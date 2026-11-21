@@ -157,7 +157,9 @@ def m_lockgate(m, opt):
     that turns while the gates move (the alarm recipe: a func_rotating with two red spotlights in a cage lamp).
     For people on foot, the way round: in the right wall a doorway upstream of the gates, a passage 128 wide inside the
     wall, lit, past the gates, and a doorway back into the canal beyond the recesses (its own areaportal, always open).
-    The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut). Path nodes go round by
+    The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut); the Combine, or rebels
+    laying an ambush, shut them at the booth (the owner, 21 November). Nothing stops a leaf: what it meets dies or is
+    broken (damage 10000, as Valve's), loose things in its way are deleted, it never waits. Path nodes go round by
     the passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
     Named for the game: lc_lockgate_open, lc_lockgate_close and lc_lockgate_toggle (logic_relays the gamemode fires:
     the klaxon, the beacon and the leaves), lc_lockgate_opened and lc_lockgate_closed (logic_relays fired when the
@@ -168,7 +170,7 @@ def m_lockgate(m, opt):
     Unchecked: Valve's sound scripts d1_canals.Floodgate_Klaxon, d1_canals.Floodgate_Move_Short and
     d1_canals.Floodgate_Stop (Half-Life 2's canal sounds); that locks_large and locks_large_b hide the areaportal
     with no gaps (Valve kept theirs far behind the gates); which way CombineButton faces (turned out of the wall and
-    tipped back 30, as Valve's); that a closing leaf crushes whoever stands in its way (Valve's damage 10000)."""
+    tipped back 30, as Valve's)."""
     from map_mods_c import cage_lamp, handrail
     from map_mods_a import tilted
     from map_modules import stair_rail
@@ -229,7 +231,7 @@ def m_lockgate(m, opt):
         cage_lamp(m, G - 64, s * 480, F + 300, 180, colour="255 214 170 60")
     m.world((G - 64, -448, LOCK_TOP, G, 448, sky), MAT["sky"])
     leaf = {"spawnflags": "512", "speed": "15", "distance": "80", "wait": "-1", "lip": "0", "dmg": "10000", "health": "0", "angles": "0 0 0", "spawnpos": "0",
-            "noise1": "d1_canals.Floodgate_Move_Short", "noise2": "d1_canals.Floodgate_Stop", "forceclosed": "0", "ignoredebris": "0", "solidbsp": "0",
+            "noise1": "d1_canals.Floodgate_Move_Short", "noise2": "d1_canals.Floodgate_Stop", "forceclosed": "1", "ignoredebris": "0", "solidbsp": "0",
             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1", "locked_sentence": "0", "unlocked_sentence": "0"}
     state = [("OnOpen", "lc_lockgate_state", "SetValue", "1", 0), ("OnOpen", "lc_lockgate_portal", "Open", "", 0),
              ("OnOpen", "lc_lockgate_switch_model", "SetAnimation", "togglein", 0), ("OnOpen", "lc_lockgate_switch_light", "Color", "0 255 0", 0.2),
@@ -239,17 +241,28 @@ def m_lockgate(m, opt):
              ("OnClose", "lc_lockgate_switch_light", "SetScale", "0.05", 0.2), ("OnClose", "lc_lockgate_switch_light", "SetScale", "0.1", 0.3),
              ("OnFullyOpen", "lc_lockgate_opened", "Trigger", "", 0),
              ("OnFullyClosed", "lc_lockgate_portal", "Close", "", 0), ("OnFullyClosed", "lc_lockgate_closed", "Trigger", "", 0)]
+    from map_forest import crusher
     for name, s, model, flags, off in (("lc_lockgate_leaf_a", 1, "locks_large_b", "512", (37, -164)), ("lc_lockgate_leaf_b", -1, "locks_large", "514", (36, 163))):
         hx, hy, hz = m.fr.at(G - 4, s * H, F + 248)
         keys = dict(leaf, targetname=name, spawnflags=flags, origin="%d %d %d" % (hx, hy, hz))
-        box = m.fr.box(G - 48, min(0, s * (H + 64)), F + 8, G, max(0, s * (H + 64)), F + 488)
-        b.vmf.brush_entity("func_door_rotating", keys, [box], MAT["nodraw"], m.dv, connections=state if s > 0 else [])
+        lo, hi = min(0, s * (H + 64)), max(0, s * (H + 64))
+        # the leaf's own brush is as thick as Valve's model (the model rides on it, not solid itself): what it meets dies
+        # or breaks (damage 10000, as Valve's), and nothing holds it (forceclosed; the owner, 21 November: "make the crush
+        # anything"); while it swings, unseen boxes on its leading face kill whoever is in the way and delete what lies there
+        # (map_forest.crusher, the owner's silo doors' way), one for closing (its upstream face), one for opening
+        shut, opening = name.replace("leaf", "crush") + "_shut", name.replace("leaf", "crush") + "_open"
+        wires = [("OnClose", shut, "Enable", "", 0), ("OnClose", opening, "Disable", "", 0), ("OnFullyClosed", shut, "Disable", "", 0),
+                 ("OnOpen", opening, "Enable", "", 0), ("OnOpen", shut, "Disable", "", 0), ("OnFullyOpen", opening, "Disable", "", 0)]
+        b.vmf.brush_entity("func_door_rotating", keys, [m.fr.box(G - 68, lo, F + 8, G + 136, hi, F + 564)], MAT["nodraw"], m.dv,
+                           connections=(state if s > 0 else []) + wires)
         b.names.append((name, "func_door_rotating", m.tag))
+        crusher(b.vmf, name, m.fr.box(G - 82, lo, F + 8, G - 68, hi, F + 564), m.dv, shut)
+        crusher(b.vmf, name, m.fr.box(G + 136, lo, F + 8, G + 150, hi, F + 564), m.dv, opening)
         tilted(m, "prop_dynamic", "models/props_canal/%s.mdl" % model, G - 4 + off[0], s * H + off[1], F, 0,
-               keys={"parentname": name, "solid": "6", "disableshadows": "1"})
+               keys={"parentname": name, "solid": "0", "disableshadows": "1"})
     b.vmf.areaportal(m.fr.box(G - 26, -440, F, G - 24, 440, LOCK_TOP), b.vis + ": areaportals", name="lc_lockgate_portal")
     b.names.append(("lc_lockgate_portal", "func_areaportal", m.tag))
-    m.blocked(G - 80, -WHALF, G + 144, WHALF)
+    m.blocked(G - 96, -WHALF, G + 160, WHALF)
     # --- the wiring (Valve's relay_locks_opengates and _closegates, the alarm's beacon, a branch for the toggle) ---
     m.point("ambient_generic", G - 32, 0, F + 300, {"targetname": "lc_lockgate_klaxon", "message": KLAXON, "health": "10", "pitch": "100", "pitchstart": "100",
                                                      "radius": "3000", "spawnflags": "48"}, b.vis + ": sounds")      # (a one-shot the wiring plays: 48)

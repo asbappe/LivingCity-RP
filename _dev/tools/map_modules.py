@@ -2100,12 +2100,13 @@ def standing_things(b):
     return {"flat": flat, "loose": loose, "props": props}
 
 
-def dish_plan(b, ch, flat, bump=None):
+def dish_plan(b, ch, flat, bump=None, floor=DISH_FLOOR):
     """The canal's floor falls to its middle (the owner, 21 November: Valve's Route Kanal, the lesson valve-canal-dish):
     every square of plain canal floor that no bank stands on, nothing stands on and the mud covers has its concrete
     lowered to DISH_FLOOR, and the mud's skin over it sags with the distance from the dish's edge (the banks' feet, an
     upright wall's foot, a gate, anything standing): 24 at a 512 canal's middle, 42 at a 1024 canal's. The edges stay
-    at F, so modules still meet on the plain section. Sets ch.dished and ch.dish; lowers the squares in the plan."""
+    at F, so modules still meet on the plain section. Sets ch.dished and ch.dish; lowers the squares in the plan (to
+    `floor`: a piece whose bottom is higher than BASE takes a shallower one)."""
     cells = ch.cells
     plain = ("open", F, MAT["canal_floor"])
     banks = ch.made.get("bank_rects", [])
@@ -2137,10 +2138,34 @@ def dish_plan(b, ch, flat, bump=None):
                 k += 1
             sag[(x, y)] = round(DISH_DEEP * (1 - math.exp(-k * CELL / float(DISH_REACH))), 1)
     for c in low:
-        b.plan.cells[c] = cells[c] = ("open", DISH_FLOOR, MAT["canal_floor"])
-    ch.dished, ch.dish, ch.dish_floor = low, {pt: d for pt, d in sag.items() if d > 0}, DISH_FLOOR
+        b.plan.cells[c] = cells[c] = ("open", floor, MAT["canal_floor"])
+    ch.dished, ch.dish, ch.dish_floor = low, {pt: d for pt, d in sag.items() if d > 0}, floor
     if low:
         b.notes.append("the canal's floor is dished on %d squares: %d deep at most" % (len(low), max(sag.values()) if sag else 0))
+
+
+def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=(), rim=784):
+    """The canal modules' dressing for a piece built by itself, outside a chain (the ring, the first canal; the owner,
+    21 November: "yes please"): what stands on its floor first, then the banks, lip, ribs and Valve's outfalls (pipes:
+    [(axis, where along, wall, wall), ...] across it), the dished floor (its concrete lowered only to F - 48: these
+    pieces' bottoms are at F - 64), the plan built, the caged lamps and the outfalls' rings, the mud, and loose things
+    and floor stains brought down onto it. Coordinates are the map's (the plan's origin 0 0). Gives the Channel (for
+    its path nodes) and the stand-in for a module chain's Build that the dressing was given."""
+    import types
+    b = types.SimpleNamespace(vmf=vmf, name=name, vis=vis, taken=taken, no_mud=list(mud_skip), lifted=set(), notes=[], plan=plan,
+                              rim=rim, props=[], upright=[], no_bank=list(no_bank))
+    standing = standing_things(b)
+    plan.walls()
+    ch = Channel(vmf, plan, F, TRIM, vis)
+    for axis, at, a, z in pipes:
+        ch.pipes(axis, at, a, z, taken)
+    ch.dress(list(no_bank), taken, outfalls=True, avoid=standing["props"])
+    dish_plan(b, ch, standing["flat"], floor=F - 48)
+    plan.build(vmf)
+    dress_canal_walls(b, ch, standing["props"])
+    ch.mud(mud_seed, skip=list(mud_skip))
+    settle(b, ch, standing["loose"])
+    return ch, b
 
 
 def settle(b, ch, loose):
@@ -2234,16 +2259,16 @@ def dress_canal_walls(b, ch, avoid=()):
         if rnd.random() < 0.18:
             wx, wy = (at + 120, line) if axis == "x" else (line, at + 120)
             b.vmf.point("infodecal", (wx, wy, F + 200 + rnd.randrange(0, 120)), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")
-    for (axis, line, side, at, z, out) in made.get("outfalls", []):
-        x, y = at_wall(axis, line, side, at, out + 7 if not out else out - 5)
+    for (axis, line, side, at, z, kind) in made.get("outfalls", []):
+        x, y = at_wall(axis, line, side, at, 7)      # (its back flush with the wall, as Valve's)
         b.vmf.point("prop_static", (x, y, z), {"model": "models/props_canal/canal_cap001.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "6",
                                                "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls")
-        if out:      # (the stain runs down the bank's slope under the pipe's mouth)
-            wx, wy = at_wall(axis, line, side, at, 96)
-            b.vmf.point("infodecal", (wx, wy, F + BANK - 96), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
-        else:
+        if kind == "bank":      # (the stain runs down the bank's slope from under the ring)
+            wx, wy = at_wall(axis, line, side, at, 24)
+            b.vmf.point("infodecal", (wx, wy, F + BANK - 24), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        else:                   # (on the wall between Valve's lip and the hole)
             wx, wy = at_wall(axis, line, side, at, 0)
-            b.vmf.point("infodecal", (wx, wy, F + 48), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+            b.vmf.point("infodecal", (wx, wy, z - 72), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
     for (axis, line, side, at, z) in made.get("stubs", []):
         wx, wy = (at, line) if axis == "x" else (line, at)
         b.vmf.point("infodecal", (wx, wy, z - 44), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")

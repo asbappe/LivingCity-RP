@@ -794,27 +794,40 @@ LC.MakeSequence, LC.BusySeqName, LC.BUSY_ACTS = MakeSequence, SeqName, BUSY
 local function StartBusy(npc, st, p)
     local names = BUSY[p.kind]
     if not names then return false end
-    local loop = SeqName(npc, names[2])
-    if not loop then return false end
-    local entry = SeqName(npc, names[1])
+    -- the spot's own pose, Valve's (a window watcher, bench sits in turn: sv_livingcity_idlelife.lua),
+    -- else the game's own for the kind
+    local entry, loop, exit
+    if LC.BusyPose then entry, loop, exit = LC.BusyPose(npc, st, p) end
+    if not loop then
+        loop = SeqName(npc, names[2])
+        if not loop then return false end
+        entry, exit = SeqName(npc, names[1]), SeqName(npc, names[3])
+    end
     local ok, ss = LC.Try(MakeSequence, npc, p.pos, p.yaw or 0, entry or loop, loop,
         SF_SCRIPT_LOOP_IN_POST_IDLE + SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 1, 0)
     if not ok or not IsValid(ss) then return false end
     st.ss = ss
     st.busyKind = p.kind
+    st.busyExit = { ss = ss, seq = exit }
     SetState(npc, st, "busy")
     st.untilT = CurTime() + math.Rand(30, 90)
+    if LC.BusyStarted then LC.BusyStarted(npc, st, p) end
     return true
 end
+LC.StartBusy = StartBusy
 
 local function EndBusy(npc, st, withExit)
+    local was, own = st.ss, st.busyExit
+    st.busyExit = nil
     if IsValid(st.ss) then
         st.ss:Fire("CancelSequence")
         SafeRemoveEntityDelayed(st.ss, 0.5)
     end
     st.ss = nil
     if withExit and IsValid(npc) and st.busyKind then
-        local exit = SeqName(npc, BUSY[st.busyKind][3])
+        local exit
+        if own and own.ss == was then exit = own.seq -- (the way out of the pose they sat in)
+        elseif BUSY[st.busyKind] then exit = SeqName(npc, BUSY[st.busyKind][3]) end
         if exit then
             local ok, ss2 = LC.Try(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, exit, nil,
                 SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 0, 0.2)
@@ -1891,6 +1904,7 @@ local function TryChat(npc, st, now)
 end
 
 local SITTABLE = { sit = true, sitchair = true, lean = true }
+LC.SITTABLE = SITTABLE -- (with Valve's idle spots added: window, armscrossed, drinker, couch, bedside: sv_livingcity_idlelife.lua)
 local LOITER = { idle = true, queue = true }
 local WORK = { work = true }
 
@@ -2136,6 +2150,8 @@ end
 local function ChooseSecurityTask(npc, st, now)
     Release(npc, st)
     if LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
+    -- a lane to walk, a door to guard, one of the garrison's posts (sv_livingcity_unitposts.lua)
+    if LC.UnitChoose and LC.UnitChoose(npc, st, now) then return end
     local run = LC.Event == "lockdown"
 
     -- a post to hold (an Overwatch landing party round its landing zone): back to it, and stand there
@@ -2533,6 +2549,7 @@ local function ThinkSecurity(npc, st, now)
     if s == "workescort" then return end -- escorting a worker (sv_livingcity_escort.lua drives them)
     if s == "cleanguard" then return end
     if s == "adminguard" then return end -- guarding the City Administrator (sv_livingcity_cityadmin.lua drives them) -- guarding an infestation cleanup worker (sv_livingcity_cleanup.lua drives them)
+    if LC.SecurityStates and LC.SecurityStates[s] then return LC.SecurityStates[s](npc, st, now) end -- (on a door post, frisking two at a wall: sv_livingcity_unitposts.lua, sv_livingcity_unitmoves.lua)
 
     if st.role == "cop" then
         -- tell people crowding them to move along, and escalate if they don't

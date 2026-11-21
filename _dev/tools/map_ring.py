@@ -141,9 +141,18 @@ class Channel:
 
         def along(axis, a, b, lo, hi, z1, z2):
             return (a, lo, z1, b, hi, z2) if axis == "x" else (lo, a, z1, hi, b, z2)
+        cuts = {}
+        if outfalls:      # (placed first: an outfall over a bank rises through the lip's height, and the lip stops either side of it)
+            for (axis, line, side, p, z, kind) in self.outfalls(trims, banks, along, fits, taken, avoid, shapes):
+                if kind == "bank":
+                    cuts.setdefault((axis, line, side), []).append((p - 82, p + 82))
         for (axis, line, side, a, b) in trims:
             dz = 1 if axis == "y" else 0      # (trims along y sit inside those along x where they cross at a corner: no shared face to flicker)
-            boxes.append(along(axis, a, b, min(line, line + side * (16 - dz)), max(line, line + side * (16 - dz)), rz + dz, rz + 16 - dz))
+            start = a
+            for c1, c2 in sorted(c for c in cuts.get((axis, line, side), []) if a < c[1] and c[0] < b) + [(b, b)]:
+                if min(c1, b) > start:
+                    boxes.append(along(axis, start, min(c1, b), min(line, line + side * (16 - dz)), max(line, line + side * (16 - dz)), rz + dz, rz + 16 - dz))
+                start = max(start, c2)
             for at in range(a + 256, b - 128, 512):
                 rib = along(axis, at - 24, at + 24, min(line, line + side * 24), max(line, line + side * 24), fz + 96, rz)
                 if fits(rib):
@@ -151,8 +160,6 @@ class Channel:
                     taken.append(rib)
                     self.stats["ribs"] += 1
                     self.made.setdefault("ribs", []).append((axis, line, side, at))      # (for whoever dresses them further)
-        if outfalls:
-            self.outfalls(trims, banks, along, fits, taken, avoid, shapes)
         for (axis, line, side, a, b) in ([] if outfalls else trims):
             for at in range(a + 512, b - 128, 1024):
                 z = fz + 176
@@ -169,44 +176,51 @@ class Channel:
             vmf.detail(boxes, MAT["beam"], vis=self.vis + ": banks, pipes and trim")
 
     def outfalls(self, trims, banks, along, fits, taken, avoid, shapes):
-        """Valve's drain outfalls (Route Kanal: canal_cap001 rings 154 across round holes 128 across, centred 139 over
-        the floor, in groups about 384 apart): a pair either side of every other rib, now and then one alone or none
-        (the same every build). Through a bank: a concrete pipe 128 across whose mouth stands 80 out of the wall, its
-        foot in the slope; in an upright wall: a dark hole flush with the face. Each goes to made["outfalls"] as
-        (axis, line, side, where along, centre height, how far out its mouth is)."""
+        """Valve's drain outfalls (Route Kanal: canal_cap001 rings 154 across round holes 128 across, in groups about 384
+        apart): a pair either side of every other rib, now and then one alone or none (the same every build), each a dark
+        hole flush with the wall, as Valve's are. In an upright wall it is centred 140 over the floor with Valve's lip under
+        it (a block 32 out from the floor to 16 under the hole, its top sloped at 45 degrees); where a bank is, it sits
+        where Valve puts theirs over a slope (d1_canals_10, 12, 01a and 02: the slope meets the wall just under the hole):
+        its ring's foot on the bank's top edge, centred 206 up, and the lip along the walls' tops stops either side of it.
+        Gives them, and puts each in made["outfalls"]: (axis, line, side, where along, centre height, "bank" or "wall")."""
         import random as _r
-        fz = self.floor_z
-        sloping = {}
+        fz, c = self.floor_z, MAT["canal_wall"]
+        sloping, placed = {}, []
         for (axis, line, side, a, b) in banks:
             sloping.setdefault((axis, line, side), []).append((a, b))
-        z = fz + 140
         for (axis, line, side, a, b) in trims:
             spans = sloping.get((axis, line, side), [])
+            across = "y" if axis == "x" else "x"
             for at in range(a + 256, b - 128, 512):      # (the ribs' places)
                 if (at // 512 + (side > 0)) % 2 == 0:
                     continue      # (every other rib; the walls facing each other take turns)
                 r = _r.Random(at * 7919 + line * 104729 + side * 13).random()
                 for d in (-192, 192) if r < 0.65 else (-192,) if r < 0.8 else (192,) if r < 0.9 else ():
                     p = at + d
-                    if p - 80 < a + 16 or p + 80 > b - 16:
+                    if p - 96 < a + 16 or p + 96 > b - 16:
                         continue
                     if any(s <= p - 96 and p + 96 <= e for s, e in spans):
-                        out = 80      # (out through the bank)
-                    elif not any(p - 96 < e and p + 96 > s for s, e in spans):
-                        out = 0       # (an upright wall)
+                        kind, z = "bank", fz + BANK + 78      # (its ring's foot on the bank's top edge, 1 over it)
+                    elif not any(p - 112 < e and p + 112 > s for s, e in spans):
+                        kind, z = "wall", fz + 140
                     else:
                         continue      # (where a bank ends)
-                    ring = along(axis, p - 80, p + 80, min(line, line + side * (out + 22)), max(line, line + side * (out + 22)), z - 80, z + 80)
-                    if not fits(ring, more=avoid):
+                    ring = along(axis, p - 80, p + 80, min(line, line + side * 22), max(line, line + side * 22), z - 80, z + 80)
+                    lip = along(axis, p - 96, p + 96, min(line, line + side * 32), max(line, line + side * 32), fz, z - 64)
+                    if not fits(ring, more=avoid) or (kind == "wall" and not fits(lip, gap=8, more=avoid)):
                         continue
                     taken.append(ring)
-                    across = "y" if axis == "x" else "x"
-                    if out:
-                        shapes.append(prism(octagon(p, z, 64), across, min(line, line + side * out), max(line, line + side * out), MAT["beam"], MAT["black"]))
-                    else:
-                        shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
-                    self.made.setdefault("outfalls", []).append((axis, line, side, p, z, out))
+                    shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
+                    if kind == "wall":      # (Valve's lip: up to 16 under the hole at the wall, falling 32 to its front)
+                        top = z - 80
+                        shapes.append(prism([(line, fz), (line + side * 32, fz), (line + side * 32, top - 32), (line, top)], axis, p - 96, p + 96, c))
+                        lo2, hi2 = min(line, line + side * 32), max(line, line + side * 32)
+                        self.made.setdefault("bank_rects", []).append((p - 96, lo2, p + 96, hi2) if axis == "x" else (lo2, p - 96, hi2, p + 96))
+                        taken.append(lip)
+                    placed.append((axis, line, side, p, z, kind))
+                    self.made.setdefault("outfalls", []).append((axis, line, side, p, z, kind))
                     self.stats["stubs"] += 1
+        return placed
 
     def pipes(self, axis, at, a, b, taken):
         """A big pipe and a small one across the canal at `at` (axis: the way the canal runs there), on saddles at each wall (a, b)."""
@@ -252,7 +266,7 @@ class Channel:
                         self.surface[(x, y)] = fz + h
             if not shown:
                 continue
-            self.vmf.world_box((x0, y0, self.dish_floor if sags else fz, x0 + 256, y0 + 256, fz + 8), MAT["nodraw"], top=MAT["mud"], vis=self.vis + ": mud",
+            self.vmf.world_box((x0, y0, self.dish_floor if sags else fz, x0 + 256, y0 + 256, fz + (3 if sags else 8)), MAT["nodraw"], top=MAT["mud"], vis=self.vis + ": mud",
                                disp={"top": (2, lambda i, j, g=grid, x0=x0, y0=y0: (x0 + j * CELL, y0 + i * CELL, g[(i, j)][0]), lambda i, j, g=grid: g[(i, j)][1])})
             self.stats["mud"] += 1
 
@@ -353,7 +367,7 @@ def ring(args):
     plan.paint((-3392, 1664, -2880, 3264), fl)          # south past the road's end
     plan.paint((-2880, 1920, -2624, 2560), ("open", ROAD_W, MAT["quay_floor"]))    # the platform at the west road's end
     plan.low((-3520, 1984, -3392, 2176), ROAD_W, MAT["quay_floor"], ROAD_W + 112)  # where its footbridge lands
-    plan.build(vmf)
+    # (the plan is built with the dressing, below: the dished floor lowers some squares first)
 
     # where brush 14734 was (x -2624..-2608): the platform's floor carried on to the road, a wall each side, a lid, and
     # above the lid the sky the road sees
@@ -466,13 +480,14 @@ def ring(args):
     lanes.append((-3900, 2880))
 
     # --- banks, trim, pipes, mud, and the fence along the top ------------------------------------------------------------
-    ch = Channel(vmf, plan, F, TRIM, "LC ring")
-    ch.pipes("x", 4160, 7552, 8064, taken)
-    ch.pipes("x", 2560, 7552, 8064, taken)
-    ch.pipes("x", -1024, 6976, 7488, taken)
-    ch.pipes("y", 6336, -4800, -4288, taken)                                              # (clear of the cave forest's gate)
-    ch.dress([(-2944, 2368, -2816, y_foot + 64)], taken)                                  # (no bank at the stairs)
-    ch.mud(81, skip=[(5000, 5000, 7000, 5696), (-BIG, 4000, -5056, 6000)])                # (not beyond a gate)
+    # (the canal modules' dressing, the owner, 21 November: "yes please": Valve's outfalls and caged lamps, the dished floor)
+    from map_modules import dress_piece
+    ch, _ = dress_piece(vmf, plan, "ring", "LC ring", taken,
+                        [(-2944, 2368, -2816, y_foot + 64)],                                  # (no bank at the stairs)
+                        [(5000, 5000, 7000, 5696), (-BIG, 4000, -5056, 6000)], 81,           # (no mud beyond a gate)
+                        pipes=[("x", 4160, 7552, 8064), ("x", 2560, 7552, 8064), ("x", -1024, 6976, 7488),
+                               ("y", 6336, -4800, -4288)],                                    # (the last clear of the cave forest's gate)
+                        rim=ROAD_E + RISE)
     fences = fence(vmf, plan, FENCE, "LC ring: fence along the walls' tops")
 
     # --- where the city's people can walk ---------------------------------------------------------------------------
