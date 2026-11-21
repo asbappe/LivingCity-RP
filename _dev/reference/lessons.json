@@ -971,7 +971,7 @@
    "title": "Breaking a place swaps intact for broken in one go",
    "rule": "A wall, door or floor that gets blown or breached is two named sets: the intact props and brushes (Kill or Break) and the broken ones (prop_dynamic and func_brush with StartDisabled 1: TurnOn or Enable). One relay does it with a one-shot sound (48, radius 2000), env_shake (amplitude 12, radius 1000, 1 s, frequency 2.5), env_explosion (magnitude 100, flag 1 for no damage) and fire half a second later.",
    "why": "d3_c17_13 bigdestroy1_relay: bigdestroy1_props_intact (3 prop_dynamic) Kill, bigdestroy1_props_broken (8 prop_dynamic, StartDisabled 1) TurnOn, bigdestroy1_breakables_intact Break, bigdestroy1_explosion Explode, bigdestroy1_shake StartShake, bigdestroy1_wav (Streetwar.d3_C17_13_explode_2) PlaySound, bigdestroy1_fire StartFire at 0.5; bigdestroy3 also wakes a prop_physics beam and fires env_physexplosion at 0.5. d1_canals_01a: sewerbarrels_gate_intact Kill, _broken Enable.",
-   "how": "m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24). d3_c17_12 strider breach: a trigger_once sends each strider SetCannonTarget at a named npc_bullseye (health 20, damagefilter strider_only_filter); its OnDeath disables destroyed_wall_1_brush_1, turns on destroyed_wall_1_hole_1, explodes @0 and @0.5, shoots concrete from an env_shooter, shakes, ForceSpawns a debris template and turns on destroyed_wall_1_link (the hole becomes a path).",
+   "how": "m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24). d3_c17_12 strider breach: a trigger_once sends each strider SetCannonTarget at a named npc_bullseye (health 20, damagefilter strider_only_filter); its OnDeath disables destroyed_wall_1_brush_1, turns on destroyed_wall_1_hole_1, explodes @0 and @0.5, shoots concrete from an env_shooter, shakes, ForceSpawns a debris template and turns on destroyed_wall_1_link (the hole becomes a path). EP2's whole buildings: ep2_outland_12 cabin_destroy_relay (25 lines: brushes, lods and props killed, breakables broken, physics props and boxes let go, a wire let go and caught at 2 s, sparks stopped at 20 and 30 s, smoke at 1 s, the ruin from templates).",
    "check": "review"
   },
   {
@@ -1479,7 +1479,7 @@
    "title": "Start a staged moment where a player is looking",
    "rule": "Before a staged moment (a beating, an arrest, a break, an approach), wait until a player is near (128 to 1000) with the spot in a 25 to 60 degree cone and in sight for half a second to two; after a timeout do it anyway. Seen, it needs no text.",
    "why": "35 ai_script_conditions: playertargetfov 25 to 60 (true cone) with line of sight, proximity 128 to 1000, requiredtime 0.4 to 2.5 s, a 15 s timeout; ts01's luggage shove waits for the player within 500 with the citizen in a 50 degree cone (3 s at most); ts01's interrogation room shuts its door slot when the player is within 150.",
-   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded. City 17 (15 maps) adds: 30 ai_script_conditions, 25 with the actor FOV left at 360 and 6 with a player proximity of 200 to 650; d3_c17_03's supply thrower waits for a 20 degree true cone with line of sight; 5 of the 30 send the same output from OnConditionsTimeout after 3 to 10 s (d3_c17_06a rubble_citizen_aisc_1, 8 s), so the moment happens even if no one looks. Ravenholm (d1_town_01, 02): 7 ai_script_conditions wake a slumped zombie or start Grigori's scene when the player looks: PlayerActorFOV 60 to 65 (45 for Grigori) with line of sight, or PlayerTargetFOV 75 at the zombie's spot; d1_town_01's are Enabled only by another zombie's OnFoundPlayer, so the house wakes once one zombie has seen you.",
+   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded. City 17 (15 maps) adds: 30 ai_script_conditions, 25 with the actor FOV left at 360 and 6 with a player proximity of 200 to 650; d3_c17_03's supply thrower waits for a 20 degree true cone with line of sight; 5 of the 30 send the same output from OnConditionsTimeout after 3 to 10 s (d3_c17_06a rubble_citizen_aisc_1, 8 s), so the moment happens even if no one looks. Ravenholm (d1_town_01, 02): 7 ai_script_conditions wake a slumped zombie or start Grigori's scene when the player looks: PlayerActorFOV 60 to 65 (45 for Grigori) with line of sight, or PlayerTargetFOV 75 at the zombie's spot; d1_town_01's are Enabled only by another zombie's OnFoundPlayer, so the house wakes once one zombie has seen you. EP2 leans on it most: 161 ai_script_conditions in 18 maps (48 in ep2_outland_12), FOV 45 to 60 with a true cone, timeouts 3 to 16 s after which the moment happens anyway (01a ceiling spitter, 06a hunters).",
    "check": "review"
   },
   {
@@ -1619,7 +1619,7 @@
    "title": "Soldiers pin a target in cover before they hit it",
    "rule": "In a fight with the Resistance, soldiers first fire at a spot beside a rebel's cover for 4 to 8 s, pause 0.5 to 3 s and fire again while he stays there; aimed fire comes after.",
    "why": "d2_coast_12 bunkers: bunker_soldier_* hate an npc_bullseye (health 35, parented to a func_tracktrain moving along the player's cover) through an ai_relationship applied by a zone trigger (3072 x 1408) and switched by two random timers (fire 4 to 8 s, pause 0.5 to 3 s); c01: cops hate a bullseye beside the player while he crosses a zone, reverted when he hurts one of them (missing on purpose).",
-   "how": "Gamemode: ents.Create('npc_bullseye') beside the target's cover and npc:AddEntityRelationship(bullseye, D_HT, 99) for the burst, then remove it. Changes how fights go (war, rebel ground, Overwatch hunts): ask the owner.",
+   "how": "Gamemode: ents.Create('npc_bullseye') beside the target's cover and npc:AddEntityRelationship(bullseye, D_HT, 99) for the burst, then remove it. Changes how fights go (war, rebel ground, Overwatch hunts): ask the owner. EP2 besiegers shoot at window bullseyes in sets that change every 6 to 8 s (front 2, 4, 6 from 0 to 6 s, front 1, 2, 3 from 8 to 15 s, again at 17 s: ep2_outland_10 inn_front_windows_bullseyes_relay).",
    "check": "review"
   },
   {
@@ -1662,7 +1662,7 @@
    "title": "A squad is topped up at each stage, with one medic",
    "rule": "Rebels who follow a leader are refilled when the squad reaches a stage (a barricade door, a gate, a roof, freed prisoners), not continuously: up to 4, one of them a medic, only for the places missing, the newcomers arriving unseen nearby. Our squads are capped at 3 (squads.md) and refilling would change them: ask the owner first.",
    "why": "16 ai_ally_manager in 9 City 17 maps: maxallies 4 (2 to 5), maxmedics 1 (one 2, one 0). Replenish comes from a trigger_once at each checkpoint (d3_c17_05 barricade_1_door_trigger; d3_c17_11 the roof @0.2), a relay (d3_c17_10a first_turret_relay, d3_c17_10b barney_lead_exit_relay), map start, once a citizen's OnWake. SpawnAlly0 to 3 and SpawnMedicAlly go to makers: Spawn (1 stock, 1 alive) or SpawnNPCInRadius to a 400-stock maker (4 alive, flag 32). 21 medics among 109 placed citizens (1 to 5 a map); 12 top-up rebels carry ResponseContext reinforcement:1. d3_c17_05 support_cit2: spawned crouched at his own busy hint (Coverlow_L, teleport), held with StartScripting until a player is in sight, then StopScripting; OnJoinedPlayerSquad starts a greeting scene.",
-   "how": "Gamemode: a rebel squad leader reaching the base or a taken checkpoint could have the squad refilled to its cap with one medic among them, the newcomers walking in from an exit doorway (valve-npc-spawn-job). Map modules: a rebel reinforcement spot behind cover at bases and checkpoints.",
+   "how": "Gamemode: a rebel squad leader reaching the base or a taken checkpoint could have the squad refilled to its cap with one medic among them, the newcomers walking in from an exit doorway (valve-npc-spawn-job). Map modules: a rebel reinforcement spot behind cover at bases and checkpoints. EP2's medic (ep2_outland_08): Alyx polls the player's health every 3 s (logic_playerproxy RequestPlayerHealth into logic_compare 75); below 75 she fetches a medkit and throws it when he looks at her (ai_script_conditions, FOV 55). In ep2_outland_02 each new wave sets the NPC defenders' health to 100.",
    "check": "review"
   },
   {
@@ -2075,7 +2075,7 @@
    "title": "Some of the dead lie slumped, and rise when someone comes near or hurts them",
    "rule": "Lay a few zombies slumped against walls and on floors (slump_a or slump_b) where people pass; each rises (slumprise_a, slumprise_a2, slumprise_b) when a player comes within about 100 to 400, looks at it, or hurts it, then goes for the nearest player. Rise them a fraction of a second apart, never all at once. In the dark, any body on the floor is a threat. Changes how our infestation's zombies appear: ask the owner first.",
    "why": "d1_town_01 and 01a: 17 scripted_sequences hold a zombie in slump_a (13) or slump_b (2) and play slumprise_a (11), slumprise_a2 (2) or slumprise_b (2); m_fMoveTo 4 (in place), spawnflags 624 (start on spawn 16, no interruptions 32, override AI 64, priority 512) or 608; a trigger_once fires BeginSequence, the zombie's own OnDamaged fires it too and Kills that trigger, and OnEndSequence > StartSchedule (set enemy to the player and run). Three rise @0.5, @1 and @1.3 (town_getup_06 to 08). d1_town_02: three more rise when the player looks at them (ai_script_conditions PlayerActorFOV 60 to 65 with line of sight), enabled 0 to 0.4 s after they are spawned or by a trigger.",
-   "how": "Gamemode: a share of infestation zombies (the owner's call, say 1 in 5) spawned against a wall in the slump pose, held by a scripted_sequence as MakeSequence in sv_livingcity.lua does, and woken by a player within 300, a player looking at it within 60 degrees, or damage; neighbours woken 0.3 to 0.5 s apart. Check in game that the zombie models have these sequences. Map modules: lc_slump spots on the floor against the walls of the quarter's rooms. Nova Prospekt repeats it (d2_prison_05, 07): four slumped zombies (slump_a > slumprise_a2, slump_b > slumprise_b, m_fMoveTo 4) wake from a trigger_once ahead or their own OnDamaged; one relay wakes three @0, 0 and 0.5, spawns a fourth from a template and Kills the trigger; each zombie's OnDeath Kills its sequence. Episode One's City 17 (10 maps): 54 act busy hints with zombie_slump_a or zombie_slump_b in 6 maps and 15 ai_goal_actbusy on zombies (search range 10 to 1024); of the 135 zombies that state a sleep, 46 wait for an input (sleepstate 3) and 11 until seen (2).",
+   "how": "Gamemode: a share of infestation zombies (the owner's call, say 1 in 5) spawned against a wall in the slump pose, held by a scripted_sequence as MakeSequence in sv_livingcity.lua does, and woken by a player within 300, a player looking at it within 60 degrees, or damage; neighbours woken 0.3 to 0.5 s apart. Check in game that the zombie models have these sequences. Map modules: lc_slump spots on the floor against the walls of the quarter's rooms. Nova Prospekt repeats it (d2_prison_05, 07): four slumped zombies (slump_a > slumprise_a2, slump_b > slumprise_b, m_fMoveTo 4) wake from a trigger_once ahead or their own OnDamaged; one relay wakes three @0, 0 and 0.5, spawns a fourth from a template and Kills the trigger; each zombie's OnDeath Kills its sequence. Episode One's City 17 (10 maps): 54 act busy hints with zombie_slump_a or zombie_slump_b in 6 maps and 15 ai_goal_actbusy on zombies (search range 10 to 1024); of the 135 zombies that state a sleep, 46 wait for an input (sleepstate 3) and 11 until seen (2). EP2's zombie miners slump on work hints (hinttype 12, zombie_slump_a and _b, 21 in ep2_outland_03) held by ai_goal_actbusy with a search range of 64, each to his own spot; the wake relay deactivates the goals at 0, 1, 3, 5 and 7 s so they rise in turn.",
    "check": "review; a test that a slumped zombie wakes on damage and on a player within 300"
   },
   {
@@ -2375,7 +2375,7 @@
    "title": "A door forced from outside is heard long before it gives: voices, blows, then beeps that quicken",
    "rule": "When attackers break into a held room, the defenders hear them first: voices behind the door now and then, a heavy blow and a shake on a slow beat, the beat quickening once the defenders are ready, then a charge's beeps coming faster and faster for about 8 s before the door blows and the first attackers come straight through. Nothing on screen says it. Changes how our raids and breaches play: ask the owner first.",
    "why": "d2_prison_08: timer_guards_bang (logic_timer random 0.8 to 3 s) > case_guard_talk (logic_case of 5, only Case01 plays d3_citadel.guards_talk: a line one time in five). logic_first_attack_sounds_1: big_crash_2 (explode_4, radius 5000) and shake_blastdoor_2 (amplitude 1, duration .75, radius 1240) @0, big_crash_4 @8, itself again @16. First turret set (math_count_turrets max 1) > logic_first_attack_sounds_2: crashes @0, 5, 12, 14, crash_4 @7, shakes @0 and 12, again @16. Both set (max 2) > logic_first_attack_sounds_3: logic_blast_beeps_1 @2 (beeps @0, 3, 4, 5, 6, 6.5, 7, 7.5), crashes @2, 2.5, 4, 5, 6.5, 7, 7.5, 8.5, 9, shakes @2, 6.5, 7.5, 9, 10, logic_first_attack_wave_start_1 @10: teleport_assault_door_L Break and explosion @0.2, smoke on @0.2 off @8, two first-wave makers Spawn, assault Activate @0.4 and BeginAssault @0.5, the guard chatter Killed.",
-   "how": "Gamemode: a unit's breach of a rebel door (Retake the block, a raid) and the Resistance's bypass charge on a Combine door could run this: muffled radio voices on random 1 to 3 s with one chance in five, a thump and a small shake every 16 s while units gather, beeps at 0, 3, 4, 5, 6, 6.5, 7, 7.5 and the door open at 10 s, the units in at once. One timer chain, cancelled if the breach is called off. The dead do it too (ep1_c17_02a hospital): a timer every 1 to 1.5 s opens a door a crack and shuts it 0.5 s later with a banging loop until a player opens it and the poison zombie comes out; the holdout room waits a random 20 to 40 s, then bangs at @0, 2, 4, 5, 5.5, 5.8, 6 and 6.1 and the door breaks at @6.3 with a group spawn, all cancelled if the door is broken first. A clinic under siege by the infested could run the same.",
+   "how": "Gamemode: a unit's breach of a rebel door (Retake the block, a raid) and the Resistance's bypass charge on a Combine door could run this: muffled radio voices on random 1 to 3 s with one chance in five, a thump and a small shake every 16 s while units gather, beeps at 0, 3, 4, 5, 6, 6.5, 7, 7.5 and the door open at 10 s, the units in at once. One timer chain, cancelled if the breach is called off. The dead do it too (ep1_c17_02a hospital): a timer every 1 to 1.5 s opens a door a crack and shuts it 0.5 s later with a banging loop until a player opens it and the poison zombie comes out; the holdout room waits a random 20 to 40 s, then bangs at @0, 2, 4, 5, 5.5, 5.8, 6 and 6.1 and the door breaks at @6.3 with a group spawn, all cancelled if the door is broken first. A clinic under siege by the infested could run the same. EP2's numbers: blows on a door at 0, 2, 4, 5, 5.5, 5.8, 6 and 6.1 s before it bursts (ep2_outland_06 lrelay_sound_banging_01); a breaching charge beeps every 2 s, every 0.2 s from 8 s and blows at 9 s, the door swapped for a broken one and the assault at 9.5 s (ep2_outland_07 relay_bustfrontdoor, timer_frontExitBomb).",
    "check": "review; a test that a cancelled breach leaves no pending sounds"
   },
   {
@@ -2574,7 +2574,7 @@
    "title": "A Resistance base is shown at work: cooks with their tools, sleepers, a game of chess, vortigaunts mending with their beams",
    "rule": "Fill the base with work, each person on his own spot with the tools in his hands: two cooks at a stove (a hat on the head, a ladle or a cleaver in the hand, put there as the scene starts), one man asleep on a bed and two at a chess table in the quarters, vortigaunts zapping a broken machine in short bursts, a lab worker at his bench who stops when spoken to and goes back after, and one person walking a loop between two places with a pause at each end. Changes how our camps' people behave: ask the owner first.",
    "why": "d1_eli_01 (21 November): vortigaunts sheffy_soup and sheffy_butcher on scripted_sequences soupstir and Butcher, sheffyhat, sheffyLadel and sheffyCleaver prop_dynamics put on by SetParentAttachment (hat, ladel_attachment, cleaver_attachment) in logic_kitchenscene_start; cit_lounger02 on SS Lying_Down over a prison bed, cit__lounger01 on Sit_Chair and vort__lounger01 on chess_Pose 48 apart across props_lab/chess; vort_repairman_01 and 02 made to hate npc_bullseye bullseye_repairman1 (ApplyRelationship @0 and @0.75, Revert @6, the scene removed @7); Eli, Mossman, Alyx and the lab vort each on a work loop scene that a talk pauses (busyactor 1) and resumes after; the walker: SS_bgwalker1 OnEndSequence > SS_bgwalker2 @3, its end > SS_bgwalker1 @6. 7 vortigaunts and 5 citizens in the map, none idle.",
-   "how": "Gamemode: the camps' fighters and the vortigaunts (loyalty-and-vortigaunts.md) could take work spots from the editor ('Point: cook', 'Point: mend', 'Point: chess', 'Point: sleep') with a prop parented to the hand while there; a mending vortigaunt plays its beam at the spot's machine every few seconds. Map modules: lc_busy_cook, lc_busy_mend and lc_busy_chess points in kitchens, workshops and quarters (valve-npc-busy-poses).",
+   "how": "Gamemode: the camps' fighters and the vortigaunts (loyalty-and-vortigaunts.md) could take work spots from the editor ('Point: cook', 'Point: mend', 'Point: chess', 'Point: sleep') with a prop parented to the hand while there; a mending vortigaunt plays its beam at the spot's machine every few seconds. Map modules: lc_busy_cook, lc_busy_mend and lc_busy_chess points in kitchens, workshops and quarters (valve-npc-busy-poses). EP2's White Forest (ep2_outland_11, 12a): a vortigaunt with a broom walks between four sweeping spots picked at random after each sweep (case_sweepSpots PickRandom on the scene's completion), a dust puff on while it sweeps; two welders (a spark and sound every 1.5 to 3 s; skip their light, no flickering); a gun class (a teacher with an AR2, three pupils with arms crossed); a consoling couple (ai_goal_actbusy); odd-job rebels from makers, each given one of two random jobs (ep2_outland_10a).",
    "check": "review"
   },
   {
@@ -2588,7 +2588,7 @@
    "title": "Give players a moment to look round, and let the person there answer what they look at",
    "rule": "After a talk, leave a short free moment (about 25 s) in which a person in the room says something about whatever a player stops to look at: a photo, a machine, a board on the wall. Looking means within reach (70 to 190) and the thing near the middle of the view (a cone of 32 to 80 degrees) for half a second to a second. Once one is said the others are dropped and things move on. Spoken, never written. New: ask the owner first.",
    "why": "d1_eli_01 (21 November): four ai_script_conditions for Eli, enabled @0.7 to 1.5 by logic_timer_lookaround_enable_1 and switched off @25 by a kill switch: conditions_photo (frame002a, within 120, cone 32, 0.5 s), conditions_teleport (190, 80, 0.5 s), conditions_thing (70, 35, 0.5 s), conditions_breen (corkboard002, 150, 35, 1 s). OnConditionsSatisfied starts that line once and disables the other three; each line ends by resuming Eli's work loop.",
-   "how": "Gamemode: a base's quartermaster or a vortigaunt answers a player who looks at a marked thing ('Point: talking point' with a recorded line, recorded-lines.md) for 0.7 s within 150 and a 40 degree cone, once a player in 10 minutes. No text.",
+   "how": "Gamemode: a base's quartermaster or a vortigaunt answers a player who looks at a marked thing ('Point: talking point' with a recorded line, recorded-lines.md) for 0.7 s within 150 and a 40 degree cone, once a player in 10 minutes. No text. EP2's monitor watcher (ep2_outland_11): a button steps a screen through five channels (math_counter 1 to 6 wrapping, logic_case); the rebel thanks you when it is back on his, reacts when you change it, and after four changes away says he is fed up (math_mon_hatelife max 4).",
    "check": "review"
   },
   {
@@ -2616,7 +2616,7 @@
    "title": "Teach a tool by play: someone reacts to every try, lost things come back, and a goal shows when it is hit",
    "rule": "To teach a tool, give players something to play with and a person (or animal) who reacts: pleased when they catch or carry it, let down when it breaks. Throwables that break or get lost come back from where they came. A goal (a hoop, a target) is a pair of touch zones, the upper one arming the lower for a second, so only a real score counts; a hit lights a sprite and gets one word of praise. The first real test opens the way on; a way round it opens anyway if they cannot (valve-teach-then-give-up). Fits our job games (house rule 9).",
    "why": "d1_eli_02 scrapyard (21 November): 10 dogobject crates each from an env_entity_maker (maker_box1 to 10) with its point_template; w_1_obj_N OnPhysGunPickup > logic_C_yes_N (Alyx's praise picked by a logic_case), OnBreak > logic_C_no_N (lcs_dog_dissapointed). Ball from maker_ball; trigger_Ball_vent and trigger_lost_ball_top start 'where's the ball' and break it @6 so the maker makes another. Hoop: trigger_BBall_score_top enables trigger_BBall_score_bottom, which is disabled again 1 s after the ball leaves the top; a score shows Sprite_score for 2 s and lcs_al_niceshot once. timer_fetch 60 s: Alyx suggests fetch if nobody has played. First test: a ledge 130 up beside the gate button (trigger_scrap_1st_success unlocks button_scrapyard_gate); env_speaker AlyxStackNag 12 to 24 s.",
-   "how": "Gamemode job games: a crate-stacking or catch game for the Resistance's recruits where a vortigaunt or the quartermaster reacts aloud to each try; props a game uses come back from a spawn spot when broken or lost; any goal made of two zones. No text beyond the one key.",
+   "how": "Gamemode job games: a crate-stacking or catch game for the Resistance's recruits where a vortigaunt or the quartermaster reacts aloud to each try; props a game uses come back from a spawn spot when broken or lost; any goal made of two zones. No text beyond the one key. EP2's striderbuster school (ep2_outland_11b): the practice devices are duds (dud 1); the teacher's scene pauses at each step and resumes when it is done (Pause, then Resume from a trigger), a nag after 20 s of dawdling; a missed throw (OnShatter) gets one of three lines and a new device from the pad 1 s later.",
    "check": "review"
   },
   {
@@ -2901,7 +2901,7 @@
    "title": "A safehouse door has a slot: it slides open, someone looks out and asks, and the door opens on the answer",
    "rule": "The Resistance's door on the street is the plain slotted door: a knock opens the slot, a face looks out and asks, the guide gives the word, the slot shuts and the door is unbolted and swung away from the guest. If the guide is killed on the way, the slot opens and shuts and the door opens anyway: nobody is left outside. Changes how a Resistance door works: ask the owner first.",
    "why": "ep1_c17_02b, two doors: bld_a_frontdoor_1 and barney_door_2 (prop_door_rotating door03_slotted_left.mdl), each with a prop_dynamic door03_slot.mdl on it. bld_a_frontdoor_1_ss_1 (the guide arrives) > bld_a_lcs_1 (c17_06_password01) OnCompletion slot open @1 > bld_a_lcs_2 > bld_a_lcs_3 (c17_safehouse_password: slot close @0.5, idle @1) > bld_a_lcs_4 > bld_a_frontdoor_open_rl: Unlock, OpenAwayFrom @1; OnFullyOpen turns its node link on. outpost_leader_death_rl (the guide dead): slot open @0, close @2, idle @3, the last line @1.5, the door opens. Barney's door: raid_pre.vcd Trigger1 slot Open, Trigger2 Close, Trigger3 Unlock and OpenAwayFrom @0.7.",
-   "how": "Gamemode: a safehouse or the base's street door (docs/features/resistance-base.md) could be the slotted door: E from outside knocks, a rebel inside (a player, or the NPC on watch) opens the slot (prop_dynamic door03_slot.mdl with Valve's 'open' and 'close'), sees who it is and lets them in; the knock and a voice, never text. Map modules: Resistance doors use door03_slotted_left.mdl with the slot prop on it.",
+   "how": "Gamemode: a safehouse or the base's street door (docs/features/resistance-base.md) could be the slotted door: E from outside knocks, a rebel inside (a player, or the NPC on watch) opens the slot (prop_dynamic door03_slot.mdl with Valve's 'open' and 'close'), sees who it is and lets them in; the knock and a voice, never text. Map modules: Resistance doors use door03_slotted_left.mdl with the slot prop on it. EP2's White Forest gate (ep2_outland_10a): the lookout in the gate tower calls down to the man at the gate and the gate slides open on his line (base_gate_tower_citizen_lcs OnTrigger1 > base_gate_open_relay).",
    "check": "map_assets.py: both models present; review"
   },
   {
@@ -2927,7 +2927,7 @@
    "title": "A friendly marksman on the roofs moves to cover whichever street the player is in",
    "rule": "Where a player must cross ground full of the dead, a friend with a rifle takes a roof over it; each part of the ground has its own roof spot, and as the player moves into a part the marksman moves to that part's spot. A new way our rebel NPCs could help: ask the owner first.",
    "why": "ep1_c17_03: 7 assault goals assault_alyx_snipeposition_01 to 07 (rally points all at z 377, nearest neighbour 304 to 600) and 7 trigger_multiples trigger_alyxSnipePosition: StartTouch Deactivates every snipe goal and Activates its own @0.1. Below, endless street wanderers: npc_template_makers of antlion (5 alive), zombine (4), zombie (2) and fast zombie (1), every 0.1 s, only unseen (CriterionVisibility 1); each OnLostPlayerLOS sets its own health to 1, so her shots kill. ep1_c17_01a: Alyx becomes an npc_sniper to cover the alley, and her nags stop when the gunner and sniper she warns of are dead (counter_sniperAndGunnerDead max 2).",
-   "how": "Gamemode: when players fight in an infested or contested district, a Resistance NPC marksman could take the nearest of a few roof spots to them and move as they move. Map modules: lc_overwatch_N spots on roofs 300 to 600 apart, each naming the ground below it.",
+   "how": "Gamemode: when players fight in an infested or contested district, a Resistance NPC marksman could take the nearest of a few roof spots to them and move as they move. Map modules: lc_overwatch_N spots on roofs 300 to 600 apart, each naming the ground below it. EP2's version (ep2_outland_06): Alyx's rifle is an npc_sniper (shootzombiesinchest 1) whose laser sweeps a target group chosen by the zone the player is in (SweepGroupRandomly, one trigger per zone), painting every 1 s (varied 0.75), every 0.25 s once she guides him; killed and respawned from a template as she moves on.",
    "check": "review"
   },
   {
@@ -3075,7 +3075,7 @@
    "title": "Combine power is a thing you can carry: pull the energy ball from its socket and what it feeds goes dark",
    "rule": "In the Citadel what powers a field, a lift or a bridge is an energy ball held in a socket, marked by a pair of glowing cores. Take the ball out and the thing it feeds switches off; put a ball back and it comes on again. Elsewhere dispensers hold a few balls that come back a few seconds after one is lost, and catchers count balls thrown in until enough are in. A new kind of job game or sabotage: ask the owner first.",
    "why": "d3_citadel_03: func_combine_ball_spawner with flag 8192 (power supply), ballcount 1, ballrespawntime -1 (never comes back), speed 75: ballspawner_ballgenerator1 OnLastBallGrabbed > relay_combineshieldwall3_off, OnBallReinserted > _on; ball_spawner_room3 holds wall 7; two env_citadel_energy_core (scale 1.5, one up, one down) at each socket. Dispensers: ballcount 10, respawn 4 s, speed 125 to 350, start inactive (4096), in rows 80 apart. ep1_citadel_03: catchers are trigger_multiples with filter_combineball_type (ball_trap_10 Add 1, its reset Subtracts 1): 2 balls per bridge section, 3 for the upper bridge, 6 for the core (counter_balltrap). 44 spawners in 9 maps, 17 launchers in EP1.",
-   "how": "Gamemode (ask first): a sabotage or repair job game in the Nexus or a Combine post (docs/features/jobs-and-quests.md): carry a glowing ball (a prop) from a dispenser to a socket to power a door or field, or pull one out to drop a field; a hands-on step in place of any waiting (house rule 9). Map modules: a socket point with two core glows, wired to a named field or door.",
+   "how": "Gamemode (ask first): a sabotage or repair job game in the Nexus or a Combine post (docs/features/jobs-and-quests.md): carry a glowing ball (a prop) from a dispenser to a socket to power a door or field, or pull one out to drop a field; a hands-on step in place of any waiting (house rule 9). Map modules: a socket point with two core glows, wired to a named field or door. EP2's version with cables (ep2_outland_06a): physics plugs carried to sockets (trigger_multiple, physics flag 8, filtered by the plug's name) that snap them in; two right sockets per route (logic_branch_listener OnAllTrue) light a lamp on the socket, the tower's lamps, the radio and a hum; pulling a plug out (OnPhysGunPickup added at run time) turns it all off again.",
    "check": "map_lint 'wire': a ball socket (func_combine_ball_spawner flag 8192) wires both OnLastBallGrabbed and OnBallReinserted; review"
   },
   {
@@ -3090,7 +3090,7 @@
    "title": "A deadline is counted out loud by the Combine's voice, closer together near the end, while a machine climbs with it",
    "rule": "When something will happen at a set moment (Breen's teleport), the time left is spoken by Overwatch at 3 minutes, 2, 1, 45 seconds, 30, 15 and 10: the calls come closer together as the end nears, and a machine everyone can see moves on a step with the late calls. No clock on the screen. Ending the threat cancels the calls still to come. Our endings and the collapse are the owner's: changing how they count down, or adding spoken calls, is ask the owner first.",
    "why": "d3_breen_01: a trigger_once fires countdown (info_teleporter_countdown) StartCountdown 190 at 12 s (the wiki: its HUD was never finished) and citadel_relay_overwatch at 19 s: citadel.overwatch_3min_to_teleport @0, 2min @57, 1min @117, 45sec @132, 30sec @147, 15sec @162, 10sec @167 (ambient_generic, radius 1250, flags 49); Train_main_lift (Breen's lift up the core) Resume @147 and @162. logic_portal_final_end: citadel_relay_overwatch CancelPending @0 and Kill @0.1, countdown StopCountdown.",
-   "how": "Gamemode (ask first): an ending or the collapse (docs/features/endings.md, collapse.md) that comes at a set time could have the city's dispatcher voice speak the time left at 3, 2, 1 min, 45, 30, 15 and 10 s, and stop the moment it is averted; a sound, never a line of text (house rule 10).",
+   "how": "Gamemode (ask first): an ending or the collapse (docs/features/endings.md, collapse.md) that comes at a set time could have the city's dispatcher voice speak the time left at 3, 2, 1 min, 45, 30, 15 and 10 s, and stop the moment it is averted; a sound, never a line of text (house rule 10). EP2's launch (ep2_outland_12a relay_launch, 28 lines from one button): warning sounds at 0 and 20 s, a voice at 5, silo doors and dust at 3, birds fly off at 3, rumble dust at 10, 20, 25, a shake timer from 3 to 36 s, the rocket at 30; the count shows on four digit panels by animated texture frames (StartAnimSequence), 30 to 0.",
    "check": "review"
   },
   {
@@ -3164,6 +3164,270 @@
    "rule": "Show a huge explosion far off (the Citadel's) as a bright sprite whose size keeps multiplying by a small step many times a second, so it swells slowly and then fast, while the fog over everything lerps to white and the screen fades. No text, no countdown. For our endings, which are the owner's: ask the owner first.",
    "why": "ep1_intro: counter_explosion (math_counter, startvalue 8, max 999999) OutValue > sprite_end_final_explosion_1 SetScale; Timer_explosion (refire 0.05) > counter_explosion Multiply 1.0065, so about 14% a second (x1.14 a second, x49 in 30 s); Enabled 15 s after lrelay_alyx_vanish, Disabled when the G-Man's scene starts. relay_citadel_end: fog_controller_explo SetColorLerpTo 255 255 255 and SetEndDistLerpTo 1 with StartFogTransition @0.21, fade_explo_01 Fade, the camera's FOV blended from 1 to 80 over 2.7 s.",
    "how": "Gamemode (ask first): an ending that ends in a blast (docs/features/endings.md: the motherlode, the collapse) could grow a glow sprite at the blast's place by 14% a second and fade the fog to white before the fade to black, in place of words on screen.",
+   "check": "review"
+  },
+  {
+   "id": "valve-wave-warning",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay",
+    "sound"
+   ],
+   "title": "Each way in warns before its wave: a siren and lamps that show how big, 20 s ahead",
+   "rule": "Where attackers come from several holes or tunnels, each hole has its own looping siren and three lamps beside it. Before a wave, the holes it will use sound their siren and light one, two or three lamps for a small, middling or big wave; the attackers come out about 20 s later (15 s for the last wave); the siren stops when the first one is out and the lamps go out when that hole's attackers are all dead. Players learn where to stand and how bad it will be from the world alone, with no text. Changing how our nest or any defence announces its waves: ask the owner first.",
+   "why": "ep2_outland_02, the mine arena: four tunnels, each with an ambient_generic siren (outland_ep02.cave_siren1 to 4_loop, radius 1250, spawnflags 16 or 17) and point_spotlights pathNN_light_easy, _medium, _hard whose lamp props change skin OnLightOn and OnLightOff. GO_spawnNN_easy, _medium, _hard and _final relays: siren PlaySound @0 (or 0.5), one to three lamps LightOn @0, the tunnel's npc_antlion_template_maker Enable @20 (@15 for _final). Each maker OnSpawnNPC > siren StopSound; OnAllSpawnedDead > that tunnel's lamps LightOff (@5 after the final wave). 16 makers: four tunnels by easy, medium, hard and final.",
+   "how": "Map modules: give each burrow or tunnel mouth of the nest (and any defended place with several ways in) a named siren and three named lamps (lc_nest_mouth_N_siren, _lamp_1 to 3). Gamemode (ask first): before a wave, sound the siren and light the lamps of the mouths it will use, and start the wave 20 s later.",
+   "check": "review"
+  },
+  {
+   "id": "valve-wave-pattern",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay"
+   ],
+   "title": "A wave fight grows by how many ways in are open, rests 6 s between waves, and stops itself if the room is overrun",
+   "rule": "A defence against waves of creatures runs from one counter and a case: wave 1 uses one way in, then two, three, three, four, four, then all at once for the last; a wave ends when every open way's attackers are dead (the counter's target set to how many ways are open). Between waves: a 6 s rest, a save point, the NPC defenders say a line for that wave and are healed to full. Two safety valves: if 8 attackers are inside the defended room at once, the wave is cut short (no more come); corpses are capped at 3. Late in the fight the defence is taken down on purpose (the two turrets run dry at 50 and 60 s of wave 6), so the last waves feel desperate, and help arrives for the last one. When it ends, stragglers are killed off out of sight and the music fades in 7 s. Changing how our waves run: ask the owner first.",
+   "why": "ep2_outland_02: caseHander_patternMaster (logic_case, 9 cases) fed by caseIncrementor (math_counter max 10): case 1 one medium tunnel, case 2 easy 3 and 2, case 3 easy 1, 4, 3, case 4 easy 3, 1 and medium 4, case 5 all four easy, case 6 easy 1, 3, 4 and medium 2, case 7 the four finals. mathCounter_antlionTracker_main SetHitMax 1, 2, 3, 3, 4, 4; each maker OnAllSpawnedDead adds 1; OnHitMax: autoSave, timer (logic_timer refire 6, disables itself) Enable @0.2, rebels SpeakResponseConcept TLK_outland_02_waveend, AddContext waveactive:0. caseIncrementor OutValue > npc_citizen SetHealth 100. trigger_antLionRoomTracker counts antlions in the room into mathCounter_antlionSurgeTracker (max 8) > end_antlion_wave (every maker SetMaxChildren 0, Disable). Case 4: ragdoll_manager SetMaxRagdollCount 3. Case 6: turret_buddy_1_disable_rl_1 @50 and _2 @60 (DepleteAmmo, env_steam, env_spark, the rebel's line), antlion relationships to the turrets changed @50. Final counter (max 4) OnHitMax: music FadeOut 6 @7, strays SetHealth 0 @8, vortigaunts SetReadinessLow. Makers: easy 3 or 4 alive of 16, one a second; medium 4 to 6 of 32 every 0.05 to 0.1 s; hard 4 of 40; final 2 or 3 alive of 21.",
+   "how": "Gamemode (ask first): if the nest becomes a defence (or a raid on rebel ground is held), run waves by a table of which mouths open per wave (1, 2, 3, 3, 4, 4, all), end a wave when its attackers are dead, rest 6 s, and cut a wave short when 8 are inside the defended area at once.",
+   "check": "review"
+  },
+  {
+   "id": "valve-swarm-retreats",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay",
+    "performance"
+   ],
+   "title": "When the fight is won, the attackers left over walk off to a far spot and vanish there, out of sight",
+   "rule": "A fight ends cleanly: when its boss or its last objective falls, the attackers still alive are not left to be mopped up. They are given one far target out of sight (an unseen bullseye they now hate most, or a walk-to spot), they run or walk there, and a trigger there removes each as it arrives. The players see the enemy break and leave. Good for a multiplayer server too: nothing is left wandering. Changing how our fights end: ask the owner first.",
+   "why": "ep2_outland_05: guards_death_relay > retreat_relay: ai_relationship sand_vs_retreat and caves_vs_retreat (hate, rank 100) on retreat_bullseye (npc_bullseye far off, 1792 2816 480), antlion_caves and antlion_sand UpdateEnemyMemory retreat_bullseye, retreat_trigger1 (filter npc_antlion) OnStartTouch > !activator Kill @0.25. ep2_outland_10: siege_phase4_counter2 OnHitMax > siege_soldier_delete_sequence1 to 7 (scripted_sequences walking the soldiers away, each enabling a trigger that removes them). ep2_outland_12: victory_counter OnHitMax > victory_hunter_retreat_relay @7 and @9.",
+   "how": "Gamemode (ask first): when a district fight, a raid or the nest's defence is won, send what is left of the losing side's NPCs to the nearest spawn point out of sight and remove them there, instead of letting them fight on.",
+   "check": "review"
+  },
+  {
+   "id": "valve-antlion-pool",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay"
+   ],
+   "title": "Antlions in the open come from a pool that refills slowly: kill them all and you get a breather; thumpers make safe islands",
+   "rule": "On open ground with antlions, keep only one or two out at a time, drawn from a small pool (3 to 5) that refills every 20 to 30 s, coming up at a random burrow. Killing them all buys a breather; lingering brings them back. Thumpers (512 reach) stand about 1400 to 1700 apart as safe islands to run between, and the way runs from one to the next. Our nest's makers have no end while its door is open: a pool would change that, so ask the owner first.",
+   "why": "ep2_outland_05: npc_antlion_template_maker antlion_maker_caves (maxlivechildren 1, pool_start 5, pool_max 5, pool_regen_amount 5, pool_regen_time 30, spawnflags 1040: random spawn node and fade corpse, frequency -1), antlion_maker_sand (2 alive, pool 3, refilled every 20 s), antlion_worker_maker_caves and _sand (1 alive, pool 2, 30 and 20 s). Three prop_thumper (combinethumper002, effectradius 512) at -80 1216, -752 2464, -80 4000: 1420 and 1680 apart. 35 burrow hints (hinttype 400) in the map. Valve's wiki: pool_max 0 turns the pool off; AddToPool, SetMaxPool, SetPoolRegenAmount and SetPoolRegenTime change it while running.",
+   "how": "Map: lc_nest_maker could carry pool_max 5, pool_regen_amount 5, pool_regen_time 30 (ask first). Gamemode: if the gamemode sends the nest's antlions itself, count a pool per nest that refills on a timer. Forest pieces: thumpers 512 reach, about 1400 to 1700 apart, if the owner wants antlions loose in a forest.",
+   "check": "review"
+  },
+  {
+   "id": "valve-busy-until-disturbed",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay"
+   ],
+   "title": "A creature busy with its own thing until someone disturbs it: feeding, wandering to a lure, waiting to be seen",
+   "rule": "Not every creature waits to attack. Some are busy: antlions feeding on a body (it is their target, so they stay on it), workers walking to a lure, one on the ceiling that waits until a player looks at it. Hurting one breaks its interest; a step closer or a look sends them all at the players; after a while (15 to 16 s) it happens anyway. The player gets a moment to see the world before the fight. Changing how our nest's antlions or the forest's creatures behave: ask the owner first.",
+   "why": "ep2_outland_01a: feasting_antlions_1 (three npc_antlion, startburrowed, eludedist 1024) with ai_relationship feasting_antlions_1_corpse_relationship (hate, rank 100) on feasting_antlions_1_corpse_bullseye (npc_bullseye, health 35000, OnDamaged > the corpse's phys explosion); func_clip_vphysics keeps the body in place; each antlion OnDamaged > !self SetRelationship the bullseye D_NU; feasting_antlions_corpse_relay > aiscripted_schedule (run to the player) @0.3, relationship reverted, bullseye and clip killed. lure_worker_1_trigger_5: workers Wake, lure_workers_bullseye relationship applied then killed @1. ceiling_spitter_aisc_1: ai_script_conditions (playeractorfov 45, true cone, timeout 15 to 16) > aiscripted_schedule. 161 ai_script_conditions in the 18 EP2 maps (48 in ep2_outland_12).",
+   "how": "Gamemode (ask first): in the nest's first chamber, a few antlions feeding on a body until a player is within about 400 or shoots; in the forest, a creature that only acts when looked at.",
+   "check": "review"
+  },
+  {
+   "id": "valve-grub-clusters",
+   "tags": [
+    "valve",
+    "props",
+    "npc",
+    "geometry"
+   ],
+   "title": "Antlion grubs lie in twos and threes along the floor and walls, 22 to 50 apart",
+   "rule": "In a nest, grubs are not scattered evenly: most lie in small clusters (two or three, now and then up to six) within about 160, 22 to 50 apart inside a cluster, with a few alone; they sit on the cave's floor and walls along the way players walk, more of them where the nest is oldest. About 90 to 140 in a long cave, 8 in a small one. It would change our nest or our NPCs: ask the owner first.",
+   "why": "340 npc_antlion_grub in ep2_outland_01a (93), 02 (8), 03 (143), 04 (96). Nearest other grub: 01a median 50 (quartiles 36 and 116), 03 median 32 (26 and 41), 04 median 31 (25 and 70). Clusters within 160: 03 has 11 alone, 22 pairs, 21 threes, 5 fours, 1 five; 04 15 alone, 9 pairs, 14 threes, 1 four, 1 five, 2 sixes. A few named ones are squashed by the guardian in a scene (guard_squish_grub). Each OnDeathByPlayer counts toward an achievement. Valve's wiki: a grub glows faintly and drops a health nugget when killed.",
+   "how": "Map modules: NestTube places its grubs (19 now) in clusters of two or three, 22 to 50 apart, on the floor and the lower walls of the passage and chambers, a few alone; checked by the nearest-other spacing.",
+   "check": "lint: in a nest piece, the median distance from each grub to its nearest other is 20 to 60, and at most a quarter stand alone (no other within 160)"
+  },
+  {
+   "id": "valve-boss-escape-gaps",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay",
+    "sound"
+   ],
+   "title": "A boss that cannot be beaten is escaped through gaps too small for it; it waits at the mouth and roars",
+   "rule": "A huge creature that chases players through tunnels is made unkillable and escaped, not fought: the way has low crawlspaces it cannot enter. While a player is inside one, it waits at the mouth, roaring and pounding, dust falling at random every 7 to 15 s; the moment the player comes out of either end it runs at him again. Its big moves (leaps, a wall bashed in) are staged, and it is heard down the tunnel (rubble, shakes, roars over 11 s) before it is seen. The owner asked for a hive boss in the nest's last chamber, separate from the infestation's boss: how it fights is the owner's to decide. It would change our nest or our NPCs: ask the owner first.",
+   "why": "ep2_outland_04: npc_antlionguard maze_guard (cavernbreed 1, incavern 1, shovetargets bigcave_guard_rocks) OnHalfHealth > !self SetHealth 500. Five crawlspaces: maze_crawlspaceN_playerin_trigger > that crawlspace's hide_case relays (scripted_sequence at the mouth, post idle 'idle', a growl @0.5 to 1), maze_crawlspace_effects_timer (random 7 to 15 s > maze_effects_case PickRandomShuffle) Enable, the playerout triggers Enable; maze_crawlspaceN_playerout_triggers (one at each end) > the hide sequences CancelSequence, effects timer Disable, tunnels_maze_guard_getplayer_sched (aiscripted_schedule, goal !player, schedule 3: run) StartSchedule @0.1. guard_leap_ss_1 to 3 with stalactites dropped by relays. cave_guardtunnel_relay2 and 3: rubble, env_shake, impacts and roars @0, 1, 1.5, 3.4, 4.5, 8, 11 (relay3 @11 roar2). The way out: guard_exit_bash_board_1 to 7 (func_breakable health 1, each OnBreak spawning a broken board from a template).",
+   "how": "Gamemode (ask first): if the hive boss is built, give the nest's last chamber two or three low crawlspaces (under 40 high) as refuges; the boss waits at a mouth with a roar while players are inside, and is heard down the passage before it shows.",
+   "check": "review"
+  },
+  {
+   "id": "valve-boss-fence",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay",
+    "multiplayer"
+   ],
+   "title": "An unseen wall that only the boss bumps into keeps it in its arena; leave the arena and it turns away",
+   "rule": "A big creature's fight stays where it belongs: a brush wall that blocks only that kind of creature (players and others pass) rings its arena, and it is leashed both ways: when the players run far out, it turns on someone else in the arena (or goes back to its spot) and forgets them; when they come back in, it hunts them again. A second boss comes about 15 s after the first, not together. For our hive boss and any big NPC: ask the owner first.",
+   "why": "ep2_outland_05: guard_brushes, four func_brush with excludednpc npc_antlionguard and invert_exclusion 1 (block only antlion guards), StartDisabled, Enabled by spawn_guard2_rl. guard_retreat_trigger OnStartTouch: guard_1 UpdateEnemyMemory alyx, guard_2 UpdateEnemyMemory vort, lost_player relationships applied; guard_refresh_trigger: both UpdateEnemyMemory !player, relationships reverted; each guard OnLostPlayer and OnFoundPlayer apply and revert the same. guard_1_timer (refire 15, kills itself) > spawn_guard1_rl after guard 2. guards_death_counter max 2.",
+   "how": "Map modules: a hive boss's chamber gets a func_brush ring named lc_nest_boss_fence with excludednpc set to the boss's class and invert_exclusion 1. Gamemode (ask first): a boss loses interest in a player who leaves its chamber.",
+   "check": "review"
+  },
+  {
+   "id": "valve-lift-holdout",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay"
+   ],
+   "title": "A holdout that is a wait for a slow lift: call it, see it coming, fight until it arrives; it climbs only while someone rides",
+   "rule": "Instead of a timer, players wait for a machine they can watch: the call button locks itself and lights up, the cage starts its long way down (about 35 s), a red lamp turns on, and 10 s after the call the attackers come. Riding up, the cage moves only while someone stands in it and goes back down to fetch anyone who stepped off. Fits house rule 9's exception (holding ground against attacks). A new kind of objective: ask the owner first.",
+   "why": "ep2_outland_03: elevator_call_bottom (func_button, spawnflags 1025, wait -1) OnPressed: Lock, button model turn_On, elevator_1_turn_on_lights_rl, holdout_elevator_1 StartForward, holdout_antlions_respawn_trigger Enable, logic_start_redlight @5, the vortigaunt's line @5, spawn_end_zombies_rl @10, autosave. holdout_elevator_1: func_tracktrain startspeed 35, about 1260 to travel (about 36 s), move sound d3_breen.core_elevator_move1. holdout_elevator_1_playerriding_trigger_1 (parented to the cage): OnStartTouch StartBackward (up), OnEndTouch StartForward (back down), a nag timer while nobody rides. Zombie miners slumped on 21 work hints (hinttype 12, zombie_slump_a and _b) under ai_goal_actbusy (busysearchrange 64) wake as holdout_zombie_wakeup_rl deactivates the goals @0, 1, 3, 5, 7, antlions @5.",
+   "how": "Gamemode (ask first): an objective where the players call a lift, cage or train in the mine or the bunker and hold until it arrives, the machine itself showing how long is left.",
+   "check": "review"
+  },
+  {
+   "id": "valve-extract-heals",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay",
+    "story"
+   ],
+   "title": "The larval extract is a glowing thing carried from the nest, and vortigaunts heal with it in a ritual",
+   "rule": "The extract from the nest's last chamber is shown as a glowing prop with a light that moves with whoever carries it; vortigaunts use it to heal: it is handed over, eaten, and several vortigaunts stand round the hurt one, chanting, until they turn back to normal one after another a fraction of a second apart. Our nest already has lc_nest_extract waiting for a use: what it does is the owner's to decide (ask the owner first).",
+   "why": "ep2_outland_02: ss_give_nectar (scripted_sequence nectar_give) OnScriptEvent01 > prop_extract2 SetParent vort_calvary_1 and SetParentAttachment nectar, extract_light_2 parented and TurnOn; SS_vort_eat_nectar OnScriptEvent01 > fx_nectar_juice (info_particle_system extract_vorteat_juice) at the mouth, sound_extract_juice, the extract and its light killed. lcs_vort_generator: chant loop @1, vort_singlechant_timer (random, lower bound 7 to 9). lcs_post_revive OnTrigger2 > four vortigaunts TurnBlue 0; OnTrigger1 > ss_vort_unfreeze, _vort1_, _vort2_, _vortc_ @0, 0.4, 0, 0.3. ep2_outland_04: vort_gather_essence_lcs, vort_chant_for_essence_ss, relay_extract_glows (9 lines) in the extract chamber.",
+   "how": "Gamemode (ask first): lc_nest_extract could be carried out (glowing) and given to a freed vortigaunt in rebel territory, which then heals the people near it for a while, with a chant and the vortigaunts' glow.",
+   "check": "review"
+  },
+  {
+   "id": "valve-hunters-in-squads",
+   "tags": [
+    "valve",
+    "npc",
+    "combine",
+    "logic",
+    "gameplay"
+   ],
+   "title": "Hunters come in twos and threes, are glimpsed one at a time first, pin the hiding place, and the next comes when one is half dead",
+   "rule": "Hunters are never alone: two or three in one squad (their own AI flanks), each kept to a zone of the fight by a hint group. Their arrival is shown before it is fought: each is glimpsed in turn (1.5 and 2.5 s apart, when a player looks), and while players hide they fire at spots by the hiding place to pin them, not to kill. The next hunter comes when the current one is at half health, not on a timer. Hunters need Episode Two's content; adding them to our Combine is the owner's choice (ask first). It would change our nest or our NPCs: ask the owner first.",
+   "why": "27 npc_hunter in 6 EP2 maps: squads ep2_outland_06a hunter_squad (3), 10 hunter_squad (2), 11a huntersquadgo (3), 12 one squad of three per strider (npc_hunter_maker SpawnMultiple 3 then FollowStrider). hintgroup with hintlimiting 1: 06a hunter_zone, 10 hunter_1_hintgroup1, 11a huntercatwalk. 06a: sc_stalker4 (ai_script_conditions, FOV 60, timeout 3) > stalker_2_looktrigger @1.5, stalker_1_looktrigger @2.5; bullseye_hunter1 to 5 and bullseye_player_hiding by the hiding place, killed by trigger_release_hunters and relay_shooter_withdraw; hunter_1 damagefilter filter_invuln until then; hunter_death_counter (max 3) > music FadeOut 6 @1, the next task @4. 11a: hunter and hunter_4 OnHalfHealth > relay_template_hunter1 (the next hunter, manhack makers, once); hunter_4 crawls along path_hunter_crawlshoot then SetSquad huntersquadgo.",
+   "how": "Gamemode (ask first): if the Combine gets hunters (an Overwatch response, the forest's patrol), spawn them two or three to a squad, show each before it attacks, and bring a replacement when one is at half health.",
+   "check": "review"
+  },
+  {
+   "id": "valve-siege-house",
+   "tags": [
+    "valve",
+    "npc",
+    "combine",
+    "logic",
+    "gameplay"
+   ],
+   "title": "A house under siege is safe inside: the attackers shoot its windows in turns, punish whoever steps out, and break in only at the end",
+   "rule": "When the Combine besiege a building the players hold, the siege runs in phases (by time, about 80 and 55 s, then by kills): soldiers fire at the windows in sets that change every 6 to 8 s, keeping heads down; hunters hide round the building and fire in; the hunters ignore a player who stays inside, but go for one who steps out and forget him when he is back in. In the last phase each hunter goes to a door, plants itself and bursts it (the door made a target only it can hurt). A new kind of raid on rebel ground: ask the owner first.",
+   "why": "ep2_outland_10: siege_phase1_relay: window bullseye relays @5, roof soldiers, hunter makers Enable @7, hunter neutral-to-player relationships @0.5, hunter_hates_outside_player_trigger Enable @7.5 (OnStartTouch reverts hunter 2's neutral relationship and UpdateEnemyMemory !player; OnEndTouch applies it again; wait 4), siege_phase2_relay @80; phase 2: the second assault line, phase3 @55; phase 4 by logic_branch_listener (both branches true); phase 5: hunter_1_killdoor_relay and hunter_2_ (ai_changehintgroup release, UseSiegeTargets, hunter_1_breakin_seq: plant, inn_basement_door_bullseye SetDamageFilter filter_hunter_1, the hunter hates the door bullseye). inn_front_windows_bullseyes_relay: bullseyes front 2, 4, 6 hated @0 to 6, front 1, 2, 3 @8 to 15, again @17 (spawnflags 2: fires again).",
+   "how": "Gamemode (ask first): a Combine siege of a rebel safehouse in phases; the soldiers aim at its windows in turn; anyone who steps out is hunted; the breach comes last, through a door.",
+   "check": "review"
+  },
+  {
+   "id": "valve-supply-pad",
+   "tags": [
+    "valve",
+    "logic",
+    "gameplay",
+    "multiplayer",
+    "props"
+   ],
+   "title": "A supply point holds one thing and makes another 7 s after it is taken: it never runs out and never piles up",
+   "rule": "Where a fight needs a steady supply of one tool (a striderbuster, a heavy weapon, a medkit), put it on a pad: one sits there; when it leaves the pad, the pad hums and spins up and 7 s later a new one appears. Never more than one per pad, so nothing piles up on a busy server; the pad hums so it can be found and is marked on the car's radar. Changing how the Resistance's supplies work: ask the owner first.",
+   "why": "ep2_outland_12: six weapon_striderbuster on Magnusson teleporter pads (teleporter_3 to 8, prop_dynamic magnusson_teleporter, idle hum radius 3000). teleporter_N_trigger (trigger_multiple, spawnflags 8: physics objects, wait 7) OnEndTouchAll > the pad SetAnimation spinup, the trigger Disable, teleporter_N_magdevice_template ForceSpawn @7; the template OnEntitySpawned > the trigger Enable. info_radar_target teleporter_N_radar_target (type 1, radius -1) by each. Each device OnShotDown (shattered by a hunter) > mag_shotdown_counter, the player says TLK_HUNTERSHOTMAG and outpost_citizen_hunterhint_conditions Enable (a rebel says to shoot the hunters first).",
+   "how": "Map modules: an lc_supply_pad piece (a pad prop, a trigger feeling physics objects, a point_template of the item) for the Resistance base and the bunker. Gamemode (ask first): which item each pad gives.",
+   "check": "review"
+  },
+  {
+   "id": "valve-defence-win-loss",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "gameplay",
+    "combine"
+   ],
+   "title": "A big defence has a clear win and a clear loss in the world, and loses its outposts one by one, people first",
+   "rule": "A large defence (waves of striders and their hunters from three sides) ends in a way everyone sees: it is won when the last few big attackers are dead (gates open, people walk out, an announcer), and lost if one reaches the heart (an alarm and a warning when one gets close, it slows there so players can still stop it). On the way, outlying buildings are lost one at a time: hunters drive the people out (they run on set paths about 20 s after the walker appears), then the walker shells the building and it swaps whole for its ruin. Defenders who fall are replaced one at a time from the base's own door. Changing how our district fights or the Resistance base's defence end: ask the owner first.",
+   "why": "ep2_outland_12: 13 npc_strider from npc_template_makers north, east and west, each relay (strider_7_west_relay: maker Spawn @10, strider_west_hunter_maker SpawnMultiple 3 @10, FollowStrider @11, lodge_evacuate_seq1 to 7 @20, lodge_hunter_bullseyes_relay @11, a 30 s cycle of hunter bullseyes in the building); cabin_destroy_conditionsmet_relay: strider SetCannonTarget cabin_strider_bullseye; cabin_destroy_relay (25 lines: brushes, lods and props Kill, breakables Break, physics EnableMotion, sparks to 20 and 30 s, smoke @1, broken model templates). victory_counter (max 5) fed by the last five striders' OnDeath: base gate and doors Open, victory scene @5, hunter retreat @7 and @9, defenders walk back @18. strider_closetobase_trigger (filter_strider): alarm, announcer @1.5, ScaleGroundSpeed 0.75; OnEndTouchAll stops the alarm. base_destroy_relay: shockwave, white fade, failure text @6, Reload @8. defence_cit_ar2_maker1 and _rpg_ (one alive, every 5 s, enabled from the start); lodge, cabin and outpost citizen makers open their base door on spawn.",
+   "how": "Gamemode (ask first): a district fight or a Combine assault on the Resistance base gets a win (the attackers' last wave dead) and a loss (an attacker reaches the base's flag or its heart), told by alarms and the place itself; outlying rebel posts are evacuated before they fall.",
+   "check": "review"
+  },
+  {
+   "id": "valve-big-door-slow",
+   "tags": [
+    "valve",
+    "doors",
+    "logic",
+    "sound"
+   ],
+   "title": "A big blast door takes 8 to 27 s, with a lock that moves first and its own start, loop and end sounds",
+   "rule": "A huge door is slow and loud: its locking bar moves first (and shuts again after it closes), then the leaves travel for 8 to 27 s with a start sound, a loop while moving and an end sound; an alarm or rotating lights run while it moves. Our bunker's sliding leaves take 4.6 s (the owner asked for 'somewhat slowly' with 'a big hoo-ha'): slowing them is the owner's call, so ask the owner first.",
+   "why": "ep2_outland_11: doors_biground_1, two func_door_rotating leaves, distance 60 at speed 6 (10 s), noise1 ep2_outland_11.blastdoors_open_loop, noise2 blastdoors_open_end, start sound sound_doors_biground_1, OnFullyClosed > doorlock_biground_1 (func_door, speed 100) Close and blastdoors_close_end; opened by path_elevator_1a1 OnPass (the lift passing). ep2_outland_11a: silo_seal_door and _2, func_movelinear movedistance 136 at speed 5 (27 s), startsound launchdoors_close_start, sound_launchdoors_loop, sound_launchdoors_stop @26, Alarm_relay1 while closing; doors_biground_2 speed 10. ep2_outland_12: base_gate_door, func_movelinear 240 at speed 30 (8 s), sound ep2_outland_12.base_gate. Ours: BunkerForest.door leaves 120 at 26 (4.6 s).",
+   "how": "Map: if the owner agrees, the bunker door's leaves could move at about 10 (12 s), with a lock bar, a start, loop and end sound and the red lamps turning while they move.",
+   "check": "review"
+  },
+  {
+   "id": "valve-jammed-door",
+   "tags": [
+    "valve",
+    "doors",
+    "logic",
+    "gameplay",
+    "sound"
+   ],
+   "title": "A broken door jams and jerks open and shut at random, with sparks and clicks, until someone repairs it",
+   "rule": "A door that has broken down is shown broken: it jerks open and shut every 0.8 to 1.5 s, each time with one of several clicks and a spark, until someone mends it; then it closes slowly and locks. It is a job waiting to be done, told by the door itself. A repair job on it would be a minigame (house rule 9), never a stand-and-wait. A new job: ask the owner first.",
+   "why": "ep2_outland_11: door_silo_lab_outside_1_malfunction_timer (logic_timer random 0.8 to 1.5) > the door Toggle, the reset relay Enable; the door (func_door, speed 80) OnOpen, OnFullyOpen, OnClose, OnFullyClosed > malfunction_case PickRandomShuffle (five ambient_generic button sounds, Buttons.snd41 to 47, flags 48), OnFullyOpen > env_spark SparkOnce. The reset relay: Close @0.3, timer Disable, SetSpeed 5 @0.2, the silo door model SetAnimation lock @0.6, a sound. Summons a vortigaunt to fix it (summon_uriah_rl, once).",
+   "how": "Gamemode (ask first): a 'fix the jammed door' job for Combine engineers or the Resistance, the door jerking until the wiring minigame is done.",
+   "check": "review"
+  },
+  {
+   "id": "valve-advisor-pulse",
+   "tags": [
+    "valve",
+    "npc",
+    "combine",
+    "logic",
+    "sound"
+   ],
+   "title": "An advisor is felt before it is seen: a pulse every 8 to 12 s that everyone near flinches at",
+   "rule": "The Combine's masters are a presence: where one is kept, a pulse comes at random every 8 to 12 s (a sound, a brief blur on the screen and a short colour flash) and the people near react to it, one after another; after three it comes less often (14 to 20 s). When it wakes, steam bursts in a quick run, the player is slowed hard and it strikes about 8 s later. No flickering lights (the owner): the pulse is sound and a screen effect. Anything with advisors in Living City: ask the owner first.",
+   "why": "ep2_outland_07: pod_pulse_timer (random 8 to 12) > pod_pulse sound, pulse_overlay Start @0.1 and Stop @0.5, pod_pulse_jitter StartEffect 2 @0.08, colorcorrection_flash Enable @0.01 and Disable @2, pulse_react_relay_1 to 3 (each a reaction scene @1.5, enabling the next, once); pulse_react_relay_3 > timer bounds 14 and 20. relay_alarm: steam bursts @1, 1.6, 2.6, 2.9, 3.3, 3.5, speedmod_player ModifySpeed 0.1 @3, Advisor_Attack @7.9 (zoom, fade, overlay). ep2_outland_11a relay_adv_pulse and 12a relay_adv_pulse_long: the same pulse. 12a relay.advisor.scene: ModifySpeed 0.1, shakes @2 and @3, far lights killed @1, 3.7 and 5. Not to copy: timer_pod_flicker_slow, _med, _fast (the pod's lights blinking).",
+   "how": "Gamemode (ask first): if an advisor ever appears (the Nexus, an ending), announce it by a pulse with a sound and a short screen effect, and let nearby NPCs flinch.",
+   "check": "review"
+  },
+  {
+   "id": "valve-cover-wrecked",
+   "tags": [
+    "valve",
+    "npc",
+    "combine",
+    "logic",
+    "gameplay"
+   ],
+   "title": "Against an aircraft, cover does not last: every 20 s one shelter is picked and bombed apart",
+   "rule": "In a long fight against a gunship or helicopter, the places players hide in are taken away one at a time: every 20 s one shelter is picked at random and bombed, and it breaks apart in one go (its pieces freed, a burst, fire, a scorch mark), with a danger sound first so NPCs clear out. Hits on the aircraft bring a bigger bomb; at half health it makes a last effort. Players must keep moving instead of camping one spot. Combine air support in our fights: ask the owner first.",
+   "why": "ep2_outland_08: timer_crate_activate (logic_timer refire 20) > case_destruction PickRandomShuffle; trigger_bomb_outside_shack (filtered, wait 1.5) > chopper DropBombAtTargetAlways target_bomb_11; relay_healthshack_1 (19 lines: physboxes EnableMotion, break_healthshack_1 Break @0.3, propane Break @0.2, explosions @0.1, a gib shooter, a decal, fire, brushes swapped, aisound_explosion_1 EmitAISound @0.3); relay_exploding_tower (30 lines), relay_exploding_shack (12). npc_helicopter chopper: OnDamaged > counter_megabomb (max 3) > relay_megabomb; OnHalfHealth > relay_megabomb (once); OnShotDown > crash alarm, cheers @1, save.",
+   "how": "Gamemode (ask first): if a gunship ever joins a district fight, give it a list of the district's shelters and let it wreck one every 20 s, each shelter a swap set (valve-swap-broken).",
    "check": "review"
   }
  ]

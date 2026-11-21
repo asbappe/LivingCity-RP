@@ -1,0 +1,249 @@
+[
+ {
+  "id": "valve-forest-layout",
+  "tags": [
+   "valve",
+   "forest",
+   "layout",
+   "props"
+  ],
+  "title": "A forest is trees standing apart in bands along the way, with open ground between",
+  "rule": "Plant Episode Two's woods thin and uneven: most trees alone (no other within 160), the nearest neighbour 150 to 300 away, 2 to 10 trees in a square 1000 a side; few on the path's edge (within 128 of the walk), the thickest band 256 to 1024 off it, thinning beyond 1024 where cards take over; and leave about half of the 512 squares with no tree at all. A few small clumps of three to five, never an even scatter. Our forests were planted and thinned at the owner's asking: ask the owner first before changing how thick they stand.",
+  "why": "Ten EP2 forest maps (21 November): nearest other tree, median 148 (ep2_outland_05), 154 (01), 165 (10a), 206 (10), 211 (12a), 244 (12), 252 (09), 261 (06a), 294 (07), 298 (08). Alone within 160: 54 to 97% (06a 85%, 07 97%, 12 81%); only 01, 05 and 10a have a quarter in groups of three or more. Trees per 1000x1000 by distance from the AI nodes: 0-128 0.1 to 7, 128-256 0.5 to 8, 256-512 2.2 to 10.6, 512-1024 1.8 to 6.4, beyond 1024 0 to 3. Of 512 squares with ground in the trees' box, 44 to 82% hold no tree (10a 0.44, 12 0.47, 10 0.48, 01 0.57, 06a 0.59, 07 0.73). Ours (map_forest.py Forest.plant, a 150 grid kept at 0.23 to 0.48, 0.64 on the ridge): about 14 a 1000 square over the valley (21 before the pond and paths), 28 on the ridge band, median gap 132, 27% alone.",
+  "how": "map_forest.py: plant by distance from the trail and the gate's way in (bands as above) rather than an even grid; a Poisson-disc spacing of about 150 with a gap test, a clump now and then (three to five within 120); leave whole 512 squares open; keep the ridge's own band for the cards (valve-forest-border). Count and print alone share, median gap and empty squares with each build.",
+  "check": "proposed: map_forest prints the median gap between trees (want 150 to 300), the share alone within 160 (want over a half) and the share of 512 squares with no tree (want 0.4 to 0.8)"
+ },
+ {
+  "id": "valve-tree-footing",
+  "tags": [
+   "valve",
+   "forest",
+   "props",
+   "geometry"
+  ],
+  "title": "Trees sink into the ground, deeper on a slope, and some lean",
+  "rule": "Set every tree's origin below the ground under it: 5 to 13 on level ground, 20 to 50 on a slope, so no root shows over the downhill side. Lean a tenth to a half of the trees 3 to 11 degrees (a few to 25), more on slopes and at the forest's edge, never a cut tree upright on a slope. Turn them on 15 degree steps or freely. Trees are solid static props that cast shadows and fade out between about 4200 and 7000.",
+  "why": "EP2 (21 November), origin minus the displaced ground under it: median -4.7 (01), -9.2 (05), -9.6 (06a), -10.5 (07), -6.6 (08), -9.6 (09), -11.9 (10), -10.4 (10a), -6.4 (12), -13.3 (12a); the deepest tenth -20 to -54. Leaning more than 2 degrees: 01 43%, 05 61%, 06 57%, 08 23%, 12 20%, 10a 15%, 06a 14%, 10 10%, 07 7%, 09 0%; median lean 4 to 11, 90th 10 to 27. Yaw on 15 degree steps 53 to 99%. fademaxdist: 07 7000 on 296 of 313, 01 5000 to 5200, 10a 2200 on 164 small ones and 4200 to 5200 on the rest; disableshadows 0 on every tree; solid 6. Ours: 8 down everywhere, no lean, yaw on 5, fade 2800 to 3400.",
+  "how": "map_forest.py Forest.static for trees: sink = 6 + 0.25 x the ground's drop across the trunk (from the height function at 32 each side), lean = 3 to 9 degrees for one tree in five (one in three on slopes over 0.4), leaning downhill; fade (4200, 6000).",
+  "check": "proposed: map_forest checks every tree is at least 4 below the lowest of five ground heights under its trunk"
+ },
+ {
+  "id": "valve-forest-border",
+  "tags": [
+   "valve",
+   "forest",
+   "layout",
+   "performance"
+  ],
+  "title": "A forest's edge is cards past the last trees, a clip on the slope and painted hills in the sky",
+  "rule": "Stop players in the woods without a wall they can see: an invisible player clip laid along the top of a slope or among the last trees (tall, 200 to 600 long, turned with the ground); past the last real trees (about 1000 to 2000 from the walk) flat tree cards (tree_pine_card_cluster_01/02, tree_deciduous_card_01, tree_pine_tall_cluster_01), not solid; and the far distance painted on brushes in the 3D skybox (mountainrange materials), with no props there at all. Our forests are held by a ridge 440 high and planted thickest on it: ask the owner first before trading the ridge's trees for cards.",
+  "why": "EP2 (21 November): cards 3 to 42 a map (12: 42, 09: 27, 07: 22, 10a: 21), median 870 to 2340 from the AI nodes, 500 to 1200 beyond the nearest real tree, solid 0 on 80 to 100% in most maps; in 12 no real tree stands more than 512 from the walk, cards stand beyond. toolsplayerclip brushes: 26 to 177 a forest map, median 54 to 570 from the nodes, height median 336 to 896, length median 192 to 576, half off the axes. Steep displacement 0.13 to 1.43 of the flat area. The 3D skybox of 01, 05 to 10 and 12a holds no tree prop: brushes with mountainrange_far_00c/02c/04c, mountains_skybox02, groundplane_01c (8 to 44 brushes, 0 to 11 displacements).",
+  "how": "map_forest.py: a ring of card props on the ridge's far side, 1000 to 1500 from the trail, solid 0; a player clip along the ridge top; keep real trees inside it. The skybox is the city's (map_merge): no change.",
+  "check": "proposed: map_forest lists card props within 600 of the trail (they show their flatness up close)"
+ },
+ {
+  "id": "valve-forest-floor",
+  "tags": [
+   "valve",
+   "forest",
+   "props"
+  ],
+  "title": "The forest floor: ferns along the path, rocks and logs tilted, grass from the ground's own material",
+  "rule": "Ground cover comes from the ground material's detail sprites, switched off (a no-sprite twin of the material) where people walk; fern props are few (a tenth to a half of the tree count) and line the path's edges, not the tree feet; rocks lie tilted (four in ten to three in four more than 5 degrees) and part sunk, 150 to 350 from the nearest tree; logs and fallen trees lie tilted, stumps near the trees. Nothing small is solid.",
+  "why": "EP2 (21 November): every map sets detailmaterial detail/detailsprites and detailvbsp detail.vbsp; walked ground in blendgrassdirt01_noprop (07: 14,763 against 6,246 by area for blendgrassdirt01; 10a 6,574 against 1,099). Plants (fern01 nearly always, fern01lg, grass_cluster03a, shrub_01a) 6 to 155 a map, 0.04 to 0.5 per tree, solid 0 on all, median 70 to 370 from the nodes and 110 to 500 from a tree. Rocks 17 to 174 a map (rockcluster01/02, rock_coast02a to h, rocks_large*_veg, forestrock_cluster01/02), tilted over 5 degrees 41 to 76%, median 160 to 340 from a tree. Logs and stumps 2 to 133 (tree_stump01, fallentree01/02, fallentree_dry01/02, forest_log01), tilted 39 to 100%. Ours: 170 plants a forest (0.74 per tree) anywhere not steep, 34 rocks and 12 logs, none tilted.",
+  "how": "map_forest.py: plants mostly within 64 to 256 of the trail; rocks pitch and roll 5 to 25 degrees for two in three, sunk 10 to 20; logs rolled to the slope. Check the ground material has detail sprites, and use a no-sprite twin on the trail if one exists (ask before adding materials).",
+  "check": "proposed: map_forest prints the share of rocks tilted (want 0.4 to 0.75) and of plants within 256 of the trail"
+ },
+ {
+  "id": "valve-forest-fences",
+  "tags": [
+   "valve",
+   "forest",
+   "props"
+  ],
+  "title": "Rail fences of the woods run end to end along the road and trail",
+  "rule": "Mark a forest road or trail with Episode Two's rail fences (props_forest/fence_border_128/256/512 and fence_trail_128/256/512), each piece set end to end with the last, 150 to 260 off the walk, turned freely to follow the way, border fences upright, trail fences sometimes leaning a few degrees; keep chain-link to the bases and yards.",
+  "why": "EP2 (21 November): 271 rail fence props in 01, 06a, 07, 10, 10a, 12 (fence_border_256 91, _128 68, fence_trail_256 50, _512 39); nearest piece 130 to 264 apart (their own lengths), median 145 to 260 from the AI nodes; 73 to 86% off the axes; border fences never tilted, trail fences a quarter tilted 5 to 10. Chain-link exterior_fence002* stands at the yards and bases (09: 42 of 118 fence props).",
+  "how": "map_forest.py: along each trail, a fence line on one side for a stretch now and then (not all the way), pieces placed head to tail along the trail's curve.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-cave-proportions",
+  "tags": [
+   "valve",
+   "cave",
+   "geometry",
+   "layout"
+  ],
+  "title": "Antlion caves: tunnels about 250 wide and 200 high, opening now and then into chambers",
+  "rule": "Make a natural cave as about three parts tunnel to one part chamber: tunnels 220 to 300 across at the narrowest (a tenth down to 120 to 180), 160 to 240 high (a quarter over 320); chambers 512 or more across and 1000 to 1800 long. Every wall, roof and floor displaced. Our cave and nest are built and walked: ask the owner first before changing their size.",
+  "why": "Rays from every AI node in ep2_outland_01a, 02, 03, 04 (21 November), nodes with a displaced roof and walls (297, 40, 287, 281): narrowest width median 298, 131, 266, 219; tenth 117 to 180; height median 243, 148, 243, 220, quartiles 158 to 190 and 319 to 371. In tunnels under 384 wide: 60 to 74%; in chambers 512 or more: 17 to 20%; the longest way across, 75th percentile 1500 to 1840. Ours: the cave hung on a square 320 by 320 (CaveForest.HALF, TALL); the nest 345 wide in its narrows and up to 760 in its chambers (NestTube radius 150 to 330), chambers about a third of its length.",
+  "how": "map_forest.py: if the owner wants it, narrow the cave's tunnels to about 260 between the mouth and the chamber and lower them to about 220; NestTube: radius about 120 in the narrows.",
+  "check": "proposed: map_forest casts rays from the cave's path nodes and prints narrowest width and height quartiles"
+ },
+ {
+  "id": "valve-grub-groups",
+  "tags": [
+   "valve",
+   "cave",
+   "lighting",
+   "props"
+  ],
+  "title": "Antlion grubs lie in twos to fours on the walls, each group with a small yellow light",
+  "rule": "Place npc_antlion_grub in groups of two to four, 20 to 50 apart, the groups 100 to 200 apart; half on the walls (turned to lie on them), a few on the ceiling, a quarter within 60 of the walk; put one small light in each group, about 30 to 40 from it: colour 255 245 157, brightness 30 to 80, quadratic. Our nest has its grubs one at a time: ask the owner first.",
+  "why": "ep2_outland_01a (93 grubs), 03 (143), 04 (96), styleguide_caves (100) (21 November): nearest grub median 23 to 51; groups (linked within 128) mostly of 2 to 4 (03: 23 pairs, 20 threes; 01a: 19 pairs, 8 threes); on walls (pitch or roll 45 to 135) 32 to 63, on ceilings 0 to 13; distance to AI node quartile 59 to 140. Lights within 160 of a grub: 43 (01a), 60 (03), 47 (04), 18 of 24 (style room); median 30 to 43 from the grub in 01a and the style room; colour 255 245 157 on 38 of 43 (01a), 57 of 60 (03); brightness 30 to 80; spawnflags 4 on most. Ours (map_forest.py NestTube): 19 grubs one every 110 along the wall feet, upright, six lights for the whole nest.",
+  "how": "map_forest.py NestTube: groups of 2 to 4 round a point on the wall (theta 0.3 to 1.2 from the floor), each grub turned to the wall's normal, one light 255 245 157 50 beside each group.",
+  "check": "proposed: map_lint notes a grub with no light within 160"
+ },
+ {
+  "id": "valve-cave-light",
+  "tags": [
+   "valve",
+   "cave",
+   "lighting"
+  ],
+  "title": "Caves are lit by three kinds of small light, never far apart",
+  "rule": "Light a cave with many small steady lights of three kinds: the grubs' pale yellow (255 245 157, 30 to 80), the miners' cage lamps (255 226 174, 80 to 140, on a lit lamp model) along the works, and a cold dim fill (132 158 202 at about 25) where neither reaches; so that no walking spot is more than about 450 to 600 from a light, half within 180. Fog dark blue (18 23 35) out to 2800.",
+  "why": "ep2_outland_01a, 02, 03, 04 (21 November): 69, 40, 126, 128 lights, style 0 on all, quadratic on 124 to 128; colours 255 245 157 (40, 5, 60, 39), 255 226 174 (16, 6, 33, 16), 132 158 202 (11, 3, 13, 63 at brightness 25); node to nearest light median 166, 187, 170, 166, 90th 433, 604, 554, 485; env_fog_controller 18 23 35 from 1 to 2800 in each. Ours (map_forest.py): seven lights in the 3072 cave, six in the 2560 nest.",
+  "how": "map_forest.py: a light every 300 to 400 along the cave and nest, of the kind its place calls for (cage lamp by the office and timber sets, grub light by grubs, cold fill between).",
+  "check": "proposed: map_forest prints the largest distance from a cave path node to a light (want under 600)"
+ },
+ {
+  "id": "valve-nest-dressing",
+  "tags": [
+   "valve",
+   "cave",
+   "props"
+  ],
+  "title": "The nest's dressing: flat nests on the floor, web sacks on the walls, web plugs in side holes",
+  "rule": "Dress an antlion nest with props_hive models where they belong: nest_lrg_flat and nest_med_flat laid on the floor in drifts (dozens, not a handful), websackhalf, _b, _c on the walls, websackceiling01 to 05 and websackceilingbig01/02/05 overhead, grubtunnel_door plugging side holes, nest_extract with larval_essence at the far end; the crust itself is the displacement's material (antlion_web01a, blendrockslime02a, blendrockblack02a), never brushes.",
+  "why": "ep2_outland_04 (21 November): nest_lrg_flat 78, nest_med_flat 30, websackhalf 16, _c 9, _b 7, grubtunnel_door 15, nest_extract 1, larval_essence 1; displacement area blendrockslime02a 5618, blendrockblack02a 1640, antlion_web01a 582. 01a: websackceilingbig05 7, websackhalf_b 7, grubtunnel_door 6. 03: websackhalf 14, grubtunnel_door 7. Ours (NestTube): 7 nests, 14 eggs, 9 ceiling web sacks, crust nature/rockwall_antlion01a.",
+  "how": "map_forest.py NestTube: 20 to 40 flat nests in two or three drifts in the chambers, half-sacks on the walls, two or three grubtunnel_door plugs where a side hole is shaped in the skin.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "raven-mine-sets",
+  "extra": {
+   "how": "Episode Two's mine galleries (ep2_outland_01a, 02, 03, 04, 21 November) are brush rooms 192 high (median in every map) and 294 to 365 wide, held up by the timber set models props_mining/struts_tunnel192_01..03 and struts_tunnel320_01..05, one every 160 to 280 (median 192 to 280), square to the grid in 69 to 100%, with struts_single01/02 posts every 90 to 170 and struts_wall02/03 every 250 to 450: 42 to 88 sets a cave map. In the raw cave there are none."
+  }
+ },
+ {
+  "id": "valve-guardian-run",
+  "tags": [
+   "valve",
+   "cave",
+   "npc",
+   "gameplay"
+  ],
+  "title": "An antlion guard gets a long passage to charge down",
+  "rule": "Where an antlion guard fights, give it a run: a passage 200 to 380 across, 1000 to 1700 long and 230 to 290 high, with rocks it can throw (shovetargets) and pillars to dodge behind. Set cavernbreed when it lives in the caves.",
+  "why": "ep2_outland_02, 03, 04 and styleguide_caves (21 November): the guard's spot is 273, 249, 191, 376 across at the narrowest, 1205, 1489, 1006, 1740 at the longest, 288, 232, 230, 256 high; cavernbreed 1 and incavern 1 in 03 and 04; 04 names shovetargets bigcave_guard_rocks.",
+  "how": "If the nest ever gets a guardian (the owner's choice): its last chamber at least 1000 long, with a few physics rocks named for shovetargets.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-white-forest-silo",
+  "tags": [
+   "valve",
+   "interiors",
+   "geometry",
+   "owner"
+  ],
+  "title": "The White Forest rocket silo, as a piece to lift: a 24-sided shaft 512 across in a block 1088 square",
+  "rule": "The owner asked (21 November) for the White Forest missile silo to be lifted and added to our bunker. Lift ep2_outland_11's silo block whole: x 1280 to 2368, y -10480 to -9392, z -1792 to 64 around the axis x 1824, y -9936; leave out the rocket's own entities; cap its four mouths; keep its 24-sided shaft (flats 254 from the axis), its collar (381), its levels and gantry. Where it joins our bunker, and anything that would change the bunker the owner walked, ask the owner first.",
+  "why": "ep2_outland_11 (21 November): the shaft's walls are 24 planes 254 from the axis (concretewall010a, lined with metalwall069a) from z -1406 to -300; the collar 24 planes at 381 from -252 to 32; the lid a world slab z 32 to 64 over the whole block; pit grate z -1568 over a floor at -1728 (x 1632 to 2016, y -10112 to -9760); full ring floors at z -1406, -832, -576, the gantry -320 (metalgrate_silo01a on trusses); ring rooms out to 508 to 552. Inside the block: 1,765 brushes (674 world, 957 func_detail, 37 func_brush, 21 func_tracktrain, 14 func_door_rotating, 8 func_door) and 790 entities. Mouths: north x 1824 to 1904, y -9432 to -9232, z -1408 to -832; north-east x 2144 to 2560, y -9584 to -9264, z -1280 to -1152; north-west x 1344 to 1580, y -9520 to -9296, z -1472 to -1248; west x 1184 to 1440, y -10080 to -9792, z -320 to 128. The rocket: rocket.mdl, rocket_stage1/2/3, three rocket_engine, rocket_hatch with door_rocket_hatch, steamjet_rocket_*, lighting_rocket_1/2. ep2_outland_11a's Silo 2 is the same design at x 1824, y -11264, flooded from z -1344 to -1100, shut by missile_doors on two func_movelinear sliding 136 at speed 5.",
+  "how": "A lifting helper (like the Citadel pieces in batch 6): copy every brush and entity whose box lies in the block, drop the rocket list and scene marks, move it so the axis lands where the owner picks beside the bunker, cap the four mouths with concretewall010a, and join one mouth to the bunker's deep level by a corridor. Save it as a prefab under _dev/reference/prefabs/.",
+  "check": "proposed: the lifted piece is sealed (map_build's flood check) and has no entity naming the rocket"
+ },
+ {
+  "id": "valve-farm-timber",
+  "tags": [
+   "valve",
+   "geometry",
+   "interiors",
+   "props"
+  ],
+  "title": "Farm timber is fine: boards 2 by 4, planks 4 by 12, beams 10 by 18, and nearly half of it turned",
+  "rule": "Build Episode Two's barns, sheds and farm frames from many small brushes of one timber material (woodfloor005a): boards 2x4 or 2x5 in section, planks 2x11 to 4x13, studs 4x8 and 4x10, beams 10x10 and 10x18, posts 6x6 and 8x8; lengths mostly 30 to 170. About 40 to 45% of the pieces stand off the axes (braces, leaning boards, rafters). Roofs pitched 45 or 34 degrees. Ravenholm's houses (raven-timber-craft) stay as they are; this is for new farm and shed pieces.",
+  "why": "Style rooms (21 November): wood brushes barn 620 (276 off the axes), farmyard 1088 (521), inn 495 (203), logging camp 503 (228), farmhouse1 127 (76), farmhouse2 97 (47). Sections: barn 2x4 100, 2x5 99, 4x13 40, 10x18 31, 10x10 21; farmyard 2x4 207, 2x5 112, 4x13 40, 4x4 39, 4x10 36; farmhouses 4x10, 4x8, 4x11, 4x16, 2x12; logging 8x8 112, 4x8 95. Lengths median 111 (barn), 104 (farmyard), 55 (inn), quartiles about 30 and 140 to 170. woodfloor005a on 521 of 620 (barn) and 832 of 1088 (farmyard). Roof faces 45 and 34 degrees (farmhouse1, farmyard, outland_building_large_01), 27 at the logging camp.",
+  "how": "A timber helper for map tools (a board, plank, beam or post by name and section), braces turned 30 to 60 degrees between posts; roofs at 34 or 45.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-decay-bends",
+  "tags": [
+   "valve",
+   "geometry",
+   "grime"
+  ],
+  "title": "A building decays by bending: boards, roof tiles and tin sheets turned to displacements",
+  "rule": "To show a timber or tin building gone to ruin, keep its frame but bend its skin: make boards, roof tiles, corrugated sheets and brick faces into small power 2 displacements and sag them (roofs down, boards bowed, sheets buckled), break the boards shorter, turn more of them off the square, and make the loose ones func_detail. Do it on the walls and roofs, not by deleting them.",
+  "why": "styleguide_barn_deterioration against styleguide_barn (21 November), both 620 wood brushes: 539 displacements against 0 (power 2 on 479, 3 on 24, 4 on 36; woodfloor005a 212, tileroof003a 68, metalwall014a 50, brickwall020a 33; board strips 153 by 30 to 39; 354 on walls, 95 on ceilings, 90 on floors); off the axes 59% against 45%; func_detail 75% against 20%; board length median 62 against 111. styleguide_inn bends shingles (woodshingles002a 16) and stone (stonewall050g 18) with 139 power 2 displacements; outland_building_large_01 breaks brick edges with 40 small ones (21x6, 24x6).",
+  "how": "For the infestation quarter or a ruined farm piece: a 'decay' pass in map tools that turns chosen faces into power 2 displacements with a sag (down 4 to 16 at the middle of a span) and bows boards 2 to 6.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-window-pairs",
+  "tags": [
+   "valve",
+   "props",
+   "facades"
+  ],
+  "title": "An Episode Two window is two models on one spot: the frame fixed, its boards or glass loose",
+  "rule": "Set the country windows (woodwall030b_window01a/02a/03a, plasterwall029c_window01a, plasterwall029g_window01a) as a prop_static frame with its _bars twin as a prop_dynamic at exactly the same origin and angles, so the part in the opening can break or be swapped while the frame stays.",
+  "why": "Style rooms and maps (21 November): styleguide_inn 41 frames and 41 bars, 34 at the same spot; styleguide_farmyard 42 and 33 (33 together); outland_building_large_01 15 and 13 (12); ep2_outland_07 27 and 21 (20); 09 10 and 10 (10). Frames prop_static every time; bars prop_dynamic.",
+  "how": "map tools: a window helper that writes both models at one origin.",
+  "check": "proposed: map_lint notes a _bars window model with no frame model within 2"
+ },
+ {
+  "id": "valve-outpost-room",
+  "tags": [
+   "valve",
+   "interiors",
+   "props"
+  ],
+  "title": "A Resistance outpost room: bunk beds, a prison sink, propane, boxes and a bare bulb",
+  "rule": "Dress a small Resistance outpost or bunk room with bunkbed and bunkbed2, a prison_sink001a and a toilet, a boiler, propane tanks and canisters, box01a/b and pallets, oil drums and tires, a kitchen shelf and file cabinets, a clock, bare bulbs and lit dome lamps; country houses nobody lives in now stay nearly bare (two chairs, a kitchen sink, a pot, a bucket, a shovel). For our bunker rooms, ask the owner first.",
+  "why": "styleguide_radiotower_b (21 November): box01a 12, tire1 6, light_domelight02_on 5, oildrum001 5, wood_pallet001a 5, prison_lamp001a 4, lightbulb01a 4, canister_propane01a 4, bunkbed 3, bunkbed2 2, prison_sink001a 3, propane_tank001a 3, furnituretoilet001a 2, furnitureboiler001a 2, kitchen_shelf001a 2, controlroom_filecabinet002a 2, clock01 1. ep2_outland_06a's house: sinkkitchen01a 5, bunkbed 3, bunkbed2 3, toilets 2, prison sinks 2, a bathtub, a stove. styleguide_farmhouse1/2 and farmyard: furniture_chair01a 2, sinkkitchen01a 1, pot01a, metalbucket01a, shovel01a. Only styleguide_inn is furnished (13 chairs, 7 tables, 7 radiators, bed, bath, stove, fridge).",
+  "how": "map_forest.py BunkerForest rooms and the cave office: a 'bunks' room kit as above.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-dirt-road",
+  "tags": [
+   "valve",
+   "streets",
+   "forest"
+  ],
+  "title": "A country road is gravel ground about 300 wide with rut overlays laid end to end",
+  "rule": "Make a forest or farm road from the ground itself: a gravel blend on the displacements (blendgravelgravel02b, blendgrassgravel01/003a, forest_road01) painted into the grass, with road_dirt_01a/01b rut overlays about 300 square laid one after another every 250 to 290 along it; no kerbs; rail fences at its edge here and there (valve-forest-fences).",
+  "why": "EP2 (21 November): road overlays road_dirt_01a 27 and road_dirt_01b 14 with sandtrack02a 15 (06a), road_dirt_01a 49 and 01b 12 (07), dirttrack01a 9 (08); sizes median 290 to 330 by 260 to 335; nearest one 215 to 290 apart. Floor material by area: 06a blendgravelgravel02b 2493, blendgrassgravel01 1535, forest_road01 798; 07 blendgrassgravel003a 1344, blendgravelgravel02b 821, gravelfloor002b 688; 08 blendgrassgravel002b 3785; 10 blendroad_broken01 2475.",
+  "how": "map_forest.py trails: paint a 300 wide band of gravel into the ground's alpha along a vehicle track, and chain rut overlays along it.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-base-concrete-and-salvage",
+  "extra": {
+   "how": "White Forest (ep2_outland_11, 11a, 12a; 21 November) is the same idea larger: concretewall010a on 43 to 45% of all brush area, banded in 59 to 63% of wall columns with the first change at 64 or 128 (ep2_concretewall01a over 01c, concretewall_bunker05b over 05a), ceilings median 192 (quartiles 186 and 229), corridors median 181 to 248 wide; steel sliding doors are props_silo/silo_door01 carried by a func_door 99 by 123; light cold fluorescent 224 254 248 (61 of 161 lights in 11a) with red light_security lamps (12 to 32 a map); props_silo dressing (prodcables256, wall_wires1/2, wall_console1..3, desk_console1a/2/3, fuel_cask, tirestack2/3)."
+  }
+ },
+ {
+  "id": "valve-bunker-into-hill",
+  "tags": [
+   "valve",
+   "geometry",
+   "materials"
+  ],
+  "title": "A bunker's concrete runs into the hill through a blend, not a seam",
+  "rule": "Where a bunker's concrete meets the earth over and round it, use a displacement in a concrete-to-ground blend material so the concrete fades into the hillside, and walls 24 to 32 thick of the bunker concretes, a blast door model in the opening. Our bunker under its mound was walked and liked: ask the owner first.",
+  "why": "styleguide_bunkers (21 November): displacement materials blendgrassdirt01 95, rockwall006b 13, blendbunk_conc01 6; concrete brushes concretewall_bunker01a/b/c 37 of 73, slabs 32x128x512 and 32x128x256, piers 24x32x136; blastdoor001a 2; ep2_outland_12 uses blendbunk_conc01 on 113 of its displaced area.",
+  "how": "map_forest.py BunkerForest: a strip of blendbunk_conc01 (if it is in the game's files) on the ground where the mound meets the bunker's face.",
+  "check": "proposed: none"
+ },
+ {
+  "id": "valve-combine-barricade-rows",
+  "extra": {
+   "how": "Episode Two (21 November): the Combine roadblock in ep2_outland_10 stands seven combine_barricade_tall01b 58 apart, each turned 15 degrees from the last (yaw 240 to 300), with 21 combine_barricade_bracket01b on the grid or at 45, combine_fence01a/b, three combine_light002a and one combine_emitter01, and force fields (combineshield comshieldwall3) in the garage doors."
+  }
+ }
+]
