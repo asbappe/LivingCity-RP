@@ -235,8 +235,8 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   (all of them, from the API), skipping pages already saved, red links, special pages, images and translations.
   Pressing it again after opening more pages adds to the queue. "Skip other games" (on by default; filter.js, lists
   editable in Options) leaves a page out when its name names another game, or one of its categories does (from the
-  API, so template-added ones count) and neither names Half-Life 2, the Episodes, Garry's Mod, Source SDK 2013 or
-  exactly "Source"; checked against 1414 real pages (21 November): game icon templates like {{tf2}} are NOT a signal
+  API, so template-added ones count) and neither names Half-Life 2, the Episodes (also EP1, EP2, Episodic, Lost
+  Coast), Garry's Mod, Source SDK 2013 or exactly "Source"; Help: pages (about editing the wiki) are not followed; checked against 1414 real pages (21 November): game icon templates like {{tf2}} are NOT a signal
   (generic pages such as "Your First Map" carry only other games' icons). "Remove other games" cleans what was saved
   before: by name at once, then by asking the wiki for the categories of the rest. The zip's index.tsv has each
   page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,

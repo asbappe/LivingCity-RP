@@ -43,9 +43,10 @@
 
   const isTranslation = vdcIsTranslation;
 
-  // Namespace of a linked title; null for ones not worth saving (special pages, images, talk, users).
-  const NS_BY_PREFIX = { template: 10, category: 14, help: 12 };
-  const SKIP_PREFIX = new Set(['special', 'file', 'image', 'media', 'user', 'talk', 'mediawiki', 'module',
+  // Namespace of a linked title; null for ones not worth saving (special pages, images, talk, users, and
+  // Help: pages, which are about editing the wiki; every page's "needs a screenshot" box links Help:Images).
+  const NS_BY_PREFIX = { template: 10, category: 14 };
+  const SKIP_PREFIX = new Set(['special', 'file', 'image', 'media', 'user', 'talk', 'mediawiki', 'module', 'help',
     'project', 'valve developer community', 'gadget', 'gadget definition']);
   function nsOf(title) {
     const i = title.indexOf(':');
@@ -226,7 +227,7 @@
         for (let round = 0; round < 50; round++) {
           const j = await api(Object.assign({ action: 'query', list: 'categorymembers', cmtitle: self, cmtype: 'page|subcat', cmlimit: 'max' }, cont));
           for (const m of (j.query && j.query.categorymembers) || []) {
-            if ([0, 10, 12, 14].includes(m.ns)) add(m.title, m.ns);
+            if ([0, 10, 14].includes(m.ns)) add(m.title, m.ns);
           }
           if (!(j.continue && j.continue.cmcontinue)) break;
           cont = j.continue;

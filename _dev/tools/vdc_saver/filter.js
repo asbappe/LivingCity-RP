@@ -13,7 +13,8 @@ const VDC_SKIP_DEFAULT = [
   'Synergy', 'Empires', 'Fistful of Frags', 'Postal', "XBLAH's Modding Tool",
 ].join('\n');
 const VDC_KEEP_DEFAULT = [
-  'Half-Life 2', 'HL2', 'Episode One', 'Episode Two', "Garry's Mod", 'GMod', 'Source SDK 2013', 'Source 2013', '=Source',
+  'Half-Life 2', 'HL2', 'Episode One', 'Episode Two', 'Episode 1', 'Episode 2', 'EP1', 'EP2', 'HL2EP1', 'HL2EP2',
+  'Episodic', 'Lost Coast', "Garry's Mod", 'GMod', 'Source SDK 2013', 'Source 2013', '=Source',
 ].join('\n');
 const VDC_FILTER_DEFAULTS = { skipOtherGames: true, skipWords: VDC_SKIP_DEFAULT, keepWords: VDC_KEEP_DEFAULT };
 
