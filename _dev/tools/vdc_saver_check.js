@@ -21,16 +21,32 @@ const PAGES = {
 let challengeLeft = 1;
 const log = [];
 
+// An open category page: every kind of link, and members only the API lists (the page shows 200 at most).
+const CATEGORY_LINKS = `<p><a href="/wiki/Func_door">already saved</a> <a href="/wiki/Func_door/de">translation</a>
+<a href="/wiki/Env_fire">fire</a> <a href="/wiki/Prop_physics#Keyvalues">a section</a> <a href="/wiki/Template:KV">template</a>
+<a href="/w/index.php?title=Missing_page&action=edit&redlink=1" class="new">red link</a> <a href="/wiki/Special:RecentChanges">special</a>
+<a href="/wiki/File:Door.png">image</a> <a href="https://en.wikipedia.org/wiki/Door">outside</a> <a href="/wiki/Category:HL2_entities">itself</a></p>`;
+const MEMBERS = [{ title: 'Npc combine s', ns: 0 }, { title: 'Category:HL2 NPCs', ns: 14 }, { title: 'File:Combine.jpg', ns: 6 }];
+const requested = [];
+
 function articleHtml(name) {
+  const ns = name.startsWith('Category:') ? 14 : 0;
   return `<!doctype html><html><head><title>${name}</title>
 <link rel="EditURI" type="application/rsd+xml" href="${WIKI}/w/api.php?action=rsd">
-<script>RLCONF={"wgPageName":${JSON.stringify(name)},"wgNamespaceNumber":0,"wgAction":"view","wgArticleId":12};</script>
+<script>RLCONF={"wgPageName":${JSON.stringify(name)},"wgNamespaceNumber":${ns},"wgAction":"view","wgArticleId":12};</script>
 </head><body><div id="mw-content-text"><div class="mw-parser-output">
 <p>A door that moves.</p><h2>Keyvalues<span class="mw-editsection">[edit]</span></h2><p>Speed</p>
-</div></div></body></html>`;
+${ns === 14 ? CATEGORY_LINKS : ''}
+</div></div><div id="catlinks"><a href="/wiki/Category:TF2_entities">not in the body</a></div></body></html>`;
 }
 
 function api(q) {
+  if (q.get('list') === 'categorymembers') {
+    const from = Number(q.get('cmcontinue') || 0);
+    const res = { query: { categorymembers: MEMBERS.slice(from, from + 2) } };
+    if (from + 2 < MEMBERS.length) res.continue = { cmcontinue: String(from + 2), continue: '-||' };
+    return res;
+  }
   if (q.get('list') === 'allpages') {
     const all = PAGES[q.get('apnamespace')] || [];
     const from = Number(q.get('apcontinue') || 0);
@@ -68,6 +84,7 @@ function api(q) {
     if (url.pathname === '/w/api.php') {
       const q = url.searchParams;
       log.push(q.get('list') || q.get('prop'));
+      if (q.get('prop') === 'revisions' && !q.has('rvcontinue')) requested.push(...q.get('titles').split('|'));
       if (q.get('prop') === 'revisions' && q.get('titles').includes('|') && challengeLeft > 0) {
         challengeLeft--;
         log.push('challenge');
@@ -91,11 +108,22 @@ function api(q) {
   await popup.waitForFunction(() => Number(document.getElementById('count').textContent) >= 2, null, { timeout: 15000 });
   console.log('visit saved:', await popup.textContent('#count'), 'files');
 
+  const category = await ctx.newPage();
+  await category.goto(WIKI + '/wiki/Category:HL2_entities');
+  await popup.waitForFunction(() => Number(document.getElementById('count').textContent) >= 4, null, { timeout: 15000 });
   await popup.click('summary');
   await popup.fill('#delay', '0.5');
   await popup.dispatchEvent('#delay', 'change');
-  await popup.click('#start');
+  await popup.click('#linked');
   await popup.waitForFunction(() => document.getElementById('status').textContent.startsWith('Done'), null, { timeout: 60000 });
+  console.log('linked:', await popup.textContent('#note'), '|', await popup.textContent('#status'));
+  const linkedAsked = [...requested];
+  await popup.click('#linked');
+  await popup.waitForFunction(() => document.getElementById('note').textContent.includes('saved already'), null, { timeout: 15000 });
+  console.log('linked again:', await popup.textContent('#note'));
+
+  await popup.click('#start');
+  await popup.waitForFunction(() => document.getElementById('status').textContent.startsWith('Done: all 6 pages'), null, { timeout: 60000 });
   console.log('whole wiki:', await popup.textContent('#status'));
   console.log('requests:', log.join(' '));
 
@@ -119,6 +147,11 @@ function api(q) {
     ['answer in pieces joined', exists('wikitext/Main/Prop_physics.wiki') && exists('wikitext/Main/Half-Life_2:_Episode_One.wiki')],
     ['template', read('wikitext/Template/KV.wiki').includes('Template:KV')],
     ['category', exists('wikitext/Category/Entities.wiki')],
+    ['linked: pages, sections, templates, members', ['Main/Env_fire', 'Main/Prop_physics', 'Template/KV', 'Main/Npc_combine_s', 'Category/HL2_NPCs'].every((f) => linkedAsked.includes(f.split('/')[1].replace(/_/g, ' ').replace(/^KV$/, 'Template:KV').replace(/^HL2 NPCs$/, 'Category:HL2 NPCs')))],
+    ['linked: already saved not asked again', linkedAsked.filter((t) => t === 'Func door').length === 1],
+    ['linked: no red links, special pages, images, outside, footer, translations',
+      !linkedAsked.some((t) => /Missing|Special|File:|^Door$|TF2|\/de$|Wikipedia/i.test(t))],
+    ['linked: members saved', exists('wikitext/Main/Npc_combine_s.wiki') && exists('wikitext/Category/HL2_NPCs.wiki')],
     ['translations skipped', !exists('wikitext/Main/Func_door/de.wiki') && !exists('wikitext/Main/Func_door/zh-cn.wiki')],
     ['bot check reloaded and carried on', log.includes('challenge')],
     ['index', read('index.tsv').split('\n').length >= 9],

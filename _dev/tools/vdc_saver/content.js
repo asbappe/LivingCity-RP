@@ -49,6 +49,65 @@
     return i > 0 && LANGS.has(title.slice(i + 1));
   }
 
+  // Namespace of a linked title; null for ones not worth saving (special pages, images, talk, users).
+  const NS_BY_PREFIX = { template: 10, category: 14, help: 12 };
+  const SKIP_PREFIX = new Set(['special', 'file', 'image', 'media', 'user', 'talk', 'mediawiki', 'module',
+    'project', 'valve developer community', 'gadget', 'gadget definition']);
+  function nsOf(title) {
+    const i = title.indexOf(':');
+    if (i < 0) return 0;
+    const p = title.slice(0, i).trim().toLowerCase();
+    if (p in NS_BY_PREFIX) return NS_BY_PREFIX[p];
+    if (SKIP_PREFIX.has(p) || p.endsWith(' talk')) return null;
+    return 0; // "Half-Life 2: Episode One" is an article
+  }
+
+  function titleFromHref(href) {
+    let u;
+    try { u = new URL(href, location.href); } catch (e) { return null; }
+    if (u.origin !== location.origin || !u.pathname.startsWith('/wiki/') || u.search) return null;
+    let t;
+    try { t = decodeURIComponent(u.pathname.slice(6)); } catch (e) { return null; }
+    t = t.replace(/_/g, ' ').trim();
+    return t ? t.charAt(0).toUpperCase() + t.slice(1) : null;
+  }
+
+  // Every page this tab links to from its article body, and every member when it is a category.
+  async function collectLinks(skipTranslations) {
+    const cfg = pageConfig();
+    if (!cfg) return { titles: [] };
+    const self = String(cfg.pageName).replace(/_/g, ' ');
+    const out = new Map();
+    const add = (title, ns) => {
+      if (ns === null || title === self || out.has(title)) return;
+      if (skipTranslations && isTranslation(title)) return;
+      out.set(title, [title, ns, pathFor('wikitext', title, ns)]);
+    };
+    const body = document.querySelector('#mw-content-text');
+    for (const a of body ? body.querySelectorAll('a[href]') : []) {
+      if (a.classList.contains('new')) continue; // red link: no such page yet
+      const t = titleFromHref(a.getAttribute('href'));
+      if (t) add(t, nsOf(t));
+    }
+    if (cfg.ns === 14) {
+      try {
+        let cont = {};
+        for (let round = 0; round < 50; round++) {
+          const j = await api(Object.assign({ action: 'query', list: 'categorymembers', cmtitle: self, cmtype: 'page|subcat', cmlimit: 'max' }, cont));
+          for (const m of (j.query && j.query.categorymembers) || []) {
+            if ([0, 10, 12, 14].includes(m.ns)) add(m.title, m.ns);
+          }
+          if (!(j.continue && j.continue.cmcontinue)) break;
+          cont = j.continue;
+          await sleep(500);
+        }
+      } catch (e) {
+        // The links shown on the page are still there.
+      }
+    }
+    return { page: self, titles: [...out.values()] };
+  }
+
   function pathFor(kind, title, ns) {
     let name = title;
     if (ns !== 0) {
@@ -93,7 +152,7 @@
     for (let round = 0; round < 60; round++) {
       const j = await api(Object.assign({
         action: 'query', prop: 'revisions', rvprop: 'content|timestamp|ids', rvslots: 'main',
-        titles: titles.join('|'),
+        redirects: 1, titles: titles.join('|'),
       }, cont));
       for (const p of (j.query && j.query.pages) || []) {
         if (p.missing || p.invalid || !p.revisions || !p.revisions.length) continue;
@@ -142,6 +201,8 @@
 
   let crawling = false;
   let titlesCache = null;
+  let titlesJob = null;
+  let myTabId = null;
 
   async function getCrawl() {
     return (await chrome.storage.local.get('crawl')).crawl;
@@ -166,6 +227,7 @@
     const j = await api(params);
     const pages = (j.query && j.query.allpages) || [];
     const keep = pages.filter((p) => !(st.skipTranslations && isTranslation(p.title))).map((p) => [p.title, p.ns]);
+    if (((await getCrawl()) || {}).jobId !== st.jobId) return; // replaced meanwhile
     const { crawlTitles = [] } = await chrome.storage.local.get('crawlTitles');
     crawlTitles.push(...keep);
     const more = j.continue && j.continue.apcontinue;
@@ -179,7 +241,10 @@
   }
 
   async function fetchStep(st) {
-    if (!titlesCache) titlesCache = (await chrome.storage.local.get('crawlTitles')).crawlTitles || [];
+    if (!titlesCache || titlesJob !== st.jobId) {
+      titlesCache = (await chrome.storage.local.get('crawlTitles')).crawlTitles || [];
+      titlesJob = st.jobId;
+    }
     const pos = st.fetchPos || 0;
     if (pos >= titlesCache.length) {
       await update({ phase: 'done', running: false, status: 'Done: all ' + titlesCache.length + ' pages saved. Press Download zip.' });
@@ -188,6 +253,7 @@
     const batch = titlesCache.slice(pos, pos + BATCH);
     const files = await fetchWikitext(batch.map((b) => b[0]));
     if (files.length) await send({ type: 'save', files });
+    if (((await getCrawl()) || {}).jobId !== st.jobId) return; // the queue changed: start on the new one
     const next = pos + batch.length;
     await update({ fetchPos: next, status: 'Saving pages: ' + next + ' of ' + titlesCache.length });
   }
@@ -201,7 +267,7 @@
     try {
       for (;;) {
         const st = await getCrawl();
-        if (!st || !st.running) break;
+        if (!st || !st.running || st.tabId !== myTabId) break;
         try {
           if (st.phase === 'list') await listStep(st);
           else if (st.phase === 'fetch') await fetchStep(st);
@@ -247,8 +313,12 @@
 
   chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     if (msg && msg.type === 'crawl:go') {
+      myTabId = msg.tabId;
       crawl();
       reply({ ok: true });
+    } else if (msg && msg.type === 'links:collect') {
+      collectLinks(!!msg.skipTranslations).then(reply, () => reply({ titles: [] }));
+      return true;
     }
   });
 
@@ -258,6 +328,7 @@
     if (!cfg) return;
     saveThisPage(cfg).catch(() => {});
     const r = await send({ type: 'hello' }).catch(() => null);
+    if (r && r.tabId != null) myTabId = r.tabId;
     if (r && r.resume) crawl();
   })();
 })();

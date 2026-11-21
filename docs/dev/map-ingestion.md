@@ -223,7 +223,11 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   scripts away with a bot check (Anubis), by working inside a wiki tab the owner opened: it saves each page they
   visit (as shown, and its wikitext) and, on "Save the whole wiki", lists and saves every article, template and
   category through the wiki's API (50 pages a request, 1.5 s apart, English only by default; when the check asks
-  again it reloads the tab and carries on). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
+  again it reloads the tab and carries on). "Save pages linked from open wiki tabs" keeps it to one game (the whole
+  wiki has TF2, L4D2, CS:GO, Alyx...): the owner opens the HL2 and Source SDK index and category pages, and it
+  queues every page their article bodies link to (not the sidebar or footer) and every member of an open category
+  (all of them, from the API), skipping pages already saved, red links, special pages, images and translations.
+  Pressing it again after opening more pages adds to the queue. "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
   `vdc/text/...txt` for visited pages, `vdc/index.tsv`. Load it in Chrome or Chromium: `chrome://extensions`,
   Developer mode, Load unpacked, pick the folder. `node _dev/tools/vdc_saver_check.js` checks it against a fake wiki
   (ends `VDC SAVER CHECK PASS`).

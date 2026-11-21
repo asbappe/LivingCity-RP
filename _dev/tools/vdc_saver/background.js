@@ -13,12 +13,14 @@ async function handle(msg, sender) {
       // A wiki tab just loaded: should it carry on with the whole-wiki save?
       const { crawl } = await chrome.storage.local.get('crawl');
       const tabId = sender.tab ? sender.tab.id : -1;
-      return { resume: !!(crawl && crawl.running && crawl.tabId === tabId) };
+      return { tabId, resume: !!(crawl && crawl.running && crawl.tabId === tabId) };
     }
     case 'save':
       await putFiles(msg.files);
       await updateBadge();
       return { ok: true };
+    case 'missing':
+      return { missing: await missingPaths(msg.paths || []) };
     case 'stats':
       return fileStats();
     case 'clear':

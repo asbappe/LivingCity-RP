@@ -72,3 +72,11 @@ async function filesBetween(first, last) {
   const store = db.transaction(STORE, 'readonly').objectStore(STORE);
   return result(store.getAll(IDBKeyRange.bound(first, last)));
 }
+
+// Which of these files are not saved yet.
+async function missingPaths(paths) {
+  const db = await openDb();
+  const store = db.transaction(STORE, 'readonly').objectStore(STORE);
+  const found = await Promise.all(paths.map((p) => result(store.getKey(p))));
+  return paths.filter((p, i) => found[i] === undefined);
+}
