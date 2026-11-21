@@ -1,0 +1,114 @@
+{
+ "title": "Valve's Episode One City 17 (ep1_c17_00 to 06, and five style rooms)",
+ "draft": true,
+ "about": "Episode One's City 17 after the Citadel's blast: the dark road tunnel and car parks under the city, the streets with everything tall leaning, the Combine's last walls, the hospital, a Resistance hideout in the flats, the station yard and the last train; and Valve's style rooms for the hospital exit, the car park whole and fallen, the train loading dock and the antlion-dug tunnel. Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props and craft study in valve_ep1c17/wip/props_craft_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; NPCs left out where the view says so). The test map ep1_c17_03 is left out.",
+ "numbers": [
+  "ep1_c17_00: 2594 entities, 2404 brushes, 588 props (355 static, 183 physics, 28 ragdoll corpses); no light_environment and no fog: all underground, 539 AI nodes and none outdoors; 21 zombines, 18 zombies, 15 barnacles, 8 antlions. Ours: our deepest place, the Ravenholm tunnel, is one corridor 192 wide and 1698 long.",
+  "ep1_c17_00: the road tunnel is 608 wall to wall and 196 clear, tiled to 120 or 128 over a concrete ceiling, two carriageways of 240 and 272 either side of a strip 96 wide raised 4; broken pillar clusters on its centre line 875 apart; 15 vehicles over its length, only one square. Ours: no road tunnel; the Ravenholm tunnel is 192 wide and 144 high, for walking.",
+  "ep1_c17_00: Combine metal is 28% of what can be seen, at texture scale 0.25 on 94% of it; in the hall under the Citadel 826 brushes, most often 8 or 4 thick (plates), 94% of the wall area square to the axes in plan but 23% leaning (panels 128 high at 14 degrees, 208 at 4, 176 at 57). Ours: our tools build no Combine structure; what Combine we have are props set square.",
+  "ep1_c17_00: lit only by its lamps: cool tubes (159 237 215, spot 600, cone 70) and warm cage lamps (254 216 146 at 75) far apart (cage lamps 2328 apart along the tunnel); median light 35. Ours: our tunnel and canal lamps are each a lamp with its own light, as Valve's.",
+  "ep1_c17_00a: 988 props in play (763 static), 1.18 props per 100 by 100 of play, the densest of the episode; ceilings where the nodes are 128 (125 nodes), 256 (111) and 120 (100); corridors 113 wide under 124. Ours: our canal side rooms are 120 to 128 high too.",
+  "ep1_c17_00a: the service ways carry 112 pipe03 straights and 112 connectors, one at every joint, 88 of them on skin 1, in three runs at 80, 104 and 120 over the floor and 20 to 44 off the wall. Ours: our modules place a pipe02 straight and connector pair here and there, never a run.",
+  "ep1_c17_00a: the lift out is a timed hold of 79 to 80 s with four zombie waves (at 5, 35, 65 and 85 s) and its clock is a row of floor lamps lit one more every 20 s; the car leaves only when both riders are in (a counter of 2). Ours: our timed holds show no clock in the world (valve-progress-in-the-world).",
+  "styleguide_hospital_exit: a street junction behind the hospital with 11 trucks, vans and cars jammed in about 1200 by 750, yaws 60 to 270, one tilted -10; lampposts along the diagonal street 724 apart (the 512 grid's diagonal), the two rows 641 apart and staggered by half a spacing; 23% of old-material brushes at odd angles (ruin cuts). Ours: our streets run on the grid, with lamps on one rhythm and no jams."
+ ],
+ "pictures": [
+  {
+   "n": "C1",
+   "file": "01_c17_00_road_tunnel.png",
+   "where": "ep1_c17_00, the road tunnel under the city, eye 4240 -4124 -59 looking south (yaw 270)",
+   "teaches": "A road tunnel under the city: 608 wall to wall and 196 clear, tiled walls under a concrete ceiling, the broken pillar clusters on the centre line every 875, sprinklers in two rows 384 apart every 512 and 20 under the ceiling, a jackknifed truck (orange) across a lane; lit by a few far-apart lamps, so it reads as a dark tube with pools of light. Ours: no road tunnel; the Ravenholm tunnel is 192 wide and 144 high, a footway.",
+   "lessons": [
+    "valve-road-tunnel",
+    "valve-wrecked-cars",
+    "valve-light-pools"
+   ],
+   "view": {
+    "eye": [
+     4240,
+     -4124,
+     -59
+    ],
+    "yaw": 270,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "C2",
+   "file": "02_c17_00_combine_hall_cut.png",
+   "where": "ep1_c17_00, the Combine's hall under the Citadel at the tunnel's end, from the south-west, cut at 180 (box 3200 -7000 5400 -5300; floor about -112)",
+   "teaches": "The Combine's hall under the Citadel, where the old tunnel ends in Combine metal: plates mostly 8 or 4 thick, square to the axes in plan (94% of the wall area) but leaning in section (23%: panels 128 high at 14 degrees, 208 high at 4, 176 high at 57), heads over the room on 46% of the leaning area; a ribbed floor (ribs 32 wide every 128, alternately 20 and 3 high) and a ceiling about 336 over it. It is not mirror-symmetric: each side steps and leans its own way. Ours: our tools build no Combine structure, only props set square; this is the owner's 'odd, unnatural' Combine to learn from.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     3200,
+     -7000,
+     5400,
+     -5300
+    ],
+    "cut": 180,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C3",
+   "file": "03_c17_00a_fallen_car_park.png",
+   "where": "ep1_c17_00a, the car park after the blast, eye -68 4476 564 looking south-east (yaw 315)",
+   "teaches": "A car park deck that has come down: the upper deck broken into func_detail slabs 96 to 300 across and 27 to 56 thick, tilted 5 to 60 degrees (orange edges), floor material on top and the ceiling's underneath, the columns still standing and the ceiling 120 over the floor where it holds; cars that were parked on the slabs lie tilted with them. Ours: the `collapse` module drops a street's wall and roadway into a squeeze and a crawl; no deck falls in a building.",
+   "lessons": [
+    "valve-collapsed-deck",
+    "valve-car-park"
+   ],
+   "view": {
+    "eye": [
+     -68,
+     4476,
+     564
+    ],
+    "yaw": 315,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "C4",
+   "file": "04_c17_00a_service_pipes.png",
+   "where": "ep1_c17_00a, the wet service tunnel, eye 3236 4101 472 looking east (yaw 0)",
+   "teaches": "A service way 128 high with its pipe rack along the wall (orange): three runs of pipe03 (96 long, 17 across) at 80, 104 and 120 over the floor, 20 to 44 off the wall, a connector at every joint, and thinner pipe02 and pipe01 near the ceiling; doorways cut square through the concrete. Ours: our side rooms have a lone pipe pair here and there; a run along the wall would dress the canal's service ways.",
+   "lessons": [
+    "valve-pipe-runs"
+   ],
+   "view": {
+    "eye": [
+     3236,
+     4101,
+     472
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "C5",
+   "file": "05_hospital_exit_jam.png",
+   "where": "styleguide_hospital_exit, the street behind the hospital, eye 9650 11400 -632 looking south into the jam (yaw 270)",
+   "teaches": "An abandoned jam: 11 trucks, vans and cars (orange boxes) in about 1200 by 750, each turned its own way (yaws 60 to 270), one tilted -10, the brick fronts closing it in. 74% of Episode One's 105 abandoned vehicles have another within 400: they come in jams, not one to a kerb. Ours: no jams; a street in our tools is clear road.",
+   "lessons": [
+    "valve-wrecked-cars"
+   ],
+   "view": {
+    "eye": [
+     9650,
+     11400,
+     -632
+    ],
+    "yaw": 270,
+    "pitch": 4,
+    "leave_out_npcs": true
+   }
+  }
+ ]
+}
