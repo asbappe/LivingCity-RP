@@ -11,6 +11,10 @@ the vehicles test map, and all of Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 
 pictures, 81 lessons (of 127 in all; tag `valve`), 26 prefab pieces (`valve_*`) and four studies (props, entity
 logic, building craft, NPCs).
 
+**The whole set (from 21 November):** the owner sent every HL2, EP1 and EP2 map source. What was chosen, the
+batches, what is done and next, the owner's requests on the way, and how to get the maps again:
+`docs/dev/valve-ingest-progress.md` (read it first when carrying on). Save every 5 or so maps (the owner's asking).
+
 ## The rules, every time
 
 1. **The owner's choices beat Valve's.** Where Valve does it differently from what the owner settled, we keep the
@@ -131,6 +135,8 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   whole flats: measure round key furniture instead. Automatic water depth misses some water: read it from cuts.
   Bridge finding picks up pipes and lintels: filter by rules. Ray casts use brush boxes; props block nothing.
 - **Valve's own faults.** 98 outputs name things that are in another map (counters in d1_canals_01a fed from 01).
+  Some files have the digit 1 saved as `&i` (`pitch "&i00"`) and stray typos in numbers (`"254 216 146) 1100"`):
+  the readers read `&i` as 1 and skip a bad number (21 November).
   Single-player tricks not to copy on our server: `!player` (it is player 1), triggers switching areaportals,
   flickering lights.
 - **Running helpers.** Five at once hit the 5-hour usage limit; a stopped helper resumes from where it was with a
