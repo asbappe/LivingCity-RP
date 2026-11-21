@@ -227,7 +227,13 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   wiki has TF2, L4D2, CS:GO, Alyx...): the owner opens the HL2 and Source SDK index and category pages, and it
   queues every page their article bodies link to (not the sidebar or footer) and every member of an open category
   (all of them, from the API), skipping pages already saved, red links, special pages, images and translations.
-  Pressing it again after opening more pages adds to the queue. "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
+  Pressing it again after opening more pages adds to the queue. "Skip other games" (on by default; filter.js, lists
+  editable in Options) leaves a page out when its name names another game, or one of its categories does (from the
+  API, so template-added ones count) and neither names Half-Life 2, the Episodes, Garry's Mod, Source SDK 2013 or
+  exactly "Source"; checked against 1414 real pages (21 November): game icon templates like {{tf2}} are NOT a signal
+  (generic pages such as "Your First Map" carry only other games' icons). "Remove other games" cleans what was saved
+  before: by name at once, then by asking the wiki for the categories of the rest. The zip's index.tsv has each
+  page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
   `vdc/text/...txt` for visited pages, `vdc/index.tsv`. Load it in Chrome or Chromium: `chrome://extensions`,
   Developer mode, Load unpacked, pick the folder. `node _dev/tools/vdc_saver_check.js` checks it against a fake wiki
   (ends `VDC SAVER CHECK PASS`).

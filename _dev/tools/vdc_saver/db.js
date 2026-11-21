@@ -80,3 +80,44 @@ async function missingPaths(paths) {
   const found = await Promise.all(paths.map((p) => result(store.getKey(p))));
   return paths.filter((p, i) => found[i] === undefined);
 }
+
+// Drop every saved file the filter rules out by its name and stored categories (and translations, when
+// English only). Files saved before the filter have no categories: those come back to be checked on the wiki.
+async function cleanByName(judge, englishOnly) {
+  const db = await openDb();
+  const tx = db.transaction(STORE, 'readwrite');
+  const removed = new Set();
+  const need = new Map();
+  tx.objectStore(STORE).openCursor().onsuccess = (ev) => {
+    const cur = ev.target.result;
+    if (!cur) return;
+    const r = cur.value;
+    const title = r.title || '';
+    if ((englishOnly && vdcIsTranslation(title)) || (judge && judge(title, r.cats || []))) {
+      removed.add(r.title);
+      cur.delete();
+    } else if (judge && !r.cats && r.title) {
+      need.set(r.title, [r.title, r.ns]);
+    }
+    cur.continue();
+  };
+  await done(tx);
+  return { removed: removed.size, needCats: [...need.values()] };
+}
+
+async function applyClean(remove, cats) {
+  const db = await openDb();
+  const tx = db.transaction(STORE, 'readwrite');
+  const store = tx.objectStore(STORE);
+  for (const p of remove) store.delete(p);
+  for (const c of cats) {
+    const req = store.get(c.path);
+    req.onsuccess = () => {
+      if (req.result) {
+        req.result.cats = c.cats;
+        store.put(req.result);
+      }
+    };
+  }
+  await done(tx);
+}

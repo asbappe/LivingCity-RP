@@ -1,4 +1,4 @@
-importScripts('db.js');
+importScripts('db.js', 'filter.js');
 
 async function updateBadge() {
   const { total } = await fileStats();
@@ -19,8 +19,30 @@ async function handle(msg, sender) {
       await putFiles(msg.files);
       await updateBadge();
       return { ok: true };
-    case 'missing':
-      return { missing: await missingPaths(msg.paths || []) };
+    case 'missing': {
+      // Not saved, and not already found to be from another game.
+      const { skippedPaths = [] } = await chrome.storage.local.get('skippedPaths');
+      const skipped = new Set(skippedPaths);
+      return { missing: (await missingPaths(msg.paths || [])).filter((p) => !skipped.has(p)) };
+    }
+    case 'skipped': {
+      const { skippedPaths = [] } = await chrome.storage.local.get('skippedPaths');
+      const all = new Set(skippedPaths);
+      for (const p of msg.paths || []) all.add(p);
+      await chrome.storage.local.set({ skippedPaths: [...all] });
+      return { ok: true };
+    }
+    case 'cleanLocal': {
+      const s = await chrome.storage.local.get(Object.assign({ englishOnly: true }, VDC_FILTER_DEFAULTS));
+      const judge = vdcJudge(s);
+      const r = await cleanByName(judge, s.englishOnly);
+      await updateBadge();
+      return r;
+    }
+    case 'clean':
+      await applyClean(msg.remove || [], msg.cats || []);
+      await updateBadge();
+      return { ok: true };
     case 'stats':
       return fileStats();
     case 'clear':

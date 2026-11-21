@@ -112,7 +112,11 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10);
   const names = [];
   const blobs = [];
-  const index = ['path\ttitle\tnamespace\tkind\trevision\ttimestamp'];
+  const index = ['path\ttitle\tnamespace\tkind\trevision\ttimestamp\tcategories'];
+  const settings = await chrome.storage.local.get(Object.assign({ englishOnly: true }, VDC_FILTER_DEFAULTS));
+  const judge = vdcJudge(settings);
+  const drop = (r) => (settings.englishOnly && vdcIsTranslation(r.title || '')) || (judge && judge(r.title || '', r.cats || []));
+  let left = 0;
   let zip = new ZipWriter();
   let done = 0;
   let bytes = 0;
@@ -123,11 +127,12 @@ async function main() {
     const slice = keys.slice(i, i + 500);
     const recs = await filesBetween(slice[0], slice[slice.length - 1]);
     for (const r of recs) {
+      if (drop(r)) { left++; done++; continue; }
       if (zip.count >= MAX_FILES || zip.offset >= MAX_BYTES) cut();
       const data = enc.encode(r.text || '');
       bytes += data.length;
       await zip.add('vdc/' + r.path, data, new Date(r.ts || Date.now()));
-      index.push([r.path, r.title, r.ns, r.kind, r.rev, r.ts].map(tsv).join('\t'));
+      index.push([r.path, r.title, r.ns, r.kind, r.rev, r.ts, (r.cats || []).join('; ')].map(tsv).join('\t'));
       done++;
     }
     msg('Packing ' + done + ' of ' + keys.length + ' files...');
@@ -140,9 +145,10 @@ async function main() {
     '',
     'wikitext/  the source of each page (.wiki), from the wiki\'s API',
     'text/      the page as it was shown (.txt), for pages you visited',
-    'index.tsv  one row per file: path, title, namespace, kind, revision, timestamp',
+    'index.tsv  one row per file: path, title, namespace, kind, revision, timestamp, categories',
     '',
-    'Files: ' + done + ', text: ' + (bytes / 1e6).toFixed(1) + ' MB.',
+    'Files: ' + (done - left) + ', text: ' + (bytes / 1e6).toFixed(1) + ' MB.',
+    'Left out (other games by the "Skip other games" lists, and translations when English only): ' + left + ' files.',
     '',
   ].join('\n');
   await zip.add('vdc/index.tsv', enc.encode(index.join('\n') + '\n'), new Date());
@@ -155,7 +161,7 @@ async function main() {
     download(b, name);
   });
   bar(1);
-  msg('Done: ' + done + ' files in ' + names.join(', ') + '. It is in your Downloads folder.');
+  msg('Done: ' + (done - left) + ' files in ' + names.join(', ') + '. It is in your Downloads folder.');
 }
 
 main().catch((e) => msg('Could not build the zip: ' + (e.message || e)));

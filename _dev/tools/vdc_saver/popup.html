@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <style>
-  body { font: 13px/1.4 system-ui, sans-serif; width: 300px; margin: 10px; color: #222; }
+  body { font: 13px/1.4 system-ui, sans-serif; width: 320px; margin: 10px; color: #222; }
   h1 { font-size: 15px; margin: 0 0 8px; }
   .row { margin: 6px 0; }
   .status { background: #f3f0ea; padding: 6px; border-radius: 4px; min-height: 18px; }
@@ -11,7 +11,9 @@
   .big { font-weight: 600; }
   details { margin: 6px 0; }
   .note { color: #a33; }
+  .hint { color: #666; font-size: 12px; }
   input[type=number] { width: 4em; }
+  textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 monospace; }
 </style>
 </head>
 <body>
@@ -29,9 +31,16 @@
   <div class="row note" id="note"></div>
 
   <details>
-    <summary>Options (used when it starts or starts over)</summary>
+    <summary>Options</summary>
     <div class="row"><label><input type="checkbox" id="englishOnly"> English only (skip translated copies)</label></div>
-    <div class="row">
+    <div class="row"><label><input type="checkbox" id="skipOtherGames"> Skip other games</label></div>
+    <div class="row">Skip a page whose name or categories name:
+      <textarea id="skipWords" rows="6"></textarea></div>
+    <div class="row">...unless they also name:
+      <textarea id="keepWords" rows="3"></textarea>
+      <span class="hint">One per line, whole words. =Name means exactly that name.</span>
+      <button id="resetLists">Reset lists</button></div>
+    <div class="row">Whole wiki:
       <label><input type="checkbox" class="ns" value="0"> Articles</label>
       <label><input type="checkbox" class="ns" value="10"> Templates</label>
       <label><input type="checkbox" class="ns" value="14"> Categories</label>
@@ -42,8 +51,10 @@
 
   <div class="row">
     <button id="download" class="big">Download zip</button>
+    <button id="clean">Remove other games</button>
     <button id="clear">Delete everything</button>
   </div>
+<script src="filter.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>
