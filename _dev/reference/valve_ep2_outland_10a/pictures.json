@@ -1,0 +1,27 @@
+{
+ "title": "Valve's ep2_outland_10a (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_10a, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 1146 prop_static, 20 prop_physics, 13 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 0 infodecal, 10 info_overlay, 21 keyframe_rope and 11 move_rope, 30 func_detail, 26 npc entities (makers included); left out: 7 hidden objects and the 3D skybox room (0 props, scale 16).",
+  "Lights: 2 light (median brightness 206), 3 light_spot (median 400), 0 point_spotlight, 1 env_sprite; sun \"241 210 190 700\" at pitch -48, ambient \"114 160 194 200\"; fog \"53 69 83\" from 512 to 7000; sky sky_ep02_04_hdr.",
+  "Sound: 8 env_soundscape (ep2_forest.light_forest 3, ep2_forest.small_river 3, ep2_forest.frogpond 1, Nothing 1), median radius 885; 16 ambient_generic (outland_10a.river, ambient/levels/streetwar/strider_distant3.wav, npc/strider/strider_hunt2.wav, outland_10a.stridersound1).",
+  "Commonest models: fern01 146, tree_pine06 138, tree_pine04 136, tree_pine05 111, tree_dead02 43, tree_dry02 38, tree_dead04 33, tree_deciduous_01a 31, tree_dry01 31, rockcluster02 30, rock_coast02h 18, tree_pine_card_cluster_01 17, rocks_large01_veg 13, rock_coast02c 12, rockcluster01 12.",
+  "Commonest materials (faces): blendgrassdirt01_noprop 1639, cliff01a 642, woodwall048b 620, blendrockrock007b 383, concretewall_bunker06c 147, cliff_path01a 123, concretewall_bunker01a 118, woodfloor005a 113, stonewall005a 110, citadel_metalwall074a 103, concretewall_bunker03c 98, clifftrees_cardboard02a 81, cliff02a 78, metalpipe003a 49, blendgrassdirt02 48, concretefloor_bunker02a 46, woodbeam002a 45, concretewall_bunker06a 31, blendplast_stone01 29, metaltruss008a 27.",
+  "Ceilings: floor to ceiling indoors (cast up from 28 AI nodes) is most often 280 (7), then 104 (3) and 88 (2); 95% of the nodes are outdoors; corridors 101 wide under 120, rooms 416 by 4229 (medians, wall to wall).",
+  "Stairs: 30 flights of 3 or more steps; steps (rise x tread) 8x12 93, 8x6.9 42, 8x8 18; median 6 steps a flight.",
+  "Streets (cuts through 227 outdoor AI nodes, 55 with a kerb each side): roadway most often 320 wide; kerbs 4 (31) or 3 (16) high; pavements most often 16, 32 wide; crown 0 in 0 of 55; road blendrockmud01a, pavement concretewall036a; wall to wall most often 1536; street walls median 224 tall (height over width 0.1).",
+  "Channels (141 cuts across the shortest way, 47 at water: 35 open, 26 tunnels): open width 64 up most often 576, 128 up 1024; rims (where a side opens out) 244; water 13.8 deep; ledges 124 wide at 108 up; tunnels most often 416 wide, roof 64 up.",
+  "Cables: 15 rope spans, median 109 long, slack 120, width 2.",
+  "Spacing (nearest of the same model): tree_pine06 256 apart (n 138), tree_pine04 449 apart (n 136), tree_pine05 387 apart (n 111), tree_dead02 809 apart (n 43), tree_dry02 736 apart (n 38), tree_dead04 1057 apart (n 33).",
+  "Walls in bands: 10% of wall columns over 256 tall change material at least once; the first change most often 1024 or 128 over the foot; pairs (below > above): cliff01a > clifftrees_cardboard02a, blendrockrock007b > blendgrassdirt01_noprop, concretewall_bunker06a > concretewall_bunker06c.",
+  "Slopes: 18 sloped faces over 2000 square units, most often 45, 70, 20 degrees; concretewall_bunker01a, cliff02a, woodwall048b.",
+  "Props: 1160 in play; on exact 90s: static 37%, physics 5%; physics tilted 65% (lying most often debris); statics touching a wall 11%, physics within 16 of one 0%; 0.143 props per 100 by 100 of play (0.006 physics).",
+  "Wiring: 308 output lines from 112 entities; commonest OnBeginSequence>BeginSequence 9, OnBeginSequence>CancelSequence 9, OnCompletion>Start 8; 10 relays (longest chain 1), 3 counters, 1 timers, 3 makers, 0 buttons working doors; 2 lines name nothing.",
+  "Craft: texture scale 0.25 on 83% of faces; lightmapscale 16 on 81% (near the nodes 86%, far 62%); func_detail 97% of brushes; 13 trim strips (8x32 4, 8x16 4); 49 chamfers; 981 displacements.",
+  "Light by fixture: gunship_gibs_headsection: light 254 174 10 400.",
+  "Grime: 0 infodecal and 10 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_10a"
+}

@@ -1,0 +1,28 @@
+{
+ "title": "Valve's d1_town_01 (draft)",
+ "draft": true,
+ "about": "Valve's own d1_town_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 157 prop_static, 166 prop_physics, 40 prop_dynamic, 4 prop_door_rotating, 36 prop_ragdoll, 281 infodecal, 10 info_overlay, 60 keyframe_rope and 29 move_rope, 217 func_detail, 119 npc entities (makers included); left out: 17 hidden objects and no 3D skybox room.",
+  "Lights: 9 light (median brightness 200), 33 light_spot (median 800), 28 point_spotlight, 2 env_sprite; sun \"175 230 239 50\" at pitch -45, ambient \"43 45 57 5\"; no fog controller; sky sky_day01_09_hdr.",
+  "Sound: 37 env_soundscape (d1_town.Start 15, d1_town.WoodBuilding 12, d1_town.ConcreteBuilding 4, d1_town.Rooftop 3, d1_town.CorpseRoom 2, Automatic 1), median radius 128; 63 ambient_generic (d1_town.flies, town.d1_town_01_spinup, d1_town.largefireloop, town.d1_town_01_loudspark).",
+  "Commonest models: propane_tank001a 26, oildrum001_explosive 17, sawblade001a 17, light_spotlight02_lamp 16, meathook001a 13, classic_legs 10, tree_deciduous_03b 9, classic 9, garbage256_composite002b 9, wood_board05a 7, fence01b 7, metal_panel02a 7, fence01a 7, gutter_320_001a 7, wood_board03a 6.",
+  "Commonest materials (faces): woodfloor005a 2144, concretewall032d 585, woodwall028a 534, woodwall027c 531, metalwall026a 389, plasterwall029a 362, metalhull005a 294, stonefloor006a 282, plasterwallpaper006a 279, metaltruss002a 263, metalwall014a 224, concretewall013d 207, brickwall049a 193, concretewall032b 189, tileroof004b 188, woodfloor008a 188, woodwall027b 174, plasterwall029d 163, wooddoor044b 149, metaltruss022c 147.",
+  "Ceilings: floor to ceiling indoors (cast up from 223 AI nodes) is most often 128 (35), then 256 (31) and 120 (29); 48% of the nodes are outdoors; corridors 113 wide under 160, rooms 240 by 632 (medians, wall to wall).",
+  "Stairs: 37 flights of 3 or more steps; steps (rise x tread) 8x12 343; median 10 steps a flight.",
+  "Streets (cuts through 320 outdoor AI nodes, 4 with a kerb each side): roadway most often 192 wide; kerbs 8 (5) or 16 (3) high; pavements most often 64, 128, 224 wide; crown 0 in 3 of 4; road blenddirtgrass008a, pavement woodfloor005a; wall to wall most often 640; street walls median 352 tall (height over width 0.4).",
+  "Channels (35 cuts across the shortest way, 0 at water: 9 open, 2 tunnels): open width 64 up most often 288, 128 up 640; rims (where a side opens out) 340; ledges 116 wide at 32 up; tunnels most often 128 wide, roof 256 up.",
+  "Doors: door01_left 4; openings at them (wide x high): 48x108 2, 56x112 2.",
+  "Cables: 59 rope spans, median 288 long, slack 100, width 2.",
+  "Spacing (nearest of the same model): light_spotlight02_lamp 638 apart (n 16), tree_deciduous_03b 435 apart (n 9), fence01b 64.6 apart (n 7), fence01a 94.2 apart (n 7), light_spotlight01_lamp 920 apart (n 6), utilityconnecter005 56.6 apart (n 6).",
+  "Walls in bands: 81% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): concretewall032d > brickwall031d, concretewall032d > woodwall027c, concretewall032d > plasterwall029c.",
+  "Slopes: 177 sloped faces over 2000 square units, most often 25, 35, 45 degrees; tileroof004b, metalwall026a, metalwall014a.",
+  "Props: 399 in play; on exact 90s: static 59%, physics 62%; physics tilted 60% (lying most often propane, board, tool); statics touching a wall 59%, physics within 16 of one 67%; 0.481 props per 100 by 100 of play (0.213 physics).",
+  "Wiring: 653 output lines from 234 entities; commonest OnTrigger>PlaySound 36, OnTrigger>Enable 31, OnTrigger>Spawn 26; 32 relays (longest chain 3), 1 counters, 7 timers, 41 makers, 0 buttons working doors; 22 lines name nothing.",
+  "Craft: texture scale 0.25 on 97% of faces; lightmapscale 16 on 69% (near the nodes 74%, far 38%); func_detail 43% of brushes; 323 trim strips (8x8 45, 8x16 27); 285 chamfers; 8 displacements.",
+  "Light by fixture: light_spotlight02_lamp: light_spot 255 245 145 600, cone 45/30, pitch -50; light_spotlight01_lamp: light_spot 159 237 215 1100, cone 35/20, pitch -37.5; light_spotlight01_base: light_spot 159 237 215 550, cone 35/20, pitch -30; lampfixture01a: light_spot 255 245 145 2500, cone 50/25, pitch -82.5.",
+  "Grime: 281 infodecal and 10 info_overlay; on walls stain 124, trash 52, graffiti 24, plant 24; wall decals median 51.6 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d1_town_01"
+}

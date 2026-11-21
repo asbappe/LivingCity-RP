@@ -1,0 +1,25 @@
+{
+ "title": "Valve's ep2_outland_01a (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_01a, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 174 prop_static, 146 prop_physics, 52 prop_dynamic, 1 prop_door_rotating, 24 prop_ragdoll, 15 infodecal, 113 info_overlay, 20 keyframe_rope and 14 move_rope, 56 func_detail, 145 npc entities (makers included); left out: 8 hidden objects and no 3D skybox room.",
+  "Lights: 51 light (median brightness 40), 18 light_spot (median 120), 0 point_spotlight, 11 env_sprite; no light_environment; fog \"18 23 35\" from 1 to 2800.0; sky sky_ep02_caves_hdr.",
+  "Sound: 28 env_soundscape (ep2_caves.quiet_tunnel 6, ep2_mines.tunnel 4, ep2_mines.tunnel_grubs 3, ep2_caves.large_watery_cavern_grubs 3, ep2_caves.watery_cavern_grubs_dropoff 2, ep2_caves.nests_tunnel 2), median radius 176; 27 ambient_generic (ep2_outland.antlion_web_break, ep2_outland.antlion_web_hit, npc_antlion.idle, wood_box.break).",
+  "Commonest models: wood_board05a 18, struts_single02 16, struts_single01 15, stalactite_static03 15, rock_forest02 14, stalactite_static02 13, mining_car 12, stalactite_static01 12, interior_fence002c 11, rock_forest01 11, interior_fence002d 10, light_cagelight02_on 9, wood_crate001a_damagedmax 8, struts_tunnel320_01 8, mesh_ceiling01 8.",
+  "Commonest materials (faces): rockwall_cave02a 1159, woodwall041a 646, woodfloor005a 603, antlion_web01a 234, concretewall_mine_002c 205, woodwall_mine001a 186, woodshelf001a 93, metalwall085a 93, concretewall_mine_002a 82, metalhull003a 73, dirtfloor_mine001a 57, metalwall061f 54, sign_generic_cluster02 44, blenddirtrock_mine01a 41, concretefloor034a 41, metaltruss017a 36, forest_metal_02c 33, metalwall014a 33, woodwall048_roof 28, concretewall055b 27.",
+  "Ceilings: floor to ceiling indoors (cast up from 420 AI nodes) is most often 192 (56), then 176 (25) and 120 (20); 0% of the nodes are outdoors; corridors 131 wide under 150, rooms 349 by 1151 (medians, wall to wall).",
+  "Doors: door03_left 1; openings at them (wide x high): 48x108 1.",
+  "Cables: 22 rope spans, median 206 long, slack 100, width 2.",
+  "Spacing (nearest of the same model): interior_fence002c 128 apart (n 11), interior_fence002d 268 apart (n 10), light_cagelight02_on 606 apart (n 9), interior_fence002a 64 apart (n 5), interior_fence002b 288 apart (n 4), utilityconnecter005 110 apart (n 4).",
+  "Walls in bands: 26% of wall columns over 256 tall change material at least once; the first change most often 16 or 128 over the foot; pairs (below > above): concretewall_mine_002c > woodfloor005a, woodwall041a > woodfloor005a, concretewall_mine_002c > concretewall_mine_002a.",
+  "Slopes: 15 sloped faces over 2000 square units, most often 35, 60, 65 degrees; antlion_web01a, rockwall_cave02a.",
+  "Props: 397 in play; on exact 90s: static 75%, physics 28%; physics tilted 78% (lying most often board, other, vehicle); statics touching a wall 56%, physics within 16 of one 55%; 0.301 props per 100 by 100 of play (0.127 physics).",
+  "Wiring: 407 output lines from 183 entities; commonest OnTakeDamage>SetAnimation 34, OnTrigger>ForceSpawn 21, OnTrigger>EnableMotion 12; 8 relays (longest chain 1), 2 counters, 1 timers, 0 makers, 0 buttons working doors; 5 lines name nothing.",
+  "Craft: texture scale 0.25 on 89% of faces; lightmapscale 16 on 94% (near the nodes 97%, far 97%); func_detail 59% of brushes; 127 trim strips (16x16 73, 8x16 14); 7 chamfers; 948 displacements.",
+  "Light by fixture: light_cagelight02_on: light_spot 255 226 174 250, cone 70/30, pitch -23; light_cagelight02_on: light 255 226 174 10; wood_board05a: light 255 226 174 27.5; grubtunnel_door: light 255 245 157 80.",
+  "Grime: 15 infodecal and 113 info_overlay; on walls blood 7, stain 5, graffiti 1; wall decals median 6.1 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_01a"
+}

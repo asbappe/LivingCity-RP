@@ -1,0 +1,27 @@
+{
+ "title": "Valve's d2_prison_02 (draft)",
+ "draft": true,
+ "about": "Valve's own d2_prison_02, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 440 prop_static, 113 prop_physics, 0 prop_dynamic, 6 prop_door_rotating, 4 prop_ragdoll, 66 infodecal, 3 info_overlay, 7 keyframe_rope and 3 move_rope, 85 func_detail, 26 npc entities (makers included); left out: 51 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 29 light_spot (median 400), 5 point_spotlight, 21 env_sprite; sun \"221 232 240 20\" at pitch -5, ambient \"103 143 184 125\"; fog \"155 183 213\" from 512 to 5000; sky sky_day02_09_hdr.",
+  "Sound: 41 env_soundscape (prison.general_hallway_lightcombat 16, prison.larger_cellblock_hvycombat 16, prison.control_room_simple 3, prison.electric_water_room 3, prison.control_room 2, d2_depot_showers1 1), median radius -1; 7 ambient_generic (glass.break, k_lab.monitorbutton, novaprospekt.entrance_music1, prison.sradio_a5_controlroom).",
+  "Commonest models: prison_cagedlight001a 40, handrail04_long 30, prison_flourescentlight001b 25, prison_sprinkler001a 19, handrail04_singlerise 15, prison_doortrack001a 15, prison_celldoor001a 15, prison_heavydoor001a 14, prison_heater001a 13, handrail04_corner 12, prison_flourescentlight001a 12, oildrum001 12, prison_pipes002a 11, controlroom_filecabinet002a 10, rebar001c_64 10.",
+  "Commonest materials (faces): plasterwall034a 1757, metalwall062a 1409, metalstair003a 786, plasterwall035a 540, concretefloor013a 526, plasterceiling008a 461, plasterwall026a 443, plasterwall034d 424, tilefloor009a 314, plasterwall035c 297, plasterwall034c 288, concretewall002a 258, tilewall009b 223, glasswindow007a 195, plasterwall035e 177, concretewall013d 169, plasterwall034b 139, plasterwall034f 113, rockwall003a 113, plasterwall034e 106.",
+  "Ceilings: floor to ceiling indoors (cast up from 162 AI nodes) is most often 120 (41), then 256 (17) and 512 (14); 8% of the nodes are outdoors; corridors 134 wide under 128, rooms 225 by 1022 (medians, wall to wall).",
+  "Stairs: 104 flights of 3 or more steps; steps (rise x tread) 8x12 770; median 7.5 steps a flight.",
+  "Streets: no kerbed roadway in 30 cuts through outdoor AI nodes; wall to wall most often 1024; walls median 320 tall (height over width 0.4).",
+  "Doors: door01_left 6; openings at them (wide x high): 96x108 4, 48x108 2.",
+  "Cables: 8 rope spans, median 432 long, slack 130, width 0.5.",
+  "Spacing (nearest of the same model): cafeteria_bench001a 4 apart (n 5), interior_fence003b 143 apart (n 3).",
+  "Walls in bands: 82% of wall columns over 256 tall change material at least once; the first change most often 16 or 128 over the foot; pairs (below > above): concretefloor013a > plasterwall034a, concretewall022a > stonewall017a, concretefloor013a > plasterwall034d.",
+  "Slopes: 44 sloped faces over 2000 square units, most often 30, 45, 25 degrees; plasterceiling008a, tileroof004b, rockwall003a.",
+  "Props: 561 in play; on exact 90s: static 87%, physics 57%; physics tilted 11% (lying most often bucket, shelf, barrel); statics touching a wall 63%, physics within 16 of one 70%; 1.18 props per 100 by 100 of play (0.227 physics).",
+  "Wiring: 156 output lines from 55 entities; commonest OnTrigger>Enable 12, OnTrigger>HideSprite 12, OnTrigger>Disable 10; 10 relays (longest chain 2), 3 counters, 1 timers, 6 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 95% of faces; lightmapscale 16 on 80% (near the nodes 83%, far 77%); func_detail 39% of brushes; 180 trim strips (16x16 26, 8x8 16); 178 chamfers; 26 displacements.",
+  "Light by fixture: prison_flourescentlight002b: light_spot 255 245 145 500, cone 70/30, pitch -72; combine_light002a: light_spot 147 226 240 2000, cone 30/12, pitch -30; prison_cagedlight001a: light_spot 254 216 146 75, cone 70/30, pitch -70; handrail04_long: light_spot 255 245 145 300, cone 70/30, pitch 45.",
+  "Grime: 66 infodecal and 3 info_overlay; on walls stain 23, other 16, blood 9, trash 8; wall decals median 56.1 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d2_prison_02"
+}

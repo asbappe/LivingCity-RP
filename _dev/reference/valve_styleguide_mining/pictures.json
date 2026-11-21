@@ -1,0 +1,23 @@
+{
+ "title": "Valve's styleguide_mining (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_mining, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 101 prop_static, 21 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 20 info_overlay, 2 keyframe_rope and 1 move_rope, 35 func_detail, 0 npc entities (makers included); left out: 926 hidden objects and no 3D skybox room.",
+  "Lights: 2 light (median brightness 200), 5 light_spot (median 700), 0 point_spotlight, 7 env_sprite; sun \"245 238 197 900\" at pitch -70, ambient \"227 233 234 200\"; fog \"43 51 57\" from 2000 to 9000; sky sky_day02_04.",
+  "Sound: 2 env_soundscape (d1_town.HeadcrabCave 1, d1_town.MineshaftDown 1), median radius 184; 0 ambient_generic ().",
+  "Commonest models: vol_light 15, handrail04_long 15, fence01a 14, pipeset32d_512_001a 9, pipeset08d_512_001a 9, pipeset02d_512_001a 8, oildrum001 8, concrete_spawnchunk001d 8, antlion 7, pipeset32d_256_001a 6, light_cagelight02_on 5, rebar_cluster001b 4, concrete_spawnchunk001f 4, pipeset32d_corner128r_001a 3, light_cagelight02_off 2.",
+  "Commonest materials (faces): reflectivity_50 1430, woodwall041a 380, metalfloor001a 177, metalwall087a 121, metalpipe002a 120, metaltruss008a 113, concretewall_mine_001b 111, concretewall_mine_002a 87, concretewall_mine_001c 75, metalbeam001a 74, metaltruss010b 70, concretewall_mine_001a 48, metaltruss017a 37, metalgrate014a 32, metalwall026a 30, metalwall089b 25, metalstair002a 24, metalrail013c 22, dirtfloor_mine001a 19, metalgrate013a 14.",
+  "Stairs: 5 flights of 3 or more steps; steps (rise x tread) 8x8 25; median 6 steps a flight.",
+  "Cables: 2 rope spans, median 578 long, slack 25, width 2.",
+  "Spacing (nearest of the same model): fence01a 133 apart (n 14), light_cagelight02_on 657 apart (n 5).",
+  "Walls in bands: 31% of wall columns over 256 tall change material at least once; the first change most often 32 or 192 over the foot; pairs (below > above): concretewall_mine_002a > metaltruss017a, reflectivity_50 > metalfloor001a, concretewall_mine_001c > concretewall_mine_001b.",
+  "Slopes: 30 sloped faces over 2000 square units, most often 45, 20, 25 degrees; metalpipe002a, reflectivity_50, metaltruss010b.",
+  "Props: 122 in play; on exact 90s: static 57%, physics 5%; physics tilted 10% (lying most often barrel); statics touching a wall 34%, physics within 16 of one 0%; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 85% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 37% of brushes; 45 trim strips (16x16 11, 4x8 10); 87 chamfers; 35 displacements.",
+  "Light by fixture: light_cagelight02_on: light_spot 255 245 145 700, cone 70/30, pitch -70; light_cagelight01_on: light 255 0 0 200.",
+  "Grime: 0 infodecal and 20 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_mining"
+}

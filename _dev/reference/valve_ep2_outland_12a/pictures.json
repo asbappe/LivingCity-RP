@@ -1,0 +1,27 @@
+{
+ "title": "Valve's ep2_outland_12a (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_12a, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 506 prop_static, 108 prop_physics, 53 prop_dynamic, 2 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 108 info_overlay, 37 keyframe_rope and 19 move_rope, 137 func_detail, 18 npc entities (makers included); left out: 222 hidden objects and the 3D skybox room (2 props, scale 16).",
+  "Lights: 22 light (median brightness 7), 42 light_spot (median 150), 10 point_spotlight, 25 env_sprite; sun \"240 184 130 750\" at pitch -15, ambient \"70 124 164 200\"; fog \"22 33 41\" from 128 to 3000; sky sky_ep02_06_hdr.",
+  "Sound: 11 env_soundscape (ep2_silo.concretehall 4, ep2_silo.techroom 2, ep2_forest.light_forest 2, ep2_silo.concreteroom 1, ep2_industrial.garage 1, Nothing 1), median radius 189; 23 ambient_generic (k_lab.tech1, npc_attackhelicopter.rotorblast, eli_lab.elevator_ding, ep2.rocket_launch_switch_push).",
+  "Commonest models: tree_pine04 25, fern01 19, pipesystem02a 18, tree_dead01 16, prison_switchbox001a 14, oildrum001 14, tree_pine06 14, prison_bracket001a 14, handrail_singlespan_128 13, tree_dead04 13, gutter_256_002a 13, lab_flourescentlight001a 12, handrail_alley-upperdeck 12, garbage_carboard002a 12, prodcables256 11.",
+  "Commonest materials (faces): metalwall030a 1210, metalwall061f 358, metalhull003a 300, concretefloor006a 298, metaltruss029a 290, metaldoor046a 271, concretewall_bunker06c 256, metalpipe003a 192, concretewall008a 167, metalgrate013a2 163, metalwall054b 137, concretewall_bunker01a 126, concreteceiling001a 116, metalrail012c 112, metalstair002a 107, metaltruss017a 101, metalcombine002 96, concretewall_bunker05b 89, concretewall_bunker01c 85, tvscreen001a 84.",
+  "Ceilings: floor to ceiling indoors (cast up from 76 AI nodes) is most often 264 (12), then 128 (11) and 144 (10); 16% of the nodes are outdoors; corridors 131 wide under 173, rooms 259 by 1275 (medians, wall to wall).",
+  "Stairs: 14 flights of 3 or more steps; steps (rise x tread) 8x8 77, 8x12 54; median 7.5 steps a flight.",
+  "Streets: no kerbed roadway in 10 cuts through outdoor AI nodes; wall to wall most often 1472; walls median 160 tall (height over width 0.1).",
+  "Doors: door01_left 1, door03_left 1; openings at them (wide x high): 48x108 2.",
+  "Cables: 21 rope spans, median 216 long, slack 120, width 1.5.",
+  "Spacing (nearest of the same model): tree_pine04 594 apart (n 25), tree_dead01 992 apart (n 16), tree_pine06 382 apart (n 14), tree_dead04 531 apart (n 13), pylon 338 apart (n 6), exterior_fence002e 578 apart (n 5).",
+  "Walls in bands: 63% of wall columns over 256 tall change material at least once; the first change most often 128 or 16 over the foot; pairs (below > above): concretewall_bunker05b > concretewall_bunker05a, concretewall_bunker06a > concretewall_bunker06c, concretewall041c > concretewall041a.",
+  "Slopes: 45 sloped faces over 2000 square units, most often 45, 70, 65 degrees; concretewall_bunker01a, metalwall030a, metalwall085a.",
+  "Props: 667 in play; on exact 90s: static 68%, physics 22%; physics tilted 20% (lying most often crate, board, trash); statics touching a wall 56%, physics within 16 of one 42%; 1.472 props per 100 by 100 of play (0.31 physics).",
+  "Wiring: 385 output lines from 118 entities; commonest OnTrigger>Start 19, OnPressed>Skin 14, OnTrigger>PlaySound 13; 30 relays (longest chain 3), 3 counters, 2 timers, 0 makers, 1 buttons working doors; 19 lines name nothing.",
+  "Craft: texture scale 0.25 on 83% of faces; lightmapscale 16 on 90% (near the nodes 88%, far 91%); func_detail 66% of brushes; 306 trim strips (8x16 58, 8x8 34); 197 chamfers; 66 displacements.",
+  "Light by fixture: lab_flourescentlight001a: light_spot 253 230 159 900, cone 60/30, pitch -85.8; industriallight01: light_spot 179 226 244 150, cone 40/30, pitch -79.3; lab_flourescentlight001a: light 253 230 159 4; prison_cagedlight001a: light 251 237 159 140.",
+  "Grime: 0 infodecal and 108 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_12a"
+}

@@ -1,0 +1,26 @@
+{
+ "title": "Valve's d1_town_04 (draft)",
+ "draft": true,
+ "about": "Valve's own d1_town_04, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 20 prop_static, 11 prop_physics, 3 prop_dynamic, 1 prop_door_rotating, 6 prop_ragdoll, 9 infodecal, 9 info_overlay, 23 keyframe_rope and 5 move_rope, 73 func_detail, 48 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 6 light (median brightness 262), 14 light_spot (median 800), 12 point_spotlight, 1 env_sprite; no light_environment; no fog controller; sky sky_day01_09_hdr.",
+  "Sound: 6 env_soundscape (d1_town.WaterCave 2, d1_town.MineshaftDown 1, d1_town.ConcreteBuilding 1, d1_town.HeadcrabCave 1, d1_town.CaveTunnel 1), median radius 128; 19 ambient_generic (town.d1_town_04_wood_creak1, d1_town.smallfireloop, town.d1_town_04_spinup, town.d1_town_04_spin_loop).",
+  "Commonest models: light_spotlight02_lamp 11, oildrum001_explosive 9, corpse1 4, garbage256_composite002b 4, trappropeller_engine 2, door01_left 1, trappropeller_blade 1, classic_legs 1, classic_torso 1, tram_lever01 1, tram_leverbase01 1, fence03a 1, oildrum001 1, light_spotlight01_base 1, light_spotlight01_lamp 1.",
+  "Commonest materials (faces): woodfloor005a 2086, rockwall015a 1577, metaltruss022c 479, brickwall048a 160, metalfloor001a 152, metalrail003a 120, metalwall001b 82, metalgrate013b 78, woodfloor002a 74, blendrockgravel001a 64, gravelfloor002b 58, metaltruss017a 54, brickwall048i 48, plasterwall039c 46, metalrail003b 40, concretefloor013a 36, plasterwall039b 31, metalwall001f 27, metalwall087a 27, metaltruss008a 24.",
+  "Ceilings: floor to ceiling indoors (cast up from 163 AI nodes) is most often 248 (23), then 128 (15) and 240 (15); 0% of the nodes are outdoors; corridors 166 wide under 219, rooms 271 by 1630 (medians, wall to wall).",
+  "Stairs: 30 flights of 3 or more steps; steps (rise x tread) 8x12 149; median 5 steps a flight.",
+  "Doors: door01_left 1; openings at them (wide x high): 48x108 1.",
+  "Cables: 23 rope spans, median 478 long, slack 110, width 1.",
+  "Spacing (nearest of the same model): light_spotlight02_lamp 1311 apart (n 11).",
+  "Walls in bands: 18% of wall columns over 256 tall change material at least once; the first change most often 256 or 344 over the foot; pairs (below > above): rockwall015a > woodfloor005a, rockwall015a > blendrockgravel001a, blendrockgravel001a > rockwall015a.",
+  "Slopes: 58 sloped faces over 2000 square units, most often 20, 25, 15 degrees; rockwall015a, gravelfloor002b, woodfloor005a.",
+  "Props: 41 in play; on exact 90s: static 40%, physics 100%; physics tilted 9% (lying most often nothing); statics touching a wall 70%, physics within 16 of one 9%; 0.088 props per 100 by 100 of play (0.026 physics).",
+  "Wiring: 87 output lines from 42 entities; commonest OnTrigger>Spawn 14, OnTrigger>PlaySound 12, OnSpawnNPC>StartSchedule 12; 4 relays (longest chain 2), 0 counters, 1 timers, 36 makers, 1 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 70% of faces; lightmapscale 16 on 65% (near the nodes 51%, far 75%); func_detail 78% of brushes; 154 trim strips (16x16 120, 8x8 15); 90 chamfers; 327 displacements.",
+  "Light by fixture: light_spotlight02_lamp: light_spot 159 237 215 800, cone 50/25, pitch -65; light_spotlight01_base: light_spot 159 237 215 800, cone 35/5, pitch -45; lightbulb01a: light_spot 254 216 146 300, cone 75/30, pitch -90; lightbulb01a: light 254 216 146 8.",
+  "Grime: 9 infodecal and 9 info_overlay; on walls plaster 4, graffiti 3, trash 2; wall decals median 73.4 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d1_town_04"
+}

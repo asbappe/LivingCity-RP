@@ -1,0 +1,24 @@
+{
+ "title": "Valve's styleguide_ravenholm_01 (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_ravenholm_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 809 prop_static, 218 prop_physics, 32 prop_dynamic, 4 prop_door_rotating, 6 prop_ragdoll, 20 infodecal, 29 info_overlay, 0 keyframe_rope and 12 move_rope, 241 func_detail, 0 npc entities (makers included); left out: 1646 hidden objects and the 3D skybox room (2 props, scale 16).",
+  "Lights: 0 light (median brightness None), 18 light_spot (median 200), 0 point_spotlight, 0 env_sprite; sun \"235 155 71 700\" at pitch -35, ambient \"105 142 165 120\"; fog \"174 109 66\" from 512 to 15000; sky dusk_01hdr.",
+  "Commonest models: pipe01_connector01 76, pipe02_connector01 76, pipe01_straight01_long 54, pipe02_straight01_long 50, oildrum001 35, pipe03_connector01 31, pipe03_straight01_long 24, wood_crate001a 23, pipe02_straight01_short 20, tree_pine_01 16, tree_deciduous_01a 14, pipe01_straight01_short 13, pipe03_straight01_short 13, exterior_fence002c 13, hedge_128 13.",
+  "Commonest materials (faces): woodfloor005a 1047, metaltruss022c 716, metalstair002a 567, brickwall045a 358, metaltruss022a 325, metalceiling005a 288, metalfloor007a 236, blendconcretesnow003a 235, glasswindow017a 228, concretewall032d 225, concretewall022a 221, concretewall026i 215, metalwall029a 188, brickwall014a 186, blendgravelsnow001d 175, concretewall034a 160, metaltruss016a 160, woodstair002c 150, blendgrassrock001a_snow 146, metalpipe001a 146.",
+  "Stairs: 25 flights of 3 or more steps; steps (rise x tread) 8x12 136, 8x8 41, 4x8 30; median 8 steps a flight.",
+  "Doors: door01_left 4; openings at them (wide x high): 48x108 4.",
+  "Cables: 6 rope spans, median 539 long, slack 50, width 2.",
+  "Spacing (nearest of the same model): tree_pine_01 263 apart (n 16), tree_deciduous_01a 404 apart (n 14), exterior_fence002c 129 apart (n 13), interior_fence002b 66 apart (n 10), tree_pine_cluster_01 461 apart (n 10), exterior_fence002d 305 apart (n 8).",
+  "Walls in bands: 70% of wall columns over 256 tall change material at least once; the first change most often 128 or 168 over the foot; pairs (below > above): metalwall070f > metalwall070a, concretewall026g > concretewall026i, concretewall071f > concretewall071e.",
+  "Slopes: 66 sloped faces over 2000 square units, most often 25, 45, 65 degrees; tileroof003a_snow, snowfloor001a, metalwall014a.",
+  "Props: 1070 in play; on exact 90s: static 84%, physics 59%; physics tilted 29% (lying most often board, trash, pallet); statics touching a wall 36%, physics within 16 of one 49%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 573 output lines from 193 entities; commonest OnTrigger>Enable 32, OnDamaged>Break 14, OnTrigger>BeginSequence 14; 12 relays (longest chain 2), 3 counters, 8 timers, 27 makers, 3 buttons working doors; 84 lines name nothing.",
+  "Craft: texture scale 0.25 on 93% of faces; lightmapscale 16 on 97% (near the nodes ?, far 97%); func_detail 67% of brushes; 286 trim strips (4x12 50, 8x32 26); 163 chamfers; 642 displacements.",
+  "Light by fixture: light_domelight02_on: light_spot 254 216 146 200, cone 60/30, pitch -90; light_domelight03: light_spot 254 216 146 300, cone 60/30, pitch -90; lampfixture01a: light_spot 159 237 215 600, cone 60/20, pitch -90; pipe01_connector01: light_spot 254 216 146 300, cone 75/30, pitch -90.",
+  "Grime: 20 infodecal and 29 info_overlay; on walls graffiti 18, stain 2; wall decals median 51.4 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_ravenholm_01"
+}

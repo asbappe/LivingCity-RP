@@ -1,0 +1,20 @@
+{
+ "title": "Valve's styleguide_caves (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_caves, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 78 prop_static, 12 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 9 info_overlay, 0 keyframe_rope and 0 move_rope, 16 func_detail, 101 npc entities (makers included); left out: 859 hidden objects and no 3D skybox room.",
+  "Lights: 23 light (median brightness 80), 1 light_spot (median 200), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Commonest models: egg 90, antlion_worker 6, antlion_guard 1.",
+  "Commonest materials (faces): reflectivity_50 1842, rockwall015a 1349, blendrockdirt_tunnel02a 8, dev_measuregeneric01b 7, water_tunnels01 6.",
+  "Ceilings: floor to ceiling indoors (cast up from 23 AI nodes) is most often 200 (3), then 224 (3) and 232 (3); 0% of the nodes are outdoors; corridors 182 wide under 198, rooms 223 by 1256 (medians, wall to wall).",
+  "Walls in bands: 7% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): rockwall015a > reflectivity_50, water_tunnels01 > rockwall015a.",
+  "Slopes: 53 sloped faces over 2000 square units, most often 25, 45, 65 degrees; rockwall015a, reflectivity_50.",
+  "Props: 90 in play; on exact 90s: static 100%, physics 100%; physics tilted 0% (lying most often nothing); statics touching a wall ?, physics within 16 of one ?; 0.272 props per 100 by 100 of play (0.0 physics).",
+  "Wiring: 9 output lines from 5 entities; commonest OnMapSpawn>SetAutoExposureMax 2, OnMapSpawn>SetAutoExposureMin 2, OnMapSpawn>SetTonemapRate 2; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 79% of faces; lightmapscale 16 on 100% (near the nodes 100%, far 100%); func_detail 86% of brushes; 0 trim strips (); 0 chamfers; 451 displacements.",
+  "Grime: 0 infodecal and 9 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_caves"
+}

@@ -1,0 +1,25 @@
+{
+ "title": "Valve's d3_citadel_03 (draft)",
+ "draft": true,
+ "about": "Valve's own d3_citadel_03, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 205 prop_static, 12 prop_physics, 22 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 1 infodecal, 0 info_overlay, 4 keyframe_rope and 1 move_rope, 216 func_detail, 27 npc entities (makers included); left out: 48 hidden objects and no 3D skybox room.",
+  "Lights: 18 light (median brightness 155), 29 light_spot (median 2000), 16 point_spotlight, 1 env_sprite; no light_environment; fog \"234 243 244\" from 512 to 4096; sky sky_day03_05.",
+  "Sound: 12 env_soundscape (d3_citadel.general_control_room 2, d3_citadel.combine_ball_room 2, d3_citadel.generic 2, d3_citadel.generic_moody2 2, d3_citadel.deep_dropoff_inside 2, d3_citadel.stasis_room 1), median radius 106; 44 ambient_generic (solidmetal.strain, d3_citadel.shield_loop, d3_citadel.shield_touch_loop, d3_citadel.combine_ball_field_loop2).",
+  "Commonest models: railing_128 33, combine_soldier 20, pipes02_single01a 16, pipes02_single01b 15, combine_fence01a 14, combine_fence01b 14, pipes01_single01b 13, railing_256 12, pipes03_single02a 11, pipes01_single01a 11, pipes03_single02b 10, pipes02_single01c 10, combine_light001a 10, pipes03_single02c 9, combine_bridge 8.",
+  "Commonest materials (faces): citadel_metalwall063a 13384, citadel_metalwall077a 10690, citadel_metalwall072b 807, metalcombine002 533, white004_nochop 149, combineglass001a 145, reflectivity_50b 116, citadel_tilefloor016a 97, citadel_metalwall101a 63, citadel_metalwall091a 51, citadel_metalwall090a 45, metalcombine001 44, citadel_tilewall005a 40, metalwall030a 36, com_shield002a 26, citadel_metalwall078a 19, citadel_metalwall101b 13, comshieldwall2 13, citadel_metalwall072a 8, decalporthole001b 4.",
+  "Ceilings: floor to ceiling indoors (cast up from 245 AI nodes) is most often 320 (68), then 192 (23) and 256 (22); 0% of the nodes are outdoors; corridors 128 wide under 239, rooms 383 by 1340 (medians, wall to wall).",
+  "Stairs: 5 flights of 3 or more steps; steps (rise x tread) 8x16 25; median 6 steps a flight.",
+  "Cables: 4 rope spans, median 1619 long, slack 25, width 4.",
+  "Spacing (nearest of the same model): combine_fence01a 489 apart (n 14), combine_fence01b 489 apart (n 14).",
+  "Walls in bands: 51% of wall columns over 256 tall change material at least once; the first change most often 64 or 128 over the foot; pairs (below > above): citadel_metalwall077a > citadel_metalwall063a, citadel_metalwall077a > citadel_metalwall072b, citadel_metalwall063a > citadel_metalwall077a.",
+  "Slopes: 61 sloped faces over 2000 square units, most often 45, 60, 65 degrees; citadel_metalwall077a, citadel_metalwall072b, citadel_metalwall063a.",
+  "Props: 239 in play; on exact 90s: static 45%, physics 100%; physics tilted 0% (lying most often nothing); statics touching a wall 41%, physics within 16 of one 100%; 0.177 props per 100 by 100 of play (0.013 physics).",
+  "Wiring: 777 output lines from 225 entities; commonest OnTrigger>Explode 96, OnTrigger>Disable 90, OnTrigger>Enable 85; 104 relays (longest chain 5), 7 counters, 26 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 75% of faces; lightmapscale 16 on 10% (near the nodes 19%, far 4%); func_detail 87% of brushes; 421 trim strips (2x8 225, 8x32 111); 234 chamfers; 300 displacements.",
+  "Light by fixture: combine_light001a: light_spot 147 226 240 2000, cone 35/12, pitch -30; combine_light002a: light_spot 147 226 240 2000, cone 35/12, pitch -30; combine_intwallunit: light_spot 147 226 240 50, cone 60/30, pitch -30; combine_intwallunit: light 32 200 196 20.",
+  "Grime: 1 infodecal and 0 info_overlay; on walls poster 1; wall decals median 51.9 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d3_citadel_03"
+}

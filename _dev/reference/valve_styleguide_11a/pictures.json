@@ -1,0 +1,20 @@
+{
+ "title": "Valve's styleguide_11a (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_11a, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 42 prop_static, 10 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 7 info_overlay, 0 keyframe_rope and 0 move_rope, 1 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 6 light (median brightness 2), 6 light_spot (median 250), 0 point_spotlight, 6 env_sprite; sun \"250 230 188 200\" at pitch -77, ambient \"46 120 156 20\"; fog \"56 68 82\" from 64 to 2000; sky sky_day01_01.",
+  "Commonest models: light_cagelight02_on 4, electricalbox01 4, pipeset32d_512_001a 4, canister01a 3, electricalbox02 2, canister02a 2, equipment1 2, wall_console2 2, horizontalcoolingtank04 2, pipeset08d_512_001a 2, pipesystem02a 2, light_cagelight01_on 1, nucleartestcabinet 1, interiorpipecluster01a 1, controlroom_monitor001b 1.",
+  "Commonest materials (faces): concretewall010a 296, concretewall036a 108, plasterwall024b 58, metalhull003a 56, metalpipe003a 42, metalroof005a 28, metalgrate013a2 28, ep2_concretewall01d 23, black 18, concretewall008a 16, metalwall031a 15, ep2_concretewall01a 15, metaltruss029a 12, ep2_concretewall01c 11, concretewall073b 10, concreteceiling_bunker01a 10, metalwall005b 10, concretestair005a 10, concretefloor_bunker02a 8, concretewall002a 6.",
+  "Stairs: 1 flights of 3 or more steps; steps (rise x tread) 8x12 3; median 4 steps a flight.",
+  "Spacing (nearest of the same model): light_cagelight02_on 362 apart (n 4).",
+  "Walls in bands: 64% of wall columns over 256 tall change material at least once; the first change most often 64 or 16 over the foot; pairs (below > above): concretewall008a > ep2_concretewall01d, concretewall010a > plasterwall024b, concretewall010a > metalgrate013a2.",
+  "Props: 52 in play; on exact 90s: static 74%, physics ?; physics tilted 70% (lying most often propane); statics touching a wall 50%, physics within 16 of one 70%; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 96% of faces; lightmapscale 16 on 94% (near the nodes ?, far 94%); func_detail 4% of brushes; 17 trim strips (4x16 4, 2x8 4); 80 chamfers; 0 displacements.",
+  "Light by fixture: light_cagelight02_on: light 253 249 219 2; light_cagelight02_on: light_spot 253 249 219 250, cone 70/40, pitch -90; light_cagelight01_on: light 208 70 55 3; light_cagelight01_on: light_spot 208 70 55 300, cone 70/40, pitch -90.",
+  "Grime: 0 infodecal and 7 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_11a"
+}

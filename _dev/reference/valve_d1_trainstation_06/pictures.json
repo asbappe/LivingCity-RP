@@ -1,0 +1,27 @@
+{
+ "title": "Valve's d1_trainstation_06 (draft)",
+ "draft": true,
+ "about": "Valve's own d1_trainstation_06, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 187 prop_static, 54 prop_physics, 5 prop_dynamic, 1 prop_door_rotating, 0 prop_ragdoll, 64 infodecal, 12 info_overlay, 0 keyframe_rope and 0 move_rope, 80 func_detail, 16 npc entities (makers included); left out: 250 hidden objects and the 3D skybox room (4 props, scale 16).",
+  "Lights: 5 light (median brightness 30), 16 light_spot (median 900), 4 point_spotlight, 6 env_sprite; sun \"237 218 143 800\" at pitch -35, ambient \"190 201 220 100\"; fog \"223 216 173\" from 512 to 15000; sky sky_day01_01_hdr.",
+  "Sound: 4 env_soundscape (d1_trainstation.city 2, d1_canals_tunnel01 1, general.concrete_quiet 1), median radius 128; 27 ambient_generic (combine.sheild_touch, combine.sheild_loop, novaprospekt.flare_fire, trainyard.train_idle).",
+  "Commonest models: train003 14, ceiling_truss001a 10, trackmarkers01 10, pole_448connection002b 10, exterior_fence002d 8, wood_crate002a 7, column_light001b 7, garbage256_composite002b 7, light_signal002a 6, wood_pallet001a 6, benchoutdoor01a 6, trackswitch01 5, cable_1152connection001b 5, column_light001a 5, tree_deciduous_01a-lod 5.",
+  "Commonest materials (faces): stonewall050c 483, stonewall050a 341, stonewall050e 249, concretewall037c 245, concretewall004a 245, stonewall050b 229, stonewall050d 211, concretewall022a 197, concretestair005a 152, concretewall004c 140, concretewall071a 135, concretewall041e 128, metalstair004a 120, concretewall004b 102, concretewall041f 88, reflectivity_50 85, building_trainstation_template001c 82, concretewall032d 81, building_trainstation_template001a 78, concretefloor039a 75.",
+  "Ceilings: floor to ceiling indoors (cast up from 81 AI nodes) is most often 352 (20), then 128 (11) and 112 (8); 69% of the nodes are outdoors; corridors 114 wide under 128, rooms 409 by 2314 (medians, wall to wall).",
+  "Stairs: 48 flights of 3 or more steps; steps (rise x tread) 8x12 450; median 10.5 steps a flight.",
+  "Streets: no kerbed roadway in 180 cuts through outdoor AI nodes; wall to wall most often 1088; walls median 384 tall (height over width 0.3).",
+  "Channels (33 cuts across the shortest way, 0 at water: 14 open, 5 tunnels): open width 64 up most often 192, 128 up 192; rims (where a side opens out) 302; ledges 116 wide at 224 up; tunnels most often 256 wide, roof 352 up.",
+  "Doors: door01_left 1; openings at them (wide x high): 48x108 1.",
+  "Spacing (nearest of the same model): pole_448connection002b 501 apart (n 10), exterior_fence002d 253 apart (n 8), column_light001b 367 apart (n 7), benchoutdoor01a 112 apart (n 6), column_light001a 367 apart (n 5), tree_deciduous_01a-lod 322 apart (n 5).",
+  "Walls in bands: 82% of wall columns over 256 tall change material at least once; the first change most often 128 or 16 over the foot; pairs (below > above): concretewall071c > concretewall071b, concretewall004a > concretewall071a, stonewall050c > stonewall050a.",
+  "Slopes: 52 sloped faces over 2000 square units, most often 20, 45, 35 degrees; building_trainstation_template001c, metalwall014a, metalroof006a.",
+  "Props: 240 in play; on exact 90s: static 72%, physics 46%; physics tilted 39% (lying most often board, pallet, cart); statics touching a wall 43%, physics within 16 of one 32%; 0.236 props per 100 by 100 of play (0.049 physics).",
+  "Wiring: 218 output lines from 80 entities; commonest OnPass>SetSpeed 54, OnPass>Stop 12, OnTrigger>PlaySound 9; 6 relays (longest chain 2), 0 counters, 2 timers, 3 makers, 0 buttons working doors; 12 lines name nothing.",
+  "Craft: texture scale 0.25 on 96% of faces; lightmapscale 16 on 12% (near the nodes 18%, far 7%); func_detail 63% of brushes; 36 trim strips (16x16 5, 10x16 5); 37 chamfers; 4 displacements.",
+  "Light by fixture: prison_cagedlight001a: light_spot 254 216 146 102, cone 50/30, pitch -57.7; lights_florescent01a: light_spot 159 237 215 900, cone 50/30, pitch -40; light_spotlight02_lamp: light_spot 159 237 215 900, cone 35/15, pitch -37.7; prison_cagedlight001a: light 254 216 146 15.",
+  "Grime: 64 infodecal and 12 info_overlay; on walls plant 17, trash 14, graffiti 12, poster 12; wall decals median 97.8 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d1_trainstation_06"
+}

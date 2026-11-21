@@ -1,0 +1,23 @@
+{
+ "title": "Valve's ep1_c17_03 (draft)",
+ "draft": true,
+ "about": "Valve's own ep1_c17_03, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 10 prop_static, 212 prop_physics, 4 prop_dynamic, 1 prop_door_rotating, 0 prop_ragdoll, 5 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 81 func_detail, 19 npc entities (makers included); left out: 285 hidden objects and no 3D skybox room.",
+  "Lights: 22 light (median brightness 200), 2 light_spot (median 325), 0 point_spotlight, 4 env_sprite; sun \"219 191 148 500\" at pitch -25, ambient \"207 172 133 100\"; fog \"207 172 133\" from 100 to 3000; sky sky_ep01_02.",
+  "Commonest models: garbage_glassbottle001a 34, cardboard_box001a 30, cinderblock01a 30, garbage_metalcan001a 26, gascan001a 21, wood_crate001a 14, wood_crate002a 12, garbage_glassbottle003a 11, garbage_takeoutcarton001a 6, combine_soldier 6, door01_left 5, combine_lock01 4, plasticbucket001a 4, garbage_plasticbottle001a 3, briefcase001a 3.",
+  "Commonest materials (faces): metalwall035a 1472, plasterwall045a 878, wooddoor004a 852, pipeset_metal 419, concretefloor011a_c17 352, wooddoor032a 296, plasterwall034b 274, metalwall061f 250, concretefloor033a 182, plasterwall042c_c17 180, plasterwall034d 165, courtyard_template006b 159, plasterwallpaper005a 146, concreteceiling003a 132, metaldoor007a 126, metalcombine001 121, stonestair001a 96, acousticceiling002a 92, metaldoor032a 90, courtyard_template001b 83.",
+  "Stairs: 15 flights of 3 or more steps; steps (rise x tread) 8x12 78, 6x16 3, 8x16 2; median 7 steps a flight.",
+  "Doors: door01_left 1; openings at them (wide x high): 48x108 1.",
+  "Walls in bands: 44% of wall columns over 256 tall change material at least once; the first change most often 128 or 192 over the foot; pairs (below > above): concretefloor033a > building_template005f, concretefloor033a > building_template003a, concretefloor033a > courtyard_template006b.",
+  "Fronts: 48% of vertical wall area is painted building fronts (courtyard_template006b, courtyard_template001b, courtyard_template001g).",
+  "Slopes: 34 sloped faces over 2000 square units, most often 20, 45, 70 degrees; metalwall035a, concretefloor033a, tileroof004a.",
+  "Props: 227 in play; on exact 90s: static 80%, physics 6%; physics tilted 54% (lying most often cinder, trash, propane); statics touching a wall 89%, physics within 16 of one 14%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 108 output lines from 36 entities; commonest OnStartTouch>Deactivate 11, OnStartTouch>Activate 10, OnTrigger>Kill 9; 6 relays (longest chain 1), 1 counters, 0 timers, 4 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 78% of faces; lightmapscale 16 on 83% (near the nodes ?, far 83%); func_detail 36% of brushes; 82 trim strips (8x16 23, 8x32 16); 7 chamfers; 0 displacements.",
+  "Light by fixture: combine_intmonitor001: light_spot 147 226 240 50, cone 60/30, pitch -30; lampfixture01a: light_spot 159 237 215 600, cone 60/20, pitch -90.",
+  "Grime: 5 infodecal and 0 info_overlay; on walls stain 2, plaster 2, graffiti 1; wall decals median 59.3 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep1_c17_03"
+}

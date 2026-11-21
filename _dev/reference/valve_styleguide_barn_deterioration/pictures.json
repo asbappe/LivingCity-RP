@@ -1,0 +1,20 @@
+{
+ "title": "Valve's styleguide_barn_deterioration (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_barn_deterioration, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 1 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 1 infodecal, 0 info_overlay, 37 keyframe_rope and 7 move_rope, 6 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 1 env_sprite; no light_environment; no fog controller; sky sky_day02_07.",
+  "Commonest models: light_cagelight02_on 1.",
+  "Commonest materials (faces): woodfloor005a 2000, tileroof003a 244, woodwall024a 160, woodwall009a 160, woodwall006a 147, woodbeam002a 122, woodfloor008a 83, woodwall008a 68, woodwall045a 62, tileroof003b 60, tileroof004b 51, concretefloor014a 46, tileroof004a_c17 30, woodfloor006a 17, brickfloor001a 13, metalwall014a 10, metalfloor001a 5.",
+  "Stairs: 2 flights of 3 or more steps; steps (rise x tread) 8x11 14; median 8 steps a flight.",
+  "Cables: 33 rope spans, median 73.1 long, slack 37.5, width 0.5.",
+  "Walls in bands: 17% of wall columns over 256 tall change material at least once; the first change most often 16 or 64 over the foot; pairs (below > above): woodfloor008a > woodfloor005a, woodfloor005a > woodwall024a, woodfloor005a > concretefloor014a.",
+  "Slopes: 117 sloped faces over 2000 square units, most often 35, 55, 15 degrees; tileroof003b, tileroof003a, woodfloor005a.",
+  "Props: 1 in play; on exact 90s: static 100%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall ?, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 97% of faces; lightmapscale 16 on 97% (near the nodes ?, far 97%); func_detail 68% of brushes; 145 trim strips (2x4 33, 10x18 25); 22 chamfers; 539 displacements.",
+  "Grime: 1 infodecal and 0 info_overlay; on walls other 1; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_barn_deterioration"
+}

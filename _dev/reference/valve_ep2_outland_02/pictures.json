@@ -1,0 +1,26 @@
+{
+ "title": "Valve's ep2_outland_02 (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_02, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 157 prop_static, 23 prop_physics, 30 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 4 infodecal, 43 info_overlay, 41 keyframe_rope and 13 move_rope, 89 func_detail, 62 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 9 light (median brightness 80), 31 light_spot (median 400), 16 point_spotlight, 5 env_sprite; sun \"145 166 204 400\" at pitch -70, ambient \"77 114 183 300\"; fog \"18 23 35\" from 1 to 2800.0; sky sky_ep02_caves_hdr.",
+  "Sound: 8 env_soundscape (ep2_mines.tunnel 3, ep2_caves.main_cavern 2, ep2_caves.quiet_tunnel 1, ep2_caves.dropoff 1, Nothing 1), median radius 176; 42 ambient_generic (npc_antlion.idle, citadel_ep01.stalk_spark_01, outland_02.vort_chant_loop, outland_ep02.cave_siren1_loop).",
+  "Commonest models: fence01a 19, antlion_detector_lights_lamp 12, handrail04_long 12, struts_tunnel192_01 10, vortigaunt_blue 9, concrete_spawnchunk001d 7, rebar_cluster001b 6, light_cagelight02_on 5, struts_single01 5, caverocks_cluster02 5, truss02d 5, antlion_detector_lights_base 4, antlion_detector 4, pipeset02d_512_001a 4, light_spotlight01_lamp 4.",
+  "Commonest materials (faces): reflectivity_50 1151, metaldoor046a 555, metalhull003a 385, blendrockslime02a 292, metalrail012c 230, metalbeam001a 203, metaltruss008a 200, concretewall010a 200, metalwall085a 197, woodwall041a 197, woodfloor005a 185, metalfloor001a 180, tvscreen001a 180, metalcombine002 180, metalwall031a 163, concretewall_mine_001b 124, concretewall_mine_001c 114, concretewall036a 109, metalfloor010a 100, concretewall_mine_002a 99.",
+  "Ceilings: floor to ceiling indoors (cast up from 190 AI nodes) is most often 192 (35), then 184 (21) and 448 (20); 8% of the nodes are outdoors; corridors 137 wide under 153, rooms 384 by 2681 (medians, wall to wall).",
+  "Stairs: 5 flights of 3 or more steps; steps (rise x tread) 8x8 25; median 6 steps a flight.",
+  "Streets: no kerbed roadway in 13 cuts through outdoor AI nodes; wall to wall most often 512; walls median 160 tall (height over width 0.3).",
+  "Cables: 33 rope spans, median 145 long, slack 100, width 2.",
+  "Spacing (nearest of the same model): fence01a 133 apart (n 19), antlion_detector_lights_lamp 0 apart (n 12), light_cagelight02_on 735 apart (n 5), light_spotlight01_lamp 314 apart (n 4).",
+  "Walls in bands: 37% of wall columns over 256 tall change material at least once; the first change most often 16 or 64 over the foot; pairs (below > above): concretewall_mine_002a > metaltruss017a, concretewall_mine_001c > concretewall_mine_001a, reflectivity_50 > metalfloor010a.",
+  "Slopes: 77 sloped faces over 2000 square units, most often 45, 20, 25 degrees; metalwall025a, metalwall031a, metalgrate014a.",
+  "Props: 210 in play; on exact 90s: static 57%, physics 17%; physics tilted 78% (lying most often board); statics touching a wall 35%, physics within 16 of one 58%; 0.255 props per 100 by 100 of play (0.035 physics).",
+  "Wiring: 1197 output lines from 250 entities; commonest OnTrigger>Enable 54, OnTrigger>LightOn 41, OnTrigger>PlaySound 39; 70 relays (longest chain 4), 12 counters, 12 timers, 18 makers, 0 buttons working doors; 4 lines name nothing.",
+  "Craft: texture scale 0.25 on 80% of faces; lightmapscale 16 on 93% (near the nodes 98%, far 82%); func_detail 45% of brushes; 136 trim strips (16x16 49, 16x32 11); 107 chamfers; 193 displacements.",
+  "Light by fixture: light_cagelight02_on: light_spot 255 226 174 300, cone 75/2, pitch -70; light_spotlight01_lamp: light_spot 147 226 240 700, cone 45/25, pitch -30; larval_essence: light 121 242 128 160.",
+  "Grime: 4 infodecal and 43 info_overlay; on walls graffiti 2, stain 1; wall decals median 24.1 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_02"
+}

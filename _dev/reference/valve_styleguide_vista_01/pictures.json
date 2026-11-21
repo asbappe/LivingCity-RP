@@ -1,0 +1,25 @@
+{
+ "title": "Valve's styleguide_vista_01 (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_vista_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 222 prop_static, 10 prop_physics, 27 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 9 info_overlay, 0 keyframe_rope and 27 move_rope, 105 func_detail, 20 npc entities (makers included); left out: 753 hidden objects and the 3D skybox room (2 props, scale 16).",
+  "Lights: 4 light (median brightness 250), 1 light_spot (median 40), 0 point_spotlight, 1 env_sprite; sun \"205 166 48 200\" at pitch -4, ambient \"109 135 167 100\"; fog \"37 52 84\" from 64 to 8000; sky sky_ep02_01.",
+  "Commonest models: handrail04_medium 26, tree_pine_01z 20, traincar_seats001 11, pulleywheels_large01 11, rockcluster02 9, handrail04_long 9, train003 8, exterior_fence002c 8, tree_pine05 7, handrail04_corner 7, exterior_fence002a 7, exterior_fence002d 6, tree_deciduous_02a 5, tree_cliff_01a 5, traincar_rack001 4.",
+  "Commonest materials (faces): metalhull003a 1023, rockwall_cave02a 761, woodfloor005a 332, metaltrain001b 325, metalpipe002a 289, metaltrain001a 281, concretewall073b 245, metalwall026a 230, metalwall014a 221, concretewall074b 220, metaltruss017a 199, metaltruss024a 183, blendrockrock007a 176, cliff03a 165, metaltrainglass001a 156, metaltrain001e 156, metaltrain001c 139, concretewall062a 135, concretewall071b 119, concretewall008a 117.",
+  "Ceilings: floor to ceiling indoors (cast up from 13 AI nodes) is most often 0 (4), then 128 (3) and 240 (1); 79% of the nodes are outdoors; corridors 121 wide under 128, rooms 1415 by 4639 (medians, wall to wall).",
+  "Stairs: 18 flights of 3 or more steps; steps (rise x tread) 8x12 144; median 8.5 steps a flight.",
+  "Streets (cuts through 26 outdoor AI nodes, 7 with a kerb each side): roadway most often 736 wide; kerbs 4 (5) or 8 (4) high; pavements most often 32, 48 wide; crown 0 in 0 of 7; road blendrockrock007a, pavement cliff03a; wall to wall most often 1280; street walls median 192 tall (height over width 0.1).",
+  "Channels (29 cuts across the shortest way, 14 at water: 9 open, 8 tunnels): open width 64 up most often 832, 128 up 256; rims (where a side opens out) 236; water 77.4 deep; ledges 104 wide at 156 up; tunnels most often 2048 wide, roof 192 up.",
+  "Cables: 10 rope spans, median 140 long, slack 25, width 2.",
+  "Spacing (nearest of the same model): tree_pine_01z 570 apart (n 20), exterior_fence002c 344 apart (n 8), tree_pine05 636 apart (n 7), exterior_fence002a 338 apart (n 7), exterior_fence002d 197 apart (n 6), tree_deciduous_02a 770 apart (n 5).",
+  "Walls in bands: 22% of wall columns over 256 tall change material at least once; the first change most often 256 or 128 over the foot; pairs (below > above): cliff01a > clifftrees_cardboard01a, blendrockrock007a > cliff03a, concretewall074c > concretewall074b.",
+  "Slopes: 89 sloped faces over 2000 square units, most often 25, 35, 45 degrees; metalwall014a, metalpipe002a, cliff03a.",
+  "Props: 261 in play; on exact 90s: static 56%, physics 90%; physics tilted 10% (lying most often nothing); statics touching a wall 29%, physics within 16 of one 17%; 0.149 props per 100 by 100 of play (0.0 physics).",
+  "Wiring: 316 output lines from 88 entities; commonest OnTrigger>Break 16, OnTrigger>PlaySound 14, OnStartTouch>PlaySound 11; 16 relays (longest chain 1), 1 counters, 4 timers, 1 makers, 4 buttons working doors; 36 lines name nothing.",
+  "Craft: texture scale 0.25 on 91% of faces; lightmapscale 16 on 98% (near the nodes 97%, far 99%); func_detail 70% of brushes; 159 trim strips (8x32 41, 16x16 32); 40 chamfers; 350 displacements.",
+  "Grime: 0 infodecal and 9 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_vista_01"
+}

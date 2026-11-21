@@ -1,0 +1,26 @@
+{
+ "title": "Valve's d2_coast_11 (draft)",
+ "draft": true,
+ "about": "Valve's own d2_coast_11, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 205 prop_static, 196 prop_physics, 19 prop_dynamic, 0 prop_door_rotating, 14 prop_ragdoll, 7 infodecal, 19 info_overlay, 6 keyframe_rope and 11 move_rope, 38 func_detail, 27 npc entities (makers included); left out: 139 hidden objects and the 3D skybox room (0 props, scale 16).",
+  "Lights: 15 light (median brightness 75), 6 light_spot (median 400), 3 point_spotlight, 5 env_sprite; sun \"255 252 230 300\" at pitch -15, ambient \"175 199 205 150\"; fog \"141 152 158\" from 2048 to 8192; sky sky_day02_07_hdr.",
+  "Sound: 16 env_soundscape (coast.distant_shoreline 7, coast.shoreline_with_antlion_dens 3, coast.general_oldwoodbuilding 3, coast.general_shoreline 2, coast.positional_shoreline 1), median radius -1; 14 ambient_generic (coast.campfire, streetwar.d3_c17_10b_rumble1, coast.wind_01, coast.baittrain_lightswitch).",
+  "Commonest models: wood_crate001a 18, wood_pallet001a 15, oildrum001 14, rockgranite01c 14, wood_crate002a 14, rockcliff_cluster02c 13, rockcliff_cluster03c 13, oildrum001_explosive 12, handrail04_long 11, dock01_pole01a_128 10, metal_panel01a 10, furnituremattress001a 9, tree_deciduous_card_01 8, trashdumpster02b 7, driftwood_01a 7.",
+  "Commonest materials (faces): metalwall061f 481, metalwall013a 442, concretewall008a 297, woodfloor005a 283, blendrockdirt008d 198, metaltruss017a 198, woodwall028a 152, cliffface002a 134, metalwall074d 122, woodburnt001a 103, reflectivity_10 102, metalwall017a 90, concretewall047c 84, metalwall013d 54, concretewall072a 53, woodwall027c 52, woodfloor008a 51, dirtfloor005b 49, woodshelf001a 42, metalrail003a 40.",
+  "Ceilings: floor to ceiling indoors (cast up from 141 AI nodes) is most often 160 (9), then 128 (5) and 352 (5); 81% of the nodes are outdoors; corridors 141 wide under 189, rooms 417 by 1698 (medians, wall to wall).",
+  "Streets (cuts through 305 outdoor AI nodes, 81 with a kerb each side): roadway most often 512 wide; kerbs 8 (19) or 4 (17) high; pavements most often 16, 48 wide; crown 0 in 0 of 81; road blendsandsand008b_antlion, pavement cliffface002a; wall to wall most often 1280; street walls median 352 tall (height over width 0.2).",
+  "Channels (217 cuts across the shortest way, 78 at water: 46 open, 25 tunnels): open width 64 up most often 736, 128 up 640; rims (where a side opens out) 182; ledges 68 wide at 204 up; tunnels most often 512 wide, roof 512 up.",
+  "Cables: 12 rope spans, median 512 long, slack 100, width 2.",
+  "Spacing (nearest of the same model): dock01_pole01a_128 80.8 apart (n 10), tree_deciduous_card_01 2263 apart (n 8), tree_deciduous_03b 682 apart (n 6), dock01_polecluster01c 315 apart (n 5), tree_deciduous_01a-lod 1467 apart (n 4), dockpole02a 869 apart (n 4).",
+  "Walls in bands: 2% of wall columns over 256 tall change material at least once; the first change most often 256 or 320 over the foot; pairs (below > above): blendrockdirt008d > blendgrassgravel001a, blendrockdirt008d > reflectivity_10, metalwall013a > metalwall013d.",
+  "Slopes: 112 sloped faces over 2000 square units, most often 20, 45, 35 degrees; concretewall008a, metalwall017a, metalwall013a.",
+  "Props: 423 in play; on exact 90s: static 39%, physics 31%; physics tilted 54% (lying most often crate, barrel, debris); statics touching a wall 8%, physics within 16 of one 5%; 0.069 props per 100 by 100 of play (0.035 physics).",
+  "Wiring: 384 output lines from 163 entities; commonest OnTrigger>Kill 20, OnTrigger>Start 20, OnTrigger>Trigger 12; 35 relays (longest chain 4), 3 counters, 0 timers, 6 makers, 0 buttons working doors; 5 lines name nothing.",
+  "Craft: texture scale 0.25 on 71% of faces; lightmapscale 16 on 76% (near the nodes 81%, far 71%); func_detail 86% of brushes; 30 trim strips (2x4 10, 4x8 9); 38 chamfers; 565 displacements.",
+  "Light by fixture: light_industrialbell01_on: light_spot 247 249 248 500, cone 30/15, pitch -51; lightbulb01a: light_spot 254 216 146 300, cone 75/30, pitch -90; lightbulb01a: light 254 216 146 8.",
+  "Grime: 7 infodecal and 19 info_overlay; on walls trash 4, stain 2, graffiti 1; wall decals median 4.4 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d2_coast_11"
+}

@@ -1,0 +1,25 @@
+{
+ "title": "Valve's ep2_outland_11 (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_11, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 449 prop_static, 95 prop_physics, 52 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 9 infodecal, 83 info_overlay, 62 keyframe_rope and 10 move_rope, 199 func_detail, 27 npc entities (makers included); left out: 615 hidden objects and no 3D skybox room.",
+  "Lights: 73 light (median brightness 30), 80 light_spot (median 300), 16 point_spotlight, 91 env_sprite; sun \"239 231 203 300\" at pitch -45, ambient \"176 193 201 150\"; fog \"135 163 192\" from 180 to 4600.0; sky sky_fog.",
+  "Sound: 11 env_soundscape (ep2_silo.concretehall 4, silo_garage_1 2, ep2_silo.silo_bottom 2, ep2_silo.silo_top 1, ep2_silo.techroom 1, ep2_silo.silo_middle 1), median radius 187; 24 ambient_generic (ep2_outland_11.silo_alarm, buttons.snd42, buttons.snd3, ep2_outland_11.weld_loop).",
+  "Commonest models: prison_flourescentlight001a 29, interior_fence002c 22, pipeset02d_128_001a 18, prison_switchbox001a 16, footlocker01_closed 13, light_spotlight02_lamp 12, light_spotlight01_base 12, pipe03_45degree01 12, keypad 12, light_security 12, pipeset32d_256_001a 12, lab_flourescentlight002b 11, wall_light 10, pipe03_straight01_short 8, pipe03_straight01_long 8.",
+  "Commonest materials (faces): concretewall010a 4109, metalhull003a 1743, metaldoor046a 1678, metalrail012c 641, metalwall085a 599, metalfloor010a 541, concretewall036a 464, ep2_concretewall01b 377, concretewall_bunker05a 235, ep2_concretewall01a 234, metalwall061f 234, metalfloor003a 222, metaltruss017a 214, concretefloor_bunker02a 213, concretewall073a 191, metalpipe010a 184, metalpipe003a 173, metaltruss008a 159, concretefloor039b 152, ep2_concretewall01c 149.",
+  "Ceilings: floor to ceiling indoors (cast up from 165 AI nodes) is most often 192 (47), then 224 (25) and 232 (14); 0% of the nodes are outdoors; corridors 139 wide under 192, rooms 320 by 796 (medians, wall to wall).",
+  "Stairs: 12 flights of 3 or more steps; steps (rise x tread) 8x16 32, 8x12 25, 8x8 3; median 6 steps a flight.",
+  "Cables: 44 rope spans, median 142 long, slack 75, width 2.",
+  "Spacing (nearest of the same model): interior_fence002c 128 apart (n 22), light_spotlight02_lamp 328 apart (n 12), light_cagelight01_on 277 apart (n 5), interior_fence002e 308 apart (n 3), light_cagelight02_on 299 apart (n 3).",
+  "Walls in bands: 59% of wall columns over 256 tall change material at least once; the first change most often 64 or 128 over the foot; pairs (below > above): concretefloor_bunker02a > concretewall010a, concretewall010a > metalpanel010a, concretewall_bunker05b > concretewall_bunker05a.",
+  "Slopes: 62 sloped faces over 2000 square units, most often 45, 25, 55 degrees; concretewall010a, metalwall025a, metalwall085a.",
+  "Props: 596 in play; on exact 90s: static 66%, physics 41%; physics tilted 19% (lying most often paper); statics touching a wall 35%, physics within 16 of one 48%; 1.496 props per 100 by 100 of play (0.191 physics).",
+  "Wiring: 565 output lines from 161 entities; commonest OnTrigger>Disable 31, OnPressed>Skin 24, OnTrigger>Start 18; 28 relays (longest chain 2), 4 counters, 6 timers, 0 makers, 1 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 88% of faces; lightmapscale 16 on 96% (near the nodes 97%, far 98%); func_detail 54% of brushes; 195 trim strips (8x16 28, 2x2 22); 141 chamfers; 16 displacements.",
+  "Light by fixture: light_security: light 224 254 248 40; light_security: light_spot 224 254 248 320, cone 45/30, pitch -75; wall_light: light 193 249 255 45; wall_light: light_spot 193 249 255 240, cone 70/30, pitch 0.",
+  "Grime: 9 infodecal and 83 info_overlay; on walls grate 8, stain 1; wall decals median 141 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_11"
+}

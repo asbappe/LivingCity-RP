@@ -1,0 +1,27 @@
+{
+ "title": "Valve's styleguide_radiotower (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_radiotower, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 183 prop_static, 20 prop_physics, 18 prop_dynamic, 3 prop_door_rotating, 0 prop_ragdoll, 11 infodecal, 4 info_overlay, 13 keyframe_rope and 23 move_rope, 51 func_detail, 7 npc entities (makers included); left out: 78 hidden objects and no 3D skybox room.",
+  "Lights: 12 light (median brightness 2), 31 light_spot (median 200), 0 point_spotlight, 5 env_sprite; sun \"234 218 170 400\" at pitch -30, ambient \"190 201 220 200\"; fog \"14 18 29\" from 3500 to 60000; sky sky_ep02_09.",
+  "Commonest models: exterior_fence002d 21, handrail04_medium 10, prison_lamp001b 9, substation_transformer01d 8, tree_pine_01 8, handrail04_singlerise 8, medbridge_post01 6, handrail04_corner 6, medbridge_strut01 5, tree_pine_03 5, tree_pine_02 5, rock_riverbed01a 5, utilityconnecter006b 4, utilityconnecter006c 4, prison_cagedlight001a 4.",
+  "Commonest materials (faces): concretewall008a 755, rockwall006b 479, stonewall017b 410, metalpipe003a 354, concretewall015a 297, concretewall074a 230, metalstair003a 168, metalrail006a 146, concretewall041f 114, concretefloor038c 114, concretefloor037b 112, dirtfloor011a 92, brickwall031a 84, metalwall020a 84, concretewall032d 67, metaldoor008a 56, concretewall041d 54, glasswindow007a 50, plasterwall034a 48, concretewall047c 48.",
+  "Ceilings: floor to ceiling indoors (cast up from 60 AI nodes) is most often 176 (16), then 368 (12) and 128 (11); 63% of the nodes are outdoors; corridors 136 wide under 176, rooms 231 by 823 (medians, wall to wall).",
+  "Stairs: 53 flights of 3 or more steps; steps (rise x tread) 8x12 296, 16x24 53; median 7 steps a flight.",
+  "Streets: no kerbed roadway in 40 cuts through outdoor AI nodes; wall to wall most often 768; walls median 256 tall (height over width 0.2).",
+  "Channels (29 cuts across the shortest way, 0 at water: 11 open, 0 tunnels): open width 64 up most often 544, 128 up 544; rims (where a side opens out) 132; ledges 130 wide at 128 up; tunnels most often None wide, roof None up.",
+  "Doors: door01_left 2, door03_left 1; openings at them (wide x high): 96x108 2, 48x131 1.",
+  "Cables: 11 rope spans, median 71 long, slack 25, width 2.",
+  "Spacing (nearest of the same model): exterior_fence002d 256 apart (n 21), prison_lamp001b 216 apart (n 9), tree_pine_01 1904 apart (n 8), medbridge_post01 448 apart (n 6), tree_pine_02 2267 apart (n 5), utilityconnecter006b 95.8 apart (n 4).",
+  "Walls in bands: 27% of wall columns over 256 tall change material at least once; the first change most often 128 or 264 over the foot; pairs (below > above): stonewall017b > metalrail006a, rockwall006b > concretewall008a, rockwall006b > metalrail006a.",
+  "Slopes: 26 sloped faces over 2000 square units, most often 45, 15, 50 degrees; concretewall008a, rockwall006b, stonewall017b.",
+  "Props: 224 in play; on exact 90s: static 76%, physics 60%; physics tilted 0% (lying most often nothing); statics touching a wall 27%, physics within 16 of one 58%; 0.204 props per 100 by 100 of play (0.029 physics).",
+  "Wiring: 69 output lines from 22 entities; commonest OnStartTouch>Display 7, OnTrigger>PlaySound 5, OnTrigger>Skin 4; 4 relays (longest chain 1), 0 counters, 2 timers, 0 makers, 1 buttons working doors; 12 lines name nothing.",
+  "Craft: texture scale 0.25 on 83% of faces; lightmapscale 16 on 94% (near the nodes 98%, far 82%); func_detail 46% of brushes; 150 trim strips (16x32 33, 2x32 18); 23 chamfers; 264 displacements.",
+  "Light by fixture: prison_lamp001b: light_spot 254 216 146 400, cone 60/30, pitch -90; prison_lamp001b: light 254 216 146 2; lightbulb01a: light_spot 254 216 146 300, cone 75/30, pitch -90; lightbulb01a: light 254 216 146 8.",
+  "Grime: 11 infodecal and 4 info_overlay; on walls trash 5, graffiti 3, poster 2, other 1; wall decals median 38.7 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_radiotower"
+}

@@ -1,0 +1,15 @@
+{
+ "title": "Valve's styleguide_01_antenna (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_01_antenna, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 0 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 0 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_05.",
+  "Commonest models: .",
+  "Commonest materials (faces): metalwall088a 414, citadel_metalwall101b 245, metalwall056a 41, citadel_tilefloor016a_cheap 26, dev_lowerwallmetal01d 18, concretefloor038b 13, metalwall075a 10, metalceiling005a 8, metalpanel014a 3, bunker_metalwall03a 2, metalpanel015a 2.",
+  "Walls in bands: 100% of wall columns over 256 tall change material at least once; the first change most often 32 over the foot; pairs (below > above): concretefloor038b > metalwall088a.",
+  "Craft: texture scale 0.25 on 99% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 0% of brushes; 0 trim strips (); 2 chamfers; 0 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_01_antenna"
+}

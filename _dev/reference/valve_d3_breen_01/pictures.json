@@ -1,0 +1,26 @@
+{
+ "title": "Valve's d3_breen_01 (draft)",
+ "draft": true,
+ "about": "Valve's own d3_breen_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 82 prop_static, 9 prop_physics, 76 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 20 infodecal, 34 info_overlay, 3 keyframe_rope and 3 move_rope, 130 func_detail, 32 npc entities (makers included); left out: 87 hidden objects and the 3D skybox room (0 props, scale 16).",
+  "Lights: 42 light (median brightness 31.5), 87 light_spot (median 1200), 20 point_spotlight, 50 env_sprite; sun \"221 112 13 300\" at pitch -21, ambient \"255 255 255 20\"; fog \"245 160 84\" from 512 to 11000.0; sky sky_day03_06_hdr.",
+  "Sound: 14 env_soundscape (d3_citadel.generic 3, Automatic_Dialog 3, d3_citadel.final_portal_chamber 1, d3_citadel.deep_dropoff_inside 1, d3_citadel.top_of_teleport_chamber 1, d3_citadel.silence_and_dialog 1), median radius 100; 66 ambient_generic (solidmetal.strain, d3_citadel.shield_loop, explode_3, k_lab.teleport_post_thunder).",
+  "Commonest models: weaponstripper 14, cell_01_pod_cheap 12, combine_super_soldier 9, combine_light001a 9, combine_fence01a 9, combine_fence01b 9, portalspire 9, combine_soldier 7, railing_128 7, tprotato2 6, blackout 5, combine_light001b 5, breenpod_inner 5, railing_256 4, breen_arm 4.",
+  "Commonest materials (faces): citadel_metalwall077a 3474, citadel_metalwall063a 3117, citadel_metalwall076a 1058, citadel_metalwall101b 558, metalcombine001 485, citadel_metalwall072b 461, com_shield002a 265, citadel_metalwall091a 164, tilefloor021a 136, citadel_metalwall101a 123, marblefloor001d 116, combineglass001a 101, citadel_metalwall072b_cheap 78, metalwall061f 72, metalwall082a 66, tilefloor020a 44, citadel_metalwall090a 42, metalcombinegrate001a 37, metalwall102a 30, white004 26.",
+  "Ceilings: floor to ceiling indoors (cast up from 244 AI nodes) is most often 192 (80), then 480 (42) and 224 (27); 9% of the nodes are outdoors; corridors 135 wide under 192, rooms 312 by 1199 (medians, wall to wall).",
+  "Stairs: 1 flights of 3 or more steps; steps (rise x tread) 8x12 3; median 4 steps a flight.",
+  "Streets: no kerbed roadway in 8 cuts through outdoor AI nodes; wall to wall most often 384; walls median 1280 tall (height over width 1.6).",
+  "Cables: 3 rope spans, median 367 long, slack 67.5, width 2.",
+  "Spacing (nearest of the same model): combine_fence01a 350 apart (n 9), combine_fence01b 349 apart (n 9).",
+  "Walls in bands: 30% of wall columns over 256 tall change material at least once; the first change most often 32 or 64 over the foot; pairs (below > above): citadel_metalwall063a > citadel_metalwall077a, citadel_metalwall072b_cheap > citadel_metalwall101a, citadel_metalwall076a > citadel_metalwall063a.",
+  "Slopes: 65 sloped faces over 2000 square units, most often 20, 35, 45 degrees; citadel_metalwall063a, metalcombine001, metalpipe007a.",
+  "Props: 168 in play; on exact 90s: static 66%, physics 67%; physics tilted 0% (lying most often nothing); statics touching a wall 54%, physics within 16 of one 58%; 0.222 props per 100 by 100 of play (0.021 physics).",
+  "Wiring: 1348 output lines from 284 entities; commonest OnTrigger>Kill 93, OnTrigger>Trigger 72, OnTrigger>Enable 64; 113 relays (longest chain 5), 4 counters, 11 timers, 2 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 54% of faces; lightmapscale 16 on 58% (near the nodes 62%, far 22%); func_detail 59% of brushes; 192 trim strips (2x8 80, 8x32 43); 152 chamfers; 0 displacements.",
+  "Light by fixture: combine_light001a: light_spot 162 221 238 2100, cone 33/1, pitch -90; combine_light001b: light_spot 162 221 238 2100, cone 14/1, pitch -90; breenlight: light_spot 162 221 238 500, cone 32/1, pitch -80; combine_intwallunit: light_spot 138 255 228 40, cone 60/1, pitch -15.",
+  "Grime: 20 infodecal and 34 info_overlay; on walls sign 11, other 7, grate 1; wall decals median 619 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d3_breen_01"
+}

@@ -1,0 +1,26 @@
+{
+ "title": "Valve's d3_c17_01 (draft)",
+ "draft": true,
+ "about": "Valve's own d3_c17_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 95 prop_static, 39 prop_physics, 35 prop_dynamic, 1 prop_door_rotating, 0 prop_ragdoll, 9 infodecal, 5 info_overlay, 8 keyframe_rope and 0 move_rope, 59 func_detail, 5 npc entities (makers included); left out: 5 hidden objects and no 3D skybox room.",
+  "Lights: 10 light (median brightness 22.5), 30 light_spot (median 100), 0 point_spotlight, 19 env_sprite; sun \"241 227 173 70\" at pitch -25, ambient \"190 201 220 125\"; fog \"61 108 118\" from -10 to 3000; sky sky_day03_01_hdr.",
+  "Sound: 2 env_soundscape (Automatic_Dialog 1, streetwar.general_small_tunnel 1), median radius 128; 30 ambient_generic (k_lab.mini_teleport_crack1, k_lab.mini_teleport_arcs, hl1/ambience/signalgear1.wav, k_lab.ambient_gootubes).",
+  "Commonest models: lab_flourescentlight001b 7, lab_flourescentlight001a 7, prison_flourescentlight001a 4, teleportring 4, light_cagelight02_off 3, pipesystem02b 3, pipesystem03d 3, powerbox02a 3, pipesystem02c 3, pipesystem01a 3, reciever_cart 3, prison_sprinkler001a 3, teleportgate 3, filecabinet02 3, wood_crate001a 3.",
+  "Commonest materials (faces): brickwall052e 542, brickwall052d 363, brickwall053a 311, metalwall061f 260, metalduct003a 258, concretewall041b 202, metalwall062a 195, concretewall032d 185, metalhull005a 172, concretewall041c 132, woodfloor005a 130, metaltruss016a 126, woodwall006a 115, concretewall002a 109, concretefloor013a 95, metalwall087a 90, metaltruss017a 75, metalwall033a 65, metalroof008a 61, concretewall041a 60.",
+  "Ceilings: floor to ceiling indoors (cast up from 19 AI nodes) is most often 320 (4), then 352 (4) and 216 (3); 0% of the nodes are outdoors; corridors 189 wide under 120, rooms 348 by 971 (medians, wall to wall).",
+  "Stairs: 5 flights of 3 or more steps; steps (rise x tread) 8x12 25; median 6 steps a flight.",
+  "Doors: door01_left 1; openings at them (wide x high): 48x108 1.",
+  "Cables: 4 rope spans, median 132 long, slack 90, width 1.5.",
+  "Spacing (nearest of the same model): light_cagelight02_off 326 apart (n 3).",
+  "Walls in bands: 57% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): brickwall052e > brickwall052d, concretewall041c > concretewall041b, concretefloor036a > concretewall041c.",
+  "Slopes: 18 sloped faces over 2000 square units, most often 15, 20, 35 degrees; brickwall052e, concretewall004a, building_trainstation_truss_template001c.",
+  "Props: 166 in play; on exact 90s: static 96%, physics 33%; physics tilted 33% (lying most often paper, corpse, machine); statics touching a wall 71%, physics within 16 of one 72%; 1.308 props per 100 by 100 of play (0.153 physics).",
+  "Wiring: 465 output lines from 83 entities; commonest OnTrigger>TurnOff 48, OnTrigger>TurnOn 47, OnTrigger>Trigger 37; 35 relays (longest chain 3), 1 counters, 2 timers, 1 makers, 1 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 84% of faces; lightmapscale 16 on 76% (near the nodes 83%, far 81%); func_detail 45% of brushes; 151 trim strips (8x16 39, 4x8 16); 16 chamfers; 10 displacements.",
+  "Light by fixture: prison_cagedlight001a: light_spot 254 216 146 75, cone 70/30, pitch -48.5; lab_flourescentlight001a: light_spot 242 222 153 175, cone 45/30, pitch -65.5; miniteleportarc: light 232 227 198 24; light_decklight01_off: light_spot 249 231 157 1100, cone 45/10, pitch -90.",
+  "Grime: 9 infodecal and 5 info_overlay; on walls stain 4, graffiti 2, puddle 1, trash 1; wall decals median 36.2 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d3_c17_01"
+}

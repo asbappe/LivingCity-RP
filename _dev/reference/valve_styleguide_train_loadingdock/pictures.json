@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_train_loadingdock (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_train_loadingdock, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 135 prop_static, 55 prop_physics, 5 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 18 info_overlay, 0 keyframe_rope and 0 move_rope, 51 func_detail, 0 npc entities (makers included); left out: 81 hidden objects and no 3D skybox room.",
+  "Lights: 2 light (median brightness 8), 18 light_spot (median 1200), 10 point_spotlight, 6 env_sprite; sun \"243 228 167 600\" at pitch -25, ambient \"182 164 143 200\"; no fog controller; sky sky_day01_01.",
+  "Commonest models: light_industrialbell01_on 48, cargo_container01 17, column_light001b 12, lockers001a 12, wood_crate002a 9, lockers 8, oildrum001 8, interior_fence003b 7, handrail04_singlerise 6, lights_florescent01a 6, wood_crate001a 6, pulleyhook01 4, train005 4, lightbulb01a 4, kitchen_shelf001a 4.",
+  "Commonest materials (faces): metaltruss022a 1430, metaltruss022c 1390, metaltruss016a 520, concretewall073b 288, brickwall037a 218, metalstair003a 138, metaltrain001b 125, metaltrain001a 103, metaltrainglass001a 90, metaltrain001e 78, metaltrain001c 77, metaltrain001d 71, metalwall029a 48, plasterwall032c 45, concretefloor039a 38, plasterwall034a 37, metaldoor009a 34, metaltrain002b 33, concretewall071b 32, reflectivity_50 32.",
+  "Stairs: 3 flights of 3 or more steps; steps (rise x tread) 8x12 23; median 8 steps a flight.",
+  "Spacing (nearest of the same model): column_light001b 512 apart (n 12), interior_fence003b 129 apart (n 7), cafeteria_bench001a 139 apart (n 3).",
+  "Walls in bands: 72% of wall columns over 256 tall change material at least once; the first change most often 96 or 352 over the foot; pairs (below > above): brickwall037a > brickwall037c, concretewall073b > metaltruss022a, metaltruss022c > metaltruss022a.",
+  "Slopes: 100 sloped faces over 2000 square units, most often 45, 30, 60 degrees; metaltruss022a, metaltruss016a, metaltrain001d.",
+  "Props: 195 in play; on exact 90s: static 93%, physics 38%; physics tilted 16% (lying most often barrel, trash); statics touching a wall 23%, physics within 16 of one 36%; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 74% of faces; lightmapscale 16 on 98% (near the nodes ?, far 98%); func_detail 87% of brushes; 76 trim strips (4x24 36, 8x16 24); 376 chamfers; 0 displacements.",
+  "Light by fixture: light_industrialbell01_on: light_spot 221 249 241 1200, cone 50/20, pitch -90; lights_florescent01a: light_spot 159 237 215 600, cone 50/30, pitch -74; lightbulb01a: light 254 216 146 8; lightbulb01a: light_spot 254 216 146 300, cone 75/30, pitch -90.",
+  "Grime: 0 infodecal and 18 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_train_loadingdock"
+}

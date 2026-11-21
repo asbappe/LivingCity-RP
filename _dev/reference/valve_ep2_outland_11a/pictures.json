@@ -1,0 +1,27 @@
+{
+ "title": "Valve's ep2_outland_11a (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_11a, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 474 prop_static, 170 prop_physics, 33 prop_dynamic, 1 prop_door_rotating, 1 prop_ragdoll, 9 infodecal, 74 info_overlay, 15 keyframe_rope and 7 move_rope, 308 func_detail, 61 npc entities (makers included); left out: 2591 hidden objects and no 3D skybox room.",
+  "Lights: 91 light (median brightness 20), 70 light_spot (median 200), 18 point_spotlight, 67 env_sprite; sun \"247 251 253 400\" at pitch -85, ambient \"255 255 255 20\"; fog \"152 184 209\" from 180 to 3500.0; sky sky_ep02_07.",
+  "Sound: 20 env_soundscape (ep2_silobattle.halls 9, ep2_silo.concretehall 5, ep2_silobattle.waterroom 2, ep2_silobattle.silo_open 2, ep2_silobattle.silo_shut 2), median radius 179; 23 ambient_generic (ep2_outland_11.silo_alarm, doorhandles.locked2, ep2_outland_11.launchdoors_close_end, ep2_outland_11.blastdoors_open_start).",
+  "Commonest models: light_security 32, combine_soldier 24, wood_crate001a 24, lab_flourescentlight001a 21, prodcables256 20, wood_crate002a 19, wood_board05a 16, wall_wires2 16, interior_fence002c 16, explosive_butane_can02 16, prison_bracket001a 16, prison_switchbox001a 13, explosive_butane_can 13, silo_door01 12, lab_flourescentlight002b 12.",
+  "Commonest materials (faces): concretewall010a 6322, metaldoor046a 4614, metalhull003a 2093, concretewall065a 1040, metalrail012c 900, metalfloor003a 866, metalfloor007a 629, ep2_concretewall01c 489, ep2_concretewall01a 469, metalfloor010a 397, metalwall069a 368, metalwall061f 348, ep2_concretewall01b 337, metalwall067a 322, metalgrate_silo01a 280, concretewall073a 262, metaltruss029a 260, metalpipe003a 254, metalgrate013a2 245, concretefloor006a 230.",
+  "Ceilings: floor to ceiling indoors (cast up from 474 AI nodes) is most often 128 (96), then 256 (84) and 160 (73); 3% of the nodes are outdoors; corridors 128 wide under 160, rooms 267 by 950 (medians, wall to wall).",
+  "Stairs: 44 flights of 3 or more steps; steps (rise x tread) 8x12 213, 8x16 75, 8x8 5; median 6 steps a flight.",
+  "Streets: no kerbed roadway in 7 cuts through outdoor AI nodes; wall to wall most often 960; walls median 432 tall (height over width 0.3).",
+  "Doors: door03_left 1; openings at them (wide x high): 48x108 1.",
+  "Cables: 14 rope spans, median 124 long, slack 105, width 1.8.",
+  "Spacing (nearest of the same model): interior_fence002c 128 apart (n 16), light_cagelight02_off 249 apart (n 9), light_cagelight01_on 173 apart (n 6), interior_fence002e 546 apart (n 6), interior_fence002b 298 apart (n 5), utilityconnecter005 33 apart (n 4).",
+  "Walls in bands: 60% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): ep2_concretewall01a > ep2_concretewall01c, concretewall010a > concretewall065a, concretewall010a > concretefloor038a.",
+  "Slopes: 116 sloped faces over 2000 square units, most often 40, 60, 15 degrees; concretewall010a, metalpipe009b, metalwall025a.",
+  "Props: 679 in play; on exact 90s: static 66%, physics 22%; physics tilted 35% (lying most often board, propane, other); statics touching a wall 55%, physics within 16 of one 51%; 0.869 props per 100 by 100 of play (0.216 physics).",
+  "Wiring: 804 output lines from 220 entities; commonest OnTrigger>Enable 45, OnTrigger>ForceSpawn 23, OnTrigger>Disable 22; 32 relays (longest chain 3), 9 counters, 5 timers, 5 makers, 1 buttons working doors; 23 lines name nothing.",
+  "Craft: texture scale 0.25 on 87% of faces; lightmapscale 16 on 91% (near the nodes 94%, far ?); func_detail 62% of brushes; 385 trim strips (1x4 76, 4x16 64); 335 chamfers; 45 displacements.",
+  "Light by fixture: light_security: light 224 254 248 20; light_security: light_spot 224 254 248 200, cone 45/30, pitch -60; lab_flourescentlight002b: light 255 247 215 90; wall_light: light 193 249 255 20.",
+  "Grime: 9 infodecal and 74 info_overlay; on walls grate 2, trash 2, blood 1; wall decals median 188 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_11a"
+}

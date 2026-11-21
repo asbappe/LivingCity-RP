@@ -1,0 +1,28 @@
+{
+ "title": "Valve's ep2_outland_07 (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_07, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 795 prop_static, 155 prop_physics, 58 prop_dynamic, 1 prop_door_rotating, 2 prop_ragdoll, 4 infodecal, 193 info_overlay, 68 keyframe_rope and 36 move_rope, 131 func_detail, 28 npc entities (makers included); left out: 480 hidden objects and the 3D skybox room (2 props, scale 16).",
+  "Lights: 10 light (median brightness 42.5), 8 light_spot (median 200), 0 point_spotlight, 7 env_sprite; sun \"240 238 217 600\" at pitch -35, ambient \"144 175 198 200\"; fog \"67 88 105\" from 64 to 6000; sky sky_ep02_03_hdr.",
+  "Sound: 13 env_soundscape (ep2_farm.courtyard 5, ep2_farm.barn 3, ep2_farm.barn_crawlspace 2, ep2_industrial.traintracks_tunnel 2, ep2_farm.advisor_room 1), median radius 128; 49 ambient_generic (underground_steamjet, ambient.steam01, k_lab.teleport_alarm, outland_ep02.farm_podmoan).",
+  "Commonest models: tree_pine04 118, exterior_fence_notbarbed002e 58, tree_dead01 45, tree_pine05 41, wood_crate001a_damagedmax 39, rockcluster01 37, tree_deciduous_01a 32, rockcluster02 31, fern01 31, fence_border_256 31, oildrum001 29, tree_stump01 28, fence_border_128 28, wood_crate002a 22, fern01lg 22.",
+  "Commonest materials (faces): woodfloor005a 3499, citadel_metalwall077a 469, tileroof003a 405, brickwall020a 316, blenddirtgrass001a 314, woodwall024a 266, woodwall006a 203, woodwall008a 196, blendgrassgravel002a 184, woodfloor008a 180, wooddoor019a 175, blendgrassgravel001a 167, plasterwall029d 150, stonewall017c 134, gravelfloor002a 132, cliff02a 128, concretewall059b 112, woodwall009a 111, concretewall059a 111, woodwall048b 99.",
+  "Ceilings: floor to ceiling indoors (cast up from 67 AI nodes) is most often 128 (8), then 96 (7) and 104 (7); 80% of the nodes are outdoors; corridors 165 wide under 137, rooms 235 by 950 (medians, wall to wall).",
+  "Stairs: 6 flights of 3 or more steps; steps (rise x tread) 8x11 54; median 10 steps a flight.",
+  "Streets: no kerbed roadway in 42 cuts through outdoor AI nodes; wall to wall most often 512; walls median 240 tall (height over width 0.2).",
+  "Channels (81 cuts across the shortest way, 0 at water: 17 open, 4 tunnels): open width 64 up most often 800, 128 up 1024; rims (where a side opens out) 160; ledges 88 wide at 242 up; tunnels most often 2048 wide, roof 32 up.",
+  "Doors: door_fence01 1; openings at them (wide x high): .",
+  "Cables: 69 rope spans, median 218 long, slack 106, width 5.",
+  "Spacing (nearest of the same model): tree_pine04 481 apart (n 118), exterior_fence_notbarbed002e 512 apart (n 58), tree_dead01 1113 apart (n 45), tree_pine05 403 apart (n 41), tree_deciduous_01a 1262 apart (n 32), fence_border_256 257 apart (n 31).",
+  "Walls in bands: 16% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): concretewall059c > concretewall059b, gravelfloor002a > concretefloor010a, concretewall059a > concretewall059b.",
+  "Slopes: 191 sloped faces over 2000 square units, most often 35, 55, 45 degrees; woodfloor005a, woodwall006a, tileroof003a.",
+  "Props: 993 in play; on exact 90s: static 36%, physics 20%; physics tilted 72% (lying most often crate, trash, barrel); statics touching a wall 23%, physics within 16 of one 18%; 0.136 props per 100 by 100 of play (0.048 physics).",
+  "Wiring: 767 output lines from 189 entities; commonest OnTrigger>Start 44, OnTrigger>Enable 40, OnTrigger>PlaySound 38; 40 relays (longest chain 4), 3 counters, 9 timers, 0 makers, 0 buttons working doors; 24 lines name nothing.",
+  "Craft: texture scale 0.25 on 95% of faces; lightmapscale 16 on 92% (near the nodes 95%, far 82%); func_detail 81% of brushes; 246 trim strips (2x4 35, 10x10 27); 51 chamfers; 540 displacements.",
+  "Light by fixture: light_cagelight02_on: light_spot 254 216 146 125, cone 70/15, pitch -70; combine_explosivepanel_wall01a: light 69 222 231 300; combine_explosivepanel_shard01a: light 74 167 217 500; combine_interface001: light 235 114 33 800.",
+  "Grime: 4 infodecal and 193 info_overlay; on walls stain 2, blood 2; wall decals median 22.7 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_07"
+}

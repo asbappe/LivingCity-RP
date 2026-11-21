@@ -157,7 +157,13 @@ def tone(rgb):
 
 
 def light_value(text):
-    t = [float(x) for x in (text or "255 255 255 200").split()[:4]] if text else [255, 255, 255, 200]
+    t = []
+    for x in (text or "").replace("(", " ").replace(")", " ").split()[:4]:   # (Valve typos: "254 216 146) 1100")
+        try:
+            t.append(float(x))
+        except ValueError:
+            break
+    t = t or [255, 255, 255, 200]
     if len(t) == 3:
         t.append(200.0)
     return (t + [255, 255, 255, 200][len(t):])[:4]
