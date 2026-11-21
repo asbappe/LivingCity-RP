@@ -12,7 +12,7 @@ Living City: canal modules, set B: places where the Resistance lives (map_module
     press      the pamphlet press: a printing room behind a door in a side tunnel
     still      a distillery in a cellar: a pot still, mash casks, shelves of bottles
     plaza      five rows of seats stepping down from the street to a stage at the back wall
-    playground a rusted playground on a terrace: a relic of before
+    playground Half-Life 2's playground from the train station: swings, roundabout, slide, see-saw, a path through it
 
 How to write one, and what every call does: docs/dev/map-modules.md.
 """
@@ -248,17 +248,19 @@ def cheeks(m, u1, u2, top=136, out=132, thick=12):
     m.shapes([prism(shape, "x", u1 - thick, u1 + 1, MAT["beam"]), prism(shape, "x", u2 - 1, u2 + thick, MAT["beam"])])      # (1 into the cut: the bank's cut end is buried, not flush with it)
 
 
-def swing(m, name, u, v, seat, bar):
-    """A swing's seat (u, v) at height seat, on a phys_hinge along the bar at height bar and two chains that follow it."""
-    m.prop("prop_physics", "models/props_c17/playground_swingset_seat01a.mdl", u, v, 0, seat, {"targetname": name, "spawnflags": "0"})
-    m.point("phys_hinge", u, v, bar, {"targetname": name + "_hinge", "attach1": name, "attach2": "", "hingeaxis": "%d %d %d" % m.fr.at(u + 32, v, bar),
+def swing(m, name, u, v, seat, bar, along="u"):
+    """A swing's seat (u, v) at height seat, on a phys_hinge along the bar at height bar (the bar runs along "u" or "v")
+    and two chains that follow it."""
+    du, dv = (1, 0) if along == "u" else (0, 1)
+    m.prop("prop_physics", "models/props_c17/playground_swingset_seat01a.mdl", u, v, 0 if along == "u" else 90, seat, {"targetname": name, "spawnflags": "0"})
+    m.point("phys_hinge", u, v, bar, {"targetname": name + "_hinge", "attach1": name, "attach2": "", "hingeaxis": "%d %d %d" % m.fr.at(u + 32 * du, v + 32 * dv, bar),
                                        "hingefriction": "0", "forcelimit": "0", "torquelimit": "0", "spawnflags": "0", "systemoverridefile": ""})
     for d in (-13, 13):
         top, low = name + "_chain%d" % (d > 0), name + "_chain%d_end" % (d > 0)
         keys = {"Slack": "0", "Type": "0", "Subdiv": "2", "Barbed": "0", "Width": "1", "TextureScale": "1", "Collide": "0", "Dangling": "0", "Breakable": "0",
                 "RopeMaterial": "cable/chain.vmt", "MoveSpeed": "64", "PositionInterpolator": "2", "NoWind": "1"}
-        m.b.vmf.point("move_rope", m.fr.at(u + d, v, bar), dict(keys, targetname=top, NextKey=low), m.b.vis + ": ropes")
-        m.b.vmf.point("keyframe_rope", m.fr.at(u + d, v, seat + 4), dict(keys, targetname=low, parentname=name), m.b.vis + ": ropes")
+        m.b.vmf.point("move_rope", m.fr.at(u + d * du, v + d * dv, bar), dict(keys, targetname=top, NextKey=low), m.b.vis + ": ropes")
+        m.b.vmf.point("keyframe_rope", m.fr.at(u + d * du, v + d * dv, seat + 4), dict(keys, targetname=low, parentname=name), m.b.vis + ": ropes")
 
 
 def candle(m, u, v, z, high=6, light=True):
@@ -1646,74 +1648,145 @@ def m_plaza(m, opt):
 # 11. The playground
 # ---------------------------------------------------------------------------
 
+PLAY = "models/props_c17/"
+VGRASS = "nature/red_grass"                  # Valve's playground: grass, a concrete path between stone kerbs, stone walls
+VPATH, VKERB, VPAVED, VSTEP = "concrete/concretefloor028c", "stone/stonefloor006b", "concrete/concretefloor019a", "concrete/concretestair005a"
+VALVE_PG = (-4288, -4160)     # (the place in Valve's map that is the yard's front corner, u 128 v 256)
+
+
+def vpg(x, y):
+    """A place (x, y) in Valve's sdk_d1_trainstation_02.vmf as a place in the playground: Valve's x runs back from the
+    street (v), its y along it (u): the prefab valve_playground_a turned three quarter turns. A yaw of Valve's is 90 less."""
+    return int(round(128 + y - VALVE_PG[1])), int(round(256 + VALVE_PG[0] - x))
+
+
 def m_playground(m, opt):
-    """The playground: a relic of before. A yard on the left, open to the sky: in a canal a terrace 128 above its floor
-    (the bank is the way up), on a street level with the pavement. Its ground is earth, worn to mud under the swings
-    and at the slide's foot, the city's handrail along its front with a gap in the middle to come in by. In it, City
-    17's own playground models: a swing set whose two seats swing on their chains (lc_playground_swing_1 and _2, each
-    on a phys_hinge under the bar); a slide; a roundabout that turns (lc_playground_roundabout on a phys_hinge); and,
-    built here, a sandpit edged with timber, a doll left on its edge; a bench with its back to the wall, facing it all
-    (lc_playground_bench: on the bench); a bin overflowing in the corner. Chalk on the ground, rust down the walls, a
-    Combine notice. No lamp.
-    Left as brushes: the sandpit (timber and sand in the ground), the worn patches.
-    Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); which end of the slide is
-    its ladder and which way the bench faces; how high the swing set's bar is (its box says 144: the seats hang
-    from 138); how freely the hinges turn."""
+    """The playground: Half-Life 2's own, copied from the courtyard by the train station (sdk_d1_trainstation_02.vmf,
+    the prefab valve_playground_a), each thing where Valve put it and turned as Valve turned it (vpg). A yard on the
+    left, open to the sky: in a canal a terrace 128 above its floor (the bank is the way up), on a street level with the
+    pavement. Valve's grass, and Valve's path through the middle of it, concrete between stone kerbs, coming in from the
+    pavement between the posts of Valve's low stone wall with its metal fence on top. On the right of the path: the
+    noughts and crosses post, its eight blocks turning on their rods; a bench turned toward the swings
+    (lc_playground_bench: on the bench); two climbing frames; the swing set, whose two seats swing on their chains
+    (lc_playground_swing_1 and _2, each on a phys_hinge under the bar), worn to mud under them; a tree over it; the doll
+    lying in the grass; the see-saw, its seat rocking on a hinge (lc_playground_teeter); in the far corner Valve's
+    terrace, paved 64 up behind a raised grass bed and its stone wall, with steps up. On the left: a bin overflowing,
+    our sandpit edged with timber, a dumpster, the roundabout that turns (lc_playground_roundabout on a phys_hinge) and
+    the slide. Leaves on the grass, chalk on the path, rust down the walls, a Combine notice. No lamp.
+    Left as brushes: the sandpit, the worn patches; the path, the terrace, its steps, the low wall and its fence (Valve's
+    own brushes too).
+    Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); how freely the hinges turn
+    (the see-saw's and the blocks' are Valve's settings, the swings' and the roundabout's ours)."""
     L, T = 1024, (F if m.fr.dz else F + 128)    # (on a street level with the pavement: the owner, 20 November)
     m.open(0, -256, L, 256)
-    m.open(192, 256, 832, 640, floor=T, mat=DIRT)
-    m.side(192, 256, 832, 640)
-    # the front: the city's handrail along it, a gap in the middle (in a canal it stands on the terrace's edge)
-    rail_run(m, 200, 432, 262, "u", T)
-    rail_run(m, 528, 824, 262, "u", T)
-    # the ground worn to mud under the swings and at the slide's foot
-    m.det([(282, 476, T, 318, 524, T + 1), (358, 476, T, 394, 524, T + 1), (720, 312, T, 776, 368, T + 1)], "nature/mudfloor004a")
+    m.open(192, 256, 960, 640, floor=T, mat=VGRASS)      # (Valve's courtyard: a building's plinth along the left as far as the slide's lawn)
+    m.open(128, 640, 960, 1088, floor=T, mat=VGRASS)
+    m.side(192, 256, 960, 640)
+    m.side(128, 640, 960, 1088)
+    # the path, and the low wall across the front with its fence, a post each side of the way in
+    m.det([(400, 256, T, 528, 1088, T + 1)], VPATH)
+    m.det([(352, 256, T, 400, 1088, T + 1), (528, 256, T, 576, 1088, T + 1)], VKERB)
+    m.det([(192, 258, T, 390, 266, T + 32), (538, 258, T, 960, 266, T + 32), (390, 256, T, 402, 268, T + 68), (526, 256, T, 538, 268, T + 68)], STONE)
+    m.det([(192, 262, T + 32, 390, 263, T + 64), (538, 262, T + 32, 960, 263, T + 64)], "metal/metalfence001a", top=MAT["nodraw"])
+    # Valve's terrace in the far corner: paved, 64 up, a raised grass bed and a capped stone wall along its edge, steps up
+    m.det([(800, 960, T, 960, 1088, T + 64), (704, 1056, T, 800, 1088, T + 64)], STONE, top=VPAVED)
+    m.det([(864, 912, T, 960, 960, T + 64)], STONE, top=VGRASS)
+    m.det([(800, 896, T, 864, 960, T + 112), (864, 896, T, 960, 912, T + 112), (704, 1056, T + 64, 720, 1088, T + 112), (720, 1056, T + 64, 800, 1072, T + 112)], STONE)
+    m.det([(704 + 24 * i, 960, T, 728 + 24 * i, 1056, T + 16 * (i + 1)) for i in range(4)], STONE, top=VSTEP)      # (Valve's are 8 by 12: the owner's are 16 by 24)
+    m.blocked(704, 896, 960, 1088)
+    m.lane(740, 1008, T + 32)
+    m.lane(900, 1020, T + 64)
 
-    # the swings: each seat hangs from the bar on a hinge and two chains, and swings (as Half-Life 2's do)
-    sv = 500
-    m.static("models/props_c17/playground_swingset01.mdl", 338, sv, 0, z=T)
-    for k, su in enumerate((300, 376)):
-        swing(m, "lc_playground_swing_%d" % (k + 1), su, sv, T + 22, T + 138)
-    m.blocked(232, 440, 440, 560)
+    # Valve's things where Valve put them (its x, its y, its yaw)
+    for model, x, y, yaw in ((PLAY + "playground_swingset01.mdl", -4656, -3541, 0),
+                             (PLAY + "playgroundslide01.mdl", -4960, -4056, 23.5),       # (8 off our wall: Valve's had a gap there)
+                             (PLAY + "playground_jungle_gym01a.mdl", -4840, -3672, 270.5),
+                             (PLAY + "playground_jungle_gym01b.mdl", -4518, -3434, 300),
+                             (PLAY + "playground_teetertoter_stan.mdl", -4851, -3491, 0),
+                             (PLAY + "playgroundTick-tack-toe_post01.mdl", -4476, -3599, 0),
+                             ("models/props_foliage/tree_deciduous_01a-lod.mdl", -4544, -3682, 185.5),
+                             ("models/props_trainstation/bench_indoor001a.mdl", -4341, -3549, 225),      # (Valve's stood by a building's corner, beyond our wall)
+                             ("models/props_junk/TrashDumpster01a.mdl", -4648, -4048, 166.5)):
+        u, v = vpg(x, y)
+        m.static(model, u, v, int(round(yaw - 90)) % 360, z=T)
+    bu, bv = vpg(-4341, -3549)
+    m.target("lc_playground_bench", bu - 4, bv + 4, T + 20, 135)
+    # the swings: each seat on a hinge under the bar and two chains (as Half-Life 2's swing), the ground worn under them
+    for k, (x, y) in enumerate(((-4674.75, -3539.75), (-4634, -3540))):
+        u, v = vpg(x, y)
+        swing(m, "lc_playground_swing_%d" % (k + 1), u, v, T + 24, T + 140, along="v")
+    m.det([(712, 628, T, 784, 658, T + 1), (712, 588, T, 784, 616, T + 1)], "nature/mudfloor004a")
+    m.blocked(700, 520, 800, 720)
+    # the roundabout, turning on its hinge
+    ru, rv = vpg(-4798.45, -4010.07)
+    m.prop("prop_physics", PLAY + "playground_carousel01.mdl", ru, rv, 270, T + 1, {"targetname": "lc_playground_roundabout", "spawnflags": "0"})
+    m.point("phys_hinge", ru, rv, T + 24, {"targetname": "lc_playground_roundabout_hinge", "attach1": "lc_playground_roundabout", "attach2": "",
+                                            "hingeaxis": "%d %d %d" % m.fr.at(ru, rv, T + 88), "hingefriction": "4", "forcelimit": "0", "torquelimit": "0",
+                                            "spawnflags": "0", "systemoverridefile": ""})
+    m.blocked(200, 690, 356, 1016)
+    # the see-saw's seat, rocking on a hinge across it (Valve's)
+    su, sv = vpg(-4851.36, -3491.65)
+    m.prop("prop_physics", PLAY + "playground_teetertoter_seat.mdl", su, sv, 270, T + 16, {"targetname": "lc_playground_teeter", "spawnflags": "2"})
+    (hu, hv), (au, av) = vpg(-4837.61, -3491.4), vpg(-4863.61, -3491.4)
+    m.point("phys_hinge", hu, hv, T + 20, {"targetname": "lc_playground_teeter_hinge", "attach1": "lc_playground_teeter", "attach2": "",
+                                            "hingeaxis": "%d %d %d" % m.fr.at(au, av, T + 20), "hingefriction": "0", "forcelimit": "0", "torquelimit": "0",
+                                            "spawnflags": "8", "systemoverridefile": ""})
+    m.blocked(720, 800, 880, 840)
+    # the noughts and crosses: eight blocks, each turning on its row's rod (Valve's: one place is empty)
+    n = 0
+    for y in (-3613, -3599, -3585):
+        for z in (28, 46, 62):
+            if (y, z) == (-3613, 46):
+                continue
+            n += 1
+            name, (u, v) = "lc_playground_block_%d" % n, vpg(-4476, y)
+            model, pos, wy = PLAY + "playgroundTick-tack-toe_block01a.mdl", m.fr.at(u, v, T + z), m.fr.yaw(270)
+            m.b.vmf.point("prop_physics", pos, {"model": model, "angles": "0 %d 0" % wy, "skin": "0", "targetname": name, "spawnflags": "768",
+                                                "physdamagescale": "0.1", "fademindist": "-1", "fadescale": "1"}, m.pv)
+            m.b.props.append(("prop_physics", model, pos, wy, m.tag))
+            m.b.vmf.point("phys_hinge", pos, {"attach1": name, "attach2": "", "hingeaxis": "%d %d %d" % m.fr.at(u + 2, v, T + z), "hingefriction": "0.05",
+                                              "forcelimit": "0", "torquelimit": "0", "spawnflags": "1", "systemoverridefile": ""}, m.dv)
+    m.blocked(650, 430, 728, 460)
+    # the doll, lying in the grass where Valve left it
+    du, dv = vpg(-4595, -3570)
+    m.point("prop_physics", du, dv, T + 3, {"model": "models/props_c17/doll01.mdl", "angles": "-90 %d 0" % m.fr.yaw(50), "skin": "0", "spawnflags": "256",
+                                           "physdamagescale": "0.1", "fademindist": "-1", "fadescale": "1"}, m.pv)
+    m.blocked(580, 488, 632, 536)      # (the tree's trunk)
+    m.blocked(800, 456, 904, 516)
+    m.blocked(596, 752, 636, 864)
+    m.blocked(690, 262, 790, 356)
 
-    # the slide, the roundabout
-    m.static("models/props_c17/playgroundslide01.mdl", 640, 340, 270, z=T)
-    m.blocked(540, 288, 760, 392)
-    m.prop("prop_physics", "models/props_c17/playground_carousel01.mdl", 330, 350, 0, T + 1, {"targetname": "lc_playground_roundabout", "spawnflags": "0"})
-    m.point("phys_hinge", 330, 350, T + 24, {"targetname": "lc_playground_roundabout_hinge", "attach1": "lc_playground_roundabout", "attach2": "",
-                                              "hingeaxis": "%d %d %d" % m.fr.at(330, 350, T + 88), "hingefriction": "4", "forcelimit": "0", "torquelimit": "0",
-                                              "spawnflags": "0", "systemoverridefile": ""})
-    m.blocked(256, 272, 408, 428)
-
-    # the sandpit
-    g1, g2, h1, h2 = 520, 680, 430, 580
+    # on the left of the path, ours: the sandpit, the bin overflowing by the front wall
+    g1, g2, h1, h2 = 208, 336, 376, 536
     m.det([(g1, h1, T, g2, h1 + 6, T + 10), (g1, h2 - 6, T, g2, h2, T + 10), (g1, h1 + 6, T, g1 + 6, h2 - 6, T + 10), (g2 - 6, h1 + 6, T, g2, h2 - 6, T + 10)], TIMBER)
     m.det([(g1 + 6, h1 + 6, T, g2 - 6, h2 - 6, T + 5)], SAND)
-    put(m, [("props_c17/doll01", g1 + 30, h1 + 3, 200)], T + 10)                        # left on the sandpit's edge
-    m.shapes([prism([(470, T + 5), (506, T + 5), (490, T + 12)], "x", 590, 634, SAND)])
+    m.shapes([prism([(420, T + 5), (456, T + 5), (440, T + 12)], "x", 250, 294, SAND)])
     m.blocked(g1, h1, g2, h2)
+    m.static("models/props_trainstation/trashcan_indoor001b.mdl", 222, 296, 0, z=T)
+    put(m, [("props_junk/garbage_bag001a", 258, 300, 30), ("props_junk/garbage_bag001a", 226, 336, 110)], T)
+    m.blocked(192, 266, 286, 356)
+    m.blocked(192, 576, 288, 656)
 
-    # the bench, its back to the wall
-    m.static("models/props_c17/bench01a.mdl", 640, 624, 270, z=T)
-    m.target("lc_playground_bench", 640, 618, T + 20, 270)
-    m.sound("ambient/levels/canals/windmill_wind_loop1.wav", 512, 440, T + 120, radius=700, volume=2)
-    # a bin overflowing in the corner, chalk on the ground, rust down the walls, a Combine notice
-    m.static("models/props_trainstation/trashcan_indoor001b.mdl", 222, 612, 0, z=T)
-    put(m, [("props_junk/garbage_bag001a", 252, 618, 30), ("props_junk/garbage_bag001a", 226, 582, 110)], T)
-    m.grime("trash", 270, 600, T, 1)
-    m.grime("graffiti", 470, 380, T, 2)
-    m.grime("stain", 192, 500, T + 120, 3)
-    m.grime("stain", 760, 640, T + 110, 4)
-    m.grime("poster", 832, 450, T + 80, 5)
-    sounds(m, L, "courtyard", 512, 450, T, 520)
+    # Valve's leaves on the grass; chalk on the path, rust down the walls, a Combine notice
+    for x, y in ((-4590, -3659), (-4452, -3701), (-4864, -3683), (-4818, -3988), (-4746, -4112), (-4924, -4110), (-5051, -4005)):
+        m.decal("decals/leaves_ground02", *(vpg(x, y) + (T,)))
+    m.grime("trash", 262, 330, T, 1)
+    m.grime("graffiti", 464, 420, T + 1, 2)
+    m.grime("stain", 128, 900, T + 120, 3)
+    m.grime("stain", 650, 1088, T + 110, 4)
+    m.grime("poster", 960, 700, T + 80, 5)
+    m.sound("ambient/levels/canals/windmill_wind_loop1.wav", 560, 680, T + 120, radius=700, volume=2)
+    sounds(m, L, "courtyard", 560, 680, T, 560)
     street_front(m, L)
-    for u, v in ((480, 300), (480, 400), (760, 480), (220, 600)):
+    for u, v in ((464, 320), (464, 700), (464, 1000)):
+        m.lane(u, v, T + 1)
+    for u, v in ((660, 740), (310, 600)):
         m.lane(u, v, T)
 
-    m.view(620, -220, F + 92, 100, 6, "from the canal's far bank")
-    m.view(220, 290, T, 30, 4, "up on the terrace")
-    m.view(640, 600, T, 250, 6, "from the bench")
-    m.view(780, 420, T, 190, 6, "the slide and the swings")
+    m.view(464, -120, F, 90, 8, "from the street, up the path")
+    m.view(884, 318, T, 145, 6, "beside the bench")
+    m.view(880, 1010, T + 64, 225, 10, "from the terrace")
+    m.view(464, 1000, T + 1, 215, 6, "the roundabout and the slide, from the path")
 
 
 MODULES = {
@@ -1726,6 +1799,6 @@ MODULES = {
     "press": (768, m_press, "the pamphlet press: a printing room behind a door in a side tunnel (left)"),
     "still": (768, m_still, "the still: a pot still, mash casks and bottles in a cellar (left)"),
     "plaza": (1536, m_plaza, "the plaza: five rows of seats stepping down from the street to a stage at the back wall (left)"),
-    "playground": (1024, m_playground, "the playground: a rusted relic on a terrace over the canal (left)"),
+    "playground": (1024, m_playground, "the playground: Half-Life 2's own from the train station's courtyard, a path through it (left)"),
     "clinic": (1024, m_clinic, "the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left)"),
 }

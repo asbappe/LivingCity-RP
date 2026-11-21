@@ -279,6 +279,10 @@ def check(path, views=None, only=None, air=None):
                 continue
             if SHELVES.search(el.get("model", "").lower()) and vol(small) < vol(large) * 0.25:
                 continue      # (a thing on a shelf, a table, in a cart: its box holds it)
+            if "props_foliage/tree" in el.get("model", "").lower():
+                ot = origin(el)
+                if not overlap(small, (ot[0] - 16, ot[1] - 16, large[2], ot[0] + 16, ot[1] + 16, large[5])):
+                    continue      # (under a tree's crown: its box is mostly air, only its trunk is solid)
             m1, m2 = short(es.get("model", "")), short(el.get("model", ""))
             o1, o2 = origin(es), origin(el)
             if m1 == m2 and (frac < 0.6 or (abs(o1[0] - o2[0]) < 2 and abs(o1[1] - o2[1]) < 2)):
