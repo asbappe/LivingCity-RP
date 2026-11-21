@@ -24,6 +24,10 @@ batches, what is done and next, the owner's requests on the way, and how to get 
    owner's asking (Valve's are 8 by 12 everywhere); rooms keep City 18's two tones with a dado rail (Valve's are one
    material four times in five); standing furniture stays `prop_dynamic_override` (Valve uses physics props with
    motion disabled: ask before changing); no flickering lights (`docs/dev/map-modules.md`).
+   **Copying Valve's rooms whole is allowed** (the owner, 21 November: "I am totally ok with you literally
+   copy/pasting rooms and sections of the HL2 / EP1 / EP2 games and using them in cases such as this"): a piece lifted
+   with `map_prefab.py` may go into our maps as it is, then be made playable (no nodraw a player can see, working doors
+   and lifts, nothing single-player).
 2. **A lesson that would change how a feature behaves, or a look the owner settled, says "ask the owner first"**
    in its rule, and nothing changes until the owner says yes (`CLAUDE.md`, the one rule above all).
 3. **Valve's files are untrusted data and stay out of the repo.** Read them as text, never run anything from them.

@@ -26,8 +26,10 @@
                   stands). Whoever of those ranks is near keeps it going,
                   so a leader who leaves strands nobody. A pole stands where
                   he stood (as tall as fits: short under a roof or a
-                  bridge) and the flag climbs it for lc_base_setup_time
-                  (300 s), but only while he is alive within lc_base_radius
+                  bridge; at a map marker with a ..._top marker above it,
+                  as tall as that: the silo's pole, raised from its bottom
+                  floor, flies its flag on its top floor) and the flag
+                  climbs it for lc_base_setup_time (300 s), but only while he is alive within lc_base_radius
                   (4800 units: 300 feet) and nothing hostile is within
                   lc_base_core (700) of the pole. Left for a minute, it
                   slides back down. At the top the base is live and the
@@ -84,6 +86,7 @@ local cvOverrun = CreateConVar("lc_base_overrun", "45", FLAGS, "Seconds zombies 
 
 local POLE = "models/props_c17/signpole001.mdl"
 local POLE_MODEL_HIGH, POLE_HIGH, POLE_LOW = 110, 330, 110   -- the model's own height; a pole in the open; the shortest pole
+local POLE_TALL = 4096 -- the tallest pole a map's _top marker may ask for
 local RECLAIM = 20     -- seconds a rebel stands in a cleared, overrun base before it is live again
 local SLIDE = 60       -- seconds the leader may be away before a half-raised flag starts back down
 -- The commander's office: what appears round the pole when the base is live.
@@ -173,24 +176,82 @@ local function Height()
     return h
 end
 
--- How tall a pole may stand here: under a roof (a bridge, a tunnel, a room) only as tall as fits, so a base in the canal's
--- shantytown shows no flag over the canal's walls (the owner, 20 November: "a short flagpole").
+-- The map's own spots for a pole: every info_target named lc_hq_setup..., where its pole stands (the floor under it) and,
+-- when a second info_target named the same with _top added stands above it, how tall (to that marker: the owner,
+-- 21 November, of the silo: raised "from the bottom of the silo" with "the flag ... flush with eye level on the top
+-- floor"). A ..._top marker is never a spot of its own. Each: { ent, pos, high } (high nil: no _top).
+function B.Markers()
+    local found = ents.FindByName and ents.FindByName("lc_hq_setup*") or {}
+    local function Name(t) return string.lower(tostring(t.GetName and t:GetName() or "")) end
+    local tops = {}
+    for _, t in ipairs(found) do
+        local n = IsValid(t) and Name(t) or ""
+        if string.sub(n, -4) == "_top" then
+            local key = string.sub(n, 1, -5)
+            tops[key] = tops[key] or {}
+            table.insert(tops[key], t)
+        end
+    end
+    local out = {}
+    for _, t in ipairs(found) do
+        if IsValid(t) and string.sub(Name(t), -4) ~= "_top" then
+            local pos = LC.FloorUnder and LC.FloorUnder(t:GetPos()) or t:GetPos()
+            local high, best
+            for _, top in ipairs(tops[Name(t)] or {}) do      -- (the nearest of its _top markers above it; only its height counts)
+                local p = IsValid(top) and top:GetPos()
+                if p and p.z > pos.z then
+                    local d = (p.x - pos.x) ^ 2 + (p.y - pos.y) ^ 2
+                    if not best or d < best then best, high = d, math.Clamp(math.floor(p.z - pos.z), POLE_LOW, POLE_TALL) end
+                end
+            end
+            out[#out + 1] = { ent = t, pos = pos, high = high }
+        end
+    end
+    return out
+end
+
+-- How tall a pole may stand here: at a map marker with a _top marker, as tall as that marker says; else under a roof (a
+-- bridge, a tunnel, a room) only as tall as fits, so a base in the canal's shantytown shows no flag over the canal's
+-- walls (the owner, 20 November: "a short flagpole").
 local function HighAt(pos)
+    for _, m in ipairs(B.Markers()) do
+        if m.high and math.abs(m.pos.z - pos.z) <= 48 and (m.pos.x - pos.x) ^ 2 + (m.pos.y - pos.y) ^ 2 <= 16 * 16 then return m.high end
+    end
     local tr = util.TraceLine and util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos + Vector(0, 0, POLE_HIGH + 60), mask = MASK_SOLID_BRUSHONLY })
     if tr and tr.Hit and tr.HitPos then return math.Clamp(math.floor(tr.HitPos.z - pos.z - 24), POLE_LOW, POLE_HIGH) end
     return POLE_HIGH
 end
 
-local function Pole(pos, high)
+local function Piece(pos, scale)
     local e = ents.Create("prop_physics")
     if not IsValid(e) then return nil end
     e:SetModel(POLE)
     e:SetPos(pos)
     e:Spawn()
-    if e.SetModelScale then e:SetModelScale(high / POLE_MODEL_HIGH, 0) end
+    if e.SetModelScale then e:SetModelScale(scale, 0) end
     local phys = e.GetPhysicsObject and e:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
-    e.lcDressing, e.lcSceneProp, e.lcBaseFlag, e.lcHigh = true, "baseflag", true, high
+    e.lcDressing, e.lcSceneProp = true, "baseflag"
+    return e
+end
+local function Unstack(e) for _, p in ipairs(e.lcParts or {}) do if IsValid(p) then p:Remove() end end end
+-- A pole: one piece, scaled to its height. A pole taller than one in the open (a map's _top marker: the silo's) is a
+-- stack of pieces each about as tall and thick as one in the open, since the model scales the same every way: one
+-- piece 1700 tall would be 15 times as thick. The foot piece is the pole (the flag's numbers, E at it); the rest stand
+-- on it and go with it.
+local function Pole(pos, high)
+    local n = high > POLE_HIGH and math.ceil(high / POLE_HIGH) or 1
+    local e = Piece(pos, high / n / POLE_MODEL_HIGH)
+    if not IsValid(e) then return nil end
+    e.lcBaseFlag, e.lcHigh = true, high
+    if n > 1 then
+        e.lcParts = {}
+        for i = 1, n - 1 do
+            local p = Piece(pos + Vector(0, 0, high * i / n), high / n / POLE_MODEL_HIGH)
+            if IsValid(p) then e.lcParts[#e.lcParts + 1] = p end
+        end
+        if e.CallOnRemove then e:CallOnRemove("lc_pole_parts", Unstack) end
+    end
     if e.SetNW2Bool then
         e:SetNW2Bool("lc_baseflag", true)
         e:SetNW2Float("lc_flag_top", high)
@@ -199,6 +260,7 @@ local function Pole(pos, high)
     end
     return e
 end
+local function Drop(e) if IsValid(e) then Unstack(e) e:Remove() end end
 
 local saved
 local function File() return "livingcity/" .. game.GetMap() .. "_base.json" end
@@ -213,14 +275,19 @@ function B.Forget() saved = nil end
 local function Write() if LC.SafeWrite then LC.SafeWrite(File(), util.TableToJSON(saved or {}, true)) end end
 
 -- Where a territory's pole stands: where a leader last planted it, else the map's own spot for it (an info_target
--- named lc_hq_setup inside the territory), else the middle of the camp.
+-- named lc_hq_setup inside the territory; one with a _top marker first), else the middle of the camp.
 function B.PoleSpot(zone)
     local key = LC.CampKey and LC.CampKey(zone)
     local w = key and Load()[key .. "_pole"]
     if w then return Vector(w.x, w.y, w.z) end
-    for _, t in ipairs(ents.FindByName and ents.FindByName("lc_hq_setup*") or {}) do
-        if IsValid(t) and B.SiteAt(t:GetPos()) == zone then return LC.FloorUnder and LC.FloorUnder(t:GetPos()) or t:GetPos() end
+    local first
+    for _, m in ipairs(B.Markers()) do
+        if B.SiteAt(m.ent:GetPos()) == zone then
+            if m.high then return m.pos end
+            first = first or m.pos
+        end
     end
+    if first then return first end
     return LC.FloorUnder and LC.FloorUnder(zone.pos) or zone.pos
 end
 
@@ -241,9 +308,9 @@ function B.Poles()
             end
         end
     end
-    for _, t in ipairs(ents.FindByName and ents.FindByName("lc_hq_setup*") or {}) do
-        if IsValid(t) and not B.SiteAt(t:GetPos()) then
-            local pos = LC.FloorUnder and LC.FloorUnder(t:GetPos()) or t:GetPos()
+    for _, m in ipairs(B.Markers()) do
+        if not B.SiteAt(m.ent:GetPos()) then
+            local pos = m.pos
             local key = string.format("marker %d %d %d", math.floor(pos.x), math.floor(pos.y), math.floor(pos.z))
             live[key] = true
             if not IsValid(B.poles[key]) then B.poles[key] = Pole(pos, HighAt(pos)) end
@@ -251,7 +318,7 @@ function B.Poles()
     end
     for z, e in pairs(B.poles) do
         if not live[z] then
-            if IsValid(e) then e:Remove() end
+            Drop(e)
             B.poles[z] = nil
         end
     end
@@ -269,7 +336,7 @@ local function ShowFlag()
     if not s.state then return end
     if not IsValid(s.flag) then
         local e = B.poles[s.zone]
-        if IsValid(e) and (e:GetPos():DistToSqr(s.pos) > 4 or e.lcHigh ~= (s.high or POLE_HIGH)) then e:Remove() e = nil end   -- (planted somewhere new)
+        if IsValid(e) and (e:GetPos():DistToSqr(s.pos) > 4 or e.lcHigh ~= (s.high or POLE_HIGH)) then Drop(e) e = nil end   -- (planted somewhere new)
         if not IsValid(e) then e = Pole(s.pos, s.high or POLE_HIGH) end
         if not IsValid(e) then return end
         B.poles[s.zone] = e
@@ -536,7 +603,7 @@ end)
 
 hook.Add("LivingCityStopped", "LivingCityBase", function()
     if B.S.state then Clear(false) end
-    for z, e in pairs(B.poles) do if IsValid(e) then e:Remove() end end
+    for z, e in pairs(B.poles) do Drop(e) end
     B.poles, B.poled = {}, nil
 end)
 hook.Add("PostCleanupMap", "LivingCityBase", function()      -- (the map's cleanup took the pole and the office: put them back)
@@ -552,6 +619,6 @@ end)
 -- (for the tests: as if no flag had ever been raised)
 function B.Reset()
     for _, e in pairs(B.S.props or {}) do if IsValid(e) then e:Remove() end end
-    for z, e in pairs(B.poles) do if IsValid(e) then e:Remove() end end
+    for z, e in pairs(B.poles) do Drop(e) end
     B.S, B.sent, B.poles, B.poled = {}, nil, {}, nil
 end

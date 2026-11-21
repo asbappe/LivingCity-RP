@@ -123,6 +123,10 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   d2_prison_08, a slot 128 wide down the teleport room's floor under a Combine glass lid; six dials, seven glows, six
   beams lighting in six steps about 26 s apart; `docs/dev/prefabs.md`, "Pieces with their wiring (Nova Prospekt)").
 
+- **The silo made playable (the owner, 21 November):** every floor usable (Valve's silo hides whole floors behind
+  nodraw: only its top and bottom were meant to be walked), the lift serving them all, and a Resistance Leader's office
+  in it. Next, after the compile fixes (TODO.md).
+
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
 All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 23).

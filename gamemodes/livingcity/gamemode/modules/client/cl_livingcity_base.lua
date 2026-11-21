@@ -23,6 +23,8 @@ local mat
 
 -- The flag's four corners for a pole standing at pos, h of the way up (0 to 1), flying along dir.
 -- poleTop: how tall this pole is (the server makes it short under a roof); the flag and where it starts shrink with it.
+-- A tall pole (a map's _top marker: the silo's, about 1700) keeps the flag full size; at the top it hangs 12 under the
+-- marker, so the map puts the marker about 120 over the floor the flag is to be seen from at eye level.
 function LC_CL.BaseFlagCorners(pos, h, dir, poleTop)
     h = math.Clamp(h or 0, 0, 1)
     poleTop = poleTop or POLE_TOP
