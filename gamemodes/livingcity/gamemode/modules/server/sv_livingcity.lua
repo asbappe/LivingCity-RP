@@ -360,6 +360,11 @@ local function FreePoints(kinds, who, looseOnly)
         for _, p in ipairs(by[kind] or NONE) do
             if IsFree(p, who) and (not looseOnly or (p.group or 0) == 0) and (p.disabledUntil or 0) < now then out[#out + 1] = p end
         end
+        -- and the spots the city found by itself (couches, chairs, beds, windows, walls: sv_livingcity_idlelife.lua)
+        local auto = LC.AutoSpots and LC.AutoSpots.byKind[kind]
+        for _, p in ipairs(auto or NONE) do
+            if IsFree(p, who) and (p.disabledUntil or 0) < now and LC.AutoSpotOK(p) then out[#out + 1] = p end
+        end
     end
     return out
 end
