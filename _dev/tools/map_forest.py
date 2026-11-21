@@ -123,8 +123,9 @@ def pf_solid(vmf, sides, q, d, vis):
         text += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, vmf.new_id(), t, " ".join("(%s %s %s)" % tuple(PF.fmt(c) for c in p) for p in pl))
         if vs:
             text += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%s %s %s"\n' % ((t,) + tuple(PF.fmt(c) for c in p)) for p in vs), t)
-        text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n' % (
-            t, s["material"], t, PF.turn_axis(s["uaxis"], q, d), t, PF.turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t, t)
+        text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n' % (
+            t, s["material"], t, PF.turn_axis(s["uaxis"], q, d), t, PF.turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t)
+        text += (PF.disp_text(s["disp"], q, d, t) if s.get("disp") else "") + "%s\t}\n" % t
     text += vmf.editor(vis, indent=t + "\t") + "%s}\n" % t
     return text, tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
 
@@ -252,6 +253,32 @@ def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=Non
         else:
             vmf.point(cls, tuple(pf_point(e["origin"], q, d)), keys, vis_props if cls.startswith("prop") else vis_logic, connections=outs)
     return names
+
+
+def pf_disp_points(pf, which=None):
+    """The points of a lifted piece's displaced faces, in the piece's own frame (before turning and moving), with each
+    face's material: (material, (x, y, z)). Valve's files give a face's corners the other way round from Hammer's own
+    (from_planes), so the rows here run from the start corner to the corner before it: with that, neighbouring faces
+    meet (21 November, Ravenholm's tunnel: 135 shared points against 20 the other way)."""
+    out = []
+    for sol in pf["solids"]:
+        for sd in sol["sides"]:
+            dsp, v = sd.get("disp"), sd.get("corners") or []
+            if not dsp or len(v) != 4 or (which and not which(sd["material"].lower())):
+                continue
+            keys = dict(dsp["keys"])
+            rows = dict((nm, [[float(c) for c in val.split()] for _, val in r]) for nm, r in dsp["blocks"])
+            n = 2 ** int(keys.get("power", "2"))
+            st = [float(c) for c in keys["startposition"].strip("[]").split()]
+            k0 = min(range(4), key=lambda k: sum((v[k][a] - st[a]) ** 2 for a in range(3)))
+            p0, p3, p1 = v[k0], v[(k0 + 1) % 4], v[(k0 + 3) % 4]
+            offs = rows.get("offsets")
+            for i in range(n + 1):
+                for j in range(n + 1):
+                    nr, dd = rows["normals"][i][3 * j:3 * j + 3], rows["distances"][i][j]
+                    off = offs[i][3 * j:3 * j + 3] if offs else (0, 0, 0)
+                    out.append((sd["material"].lower(), tuple(p0[a] + (p1[a] - p0[a]) * i / n + (p3[a] - p0[a]) * j / n + off[a] + nr[a] * dd for a in range(3))))
+    return out
 
 
 def smooth(t):
@@ -1513,6 +1540,28 @@ class NestTube:
         return self.ring(math.atan2(zn - self.TALL / 2.0, xn), y)
 
 
+def old_nest_draws(rnd, L):
+    """The random numbers the nest's first dressing (19 November) drew from the forest's generator, drawn again in the
+    same order: the forest is planted after the cave, so its trees stay where the owner has seen them."""
+    for k in range(7):
+        rnd.randrange(0, 360, 15)
+    for k in range(14):
+        rnd.choice((rnd.uniform(620, 1150), rnd.uniform(1900, 2400)))
+        rnd.uniform(-0.8, 0.8)
+        rnd.randrange(0, 360, 15)
+    for k in range(9):
+        rnd.choice((rnd.uniform(620, 1150), rnd.uniform(1900, 2400)))
+        rnd.uniform(1.2, 1.9)
+        rnd.choice((1, 2, 3, 4, 5))
+        rnd.randrange(0, 360, 15)
+    for k in range(5):
+        rnd.choice((1, 2))
+        rnd.randrange(0, 360, 15)
+    for q in range(420, L - 120, 110):
+        rnd.uniform(0.75, 0.95)
+        rnd.randrange(0, 360, 15)
+
+
 class CaveForest(Forest):
     SHORE_MUD = False                   # (the stream's banks are dirt by their own rule)
     CX, YM, LONG = 2304, 2560, 3072     # the mouth's middle, the hillside's line, how far in it goes (to the forest's north wall: the emergency door)
@@ -1526,6 +1575,7 @@ class CaveForest(Forest):
     SPRING = 2624                       # how far in the spring is: a low slot in the west wall the stream runs out of
     HALF, TALL = 160, 320               # the square the cave's skin is hung on
     TEAR = 640                          # the hillside is cut this far each side of the mouth
+    MINE, BREACH = 1280, 64             # behind the emergency door: Ravenholm's mine tunnel (lifted), then the wall the antlions broke through
 
     def setup(self):
         z0 = self.z0
@@ -1536,7 +1586,7 @@ class CaveForest(Forest):
         self.front_x = cx + self.BEND[2] + self.FRONT
         self.end_x = cx + self.BEND[2]                                  # the passage's middle where it ends, at the emergency door
         self.cuts["north"] = (self.end_x - 640, self.end_x + 640)       # the bulkhead that door is in
-        self.nest_tube = NestTube(self.end_x, self.D + WALL, self.zf, self.seed + 40)
+        self.nest_tube = NestTube(self.end_x, self.D + WALL + self.MINE + self.BREACH, self.zf + 16, self.seed + 40)
         self.office_plan()
         # the spring: where the west wall meets the floor. The slot runs 140 back into the rock from the wall's lip.
         ys = ym + self.SPRING
@@ -1852,6 +1902,7 @@ class CaveForest(Forest):
         self.fence_gate()
         self.mine_office()
         self.bulkhead()
+        self.mine()
         self.nest()
         for q in range(64, self.LONG - 100, 192):
             y = ym + q
@@ -2087,6 +2138,83 @@ class CaveForest(Forest):
         self.notes.append("the emergency door: in a bulkhead at (%d %d), floor z %d, a shutter 192 wide and %d high; its two buttons are 480 apart with a wall between each "
                           "and the door (about 700 on foot); both within a second open it, and shut it again" % (self.ox + bx, self.oy + D, zf, high))
 
+    def mine(self):
+        """Behind the emergency door, before the hive: the old mine the door was put in to shut (the owner, 21 November:
+        "reference ... the HL2 ravenholm caves/mines at the end of ravenholm"; copying Valve's maps is welcome). 1280 of
+        Ravenholm's low mine tunnel (d1_town_04) lifted whole (valve_raven_mine_tunnel: Valve's own rock, two timber sets,
+        a clamp lamp), turned to run north from the door. Ravenholm's set again every 256 and a clamp lamp on every other,
+        its rail bed laid on along it, its floor flooded from half way as Valve's is. At its end the wall the antlions broke
+        through into the hive (BREACH thick, a rough hole in it, rocks heaped at its feet), and before it Episode Two's
+        antlion alarm post (valve_ep2_antlion_alarm: a pole with three lamps, a sensor, a siren), named for the gamemode
+        (lc_nest_mouth_1_siren, lc_nest_mouth_1_lamp_1 to 3; nothing in the map sets them off: the lesson
+        valve-wave-warning, the owner to decide)."""
+        v, zf, bx = self.vmf, self.zf, self.end_x
+        rnd = random.Random(self.seed + 61)      # (its own: the forest's planting must not move because the mine was added)
+        y1, L = self.D + WALL, self.MINE
+        q, d = 1, self.w(bx, y1, zf)              # (the piece's x runs north, its y west; its floor brush's top at zf)
+        mv_, lv = self.vis("old mine (Valve's Ravenholm tunnel)"), self.vis("old mine: lights and alarm")
+        pf = PF.load("valve_raven_mine_tunnel")
+        pf_solids(v, pf, q, d, mv_, world=True)
+        floor = [p for m, p in pf_disp_points(pf, lambda m: "gravel" in m)]
+
+        def floor_at(xp, yp):
+            """The lifted floor's height (above zf) at a place in the piece's frame."""
+            near = sorted(floor, key=lambda p: (p[0] - xp) ** 2 + (p[1] - yp) ** 2)[:3]
+            return sum(p[2] for p in near) / len(near)
+
+        def at(xp, yp, zp=0):                    # the piece's frame to the forest's
+            return (bx - yp, y1 + xp, zf + zp)
+        # Ravenholm's set (16 by 16 posts 240 apart, cap, knee braces) again every 256 to the breach
+        one_set = {"solids": [sol for sol in pf["solids"] if sol["from"] == "func_detail" and "woodfloor" in sol["sides"][0]["material"].lower()
+                              and all(250 <= c[0] <= 300 for sd in sol["sides"] for c in (sd["corners"] or sd["plane"]))]}
+        for off in (256, 512, 768, 1000):
+            pf_solids(v, one_set, q, (d[0], d[1] + off, d[2]), mv_)
+        # its rail bed (gravel 128 wide, two rails 4 square), laid as Valve's runs on past the piece's box
+        B = self.box
+        v.detail([B(bx - 64, y1, zf - 8, bx + 64, y1 + L - 16, zf + 8)], "nature/gravelfloor002b", vis=mv_)
+        v.detail([B(bx - 32, y1, zf + 8, bx - 28, y1 + L - 16, zf + 12), B(bx + 28, y1, zf + 8, bx + 32, y1 + L - 16, zf + 12)], "nature/gravelfloor002b", vis=mv_)
+        # the flood: Valve's water starts 512 in and stands at the floor brush's top
+        v.world_box(B(bx - 384, y1 + 512, zf - 128, bx + 384, y1 + L, zf - 2), MAT["nodraw"], top=FMAT["stream"], vis=mv_, seals=False)
+        # the clamp lamp of the first set (Valve's) again on every other set; the lift lever left out
+        lamps = [e for e in pf["points"] if "light_spotlight" in e["keys"].get("model", "") or e["classname"] == "light_spot"]
+        extra = [dict(e, origin=[e["origin"][0] + off, e["origin"][1], e["origin"][2]]) for off in (512, 1000) for e in lamps]
+        pf_entities(v, pf, q, d, "lc_mine_", lv, lv, keep=lambda e: "tram_lever" not in e["keys"].get("model", ""), extra=extra)
+        v.point("env_cubemap", self.w(*at(640, 0, 96)), {"cubemapsize": "0"}, mv_)
+        # odds and ends of the miners' (Episode Two's mine props, as Valve lays them: a few, by the walls)
+        for (xp, yp, model, yaw) in ((300, 104, "models/props_mining/bucket_mining01.mdl", 30), (330, -100, "models/props_mining/pickaxe01.mdl", 80)):
+            x, y, z = at(xp, yp, floor_at(xp, yp) + 4)          # (loose: they have physics, so they cannot be static)
+            v.point("prop_physics", self.w(x, y, z), {"model": model, "angles": "0 %d 0" % (yaw + rnd.randrange(-15, 16)), "skin": "0", "spawnflags": "0",
+                                                       "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "physdamagescale": "0.1", "inertiaScale": "1.0"}, lv)
+        x, y, z = at(760, 100, floor_at(760, 100))
+        self.static("models/props_mining/caverocks_cluster01.mdl", x, y, z - 6, rnd.randrange(0, 360, 15), "old mine", fade=(-1, 0))
+        # the breach: a wall across the tunnel's end with a rough hole in it, the hive's crust on its far side
+        yb = y1 + L
+        rock, crust = "nature/rockwall015a", FMAT["nest_rock"]
+        s1, s2, top = zf + 16, zf + 150, zf + 184
+        for box, faces in (((bx - 576, yb, zf - 160, bx - 72, yb + self.BREACH, zf + 448), {"west": crust}),
+                           ((bx + 72, yb, zf - 160, bx + 576, yb + self.BREACH, zf + 448), {"east": crust}),
+                           ((bx - 72, yb, zf - 160, bx + 72, yb + self.BREACH, s1), {"top": crust}),
+                           ((bx - 72, yb, top, bx + 72, yb + self.BREACH, zf + 448), {"bottom": crust}),
+                           ((bx - 72, yb, s2, bx - 44, yb + self.BREACH, top), {"east": crust, "bottom": crust}),
+                           ((bx + 44, yb, s2, bx + 72, yb + self.BREACH, top), {"west": crust, "bottom": crust})):
+            f = dict(faces)
+            f.update({"south": rock, "north": crust})
+            v.world_box(B(*box), MAT["nodraw"], faces=f, vis=mv_, tex=1)
+        for (xp, yp, model) in ((L - 70, 120, "models/props_mining/caverocks_cluster02.mdl"), (L - 60, -118, "models/props_mining/caverocks_cluster01.mdl")):
+            x, y, z = at(xp, yp, floor_at(xp, yp))
+            self.static(model, x, y, z - 8, rnd.randrange(0, 360, 15), "old mine", fade=(-1, 0))
+        self.static("models/props_mining/stalactite_cluster01.mdl", bx, yb - 12, top + 6, 90, "old mine", fade=(-1, 0))
+        # Episode Two's antlion alarm post, by the west wall before the breach, its lamps facing the way from the door
+        ax, ay = 1100, 96
+        alarm = PF.load("valve_ep2_antlion_alarm")
+        pf_entities(v, alarm, q, self.w(*at(ax, ay, floor_at(ax, ay))), "lc_nest_", lv, lv)
+        for xp in range(128, L - 40, 256):
+            x, y, z = at(xp, 0, max(8, floor_at(xp, 0)))
+            self.node(x, y, z)
+        self.mine_floor = floor_at
+        self.notes.append("the old mine: behind the emergency door, 1280 of Ravenholm's low mine tunnel lifted from d1_town_04 (its rock, timber sets every 256, clamp lamps, "
+                          "a rail bed, flooded from 512 in), then the breach into the hive; Episode Two's antlion alarm post before it (lc_nest_mouth_1_siren, _lamp_1 to 3, not wired)")
+
     def nest(self):
         """The antlion nest (the owner: "an EP2 style antlion nest deeper in the cave ... a mini version of the EP2 antlion
         caves"): behind the emergency door, in a shut box of its own north of the forest (so the door's areaportal can hide
@@ -2098,10 +2226,11 @@ class CaveForest(Forest):
         H, T, y0, L = n.HALF, n.TALL, n.y0, n.LONG
         # the box it is in: the forest's north wall is its south side
         bx1, bx2, by2 = n.bcx - 1088, n.bcx + 1152, y0 + L + 192
+        ys = self.D + WALL                                 # (the box starts at the bulkhead: the old mine is in it too)
         ztop = zf + 640
         black = MAT["black"]
-        for box in ((bx1 - 64, y0, self.zb - 64, bx2 + 64, by2 + 64, self.zb), (bx1 - 64, y0, ztop, bx2 + 64, by2 + 64, ztop + 64),
-                    (bx1 - 64, y0, self.zb, bx1, by2 + 64, ztop), (bx2, y0, self.zb, bx2 + 64, by2 + 64, ztop), (bx1, by2, self.zb, bx2, by2 + 64, ztop)):
+        for box in ((bx1 - 64, ys, self.zb - 64, bx2 + 64, by2 + 64, self.zb), (bx1 - 64, ys, ztop, bx2 + 64, by2 + 64, ztop + 64),
+                    (bx1 - 64, ys, self.zb, bx1, by2 + 64, ztop), (bx2, ys, self.zb, bx2 + 64, by2 + 64, ztop), (bx1, by2, self.zb, bx2, by2 + 64, ztop)):
             v.world_box(self.box(*box), black, vis=nv)
         rock, hive, floor = FMAT["nest_rock"], FMAT["nest_hive"], FMAT["cave"]
 
@@ -2152,16 +2281,21 @@ class CaveForest(Forest):
             y = y0 + q
             x = n.mid(y) + across * 1.15 * n.radius(y) * n.lean(y) * 0.62
             return (x, y, n.floor(x, y) + up)
-        # light: dim and cold on the way down, the grubs' green in the first chamber, amber round the extract
-        for (q, across, up, colour) in ((200, 0, 150, "150 190 255 35"), (850, 0.2, 230, "190 255 130 120"), (1080, -0.4, 120, "170 255 120 50"),
-                                        (1500, 0, 110, "170 255 140 35"), (2150, 0, 210, "255 200 90 150"), (2380, 0.3, 100, "160 255 150 50")):
+        # Dressed to Episode Two's caves (the plan from the ingestion, docs/dev/map-building.md: valve-cave-light,
+        # valve-grub-groups, valve-grub-clusters, valve-nest-dressing). Its own random numbers: the forest's are left as
+        # the nest's first dressing left them (old_nest_draws), so the planting does not move.
+        forest_rnd, rnd = self.rnd, random.Random(self.seed + 62)
+        before = forest_rnd.getstate()
+        # light: three kinds, never far apart (Valve: a node's nearest light 165 to 185 away). A cold fill every 420
+        # (Valve's 132 158 202), amber round the extract and its own glow; each grub group has its small yellow one (below).
+        for (q, across, up, colour) in [(q, 0, 170, "132 158 202 40") for q in (220, 640, 1060, 1480, 1900, 2320)] + [(2150, 0, 210, "255 200 90 150"), (2380, 0.3, 100, "160 255 150 50")]:
             v.point("light", self.w(*spot(q, across, up)), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         for q in (850, 2150):
             v.point("env_cubemap", self.w(*spot(q, 0, 80)), {"cubemapsize": "0"}, nv)
-        # what is in it: nests and eggs on the floor (static), web sacks hanging from the roof, the extract's own nest at the end
-        rnd = self.rnd
+        # what is on its floor: flat nests (Valve's commonest), eggs, the extract's own nest at the end
         for (q, across, model) in ((760, 0.35, "models/props_hive/nest_lrg_flat.mdl"), (1000, -0.5, "models/props_hive/nest_med_flat.mdl"), (640, -0.6, "models/props_hive/nest_sm_flat.mdl"),
                                    (1120, 0.55, "models/props_hive/nest_sm_flat.mdl"), (1980, -0.55, "models/props_hive/nest_med_flat.mdl"), (2240, 0.6, "models/props_hive/nest_sm_flat.mdl"),
+                                   (1760, 0.4, "models/props_hive/nest_med_flat.mdl"),
                                    (2360, 0, "models/props_hive/nest_extract.mdl")):
             x, y, z = spot(q, across)
             self.static(model, x, y, z - 2, rnd.randrange(0, 360, 15), "antlion nest", fade=(-1, 0))
@@ -2169,30 +2303,79 @@ class CaveForest(Forest):
             x, y, z = spot(rnd.choice((rnd.uniform(620, 1150), rnd.uniform(1900, 2400))), rnd.uniform(-0.8, 0.8))
             self.static("models/props_hive/egg.mdl", x, y, z - 1, rnd.randrange(0, 360, 15), "antlion nest", fade=(-1, 0))
 
-        def dynamic(model, pos, yaw, name=None):
-            keys = {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
+        def dynamic(model, pos, yaw, name=None, angles=None):
+            keys = {"model": model, "angles": angles or "0 %d 0" % yaw, "skin": "0", "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
                     "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0",
                     "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}
             if name:
                 keys["targetname"] = name
             v.point("prop_dynamic", self.w(*pos), keys, nv)
+
+        def chamber():
+            return rnd.choice((rnd.uniform(620, 1150), rnd.uniform(1900, 2400)))
+
+        def wall(q, side, lift=0.0, inset=0):
+            """A point on the nest's wall q in: side 1 or -1, lift from 0 (half way up) towards the roof (positive) or the
+            floor (negative), in radians; inset: pulled this far in towards its middle."""
+            y = y0 + q
+            th = lift if side > 0 else (math.pi - lift)
+            p = n.ring(th, y)
+            return (p[0] - side * inset, p[1], p[2])
+        # overhead: web sacks from the roof, the big ones in the chambers (Valve: websackceiling01 to 05, big01, 02, 05)
         for k in range(9):
-            y = y0 + rnd.choice((rnd.uniform(620, 1150), rnd.uniform(1900, 2400)))
+            y = y0 + chamber()
             p = n.ring(rnd.uniform(1.2, 1.9), y)
-            dynamic("models/props_hive/websackceiling0%d.mdl" % rnd.choice((1, 2, 3, 4, 5)), (p[0], p[1], p[2] - 4), rnd.randrange(0, 360, 15))
+            dynamic("models/props_hive/websackceiling0%d.mdl" % rnd.choice((1, 2, 3, 5)), (p[0], p[1], p[2] - 4), rnd.randrange(0, 360, 15))
+        for (q, big) in ((830, "01"), (2050, "02"), (2290, "05")):
+            p = n.ring(math.pi / 2 + rnd.uniform(-0.25, 0.25), y0 + q)
+            dynamic("models/props_hive/websackceilingbig%s.mdl" % big, (p[0], p[1], p[2] - 6), rnd.randrange(0, 360, 15))
+        # on the walls: half sacks (their flat back to the rock) and the web plugs over side holes (grubtunnel_door)
+        for k in range(10):
+            q, side = rnd.uniform(560, 2440), rnd.choice((1, -1))
+            p = wall(q, side, rnd.uniform(0.25, 0.5), 6)
+            dynamic("models/props_hive/websackhalf%s.mdl" % rnd.choice(("", "_b", "_c")), p, 180 if side > 0 else 0)
+        for (q, side) in ((700, 1), (1080, -1), (1600, 1), (1950, 1), (2300, -1)):
+            p = wall(q, side, -0.15, -8)                    # (8 into the rock, so its rim is buried)
+            dynamic("models/props_hive/grubtunnel_door.mdl", (p[0], p[1], p[2] + 10), 0)
+        # from the roof: stalactites (Valve: 12 to 50 a cave map), where the roof is high enough
+        for k in range(12):
+            q = chamber()
+            p = n.ring(math.pi / 2 + rnd.uniform(-0.5, 0.5), y0 + q)
+            model = rnd.choice(("models/props_mining/stalactite_static01.mdl", "models/props_mining/stalactite_static02.mdl", "models/props_mining/stalactite_cluster01.mdl",
+                                "models/props_mining/stalactite_cluster02.mdl"))
+            drop = {"static01": 176, "static02": 150, "cluster01": 77, "cluster02": 53}[model.rsplit("_", 1)[1][:-4]]
+            if p[2] - drop < n.floor(p[0], p[1]) + 110:
+                continue                                    # (not where it would reach a head)
+            self.static(model, p[0], p[1], p[2] + 4, rnd.randrange(0, 360, 15), "antlion nest", fade=(-1, 0))
         ex = spot(2360, 0)
         dynamic("models/props_hive/larval_essence.mdl", (ex[0], ex[1], ex[2] + 24), 0, "lc_nest_extract")
         for (q, side) in ((300, 1), (520, -1), (1350, 1), (1600, -1), (1800, 1)):
             y = y0 + q
             p = n.ring(-0.5 if side > 0 else math.pi + 0.5, y)
             self.static("models/props_mining/caverocks_cluster0%d.mdl" % rnd.choice((1, 2)), p[0] - 30 * side, p[1], n.floor(p[0] - 30 * side, p[1]) - 6, rnd.randrange(0, 360, 15), "antlion nest", fade=(-1, 0))
-        # grubs along the walls' feet (Episode Two's npc_antlion_grub: they glow, and burst when trodden on)
-        grubs = 0
-        for q in range(420, L - 120, 110):
-            side = 1 if (q // 110) % 2 else -1
-            x, y, z = spot(q, side * rnd.uniform(0.75, 0.95), 2)
-            v.point("npc_antlion_grub", self.w(x, y, z), {"angles": "0 %d 0" % rnd.randrange(0, 360, 15), "spawnflags": "0"}, gv)
-            grubs += 1
+        # grubs (Episode Two's npc_antlion_grub: they glow, and burst when trodden on) in groups of two to four, the
+        # groups about 170 apart along alternate walls, each grub 23 to 51 from the next, half of them up the wall
+        # (rolled 45 to 90 to face out of it), the rest at its foot; a small yellow light 30 to 45 out from each group
+        grubs = groups = 0
+        for g, q0 in enumerate(range(440, L - 120, 170)):
+            side = 1 if g % 2 else -1
+            q = q0 + rnd.uniform(-30, 30)
+            for k in range(rnd.choice((2, 3, 3, 4))):
+                q += rnd.uniform(23, 51) * (1 if k else 0)
+                if rnd.random() < 0.5:
+                    p = wall(q, side, -rnd.uniform(0.25, 0.55), 2)
+                    roll = -side * rnd.randrange(45, 91, 5)
+                    v.point("npc_antlion_grub", self.w(*p), {"angles": "0 90 %d" % roll, "spawnflags": "0"}, gv)
+                else:
+                    x, y, z = spot(q, side * rnd.uniform(0.85, 0.97), 2)
+                    v.point("npc_antlion_grub", self.w(x, y, z), {"angles": "0 %d 0" % rnd.randrange(0, 360, 15), "spawnflags": "0"}, gv)
+                grubs += 1
+            lx, ly, lz = spot(q0 + 30, side * 0.55, 34)
+            v.point("light", self.w(lx, ly, lz), {"_light": "255 245 157 %d" % rnd.randrange(40, 81, 10), "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"},
+                    self.vis("lights"))
+            groups += 1
+        forest_rnd.setstate(before)
+        old_nest_draws(forest_rnd, L)
         # the antlions: one pattern (it is not in the map until a maker copies it), four makers that only work while the door
         # is open, two alive from each at a time. Each one made runs to lc_nest_rally, in the chamber before the mine office.
         tx, ty, tz = spot(900, 0, 8)
@@ -2216,9 +2399,11 @@ class CaveForest(Forest):
             self.problems.append("the nest is open to the forest somewhere other than the emergency door")
         if not reaches(closed, self.w(*spot(2300, 0, 64))):
             self.problems.append("the nest's last chamber can't be reached from its door")
+        if not reaches(closed, self.w(n.bcx, self.D + WALL + self.MINE / 2, zf + 64)):
+            self.problems.append("the old mine can't be reached from the hive: the breach is shut")
         self.notes.append("the antlion nest: behind the emergency door, in its own box x %d to %d, y %d to %d; %d long: down %d to a first chamber (nests, eggs), round two bends "
-                          "to a last chamber with the extract (lc_nest_extract); %d grubs; %d makers, 2 antlions alive from each while the door is open" % (
-                              self.ox + bx1 - 64, self.ox + bx2 + 64, self.oy + y0, self.oy + by2 + 64, L, zf - n.base(y0 + 1000), grubs, len(makers)))
+                          "to a last chamber with the extract (lc_nest_extract); %d grubs in %d groups, each with its light; %d makers, 2 antlions alive from each while the door is open" % (
+                              self.ox + bx1 - 64, self.ox + bx2 + 64, self.oy + ys, self.oy + by2 + 64, L, n.zf - n.base(y0 + 1000), grubs, groups, len(makers)))
 
     def fence_gate(self):
         """A chain link fence across the cave, 48 inside its mouth, with a double gate in it: two leaves 44 wide and 100 high
