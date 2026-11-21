@@ -171,6 +171,7 @@ LC_MODULES = {
         "sv_livingcity_garden", -- (the walled garden's planting spots, lc_garden_plot_N: melons and pumpkins from a seed packet)
         "sv_livingcity_squadtopup", -- (a Resistance squad topped up at each stage of a fight, one of them a medic)
         "sv_livingcity_roofdrop", -- (Resistance supplies thrown down from a roof between waves)
+        "sv_livingcity_strongholds", -- (Combine strongholds' tripwires and turrets: the alarm heard, a job to shut them)
         "sv_livingcity_slots",
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",

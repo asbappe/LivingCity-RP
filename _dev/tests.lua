@@ -43634,6 +43634,44 @@ function Nov21_RoofDropTests()
 end
 Nov21_RoofDropTests()
 
+function Nov21_StrongholdTests()
+    section("21 November: Combine strongholds' tripwires heard, and the Resistance's job to cut the defences")
+    local runWas = LC.Running
+    LC.Running = true
+    LC.Strongholds.off = {}
+    local at = Vector(-46000, 48000, 0)
+    ok(next(LC.StrongholdRooms()) == nil, "no stronghold relays on the map: no rooms")
+    local alarm = ents.Create("logic_relay") alarm:SetPos(at) alarm:SetName("lc_atrium_alarm") alarm:Spawn()
+    local off = ents.Create("logic_relay") off:SetPos(at + Vector(200, 0, 0)) off:SetName("lc_atrium_off") off:Spawn()
+    ok(LC.StrongholdRooms().atrium == off, "a room with its _off relay is a stronghold with defences up")
+    local fired = {}
+    off.Fire = function(_, input) fired[#fired + 1] = input end
+    local intruder = newPlayer("WireBreaker", "citizen")
+    intruder:SetPos(at + Vector(40, 0, 0))
+    local unit = newPlayer("WireUnit", "cp")
+    unit.chat = {}
+    hook.Run("AcceptInput", alarm, "Trigger", intruder, intruder)
+    ok(LC.PlayerIsWanted(intruder), "breaking a wire: whoever did it is wanted")
+    ok(has(unit.chat, "tripwire broken"), "and the units hear it on the CP net")
+    local rebel = newPlayer("DefenceCutter", "resistance", nil, 400)
+    rebel:SetPos(at + Vector(0, 300, 0))
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "res_cutdefences" then t = x end end
+    ok(t and t.available(rebel), "the Resistance are offered Cut the defences")
+    local spec = t and t.build(rebel)
+    ok(spec and #spec.stages == 2 and spec.stages[1].game == "wiring", "get to the control point, then the wiring game", spec and spec.stages[1].game)
+    if spec then spec.stages[2].onDone({ owner = rebel }) end
+    ok(fired[1] == "Trigger" and LC.Strongholds.off.atrium and next(LC.StrongholdRooms()) == nil, "wired out: the room's _off relay is fired, and its defences are down for good")
+    unit.chat = {}
+    hook.Run("AcceptInput", alarm, "Trigger", intruder, intruder)
+    ok(not has(unit.chat, "tripwire broken"), "(a room shut down raises no alarm)")
+    LC.ClearWanted(intruder)
+    alarm:Remove() off:Remove() intruder:Remove() unit:Remove() rebel:Remove()
+    LC.Strongholds.off = {}
+    LC.Running = runWas
+end
+Nov21_StrongholdTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
