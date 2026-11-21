@@ -296,6 +296,7 @@ local function SeatSpots(t)
     end
     return out
 end
+LC.RebelSeatSpots = SeatSpots -- (also where the city finds citizens' couches, chairs and beds by itself: sv_livingcity_idlelife.lua)
 
 -- Where to lie on a bed or a mattress: on top, along it, and where to stand
 -- up again beside it.

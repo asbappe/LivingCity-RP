@@ -357,8 +357,15 @@ LC.IsPointFree = IsFree
 local function FreePoints(kinds, who, looseOnly)
     local out, now, by = {}, CurTime(), PointIndex()
     for kind in pairs(kinds) do
-        for _, p in ipairs(by[kind] or NONE) do
+        -- (the citizens' idle poses are never a unit's: sv_livingcity_idlelife.lua)
+        local refused = LC.IdleKindRefused and LC.IdleKindRefused(kind, who)
+        for _, p in ipairs(not refused and by[kind] or NONE) do
             if IsFree(p, who) and (not looseOnly or (p.group or 0) == 0) and (p.disabledUntil or 0) < now then out[#out + 1] = p end
+        end
+        -- and the spots the city found by itself (couches, chairs, beds, windows, walls: sv_livingcity_idlelife.lua)
+        local auto = not refused and LC.AutoSpots and LC.AutoSpots.byKind[kind]
+        for _, p in ipairs(auto or NONE) do
+            if IsFree(p, who) and (p.disabledUntil or 0) < now and LC.AutoSpotOK(p) then out[#out + 1] = p end
         end
     end
     return out
@@ -794,27 +801,41 @@ LC.MakeSequence, LC.BusySeqName, LC.BUSY_ACTS = MakeSequence, SeqName, BUSY
 local function StartBusy(npc, st, p)
     local names = BUSY[p.kind]
     if not names then return false end
-    local loop = SeqName(npc, names[2])
-    if not loop then return false end
-    local entry = SeqName(npc, names[1])
+    if LC.IdleKindRefused and LC.IdleKindRefused(p.kind, npc) then return false end -- (a citizen's idle pose: never a unit's)
+    -- the spot's own pose, Valve's (a window watcher, bench sits in turn: sv_livingcity_idlelife.lua),
+    -- else the game's own for the kind
+    local entry, loop, exit
+    if LC.BusyPose then entry, loop, exit = LC.BusyPose(npc, st, p) end
+    if not loop then
+        loop = SeqName(npc, names[2])
+        if not loop then return false end
+        entry, exit = SeqName(npc, names[1]), SeqName(npc, names[3])
+    end
     local ok, ss = LC.Try(MakeSequence, npc, p.pos, p.yaw or 0, entry or loop, loop,
         SF_SCRIPT_LOOP_IN_POST_IDLE + SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 1, 0)
     if not ok or not IsValid(ss) then return false end
     st.ss = ss
     st.busyKind = p.kind
+    st.busyExit = { ss = ss, seq = exit }
     SetState(npc, st, "busy")
     st.untilT = CurTime() + math.Rand(30, 90)
+    if LC.BusyStarted then LC.BusyStarted(npc, st, p) end
     return true
 end
+LC.StartBusy = StartBusy
 
 local function EndBusy(npc, st, withExit)
+    local was, own = st.ss, st.busyExit
+    st.busyExit = nil
     if IsValid(st.ss) then
         st.ss:Fire("CancelSequence")
         SafeRemoveEntityDelayed(st.ss, 0.5)
     end
     st.ss = nil
     if withExit and IsValid(npc) and st.busyKind then
-        local exit = SeqName(npc, BUSY[st.busyKind][3])
+        local exit
+        if own and own.ss == was then exit = own.seq -- (the way out of the pose they sat in)
+        elseif BUSY[st.busyKind] then exit = SeqName(npc, BUSY[st.busyKind][3]) end
         if exit then
             local ok, ss2 = LC.Try(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, exit, nil,
                 SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 0, 0.2)
@@ -1321,6 +1342,8 @@ function Arrive(npc, st, now)
     FaceYaw(npc, poi.yaw)
 
     local k = poi.kind
+    -- arrivals other modules handle (a unit's door post, the garrison's posts, a lane's bounds: sv_livingcity_unitposts.lua)
+    if LC.ArriveHandlers and LC.ArriveHandlers[k] and LC.ArriveHandlers[k](npc, st, now, poi) then return end
     if k == "lineslot" then
         SetState(npc, st, "inline")
     elseif k == "lineapproach" then
@@ -1868,6 +1891,9 @@ end
 
 local function TryChat(npc, st, now)
     st.nextChat = now + math.Rand(25, 60)
+    -- a quiet crowd where the Combine is watching: they look (at you, a unit, the screen), they don't chat
+    -- (Valve's station maps; the owner, 21 November: sv_livingcity_idlelife.lua)
+    if LC.CrowdQuiet and LC.CrowdQuiet(npc, st, now) then return end
     for other, ost in pairs(LC.NPCs) do
         if other ~= npc and IsValid(other) and ost.role == "citizen" and (ost.state == "idle" or ost.state == "inline")
             and other:GetPos():DistToSqr(npc:GetPos()) < 160 * 160 then
@@ -1888,7 +1914,10 @@ local function TryChat(npc, st, now)
     end
 end
 
+LC.TryChat = TryChat
+
 local SITTABLE = { sit = true, sitchair = true, lean = true }
+LC.SITTABLE = SITTABLE -- (with Valve's idle spots added: window, armscrossed, drinker, couch, bedside: sv_livingcity_idlelife.lua)
 local LOITER = { idle = true, queue = true }
 local WORK = { work = true }
 
@@ -2041,6 +2070,7 @@ local function TryStartInspection(cop, cst, now)
     local sweep = LC.Event == "sweep"
     cst.nextInspect = now + (sweep and math.Rand(10, 20) or math.Rand(40, 90))
     if not sweep and math.random() > 0.6 then return end
+    if LC.WallFriskTry and LC.WallFriskTry(cop, cst, now) then return end -- (two against a wall: sv_livingcity_unitmoves.lua)
     for cit, ist in pairs(LC.NPCs) do
         if IsValid(cit) and ist.role == "citizen" and not ist.test and (ist.state == "idle" or ist.state == "moving")
             and cit:GetPos():DistToSqr(cop:GetPos()) < 500 * 500 then
@@ -2061,6 +2091,7 @@ local function TryArrestCitizen(cop, cst, cit, ist, now)
     if math.random(100) > cvArrestChance:GetInt() then return false end
     if not LC.ArrestNPC then return false end
     cop:EmitSound(Pick(COP_ARREST), 75)
+    if LC.ArrestPunch and LC.ArrestPunch(cop, cst, cit, ist, now, LC.ArrestNPC) then return true end -- (a punch first, now and then: sv_livingcity_unitmoves.lua)
     CitSay(cit, ist, Vo(ist.gender, Pick(CIT_PROTEST)), 70)
     if LC.Cue then LC.Cue(cit, ist, "say_break_beaten", { force = true }) end
     cst.subject = nil
@@ -2132,6 +2163,8 @@ end
 local function ChooseSecurityTask(npc, st, now)
     Release(npc, st)
     if LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
+    -- a lane to walk, a door to guard, one of the garrison's posts (sv_livingcity_unitposts.lua)
+    if LC.UnitChoose and LC.UnitChoose(npc, st, now) then return end
     local run = LC.Event == "lockdown"
 
     -- a post to hold (an Overwatch landing party round its landing zone): back to it, and stand there
@@ -2529,6 +2562,7 @@ local function ThinkSecurity(npc, st, now)
     if s == "workescort" then return end -- escorting a worker (sv_livingcity_escort.lua drives them)
     if s == "cleanguard" then return end
     if s == "adminguard" then return end -- guarding the City Administrator (sv_livingcity_cityadmin.lua drives them) -- guarding an infestation cleanup worker (sv_livingcity_cleanup.lua drives them)
+    if LC.SecurityStates and LC.SecurityStates[s] then return LC.SecurityStates[s](npc, st, now) end -- (on a door post, frisking two at a wall: sv_livingcity_unitposts.lua, sv_livingcity_unitmoves.lua)
 
     if st.role == "cop" then
         -- tell people crowding them to move along, and escalate if they don't
@@ -2736,28 +2770,33 @@ local function ThinkZombie(npc, st, now)
 end
 
 ------------------------------------------------------------------------
--- Ambient barks when players brush past citizens
+-- Players brushing past citizens: a glance (a quiet crowd, the owner, 21 November: Valve's
+-- citizens look at you, they don't say "Excuse me"; sv_livingcity_idlelife.lua). One of the
+-- infested still sends them off with "Run for your life!"
 ------------------------------------------------------------------------
 
 local function BarkPass(now)
     for _, ply in LC.Players() do
         if ply:Alive() and ply:GetVelocity():LengthSqr() > 100 * 100 then
             -- only who's right there (the engine finds them; not every NPC in the city)
-            for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 60)) do
+            for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 80)) do
                 local st = LC.NPCs[npc]
                 if st and st.role == "citizen" and now > st.nextBark and IsValid(npc)
                     and (st.state == "moving" or st.state == "idle" or st.state == "inline") then
                     st.nextBark = now + 20
-                    if math.random() < 0.5 then
-                        local snd = LC.PlayerIsZombie and LC.PlayerIsZombie(ply) and Vo(st.gender, "runforyourlife01")
-                            or Vo(st.gender, Pick(CIT_BARK))
-                        npc:EmitSound(snd, 70)
+                    if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then
+                        if math.random() < 0.5 then npc:EmitSound(Vo(st.gender, "runforyourlife01"), 70) end
+                    elseif LC.CrowdGlance then
+                        LC.CrowdGlance(npc, st, ply)
+                    elseif math.random() < 0.5 then
+                        npc:EmitSound(Vo(st.gender, Pick(CIT_BARK)), 70)
                     end
                 end
             end
         end
     end
 end
+LC.BarkPass = BarkPass
 
 ------------------------------------------------------------------------
 -- Relationships with players (zombie players, CP players)
@@ -3153,7 +3192,8 @@ function LC.UnitsSpotMonsters()
     if #list == 0 then return 0 end
     local n = 0
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and IsSecurity(st) and not st.test and st.state ~= "hostile" and st.state ~= "workescort" and st.state ~= "event" then
+        if IsValid(npc) and IsSecurity(st) and not st.test and st.state ~= "hostile" and st.state ~= "workescort" and st.state ~= "event"
+            and st.state ~= "turretgun" then -- (an officer on a mounted gun deals with them with it: sh_livingcity_turret.lua)
             local pos, best, bd = npc:GetPos(), nil, 400 * 400
             for _, m in ipairs(list) do
                 local d = m:GetPos():DistToSqr(pos)

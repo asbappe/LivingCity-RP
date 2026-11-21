@@ -2792,8 +2792,8 @@ _run(1) -- let their spawns settle
 trespasser:SetPos(nexus)
 nexusCop:SetPos(nexus + Vector(50, 0, 0))
 _run(2)
-ok(has(trespasser.chat, "restricted area"), "a citizen who walks in is told to leave")
-ok(not has(nexusCop.chat, "restricted area") and not LC.PlayerIsWanted(nexusCop), "Civil Protection may be there", tostring(nexusCop.chat and nexusCop.chat[#nexusCop.chat]))
+ok(trespasser:GetNW2Float("lc_trespass_until", 0) > CurTime() and not has(trespasser.chat, "restricted area"), "a citizen who walks in gets the countdown (and a unit's voice, no chat line: 21 November)")
+ok(nexusCop:GetNW2Float("lc_trespass_until", 0) == 0 and not LC.PlayerIsWanted(nexusCop), "Civil Protection may be there", tostring(nexusCop.chat and nexusCop.chat[#nexusCop.chat]))
 trespasser:SetPos(FAR)
 _run(2)
 ok(not LC.PlayerIsWanted(trespasser), "leaving in time costs nothing")
@@ -11349,6 +11349,7 @@ local did = LC.MindsAct(mv, "tantrum", CurTime())
 ok(vst.mindErrand ~= nil and vst.questLock == true and has(mv, "vented"), "a tantrum: they set off for the nearest unit", did)
 v:SetPos(unit:GetPos() + Vector(50, 0, 0))
 LC.MindsErrandTick(CurTime())
+LC.StageTick(CurTime() + 16) -- (where a player sees it, or 15 seconds on: sv_livingcity_idlelife.lua)
 ok(vst.mindErrand == nil and vst.questLock == nil and vst.state == "detained", "and scream in his face: stopped where they stand", vst.state)
 LC.ArrestNPC = arrest
 vst.state = "idle"
@@ -11368,6 +11369,7 @@ for i = 1, 8 do LC.Minds.byId[8000 + i] = nil end
 ok(v.lcProfile.rebel == true and vst.rebel == true and vst.mindErrand ~= nil, "defiance: they side with the Resistance, and go for a poster", did)
 v:SetPos(poster:GetPos() + Vector(40, 0, 0))
 LC.MindsErrandTick(CurTime())
+LC.StageTick(CurTime() + 16)
 ok(poster:GetNW2Bool("lc_defaced", false) == true, "the poster is painted over")
 ok(LC.MindsIsInformer(v, vst) == false, "a sympathizer is never an informant")
 v:SetPos(T0)
@@ -11427,6 +11429,8 @@ unit:SetPos(T0 + Vector(60, 60, 0))
 local hp = v:Health()
 Psy.State(mv).th = {}
 did = LC.MindsAct(mu, "brutal", CurTime())
+LC.MindsErrandTick(CurTime())
+LC.StageTick(CurTime() + 16)
 ok(string.find(did or "", "beat", 1, true) ~= nil and (has(mv, "beaten") or has(mf, "beaten")), "a brutal unit beats the nearest citizen, who feels it", did)
 ok(v:Health() > 0 and f:Health() > 0, "never to death")
 for _, e in ipairs({ v, f }) do LC.NPCs[e].state = "idle" end
@@ -32932,7 +32936,7 @@ function HeldNotTrespassingTests()
     p:SetNW2Float("lc_jail_until", CurTime() + 60)
     ok(tick() == 0, "in a cell: none")
     p:SetNW2Float("lc_jail_until", 0)
-    ok(not LC.HeldByCombine(p) and tick() > CurTime() and has(p.chat, "restricted area"), "free and there: the countdown, as before")
+    ok(not LC.HeldByCombine(p) and tick() > CurTime() and not has(p.chat, "restricted area"), "free and there: the countdown, as before (no chat line since 21 November)")
     p:SetNW2Bool("lc_tied", true)
     ok(tick() == 0, "taken in after the countdown started: it stops")
     _run(12)
@@ -42332,7 +42336,7 @@ local n = #gun.shots
 ok(n >= 28 and n <= 31, "15 rounds a second, Valve's rate (two seconds held)", n)
 local b = gun.shots[1] or {}
 ok(b.Attacker == cit and b.Inflictor == gun, "every bullet is the gunner's: they are the attacker, the gun the inflictor (the laws and kills see who shot)")
-ok(math.abs((b.Damage or 0) - 26 / 3) < 1e-6, "each does a third of Valve's 26 (the owner, 21 November: \"cut that damage down to 1/3\")", b.Damage)
+ok(b.Damage == 5, "each does 5, Valve's own against players, to anyone (the owner, 21 November: \"this is the damage we want universally\")", b.Damage)
 ok(b.TracerName == "AR2Tracer" and b.Tracer == 1 and b.AmmoType == "AR2" and b.Spread ~= nil and math.abs(b.Spread.x - 0.025) < 1e-6,
     "AR2 rounds and tracers, in Valve's small cone")
 local snd = 0
@@ -42397,6 +42401,58 @@ ok(LC.TurretOf(cit) == gun, "(on it again)")
 cit:Kill()
 ok(LC.TurretOf(cit) == nil and gun:GetNW2Entity("lc_turret_gunner") == nil, "dying lets go")
 
+-- an officer on it (the owner, 21 November: "if there is an enemy within range of the turret and relatively in front of it, then yes")
+local runWas = LC.Running
+LC.Running = false -- (no city about: the officer is the test's)
+local officer, ost = LC.SpawnCop(T.ToWorld(gun, -300, 200, -33))
+local rebel = ents.Create("npc_citizen")
+LC.NPCs[rebel] = { role = "rebel", state = "idle" }
+rebel:SetPos(T.ToWorld(gun, -900, 0, -33))
+gun.lcNPCNext = 0
+LC.TurretWatch(CurTime())
+ok(IsValid(officer) and ost ~= nil and ost.turretGun == nil and T.Gunners[gun] == nil, "a rebel behind it: no officer is sent to it")
+rebel:SetPos(T.ToWorld(gun, 900, 100, -33))
+LC.TurretWatch(CurTime())
+ok(ost ~= nil and ost.turretGun == gun and ost.state == "turretgun" and T.Gunners[gun] == officer, "a rebel in front of it, in range: the nearest free officer is sent to it")
+local function Steps(n) for _ = 1, n do _advance(0.1) _simulate(0.1) think() end end
+local before2 = #gun.shots
+Steps(30)
+local spot = T.ToWorld(gun, T.SPOT.x, T.SPOT.y, T.SPOT.z)
+ok(ost.turretPhase == "manning" and IsValid(officer) and officer:GetPos():Distance(spot) <= 40 and gun:GetNW2Entity("lc_turret_gunner") == officer,
+    "he runs to the spot behind it, where Valve's Metrocop stands, and mans it", IsValid(officer) and officer:GetPos():Distance(spot))
+last = gun.shots[#gun.shots] or {}
+local toRebel = last.Src and (rebel:WorldSpaceCenter() - last.Src):GetNormalized()
+ok(#gun.shots > before2 + 10 and last.Attacker == officer and last.Damage == 5 and toRebel and last.Dir:Dot(toRebel) > 0.995,
+    "and fires it at the rebel, at Valve's rate, every round his own", #gun.shots - before2)
+rebel:SetPos(T.ToWorld(gun, -900, 0, -33))
+Steps(20)
+ok(ost.turretGun == gun, "the rebel gone from in front of it: he stays on it a moment (Valve's persistence)")
+Steps(20)
+ok(ost.turretGun == nil and ost.state == "idle" and not ost.questLock and T.Gunners[gun] == nil and gun:GetNW2Entity("lc_turret_gunner") == nil,
+    "then lets go, back to his beat")
+_advance(T.RECALL + 0.1)
+rebel:SetPos(T.ToWorld(gun, 900, 100, -33))
+LC.TurretWatch(CurTime())
+Steps(3)
+ok(ost.turretGun == gun and ost.turretPhase == "manning", "(sent to it again for the next one)")
+officer:SetHealth(10)
+Steps(1)
+ok(ost.turretGun == nil and T.Gunners[gun] == nil, "badly hurt, he breaks off")
+officer:SetHealth(officer:GetMaxHealth())
+_advance(T.RECALL + 0.1)
+LC.TurretWatch(CurTime())
+Steps(3)
+ok(ost.turretGun == gun and ost.turretPhase == "manning", "(on it again)")
+Behind(cop)
+press(cop, IN_USE)
+ok(LC.TurretOf(cop) == gun and T.Gunners[gun] == cop and ost.turretGun == nil and ost.state == "idle", "a player of the Combine pressing E takes it from him: a player comes first")
+_advance(0.5)
+press(cop, IN_USE)
+ok(LC.TurretOf(cop) == nil, "(and lets it go)")
+LC.NPCs[rebel] = nil rebel:Remove()
+LC.NPCs[officer] = nil officer:Remove()
+LC.Running = runWas
+
 -- anyone may man it; the gun going lets its gunner go
 _advance(0.5) Behind(cop)
 press(cop, IN_USE)
@@ -42409,6 +42465,784 @@ Restore()
 cit:Remove() cop:Remove()
 end
 TurretTests()
+
+function IdlePoseTests()
+section("21 November: Valve's idle spots, one pose each; bench seats 48 apart, two sits in turn")
+local P0 = Vector(152000, -152000, 0)
+local made, people = {}, {}
+local function point(off, kind, yaw) local p = LC.AddPoint(P0 + off, yaw or 0, kind, 0) made[#made + 1] = p return p end
+local function person(off, seqs)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    n.seqs, n.sim, st.test, st.leaveAt = seqs, false, nil, nil
+    st.state, st.untilT = "idle", CurTime() + 9999
+    people[#people + 1] = n
+    return n, st
+end
+local function playing(st) return st.ss and st.ss.kv.m_iszPostIdle, st.ss and st.ss.kv.m_iszPlay end
+for _, k in ipairs({ "window", "armscrossed", "drinker", "couch", "bedside" }) do
+    ok(LC.POINT_KINDS[k] and LC.BUSY_ACTS[k] ~= nil and LC.SITTABLE[k], "a " .. k .. " spot is placed with the editor, and citizens idle there", k)
+end
+-- a window: a man and a woman each have their own of Valve's two watchers
+local man, mst = person(Vector(-30, 0, 0), { d1_t03_Tenements_Look_Out_Window_Idle = 11 })
+ok(LC.StartBusy(man, mst, point(Vector(0, 0, 0), "window", 90)) and mst.state == "busy" and playing(mst) == "d1_t03_Tenements_Look_Out_Window_Idle",
+    "a man at a window looks out of it (Valve's tenement watcher, d1_t03)", playing(mst))
+local woman, wst = person(Vector(-30, 40, 0), { d1_t03_LookOutWindow = 12 })
+ok(LC.StartBusy(woman, wst, point(Vector(0, 40, 0), "window", 90)) and playing(wst) == "d1_t03_LookOutWindow", "a woman has her own (d1_t03_LookOutWindow)", playing(wst))
+-- a model without Valve's pose: the game's own idle, never a name the model lacks
+local plain, pst = person(Vector(-30, 80, 0), {})
+local win3 = point(Vector(0, 80, 0), "window", 90)
+ok(not LC.StartBusy(plain, pst, win3) and pst.state ~= "busy", "nothing the model hasn't got is ever played")
+local hadQ = ACT_BUSY_QUEUE
+ACT_BUSY_QUEUE = hadQ or 9001
+plain.acts = { [ACT_BUSY_QUEUE] = 4 }
+plain.GetSequenceName = function() return "LineIdle01" end
+ok(LC.StartBusy(plain, pst, win3) and playing(pst) == "LineIdle01", "a model with only the game's own stands there in it (the queue idle)", playing(pst))
+ACT_BUSY_QUEUE = hadQ
+-- arms crossed or hands in pockets: one of them for each person, always the same one
+local stand = point(Vector(0, 120, 0), "armscrossed", 90)
+local idler, ist = person(Vector(-30, 120, 0), { d1_t02_Playground_Cit1_Arms_Crossed = 1, d1_t02_Playground_Cit2_Pockets = 2 })
+local _, l1 = LC.BusyPose(idler, ist, stand)
+local _, l2 = LC.BusyPose(idler, ist, stand)
+ok((l1 == "d1_t02_Playground_Cit1_Arms_Crossed" or l1 == "d1_t02_Playground_Cit2_Pockets") and l1 == l2, "standing about: arms crossed or hands in pockets, the same for the same person", l1)
+-- a drinker's seat: Valve's seated drinker, a bottle out for one fond of a drink, and Valve's way up again
+local seat = point(Vector(0, 160, 0), "drinker", 90)
+local drinker, dst = person(Vector(-30, 160, 0), { drinker_sit = 1, drinker_sit_idle = 2, Sit_Chair_to_Idle = 3 })
+local viceOf, vicesWas = LC.NPCViceOf, GetConVar("lc_npc_vices"):GetString()
+LC.NPCViceOf = function(n) return n == drinker and 0.8 or 0 end
+_setcvar("lc_npc_vices", 1)
+local idle, play = nil, nil
+ok(LC.StartBusy(drinker, dst, seat), "a citizen sits at a drinker's seat")
+idle, play = playing(dst)
+ok(play == "drinker_sit" and idle == "drinker_sit_idle", "Valve's seated drinker: sitting down, then the drinker's idle", tostring(play) .. " " .. tostring(idle))
+ok(LC.NPCVices[drinker] and IsValid(LC.NPCVices[drinker].prop) and LC.NPCVices[drinker].untilT >= dst.untilT - 0.01, "fond of a drink: the bottle is out while they sit", LC.NPCVices[drinker] and LC.NPCVices[drinker].untilT)
+LC.NPCViceOf = viceOf
+_setcvar("lc_npc_vices", vicesWas)
+if LC.NPCViceStop then LC.NPCViceStop(drinker) end
+local before = {}
+for _, e in ipairs(ents.FindByClass("scripted_sequence")) do before[e] = true end
+LC.EndBusy(drinker, dst, true)
+local exitSeq
+for _, e in ipairs(ents.FindByClass("scripted_sequence")) do if not before[e] and IsValid(e) then exitSeq = e.kv.m_iszPlay end end
+ok(exitSeq == "Sit_Chair_to_Idle", "getting up plays the way out of the seat", exitSeq)
+-- a couch and a bed's edge
+local cman, cst = person(Vector(-30, 200, 0), { sitcouch1 = 1, sitcouchknees1 = 2, laycouch1 = 3, laycouch1_exit = 4 })
+local _, cl = LC.BusyPose(cman, cst, point(Vector(0, 200, 0), "couch", 90))
+ok(cl == "sitcouch1" or cl == "sitcouchknees1" or cl == "laycouch1", "on a couch: one of Valve's couch poses", cl)
+local bwoman, bst = person(Vector(-30, 240, 0), { d1_t03_Sit_Bed_Entry = 1, d1_t03_Sit_Bed = 2, d1_t03_Sit_Bed_Exit = 3 })
+local be, bl, bx = LC.BusyPose(bwoman, bst, point(Vector(0, 240, 0), "bedside", 90))
+ok(be == "d1_t03_Sit_Bed_Entry" and bl == "d1_t03_Sit_Bed" and bx == "d1_t03_Sit_Bed_Exit", "on a bed's edge: Valve's d1_t03 bed sit, in and out", tostring(bl))
+-- bench seats: 48 apart along the bench, and Valve's two plaza sits in turn
+local s1 = point(Vector(0, 400, 0), "sitchair", 0)
+local at, yaw = LC.BenchSeatSnap(P0 + Vector(5, 430, 0), 10)
+ok(math.abs((at - s1.pos):Length() - 48) < 0.01 and yaw == 0 and math.abs(at.x - s1.pos.x) < 0.01, "a seat placed beside another goes 48 from it along the bench, facing the same way", tostring(at))
+local s2 = point(at - P0, "sitchair", yaw)
+at, yaw = LC.BenchSeatSnap(s2.pos + Vector(0, 40, 0), 0)
+local s3 = point(at - P0, "sitchair", yaw)
+ok(math.abs((s3.pos - s2.pos):Length() - 48) < 0.01 and math.abs((s3.pos - s1.pos):Length() - 96) < 0.01, "and the next one 48 further on", tostring(s3.pos))
+local far, fyaw = LC.BenchSeatSnap(P0 + Vector(0, 700, 0), 0)
+ok(far == P0 + Vector(0, 700, 0) and fyaw == 0, "a seat nowhere near another stays where it is put")
+local _, tyaw = LC.BenchSeatSnap(P0 + Vector(40, 400, 0), 180)
+ok(tyaw == 180, "a chair facing the other way (across a table) is left alone")
+local chair = point(Vector(0, 1000, 0), "sitchair", 0)
+local i1, i2, i3 = LC.BenchSeatIndex(s1), LC.BenchSeatIndex(s2), LC.BenchSeatIndex(s3)
+ok(i1 and i2 and i3 and i1 % 2 == i3 % 2 and i1 % 2 ~= i2 % 2 and LC.BenchSeatIndex(chair) == nil, "three seats in a row, counted along the bench; a lone chair is no bench",
+    tostring(i1) .. tostring(i2) .. tostring(i3))
+local benchSeqs = { Idle_to_d1_t01_BreakRoom_Sit01 = 1, d1_t02_Plaza_Sit01_Idle = 2, d1_t01_BreakRoom_Sit01_to_Idle = 3,
+    d1_t01_BreakRoom_Sit02_Entry = 4, d1_t02_Plaza_Sit02 = 5, d1_t01_BreakRoom_Sit02_Exit = 6 }
+local sitter, sst = person(Vector(-30, 400, 0), benchSeqs)
+local _, b1 = LC.BusyPose(sitter, sst, s1)
+local _, b2 = LC.BusyPose(sitter, sst, s2)
+local _, b3 = LC.BusyPose(sitter, sst, s3)
+ok(b1 == b3 and b1 ~= b2 and (b1 == "d1_t02_Plaza_Sit01_Idle" or b1 == "d1_t02_Plaza_Sit02") and (b2 == "d1_t02_Plaza_Sit01_Idle" or b2 == "d1_t02_Plaza_Sit02"),
+    "along a bench, Valve's two plaza sits take turns seat by seat (d1_trainstation_02)", tostring(b1) .. " " .. tostring(b2) .. " " .. tostring(b3))
+ok(select(2, LC.BusyPose(sitter, sst, chair)) == nil, "a lone chair keeps the game's own sit")
+for _, n in ipairs(people) do if IsValid(n) then local st = LC.NPCs[n] if st and st.state == "busy" then LC.EndBusy(n, st, false) end n:Remove() end end
+for _, p in ipairs(made) do LC.RemovePoint(p) end
+end
+IdlePoseTests()
+
+function SeenMomentTests()
+section("21 November: a moment waits until a player is looking (Valve's way); a mind's break is seen, not told")
+local S0 = Vector(156000, -140000, 0)
+local savedWalls = _walls
+_walls = {}
+local ply = newPlayer("Onlooker", "citizen")
+ply:SetPos(S0 + Vector(-600, 0, 0))
+local cit, cst = LC.SpawnCitizen(S0)
+cit.sim, cst.test, cst.leaveAt = false, nil, nil
+cst.state, cst.untilT = "idle", CurTime() + 9999
+local spot = cit:GetPos() + Vector(0, 0, 48)
+local function lookAt(p) ply.aim = (p - ply:EyePos()):GetNormalized() end
+ply.aim = Vector(-1, 0, 0)
+ok(LC.SpotWatched(spot) == nil, "a player 600 away looking the other way doesn't see it")
+lookAt(spot)
+ok(LC.SpotWatched(spot) == ply, "looking at it, within 1000 and in plain sight: seen")
+_walls = { { a = S0 + Vector(-300, -200, 0), b = S0 + Vector(-300, 200, 0) } }
+ok(LC.SpotWatched(spot) == nil, "a wall between: not seen")
+_walls = {}
+ply:SetPos(S0 + Vector(-1400, 0, 0)) lookAt(spot)
+ok(LC.SpotWatched(spot) == nil, "1400 away: too far (Valve: 1000)")
+ply:SetPos(S0 + Vector(-100, 0, 0)) ply.aim = Vector(-1, 0, 0)
+ok(LC.SpotWatched(spot) == ply, "closer than 128: right there, seen whichever way they look")
+-- a moment waits: the citizen stops where they are, and it happens once a player has had them in view a moment
+ply:SetPos(S0 + Vector(-600, 0, 0)) ply.aim = Vector(-1, 0, 0)
+local fired
+LC.WhenSeen(cit, function(n, s, seen, who) fired = { seen = seen, who = who } end, { need = 1 })
+ok(cst.state == "event" and not fired, "until then the citizen stops where they stand", cst.state)
+local t0 = CurTime()
+LC.StageTick(t0 + 0.5)
+ok(not fired, "nobody looking: nothing yet")
+lookAt(spot)
+LC.StageTick(t0 + 1)
+ok(not fired, "a glance is not enough: in view for a moment first")
+LC.StageTick(t0 + 2.2)
+ok(fired and fired.seen == true and fired.who == ply and cst.state == "idle", "in view for a second: it happens, and they go on with their day", cst.state)
+fired = nil
+ply.aim = Vector(-1, 0, 0)
+LC.WhenSeen(cit, function(n, s, seen) fired = { seen = seen } end)
+LC.StageTick(CurTime() + 14)
+ok(not fired, "nobody looking: it waits")
+LC.StageTick(CurTime() + 15.1)
+ok(fired and fired.seen == false and cst.state == "idle", "and after 15 seconds it happens anyway (Valve's timeout)")
+fired = nil
+LC.WhenSeen(cit, function() fired = true end)
+cst.state = "detained" -- (taken in meanwhile)
+LC.StageTick(CurTime() + 16)
+local left = false
+for _, s in ipairs(LC.StagedMoments) do if s.npc == cit then left = true end end
+ok(not fired and not left and cst.state == "detained", "taken by something else meanwhile: the moment is dropped, and they are left to it")
+cst.state = "idle"
+-- a break: a tantrum at a unit, seen, with a fist shaken and nothing in chat
+_setcvar("lc_minds", 1)
+_setcvar("lc_minds_act", 1)
+if not cit.lcProfile then LC.AttachProfile(cit, cst, LC.NewPerson("citizen")) end
+local m = LC.MindOf(cit.lcProfile)
+LC.Psy.State(m)
+local unit, ust = LC.SpawnCop(S0 + Vector(300, 0, 0))
+ust = ust or LC.NPCs[unit]
+unit.sim = false
+cit.seqs = { g_fistshake = 41 }
+cit.AddGestureSequence = function(self, s) self.gestured = s end
+local arrest = LC.ArrestNPC
+LC.ArrestNPC = function() return false end
+ply.chat = {}
+ply.aim = Vector(-1, 0, 0)
+local did = LC.MindsAct(m, "tantrum", CurTime())
+ok(did and cst.mindErrand ~= nil, "a tantrum: off to the nearest unit", did)
+cit:SetPos(unit:GetPos() + Vector(50, 0, 0))
+LC.MindsErrandTick(CurTime())
+ok(cst.state == "event" and cit.gestured == nil, "there, they wait for someone to see it", cst.state)
+lookAt(cit:GetPos() + Vector(0, 0, 48))
+LC.StageTick(CurTime())
+LC.StageTick(CurTime() + 2)
+ok(cst.state == "detained" and cit.gestured == 41, "a player looking: they shake a fist in his face, and are stopped", cst.state)
+ok(not has(ply.chat, "**"), "and nothing about it in chat: it was seen (house rule 10)", ply.chat[1])
+LC.ArrestNPC = arrest
+-- a brutal unit: the stick where a player can see it, and nothing in chat
+cst.state = "idle"
+cit:SetPos(S0) unit:SetPos(S0 + Vector(60, 0, 0))
+ust.state, ust.subject, ust.questLock, ust.mindErrand = "idle", nil, nil, nil
+if not unit.lcProfile then LC.AttachProfile(unit, ust, LC.NewPerson("cop")) end
+local mu = LC.MindOf(unit.lcProfile)
+LC.Psy.State(mu)
+local hp = cit:Health()
+did = LC.MindsAct(mu, "brutal", CurTime())
+LC.MindsErrandTick(CurTime())
+ok(cit:Health() == hp and cst.state == "event", "a brutal unit walks up; the beating waits for someone to see it", cst.state)
+lookAt(cit:GetPos() + Vector(0, 0, 48))
+LC.StageTick(CurTime())
+LC.StageTick(CurTime() + 2)
+ok(cit:Health() < hp and cst.state == "detained" and not has(ply.chat, "**"), "seen: the blow lands, and nothing in chat", cit:Health())
+cit:Remove() unit:Remove()
+ply:SetPos(Vector(-190000, 190000, 0))
+_walls = savedWalls
+end
+SeenMomentTests()
+
+function QuietCrowdTests()
+section("21 November: a quiet crowd under the Combine's eye: a look, not a chat; a glance, not \"Excuse me\"")
+local Q0 = Vector(160000, -128000, 0)
+local a, ast = LC.SpawnCitizen(Q0)
+local b, bst = LC.SpawnCitizen(Q0 + Vector(100, 0, 0))
+for _, s in ipairs({ ast, bst }) do s.state, s.untilT, s.test, s.leaveAt, s.nextChat = "idle", CurTime() + 9999, nil, nil, 0 end
+a.sim, b.sim = false, false
+local function said(from, what) for i = from + 1, #_sounds do if string.find(_sounds[i], what or "vo/npc/", 1, true) then return true end end return false end
+-- out of the Combine's sight two citizens still chat
+local s0 = #_sounds
+LC.TryChat(a, ast, CurTime())
+ok(said(s0, "question"), "out of the Combine's sight, two citizens still talk")
+-- a unit near: not a word; they look at him
+local unit = LC.SpawnCop(Q0 + Vector(400, 200, 0))
+unit.sim = false
+s0 = #_sounds
+a.lcLook = nil
+LC.TryChat(a, ast, CurTime())
+ok(not said(s0), "a unit within sight: not a word")
+local want = (unit:GetPos() - a:GetPos()):Angle().y
+ok(a.lcLook and a.lcLook.what == "unit" and math.abs(((a.yaw or 0) - want + 180) % 360 - 180) < 1, "they turn to look at the unit instead (Valve's cit_lookatcops)", a.lcLook and a.lcLook.what)
+-- a player close by: it's the player they look at
+local ply = newPlayer("Passerby", "citizen")
+ply:SetPos(Q0 + Vector(-200, 0, 0))
+LC.TryChat(a, ast, CurTime())
+ok(a.lcLook.what == "player", "with a player close by, they look at the player (Valve's LookAtPlayer)")
+unit:Remove()
+ply:SetPos(Vector(-190000, 190000, 0))
+-- by a city screen: they watch the screen
+local scr = LC.AddPoint(Q0 + Vector(0, 600, 0), 0, "screen", 0)
+s0 = #_sounds
+LC.TryChat(a, ast, CurTime())
+ok(not said(s0) and a.lcLook.what == "screen", "by a city screen: they watch it, quietly (Valve's lookatbreencast)")
+LC.RemovePoint(scr)
+-- in the ration line: quiet
+ast.state = "inline"
+s0 = #_sounds
+LC.TryChat(a, ast, CurTime())
+ok(not said(s0), "in the ration line: quiet")
+ast.state = "idle"
+-- a player brushing past: a glance, never "Excuse me"
+ply:SetPos(a:GetPos() + Vector(-50, 0, 0))
+ply.vel = Vector(200, 0, 0)
+ast.nextBark, a.lcLook = 0, nil
+s0 = #_sounds
+LC.BarkPass(CurTime() + 1)
+ok(not said(s0) and a.lcLook and a.lcLook.what == "player", "a player brushing past gets a glance, never \"Excuse me\"")
+ply.vel = nil
+-- pressing E still greets you
+ast.nextUse, ast.state = 0, "idle"
+s0 = #_sounds
+hook.Run("PlayerUse", ply, a)
+ok(said(s0, "/hi0") or said(s0, "/excuseme0"), "pressing E on them still gets a hello")
+ply:SetPos(Vector(-190000, 190000, 0))
+a:Remove() b:Remove()
+end
+QuietCrowdTests()
+
+function AutoSpotTests()
+section("21 November: the city finds idle spots by itself: couches, chairs, beds, windows under a roof, walls not of glass; sparingly")
+local A0 = Vector(164000, -116000, 0)
+local savedWalls, graphWas, staticWas, chanceWas, traceWas, czWas = _walls, LC.NavGraph, LC.StaticRest, LC.AUTO_CHANCE, util.TraceLine, LC.CombineZoneAt
+_walls = {}
+LC.AUTO_CHANCE = { couch = 1, bedside = 1, drinker = 1, window = 1, armscrossed = 1 } -- (every one found is a spot, so the caps can be seen)
+LC.StaticRest = {}
+local nodes, props, made = {}, {}, {}
+local function node(x, y) nodes[#nodes + 1] = { pos = A0 + Vector(x, y, 0), adj = {}, comp = 1 } end
+local function prop(model, x, y, yaw, mins, maxs)
+    local e = ents.Create("prop_physics")
+    e:SetModel(model) e:SetPos(A0 + Vector(x, y, 0)) e:SetAngles(Angle(0, yaw or 0, 0))
+    e.obbmin, e.obbmax = mins, maxs
+    props[#props + 1] = e
+    return e
+end
+local function wall(x1, y1, x2, y2, glass) _walls[#_walls + 1] = { a = A0 + Vector(x1, y1, 0), b = A0 + Vector(x2, y2, 0), glass = glass } end
+-- the world: a roof over the first part of it (sky beyond x 2100), and glass where a wall says so
+local function onGlass(p)
+    for _, w in ipairs(_walls) do
+        if w.glass and math.abs(p.x - w.a.x) < 1 and p.y >= math.min(w.a.y, w.b.y) - 1 and p.y <= math.max(w.a.y, w.b.y) + 1 then return true end
+    end
+    return false
+end
+util.TraceLine = function(t)
+    if t.endpos.z > t.start.z + 100 and math.abs(t.endpos.x - t.start.x) < 1 and math.abs(t.endpos.y - t.start.y) < 1 then -- straight up
+        if t.start.x < A0.x + 2100 then return { Hit = true, HitSky = false, HitPos = t.start + Vector(0, 0, 120), Fraction = 0.25 } end
+        return { Hit = true, HitSky = true, HitPos = t.endpos, Fraction = 0.9 }
+    end
+    local tr = traceWas(t)
+    if tr.Hit and t.endpos.z >= t.start.z - 100 then tr.HitTexture = onGlass(tr.HitPos) and "GLASS/WINDOW001A" or "CONCRETE/CONCRETEWALL001A" end
+    return tr
+end
+-- a couch with its back to a wall, a chair, a bed, a window under the roof, a window under the sky
+local couch = prop("models/props_c17/furniturecouch001a.mdl", 0, 0, 0, Vector(-16, -40, 0), Vector(16, 40, 30))
+wall(-20, -60, -20, 60) node(100, 0)
+local chair = prop("models/props_c17/chair02a.mdl", 600, 0, 0) node(700, 0)
+local bed = prop("models/props_c17/furniturebed001a.mdl", 1200, 0, 0) node(1300, 0)
+wall(1900, -100, 1900, 100, true) node(1800, 0)
+wall(2500, -100, 2500, 100, true) node(2400, 0)
+-- a plain wall, and a glass one, under the sky (somewhere to stand, and not)
+wall(3060, -100, 3060, 100) node(3000, 0)
+wall(3660, -100, 3660, 100, true) node(3600, 0)
+-- a couch where the editor already placed a spot, and one in a Combine-only zone
+prop("models/props_c17/furniturecouch001a.mdl", 4200, 0, 0) node(4300, 0)
+made[#made + 1] = LC.AddPoint(A0 + Vector(4220, 0, 0), 0, "sitchair", 0)
+prop("models/props_c17/furniturecouch001a.mdl", 4800, 0, 0) node(4900, 0)
+LC.CombineZoneAt = function(p) if p.x > A0.x + 4700 and p.x < A0.x + 5000 then return { kind = "combine" } end return czWas and czWas(p) end
+-- a crowded room: three couches, two chairs and a bed in one area
+for i = 0, 2 do prop("models/props_c17/furniturecouch001a.mdl", 6050 + i * 100, 0, 0) end
+prop("models/props_c17/chair02a.mdl", 6050, 150, 0) prop("models/props_c17/chair02a.mdl", 6250, 150, 0)
+prop("models/props_c17/furniturebed001a.mdl", 6400, 150, 0)
+node(6150, 80) node(6350, 80)
+-- one of the map's own static props
+LC.StaticRest = { { kind = "couch", pos = A0 + Vector(7200, 0, 0), ang = Angle(0, 90, 0), model = "models/props_interiors/sofa01.mdl" } }
+node(7300, 0)
+-- a couch in the infestation (the owner: no citizen lounging on a couch in there)
+prop("models/props_c17/furniturecouch001a.mdl", 8400, 0, 0) node(8500, 0)
+local infest = LC.AddZone(A0 + Vector(8400, 0, 0), 300, "infest", 0)
+LC.NavGraph = { nodes = nodes, main = 1, links = 0 }
+LC.NavGraphReady()
+LC.AutoSpotsScan(true)
+local function spotsNear(x, y, r, kind)
+    local out = {}
+    for k, list in pairs(LC.AutoSpots.byKind) do
+        for _, p in ipairs(list) do
+            if (not kind or k == kind) and p.pos:Distance(A0 + Vector(x, y, 0)) < r then out[#out + 1] = p end
+        end
+    end
+    return out
+end
+local cs = spotsNear(0, 0, 60, "couch")[1]
+ok(cs and cs.pos.x > couch:GetPos().x and math.abs(((cs.yaw or 0) + 180) % 360 - 180) < 1, "a couch: a spot in front of it, facing out, away from the wall behind it", cs and tostring(cs.pos))
+ok(spotsNear(600, 0, 60, "drinker")[1] ~= nil, "a chair: a drinker's seat")
+ok(spotsNear(1200, 0, 60, "bedside")[1] ~= nil, "a bed: a spot on its edge")
+local ws = spotsNear(1878, 0, 10, "window")[1]
+ok(ws and math.abs(((ws.yaw or 0) + 180) % 360 - 180) < 1, "glass in a wall by a walking node, under a roof: someone can stand there looking out", ws and tostring(ws.pos))
+ok(#spotsNear(2478, 0, 60, "window") == 0, "the same under the open sky: no")
+local as = spotsNear(3040, 0, 10, "armscrossed")[1]
+ok(as and math.abs(math.abs(((as.yaw or 0) + 180) % 360 - 180) - 180) < 1, "a solid wall by a path: someone stands against it, arms crossed, looking at the path", as and tostring(as.yaw))
+ok(#spotsNear(3640, 0, 60, "armscrossed") == 0, "never against glass")
+ok(#spotsNear(4200, 0, 100) == 0, "never where the editor already placed a spot")
+ok(#spotsNear(4800, 0, 100) == 0, "never in a Combine-only zone")
+local crowd = spotsNear(6200, 75, 260)
+local kinds = {}
+for _, p in ipairs(crowd) do kinds[p.kind] = (kinds[p.kind] or 0) + 1 end
+ok(#crowd == 2 and kinds.couch == 1 and kinds.bedside == 1, "a room full of furniture: two spots at most, one of a kind (a room never fills with posers)", #crowd)
+ok(spotsNear(7200, 0, 60, "couch")[1] ~= nil, "the map's own static props count too")
+ok(infest ~= nil and LC.InfestZoneAt(A0 + Vector(8400, 0, 0)) ~= nil and #spotsNear(8400, 0, 100) == 0, "never in the infestation")
+-- citizens are offered them with the placed spots, and use Valve's poses there
+local offered = {}
+for _, p in ipairs(LC.FreePoints(LC.SITTABLE, nil)) do offered[p] = true end
+ok(offered[cs] and offered[ws] and offered[as], "citizens are offered them along with the placed spots")
+local cit, cst = LC.SpawnCitizen(A0 + Vector(100, 0, 0))
+cit.seqs, cit.sim, cst.test = { sitcouch1 = 1 }, false, nil
+ok(LC.StartBusy(cit, cst, cs) and cst.ss and cst.ss.kv.m_iszPostIdle == "sitcouch1", "and sit there in Valve's couch pose")
+LC.EndBusy(cit, cst, false)
+cit:Remove()
+-- never Civil Protection or the Overwatch: not these, not the placed ones (the owner, 21 November)
+local hand = LC.AddPoint(A0 + Vector(0, 300, 0), 0, "window", 0)
+made[#made + 1] = hand
+local cop, copst = LC.SpawnCop(A0 + Vector(100, 300, 0))
+copst = copst or LC.NPCs[cop]
+cop.seqs, cop.sim = { sitcouch1 = 1, d1_t03_Tenements_Look_Out_Window_Idle = 2 }, false
+local unitOffered = false
+for _, p in ipairs(LC.FreePoints(LC.SITTABLE, cop)) do if LC.IDLE_POSES[p.kind] or p.auto then unitOffered = true end end
+ok(not unitOffered and not LC.StartBusy(cop, copst, cs) and not LC.StartBusy(cop, copst, hand) and copst.state ~= "busy",
+    "a Civil Protection unit is never offered them, found or placed, nor sat down in one")
+local cit2, cst2 = LC.SpawnCitizen(A0 + Vector(-100, 300, 0))
+cst2.test = nil
+local citOffered = false
+for _, p in ipairs(LC.FreePoints(LC.SITTABLE, cit2)) do if p == hand then citOffered = true end end
+ok(citOffered, "(a citizen is)")
+cop:Remove() cit2:Remove()
+-- looked for again: the same spot (whoever sits there keeps it); a chair moved off is no seat until found again
+LC.AutoSpotsScan(true)
+ok(spotsNear(0, 0, 60, "couch")[1] == cs, "looked for again, a spot found again is the same one")
+local ds = spotsNear(600, 0, 60, "drinker")[1]
+chair:SetPos(chair:GetPos() + Vector(0, 120, 0))
+offered = {}
+for _, p in ipairs(LC.FreePoints({ drinker = true }, nil)) do offered[p] = true end
+ok(ds and not offered[ds], "a chair someone has moved is no seat until it is found again")
+-- sparing in the real city: only some of them, the same ones each time
+LC.AUTO_CHANCE = chanceWas
+LC.AutoSpotsScan(true)
+local some = 0
+for _, list in pairs(LC.AutoSpots.byKind) do some = some + #list end
+LC.AutoSpotsScan(true)
+local again = 0
+for _, list in pairs(LC.AutoSpots.byKind) do again = again + #list end
+ok(some < 12 and some == again, "with the real chances only some are spots, and the same ones every time", some)
+for _, e in ipairs(props) do e:Remove() end
+for _, p in ipairs(made) do LC.RemovePoint(p) end
+if infest then LC.RemoveZone(infest) end
+util.TraceLine, LC.CombineZoneAt, LC.StaticRest, _walls = traceWas, czWas, staticWas, savedWalls
+LC.NavGraph = graphWas
+LC.NavGraphReady()
+LC.AutoSpots.byKind, LC.AutoSpots.byKey, LC.AutoSpots.job = {}, {}, nil
+end
+AutoSpotTests()
+
+----------------------------------------------------------------------
+-- 21 November: Valve's ways with the Combine (docs/dev/valve-npc-notes.md, section 5): a unit at
+-- each Combine door, guards at ease, the raid's breach, squads in lanes, the Combine at work. Each unit
+-- notes the scripted sequences made (made, played) and the sounds since a point (heard).
+
+function Nov21_DoorPostTests()
+    section("21 November: a unit at each Combine door (Valve's police posts)")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    _setcvar("lc_garrison", 6)
+    local made = {}
+    hook.Add("OnEntityCreated", "Nov21DoorSeqs", function(e) if e.cls == "scripted_sequence" then made[#made + 1] = e end end)
+    local function played(npc, name) for _, e in ipairs(made) do if e.kv.m_iszEntity == npc:GetName() and (e.kv.m_iszPlay == name or e.kv.m_iszPostIdle == name) then return e end end end
+    local function heard(from, name) for i = from + 1, #_sounds do if string.find(_sounds[i], name, 1, true) then return true end end return false end
+    local Z0 = Vector(-310000, 120000, 0)
+    local z = LC.AddZone(Z0, 300, "combine", 0)
+    local door = ents.Create("prop_door_rotating") door:SetPos(Z0 + Vector(300, 0, 0))
+    local inner = ents.Create("prop_door_rotating") inner:SetPos(Z0 + Vector(0, 100, 0))
+    local posts = LC.CombineDoorPosts(z)
+    ok(#posts == 1 and posts[1].door == door, "the door into the zone is found; a door inside it is not a way in", #posts)
+    local p = posts[1] or { pos = Z0, doorPos = Z0, out = Vector(1, 0, 0) }
+    local out = p.pos:Distance(p.doorPos)
+    ok(not LCZ.Contains(z, p.pos, 0) and out >= 32 and out <= 64, "his post is just outside the door (Valve: 32 to 64)", out)
+    local t0 = CurTime()
+    for i = 1, 6 do LC.GarrisonTick(t0 + i * 3) end
+    local cop, cst
+    for npc, gz in pairs(LC.Garrison) do local s = LC.NPCs[npc] if gz == z and s and s.doorPost then cop, cst = npc, s end end
+    ok(cop ~= nil and cst.role == "cop", "one of the zone's own metrocops takes the door")
+    if cop then
+        cop.seqs = { plazahalt = 1, harassfront1 = 2, pushplayer = 3, swing = 4, plazalean = 5, Crouch_idle_pistol = 6, harrassidle = 7, batonidle1 = 8, busyidle1 = 9 }
+        for npc, gz in pairs(LC.Garrison) do if gz == z and npc ~= cop then LC.NPCs[npc] = nil npc:Remove() end end -- (the door's man alone)
+        cst.untilT = 0
+        _run(6)
+        ok(cst.state == "post" and cop:GetPos():Distance(p.pos) <= 128, "he goes to his post and holds it, within 128 of it", tostring(cst.state) .. " " .. math.floor(cop:GetPos():Distance(p.pos)))
+        local sc = ents.Create("npc_cscanner") sc:SetPos(p.pos + Vector(400, 0, 150))
+        local sst = LC.RegisterNPC(sc, "scanner")
+        local tr = newPlayer("DoorTrespasser", "citizen")
+        _run(0.5)
+        -- deeper in than his reach: the countdown, and a unit who sees them calls out (no chat line)
+        tr:SetPos(Z0 + Vector(-150, 0, 0))
+        local s0 = #_sounds
+        LC.CombineZoneTick(CurTime())
+        ok(tr:GetNW2Float("lc_trespass_until", 0) > CurTime() and heard(s0, "holdit") and not has(tr.chat, "restricted"), "deeper in than the door's reach: the countdown as before, and a unit calls out instead of a chat line")
+        -- at the door: three warnings, each setting something off
+        local function Until(fn, most) local t = 0 while not fn() and t < most do _run(0.1) t = t + 0.1 end return fn() end
+        tr:SetPos(p.pos + Vector(80, 0, 0))
+        s0 = #_sounds
+        ok(Until(function() return heard(s0, "firstwarningmove") end, 3), "someone at the door: the first warning, in his own voice")
+        ok(sst.followEnt == tr, "and the nearest scanner comes to photograph them")
+        LC.CombineZoneTick(CurTime())
+        ok(tr:GetNW2Float("lc_trespass_until", 0) == 0, "(out of the zone: the countdown is gone)")
+        s0 = #_sounds
+        ok(Until(function() return heard(s0, "secondwarning") end, 3.5) and played(cop, "plazahalt") ~= nil, "the second: he raises his hand at the door (Plazahalt)")
+        ok(has(sc.fired or {}, "InspectTargetPhoto"), "the scanner takes the photograph")
+        s0 = #_sounds
+        tr.pushed = nil
+        ok(Until(function() return heard(s0, "finalwarning") end, 3.5) and played(cop, "pushplayer") ~= nil and tr.pushed ~= nil and tr.pushed.x > 0, "the third: he shoves them back, away from the door")
+        ok(not LC.PlayerIsWanted(tr), "warned at the door, nobody is wanted")
+        -- past him: beaten down, never to death, and they come to outside
+        tr:SetHealth(30)
+        tr:SetPos(Z0 + Vector(150, 0, 0))
+        s0 = #_sounds
+        Until(function() return (tr.lcPostKOBusy or 0) > CurTime() end, 3)
+        _run(0.5)
+        LC.CombineZoneTick(CurTime())
+        ok(tr:GetNW2Float("lc_trespass_until", 0) == 0 and LC.PostCovers(tr, CurTime()), "past him and in his reach: no countdown, he deals with it")
+        _run(2.5)
+        ok(heard(s0, "stunstick_fleshhit") and tr:Health() >= 25 and tr:Health() < 30, "beaten with the stick, never below 25 health", tr:Health())
+        ok(not LCZ.Contains(z, tr:GetPos(), 0) and tr:GetPos():Distance(p.pos) < 120, "and they come to outside the door", tostring(tr:GetPos()))
+        ok(not LC.PlayerIsWanted(tr), "the first time costs no more than that")
+        _run(1)
+        tr:SetPos(Z0 + Vector(150, 0, 0))
+        _run(3)
+        ok(LC.PlayerIsWanted(tr), "through again within five minutes: wanted for trespassing")
+        LC.ClearWanted(tr)
+        if LC.CalmCops then LC.CalmCops(tr) end
+        tr:SetPos(Vector(0, -500, 0))
+        tr:SetHealth(100)
+        LC.NPCs[sc] = nil sc:Remove()
+    end
+    hook.Remove("OnEntityCreated", "Nov21DoorSeqs")
+    LC.RemoveZone(z)
+    for npc, gz in pairs(LC.Garrison) do if gz == z then LC.Garrison[npc] = nil LC.NPCs[npc] = nil if IsValid(npc) then npc:Remove() end end end
+    door:Remove() inner:Remove()
+    _setcvar("lc_garrison", 0)
+    LC.IsSeen, LC.Running = seenWas, runWas
+end
+Nov21_DoorPostTests()
+
+function Nov21_GuardsAtEaseTests()
+    section("21 November: guards at ease until something brings them up; more posts than men")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    local made = {}
+    hook.Add("OnEntityCreated", "Nov21EaseSeqs", function(e) if e.cls == "scripted_sequence" then made[#made + 1] = e end end)
+    local function played(npc, name) for _, e in ipairs(made) do if e.kv.m_iszEntity == npc:GetName() and (e.kv.m_iszPlay == name or e.kv.m_iszPostIdle == name) then return e end end end
+    local G0 = Vector(-330000, 120000, 0)
+    local cop, cst = LC.Spawners.cop(G0)
+    cst.unmanaged, cst.routeGroup = true, nil
+    cop.seqs = { plazalean = 1, Crouch_idle_pistol = 2, harrassidle = 3, batonidle1 = 4, busyidle1 = 5 }
+    LC.SetState(cop, cst, "idle") cst.untilT = CurTime() + 999 cst.nextInspect = CurTime() + 999
+    local wall = { a = G0 + Vector(-30, -100, 0), b = G0 + Vector(-30, 100, 0) }
+    table.insert(_walls, wall)
+    ok(LC.RelaxAtPost(cop, cst, 0, CurTime()) and played(cop, "plazalean") ~= nil, "a wall behind him: he leans on it (Plazalean)")
+    for i = #_walls, 1, -1 do if _walls[i] == wall then table.remove(_walls, i) end end
+    LC.RelaxEnd(cop, cst)
+    ok(LC.RelaxAtPost(cop, cst, 0, CurTime()) and LC.AtEase[cop] and LC.AtEase[cop].name ~= "plazalean", "in the open: he crouches, or rests his baton", LC.AtEase[cop] and LC.AtEase[cop].name)
+    local alarms = {}
+    hook.Add("LivingCityGuardAlarmed", "Nov21Ease", function(npc, why) if npc == cop then alarms[#alarms + 1] = why end end)
+    local walker = newPlayer("EaseWalker", "citizen")
+    walker:SetPos(G0 + Vector(600, 0, 0))
+    _run(1)
+    ok(LC.AtEase[cop] ~= nil, "someone walking by a way off doesn't bring him up")
+    walker:SetPos(G0 + Vector(180, 0, 0))
+    _run(0.6)
+    ok(LC.AtEase[cop] == nil and alarms[#alarms] == "heard" and (cst.alertUntil or 0) > CurTime(), "someone close: he comes up, and stays alert a while")
+    ok(not LC.RelaxAtPost(cop, cst, 0, CurTime()), "(and doesn't settle again while alert)")
+    cst.alertUntil = 0
+    walker:SetPos(G0 + Vector(600, 0, 0))
+    walker.vel = Vector(300, 0, 0)
+    LC.RelaxAtPost(cop, cst, 0, CurTime())
+    _run(0.6)
+    ok(LC.AtEase[cop] == nil and alarms[#alarms] == "heard", "someone running, further off: up")
+    walker.vel = nil
+    walker:SetPos(Vector(0, -500, 0))
+    cst.alertUntil = 0
+    LC.RelaxAtPost(cop, cst, 0, CurTime())
+    local shooter = ents.Create("npc_combine_s") shooter:SetPos(G0 + Vector(1000, 0, 0))
+    hook.GetTable().EntityFireBullets.LivingCityGuardsHear(shooter, {})
+    _run(0.6)
+    ok(LC.AtEase[cop] == nil and alarms[#alarms] == "gunfire", "a shot: up")
+    shooter:Remove()
+    cst.alertUntil = 0
+    LC.RelaxAtPost(cop, cst, 0, CurTime())
+    hook.GetTable().EntityTakeDamage.LivingCityGuardsHurt(cop, _dmg(nil, 1))
+    ok(LC.AtEase[cop] == nil and alarms[#alarms] == "hurt", "hurt: up at once")
+    cst.alertUntil = 0
+    local d = ents.Create("prop_door_rotating") d:SetPos(G0 + Vector(0, 200, 0))
+    _run(1.5) -- (the shot is past)
+    cst.alertUntil = 0
+    LC.RelaxAtPost(cop, cst, 0, CurTime())
+    _run(0.6)
+    ok(LC.AtEase[cop] ~= nil, "(a shut door near him: at ease)")
+    d:Fire("Open")
+    _run(0.6)
+    ok(LC.AtEase[cop] == nil and alarms[#alarms] == "door", "the door opens: up")
+    d:Remove()
+    hook.Remove("LivingCityGuardAlarmed", "Nov21Ease")
+    -- the garrison's posts: 1.5 to 2 for each man, shared out
+    _setcvar("lc_garrison", 6)
+    local gz = LC.AddZone(G0 + Vector(0, 4000, 0), 900, "combine", 0)
+    local size = LC.GarrisonSize(gz)
+    local posts = LC.GarrisonPosts(gz)
+    ok(size > 0 and #posts >= math.ceil(size * 1.5) and #posts <= math.ceil(size * 2), "more posts than men: 1.5 to 2 for each unit", #posts .. " for " .. size)
+    local u1, s1 = LC.Spawners.cop(G0 + Vector(0, 4000, 0))
+    local u2, s2 = LC.Spawners.cop(G0 + Vector(50, 4000, 0))
+    s1.guardZone, s2.guardZone = gz, gz
+    local a, b = LC.GarrisonPost(u1, s1), LC.GarrisonPost(u2, s2)
+    ok(a and b and a ~= b, "two units never share a post")
+    local a2 = LC.GarrisonPost(u1, s1)
+    ok(a2 and a2 ~= a and a2 ~= b, "one moving on takes another free post, not the one he had")
+    u1.seqs = { Crouch_idle_pistol = 1 }
+    LC.ArriveHandlers.guardpost(u1, s1, CurTime(), a2)
+    ok(LC.AtEase[u1] ~= nil and s1.untilT > CurTime() + 15, "at his post he is at ease, a while, then moves on")
+    LC.RelaxEnd(u1, s1)
+    LC.ArriveHandlers.checkpoint(u1, s1, CurTime(), { yaw = 90 })
+    ok(LC.AtEase[u1] ~= nil, "at a checkpoint too")
+    LC.RemoveZone(gz)
+    for npc, z2 in pairs(LC.Garrison) do if z2 == gz then LC.Garrison[npc] = nil LC.NPCs[npc] = nil if IsValid(npc) then npc:Remove() end end end
+    _setcvar("lc_garrison", 0)
+    for _, u in ipairs({ cop, u1, u2 }) do LC.RelaxEnd(u, LC.NPCs[u]) LC.NPCs[u] = nil u:Remove() end
+    hook.Remove("OnEntityCreated", "Nov21EaseSeqs")
+    LC.IsSeen, LC.Running = seenWas, runWas
+end
+Nov21_GuardsAtEaseTests()
+
+function Nov21_RaidBreachTests()
+    section("21 November: a block raid comes in the way Valve's does (the knock, the kick, the run, the beating heard)")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    if LC.Raid then LC.EndRaid() end
+    local made = {}
+    hook.Add("OnEntityCreated", "Nov21RaidSeqs", function(e) if e.cls == "scripted_sequence" then made[#made + 1] = e end end)
+    local function played(npc, name) for _, e in ipairs(made) do if e.kv.m_iszEntity == npc:GetName() and (e.kv.m_iszPlay == name or e.kv.m_iszPostIdle == name) then return e end end end
+    local B0 = Vector(-350000, 120000, 0)
+    local bz = LC.AddZone(B0, 450, "block", 77)
+    local door = ents.Create("prop_door_rotating") door:SetPos(B0 + Vector(200, 0, 0))
+    local cit, ist = LC.Spawners.citizen(B0 + Vector(-100, 50, 0))
+    cit.seqs = { cower_Idle = 1 }
+    LC.SetState(cit, ist, "idle") ist.untilT = CurTime() + 9999
+    local unitsWas = GetConVar("lc_raid_units"):GetInt()
+    _setcvar("lc_raid_units", 3)
+    ok(LC.StartRaid(77), "a raid on the block")
+    local raid = LC.Raid or { units = {} }
+    local b = raid.breach
+    ok(b and b.door == door and IsValid(b.kicker) and IsValid(b.knocker) and b.kicker ~= b.knocker, "two of the team take the block's door: one to kick it, one to knock")
+    local lanes, ends = 0, {}
+    for _, u in ipairs(raid.units) do local s = LC.NPCs[u] if s and s.lane then lanes = lanes + 1 ends[#ends + 1] = s.lane.target end end
+    local apart = #ends >= 2
+    for i = 1, #ends do for j = i + 1, #ends do if ends[i]:Distance(ends[j]) < 40 then apart = false end end end
+    ok(lanes == #raid.units and lanes > 0 and apart, "each man moves up in his own lane, to his own spot", lanes)
+    if b then
+        b.kicker.seqs = { adooridle = 1, adoorkick = 2 }
+        b.knocker.seqs = { adoorknock = 1, adoorenter = 2 }
+        local waited = 0
+        while not b.opened and waited < 60 do _run(1) waited = waited + 1 end
+        ok(b.opened ~= nil, "the door is broken in", waited)
+        ok(has(door.fired or {}, "Unlock") and has(door.fired or {}, "OpenAwayFrom"), "it opens on the kick itself, away from the boot")
+        ok(played(b.knocker, "adoorknock") ~= nil and played(b.kicker, "adoorkick") ~= nil and played(b.kicker, "adooridle") ~= nil, "one knocks while the other kicks (Valve's adoorknock, adooridle and adoorkick)")
+        local run = false
+        for _, e in ipairs(made) do if e.kv.m_iszEntity == cit:GetName() and e.kv.m_iszPostIdle == "cower_Idle" and e.kv.m_fMoveTo == "2" then run = true end end
+        ok(ist.state == "event" and run, "the resident runs for the far side of the block and cowers there")
+        local before = #_sounds
+        _run(10.5)
+        local blows = 0
+        for i = before + 1, #_sounds do
+            local snd = _sounds[i]
+            if string.find(snd, "stunstick_fleshhit", 1, true) or string.find(snd, "body_medium_impact_hard", 1, true) or string.find(snd, "male01/pain0", 1, true) then blows = blows + 1 end
+        end
+        ok(blows >= 6 and blows <= 40, "the beating is heard, not seen: a blow every 0.4 to 1.5 s for 6 to 8 s", blows)
+        ok(played(b.knocker, "adoorenter") ~= nil, "the knocker goes in (adoorenter)")
+        ok(b.phase == "done", "and the team goes on to the stops")
+    end
+    if LC.Raid then LC.EndRaid() end
+    _setcvar("lc_raid_units", unitsWas)
+    LC.RemoveZone(bz)
+    door:Remove()
+    LC.NPCs[cit] = nil cit:Remove()
+    for _, u in ipairs(raid.units) do LC.NPCs[u] = nil if IsValid(u) then u:Remove() end end
+    hook.Remove("OnEntityCreated", "Nov21RaidSeqs")
+    LC.IsSeen, LC.Running = seenWas, runWas
+end
+Nov21_RaidBreachTests()
+
+function Nov21_LaneTests()
+    section("21 November: squads move in lanes, in bounds of 450 to 1000")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    local L0 = Vector(-370000, 120000, 0)
+    local to = L0 + Vector(3000, 0, 0)
+    local spots = LC.LaneSpots(to, L0, 3)
+    ok(#spots == 3 and math.abs(spots[1]:Distance(spots[2]) - 130) < 1 and math.abs(spots[2]:Distance(spots[3]) - 130) < 1, "each man his own spot, 130 apart (Valve's lanes)")
+    ok(math.abs(spots[1].x - to.x) < 1 and math.abs(spots[3].x - to.x) < 1, "across the way, not along it")
+    local bounds = LC.LaneBounds(L0, to, "cop")
+    local short, prev = true, L0
+    for _, q in ipairs(bounds) do if prev:Distance(q) > 1001 then short = false end prev = q end
+    ok(#bounds >= 3 and short and bounds[#bounds] == to, "a long move goes in bounds of at most 1000", #bounds)
+    local units, arrived = {}, {}
+    for i = 1, 3 do
+        local u, s = LC.Spawners.cop(L0 + Vector(0, (i - 2) * 40, 0))
+        s.unmanaged, s.routeGroup, s.nextInspect = true, nil, CurTime() + 999
+        units[i] = u
+    end
+    local pauses = {}
+    local hop = LC.ArriveHandlers.lanehop
+    LC.ArriveHandlers.lanehop = function(npc, st, now, poi) local r = hop(npc, st, now, poi) pauses[#pauses + 1] = { st.untilT - now, poi.last } return r end
+    ok(LC.LaneMove(units, L0 + Vector(1600, 0, 0), { run = true, done = function(npc) arrived[npc] = npc:GetPos() end }) == 3, "three sent")
+    local targets = {}
+    for i, u in ipairs(units) do targets[i] = LC.NPCs[u].lane.target end
+    _run(30)
+    LC.ArriveHandlers.lanehop = hop
+    local there = 0
+    for i, u in ipairs(units) do if arrived[u] and arrived[u]:Distance(targets[i]) < 48 then there = there + 1 end end
+    ok(there == 3, "each gets to his own spot", there)
+    local mids, inRange = 0, true
+    for _, ps in ipairs(pauses) do if not ps[2] then mids = mids + 1 if ps[1] < 0 or ps[1] > 3 then inRange = false end end end
+    ok(mids >= 3 and inRange, "with a pause of 0 to 3 s at each bound on the way", mids)
+    for _, u in ipairs(units) do LC.NPCs[u] = nil u:Remove() end
+    -- a reaction squad sent to a place, not after anyone: lanes too
+    if LC.QRFDeploy and LC.Spawners.soldier then
+        local q = LC.QRFDeploy(L0, 2, L0 + Vector(2000, 0, 0), nil, "soldier", 4)
+        local qs = q and LC.NPCs[q]
+        ok(qs and qs.lane and qs.lane.target:Distance(L0 + Vector(2000, 0, 0)) > 20 and qs.lane.target:Distance(L0 + Vector(2000, 0, 0)) < 200, "a reaction squad sent to a place goes in lanes too")
+        if q then LC.QRF[q] = nil LC.NPCs[q] = nil q:Remove() end
+    end
+    LC.IsSeen, LC.Running = seenWas, runWas
+end
+Nov21_LaneTests()
+
+function Nov21_CombineActsTests()
+    section("21 November: Valve's Combine at work (two at a wall, the punch, pick up that can)")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    local made = {}
+    hook.Add("OnEntityCreated", "Nov21ActsSeqs", function(e) if e.cls == "scripted_sequence" then made[#made + 1] = e end end)
+    local function played(npc, name) for _, e in ipairs(made) do if e.kv.m_iszEntity == npc:GetName() and (e.kv.m_iszPlay == name or e.kv.m_iszPostIdle == name) then return e end end end
+    local function heard(from, name) for i = from + 1, #_sounds do if string.find(_sounds[i], name, 1, true) then return true end end return false end
+    local A0 = Vector(-390000, 120000, 0)
+    local watcher = newPlayer("ActsWatcher", "citizen") -- (someone about: the units there think at their full pace)
+    _run(0.5)
+    watcher:SetPos(A0 + Vector(0, -400, 0))
+    local wall = { a = A0 + Vector(-300, 100, 0), b = A0 + Vector(300, 100, 0) }
+    table.insert(_walls, wall)
+    local cop, cst = LC.Spawners.cop(A0 + Vector(0, -150, 0))
+    cst.unmanaged, cst.routeGroup = true, nil
+    cop.seqs = { Spreadwall = 1, arrestpunch = 2 }
+    local c1, i1 = LC.Spawners.citizen(A0 + Vector(-40, 20, 0))
+    local c2, i2 = LC.Spawners.citizen(A0 + Vector(60, 30, 0))
+    local cw, iw = LC.Spawners.citizen(A0 + Vector(0, 40, 0))
+    c1.seqs, c2.seqs = { spreadwallidle = 1 }, { spreadwallidle = 1 }
+    for _, c in ipairs({ c1, c2, cw }) do local s = LC.NPCs[c] LC.SetState(c, s, "idle") s.untilT = CurTime() + 999 end
+    LC.SetState(cop, cst, "idle") cst.untilT = CurTime() + 999
+    ok(LC.WallFriskTry(cop, cst, CurTime(), true), "a unit lines two citizens up against the wall")
+    ok(i1.state == "detained" and i2.state == "detained" and iw.state ~= "detained", "the two men (a woman's model has no such pose: left alone)")
+    ok(played(c1, "spreadwallidle") ~= nil and played(c2, "spreadwallidle") ~= nil, "hands on the wall (spreadwallidle)")
+    local f = cst.frisk or { spots = { A0, A0 }, n = Vector(0, -1, 0), yaw = 0 }
+    ok(math.abs(f.spots[1]:Distance(f.spots[2]) - 52) < 1 and math.abs(((f.yaw - 90 + 180) % 360) - 180) < 1, "52 apart, facing the wall, as Valve stands them")
+    _run(2)
+    local first = played(cop, "Spreadwall")
+    ok(cst.state == "wallfrisk" and first and first.pos:Distance(f.spots[1] + f.n * 39) < 1, "he frisks the first from behind (Spreadwall, 39 back)")
+    _run(6)
+    local second = false
+    for _, e in ipairs(made) do if e.kv.m_iszEntity == cop:GetName() and e.kv.m_iszPlay == "Spreadwall" and e.pos:Distance(f.spots[2] + f.n * 39) < 1 then second = true end end
+    ok(second, "then the second")
+    local s0 = #_sounds
+    _run(6)
+    ok(i1.state ~= "detained" and i2.state ~= "detained" and cst.state ~= "wallfrisk" and heard(s0, "allrightyoucango"), "and lets them go")
+    for i = #_walls, 1, -1 do if _walls[i] == wall then table.remove(_walls, i) end end
+    -- the punch before the arrest
+    local c3, i3 = LC.Spawners.citizen(A0 + Vector(300, -150, 0))
+    c3.seqs = { arrestpunch = 1 }
+    local arrested
+    LC.SetState(cop, cst, "idle")
+    ok(LC.ArrestPunch(cop, cst, c3, i3, CurTime(), function(c, u) arrested = { c, u } return true end, true), "an arrest that starts with a punch")
+    ok(played(cop, "arrestpunch") ~= nil and played(c3, "arrestpunch") ~= nil, "both play it (Valve's arrestpunch)")
+    ok(cst.state == "event" and i3.state == "detained" and not arrested, "the walk to the cells waits for it")
+    _run(3)
+    ok(arrested and arrested[1] == c3 and arrested[2] == cop and cst.state ~= "event", "then the arrest itself")
+    ok(not LC.ArrestPunch(cop, cst, cw, iw, CurTime(), function() end, true), "a model without the punch: none")
+    -- pick up that can: his hand knocks it off; in the bin, a little standing; left there, a beating that never kills
+    local canWas = GetConVar("lc_can_event"):GetInt()
+    _setcvar("lc_can_event", 1)
+    local cop2, cst2 = LC.Spawners.cop(A0 + Vector(0, -900, 0))
+    cst2.unmanaged, cst2.routeGroup = true, nil
+    cop2.seqs = { itemhit = 1, swing = 2 }
+    local bins = LC.StaticBins
+    local function StartCanOn(ply)
+        LC.SetState(cop2, cst2, "idle") cst2.untilT = CurTime() + 999 cst2.nextInspect = CurTime() + 999
+        ply:SetPos(cop2:GetPos() + Vector(120, 0, 0))
+        LC.StaticBins = { { pos = cop2:GetPos() + Vector(260, 0, 0), model = "models/props_junk/trashbin01a.mdl" } }
+        _advance(31)
+        local npcs, ev, r = LC.NPCs, LC.Event, math.random
+        LC.NPCs, LC.Event = { [cop2] = cst2 }, nil
+        math.random = function(x, y) if x == nil then return 0.01 elseif y == nil then return r(x) end return r(x, y) end
+        timer.list.LivingCityEvents.fn()
+        math.random = r
+        LC.NPCs, LC.Event = npcs, ev
+    end
+    local tp = newPlayer("CanPasser", "citizen")
+    _run(0.5)
+    StartCanOn(tp)
+    ok(cst2.state == "event" and played(cop2, "itemhit") ~= nil, "pick up that can: his hand knocks it off as he swings (Valve's itemhit)")
+    local can
+    for _, e in ipairs(ents.FindByClass("prop_physics")) do if e.lcCan and e:GetPos():Distance(cop2:GetPos()) < 120 then can = e end end
+    if can then
+        hook.GetTable().PhysgunPickup.LivingCityCan(tp, can)
+        can:SetPos(LC.StaticBins[1].pos + Vector(0, 0, 10))
+        local before = LC.Standing(tp)
+        _run(1)
+        ok(LC.Standing(tp) == before + 3, "in the bin: a little Civil Standing", LC.Standing(tp) - before)
+    else
+        ok(false, "(the can was dropped)")
+    end
+    tp:SetPos(Vector(0, -500, 0))
+    local tcan = newPlayer("CanRefuser", "citizen")
+    _run(0.5)
+    tcan:SetHealth(30)
+    StartCanOn(tcan)
+    _run(16)
+    ok(tcan:Health() >= 25 and tcan:Health() < 30, "left lying there: a beating with the stick that never kills", tcan:Health())
+    tcan:SetPos(Vector(0, -500, 0))
+    tcan:SetHealth(100)
+    LC.StaticBins = bins
+    _setcvar("lc_can_event", canWas)
+    for _, u in ipairs({ cop, cop2, c1, c2, cw, c3 }) do LC.NPCs[u] = nil if IsValid(u) then u:Remove() end end
+    watcher:SetPos(Vector(0, -500, 0))
+    hook.Remove("OnEntityCreated", "Nov21ActsSeqs")
+    LC.IsSeen, LC.Running = seenWas, runWas
+end
+Nov21_CombineActsTests()
 
 ----------------------------------------------------------------------
 section("Stop")

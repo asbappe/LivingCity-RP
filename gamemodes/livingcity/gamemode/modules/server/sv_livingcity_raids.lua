@@ -10,6 +10,13 @@
         loose weapons, and TVs and radios;
       * residents' hidden stashes may be found.
 
+    They come in the way Valve's own raid does it (the owner, 21 November;
+    d1_trainstation_03): the team moves up each man in his own lane, two of
+    them take the block's nearest door, one knocks while the other kicks it in
+    (it opens on the kick itself), the residents run with their arms over their
+    heads to a corner and cower, and the beating inside is heard, not seen,
+    while the furniture flies. Then the stops.
+
     Everything found is traced to whoever dropped or spawned it. Each owner
     becomes wanted for contraband, and the more of it was found under their
     name, the longer and the worse. Owners who are offline are wanted when
@@ -231,7 +238,7 @@ local function Scan(npc, raid, pos)
             and LC.InBlock(ply:GetPos(), raid.block) and not LC.PlayerIsCP(ply)
             and not (LC.InCustody and LC.InCustody(ply)) and not (LC.EditorHeld and LC.EditorHeld(ply)) then
             raid.frisked[ply] = true
-            ply:ChatPrint("[Civil Protection] Block inspection. Stand still and cooperate.")
+            npc:EmitSound("npc/metropolice/vo/dontmove.wav", 75) -- (he says it: no line of text)
             ply:SetNW2Float("lcu_stop_until", CurTime() + 4)
             if LC.Search then LC.Search(npc, ply) end
         end
@@ -299,6 +306,213 @@ local function Finish(raid)
 end
 LC.FinishRaid = Finish
 
+------------------------------------------------------------------------
+-- The breach (the owner, 21 November: Valve's apartment raid, d1_trainstation_03)
+------------------------------------------------------------------------
+
+local LOOP, NOCOMPLAIN, MAYDIE = 256, 2048, 4096
+local KICK_AT, KICK_HIT = 1.6, 0.67 -- (adoorkick's foot lands at frame 20, at 30 a second)
+local BEAT = { "weapons/stunstick/stunstick_fleshhit1.wav", "weapons/stunstick/stunstick_fleshhit2.wav",
+    "physics/body/body_medium_impact_hard1.wav", "physics/body/body_medium_impact_hard3.wav",
+    "physics/body/body_medium_impact_hard5.wav", "physics/body/body_medium_impact_hard6.wav" }
+local PAIN = { "vo/npc/male01/pain07.wav", "vo/npc/male01/pain08.wav", "vo/npc/male01/pain09.wav" }
+local THROW_AT = { 2.1, 3, 4.1, 5.6, 7.1 } -- (Valve's physics explosions in the flat)
+local COWER = { "cower_Idle", "Fear_Reaction_Idle" }
+
+local function Has(npc, name) local s = IsValid(npc) and npc.LookupSequence and npc:LookupSequence(name) return s ~= nil and s >= 0 end
+
+-- The block's door nearest where the team comes from: a hinged door, not a cell's or one tagged shut.
+function LC.RaidBreachDoor(raid, from)
+    local best, bd
+    for _, z in ipairs(raid.zones) do
+        for _, door in ipairs(ents.FindInSphere(z.pos, (z.r or 300) + 150)) do
+            if IsValid(door) and door:GetClass() == "prop_door_rotating" and not door.lcBlown then
+                local tag = LC.GetDoorTag and LC.GetDoorTag(door)
+                local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
+                if tag ~= "prison" and tag ~= "locked" and tag ~= "open" and auto ~= "prison"
+                    and LC.InBlock(door:WorldSpaceCenter(), raid.block) then
+                    local d = door:WorldSpaceCenter():DistToSqr(from)
+                    if not bd or d < bd then best, bd = door, d end
+                end
+            end
+        end
+    end
+    return best
+end
+
+-- Two to the door (one to kick it, one to knock), the rest covering behind them, each in his lane.
+function LC.RaidBreachPlan(raid)
+    local team = {}
+    for _, u in ipairs(raid.units) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].raid then team[#team + 1] = u end end
+    if #team == 0 then return end
+    local from = team[1]:GetPos()
+    local door = LC.DoorNormal and LC.RaidBreachDoor(raid, from)
+    if not door then
+        -- no door to take: each man still goes up in his own lane, to his own first stop
+        for i, u in ipairs(team) do
+            local st = LC.NPCs[u]
+            if st.raid.pts[1] and LC.LaneOne then LC.LaneOne(u, st, st.raid.pts[1], from, i, #team, { spot = st.raid.pts[1], run = true }) end
+        end
+        return
+    end
+    local n = LC.DoorNormal(door)
+    local side = ((from - door:WorldSpaceCenter()):Dot(n) >= 0) and 1 or -1
+    local out = n * side
+    local across = Vector(out.y, -out.x, 0)
+    local yaw = (-out):Angle().y -- (facing the door)
+    local kick = LC.DoorFloor(door, side, 40)
+    local b = { door = door, out = out, yaw = yaw, t0 = CurTime(), phase = "coming",
+        kick = kick, knock = kick + across * 44, inside = LC.DoorFloor(door, -side, 120),
+        kicker = team[1], knocker = team[2] }
+    raid.breach = b
+    local spots = { b.kick, b.knock }
+    if #team > 2 and LC.LaneSpots then
+        for _, p in ipairs(LC.LaneSpots(kick + out * 110, from, #team - 2)) do spots[#spots + 1] = p end
+    end
+    if LC.LaneMove then
+        LC.LaneMove(team, kick, { spots = spots, run = true, from = from, yaw = yaw,
+            done = function(npc, st) if st.raid then st.raid.atDoor = true end end })
+    end
+end
+
+local function Play(npc, pos, yaw, name, loop, moveTo)
+    if not Has(npc, name) or not LC.MakeSequence then return nil end
+    local ok, ss = LC.Try(LC.MakeSequence, npc, pos, yaw, name, loop and name or nil, (loop and LOOP or 0) + NOCOMPLAIN + MAYDIE, moveTo or 0, 0)
+    if not ok or not IsValid(ss) then return nil end
+    if IsValid(npc.lcGesture) then npc.lcGesture:Fire("CancelSequence") SafeRemoveEntityDelayed(npc.lcGesture, 0.2) end
+    npc.lcGesture = ss
+    SafeRemoveEntityDelayed(ss, 8)
+    return ss
+end
+
+-- Kicked open: it bangs open, away from the boot, on the kick itself.
+function LC.RaidKickOpen(door, kicker)
+    if not IsValid(door) then return false end
+    local locked = door:GetInternalVariable("m_bLocked") == true
+    local rental = LC.RentalOf and LC.RentalOf(door)
+    if rental and rental.locked then locked = true end
+    door:Fire("Unlock")
+    local kv = door.GetKeyValues and door:GetKeyValues() or {}
+    local was = tonumber(kv.speed)
+    door:SetKeyValue("speed", tostring(math.max(500, (was or 100) * 5)))
+    timer.Simple(1.2, function() if IsValid(door) then door:SetKeyValue("speed", tostring(was or 100)) end end)
+    if IsValid(kicker) then door:Fire("OpenAwayFrom", "!activator", 0, kicker, kicker) else door:Fire("Open") end
+    door:EmitSound(locked and "physics/wood/wood_crate_break3.wav" or "physics/wood/wood_panel_impact_hard1.wav", 85)
+    if LC.OpenedDoors then LC.OpenedDoors[door] = CurTime() + 8 end
+    if locked and LC.Relock then LC.Relock[door] = true end
+    return true
+end
+
+-- The residents run, arms over their heads, to the far side of the block, and cower there.
+function LC.RaidScatter(raid, door)
+    local dpos = door:WorldSpaceCenter()
+    local now, ran = CurTime(), {}
+    for cit, ist in pairs(LC.NPCs) do
+        if IsValid(cit) and ist.role == "citizen" and not ist.test and cit:Health() > 0
+            and (ist.state == "idle" or ist.state == "moving" or ist.state == "busy")
+            and cit:GetPos():DistToSqr(dpos) < 900 * 900 and LC.InBlock(cit:GetPos(), raid.block) then
+            local best, bd
+            for _ = 1, 6 do
+                local p = LC.SpotInZone(raid.zones[math.random(#raid.zones)])
+                local d = p and p:DistToSqr(dpos)
+                if d and d > 250 * 250 and (not bd or d > bd) then best, bd = p, d end
+            end
+            if best then
+                if IsValid(ist.ss) then ist.ss:Fire("CancelSequence") SafeRemoveEntityDelayed(ist.ss, 0.2) ist.ss, ist.busyKind = nil, nil end
+                LC.SetState(cit, ist, "event")
+                ist.eventUntil = now + 18
+                local name
+                for _, c in ipairs(COWER) do if Has(cit, c) then name = c break end end
+                name = name or (LC.BusySeqName and LC.BusySeqName(cit, "ACT_COWER"))
+                local ss = name and Play(cit, best, (dpos - best):Angle().y, name, true, 2)
+                if ss then SafeRemoveEntityDelayed(ss, 18) else cit:SetLastPosition(best) cit:SetSchedule(SCHED_FORCED_GO_RUN) end
+                if cit.SetMovementActivity and ACT_RUN_PROTECTED then
+                    timer.Simple(0.5, function() if IsValid(cit) then cit:SetMovementActivity(ACT_RUN_PROTECTED) end end)
+                end
+                ran[#ran + 1] = cit
+            end
+        end
+    end
+    return ran
+end
+
+local function Throw(at)
+    local n = 0
+    for _, e in ipairs(ents.FindInSphere(at, 260)) do
+        if n >= 2 then break end
+        if IsValid(e) and e:GetClass() == "prop_physics" and not e.lcCan and not e.lcEvidence then
+            local phys = e:GetPhysicsObject()
+            if IsValid(phys) and phys:IsMotionEnabled() then
+                phys:Wake()
+                phys:ApplyForceCenter((VectorRand() * 0.6 + Vector(0, 0, 0.7)):GetNormalized() * phys:GetMass() * 260)
+                n = n + 1
+            end
+        end
+    end
+end
+
+-- Heard, not seen: blows on two random timers (0.4 to 1.5 s) for 6 and 8 seconds, and the furniture going over.
+function LC.RaidBeating(raid, src, at)
+    local b = raid.breach
+    local fired = 0
+    local function Chain(t, limit)
+        local d = math.Rand(0.4, 1.5)
+        if t + d > limit then return end
+        timer.Simple(d, function()
+            if LC.Raid ~= raid then return end
+            local e = (IsValid(src) and src) or (b and IsValid(b.door) and b.door)
+            if not e then return end
+            e:EmitSound(math.random() < 0.25 and PAIN[math.random(#PAIN)] or BEAT[math.random(#BEAT)], 75)
+            fired = fired + 1
+            Chain(t + d, limit)
+        end)
+    end
+    Chain(0, math.Rand(6, 7))
+    Chain(0, math.Rand(7, 8))
+    for _, t in ipairs(THROW_AT) do timer.Simple(t, function() if LC.Raid == raid then Throw(at) end end) end
+    return function() return fired end
+end
+
+local function Breach(raid, b)
+    b.phase = "breaching"
+    local kicker = IsValid(b.kicker) and LC.NPCs[b.kicker] and b.kicker or nil
+    local knocker = IsValid(b.knocker) and LC.NPCs[b.knocker] and b.knocker or nil
+    if knocker then Play(knocker, b.knock, b.yaw, "adoorknock", false, 0) end
+    if kicker then Play(kicker, b.kick, b.yaw, "adooridle", true, 0) end
+    timer.Simple(KICK_AT, function() if IsValid(kicker) then Play(kicker, b.kick, b.yaw, "adoorkick", false, 0) end end)
+    timer.Simple(KICK_AT + KICK_HIT, function()
+        if LC.Raid ~= raid or not IsValid(b.door) then b.phase = "done" return end
+        LC.RaidKickOpen(b.door, kicker)
+        b.ran = LC.RaidScatter(raid, b.door)
+        b.opened = CurTime()
+    end)
+    timer.Simple(KICK_AT + 1.2, function() if IsValid(knocker) then Play(knocker, b.knock, b.yaw, "adoorenter", false, 0) end end)
+    timer.Simple(KICK_AT + 2.2, function()
+        if LC.Raid ~= raid then return end
+        local st = IsValid(knocker) and LC.NPCs[knocker]
+        if st then
+            if IsValid(knocker.lcGesture) then knocker.lcGesture:Fire("CancelSequence") end
+            LC.GoTo(knocker, st, b.inside, false, { kind = "raidpoint", pos = b.inside, yaw = b.yaw })
+        end
+        b.heard = LC.RaidBeating(raid, knocker, b.inside)
+    end)
+    timer.Simple(KICK_AT + 3, function() b.phase = "done" end)
+end
+
+-- The team at the door waits for the two to be at their marks (at most 40 s), then the knock and the kick.
+function LC.RaidBreachThink(raid, b, npc, st, now)
+    if b.phase == "coming" then
+        local ready = true
+        for _, u in ipairs({ b.kicker, b.knocker }) do
+            local ust = IsValid(u) and LC.NPCs[u]
+            if ust and ust.raid and (ust.lane or not ust.raid.atDoor) then ready = false end
+        end
+        if ready or now - b.t0 > 40 then Breach(raid, b) end
+    end
+    st.untilT = now + 0.5
+    return true
+end
+
 -- Pick the block: one with people in it first, else any.
 function LC.StartRaid(block)
     if LC.Raid then return false, "A raid is already in progress." end
@@ -324,6 +538,7 @@ function LC.StartRaid(block)
         LC.Raid = nil
         return false, "No Civil Protection units could get to " .. LC.BlockName(block) .. "."
     end
+    LC.Try(LC.RaidBreachPlan, raid)
     LC.Log("info", string.format("Raid on block %d: %d unit(s) sent", block, #raid.units))
     for _, ply in ipairs(player.GetAll()) do
         if LC.PlayerBlock(ply) == block then
@@ -342,6 +557,9 @@ function LC.RaidThink(npc, st, now)
     if not r then return false end
     local raid = r.owner
     if LC.Raid ~= raid then st.raid = nil return false end
+    if st.lane and LC.LaneStep and LC.LaneStep(npc, st, now) then return true end -- (moving up, in his lane)
+    local b = raid.breach
+    if b and b.phase ~= "done" then return LC.RaidBreachThink(raid, b, npc, st, now) end
 
     if r.phase == "scanning" then
         Scan(npc, raid, npc:GetPos())
@@ -386,6 +604,7 @@ timer.Create("LivingCityRaids", 2, 0, function()
     end
     local raid = LC.Raid
     if not raid then return end
+    if raid.breach and raid.breach.phase ~= "done" and now - raid.breach.t0 > 60 then raid.breach.phase = "done" end -- (never held up by it)
     local alive = false
     for _, u in ipairs(raid.units) do
         if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].raid then alive = true end

@@ -27,6 +27,9 @@
         share     gives food to their hungriest friend
         shelter   sides with the Resistance; Freq 7 hears they can be trusted
         steady    calms the people around them
+      what can be seen of a break waits until a player has the person in view
+      (15 seconds at most: LC.WhenSeen, sv_livingcity_idlelife.lua) and is
+      shown, not told (the owner, 21 November: Valve's way; no "** ..." lines)
 
       informants come from who people are (LC.MindsIsInformer, asked by
       LC.IsSnitch): the timid, loyal, greedy and cold of the roster, the same
@@ -48,7 +51,7 @@ local cvUnrest = CreateConVar("lc_minds_unrest", "0.4", FLAGS, "Unrest among the
 
 local NEAR = 140          -- this close, they have arrived
 local ERRAND_SECS = 75    -- an errand not done by then is dropped
-local HEAR = 600          -- players this near are told what happened
+local HEAR = 600          -- this near, the two in a moment (the accused, a friend fed) are part of it
 local LOW_SECS = 900      -- despair: this long without work or the queue
 local REBEL_CAP = 0.4     -- sympathizers made by the minds stop at this share of the roster's citizens
 
@@ -85,12 +88,15 @@ local function Line(npc, st, id)
     if LC.LineSay and IsValid(npc) and st then LC.LineSay(npc, st, id) end
 end
 
--- What players near see, as a line of the scene.
-local function Scene(pos, text)
-    for _, ply in ipairs(player.GetAll()) do
-        if ply:GetPos():DistToSqr(pos) < HEAR * HEAR then ply:ChatPrint("** " .. text) end
-    end
+-- A break is seen, not told (the owner, 21 November: Valve's way, and house rule 10; it was a "** ..." chat
+-- line to players within 600): it waits until a player has the person in view, 15 seconds at most
+-- (LC.WhenSeen, sv_livingcity_idlelife.lua), and what they do shows it.
+local function Staged(npc, fn, valid)
+    if LC.WhenSeen and LC.WhenSeen(npc, fn, valid and { valid = valid } or nil) then return end
+    fn(npc, LC.NPCs and LC.NPCs[npc], false)
 end
+
+local function Gesture(npc, kind) if LC.CitizenGesture then LC.CitizenGesture(npc, kind) end end
 
 local function UnitName(npc)
     local p = IsValid(npc) and npc.lcProfile
@@ -320,18 +326,22 @@ function ACT.tantrum(m, now)
     if not npc or not Free(st) then return "let it out at home" end
     local unit = NearestOf(npc:GetPos(), 1500, IsUnit)
     if not unit then
-        Line(npc, st, "say_break_tantrum")
-        Scene(npc:GetPos(), m.name .. " kicks at the wall and shouts at nobody.")
+        -- shouting at nobody, a fist in the air
+        Staged(npc, function(n, s) Gesture(n, "angry") Line(n, s, "say_break_tantrum") end)
         return "shouted in the street"
     end
     Errand(npc, st, unit, function(n, s, u)
-        if LC.Face then LC.Face(n, u:GetPos()) LC.Face(u, n:GetPos()) end
-        Line(n, s, "say_break_tantrum")
-        Scene(n:GetPos(), m.name .. " screams in " .. UnitName(u) .. "'s face.")
-        local who = LC.MindsWhoKey and LC.MindsWhoKey(u)
-        if who then Psy.Bond(m, who, -1) end
-        if LC.ArrestNPC and math.random() < 0.25 and LC.ArrestNPC(n, u) then return end
-        Stop(n, s, 30)
+        -- in his face, a fist shaking; he squares up to them
+        Staged(n, function()
+            if LC.Face then LC.Face(n, u:GetPos()) LC.Face(u, n:GetPos()) end
+            Gesture(n, "angry")
+            Line(n, s, "say_break_tantrum")
+            if LC.PlayGesture then LC.PlayGesture(u, { "plazathreat1", "plazathreat2", "harassfront1" }, 3) end
+            local who = LC.MindsWhoKey and LC.MindsWhoKey(u)
+            if who then Psy.Bond(m, who, -1) end
+            if LC.ArrestNPC and math.random() < 0.25 and LC.ArrestNPC(n, u) then return end
+            Stop(n, s, 30)
+        end, function() return IsValid(u) and u:Health() > 0 end)
     end)
     return "went to scream at " .. UnitName(unit)
 end
@@ -341,17 +351,20 @@ function ACT.despair(m, now)
     if not npc then return "stayed in" end
     st.mindLowUntil = now + LOW_SECS
     if not Free(st) then return "gave up for a while" end
-    local spots = LC.FreePoints and LC.FreePoints({ sit = true, sitchair = true, lean = true }, npc) or {}
-    Line(npc, st, "say_break_despair")
-    Scene(npc:GetPos(), m.name .. " stops where they are and stares at nothing.")
-    if #spots > 0 then
-        local p = spots[math.random(#spots)]
-        LC.Claim(npc, st, p)
-        LC.GoTo(npc, st, p.pos, false, p)
-        return "sat down and gave up for a while"
-    end
-    if LC.StartLeaving then LC.StartLeaving(npc, st, false, "despair: gone home") end
-    return "went home"
+    local spots = LC.FreePoints and LC.FreePoints({ sit = true, sitchair = true, lean = true, couch = true, bedside = true }, npc) or {}
+    -- they stop where they are and stare at nothing until someone sees it, shake their head, then sit down or go home
+    local p = #spots > 0 and spots[math.random(#spots)] or nil
+    Staged(npc, function(n, s)
+        Gesture(n, "despair")
+        Line(n, s, "say_break_despair")
+        if p and LC.IsPointFree and LC.IsPointFree(p, n) then
+            LC.Claim(n, s, p)
+            LC.GoTo(n, s, p.pos, false, p)
+        elseif LC.StartLeaving then
+            LC.StartLeaving(n, s, false, "despair: gone home")
+        end
+    end)
+    return p and "sat down and gave up for a while" or "went home"
 end
 
 function ACT.defy(m, now)
@@ -367,12 +380,16 @@ function ACT.defy(m, now)
         end
         if poster then
             Errand(npc, st, poster, function(n, s, e)
-                if e:GetNW2Bool("lc_defaced", false) then return end
-                e:SetNW2Bool("lc_defaced", true)
-                e.lcDefacedBy = n
-                Line(n, s, "say_break_defy")
-                Scene(n:GetPos(), m.name .. " drags a line of paint across the poster and walks on.")
-                hook.Run("LivingCityPosterDefaced", n, e)
+                -- a reach up and a line of paint across it (the poster shows it)
+                Staged(n, function()
+                    if e:GetNW2Bool("lc_defaced", false) then return end
+                    if LC.Face then LC.Face(n, e:GetPos()) end
+                    if LC.PlayGesture then LC.PlayGesture(n, { "ACT_PICKUP_RACK" }, 1.5) end
+                    e:SetNW2Bool("lc_defaced", true)
+                    e.lcDefacedBy = n
+                    Line(n, s, "say_break_defy")
+                    hook.Run("LivingCityPosterDefaced", n, e)
+                end, function() return IsValid(e) end)
             end)
             return "went to paint over a poster" .. (joined and ", and sides with the Resistance now" or "")
         end
@@ -463,13 +480,19 @@ function ACT.accuse(m, now)
                 if heard then Psy.OnNews(w, heard, now, LC.MindsCtx or {}) end
             end
         end
-        local _, nst = Body(m)
-        Line(npc, nst, "say_break_accuse")
         local other, ost = Body(q)
-        if other and other:GetPos():DistToSqr(npc:GetPos()) < HEAR * HEAR then
-            timer.Simple(3, function() if IsValid(other) then Line(other, ost, "say_break_accused") end end)
-        end
-        Scene(npc:GetPos(), m.name .. " says it loud enough for the street to hear: " .. (q.name or "someone") .. " talks to Civil Protection.")
+        -- out loud, where a player can see it: pointing at them if they are there, and they answer
+        Staged(npc, function(n, s)
+            if IsValid(other) and other:GetPos():DistToSqr(n:GetPos()) < HEAR * HEAR then
+                if LC.Face then LC.Face(n, other:GetPos()) LC.Face(other, n:GetPos()) end
+                Gesture(n, "point")
+                Line(n, s, "say_break_accuse")
+                timer.Simple(3, function() if IsValid(other) then Line(other, ost, "say_break_accused") end end)
+            else
+                Gesture(n, "angry")
+                Line(n, s, "say_break_accuse")
+            end
+        end)
     end
     return "called " .. (q.name or "someone") .. " an informer"
 end
@@ -488,7 +511,12 @@ function ACT.sabotage(m, now)
     end
     if not best then return "did their work badly on purpose" end
     Errand(npc, st, best, function(n, s, e)
-        if LC.BreakStreetFixture(e, n) then Scene(n:GetPos(), m.name .. " does something quick to the wiring and walks away.") end
+        -- something quick to the wiring, and it goes out (the light or speaker shows it)
+        Staged(n, function()
+            if LC.Face then LC.Face(n, e:GetPos()) end
+            if LC.PlayGesture then LC.PlayGesture(n, { "ACT_PICKUP_RACK" }, 1.5) end
+            LC.BreakStreetFixture(e, n)
+        end, function() return IsValid(e) and not e:GetNW2Bool("lc_broken", false) end)
     end)
     return "went to break a " .. (best:GetClass() == "lc_loudspeaker" and "loudspeaker" or "streetlight")
 end
@@ -499,8 +527,7 @@ function ACT.binge(m, now)
     if LC.NPCViceStop then LC.NPCViceStop(npc) end
     if LC.NPCViceStart(npc, "drink", now) and LC.NPCVices and LC.NPCVices[npc] then
         LC.NPCVices[npc].untilT = now + 150
-        Line(npc, st, "say_break_binge")
-        Scene(npc:GetPos(), m.name .. " has a bottle out and doesn't care who sees.")
+        Line(npc, st, "say_break_binge") -- (the bottle in their hand shows it)
         return "drank in the street"
     end
     return "drank at home"
@@ -509,18 +536,33 @@ end
 function ACT.brutal(m, now)
     local npc, st = Body(m)
     if not npc or st.state == "hostile" then return "took it out on the cells" end
-    local cit, cst = NearestOf(npc:GetPos(), 400, IsCitizen)
+    local cit = NearestOf(npc:GetPos(), 400, IsCitizen)
     if not cit then return "found nobody to take it out on" end
-    if LC.Face then LC.Face(npc, cit:GetPos()) end
-    npc:EmitSound("weapons/stunstick/stunstick_fleshhit" .. math.random(1, 2) .. ".wav", 80)
-    Line(npc, st, "unit_brutal")
-    timer.Simple(1.2, function() if IsValid(cit) and cit:Health() > 0 then Line(cit, cst, "say_break_beaten") end end)
     local victim = cit.lcProfile and cit.lcProfile.name or "a citizen"
-    Scene(cit:GetPos(), m.name .. " lays into " .. victim .. " with the stick, for nothing.")
-    local dmg = math.min(12, math.max(0, cit:Health() - 5))
-    if LC.MindsHurt then LC.MindsHurt(cit, npc, dmg) end
-    if dmg > 0 then cit:SetHealth(cit:Health() - dmg) end
-    Stop(cit, cst, 20)
+    -- the stick and the blow, seen, not told: the victim stopped where they stand until a player has them in
+    -- view (15 seconds at most); a unit with nothing on his hands walks up to them first
+    local function Beat(u, ust, c, cs)
+        if not IsValid(u) or not IsValid(c) or c:Health() <= 0 or not cs or ust.state == "hostile" then return end
+        if LC.Face then LC.Face(u, c:GetPos()) LC.Face(c, u:GetPos()) end
+        if LC.PlayGesture then LC.PlayGesture(u, { "arrestpunch", "swinggesture", "ACT_MELEE_ATTACK_SWING_GESTURE", "ACT_MELEE_ATTACK1" }, 1.5) end
+        u:EmitSound("weapons/stunstick/stunstick_fleshhit" .. math.random(1, 2) .. ".wav", 80)
+        Line(u, ust, "unit_brutal")
+        timer.Simple(1.2, function() if IsValid(c) and c:Health() > 0 then Line(c, cs, "say_break_beaten") end end)
+        local dmg = math.min(12, math.max(0, c:Health() - 5))
+        if LC.MindsHurt then LC.MindsHurt(c, u, dmg) end
+        if dmg > 0 then c:SetHealth(c:Health() - dmg) end
+        Stop(c, cs, 20)
+        Gesture(c, "flinch")
+    end
+    local function UnitThere(c) return IsValid(npc) and npc:Health() > 0 and IsValid(c) and npc:GetPos():DistToSqr(c:GetPos()) < 500 * 500 end
+    if (st.state == "idle" or st.state == "moving") and not st.subject and not st.questLock and not st.mindErrand then
+        Errand(npc, st, cit, function(u, ust, c)
+            ust.untilT = math.max(ust.untilT or 0, CurTime() + 16) -- (he waits there for it)
+            Staged(c, function(cc, cs) Beat(u, ust, cc, cs) end, function() return UnitThere(c) end)
+        end)
+    else
+        Staged(cit, function(c, cs) Beat(npc, st, c, cs) end, function() return UnitThere(cit) end)
+    end
     return "beat " .. victim
 end
 
@@ -528,8 +570,7 @@ function ACT.drink(m, now)
     local npc, st = Body(m)
     if not npc then return "drank off duty" end
     st.nextInspect = math.max(st.nextInspect or 0, now + 300)
-    Line(npc, st, "unit_drink")
-    Scene(npc:GetPos(), m.name .. " takes a pull from a flask when he thinks nobody is looking.")
+    Line(npc, st, "unit_drink") -- (when he thinks nobody is looking: no line of the scene, house rule 10)
     return "drank on duty: no stops from him for five minutes"
 end
 
@@ -563,12 +604,22 @@ function ACT.share(m, now)
     m.psy.food = math.max(0, m.psy.food - 0.2)
     Psy.Think(q, "kindness", now, m.id)
     Psy.Bond(q, m.id, 2)
-    local npc = Body(m)
+    local npc, nst = Body(m)
     local other = Body(q)
     if npc and other and npc:GetPos():DistToSqr(other:GetPos()) < HEAR * HEAR then
-        local _, nst = Body(m)
-        Line(npc, nst, "say_break_share")
-        Scene(npc:GetPos(), m.name .. " presses half a ration into " .. (q.name or "a friend") .. "'s hands.")
+        -- over to them, and half a ration from hand to hand where a player can see it
+        local function Hand(n, s, o)
+            if not IsValid(o) then return end
+            if LC.Face then LC.Face(n, o:GetPos()) LC.Face(o, n:GetPos()) end
+            Gesture(n, "give")
+            timer.Simple(0.6, function() if IsValid(o) then Gesture(o, "give") end end)
+            Line(n, s, "say_break_share")
+        end
+        if Free(nst) then
+            Errand(npc, nst, other, function(n, s, o) Staged(n, function() Hand(n, s, o) end, function() return IsValid(o) end) end)
+        else
+            Line(npc, nst, "say_break_share")
+        end
     end
     return "shared food with " .. (q.name or "a friend")
 end
@@ -593,9 +644,13 @@ function ACT.steady(m, now)
         end
     end
     if n > 0 then
-        local _, nst = Body(m)
-        Line(npc, nst, "say_break_steady")
-        Scene(npc:GetPos(), m.name .. " has a quiet word with the people nearby, and shoulders come down.")
+        -- a quiet word and a calming hand, where a player can see it
+        Staged(npc, function(x, s)
+            local near = NearestOf(x:GetPos(), 300, function(o, ost) return o ~= x and IsCitizen(o, ost) end)
+            if near and LC.Face then LC.Face(x, near:GetPos()) end
+            Gesture(x, "calm")
+            Line(x, s, "say_break_steady")
+        end)
     end
     return "steadied " .. n .. " people nearby"
 end

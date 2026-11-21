@@ -31,18 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (night). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); batch by
-  batch, saving every 5 or so maps: docs/dev/valve-ingest-progress.md (read it first). Batch 1 (City 17) done: 36
-  pictures, 22 lessons; Ravenholm's studies merged (167 lessons), its pictures and Nova Prospekt running. Owner-approved
-  findings wait on TODO.md, built only after all ingestion.
-- Valve map ingestion so far: 127 lessons, 54 prefab pieces, studies docs/dev/valve-*.md, the tool
-  _dev/tools/map_ingest.py, statistics _dev/reference/valve_stats.json. THE GUIDE: docs/dev/map-ingestion.md.
-- Canals: the owner's Valve table is built (dished floor, wide stretches, ledges, outfalls, lamps) and `lockgate`
-  (map_layouts/wide.txt); wiring follows Valve's five rules (map_wiring.py; map_lint kind wire).
-- New in the game: the station's Breencast screen (editor Street, kind screen_station) and the Combine mounted gun
-  (editor Fixture, kind mounted_gun: anyone can man it, a third of Valve's damage). Playground module from Valve's.
-- VDC Saver (_dev/tools/vdc_saver/, map-ingestion.md "The tools"): saves the Valve Developer Community wiki;
-  "Skip other games" keeps it to HL2.
-- Open questions for the owner: the gun's damage (Valve: 15 manned by a player, 5 against players; ours 26/3); an
-  NPC manning the gun; lock gates crush (Valve's) or stop; outfalls on banks as pipes or notched holes; the ring and
-  first canal to the new dressing; which NPC ideas from docs/dev/valve-npc-notes.md to build.
+- 21 November (night). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); another chat
+  ingests them batch by batch: docs/dev/valve-ingest-progress.md (read it first). Batch 1 (City 17) done; Ravenholm
+  merged (167 lessons); Nova Prospekt running. Owner-approved findings wait on TODO.md, built after all ingestion.
+- Ingestion tools: _dev/tools/map_ingest.py, valve_stats.json, VDC Saver (_dev/tools/vdc_saver/); THE GUIDE:
+  docs/dev/map-ingestion.md.
+- Canals: the Valve table built, `lockgate` (crushes anything, open on map load, booth switch for anyone), the ring
+  and first canal on the new dressing, NPC nodes with a share of the 4096 limit each; wiring follows Valve's five
+  rules (map_wiring.py; map_lint kind wire).
+- Gamemode, from Valve's NPC study (the owner said build all): door guards at Combine zones (the trespass chat lines
+  gone), Valve's raid breach, frisks, the arrest punch, the can, guards at ease, squads in lanes; citizens' idle poses
+  (editor points and spots found by the city; never Combine or the infestation), moments that wait to be seen, a
+  quieter crowd. The mounted gun (5 damage; an officer mans it for an enemy in front), the station's Breencast screen.
+- Tests: full parallel run passes but for a few that come and go (TODO.md); robots pass. Not seen in game yet: the new
+  poses and gestures, the gunner's stance, the lock gates hiding their portal.

@@ -131,7 +131,7 @@ local GUIDE = {
         "The Administrator's address: when she calls the city to the speech stand, every citizen must go and listen. Units who find you elsewhere warn you once, then use the stick until you black out, and you come to in the crowd. Keep your distance from her: her guards warn you once, then shoot. Anyone who tries to kill her is hunted by Overwatch, and wanted for the rest of their life.",
         "Full stomach (hunger 85 or more): 15% more XP from jobs and shifts.",
         "Top left: your credits and Civil Standing, and under them your loyalty, sympathy and corruption (what your choices in jobs and stories have made of you; they open up choices later).",
-        "Combine-only areas (the Nexus, offices, armory, prison) are off limits. The doors near the cells are locked.",
+        "Combine-only areas (the Nexus, offices, armory, prison) are off limits, and a unit guards each door. The doors near the cells are locked.",
         "Raids: Civil Protection units search a housing block, and any contraband they find (guns, TVs, radios...) is traced back to whoever owned it.",
         "Confiscated contraband is burned in public: after a sweep or a raid, or once enough has built up, units carry it to the square, pile it up and set it alight while the citizens watch (units see what's waiting in Unit tools, F2). Before it catches, anyone who isn't a unit can press E on something in the pile to take it back, but a unit who sees you makes you wanted.",
         "When you're wanted, every Civil Protection unit nearby comes after you. If they catch you, you're arrested.",

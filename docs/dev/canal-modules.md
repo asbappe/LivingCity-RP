@@ -1390,7 +1390,9 @@ recipe, the state set by the gates themselves, so it is right whoever moved them
 that turns while the gates move (the alarm recipe: a func_rotating with two red spotlights in a cage lamp).
 For people on foot, the way round: in the right wall a doorway upstream of the gates, a passage 128 wide inside the
 wall, lit, past the gates, and a doorway back into the canal beyond the recesses (its own areaportal, always open).
-The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut). Path nodes go round by
+The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut); the Combine, or rebels
+laying an ambush, shut them at the booth (the owner, 21 November). Nothing stops a leaf: what it meets dies or is
+broken (damage 10000, as Valve's), loose things in its way are deleted, it never waits. Path nodes go round by
 the passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
 Named for the game: lc_lockgate_open, lc_lockgate_close and lc_lockgate_toggle (logic_relays the gamemode fires:
 the klaxon, the beacon and the leaves), lc_lockgate_opened and lc_lockgate_closed (logic_relays fired when the
@@ -1401,7 +1403,7 @@ Left as brushes: the piers, the quoins and the sky over the gate line, the stair
 Unchecked: Valve's sound scripts d1_canals.Floodgate_Klaxon, d1_canals.Floodgate_Move_Short and
 d1_canals.Floodgate_Stop (Half-Life 2's canal sounds); that locks_large and locks_large_b hide the areaportal
 with no gaps (Valve kept theirs far behind the gates); which way CombineButton faces (turned out of the wall and
-tipped back 30, as Valve's); that a closing leaf crushes whoever stands in its way (Valve's damage 10000).
+tipped back 30, as Valve's).
 
 ### `hq`
 

@@ -34,7 +34,7 @@ local CATS = {
 -- in one place (building a rebel base: its zone, its lab, its beds, its lookouts, all together).
 -- A thing can be in more than one. Occupations get a folder each: their workplace and what goes with it.
 local USES = {
-    { title = "Citizens' daily life", ids = { "idle", "sit", "sitchair", "lean", "queue", "dispenser", "vending", "terminal", "stove", "bed",
+    { title = "Citizens' daily life", ids = { "idle", "sit", "sitchair", "lean", "window", "armscrossed", "drinker", "couch", "bedside", "queue","dispenser", "vending", "terminal", "stove", "bed",
         "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "jobboard", "infodesk", "civposter", "citybin", "bin", "zone_block", "door_rent" } },
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn" } },
     -- (the landing zone and the suppression device are the Combine's: they were only under arriving and under her last stand)

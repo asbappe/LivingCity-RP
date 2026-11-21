@@ -29,6 +29,11 @@ local MODES = {
     { id = "sit",         label = "Point: sitting spot, on the ground (citizens; rebels too, inside rebel territory)" },
     { id = "sitchair",    label = "Point: sitting spot, on a bench or chair (citizens; rebels too, inside rebel territory)" },
     { id = "lean",        label = "Point: leaning spot, on a wall (citizens; rebels too, inside rebel territory)" },
+    { id = "window",      label = "Point: standing spot, at a window (a citizen looks out here; stand on the spot facing the glass)" },
+    { id = "armscrossed", label = "Point: standing spot, arms crossed (a citizen waits here, arms folded or hands in pockets; facing you)" },
+    { id = "drinker",     label = "Point: sitting spot, a drinker's seat (a citizen sits here, with a bottle if fond of one; aim at the seat from in front of it)" },
+    { id = "couch",       label = "Point: sitting spot, on a couch (a citizen sits or lies here; aim at the seat from in front of it)" },
+    { id = "bedside",     label = "Point: sitting spot, on a bed's edge (a citizen sits here; aim at the edge from beside the bed)" },
     { id = "queue",       label = "Point: ration line slot (line #, front first)", group = true },
     { id = "patrol",      label = "Point: Civil Protection patrol stop (beat #, 0 = random patrols)", group = true },
     { id = "checkpoint",  label = "Point: Civil Protection checkpoint post (security)" },
@@ -158,7 +163,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { still = true, cardtable = true, rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, fundtv = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor = true, monitor_hang = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, mounted_gun = true, yard = true }
+local FACE_PLACER = { still = true, cardtable = true, rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, fundtv = true, arrival = true, sit = true, sitchair = true, lean = true, armscrossed = true, drinker = true, couch = true, bedside = true,vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor = true, monitor_hang = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, mounted_gun = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -222,7 +227,10 @@ local function PlacePoint(self, ply, trace, mode)
     if FACE_PLACER[mode.id] then yaw = yaw + 180 end
     local kind = mode.kind or mode.id
     local group = mode.num or (Mode(mode.id).group and self:GetClientNumber("group", 1)) or 0
-    local p = LC.AddPoint(trace.HitPos, yaw, kind, group)
+    local at = trace.HitPos
+    -- (a bench seat goes 48 units from the seat beside it, along its bench, as Valve spaces them: sv_livingcity_idlelife.lua)
+    if kind == "sitchair" and LC.BenchSeatSnap then at, yaw = LC.BenchSeatSnap(at, yaw) end
+    local p = LC.AddPoint(at, yaw, kind, group)
     if not p then return false end
     Undoable(ply, kind .. " point", function() LC.RemovePoint(p) end)
     local extra = ""

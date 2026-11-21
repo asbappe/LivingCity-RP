@@ -130,6 +130,8 @@ LC_MODULES = {
         "sv_livingcity_ways",
         "sv_livingcity_outfits",
         "sv_livingcity_squadai",
+        "sv_livingcity_unitposts", -- (a unit at each Combine door, guards at ease, the garrison's posts: Valve's police posts)
+        "sv_livingcity_unitmoves", -- (squads in lanes, two frisked at a wall, the punch before an arrest)
         "sv_livingcity_mortuary",
         "sv_livingcity_navgraph",
         "sv_livingcity_npcwork",
@@ -289,6 +291,7 @@ LC_MODULES = {
         "sv_livingcity_voicecues", -- (named citizens say those recorded lines at the moments that fit, without the director)
         "sv_livingcity_voice", -- (the city's own Administrator's decrees spoken in her voice; off until a voice key and id are set)
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
+        "sv_livingcity_idlelife", -- (citizens' idle life as Valve directs it: a pose for each idle spot, moments started where a player looks, a crowd that looks instead of chatting)
     },
     client = {
         "cl_livingcity",
