@@ -296,7 +296,7 @@ def fire(m, u, v, z, size=24, light="255 150 70 110", drop=True):
 
 def mattress(m, u, v, yaw, z=F):
     """A loose mattress, turned the right way up (unturned the model lies on its back: the owner saw the clinic's so)."""
-    m.prop("prop_physics", "models/props_c17/furnituremattress001a.mdl", u, v, yaw, z + 1, {"spawnflags": "0", "angles": "0 %d 180" % m.fr.yaw(yaw)})
+    m.prop("prop_physics", "models/props_c17/furnituremattress001a.mdl", u, v, yaw, z + 1, {"spawnflags": "1"}, roll=180)      # (asleep until touched, as m.loose)
 
 
 def frustum(u, v, r1, z1, r2, z2, mat):

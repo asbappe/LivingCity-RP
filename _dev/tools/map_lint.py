@@ -4,7 +4,7 @@ Living City: the owner's corrections, checked by machine (_dev/reference/lessons
 map_lint).
 
     python3 map_lint.py FILE.vmf [more.vmf ...]      every finding, one line each
-    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, palette)
+    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, props, lightmap, scale, seam, palette)
 
 Every build runs it on the file it writes and prints what it finds as LOOK lines (map_build.py), so
 map_modules_check.py shows them with the rest. A finding is a thing to look at, not always a fault: a model's box is
@@ -17,7 +17,13 @@ often bigger than the model. What each kind means:
   mattress  the loose mattress not turned over (it lies on its back unturned)
   view      a module's viewpoint inside a prop or a wall (its picture shows nothing)
   water     a water brush whose top is level with a floor (they flicker through each other)
-  rope      a rope or cable end tied to nothing
+  rope      a rope or cable end tied to nothing; a span over 128 with slack under 25 (Valve's have 100)
+  props     as Valve dresses props (docs/dev/valve-prop-notes.md): most loose props square on the 90s and flat,
+            8 or more small props that never fade, a thing standing in a door's way (48 in front or behind)
+  lightmap  Valve's lightmap scales (docs/dev/valve-craft-notes.md): big faces far from every path node at 16 or finer,
+            displacements far from play under 32, big faces at 8 (8 is for stairs, rails and trims)
+  scale     rock, dirt and blends at texture scale 0.25, canal concrete walls at 0.25, upright faces over 1024 at 0.25
+  seam      fewer than 40% of walls start their texture on a 128 seam at their foot (Valve 54 to 56%)
   palette   materials the owner's City 18 map never uses (listed once, the commonest first): use theirs where one fits
   flush     two visible faces of different brushes lying in the same plane, facing the same way and overlapping:
             they flicker through each other in game (z-fighting; the owner, 21 November). Faces made of
@@ -25,7 +31,9 @@ often bigger than the model. What each kind means:
   wire      Valve's five wiring rules (docs/dev/map-modules.md, "Wiring the way Valve does"): outputs sent to
             things not in the map, !player (player 1 only on a shared server), triggers that name nobody, sounds
             played once without "not looped" (32) or loops that carry it, timers that only dress a place left
-            running, a door hanging in an areaportal that nothing closes, a valve that is a press button
+            running, a door hanging in an areaportal that nothing closes (or a portal naming a door not there, or a
+            trigger opening and shutting a portal), a valve that is a press button, a moving part (door, gate,
+            lift, train, turning thing) with no sound of its own and none in the wiring that moves it
   bare      a big plain wall: one face of one material at least 384 long and 256 tall with nothing on it or in front
             of it (no ledge, trim, prop, decal or overlay within 24): lay it in courses, break it with pilasters,
             dress it (lessons valve-wall-bands, valve-column-rhythm, facades). The six biggest, and how many.
@@ -330,6 +338,63 @@ def check(path, views=None, only=None, air=None):
         o = origin(e)
         if not any(all(b[k] - 20 <= o[k] <= b[k + 3] + 20 for k in range(3)) for b in near_boxes):
             say("rope", "a rope's end at (%d %d %d) is tied to nothing" % o)
+    # rope slack: Valve hangs a span over 128 with slack 100 (120 over 1024); under 25 it is drawn as a rod
+    by_name = dict((e.get("targetname", "").lower(), e) for e in ents if e.get("classname") in ("move_rope", "keyframe_rope") and e.get("targetname"))
+    taut = []
+    for e in ents:
+        nxt = by_name.get(e.get("nextkey", "").lower()) if e.get("classname") in ("move_rope", "keyframe_rope") else None
+        if nxt is None:
+            continue
+        span = math.dist(origin(e), origin(nxt))
+        try:
+            slack = float(e.get("slack", "25"))
+        except ValueError:
+            continue
+        if span > 128 and slack < 25:
+            taut.append((span, slack, origin(e)))
+    for span, slack, o in sorted(taut, reverse=True)[:4]:
+        say("rope", "a cable %d long at (%d %d %d) hangs with slack %d: Valve's spans over 128 have 100 (m.rope's own when left out); keep it only for a wire meant to be taut" % ((span, slack) + o))
+    if len(taut) > 4:
+        say("rope", "... and %d more taut cables" % (len(taut) - 4))
+    # props as Valve dresses them (docs/dev/valve-prop-notes.md): loose things not all set square, small things that fade,
+    # no clutter in a doorway
+    if not only or only == "props":
+        loose = [e for e in ents if e.get("classname", "").startswith("prop_physics") and not e.get("parentname")]
+        square = [e for e in loose if angles(e)[1] % 90 == 0 and angles(e)[0] == 0 and angles(e)[2] == 0]
+        if len(loose) >= 6 and len(square) > 0.6 * len(loose):
+            say("props", "%d of %d loose props sit square on the 90s and flat (Valve: 41%% square, 43%% leaning or lying): turn some (m.loose does), lay some down (pitch, roll)" % (len(square), len(loose)))
+        import map_build
+        never = [e for e in ents if e.get("classname", "").startswith(("prop_static", "prop_physics", "prop_dynamic")) and not e.get("targetname") and not e.get("parentname")
+                 and map_build.prop_fade(e.get("model", "")) and (e.get("fademindist", "-1") in ("-1", "") or e.get("fademaxdist", "0") in ("0", ""))]
+        if len(never) >= 8:
+            say("props", "%d small props never fade (Valve fades a third of theirs, small ones at 1900 to 2500): give them fademindist and fademaxdist (m.static and m.loose do)" % len(never))
+        ways = []      # (the way through every door: as wide as the door, 48 out from it on both sides, at its foot)
+        for e in ents:
+            b = None
+            if e.get("classname") == "prop_door_rotating":
+                b = prop_box(e)
+            elif e.get("classname") in ("func_door", "func_door_rotating") and e.get("_solids"):
+                b = [min(s[0][k] for s in e["_solids"]) for k in range(3)] + [max(s[0][k] for s in e["_solids"]) for k in range(3)]
+            if not b or b[5] - b[2] < 64 or min(b[3] - b[0], b[4] - b[1]) > 24:
+                continue      # (standing and thin: a door across a way, not a hatch or a lift)
+            if b[3] - b[0] <= b[4] - b[1]:      # (thin along x: the way runs along x)
+                cx = (b[0] + b[3]) / 2
+                ways.append((cx - 48, b[1] + 4, b[2], cx + 48, b[4] - 4))
+            else:
+                cy = (b[1] + b[4]) / 2
+                ways.append((b[0] + 4, cy - 48, b[2], b[3] - 4, cy + 48))
+        cluttered = []
+        for e, bx in solid_props:
+            if e.get("classname") == "prop_door_rotating" or DOORS.search(e.get("model", "").lower()):
+                continue
+            for (x1, y1, wz, x2, y2) in ways:
+                if bx[0] < x2 and bx[3] > x1 and bx[1] < y2 and bx[4] > y1 and abs(bx[2] - wz) < 24:
+                    cluttered.append((short(e.get("model", "")), origin(e)))
+                    break
+        for m, o in cluttered[:6]:
+            say("props", "%s at (%d %d %d) stands in a doorway's way (within 48 of the door, in front or behind; Valve: 1 of 69 doors): move it aside" % ((m,) + o))
+        if len(cluttered) > 6:
+            say("props", "... and %d more things in doorways" % (len(cluttered) - 6))
     # flush: two faces in one plane, facing one way, overlapping (they flicker)
     if not only or only == "flush":
         HIDDEN = ("tools/", "effects/", "nature/water", "nature/toxicslime", "nature/sewer")
@@ -491,13 +556,128 @@ def check(path, views=None, only=None, air=None):
                 for bx, mats in e.get("_solids", []):
                     if mats and not any(m.startswith("tools/") or any(w in m for w in map_build.SEE_THROUGH) for m in mats):
                         doors.append(bx)
+        portals = set()
         for e in ents:
-            if e.get("classname") == "func_areaportal" and not e.get("target"):
+            if e.get("classname") != "func_areaportal":
+                continue
+            if e.get("targetname"):
+                portals.add(e["targetname"].lower())
+            if e.get("target") and e["target"].lower() not in names:
+                bx = (e.get("_solids") or [((0, 0, 0, 0, 0, 0), None)])[0][0]
+                say("wire", "the areaportal at (%d %d %d) names the door %s, which is not in the map: it is never closed" % ((bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2], e["target"]))
+            elif not e.get("target"):
                 for bx, _ in e.get("_solids", []):
                     near = (bx[0] - 32, bx[1] - 32, bx[2] - 8, bx[3] + 32, bx[4] + 32, bx[5] + 8)
                     if any(overlap(near, d) > 0 for d in doors):
                         say("wire", "a door hangs in the areaportal at (%d %d %d) and nothing closes it: name the door in its target" % ((bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2]))
                         break
+        for e in ents:      # (Valve's single player trick: a portal shut as the player passes; on a shared server it hides a room from the others)
+            if e.get("classname", "").startswith("trigger_"):
+                for out, tgt, inp in e.get("_outputs", []):
+                    if tgt.lower() in portals and inp.lower() in ("open", "close", "toggle"):
+                        say("wire", "the trigger %s sends the areaportal %s %s: a door should work its portal, never a trigger (others are still in there)" % (e.get("targetname") or e["classname"], tgt, inp))
+                        break
+        # moving parts with no sound (Valve's rule): a door, gate, lift or turning thing with no sound of its own, none played
+        # by its own outputs, and none played by the wire that moves it
+        MOVE_SOUNDS = {"func_door": ("noise1", "noise2", "startclosesound", "closesound"), "func_door_rotating": ("noise1", "noise2", "startclosesound", "closesound"),
+                       "func_movelinear": ("startsound", "stopsound"), "func_tracktrain": ("movesound", "startsound", "stopsound", "movepingsound"),
+                       "func_rotating": ("message",), "func_water_analog": ("startsound", "stopsound")}
+        def own_sound(e):
+            return any((e.get(k) or "").strip() not in ("", "0") for k in MOVE_SOUNDS[e["classname"]]) or any(i.lower() == "playsound" for _, _, i in e.get("_outputs", []))
+        sounded = set((e.get("targetname") or "").lower() for e in ents if e.get("classname") in MOVE_SOUNDS and own_sound(e)) - {""}
+        fired_with_sound = set()       # (names moved by a wire that also plays a sound, or moves a part that has one: a counterweight with its lift)
+        for e in ents:
+            events = {}
+            for out, tgt, inp in e.get("_outputs", []):
+                events.setdefault(out.lower(), []).append((tgt.lower(), inp.lower()))
+            for wires in events.values():
+                if any(i == "playsound" or t in sounded for t, i in wires):
+                    fired_with_sound.update(t for t, i in wires if i != "playsound")
+        quiet = []
+        for e in ents:
+            if e.get("classname") not in MOVE_SOUNDS or own_sound(e) or (e.get("targetname") or "").lower() in fired_with_sound:
+                continue
+            bx = (e.get("_solids") or [((0, 0, 0, 0, 0, 0), None)])[0][0]
+            who = e.get("targetname") or "a %s at (%d %d %d)" % (e["classname"], (bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2])
+            if who not in quiet:      # (one name over several brushes is one moving part)
+                quiet.append(who)
+        for who in quiet[:6]:
+            say("wire", "%s moves without a sound of its own (Valve gives every moving part one: noise1 / startsound, or a PlaySound in its wiring)" % who)
+        if len(quiet) > 6:
+            say("wire", "... and %d more moving parts with no sound" % (len(quiet) - 6))
+    # lightmap, scale, seam: Valve's building craft (docs/dev/valve-craft-notes.md; map_build.craft does it to our faces)
+    if not only or only in ("lightmap", "scale", "seam"):
+        import map_build
+        text = open(path, errors="replace").read()
+        nodes = [origin(e) for e in ents if e.get("classname") == "info_node"]
+        side_re = re.compile(r'vertices_plus\s*\{\s*((?:"v" "[^"]+"\s*)+)\}\s*"material" "([^"]+)"\s*"uaxis" "([^"]+)"\s*"vaxis" "([^"]+)"\s*'
+                             r'"rotation" "[^"]*"\s*"lightmapscale" "(\d+)"\s*"smoothing_groups" "[^"]*"\s*(dispinfo)?')
+        cell, grid = 256, {}
+        for q in nodes:
+            grid.setdefault((int(q[0] // cell), int(q[1] // cell)), []).append(q)
+
+        def far(lo, hi, limit):
+            for i in range(int((lo[0] - limit) // cell), int((hi[0] + limit) // cell) + 1):
+                for j in range(int((lo[1] - limit) // cell), int((hi[1] + limit) // cell) + 1):
+                    for q in grid.get((i, j), ()):
+                        if math.sqrt(sum(max(lo[k] - q[k], 0, q[k] - hi[k]) ** 2 for k in range(3))) <= limit:
+                            return False
+            return True
+        grid_b = {}
+        for b, _ in brushes:
+            for i in range(int(b[0] // 256), int(b[3] // 256) + 1):
+                for j in range(int(b[1] // 256), int(b[4] // 256) + 1):
+                    grid_b.setdefault((i, j), []).append(b)
+        big_near, disp_fine, fine_big, terrain, tall_canal, long_fine, walls, on_seam = 0, 0, 0, 0, 0, 0, 0, 0
+        for m in side_re.finditer(text):
+            mat = m.group(2).lower()
+            if mat.startswith(("tools/", "dev/")):
+                continue
+            vs = [nums(v) for v in re.findall(r'"v" "([^"]+)"', m.group(1))]
+            if len(vs) < 3:
+                continue
+            lo = [min(v[k] for v in vs) for k in range(3)]
+            hi = [max(v[k] for v in vs) for k in range(3)]
+            a = [vs[1][k] - vs[0][k] for k in range(3)]
+            b = [vs[2][k] - vs[0][k] for k in range(3)]
+            n = (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+            ln = math.sqrt(sum(c * c for c in n)) or 1.0
+            n = [c / ln for c in n]
+            ext = sorted((hi[k] - lo[k] for k in range(3)), reverse=True)
+            area, lms, disp = ext[0] * ext[1], int(m.group(5)), bool(m.group(6))
+            (ua, us, usc), (va, vsh, vsc) = map_build._axis(m.group(3)), map_build._axis(m.group(4))
+            if nodes and disp and lms < 32 and far(lo, hi, 256):
+                disp_fine += 1
+            elif nodes and not disp and area > 65536 and lms <= 16 and far(lo, hi, 1024):
+                big_near += 1
+            if lms <= 8 and area > 128 * 256:
+                fine_big += 1
+            if usc == 0.25 and any(w in mat for w in ("rock", "cliff", "blend", "dirt", "grass", "sand", "mud")):
+                terrain += 1
+            upright = abs(n[2]) < 0.01
+            if upright and usc == 0.25 and mat in map_build.SCALE_HALF and hi[2] - lo[2] > 256:
+                tall_canal += 1
+            if upright and usc == 0.25 and max(hi[0] - lo[0], hi[1] - lo[1]) > 1024:
+                long_fine += 1
+            if upright and not disp and va == [0.0, 0.0, -1.0] and hi[2] - lo[2] >= 64:
+                walls += 1
+                foot = map_build.foot_of(lo + hi, n, [], grid_b)
+                if abs((-foot / vsc + vsh) % 128) < 0.5 or abs((-foot / vsc + vsh) % 128 - 128) < 0.5:
+                    on_seam += 1
+        if big_near:
+            say("lightmap", "%d big faces more than 1024 from every path node are lit at lightmapscale 16 or finer: 64 there (Valve: 54%% at 64 far from play)" % big_near)
+        if disp_fine:
+            say("lightmap", "%d displacements more than 256 from every path node at lightmapscale under 32: 64 (Valve's ground: 64 on 70%%)" % disp_fine)
+        if fine_big:
+            say("lightmap", "%d faces bigger than 128 by 256 at lightmapscale 8 or finer: 8 is for stairs, rails and trims (Valve: 3 to 4%% of faces)" % fine_big)
+        if terrain:
+            say("scale", "%d rock, dirt or blend faces at texture scale 0.25: Valve lays rock at 2 and blends at 0.5 to 1" % terrain)
+        if tall_canal:
+            say("scale", "%d canal concrete walls taller than 256 at texture scale 0.25: Valve's canal concrete is 0.5 (map_build.craft does it)" % tall_canal)
+        if long_fine:
+            say("scale", "%d upright faces longer than 1024 at texture scale 0.25: the pattern repeats a great many times; 0.5 or more (Valve's far walls)" % long_fine)
+        if walls >= 20 and on_seam < 0.4 * walls:
+            say("seam", "%d of %d walls start their texture on a seam at their foot (Valve: 54 to 56%% on a 128 seam): shift them to start at the floor (map_build.craft)" % (on_seam, walls))
     # palette: materials City 18 never uses (one line, the commonest few)
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):

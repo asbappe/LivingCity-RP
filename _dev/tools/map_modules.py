@@ -154,6 +154,17 @@ class Build:
         self.node_id += 1
 
 
+# How Valve lights each lamp fixture (docs/dev/valve-craft-notes.md, "Per fixture": the light within 48 of the model):
+# kind: (spot cone, inner cone, exponent, falloff, spot this far under the bulb, faint light this far under, the spot's
+# brightness and the faint light's as shares of the brightness asked for). Valve's dome light: a spot 200 (60/30, -90,
+# exponent 1, falloff 500/0/1) 11 under, a point 8 27 under; the bell lamp: a spot 60/30, exponent 2. The shares keep a
+# room about as lit as one point light of the asked brightness did, more on the floor under the lamp, less on the walls.
+LAMP_RECIPES = {
+    "dome": (60, 30, 1, "lamp", 9, 25, 2.0, 1 / 6.0),
+    "bell": (60, 30, 2, "lamp", 6, 16, 2.0, 1 / 6.0),
+}
+
+
 class Mod:
     """One module being built: everything in the module's own coordinates."""
 
@@ -258,48 +269,65 @@ class Mod:
         if keys and keys.get("targetname"):
             self.b.names.append((keys["targetname"], cls, self.tag))
 
-    def stand(self, model, z):
+    def stand(self, model, z, pitch=0, roll=0):
         """The height to put a model's origin at for it to stand ON z (models' origins are often at their middles). Read
-        from the model's own build file (map_assets.py); a model whose size is not known is put at z itself."""
-        import map_assets
-        bb = map_assets.size(model)
-        return z - int(math.floor(bb[2])) if bb else z
+        from the model's own build file (map_assets.py), turned by pitch and roll; a model whose size is not known is put
+        at z itself (map_build.stand_z, which the older pieces use too)."""
+        import map_build
+        return map_build.stand_z(model, z, pitch, roll)
 
-    def prop(self, cls, model, u, v, yaw, z, keys, vis=None):
-        """Any prop, standing on z. Its place and size go to the checks and the pictures."""
-        zo = self.stand(model, z)
+    def prop(self, cls, model, u, v, yaw, z, keys, vis=None, pitch=0, roll=0):
+        """Any prop, standing on z (pitch and roll lean it or lay it down: it still stands on z by its turned box). Its
+        place and size go to the checks and the pictures. As Valve dresses props (docs/dev/valve-prop-notes.md): a
+        model with several skins of looks only gets one of them (map_build.prop_skin) unless keys name a skin, and a
+        small thing nobody names fades far off (map_build.prop_fade) unless keys set its fade."""
+        import map_build
+        zo = self.stand(model, z, pitch, roll)
         wy = self.fr.yaw(yaw)
-        k = {"model": model, "angles": "0 %d 0" % wy, "skin": "0"}
+        x, y, _ = self.fr.at(u, v, zo)
+        k = {"model": model, "angles": "%d %d %d" % (pitch, wy, roll), "skin": map_build.prop_skin(model, x, y)}
         k.update(keys)
+        fade = map_build.prop_fade(model)
+        if fade and k.get("fademindist", "-1") == "-1" and not k.get("targetname") and not k.get("parentname"):
+            k.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
         self.point(cls, u, v, zo, k, vis or self.pv)
         self.b.props.append((cls, model, self.fr.at(u, v, zo), wy, self.tag))
 
-    def static(self, model, u, v, yaw=0, z=F):
+    def static(self, model, u, v, yaw=0, z=F, pitch=0, roll=0):
         """A prop that never moves, standing on z. A model that was not built to be static (map_assets.py knows) is
         placed as a prop_dynamic instead, since the compiler would leave it out."""
         import map_assets
         if map_assets.is_static(model) is False:
-            return self.dynamic(model, u, v, yaw, z)
-        self.prop("prop_static", model, u, v, yaw, z, {"solid": "6", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
+            return self.dynamic(model, u, v, yaw, z, pitch=pitch, roll=roll)
+        self.prop("prop_static", model, u, v, yaw, z, {"solid": "6", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"},
+                  pitch=pitch, roll=roll)
 
-    def loose(self, model, u, v, yaw=0, z=F):
-        """A prop that can be pushed about, standing on z."""
-        self.prop("prop_physics", model, u, v, yaw, z + 1, {"spawnflags": "0"})
+    def loose(self, model, u, v, yaw=0, z=F, pitch=0, roll=0):
+        """A prop that can be pushed about, standing on z: lean it or lay it down with pitch and roll (Valve lays 23% of
+        theirs on their sides). Set square, it is turned a little off the square three times in five, as Valve's are
+        (map_build.loose_yaw); it starts asleep, and small junk is debris players walk through (map_build.loose_flags)."""
+        import map_build
+        x, y = self.fr.pt(u, v)
+        self.prop("prop_physics", model, u, v, map_build.loose_yaw(model, x, y, yaw), z + 1, {"spawnflags": map_build.loose_flags(model)}, pitch=pitch, roll=roll)
 
-    def dynamic(self, model, u, v, yaw=0, z=F, name=None, solid=True):
+    def dynamic(self, model, u, v, yaw=0, z=F, name=None, solid=True, pitch=0, roll=0):
         """A prop that stays put but may be named for the game (any model will do), standing on z."""
         k = {"solid": "6" if solid else "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
              "renderamt": "255", "rendercolor": "255 255 255"}
         if name:
             k["targetname"] = name
         import map_assets      # (a physics prop standing still is a prop_dynamic_override: as a plain prop_dynamic the game objects to it)
-        self.prop("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic", model, u, v, yaw, z, k)
+        self.prop("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic", model, u, v, yaw, z, k, pitch=pitch, roll=roll)
 
     def body(self, model, u, v, yaw=0, z=F):
         self.point("prop_ragdoll", u, v, z + 16, {"model": model, "angles": "0 %d 0" % self.fr.yaw(yaw), "spawnflags": "4"}, self.b.vis + ": bodies")
 
-    def light(self, u, v, z, colour):
-        self.point("light", u, v, z, {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.lv)
+    def light(self, u, v, z, colour, falloff="fill"):
+        """A point light; falloff: one of map_build.FALLOFF (fill, the plain quadratic one, unless told)."""
+        import map_build
+        k = {"_light": colour, "_lightHDR": "-1 -1 -1 1", "style": "0"}
+        k.update(map_build.falloff(falloff))
+        self.point("light", u, v, z, k, self.lv)
 
     def glow(self, u, v, z, colour="255 220 170", scale=0.3):
         """A soft glow in the air (a lamp seen from afar). No light of its own."""
@@ -308,17 +336,31 @@ class Mod:
 
     def lamp(self, u, v, z, colour, hang=0):
         """A lamp to be seen, a real fixture of the city's (the owner's map has 151 of the dome light): a dome light flat
-        on the ceiling at z + 8, or with hang a bell lamp on a rod this long from above. A glow, and its light under it."""
-        rgb = " ".join(colour.split()[:3])
+        on the ceiling at z + 8, or with hang a bell lamp on a rod this long from above. Lit as Valve lights each
+        fixture (LAMP_RECIPES, docs/dev/valve-craft-notes.md): a glow at the bulb, a spot under it shining down, and a
+        faint point light that shows the fixture and the ceiling round it. colour "R G B brightness": the brightness a
+        plain point light of ours would have had (40 to 70 lights a room); the spot and the faint light are made from it."""
         if hang:
             self.det([(u - 1, v - 1, z + 8, u + 1, v + 1, z + 8 + hang)], MM["steel"])
             self.static("models/props_c17/light_industrialbell01_on.mdl", u, v, 0, z - 15)
-            self.glow(u, v, z - 18, rgb, 0.25)
-            self.light(u, v, z - 24, colour)
+            self.fixture_light("bell", u, v, z - 18, colour)
             return
         self.static("models/props_c17/light_domelight02_on.mdl", u, v, 0, z + 1)
-        self.glow(u, v, z - 2, rgb, 0.25)
-        self.light(u, v, z - 10, colour)
+        self.fixture_light("dome", u, v, z - 2, colour)
+
+    def fixture_light(self, kind, u, v, bulb, colour):
+        """The light of a lamp fixture by Valve's recipe for its kind (LAMP_RECIPES): its glow at the bulb (z bulb),
+        the spot shining down from under it and the faint point light below that."""
+        import map_build
+        cone, inner, exponent, fall, spot_under, faint_under, spot_k, faint_k = LAMP_RECIPES[kind]
+        parts = colour.split()
+        rgb, b = " ".join(parts[:3]), float(parts[3]) if len(parts) > 3 else 60.0
+        self.glow(u, v, bulb, rgb, 0.75)      # (Valve's sprite at a lamp: light_glow03 at scale 0.75)
+        keys = {"_light": "%s %d" % (rgb, max(1, round(b * spot_k))), "_lightHDR": "-1 -1 -1 1", "_cone": str(cone), "_inner_cone": str(inner),
+                "_exponent": str(exponent), "angles": "-90 0 0", "pitch": "-90", "style": "0"}
+        keys.update(map_build.falloff(fall))
+        self.point("light_spot", u, v, bulb - spot_under, keys, self.lv)
+        self.light(u, v, bulb - faint_under, "%s %d" % (rgb, max(2, round(b * faint_k))))
 
     def soundscape(self, name, u, v, z, radius=768):
         """What the place sounds like: an env_soundscape (the owner's map has 155; a loop alone is not a place). Use the
@@ -339,11 +381,14 @@ class Mod:
         za, zb = (z_low, z_high) if sign > 0 else (z_high, z_low)
         self.shapes([prism([(a, z_low), (b, z_low), (b, zb + high), (a, za + high)], "y", v1, v2, mat or MAT["beam"])])
 
-    def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None):
-        """A beam: a light that only shines one way (pitch: degrees down), and the beam drawn in the air."""
+    def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None, falloff="fill"):
+        """A beam: a light that only shines one way (pitch: degrees down), and the beam drawn in the air. falloff: one of
+        map_build.FALLOFF ("flood" for a floodlight that reaches far, as Valve's)."""
+        import map_build
         wy = self.fr.yaw(yaw)
-        self.point("light_spot", u, v, z, {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_inner_cone": str(cone // 2), "_cone": str(cone), "_quadratic_attn": "1",
-                                           "angles": "0 %d 0" % wy, "pitch": str(-pitch), "style": "0"}, self.lv)
+        k = {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_inner_cone": str(cone // 2), "_cone": str(cone), "angles": "0 %d 0" % wy, "pitch": str(-pitch), "style": "0"}
+        k.update(map_build.falloff(falloff))
+        self.point("light_spot", u, v, z, k, self.lv)
         keys = {"angles": "%d %d 0" % (pitch, wy), "spawnflags": "1", "spotlightlength": "500", "spotlightwidth": "50",
                 "rendercolor": " ".join(colour.split()[:3]), "renderamt": "160", "HDRColorScale": "1.0"}
         if name:
@@ -375,8 +420,15 @@ class Mod:
         self.point("logic_relay", u, v, z, {"targetname": name, "StartDisabled": "0" if on else "1", "spawnflags": "0"},
                    connections=[("OnTrigger", n, i, val, d) for n, i, val, d in wires])
 
-    def rope(self, pts, slack=40, width=2):
-        """A cable hung from point to point, [(u, v, z), ...]: it sags by itself."""
+    def rope(self, pts, slack=None, width=None):
+        """A cable hung from point to point, [(u, v, z), ...]: it sags by itself. Left out, slack and width are Valve's
+        for its longest span (781 ropes: under 128 slack 50 width 1, up to 1024 slack 100 width 2, longer 120 width 3);
+        a wire meant to be taut names its own."""
+        span = max([math.dist(pts[k], pts[k + 1]) for k in range(len(pts) - 1)] or [0])
+        if slack is None:
+            slack = 50 if span < 128 else 100 if span <= 1024 else 120
+        if width is None:
+            width = 1 if span < 128 else 2 if span <= 1024 else 3
         self.b.rope_n += 1
         names = ["lc_rope_%s_%d_%d" % (self.b.name, self.b.rope_n, k) for k in range(len(pts))]
         for k, (u, v, z) in enumerate(pts):
@@ -2303,13 +2355,20 @@ def dress_canal_walls(b, ch, avoid=()):
 COVER_MODELS = ("barricade", "barrier", "sandbag", "/car00", "jersey")
 
 
-def cover_hints(b, dished=(), step=96):
+def cover_hints(b, dished=(), step=96, cell_of=None, limit=None):
     """Cover hints (info_node_hint 101 cover low, 100 cover medium, Valve's keys: nodeFOV 180, IgnoreFacing 2) behind the
     modules' barriers, barricades, sandbags and car wrecks: one each side of a piece, 28 out from it, facing it, on the
-    floor it stands on, about `step` apart, in a group named for its place (lc_cover_<module>). Counted as path nodes."""
+    floor it stands on, about `step` apart, in a group named for its place (lc_cover_<module>). Counted as path nodes.
+    cell_of(x, y): the plan's square at a point of the map (default: b.plan's, on the map's own grid); limit: at most
+    this many (what is left of the piece's share of path nodes)."""
     import re
     import map_assets
-    cells, made = b.plan.cells, []
+    made = []
+    if cell_of is None:
+        cells = b.plan.cells
+
+        def cell_of(x, y):
+            return cells.get((x // CELL, y // CELL))
     keep = [bx for bx, _ in b.vmf.boxes] + list(getattr(b.vmf, "shape_boxes", []))
     for cls, model, (x, y, z), yaw, tag in b.props:
         if not any(k in model.lower() for k in COVER_MODELS):
@@ -2328,8 +2387,10 @@ def cover_hints(b, dished=(), step=96):
         cx = x + math.cos(math.radians(yaw)) * (bb[0] + bb[3]) / 2.0 - math.sin(math.radians(yaw)) * (bb[1] + bb[4]) / 2.0
         cy = y + math.sin(math.radians(yaw)) * (bb[0] + bb[3]) / 2.0 + math.cos(math.radians(yaw)) * (bb[1] + bb[4]) / 2.0
         for side in (1, -1):
+            if limit is not None and len(made) >= limit:
+                break
             hx, hy = int(round(cx + side * math.cos(a) * (half + 28))), int(round(cy + side * math.sin(a) * (half + 28)))
-            spec = cells.get((hx // CELL, hy // CELL))
+            spec = cell_of(hx, hy)
             if not spec or spec[0] == "solid":
                 continue
             if abs((F if (hx // CELL, hy // CELL) in dished else spec[1]) - foot) > 18:
@@ -2346,6 +2407,27 @@ def cover_hints(b, dished=(), step=96):
                                                                     "MaximumState": "3", "nodeFOV": "180", "Group": group}, b.vis + ": cover hints")
             b.node_id += 1
     return len(made)
+
+
+def piece_cover_hints(vmf, cell_of, vis, tag, first_id, limit, dished=()):
+    """Cover hints for a piece built by itself (the first canal, the ring, Ravenholm), as the modules have them
+    (cover_hints): behind its barriers, barricades and wrecks, read from the props already in it. first_id: the first
+    node id to give; limit: what is left of its share of path nodes. Gives how many it made."""
+    import re
+    import types
+    props = []
+    for text in vmf.ents:
+        cls = re.search(r'"classname" "(prop_[a-z_]+)"', text)
+        model = re.search(r'"model" "([^"]+)"', text)
+        o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        if not cls or not model or not o or cls.group(1) == "prop_ragdoll" or "parentname" in text:
+            continue
+        ang = re.search(r'"angles" "(-?[\d.]+) (-?[\d.]+) (-?[\d.]+)"', text)
+        if ang and (abs(float(ang.group(1))) > 20 or abs(float(ang.group(3))) > 20):
+            continue      # (a wreck on its side: no cover hint by rule)
+        props.append((cls.group(1), model.group(1), tuple(int(t) for t in o.groups()), float(ang.group(2)) if ang else 0.0, tag))
+    b = types.SimpleNamespace(props=props, vmf=vmf, node_id=first_id, vis=vis)
+    return cover_hints(b, dished, cell_of=cell_of, limit=max(0, limit))
 
 
 # Gates NPCs walk through (Valve, lesson valve-node-link): a thin box across the gap that turns the path links through it

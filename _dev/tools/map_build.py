@@ -65,6 +65,94 @@ def standing_prop(model):
     return ("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic"), keys
 
 
+def stand_z(model, z, pitch=0, roll=0):
+    """The height to put a model's origin at for it to stand ON z: many models have their origin at their middle
+    (tables, couches, lockers, the lorry), so placed at the floor they are half in it. Read from the model's own box
+    (map_assets.size), turned by pitch and roll (a thing lying on its side stands on its side); a model whose size is
+    not known is put at z itself. The modules' m.stand and the older pieces (canal, ring, forests, Ravenholm) both
+    use this."""
+    import map_assets
+    bb = map_assets.size(model)
+    if not bb:
+        return z
+    sp, cp = math.sin(math.radians(pitch)), math.cos(math.radians(pitch))
+    sr, cr = math.sin(math.radians(roll)), math.cos(math.radians(roll))
+    low = min(-sp * x + sr * cp * y + cr * cp * h for x in (bb[0], bb[3]) for y in (bb[1], bb[4]) for h in (bb[2], bb[5]))
+    return z - int(math.floor(low + 1e-6))
+
+
+# Props the way Valve dresses them (docs/dev/valve-prop-notes.md, 8,951 props in 22 maps; the owner said go ahead, 21
+# November): a mix of skins on things that come in several, small things that fade far off, loose things turned off
+# the square, asleep until touched, and small junk that players walk through (debris).
+SKIN_KINDS = ("oildrum", "crate", "container", "glassbottle", "popcan", "trashcluster", "/car00", "van001", "truck001", "coolingtank", "armchair",
+              "radiator", "concrete_barrier", "wood_fence", "rockgranite", "bicycle")      # (of the 304 models with skins: those whose skins are only looks)
+NO_SKIN = ("light", "lamp", "door", "sign", "combine", "monitor", "screen", "button", "keypad", "_on.", "_off.", "explosive", "clock", "tv", "radio",
+           "poster", "lever", "valve")
+DEBRIS = ("garbage", "trash", "popcan", "bottle", "paper", "cardboard", "box01", "box02", "shoe", "doll", "bucket", "cinderblock", "props_junk/glass",
+          "plasticcrate", "milkcarton", "takeout", "tincan", "garbage_")
+
+
+def _stable(*parts):
+    """A number from these parts, the same every build (Python's own hash of a string changes from run to run)."""
+    import zlib
+    return zlib.crc32(" ".join(str(p) for p in parts).encode())
+
+
+def prop_skin(model, x, y):
+    """A skin for a model that comes in several, as Valve mixes them (oil drums 45% not skin 0, containers 69%, crates
+    33%): half of them skin 0, the rest one of the others, the same every build for one place. "0" for a model with one
+    skin (map_skins.count) or whose skins mean something (a lamp lit or not, a door, a sign, a screen)."""
+    import map_skins
+    m = model.lower()
+    n = map_skins.count(m)
+    if n < 2 or not any(k in m for k in SKIN_KINDS) or any(k in m for k in NO_SKIN):
+        return "0"
+    h = _stable(m, int(x), int(y))
+    return "0" if h % 2 == 0 else str(1 + (h >> 1) % (n - 1))
+
+
+def prop_fade(model):
+    """Valve's fades for a small thing (their medians: tiny 1024 to 1500, small 1900 to 2500; a third of props have one),
+    as (start, end); None for anything 64 or bigger, a lamp (its light would stay) or a model of unknown size."""
+    import map_assets
+    m = model.lower()
+    bb = map_assets.size(m)
+    if not bb or "light" in m or "lamp" in m:
+        return None
+    big = max(bb[3] - bb[0], bb[4] - bb[1], bb[5] - bb[2])
+    return (1024, 1500) if big < 24 else (1900, 2500) if big < 64 else None
+
+
+def loose_yaw(model, x, y, yaw):
+    """A loose thing set square (a yaw on the exact 90s) is turned 3 to 17 degrees three times in five, as Valve's are
+    (41% of their physics props are square, 34% turned 1 to 20); the same every build for one place."""
+    if yaw % 90:
+        return yaw
+    h = _stable(model.lower(), int(x), int(y), "turn")
+    if h % 5 >= 3:
+        return yaw
+    turn = 3 + (h >> 3) % 15
+    return yaw + (turn if (h >> 8) & 1 else -turn)
+
+
+def loose_flags(model):
+    """Valve's physics prop flags for a thing left lying about: 1 asleep until something touches it (it was put down at
+    rest: the server need not move it), and 4 debris for small junk (players and other junk pass through it)."""
+    return str(1 + (4 if any(k in model.lower() for k in DEBRIS) else 0))
+
+
+def dress_keys(model, x, y, keys):
+    """A prop's keys with Valve's skin mix and small-thing fade added (prop_skin, prop_fade), as the modules' m.prop
+    does: for the older pieces' own prop helpers. A skin or fade already in keys, a name or a parent is kept as it is."""
+    k = dict(keys)
+    if k.get("skin", "0") == "0":
+        k["skin"] = prop_skin(model, x, y)
+    fade = prop_fade(model)
+    if fade and str(k.get("fademindist", "-1")) == "-1" and not k.get("targetname") and not k.get("parentname"):
+        k.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
+    return k
+
+
 def node_share(name):
     """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
     if name.startswith("mod_"):
@@ -218,6 +306,160 @@ def disp_text(p, spec, t, record=None):
     return s
 
 
+# Valve's building craft (docs/dev/valve-craft-notes.md, 22 maps; the owner said go ahead, 21 November), done to every
+# face our builder lays as the file is written (faces copied exactly from a map of the owner's or Valve's are left be):
+#   lightmapscale  8 on stairs, rails, ladders and bars (Valve: 3 to 10% of faces, on stairs, rails, trims); 64 on a face
+#                  more than 1024 from every path node (far from play), and on a displacement more than 256 from one;
+#                  32 on other displacements; 16 for the rest
+#   texture scale  0.5 on the canal's concrete walls (Valve's canal concrete: 0.5 on 53 to 90% of it), not 0.25
+#   seams          a wall's texture starts at its foot: every upright face is shifted so a texture's edge lies where
+#                  the stack of faces of its material in its plane stands (Valve: 54 to 56% on a seam; ours, chance)
+LMS_FINE = ("stair", "rail", "metalpipe", "handrail", "ladder")
+SCALE_HALF = ("concrete/concretewall064a",)        # (MAT["canal_wall"]: the canal's concrete)
+CRAFT_SIDE = re.compile(r'(vertices_plus\n\t*\{\n)((?:\t*"v" "[^"]+"\n)+)(\t*\}\n\t*"material" ")([^"]+)("\n\t*"uaxis" ")([^"]+)("\n\t*"vaxis" ")([^"]+)'
+                        r'("\n\t*"rotation" "0"\n\t*"lightmapscale" ")@(\d+)("\n\t*"smoothing_groups" "0"\n)(\t*dispinfo)?')
+
+
+def _axis(a):
+    """'[x y z shift] scale' -> ([x, y, z], shift, scale)."""
+    m = re.match(r"\[\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*\]\s*(\S+)", a)
+    return [float(m.group(k)) for k in (1, 2, 3)], float(m.group(4)), float(m.group(5))
+
+
+def foot_of(w, n, boxes, grid):
+    """Where a wall (w: its box, n: the way it faces) shows above the floor in front of it: the lowest top of a brush
+    standing against it that is above its own bottom (a wall's brush often runs down under the floor); its own bottom
+    when nothing stands against it, or when it does not face along x or y."""
+    ax = 0 if abs(n[0]) > 0.99 else 1 if abs(n[1]) > 0.99 else None
+    if ax is None:
+        return w[2]
+    plane, side, other = w[ax], (1 if n[ax] > 0 else -1), 1 - ax
+    best = None
+    seen = set()
+    for i in range(int((w[0] - 1) // 256), int((w[3] + 1) // 256) + 1):
+        for j in range(int((w[1] - 1) // 256), int((w[4] + 1) // 256) + 1):
+            for b in grid.get((i, j), ()):
+                if id(b) in seen:
+                    continue
+                seen.add(id(b))
+                infront = (b[ax] <= plane + 1 and b[ax + 3] >= plane + 2) if side > 0 else (b[ax + 3] >= plane - 1 and b[ax] <= plane - 2)
+                if infront and b[other] < w[other + 3] and b[other + 3] > w[other] and w[2] + 1 < b[5] < w[5]:
+                    best = b[5] if best is None else min(best, b[5])
+    return w[2] if best is None else best
+
+
+def craft(text, nodes, boxes=()):
+    """Valve's craft on every face laid by us (marked "@" before its lightmapscale), as the file is written. nodes: the
+    path nodes (where people walk); boxes: every brush's box (what stands against a wall)."""
+    grid_b = {}
+    for b in boxes:
+        for i in range(int(b[0] // 256), int(b[3] // 256) + 1):
+            for j in range(int(b[1] // 256), int(b[4] // 256) + 1):
+                grid_b.setdefault((i, j), []).append(b)
+    faces = []
+    for m in CRAFT_SIDE.finditer(text):
+        vs = [tuple(int(float(c)) for c in v.split()) for v in re.findall(r'"v" "([^"]+)"', m.group(2))]
+        a = [vs[1][k] - vs[0][k] for k in range(3)]
+        b = [vs[2][k] - vs[0][k] for k in range(3)]
+        n = (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+        ln = math.sqrt(sum(c * c for c in n)) or 1.0
+        n = tuple(c / ln for c in n)
+        lo = [min(v[k] for v in vs) for k in range(3)]
+        hi = [max(v[k] for v in vs) for k in range(3)]
+        faces.append({"mat": m.group(4).lower(), "n": n, "lo": lo, "hi": hi, "disp": bool(m.group(12)), "lms": int(m.group(10)),
+                      "u": m.group(6), "v": m.group(8), "plane": round(sum(n[k] * vs[0][k] for k in range(3)))})
+    # how far each face is from where people walk (its box to the nearest path node), as far as 1024 matters
+    cell, grid = 256, {}
+    for p in nodes:
+        grid.setdefault((int(p[0] // cell), int(p[1] // cell)), []).append(p)
+
+    def far(f, limit):
+        if not nodes:
+            return False
+        lo, hi = f["lo"], f["hi"]
+        for i in range(int((lo[0] - limit) // cell), int((hi[0] + limit) // cell) + 1):
+            for j in range(int((lo[1] - limit) // cell), int((hi[1] + limit) // cell) + 1):
+                for p in grid.get((i, j), ()):
+                    if math.sqrt(sum(max(lo[k] - p[k], 0, p[k] - hi[k]) ** 2 for k in range(3))) <= limit:
+                        return False
+        return True
+    for f in faces:
+        mat, lo, hi = f["mat"], f["lo"], f["hi"]
+        seen = not mat.startswith(("tools/", "dev/"))
+        area = max((hi[0] - lo[0]) * (hi[1] - lo[1]), (hi[0] - lo[0]) * (hi[2] - lo[2]), (hi[1] - lo[1]) * (hi[2] - lo[2]))
+        if seen and f["disp"]:
+            f["lms"] = 64 if far(f, 256) else 32
+        elif seen and any(k in mat for k in LMS_FINE) and area <= 128 * 256:
+            f["lms"] = 8
+        elif seen and far(f, 1024):
+            f["lms"] = 64
+        (ua, us, uscale), (va, vs_, vscale) = _axis(f["u"]), _axis(f["v"])
+        if seen and mat in SCALE_HALF and abs(f["n"][2]) < 0.9 and uscale == 0.25 and vscale == 0.25:
+            uscale = vscale = 0.5
+        f["axes"] = [ua, us, uscale, va, vs_, vscale]
+        f["foot"] = seen and abs(f["n"][2]) < 0.01 and va == [0.0, 0.0, -1.0] and not f["disp"]
+    # seams: the faces of one material in one plane that stand on each other are one wall; its texture starts at its foot
+    groups = {}
+    for k, f in enumerate(faces):
+        if f["foot"]:
+            groups.setdefault((f["mat"], tuple(round(c, 3) for c in f["n"]), f["plane"]), []).append(k)
+    for ks in groups.values():
+        up = dict((k, k) for k in ks)
+
+        def root(k):
+            while up[k] != k:
+                up[k] = up[up[k]]
+                k = up[k]
+            return k
+        ks.sort(key=lambda k: faces[k]["lo"][2])
+        for i, a in enumerate(ks):
+            fa = faces[a]
+            for b in ks[i + 1:]:
+                fb = faces[b]
+                if fb["lo"][2] > fa["hi"][2]:
+                    break
+                if all(fa["lo"][q] < fb["hi"][q] and fb["lo"][q] < fa["hi"][q] for q in (0, 1) if fa["hi"][q] > fa["lo"][q]):
+                    up[root(a)] = root(b)
+        wall = {}
+        for k in ks:
+            r = root(k)
+            lo, hi = faces[k]["lo"], faces[k]["hi"]
+            w = wall.get(r)
+            wall[r] = [min(w[0], lo[0]), min(w[1], lo[1]), min(w[2], lo[2]), max(w[3], hi[0]), max(w[4], hi[1]), max(w[5], hi[2])] if w else list(lo) + list(hi)
+        for r, w in wall.items():
+            wall[r] = foot_of(w, faces[r]["n"], boxes, grid_b)
+        for k in ks:
+            ax = faces[k]["axes"]
+            ax[4] = (wall[root(k)] / ax[5]) % 1024      # (t = -z / scale + shift: 0 at the wall's foot)
+    out = iter(faces)
+
+    def put(m):
+        f = next(out)
+        ua, us, usc, va, vs_, vsc = f["axes"]
+        u = "[%s %s %s %s] %s" % (_num(ua[0]), _num(ua[1]), _num(ua[2]), _num(us), _num(usc))
+        v = "[%s %s %s %s] %s" % (_num(va[0]), _num(va[1]), _num(va[2]), _num(vs_), _num(vsc))
+        return m.group(1) + m.group(2) + m.group(3) + m.group(4) + m.group(5) + u + m.group(7) + v + m.group(9) + str(f["lms"]) + m.group(11) + (m.group(12) or "")
+    text = CRAFT_SIDE.sub(put, text)
+    return text.replace('"lightmapscale" "@', '"lightmapscale" "')      # (any face the pass could not read keeps its own)
+
+
+# Light falloffs (Valve's, docs/dev/valve-craft-notes.md "Light craft": constant, linear, quadratic). VRAD makes a light
+# its brightness at 100 units whatever the falloff, so these change how far it reaches, not how bright it is there.
+FALLOFF = {
+    "fill": (0, 0, 1),           # a plain point light (ours until now; Valve's 246 city lights)
+    "lamp": (500, 0, 1),         # a lamp's spot under its fixture (domes, bulbs, prison lamps): soft near, quadratic far
+    "cage": (20, 0, 1),          # a caged lamp's spot (light_cagelight02_on)
+    "tube": (100000, 100, 1),    # a fluorescent tube's spot (lights_florescent01a)
+    "flood": (500000, 0, 1),     # a floodlight or Combine light: reaches far, hardly fading (Valve's city spots)
+}
+
+
+def falloff(kind):
+    """The light keys for a falloff preset (FALLOFF)."""
+    c, l, q = FALLOFF[kind]
+    return {"_constant_attn": str(c), "_linear_attn": str(l), "_quadratic_attn": str(q)}
+
+
 class Vmf:
     def __init__(self, skyname="painted"):
         self.next = 1
@@ -262,12 +504,14 @@ class Vmf:
             p = face_corners(box, name)
             mat = (faces or {}).get(name) or (top if name == "top" else bottom if name == "bottom" else sides)
             u, v = (a.replace("0.25", _num(tex)) for a in FACE_AXES[name])
+            mark = "@"       # (laid by us: the craft pass may set its lightmapscale, scale and seam: Vmf.text)
             if axes and name in axes:
                 u, v = axes[name]        # (a face's texture laid exactly as given: to copy a brush of the owner's)
+                mark = ""
             s += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, self.new_id(), t, " ".join("(%d %d %d)" % q for q in p[:3]))
             s += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%d %d %d"\n' % ((t,) + q) for q in p), t)
-            s += ('%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%d"\n%s\t\t"smoothing_groups" "0"\n'
-                  % (t, mat.upper(), t, u, t, v, t, t, 32 if disp else 16, t))
+            s += ('%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s%d"\n%s\t\t"smoothing_groups" "0"\n'
+                  % (t, mat.upper(), t, u, t, v, t, t, mark, 32 if disp else 16, t))
             if disp and name in disp:
                 s += disp_text(p, disp[name], t + "\t\t", lambda edge, folded, quads, vis=vis: self.disp_made.append((vis, edge, folded, quads)))
                 self.disp_count += 1
@@ -306,7 +550,7 @@ class Vmf:
                     w = (-w[0], -w[1], -w[2])
             s += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, self.new_id(), t, " ".join("(%d %d %d)" % tuple(q) for q in verts[:3]))
             s += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%d %d %d"\n' % ((t,) + tuple(q)) for q in verts), t)
-            s += ('%s\t\t"material" "%s"\n%s\t\t"uaxis" "[%s %s %s 0] 0.25"\n%s\t\t"vaxis" "[%s %s %s 0] 0.25"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "16"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n'
+            s += ('%s\t\t"material" "%s"\n%s\t\t"uaxis" "[%s %s %s 0] 0.25"\n%s\t\t"vaxis" "[%s %s %s 0] 0.25"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "@16"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n'
                   % (t, mat.upper(), t, _num(u[0]), _num(u[1]), _num(u[2]), t, _num(w[0]), _num(w[1]), _num(w[2]), t, t, t, t))
         s += self.editor(vis, indent=t + "\t") + "%s}\n" % t
         self.shapes += 1
@@ -441,7 +685,7 @@ class Vmf:
         s += "".join(self.world) + "}\n"
         s += "".join(self.ents)
         s += 'cameras\n{\n\t"activecamera" "-1"\n}\ncordons\n{\n\t"active" "0"\n}\n'
-        return s
+        return craft(s, [p for c, p in self.points if c == "info_node"], [b for b, _ in self.boxes] + list(self.shape_boxes))
 
 
 # ---------------------------------------------------------------------------
@@ -859,7 +1103,8 @@ def canal(args):
 
     def static(model, x, y, yaw):
         cls, keys = standing_prop(model)      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
-        vmf.point(cls, W(x, y, floor_z), dict(keys, model=model, angles="0 %d 0" % yaw), sv)
+        at = W(x, y, stand_z(model, floor_z))      # (standing ON the floor, by its size)
+        vmf.point(cls, at, dress_keys(model, at[0], at[1], dict(keys, model=model, angles="0 %d 0" % yaw)), sv)
     # a container between the stairs and the pipes; cars pushed in beyond the pipes
     static("models/props_wasteland/cargo_container01.mdl", 1300, 590, 8)
     for model, x, y, yaw in (("models/props_vehicles/car002a_physics.mdl", 2080, 470, 25), ("models/props_vehicles/car005a_physics.mdl", 2260, 580, 190),
@@ -903,9 +1148,10 @@ def canal(args):
     )
     import map_assets
     for model, x, y, up in junk:      # (standing on the floor, by the model's own size: the dressing brings them down onto the mud)
-        bb = map_assets.size(model)
-        vmf.point("prop_physics", W(x, y, floor_z + 1 - (int(math.floor(bb[2])) if bb else -up)), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
-                                                                                                  "skin": "0", "spawnflags": "0"}, "LC canal: props")
+        z = stand_z(model, floor_z + 1) if map_assets.size(model) else floor_z + 1 + up
+        at = W(x, y, z)
+        vmf.point("prop_physics", at, dress_keys(model, at[0], at[1], {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
+                                                                        "spawnflags": loose_flags(model)}), "LC canal: props")
 
     # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
     # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before)
@@ -934,6 +1180,9 @@ def canal(args):
                     (160, 384, road_z), (160, 512, road_z), (160, 640, road_z), (2688, 1920, road_z), (2816, 1920, road_z), (2944, 1920, road_z)):
         node(x, y, z)
 
+    # cover hints behind its wrecks and barricades, as the modules have (Valve's; in what is left of its share)
+    node_id[0] += map_modules.piece_cover_hints(vmf, lambda x, y: plan.cells.get((x // CELL, y // CELL)), "LC canal", "canal", node_id[0],
+                                                node_share("canal") - (node_id[0] - args.first_node), ch.dished)
     for x, y, z in dim:
         vmf.point("info_target", W(x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC canal: the dimmer southern half (marks for the gamemode)")
 

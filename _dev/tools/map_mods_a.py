@@ -1236,7 +1236,7 @@ def m_boathouse(m, opt):
     for u in (624, 720):                                                                                    # the cellar's racking
         m.static(P + "props_c17/shelfunit01a.mdl", u, 884, 0, cz)
     m.loose(P + "props_junk/wood_crate001a.mdl", 610, 740, 10, z=cz)
-    m.loose(P + "props_junk/wood_crate002a.mdl", 736, 840, 90, z=cz)
+    m.loose(P + "props_junk/wood_crate002a.mdl", 736, 826, 86, z=cz)      # (turned off the square away from the supply crate)
     put(m, P + "props_c17/canister01a.mdl", 750, 780, 30, z=cz)
     put(m, P + "props_lab/citizenradio.mdl", 736, 840, 270, z=cz + 33)
     m.lane(672, 800, cz)
