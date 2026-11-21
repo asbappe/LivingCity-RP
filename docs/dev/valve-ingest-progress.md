@@ -50,7 +50,7 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
   Numbers gathered on the way: City 17's Nexus (`valve_c17/pictures.json` U26, U27, U32: Combine metal as thin plates,
   2 thick most often, longest side 64; 14% of its faces off right angles against 4% of the old plaster, tilted 45 to 70
   and turned 25, 45 or 65; set inside the old rooms like a second skin and breaking out through the front), and the
-  "Combine architecture" section of Nova Prospekt's notes (`valve_prison/notes/`) with its pictures P14 (depot: Combine
+  "Combine architecture" sections of Nova Prospekt's and EP1 City 17's notes (`valve_prison/notes/`, `valve_ep1c17/notes/`; EP1 pictures C2, C6, C8, C14) with its pictures P14 (depot: Combine
   walls leaning against old concrete, 20% of its wall area at about 14 degrees), P16 (the lopsided pod shaft), P17.
 
 - **Black Mesa East pieces (the owner, 21 November: "all of them please lift for use in the future with the modules"):**
@@ -84,7 +84,7 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 | 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | yes: 19 pictures R101 to R119 (`valve_ravenholm/`) | yes: 18 new lessons, 18 extended; notes in `valve_ravenholm/notes/` |
 | 3 | Nova Prospekt | d2_prison_01 to 08 | yes | yes: 17 pictures P1 to P17 (`valve_prison/`) | yes: 23 new lessons, 16 extended; notes in `valve_prison/notes/` |
 | 4 | Black Mesa East | d1_eli_01, 02 | yes | yes: 8 pictures E1 to E8 (`valve_eli/`) | yes: 9 new lessons, 5 extended; notes in `valve_eli/notes/` |
-| 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | running (`valve_ep1c17/`) | props and craft merged (14 new, 5 extended; 213 in all); logic and NPCs running |
+| 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | yes: 19 pictures C1 to C19 (`valve_ep1c17/`) | yes: 22 new lessons, 15 extended; notes in `valve_ep1c17/notes/` |
 | 6 | The Citadel, HL2 and EP1 | d3_citadel_01 (in before; studied again), 02, 03, 04, 05, d3_breen_01; ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | | |
 | 7 | EP2 | ep2_outland_01, 01a, 02, 03, 04, 05, 06, 06a, 07, 08, 09, 10, 10a, 11, 11a, 11b, 12, 12a; styleguide_01_antenna, 06_elev_tower, 11a, barn, barn_deterioration, bunkers, caves, farmhouse1, farmhouse2, farmyard, forest_01, inn, logging, radiotower, radiotower_a, radiotower_b, silo, silo_derilict, vista_01, riverbed, riverbed2; outland_building_large_01, medium_01, medium_02 | yes | | |
 | 8 | The rest of HL2 | d1_trainstation_06; d2_coast_01, 03, 04, 05, 07, 08, 09, 10, 11 | yes | | |

@@ -1,6 +1,5 @@
 {
  "title": "Valve's Episode One City 17 (ep1_c17_00 to 06, and five style rooms)",
- "draft": true,
  "about": "Episode One's City 17 after the Citadel's blast: the dark road tunnel and car parks under the city, the streets with everything tall leaning, the Combine's last walls, the hospital, a Resistance hideout in the flats, the station yard and the last train; and Valve's style rooms for the hospital exit, the car park whole and fallen, the train loading dock and the antlion-dug tunnel. Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props and craft study in valve_ep1c17/wip/props_craft_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; NPCs left out where the view says so). The test map ep1_c17_03 is left out.",
  "numbers": [
   "ep1_c17_00: 2594 entities, 2404 brushes, 588 props (355 static, 183 physics, 28 ragdoll corpses); no light_environment and no fog: all underground, 539 AI nodes and none outdoors; 21 zombines, 18 zombies, 15 barnacles, 8 antlions. Ours: our deepest place, the Ravenholm tunnel, is one corridor 192 wide and 1698 long.",
@@ -10,7 +9,29 @@
   "ep1_c17_00a: 988 props in play (763 static), 1.18 props per 100 by 100 of play, the densest of the episode; ceilings where the nodes are 128 (125 nodes), 256 (111) and 120 (100); corridors 113 wide under 124. Ours: our canal side rooms are 120 to 128 high too.",
   "ep1_c17_00a: the service ways carry 112 pipe03 straights and 112 connectors, one at every joint, 88 of them on skin 1, in three runs at 80, 104 and 120 over the floor and 20 to 44 off the wall. Ours: our modules place a pipe02 straight and connector pair here and there, never a run.",
   "ep1_c17_00a: the lift out is a timed hold of 79 to 80 s with four zombie waves (at 5, 35, 65 and 85 s) and its clock is a row of floor lamps lit one more every 20 s; the car leaves only when both riders are in (a counter of 2). Ours: our timed holds show no clock in the world (valve-progress-in-the-world).",
-  "styleguide_hospital_exit: a street junction behind the hospital with 11 trucks, vans and cars jammed in about 1200 by 750, yaws 60 to 270, one tilted -10; lampposts along the diagonal street 724 apart (the 512 grid's diagonal), the two rows 641 apart and staggered by half a spacing; 23% of old-material brushes at odd angles (ruin cuts). Ours: our streets run on the grid, with lamps on one rhythm and no jams."
+  "ep1_c17_01: 511 props in play, 79% of the 94 AI nodes outdoors; streets 320 roadway, kerbs 4, pavements 160 or 128, flat (crown 0 in 35 of 46 cuts), wall to wall 640, street walls 448 tall; brown haze 210 176 130 from 300 to 3000. Ours: road with a crown, kerb 8, pavements 96 (the owner's choice), and no haze.",
+  "ep1_c17_01: after the blast 9 of 12 lampposts lean 13 to 45 degrees (22 and 30 commonest), 10 of 12 utility poles 10 to 45, 7 of 13 signs 22 to 30, 5 of 18 trees 13 to 22, all in round steps and many ways; benches, bins and phones stay upright. Ours: every lamppost and pole stands upright.",
+  "ep1_c17_01: the Combine's wall through the old city is metalcombine001 brushes 48 thick and 160 to 336 high in straight runs 208 to 984 long, each turned 3 to 17 degrees from the last (yaws 357, 357, 13, 30, 77, 94, 105), outer faces leaning back 4 degrees; about 3000 long from y -64 to -1944 and east to x 3152. Ours: no Combine wall; our walls follow the street grid.",
+  "ep1_c17_01a: 423 props in play, 63% of 158 nodes outdoors; roadway 320, kerbs 4 (243 of 255 cuts), pavements 96 to 128, flat in 115 of 145 cuts, wall to wall 576, street walls 544 tall; indoors most often 184 high. Ours: pavements 96 as here, but kerb 8 and a crowned road.",
+  "ep1_c17_01a: physics props lie down more than anywhere in the episode (81% tilted); 13 of the creeping Combine walls (combineinnerwall001a) stand high in the skyline turned in 15 degree steps; force fields are comshieldwall2. Ours: no creeping walls on our skyline.",
+  "ep1_c17_01a: the block the player crosses is broken open: 29 concrete_section64floor slab pieces, 16 short rebar pieces and destroyed-wall models (walldestroyed09c, collapsedbuilding01awall) in about 1800 by 1800, 64 of 177 props there tilted. Ours: the `collapse` module is our only broken building piece.",
+  "ep1_c17_02: 339 props in play; a wide street, roadway 512, kerbs 4 (16 where a step), wall to wall 832, walls 512 tall; indoors most often 120 high (81 of 120 nodes); 26 explosive drums, all upright, in clusters 32 to 48 apart. Ours: rooms 120 to 128 high as here.",
+  "ep1_c17_02: the Combine's last hold is a control room set inside an old office (about 560 by 660): Combine metal lines its walls and ceiling from 16 to 455 over an old plaster floor, six combine_light002a turned to aim (yaws 120, 300, 315, and pitched), monitors and interfaces square to the walls, emitters in a pair, a lock and a bracket barricade at each door, nine soldiers. Ours: our Combine rooms are the owner's map's own; no tool lines an old room in Combine metal.",
+  "ep1_c17_02a: the hospital: 838 props in play (162 hospital props), 629 AI nodes and 2% outdoors; ceilings 192 (250 nodes), 128 (182) and 112 (78); corridors 224 wide most often (160 to 256), the lobby 224 by 192, ward corridors 240 by 128. Ours: the clinic is one vault 1024 long, its rooms 120 to 128 high.",
+  "ep1_c17_02a: a ward is 232 by 304 under 128 with its own washroom 152 by 112 (tub, sink, toilet, radiator); the bed is a free physics prop 32 to 56 off the wall (median 40), turned 3 to 20 on 7 of 13, with an IV stand 42 to 51 away, a cart 52 to 58, a bedside shelf and a reading tube over its head at 64 up. Ours: four beds in a row along the back wall with cloth screens between them, a field hospital rather than wards.",
+  "ep1_c17_02a: 113 wall rails (hospital_railing 64, 160 and 32) all static, flush on the wall, their top about 37 up; 91 lights, 10 of them named power lamps that start off and come on with the power. Ours: the clinic has a stone dado rail, no hand rail.",
+  "ep1_c17_02b: 367 props in play, 41% of 282 nodes outdoors; roadway 256, kerbs 4, pavements 192 or 128, flat in 76 of 82 cuts, street walls 640 tall; indoors 120 high most often (157 nodes); storeys here 128 to 132 apart. Ours: storeys 120 to 128 high inside, as here.",
+  "ep1_c17_02b: the Resistance hideout is the top flat of a block (floor 132, ceiling 120 over it): two slotted doors with a peephole (door03_slotted, at the street and at the flat), two tall barricades leaned back 30 degrees on the windows of the floor below, a radio corner (citizenradio on a shelf, a hard drive), a kitchen (stove, sink, fridge, pot), five chairs, one warm dome light, and a pulley hoist with two crowbars wedged in it as the way up; Barney and two citizens. Ours: our hideouts use the city's ordinary doors and no radio corner.",
+  "ep1_c17_02b: the evacuation's Combine barricades stand in a straight row 147 apart, all turned 30 degrees (x -2710, y 2907 to 3348). Ours: none.",
+  "ep1_c17_05: 389 props in play, 35% of 231 nodes outdoors; the station's sheds and yard lit by 37 bell lamps (light_industrialbell01_on) hung 480 to 704 over the floor, each with a light_spot 221 249 241 at 3000 straight down; fog 210 176 130 out to 15000. Ours: our train sheds are brick boxes lit by a few lamps (`shed`).",
+  "ep1_c17_05: the diagonal street to the station keeps its lampposts 724 apart (8 lampposts, the 512 grid's diagonal), the two rows staggered by half a spacing; the repair shed is 1296 wide with the train at floor level, a sunk walk 64 deep and 120 wide each side of it and galleries 256 up along both walls. Ours: our lamps run on the street's own rhythm; the train runs between two sheds with no walk beside it.",
+  "ep1_c17_06: 333 props in play, 5% of 202 nodes outdoors; the last train's shed is tall: ceilings 608 (39 nodes), 480 (33) and 704 (24), under 25 bell lamps; force fields (comshieldwall3) on func_brush pieces 70 wide and 340 high in a row across the yard. Ours: our sheds are as long as the train and low; no force field yet.",
+  "ep1_c17_06: two great Combine walls stand off beyond the yard: slabs of citadel_metalwall077a 768 high, 96 thick at the foot and 48 at the head, faces turned 10 and 21 degrees off the grid while their end caps stay square; one face leans back 4.4 to 4.7 degrees and the other is plumb, so each section is lop-sided. Ours: no Combine walls; our walls are plumb and on the grid.",
+  "styleguide_hospital_exit: a street junction behind the hospital with 11 trucks, vans and cars jammed in about 1200 by 750, yaws 60 to 270, one tilted -10; lampposts along the diagonal street 724 apart (the 512 grid's diagonal), the two rows 641 apart and staggered by half a spacing; 23% of old-material brushes at odd angles (ruin cuts). Ours: our streets run on the grid, with lamps on one rhythm and no jams.",
+  "styleguide_garage: a car park deck 2288 by 1072, 112 clear (beams down to 96), columns 32 by 32 every 256 in three rows with a drive aisle of 384; two cars to a column bay (128 a car), bays 176 to 192 deep, 2 cars in 3 nose to the wall; ramps 1 in 6, 224 to 240 wide; bay lines, arrows and letters are overlays. Ours: no car park.",
+  "styleguide_garage_destroyed: the same deck after the blast: 90 of its 197 props tilted, spawn chunks and rebar where the slab broke, 18 up-facing faces tilted 5 to 70 degrees; ep1_c17_00a shows the same in play (the slab pieces 96 to 300 across, 27 to 56 thick). Ours: no fallen floor in a building.",
+  "styleguide_train_loadingdock: a brick shed 1824 wall to wall: a dock 256 wide on one side and a loading floor 800 wide on the other, both 96 over a gravel bed 736 wide with three sidings 224 apart; the roof 608 over the docks and 704 over the bed; 48 bell lamps in rows 192 to 224 apart; 17 cargo containers, 20 lockers, forklifts; track is a texture strip 128 wide on the gravel. Ours: the `shed` roofs one track with the train at street level.",
+  "styleguide_antlion_tunnel: a service tunnel (mine concrete, cage lamps 248 apart, pipe sets along one wall) broken open into a cave of 119 displacements (power 3 on 74), 120 to 680 high; at the break 11 concrete spawn chunks within 80 of each other and five rebar pieces at pitch 60 to 90; grub clusters each with a faint green light (154 168 122 80) 12 over them, the cave lit by one cool blue light (109 192 207 1500). Ours: the antlion nest behind the forest cave's emergency door is cave alone; no built tunnel is broken into it."
  ],
  "pictures": [
   {
@@ -36,7 +57,7 @@
   {
    "n": "C2",
    "file": "02_c17_00_combine_hall_cut.png",
-   "where": "ep1_c17_00, the Combine's hall under the Citadel at the tunnel's end, from the south-west, cut at 180 (box 3200 -7000 5400 -5300; floor about -112)",
+   "where": "ep1_c17_00, the Combine's hall under the Citadel where the road tunnel ends, from the south-west, cut at 200 (box 2700 -7300 5900 -4900; floor about -112)",
    "teaches": "The Combine's hall under the Citadel, where the old tunnel ends in Combine metal: plates mostly 8 or 4 thick, square to the axes in plan (94% of the wall area) but leaning in section (23%: panels 128 high at 14 degrees, 208 high at 4, 176 high at 57), heads over the room on 46% of the leaning area; a ribbed floor (ribs 32 wide every 128, alternately 20 and 3 high) and a ceiling about 336 over it. It is not mirror-symmetric: each side steps and leans its own way. Ours: our tools build no Combine structure, only props set square; this is the owner's 'odd, unnatural' Combine to learn from.",
    "lessons": [
     "valve-combine-lean",
@@ -45,12 +66,12 @@
    "view": {
     "iso": "SW",
     "box": [
-     3200,
-     -7000,
-     5400,
-     -5300
+     2700,
+     -7300,
+     5900,
+     -4900
     ],
-    "cut": 180,
+    "cut": 200,
     "leave_out_npcs": true
    }
   },
@@ -93,7 +114,233 @@
   },
   {
    "n": "C5",
-   "file": "05_hospital_exit_jam.png",
+   "file": "05_c17_01_leaning_poles.png",
+   "where": "ep1_c17_01, the street after the blast, eye 4875 415 28 looking east (yaw 0)",
+   "teaches": "After the blast everything tall leans: the lampposts and utility poles (thin lines) stand tilted 15 to 45 degrees, each its own way, the wires still strung between them, rubble (orange) heaped along the walls, while the low things stay upright. Round steps of tilt (15, 22, 30, 45) and many directions make it read as shaken, not designed. Ours: our lamps and poles all stand upright on one rhythm; a blast-hit street would lean them.",
+   "lessons": [
+    "valve-blast-lean",
+    "valve-overhead-cables",
+    "valve-rubble-fitted"
+   ],
+   "view": {
+    "eye": [
+     4875,
+     415,
+     28
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "C6",
+   "file": "06_c17_01_combine_wall_chain.png",
+   "where": "ep1_c17_01, the Combine's wall through the old blocks, from the south-west, cut at 600 (box 900 -2200 3300 200)",
+   "teaches": "The Combine's wall (dark band) cutting through the old blocks: straight lengths of metalcombine001 48 thick and up to 336 high, each length turned a few degrees from the last (3 to 17), so the chain bends round the city without ever running square to it; it crosses blocks and open ground (trees in green) instead of following the streets. Ours: we have no Combine wall; this is the off-grid, unsymmetrical line the owner wants to copy.",
+   "lessons": [
+    "valve-combine-wall-chain",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     900,
+     -2200,
+     3300,
+     200
+    ],
+    "cut": 600,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C7",
+   "file": "07_c17_01a_broken_block_cut.png",
+   "where": "ep1_c17_01a, the block the player crosses, from the south-west, cut at 209 (box about 284 1083 2084 2883)",
+   "teaches": "A block broken open by the blast, roofs off: rooms and a shop (display coolers) whose floors have given way into slab pieces (concrete_section64floor, 29 of them) with short rebar sticking out (16), destroyed-wall models where walls are gone, heaps of debris against what stands; 64 of the 177 props here are tilted. The way through is made of the damage. Ours: the `collapse` module drops a street wall into a crawl; no block of flats is broken open.",
+   "lessons": [
+    "valve-broken-edges",
+    "valve-rubble-fitted",
+    "valve-tilt-and-topple"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     284,
+     1083,
+     2084,
+     2883
+    ],
+    "cut": 209
+   }
+  },
+  {
+   "n": "C8",
+   "file": "08_c17_02_combine_control_room.png",
+   "where": "ep1_c17_02, the Combine control room in an old office, eye 1300 -300 72 looking north (yaw 90)",
+   "teaches": "The Combine set into an old building: blue-grey Combine metal (citadel_metalwall077a) laid over the old room's walls and ceiling as a second skin, down to about 266 over the floor, with the old doorways and radiators left as they were; Combine lights (combine_light002a, six) turned to aim at the room while the monitors, interfaces and locks stand square. Ours: no Combine skin inside our rooms; this is one cheap way to show a block the Combine has taken over.",
+   "lessons": [
+    "valve-combine-aimed",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "eye": [
+     1300,
+     -300,
+     72
+    ],
+    "yaw": 90,
+    "pitch": -3,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C9",
+   "file": "09_c17_02a_ward_wing_cut.png",
+   "where": "ep1_c17_02a, a wing of wards and theatres, from the south-west, cut at -2440 with nothing under -2600 drawn (box -900 8300 1000 9300; floor about -2560)",
+   "teaches": "A hospital floor from above: small wards off a corridor, each with its own washroom (3 tubs, sinks and toilets here), beds (5) standing out from the walls with shelves and IV stands round them, and the theatres (5 tables) at the far end; a rail runs along the corridor walls (49 rail pieces in this box) under a tube every bay. Ours: the clinic is one room of four beds with a curtained theatre off it; a hospital in the city would be cells of ward plus washroom along a corridor.",
+   "lessons": [
+    "valve-hospital-ward",
+    "valve-hospital-corridor"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -900,
+     8300,
+     1000,
+     9300
+    ],
+    "cut": -2440,
+    "floor": -2600,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C10",
+   "file": "10_c17_02a_operating_theatre.png",
+   "where": "ep1_c17_02a, the theatre with three tables, eye -760 9060 -2496 looking east along the row (yaw 0, 10 down)",
+   "teaches": "An operating theatre: the tables (orange) in the middle of the room, square, 48 to 120 from every wall and here three in a row 92 apart, surgery lamps (yellow) held still about 100 over the floor and turned each their own way, shelves and a cabinet on the walls, two kitchen sinks as scrub sinks, monitors on a console. Ours: the clinic's theatre has one table under one lamp shining straight down.",
+   "lessons": [
+    "valve-operating-theatre"
+   ],
+   "view": {
+    "eye": [
+     -760,
+     9060,
+     -2496
+    ],
+    "yaw": 0,
+    "pitch": 10,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C11",
+   "file": "11_c17_02b_hideout_cut.png",
+   "where": "ep1_c17_02b, the Resistance hideout on the top floor of the flats, from the south-west, cut at 240 with nothing under 120 drawn (box 800 1450 1700 2350; floor 132)",
+   "teaches": "A Resistance hideout in a top-floor flat: a few small rooms off a hall, the kitchen in one (stove, sink, fridge, a pot), chairs pulled round, cupboards and drawers on the walls, a hole in a wall and a broken ceiling piece left as they are, the hoist (pulley wheels and two crowbars) where the way up comes in; 19 of its 41 props are loose physics props. Ours: our hideouts are rooms of the city's own furniture; this one is lived in by people who hide.",
+   "lessons": [
+    "valve-rebel-hideout",
+    "valve-furniture-on-walls",
+    "valve-flat-interiors"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     800,
+     1450,
+     1700,
+     2350
+    ],
+    "cut": 240,
+    "floor": 120,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C12",
+   "file": "12_c17_02b_hideout_radio.png",
+   "where": "ep1_c17_02b, inside the hideout by its door, eye 1330 1880 196 looking south-west toward the radio corner (yaw 225)",
+   "teaches": "Inside the hideout: the radio set (cyan, citizenradio as prop_dynamic_override) on a shelf 12 off the wall with a hard drive beside it, loose things (yellow) on the floor and tables, plaster walls and a low ceiling (120), lit by one warm dome light and a bare bulb. Ours: no radio corner; it would mark the Resistance's room without a word of text.",
+   "lessons": [
+    "valve-rebel-hideout",
+    "valve-story-props"
+   ],
+   "view": {
+    "eye": [
+     1330,
+     1880,
+     196
+    ],
+    "yaw": 225,
+    "pitch": 5,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C13",
+   "file": "13_c17_05_station_yard_cut.png",
+   "where": "ep1_c17_05, the station yard, its sheds and sidings, from the south-west, cut at -300 (box 7700 8000 11900 10900; track bed about -800)",
+   "teaches": "The station yard with its roofs off: long sheds over the sidings, the train cars (cyan) standing on the tracks, lockers in rows (20), fences and gates closing the yard off, and 37 bell lamps hung in rows under the roofs (192 to 224 apart). A rail yard is a few long parallel boxes, not one hall. Ours: the `shed` stretch roofs one track as long as its train; a yard would set several sidings side by side under a tight grid of lamps.",
+   "lessons": [
+    "valve-train-shed",
+    "valve-column-rhythm"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     7700,
+     8000,
+     11900,
+     10900
+    ],
+    "cut": -300,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C14",
+   "file": "14_c17_06_combine_great_walls.png",
+   "where": "ep1_c17_06, the two great Combine walls beyond the yard, from the south-east (box 1600 -2300 3200 1000; foot at -960)",
+   "teaches": "The Combine's great walls (dark): two slabs 768 high dropped onto the hillside (green), each turned its own way off the grid (10 and 21 degrees), 96 thick at the foot and 48 at the head, one face leaning back about 4.5 degrees and the other plumb, the ends cut square to the grid as if the slab had been rotated after it was cut. Nothing matches its neighbour: no mirror, no common angle. Ours: none; this is the unsymmetrical Combine the owner wants, in its simplest form (two lop-sided slabs).",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-combine-wall-chain"
+   ],
+   "view": {
+    "iso": "SE",
+    "box": [
+     1600,
+     -2300,
+     3200,
+     1000
+    ],
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C15",
+   "file": "15_c17_06_train_shed.png",
+   "where": "ep1_c17_06, inside the last train's shed, eye 10558 9199 -768 looking east (yaw 0)",
+   "teaches": "A tall train shed: about 600 to 700 to the roof trusses, the bell lamps (25 in this map) hung right under the roof in a tight grid, the platform and the track bed side by side, containers and crates along the walls. Valve lights a tall shed with many lamps high up, each with a light_spot 3000 straight down, not with a few floods. Ours: the `shed` is a brick box over one track, lit by a few lamps.",
+   "lessons": [
+    "valve-train-shed",
+    "valve-fixture-lights"
+   ],
+   "view": {
+    "eye": [
+     10558,
+     9199,
+     -768
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "C16",
+   "file": "16_hospital_exit_jam.png",
    "where": "styleguide_hospital_exit, the street behind the hospital, eye 9650 11400 -632 looking south into the jam (yaw 270)",
    "teaches": "An abandoned jam: 11 trucks, vans and cars (orange boxes) in about 1200 by 750, each turned its own way (yaws 60 to 270), one tilted -10, the brick fronts closing it in. 74% of Episode One's 105 abandoned vehicles have another within 400: they come in jams, not one to a kerb. Ours: no jams; a street in our tools is clear road.",
    "lessons": [
@@ -107,6 +354,67 @@
     ],
     "yaw": 270,
     "pitch": 4,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C17",
+   "file": "17_garage_aisle.png",
+   "where": "styleguide_garage, down the car park's drive aisle, eye 4300 -1800 64 looking west (yaw 180)",
+   "teaches": "A car park deck: a low ceiling (112, beams to 96) on columns every 256, the cars (orange) two to a bay on either side of a drive aisle 384 wide, most nose to the wall, tubes in rows under the slab; dark but for a few lamps, so the far end is lost. Ours: no car park; this is the recipe if the city gets one (a deck under the flats, or a ruin to fight through).",
+   "lessons": [
+    "valve-car-park",
+    "valve-column-rhythm",
+    "valve-light-pools"
+   ],
+   "view": {
+    "eye": [
+     4300,
+     -1800,
+     64
+    ],
+    "yaw": 180,
+    "pitch": 2,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C18",
+   "file": "18_loading_dock_cut.png",
+   "where": "styleguide_train_loadingdock, the loading shed with its roof off, from the south-west, cut at -200 (box 10400 8150 12400 10200; track bed -832, docks -736)",
+   "teaches": "A loading shed in plan and section: the dock (left) and the loading floor (right) both 96 over the gravel bed between them, three sidings on the bed with flatcars and boxcars (cyan), the roof trusses on columns, containers, crates and lockers on the floors, steps down from dock to bed. Ours: the `shed` roofs a single track; a goods shed would add the raised docks either side for loading and for cover.",
+   "lessons": [
+    "valve-train-shed"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     10400,
+     8150,
+     12400,
+     10200
+    ],
+    "cut": -200,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "C19",
+   "file": "19_antlion_tunnel_break.png",
+   "where": "styleguide_antlion_tunnel, in the cave by the break, eye -600 300 448 looking east (yaw 0)",
+   "teaches": "Where antlions have dug through: the built tunnel's flat concrete wall and lamp (left) end at a ragged edge, and the rough rock of the cave (displacements 128 to 512 across, power 3) takes over, rising 120 to 680; concrete chunks and rebar lie at the break, a cool blue light fills the cave. Ours: the antlion nest (behind the forest cave's emergency door) is cave alone; a breach would join it to a built tunnel with this ragged edge.",
+   "lessons": [
+    "valve-antlion-breach",
+    "valve-rubble-displacements"
+   ],
+   "view": {
+    "eye": [
+     -600,
+     300,
+     448
+    ],
+    "yaw": 0,
+    "pitch": 5,
     "leave_out_npcs": true
    }
   }
