@@ -369,7 +369,7 @@
    "title": "The Combine's places in the Combine's kit",
    "rule": "Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses (combinebuttress), bunker shields, fences with fields (combine_fence01a/b, combine_emitter01), railings (props_combine railing_128/256/512), lights (combine_light001/002), monitors, cameras (combinecamera001), locks, health chargers, metal (metalcombine002).",
    "why": "The owner's map: combine_fence01a/b 12 each, combine_light002a 75; review, 20 November (checkpoint, thumper, depot, armoury in brushes, prison fencing and cream plaster).",
-   "how": "grep source/hl2/props_combine in the lists.",
+   "how": "grep source/hl2/props_combine in the lists. Into the old city the Combine comes as models (combine_barricade_*, combine_lock01, monitors, CombineInnerwallCluster1024, combine_light002a); its brushes are rare: 34 in d1_trainstation_02, metalcombine001 panels 4 to 8 thick, a third of them cut into the old wall, none in d1_trainstation_03 to 05.",
    "check": "review"
   },
   {
@@ -450,7 +450,7 @@
    "title": "Round means round",
    "rule": "A round room or yard drawn with 64 squares has a jagged, sawtooth wall: build the wall from angled segments on the squares' line (the squares behind only seal).",
    "why": "Review, 20 November: the cistern and the chimney yard.",
-   "how": "m.shapes prisms.",
+   "how": "m.shapes prisms. Valve: round pillars are one brush of 8 or 16 sides (radius median 90 in the city maps), canal tunnel rings 32 sides (radius about 512); curved walls step at 22.5 degrees (961 faces in the canals).",
    "check": "review"
   },
   {
@@ -522,7 +522,7 @@
    "title": "Build in the owner's palette",
    "rule": "Prefer the materials and models the owner's own map uses (_dev/reference/city18/palette.json: 503 materials, 238 models, by count), so a piece looks like their city when it is stitched in. Their wood: wood/woodwall006a (panelling and trims), woodfloor006b and 007a (floors), woodstair002a/c (stairs), wooddoor042a. Steel: metal/metalhull010c. Grates: metalgrate016a, 013b, metalcombinegrate001a. Floors: concretefloor031a, 013a, 006a, 016a with a 039b kerb. Tiles: tilefloor009a, 007b, tilewall009b/d. Chain link: effects/metalfence007a (the tools use metal/metalfence007a: to change once the modules are done). The Combine: metalcombine001/002, citadel_metalwall090a/072c/077a.",
    "why": "Counted in c18_lc.vmf, 20 November: wood/woodbeam001a, metal/metalhull003a and metal/metalfence007a, the tools' defaults, are not in it at all.",
-   "how": "Pick from palette.json; map_town's trims are wood/woodwall006a since 20 November.",
+   "how": "Pick from palette.json; map_town's trims are wood/woodwall006a since 20 November. Valve keeps a place to few materials: a 512 cube of play space holds a median 5 materials (p90 15) from 2 or 3 kinds (city maps and canals alike).",
    "check": "map_lint.py palette (one LOOK line naming the commonest materials City 18 never uses)"
   },
   {
@@ -623,7 +623,7 @@
    "title": "Upper storeys and far blocks as painted fronts",
    "rule": "Where the player cannot reach, Valve's fronts are flat walls in building_template textures (windows, sills and cornices painted on), with window models (building_tem002_window01 and its _bars) set into them near the player; built detail (plinth, shopfronts, doors, real windows) only at street level.",
    "why": "building_template share of all vertical wall area: 46% in d1_trainstation_02, 39% in 04, 38% in d3_c17_13, 35% in 03 (3% in the lab, 0 in Ravenholm, the coast and the Citadel); d1_trainstation_03 has building_tem002_window01 14, the same with bars 14, courtyard_template002_window 10. Pictures T2.1, T2.7, T4.6.",
-   "how": "Backdrop blocks and storeys out of reach: one template face per storey band instead of brush windows; keep map_town.facade where players walk. Check the materials exist in the owner's content first (map_assets.py).",
+   "how": "Backdrop blocks and storeys out of reach: one template face per storey band instead of brush windows; keep map_town.facade where players walk. Check the materials exist in the owner's content first (map_assets.py). Past the template fronts, the 3D skybox (scale 16 in every map) holds only 1 to 47 models, nearly all skybox buildings (row_res_2, row_upscale, project_building01_skybox, buildingskybox_002a, the Citadel, tree cards) and a few ground brushes; brushes more than 1024 from play are 13% of a city map, plain six-faced boxes with 29% of their faces nodraw.",
    "check": "map_assets.py (the materials exist); the look in the viewer"
   },
   {
@@ -1203,6 +1203,197 @@
    "rule": "Put a looping ambient_generic on the prop that makes the sound, a few units off it: sink drips 6 to 10 from each sink, a dead radio's static 24 to 28 from the radio, a diesel generator's hum at its pipes, printers and servers at their machines, fire loops at the burning pile. Triggered one-shots (spawnflags 48, start silent and not looped) are the commonest ambient_generic (129); always-on loops (0) are the few placed at props.",
    "why": "ambient_generic within 96 of a prop in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): d1_trainstation_03 sinkdrips (3, at sinkkitchen01a and furnituresink001a), d1_canals_05 and 06 coast.radio_dead at citizenradio, d1_canals_11 diesel_generator, d1_trainstation_05 k_lab.printer and tech1 at servers, d3_c17_13 fire at debris piles.",
    "how": "m.sound(message, u, v, z) at the prop for radios, sinks, generators, TVs and fires; radius 500 to 1250, as Valve.",
+   "check": "review"
+  },
+  {
+   "id": "valve-lightmap-by-distance",
+   "tags": [
+    "valve",
+    "lighting",
+    "materials",
+    "performance",
+    "check"
+   ],
+   "title": "Lightmaps fine near people, coarse far away",
+   "rule": "Never one lightmapscale for everything. 16 on what players walk past; 8 on small detailed pieces at eye level (stairs, rails, pipes, trims, a floor under a lamp); 32 to 64 on faces more than about 1000 from anywhere players walk (far walls, roof tops, backdrops, the upper part of a tall canal wall); 64 on terrain displacements, 128 on far terrain.",
+   "why": "Faces within 256 of an AI node: 16 on 86% in the city maps (d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12), 8 or 4 on 5% (canals 11%); faces over 3000 away: 64 on 54%, 16 on only 34%. Displacements: 64 on 70 to 78% in d1_canals_01 to 13, 128 on 16% of the far ones; only near ones keep 16. 8 goes on stonefloor006a, stonewall050b/c, plasterwall, metalstair004a, metalpipe009a/b, metalrail013b, metaltrack001a. Our builder writes 16 on every face and 32 on displacements.",
+   "how": "map_build: a lightmapscale per box (default 16); 8 from the stair, rail, pipe and trim helpers; 64 for displacements and for pieces a module marks as backdrop or out of reach.",
+   "check": "map_lint.py lightmap (proposed): a face over 64k square units at 16 with no viewpoint or spawn within 1024; a displacement at 16 or 32."
+  },
+  {
+   "id": "valve-texture-scale",
+   "tags": [
+    "valve",
+    "materials",
+    "check"
+   ],
+   "title": "Texture scale follows the size of the surface",
+   "rule": "0.25 for what players walk past (brick, plaster, wood, small concrete). Big poured concrete on the canals at 0.5 (concretewall074a, 022a, 004c, 010c); rock and cliff faces at 1 to 2; terrain blends at 0.5 to 1; water at 0.5 to 1; walls far from play may go to 1.",
+   "why": "0.25 is on 84% of faces in the city maps and 63% in the canals, but the canals lay big concrete at 0.5 (by area: concretewall074a 53%, 022a 71%, 004c 64%, 010c 89%, 074c 90%), rockwall006a at 2 on 85%, blenddirtgrass008b at 0.5 or 1, water_canals_water2 at 0.5 or 1. Faces more than 1024 from any AI node carry scale 1 or 2 on 43% of their area (city maps), against 0.25 on 51 to 64% of the area near nodes. A 128-unit tile repeated over a 1000-unit canal wall reads as wallpaper.",
+   "how": "Mod.box(tex=...) already takes a scale (map_build): pass 0.5 for canal wall panels over 256 tall, 1 or 2 for rock, cliff and terrain displacements.",
+   "check": "map_lint.py scale (proposed): nature/rock*, cliff* or blend* faces at 0.25; a wall face longer than 1024 at 0.25."
+  },
+  {
+   "id": "valve-wall-foot-seam",
+   "tags": [
+    "valve",
+    "materials",
+    "facades"
+   ],
+   "title": "Sit the wall texture on the floor",
+   "rule": "Shift a wall texture up or down so a whole texture starts at the wall foot (at scale 0.25: v at the floor a multiple of 512 texels, a floor z on a multiple of 128), so the dirty band or dado in the texture lands at the floor and not halfway up. Leave the horizontal seams and corners as they fall.",
+   "why": "35681 walls in the city maps: the foot sits on a 512-texel seam on 36%, against 24% with no shift; the top the same (35% against 24%). Horizontal seams are left alone (30% against 27%) and corners are not wrapped: of 24840 same-material corners only 7.5% continue the texture, no more than chance. 80% of faces carry some shift, most of it from moving brushes with the texture locked.",
+   "how": "In the face writer of map_build, set the v shift of wall faces to -(floor z / scale) mod 512 when a box stands on a known floor; leave u at 0.",
+   "check": "map_lint.py seam (proposed): wall faces of plasterwall, concretewall or stonewall050 whose foot is not on a 128-texel seam."
+  },
+  {
+   "id": "valve-fixture-lights",
+   "tags": [
+    "valve",
+    "lighting"
+   ],
+   "title": "Each lamp model has its own light recipe",
+   "rule": "Light a fixture as Valve does that model: a light_spot a few units under the model, pitch -90, cone 60 to 80, inner 30 to 45, does the lighting; a small fixture adds a faint point light (brightness 2 to 10) for the glow. Copy the per-model table in the notes (dome light, bulb, prison lamp, cage light, fluorescent, Combine light, spotlight lamp, bell lamp).",
+   "why": "Lights matched to the nearest model within 48 (946 lights, 22 maps): light_domelight02_on = light 254 216 146 at 8 plus light_spot 254 216 146 at 200, cone 60, inner 30, pitch -90 (17 pairs); lightbulb01a = light at 8 plus spot at 300, cone 75; prison_lamp001b = light at 2 plus spot at 400 to 550, cone 45 to 60 (12 pairs); light_cagelight02_on = spot 241 214 173 at 1850, cone 80, inner 45, exponent 5, 15 under the model (106 in the canals); lights_florescent01a = spot 159 237 215 at 1200, cone 80, inner 30, exponent 2; combine_light002a = spot 147 226 240 at 2000, cone 35, inner 12; light_spotlight01_lamp = spot 187 234 201 at 1500, cone 35, inner 20, pitch -30, exponent 0.5. Spots point straight down on 37% (city) and 52% (canals). Our m.lamp gives the dome light one point light, and the canal lamps are point lights at 60.",
+   "how": "A FIXTURE table in map_modules keyed by model; m.lamp and the canal lamps place the table light_spot under the model and turn the point light down to the table value.",
+   "check": "map_lint.py offlamp (extend, proposed): a lit model from the table with no light_spot under it."
+  },
+  {
+   "id": "valve-falloff-by-job",
+   "tags": [
+    "valve",
+    "lighting"
+   ],
+   "title": "Falloff chosen by the light's job",
+   "rule": "A lamp lighting its own spot: plain quadratic. A flood or big Combine light that must light a whole yard evenly: a huge constant term (_constant_attn 500000, _quadratic_attn 1) at 2000 to 2500. A fill light with no model, to lift a dark end without a visible source: low (70 to 100) and soft (_constant_attn 500, _linear_attn 500, _quadratic_attn 0), cold 39 64 73 or warm 216 183 105.",
+   "why": "City maps: 246 of 391 lights plain quadratic; 69 with a constant of 50000 to 600000, every one a light_spot at 600 to 3000 (Combine lights, spotlight lamps, fluorescents). Canals: 240 point lights with no model near them, the commonest 216 183 105 at 70 (61) and 39 64 73 at 100 (33); 67 lights at 500/500/0. Our modules write quadratic on every light.",
+   "how": "m.light(kind=) with three presets: lamp, flood, fill; put fill lights in the dark ends of rooms and tunnels instead of a brighter lamp.",
+   "check": "review (the light pools in the viewer)"
+  },
+  {
+   "id": "valve-light-colour-by-place",
+   "tags": [
+    "valve",
+    "lighting"
+   ],
+   "title": "Cold light on City streets, warm light in homes and canals",
+   "rule": "Streets and Combine places: cool spots (147 226 240, 159 237 215). Flats, shops and canal tunnels: warm (254 216 146, 241 214 173). Almost never pure white.",
+   "why": "City maps: 36 of 37 outdoor light_spots are cool; indoors 113 cool and 96 warm. Canals: 166 of 262 indoor and 61 of 74 outdoor spots warm. Only 26 of 946 lights are 255 255 255. Suns: d1_trainstation 237 218 143 at 800 with ambient 190 201 220 at 100; d3_c17_13 238 200 128 at 450, ambient 75 96 116 at 250; the canals go from 248 234 205 at 1000 to an orange 235 155 71 by d1_canals_13.",
+   "how": "m.lamp picks the colour from the kind of place; the sun stays the owner's.",
+   "check": "review"
+  },
+  {
+   "id": "valve-trim-strips",
+   "tags": [
+    "valve",
+    "facades",
+    "geometry"
+   ],
+   "title": "Trim strips of another material along edges",
+   "rule": "Edge walls, doorways and floor changes with thin strips 8x16, 16x32, 8x8 or 4x8 in section, as func_detail, mostly in a material other than the wall (metalwall061f, concretewall037d, stonewall050b/c, woodfloor005a). Ledges and cornices stand 8 (or 16) out from the wall and are 16 to 32 tall, most of them high on the front. Skirting is left to the texture.",
+   "why": "1627 strip brushes in the city maps and 1481 in the canals: 16x32 (239), 8x32 (231), 8x16 (183), 8x8 (150), 4x8 (110); 59% (city) and 83% (canals) are func_detail; 49% (city) and 66% (canals) are in another material than the brush they touch. Ledges along walls: 246 in the city maps, standing 8 out (116) or 16 (65), 16 or 32 tall, their bottom a median 319 over the ground; only 9 at a wall foot. 28 of 32 doors have a strip within reach.",
+   "how": "A trim helper in map_build: a strip along an edge, section 8 by 16 by default, func_detail, kept 1 unit off any flush face (no-flush-faces).",
+   "check": "map_lint.py bare counts a strip within 24 as dressing."
+  },
+  {
+   "id": "valve-chamfer-8",
+   "tags": [
+    "valve",
+    "geometry"
+   ],
+   "title": "Cut corners at 8",
+   "rule": "Where a corner should not be sharp (pillars, piers, kerb ends, the top edge of a ledge), cut it at 45 degrees 8 units off the corner (16 on canal concrete); bevel the top edge of a ledge 4 or 16.",
+   "why": "45-degree faces between square faces: 1995 in the city maps, face width 11 (8 off the corner) 568 times, 23 (16 off) 265, 6 (4 off) 151; canals 2729, width 23 (16 off) 557 times. 45-degree bevels on ledge tops: 741 in the city maps, slant 6 (4 off) or 23 (16 off); 2316 in the canals, slant 13 to 17 (9 to 12 off).",
+   "how": "m.shapes prisms with the corner cut; a chamfer=8 option on map_build boxes (proposed).",
+   "check": "review"
+  },
+  {
+   "id": "valve-wall-thickness",
+   "tags": [
+    "valve",
+    "geometry",
+    "interiors"
+   ],
+   "title": "Thin walls indoors, thick canal walls, glass set 4 back",
+   "rule": "Partitions in flats and houses 8 thick (16 at most); a door jamb 8 deep; canal and outer walls 32 to 64. Glass 1 or 2 thick, set 2 to 5 back from its frame.",
+   "why": "Tall wall slabs textured on both sides: 8 thick 400 times and 16 306 times in the city maps (64 only 95); in the canals 64 (337), 32 (326), 16 (293). The jamb beside 29 of 32 city doors is 8 deep (14 of 19 in the canals). Glass brushes 2 (63) or 1 (40) thick; the frame stands a median 4 proud of the glass (67 windows; 86 in the canals, also 4); func_breakable_surf panes 2 x 58 x 99.",
+   "how": "Interior partitions in map_town and map_mods at 8; the owner's outer walls stay as they are.",
+   "check": "review"
+  },
+  {
+   "id": "valve-terrain-into-brush",
+   "tags": [
+    "valve",
+    "geometry",
+    "canal"
+   ],
+   "title": "Ground runs into the brush, never stops at its edge",
+   "rule": "A displacement that meets a path, kerb or wall goes past the edge: it dips under the brush floor in places and rises over it in others, and climbs about 30 up a wall, so no seam line shows. Power 2 (3 where players walk on it), squares of 512 or 1024 sewn to their neighbours; a blend material is always painted.",
+   "why": "Canal floor displacements beside a brush floor (2872 edges): 47% cross it (part above, part below), 28% lie over it, 25% under, 0.6% flush; at a wall the edge climbs a median 34 (472 edges). Power 2 on 66% (canals) and 86% (city), 3 on 33% of the canals, 4 on 1%; 1363 of 2600 canal displacements are 1024 square; 65 to 72% of floor edges are sewn to another displacement; 95% of displacements in a blend material have alpha painted (blenddirtgrass008b 808).",
+   "how": "map_build displacements: let the border rows overshoot the neighbouring brush by 4 to 16 (down under a path, up a wall) instead of ending at its edge; power 2 by default.",
+   "check": "map_lint.py (proposed): a displacement edge lying on a brush edge at the same height; a blend material with no alpha."
+  },
+  {
+   "id": "valve-decal-or-overlay",
+   "tags": [
+    "valve",
+    "grime"
+   ],
+   "title": "Decals for small marks, overlays for big ones, in clusters",
+   "rule": "Small marks (trash, leaves, graffiti, posters, cracks, outlets) as infodecal: four to eight decals for each overlay. An info_overlay only for a mark over 128 or one that must cross a corner or seam (big stains 128 to 600, ivy about 230, sand tracks, drains 96 by 128). Wall marks low, floor litter by the walls, and in clusters: about a third of the spaces get any, two to four each.",
+   "why": "City maps: 699 infodecal to 157 info_overlay; canals 613 to 75. On floors the decals are mostly trash (158) and leaves (105); wall decals graffiti, stains, plaster damage, posters, ivy, a median 78 over the floor (p10 28, p90 398). Overlays: decalstain015a/002a 128 to 600, ivy02/03 about 230, sandtrack02a, decalconcretedrain002a; half of them (city) and a third (canals) span two or more faces. Only 36% (city) and 26% (canals) of 512 squares with AI nodes carry any mark, and nine in ten carry 4 or fewer.",
+   "how": "Mod.grime as now (decals); a Mod.overlay for big stains and ivy across a corner (proposed).",
+   "check": "review"
+  },
+  {
+   "id": "valve-sightlines",
+   "tags": [
+    "valve",
+    "layout"
+   ],
+   "title": "Corridors 112 wide, rooms twice that, one long view",
+   "rule": "Corridors about 112 wide (64 to 176) under 120 ceilings; rooms about 270 across (2.4 times the corridor) and 120 to 140 high, halls more. Outdoors keep one long view (3000 or more) down a street and close the rest within 512: from any spot, half the directions end that close.",
+   "why": "Rays from AI nodes under a ceiling, city maps: corridor width median 112 (307 nodes, p10 64, p90 178), ceiling 120; rooms 271 wide, ceiling 139; canals 118 and 340. Outdoors the longest view is a median 3360, the typical one (median of 16 directions) 483, and 52% of directions end within 512 (canals 46%).",
+   "how": "Module layouts: corridors 96 to 128, rooms 256 to 320; streets end in a turn, a building or a gate rather than an open run.",
+   "check": "review (the viewer from a node's eye)"
+  },
+  {
+   "id": "valve-broken-edges",
+   "tags": [
+    "valve",
+    "geometry",
+    "facades"
+   ],
+   "title": "Broken walls: odd cuts and debris models",
+   "rule": "Break a wall by cutting its brushes at odd angles (a box with one or two slanted faces, not a 15 or 45 degree step), then lay broken concrete and rebar models along the break (concrete_section64floor001a/b/c, concrete_section128wall001a, rebar_cluster001a/b, walldestroyed08a).",
+   "why": "d3_c17_13: 102 of 1057 old-material brushes (10%) are cut at odd angles, 62 of them six-sided boxes; Ravenholm 18%; with 126 concrete_section64floor, 34 concrete_section128wall001a, 41 rebar_cluster and 14 walldestroyed08a along the breaks.",
+   "how": "A ruin option for map_town fronts: slice the top of a wall box with two or three random planes (convex_text), then place the debris models on the cut (map_assets.py first).",
+   "check": "map_assets.py; review"
+  },
+  {
+   "id": "valve-water-depth",
+   "tags": [
+    "valve",
+    "water",
+    "canal"
+   ],
+   "title": "Water 32 to 64 deep, with a cheap-water distance",
+   "rule": "Where a new piece has water: the water brush 32 to 64 tall, the bed 32 to 64 under the surface, and one water_lod_control per map (cheap water from 1000 to 1500 out to 2000 to 3000). The owner's sewers keep their own water (canal-water): ask before changing them.",
+   "why": "Canal maps: 410 water brushes (water_canals_water2 235, toxicslime002a 109), 64 tall (166) or 32 (106); the bed lies a median 62 under the surface (p10 30, p90 71); every canal map has a water_lod_control (1000/2000, 1500/2000, 1500/2500, 1500/3000).",
+   "how": "The water helper in map_mods: depth 48 by default; add water_lod_control when the map has none (check the owner's map first).",
+   "check": "map_lint.py water (proposed): water deeper than 128; water in a map with no water_lod_control."
+  },
+  {
+   "id": "valve-detail-and-nodraw",
+   "tags": [
+    "valve",
+    "geometry",
+    "compiler"
+   ],
+   "title": "Detail the small and the angled; nodraw where nobody looks",
+   "rule": "Small, angled and strip brushes go in func_detail; big walls and floors stay world. Nodraw the backs and tops nobody can see (a module shell's outer faces, far boxes); there is no need to chase every buried face.",
+   "why": "City maps: 47% of brushes func_detail but only 19% of visible area (canals 73% and 27%); of the detail 46% are angled and 25% strips. Only 22% (canals 28%) of fully covered faces are nodraw, while 18 to 20% of uncovered faces are (backs facing out), and 29 to 34% of the faces of brushes more than 1024 from play.",
+   "how": "Mod.det for trims, chamfered and angled pieces; nodraw on the outer faces of a module's shell.",
    "check": "review"
   }
  ]
