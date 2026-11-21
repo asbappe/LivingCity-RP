@@ -29,7 +29,48 @@
  "pictures": [
   {
    "n": "W1",
-   "file": "01_o02_arena_holdout_cut.png",
+   "file": "01_o01a_cave_tunnels_cut.png",
+   "where": "ep2_outland_01a, the antlion tunnels round x -3900 y -6000 (floors about -43), from the south-west, cut at 220 (box -5190 -7260 -2630 -4700; drawn without what lies below -500)",
+   "teaches": "An antlion tunnel from above: one rough tube that winds, pinches and swells, with pockets off it, never a straight run. Its dressing (cyan): web sacks overhead and on the walls (websackceilingbig05 4, _01 3, _02 1; websackhalf 2, _b 4, _c 2), an antlionhill mound, 10 stalactites; 12 grubs and 7 small lights; 11 antlions placed. Map-wide the passages are narrowest median 298 and 243 high, and all 424 nodes are under rock. Ours: our cave is one square room; a tube like this, 250 to 300 wide and widening into pockets, is what the cave and nest pieces could follow.",
+   "lessons": [
+    "valve-cave-proportions",
+    "valve-nest-dressing",
+    "valve-cave-light"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -5190,
+     -7260,
+     -2630,
+     -4700
+    ],
+    "cut": 220,
+    "clip_below": -500
+   }
+  },
+  {
+   "n": "W2",
+   "file": "02_o01a_watery_cavern_eye.png",
+   "where": "ep2_outland_01a, eye level in the watery grub cavern, looking west (eye -5331 -6760 9, yaw 180); soundscape ep2_caves.large_watery_cavern_grubs",
+   "teaches": "A cavern at eye level: rock walls and roof of displacements with no flat face, a pool in the low part, stalactites hung from the roof (stalactite_static01 to 03, 16 in this part; the viewer draws them as orange boxes) and loose rocks and boards on the floor (rock_forest01 3, boat002b, shovel). Three barnacles hang in this part. Valve's caves keep a small light within about 170 of every node (90% within 430 to 600): grub yellow 255 245 157, cage lamps 255 226 174, a cold fill 132 158 202 at 25; fog 18 23 35 to 2800. Ours: 7 lights in the 3072 cave.",
+   "lessons": [
+    "valve-cave-light",
+    "valve-cave-proportions"
+   ],
+   "view": {
+    "eye": [
+     -5331,
+     -6760,
+     9
+    ],
+    "yaw": 180,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W3",
+   "file": "03_o02_arena_holdout_cut.png",
    "where": "ep2_outland_02, the mine arena where the rebels hold out, from the south-west, cut at -440 (box -4090 -11030 -1530 -8470; drawn without what lies below -1100)",
    "teaches": "The holdout is a built room at the foot of the mine (floor about -692), a round hall of concrete and steel with galleries and caves joining it: four tunnels lead in, and each has a looping siren (radius 1250) and three lamps marked easy, medium and hard that light 20 s before that tunnel's antlions come, so players read where the next wave comes from and how big it is from the room itself. Seven waves, growing by how many tunnels are open; 8 antlions in the room at once ends a wave. Ours: no defence in our map shows where the next attack comes from.",
    "lessons": [
@@ -50,8 +91,8 @@
    }
   },
   {
-   "n": "W2",
-   "file": "02_o02_gallery_into_cave_cut.png",
+   "n": "W4",
+   "file": "04_o02_gallery_into_cave_cut.png",
    "where": "ep2_outland_02, a straight mine gallery and the antlion tunnel that leaves it, from the south-west, cut at -330 (box -2040 -11540 520 -8980; drawn without what lies below -1100)",
    "teaches": "Where the built mine meets the antlions' own work: a square gallery runs straight (Valve's galleries 192 high, 294 to 365 wide, a timber set every 192 to 280) and from its end a rough tube winds off for about 2500, never straight for long, narrowest median 131 and 148 high in this map, wider in the other cave maps (219 to 298). Ours: our cave is one 320 by 320 square in plan; a tunnel that winds and changes width reads as dug by antlions, a straight one as dug by men.",
    "lessons": [
@@ -68,6 +109,50 @@
     ],
     "cut": -330,
     "clip_below": -1100
+   }
+  },
+  {
+   "n": "W5",
+   "file": "05_o03_mine_galleries_cut.png",
+   "where": "ep2_outland_03, the mine galleries round x 1400 y -5200 (floors about -960), from the south-west, cut at -780 (box 80 -6480 2640 -3920; drawn without what lies below -1300)",
+   "teaches": "The miners' part of the caves: square galleries that run straight and meet at right angles, a winch among them (pulleywheels_large01, crank, diesel_generator). The orange blocks are the timber sets (struts_tunnel320_01 5, _04 3, struts01 3; the viewer draws them as solid boxes, they are hollow frames) with posts struts_single02 7 between, and cage lamps (light_cagelight02_on 5) hung along them. Across the whole map: 158 timber props, a set every 160 to 280 (median 192 to 280), galleries 192 high and 294 to 365 wide; lamps 687 apart. Ours: raven-mine-sets puts a set every 512, and our cave has no built gallery.",
+   "lessons": [
+    "raven-mine-sets",
+    "valve-cave-light"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     80,
+     -6480,
+     2640,
+     -3920
+    ],
+    "cut": -780,
+    "clip_below": -1300
+   }
+  },
+  {
+   "n": "W6",
+   "file": "06_o03_antlion_chamber_cut.png",
+   "where": "ep2_outland_03, an antlion chamber and its tunnels round x -3300 y -4700 (floors about -865), from the south-west, cut at -600 (box -4560 -5970 -2000 -3410; drawn without what lies below -1300)",
+   "teaches": "The antlions' own ground: a broad chamber of displacements with rough tubes leaving it at several heights, no timber anywhere. In the box: 18 grubs, 12 antlions, 14 small lights, web sacks on the walls (websackhalf 5, _b 2, _c 3; websackceiling03 3, the cyan boxes), 3 grubtunnel_door plugging side holes, 9 stalactites. Valve's caves: tunnels about 250 wide and 200 high (this map's narrowest median 266, height 243), 17 to 20% of the walk in chambers 512 or more, a chamber's long way 1500 to 1840. Ours: the cave is a 320 by 320 square, the nest 345 wide and 760 in its chambers.",
+   "lessons": [
+    "valve-cave-proportions",
+    "valve-nest-dressing",
+    "valve-grub-groups",
+    "valve-cave-light"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -4560,
+     -5970,
+     -2000,
+     -3410
+    ],
+    "cut": -600,
+    "clip_below": -1300
    }
   }
  ]

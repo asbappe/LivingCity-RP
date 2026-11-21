@@ -275,6 +275,36 @@ The Combine's own stronghold, in Half-Life 2 and Episode One: the pod bays and t
 | Z24 | `valve_citadel/24_style_core_cut.png` | styleguide_core, Valve's style room for the core, from the south-west, cut at 5250 (box 1600 11000 3800 13300; drawn from a copy keeping brushes between 3600 and 6600 and the props inside the box) | The core alone: a shaft walled in panels of different heights, the coreball in its middle (2703 12142 5161) ringed by four tall barricades, teleport rings (cyan outlines, combine_teleport_2) above and below, three ball sockets on the floor and three portalballs round it; the wobble runs on three timers of 0.2 to 0.9 s. Ours: reference for any core or reactor piece. | valve-progress-in-the-world, valve-combine-cold |
 | Z25 | `valve_citadel/25_style_destroyed_bridge.png` | styleguide_destroyed_citadel, Valve's style room for the broken Citadel (ep1_citadel_02's bridges), eye level looking west (eye -6848 960 859, yaw 180); the auto view | The bridge as a sample: tall walls of plates each standing out by its own depth, a walk with rails, a lit doorway at the end; soldiers and stalkers on it (9 and 8 in the room), the rumble timer of 12 to 49 s. Ours: reference for a broken Combine approach. | valve-combine-lean, valve-place-falling-apart |
 
+## Valve's coast (d1_trainstation_06, d2_coast_01 to 11) (`_dev/reference/valve_coast/`)
+
+The rest of Half-Life 2's way out of the city: the train yard and the start of the canal (d1_trainstation_06), then Highway 17 and Sandtraps: the dock post where the buggy is lifted ashore, New Little Odessa (a Resistance village fighting off a gunship), the Combine-held dock and warehouses, the cliff road and its ruined houses, the great bridge and the village under it, the shacks and yards on the shore, the lighthouse the Resistance holds against dropships, and the vortigaunts' camp on the beach past the sand. d2_coast_12 is its own set (valve_d2_coast_12). Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the study in valve_coast/notes/notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs). Most of the coast is displacement ground and sea, so most eye views are of grass and sky: the cut-aways teach more.
+
+- d1_trainstation_06: 240 props in play, 69% of AI nodes outdoors; 4 trains on path_track (54 OnPass > SetSpeed lines) and a level crossing (two red lamps blinking every 0.5 s, a bell for 25 s); Combine force fields across the tracks (five humming pairs at two places); 8 metrocops and 2 scanners chase the player while cop voices placed round the yard (radius 5000) call him out. The canal starts as a concrete tunnel 256 wide under a roof 352 up, with ledges 116 wide at 224 up. Ours: our canal pieces start in the open.
+- d2_coast_01: the dock post: a crane (prop_vehicle_crane, npc_cranedriver, phys_magnet) lifts the buggy ashore; 18 item_dynamic_resupply; 9 caged tubes (prison_flourescentlight002b, light_spot 209 228 228 at 166, cone 70) light the post; the sea is 1344 across at the dock; 22 cables span a median 1764 with slack 105; poles 1773 apart along the road. Ours: no vehicles on our maps.
+- d2_coast_03 (New Little Odessa): 14 rebels, 35 choreographed scenes, 150 props round the village houses (bunks, mess tables and benches, a radio room of four receivers and a cart of two, a generator trailer, six floodlamps, eleven explosive drums); three rebels come back 10 s after dying from makers under the house; a lookout in a tower sounds a hand siren; the gunship switches among three loops every 7 to 12 s; 11 RPG rounds lie about and the ammo rebel carries more; four thumpers reach 1000. Ours: the Resistance base has no lookout, no siren and no comebacks.
+- d2_coast_04: the Combine-held dock: 18 soldiers in four squads named for what they hold (dock, crane, warehouse 1 and 2), a second crane, 49 cables (median span 1052, slack 102), poles 1022 apart, 8 antlion repellent points (radius 200 to 576) over the docks and roads; the walls are cheap metal (metalwall014a, 032a, 070e). Ours: our Combine posts are props on our streets.
+- d2_coast_05: no light entity at all (sun only, 400); the road runs 384 wide on gravel (blendgrassgravel001b) under cliffs (cliffface001a); 21 soldiers in a gas station, a ruined house and a rock pile; 8 rollermines; 12 env_explosion and an APC that blows up in steps; 24 func_breakable, most of them window panes. Ours: our streets are paved and lit.
+- d2_coast_07 and 08: the bridge: a truss about 1150 wide carries the road deck at 1856 over the sea at 0; under it, catwalks (metalfloor003a) at 1240 to 1792; 9 zones along the deck keep the gunship beside the player; force fields of strips 32 apart with a solid clip block the far end; razor trains (train003) cross overhead; the village at the landward end has 16 house window pairs. Ours: no bridge.
+- d2_coast_09: shacks and yards on the shore: wood_fence01a 128 apart (23 of them), cinder blocks, poplars 659 apart; 9 zombies and 3 fast zombies in the houses; rollermines dropped by a dropship (roller_dropship, 5 at a time). Ours: our yards are walled, not fenced in boards.
+- d2_coast_10 (the lighthouse): the tower is one spiral stair model 128 high stacked ten times, each turned 180 from the last (z 836 to 1988), the lamp at 2108; round it a farm of wooden houses (woodwall030b windows, a fireplace, a stove, beds) and a barn for the car; 4 dropships and a gunship; rebels come back every 15 s; three rebels' shout counters (to 6 each) call for rockets. Ours: no tower.
+- d2_coast_11: the vortigaunts' camp on the beach (7 mattresses, crates, a generator trailer, a cooling tank, 3 vortigaunts) past a sand crossing done on rocks and boards: stepping on sand (env_player_surface_trigger, material 78) wakes antlions 1000 round the player, 5 alive; after the bugbait, antlions turn neutral (env_global antlion_allied). Ours: nothing on sand.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| K1 | `valve_coast/01_ts06_canal_start_cut.png` | d1_trainstation_06, the start of the canal at the map's end, from the south-west, cut at -250 | The canal does not open at once: it starts as a closed concrete tunnel about 256 wide that turns twice, its floor lit by lamps along one wall, before it comes out into the open canal (d1_canals_01). The frame is mostly empty: a brush far below the tunnel widens it (a known viewer fault). Ours: our canal pieces start in the open. | valve-canal-varies, valve-canal-culverts |
+| K2 | `valve_coast/02_coast01_dock_outpost_cut.png` | d2_coast_01, the dock post, the busiest knot of props (20 near -7456 -10448), from the south-west, cut at 1156 | A Resistance dock post: a concrete block with a wooden deck on the water, lit by nine caged tubes and bare bulbs (17 spots and 8 point lights in this box), crates and drums along its walls, the canal map on a wall, a speaker cluster outside; 18 resupply points round the map. | valve-rebel-hideout, valve-fixture-lights, valve-supplies-by-need |
+| K3 | `valve_coast/03_coast03_odessa_house_cut.png` | d2_coast_03 (New Little Odessa), Odessa's house, the busiest knot of props (47 near 8761 4299), from the south-west, cut at 486 | The village's main house as a Resistance post: a radio room (four receivers, two on a cart, a radio, an antenna on the roof, a control desk, five storage closets), a mess of cafeteria tables and benches, a couch, six floodlamps on stands outside; the three rebels who come back are made under this house. | valve-rebel-hideout, valve-base-quarters, valve-village-respawn |
+| K4 | `valve_coast/04_coast03_odessa_approach.png` | d2_coast_03, the road into the village, eye 7776 2688 320 looking north-west (yaw 135) | How the road leads to the village: a line of wooden poles with their wires, trees and explosive drums by the way, the houses ahead; the gate opens only for the car, and the gatekeeper says one of three lines if you come on foot. | valve-overhead-cables, valve-aircraft-loops, valve-lookout-siren |
+| K5 | `valve_coast/05_coast04_combine_dock.png` | d2_coast_04, the whole map from the south-west | The Combine-held dock on a cove: warehouses of cheap metal walls, a crane and a long pier, held by four squads named for what they hold (dock, crane, warehouse 1 and 2); the cliffs round it are displacements with rock cluster props. | valve-squad-guns, combine-kit |
+| K6 | `valve_coast/06_coast05_cliff_road.png` | d2_coast_05, the road under the cliffs, eye -4615 -4194 1152 looking south-east (yaw 315) | The long road: a gravel roadway about 384 wide between a cliff and the sea, wooden poles and wires along one side, a wreck at the verge; the poles and the wires are what lead the eye along it. | valve-overhead-cables, valve-terrain-into-brush |
+| K7 | `valve_coast/07_coast07_bridge_village.png` | d2_coast_07, the village at the bridge's landward end, eye 2400 6378 1600 looking west (yaw 180) | A shore village: low plaster and wooden houses either side of a grass street, every window a frame with its bars twin, wires strung from house to house and to the poles. | valve-overhead-cables, glass-variety |
+| K8 | `valve_coast/08_coast08_bridge.png` | d2_coast_08, the whole map from the south-west | The bridge: a truss about 1150 wide and 9000 long carrying the road deck at 1856 over the sea, crossed underneath on catwalks at 1240 to 1792; the Combine's control house and its force field at the far end; nine zones along it keep the gunship beside the player. | valve-aircraft-loops, valve-forcefield |
+| K9 | `valve_coast/09_coast09_fenced_yards.png` | d2_coast_09, the shacks' yards, eye 376 -6491 -695 looking north-west (yaw 135) | Yards fenced in boards: board fence props end to end about 128 apart, a cinder block or two, a pole and its wires over the yard; the shacks behind. | valve-prop-groups |
+| K10 | `valve_coast/10_coast10_lighthouse.png` | d2_coast_10, the lighthouse, the busiest knot of props (49 near 8191 1396), from the south-west | The lighthouse the Resistance holds: a round tower whose stair is one spiral model 128 high stacked ten times, each turned 180, handrails all round its gallery, the lamp at the top; a radio and the canal map inside the keeper's house at its foot. | valve-rebel-hideout, valve-npc-dropship |
+| K11 | `valve_coast/11_coast10_lighthouse_approach.png` | d2_coast_10, the farm below the lighthouse, eye 3603 593 984 looking east (yaw 0) | The approach: wooden houses, crates and poles, and the lighthouse standing over them as the landmark players head for. | valve-village-respawn, valve-npc-dropship |
+| K12 | `valve_coast/12_coast11_camp_cut.png` | d2_coast_11, the vortigaunts' camp, the busiest knot of props (22 near 2642 9604), from the south-west, cut at 374 | A camp on the beach: seven mattresses on the floor, crates, bottles and takeout cartons, a generator trailer and a cooling tank, two vortigaunts and two rebels; it is the end of the sand crossing. | valve-base-at-work, valve-base-quarters |
+| K13 | `valve_coast/13_coast11_sand_planks.png` | d2_coast_11, the clifftop where the sand begins, eye 1834 -6598 1565 looking south-east (yaw 315) | The way over the sand: rocks and boards laid as stepping stones between the cliffs; stepping off them onto sand wakes the antlions. | valve-antlion-pool |
+
 ## Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py) (`_dev/reference/valve_d1_town_03/`)
 
 Valve's own d1_town_03 (Ravenholm, the town) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo. It is the reference for the infestation quarter still to be built (the zombie-overrun quarter behind the sealed gate, map_raven.py), not for the Resistance town.
@@ -996,6 +1026,8 @@ Use several of the owner's glass materials, each laid exactly as their map lays 
 - **Checked by:** review
 - **Tags:** facades, owner
 
+- **See:** `valve_coast/07_coast07_bridge_village.png`
+
 ### Cut corners and a broken skyline (`skyline-corners`)
 
 Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines get chimneys, aerials, dishes, the odd pitched roof; facades get balconies, shutters, shopfronts with signs and awnings.
@@ -1056,7 +1088,7 @@ Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses 
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_c17/02_checkpoint_iso.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/18_combine_post_iso.png`, `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_c17/28_nexus_courtyard_eye.png`, `valve_c17/29_combine_barricade_row_cut.png`, `valve_c17/30_nexus_roof_post_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_prison/03_prison01_barred_block.png`, `valve_prison/13_prison06_interrogation.png`, `valve_prison/14_prison06_depot_lean_cut.png`, `valve_prison/15_prison07_post_and_pods_cut.png`, `valve_prison/17_prison08_teleport_hall.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_c17/02_checkpoint_iso.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/18_combine_post_iso.png`, `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_c17/28_nexus_courtyard_eye.png`, `valve_c17/29_combine_barricade_row_cut.png`, `valve_c17/30_nexus_roof_post_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_coast/05_coast04_combine_dock.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_prison/03_prison01_barred_block.png`, `valve_prison/13_prison06_interrogation.png`, `valve_prison/14_prison06_depot_lean_cut.png`, `valve_prison/15_prison07_post_and_pods_cut.png`, `valve_prison/17_prison08_teleport_hall.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -1294,11 +1326,11 @@ Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 
 Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 100, width 1 to 2; poles 700 to 1400 apart, or utilitypolemount01a on the walls.
 
 - **Why:** Rope spans median 734 (d1_trainstation_02, 25 spans), 736 (04, 46), 914 (Ravenholm, 32 spans from 41 rope entities), slack 100 in all; utilitypole02b 693 and 1411 apart, utilitypole01b 887 in Ravenholm; utilitypolemount01a 8 in d1_trainstation_04. Pictures R3, T2.4, T4.4.
-- **How:** keyframe_rope and move_rope from pole to pole and pole to wall mount, never ending in the air (no-floating-ropes). Rope settings in all 22 maps (781 rope entities): RopeMaterial cable/cable 98% (cable/rope 17), Subdiv 2 (67%) or 5; spans under 128 slack 50 and width 1 (wires between substation boxes, connectors, swings, pulleys), 128 to 1024 slack 100 and width 1 to 2, over 1024 (power towers) slack 120 and width 3; ends pole to pole 276, box to box 24, box to pole 18. Our m.rope defaults to slack 40 and our scratch town had slack 0 to 2.
+- **How:** keyframe_rope and move_rope from pole to pole and pole to wall mount, never ending in the air (no-floating-ropes). Rope settings in all 22 maps (781 rope entities): RopeMaterial cable/cable 98% (cable/rope 17), Subdiv 2 (67%) or 5; spans under 128 slack 50 and width 1 (wires between substation boxes, connectors, swings, pulleys), 128 to 1024 slack 100 and width 1 to 2, over 1024 (power towers) slack 120 and width 3; ends pole to pole 276, box to box 24, box to pole 18. Our m.rope defaults to slack 40 and our scratch town had slack 0 to 2. The coast road's poles (utilitypole01b) stand 1022 to 1788 apart (nearest of the same model in d2_coast_01, 04, 09, 10) with spans of median 1052 to 1764 and slack 100 to 105, width 1: twice the city's span with the same sag.
 - **Checked by:** no-floating-ropes check; review
 - **Tags:** streets, props, valve
 
-- **See:** `valve_c17/04_street_wires_eye.png`, `valve_c17/36_rubble_wired_street_eye.png`, `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`, `valve_ep1c17/05_c17_01_leaning_poles.png`
+- **See:** `valve_c17/04_street_wires_eye.png`, `valve_c17/36_rubble_wired_street_eye.png`, `valve_coast/04_coast03_odessa_approach.png`, `valve_coast/06_coast05_cliff_road.png`, `valve_coast/07_coast07_bridge_village.png`, `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`, `valve_ep1c17/05_c17_01_leaning_poles.png`
 
 ### The Combine is one cold metal; the old city is banded and warm (`valve-combine-cold`)
 
@@ -1437,7 +1469,7 @@ Culverts off a canal: box culverts 512 wide by 224 to 256 high (our gate is alre
 - **Checked by:** review
 - **Tags:** canal, valve, geometry
 
-- **See:** `valve_canals/06_culverts_section.png`, `valve_canals/09_airboat_canal_iso.png`, `valve_canals/10_city_canal_eye.png`, `valve_canals/12_culvert_inside_eye.png`
+- **See:** `valve_canals/06_culverts_section.png`, `valve_canals/09_airboat_canal_iso.png`, `valve_canals/10_city_canal_eye.png`, `valve_canals/12_culvert_inside_eye.png`, `valve_coast/01_ts06_canal_start_cut.png`
 
 ### Vary the canal between its ends (`valve-canal-varies`)
 
@@ -1448,7 +1480,7 @@ Valve's canal changes its cross-section from stretch to stretch: 512 (city) and 
 - **Checked by:** map_modules_check.py (the ends still match), then review
 - **Tags:** canal, valve, layout
 
-- **See:** `valve_canals/02_city_canal_walk_section.png`, `valve_canals/03_airboat_canal_section.png`, `valve_canals/04_battered_canal_section.png`, `valve_canals/07_city_canal_iso.png`, `valve_canals/09_airboat_canal_iso.png`, `valve_canals/11_airboat_canal_eye.png`, `valve_canals/14_bridge_eye.png`
+- **See:** `valve_canals/02_city_canal_walk_section.png`, `valve_canals/03_airboat_canal_section.png`, `valve_canals/04_battered_canal_section.png`, `valve_canals/07_city_canal_iso.png`, `valve_canals/09_airboat_canal_iso.png`, `valve_canals/11_airboat_canal_eye.png`, `valve_canals/14_bridge_eye.png`, `valve_coast/01_ts06_canal_start_cut.png`
 
 ### A lock is Valve's lock gates in a recess (`valve-canal-locks`)
 
@@ -1660,6 +1692,8 @@ Place clutter as groups of 2 or 3 of one kind, sometimes with one partner thing,
 - **Checked by:** review (the groups show in the viewer); proposed: map_lint notes a module whose loose props are all more than 96 from each other
 - **Tags:** props, valve
 
+- **See:** `valve_coast/09_coast09_fenced_yards.png`
+
 ### Stacks are never neat columns (`valve-stacks`)
 
 Stack things the way people drop them. 17% of Valve's crates stand on another crate, the top one turned (median 7 degrees, a quarter over 30) and shifted (median 8, a quarter over 20) from the one under it; tyres lie flat (76%) in columns of 2 to 6 (44% stacked); physics props stand on another prop 14% of the time, statics 4%. Small things stand on furniture: TVs on shelves (9), papers and binders on desks, pots on the stove (7 to 12 up, 13 to 21 from its middle).
@@ -1747,7 +1781,7 @@ Light a fixture as Valve does that model: a light_spot a few units under the mod
 - **Checked by:** map_lint.py offlamp (extend, proposed): a lit model from the table with no light_spot under it.
 - **Tags:** valve, lighting
 
-- **See:** `valve_c17/20_warehouse_hall_eye.png`, `valve_ep1c17/15_c17_06_train_shed.png`, `valve_prison/06_prison02_upper_walk.png`
+- **See:** `valve_c17/20_warehouse_hall_eye.png`, `valve_coast/02_coast01_dock_outpost_cut.png`, `valve_ep1c17/15_c17_06_train_shed.png`, `valve_prison/06_prison02_upper_walk.png`
 
 ### Falloff chosen by the light's job (`valve-falloff-by-job`)
 
@@ -1807,7 +1841,7 @@ A displacement that meets a path, kerb or wall goes past the edge: it dips under
 - **Checked by:** map_lint.py (proposed): a displacement edge lying on a brush edge at the same height; a blend material with no alpha.
 - **Tags:** valve, geometry, canal
 
-- **See:** `valve_ravenholm/10_town02a_graveyard_cut.png`
+- **See:** `valve_coast/06_coast05_cliff_road.png`, `valve_ravenholm/10_town02a_graveyard_cut.png`
 
 ### Decals for small marks, overlays for big ones, in clusters (`valve-decal-or-overlay`)
 
@@ -2060,9 +2094,11 @@ Over a quarter the Combine holds, a dropship or gunship now and then flies a fix
 A dropship carrying troops is spawned unseen, flies its route, lands from a waypoint, and the moment it has dropped them their assault starts (gathered at once, the push about 10 s later, a gate opening for them with its path link); the ship leaves by a different route and is removed out of sight. Our Overwatch drops exist (city-administration.md): differences from them need the owner's yes.
 
 - **Why:** 13 npc_combinedropship in 9 City 17 maps (crate 1 soldiers 7, none 4, strider 2), all from makers: d3_c17_11 dropship_maker (spawned 30 s after the gunship's OnDeath) sends FlyToSpecificTrackViaPath dropship_path8; dropship_path8 OnPass LandTakeCrate 4; dropship OnFinishedDropoff: FlyToSpecificTrackViaPath dropship9 @0 (dropship8 OnPass Kill), dropship_soldiers_assault Activate @0 and BeginAssault @10.5, roof_gate SetAnimation open @10, roof_gate_nodelink TurnOn @10.1, sounds @10 and @12. Its 4 rally points play rallysequence 'cower' while waiting. d3_c17_07 dropships land from path_track OnPass LandLeaveCrate.
-- **How:** Gamemode: after an Overwatch drop, give the soldiers their target at once (each his own spot, valve-npc-assault-lanes) and send the ship off along another path. Map modules: a landing zone gets an arrival path, a departure path and the troops' rally spots.
+- **How:** Gamemode: after an Overwatch drop, give the soldiers their target at once (each his own spot, valve-npc-assault-lanes) and send the ship off along another path. Map modules: a landing zone gets an arrival path, a departure path and the troops' rally spots. d2_coast_10 (the lighthouse): four dropships from npc_template_makers bring the waves; one whose crate is shot down before it lands (OnCrateShotDownBeforeDropoff) leaves at once and is counted; 5 to 10 s after each one appears the rebels' shout conditions are enabled (they call for rockets); the rebels come back every 15 s until the gunship arrives.
 - **Checked by:** review
 - **Tags:** npc, valve, combine, logic
+
+- **See:** `valve_coast/10_coast10_lighthouse.png`, `valve_coast/11_coast10_lighthouse_approach.png`
 
 ### Combine tripwires wake turrets, and re-arm when the room is clear (`valve-tripwire-turrets`)
 
@@ -2528,7 +2564,7 @@ Build a field from two parts: the shield you see (never solid) and a clip that d
 - **Checked by:** map_lint 'wire': a combineshield brush entity that is solid (Solidity not 1), or one with no clip twin in its box
 - **Tags:** valve, logic, combine, sound, doors
 
-- **See:** `valve_citadel/06_c03_ball_room_cut.png`, `valve_prison/17_prison08_teleport_hall.png`
+- **See:** `valve_citadel/06_c03_ball_room_cut.png`, `valve_coast/08_coast08_bridge.png`, `valve_prison/17_prison08_teleport_hall.png`
 
 ### A door forced from outside is heard long before it gives: voices, blows, then beeps that quicken (`valve-breach-buildup`)
 
@@ -2679,7 +2715,7 @@ Fill the base with work, each person on his own spot with the tools in his hands
 - **Checked by:** review
 - **Tags:** valve, npc, props, gameplay
 
-- **See:** `valve_eli/03_eli01_kitchen_floor.png`
+- **See:** `valve_coast/12_coast11_camp_cut.png`, `valve_eli/03_eli01_kitchen_floor.png`
 
 ### Give players a moment to look round, and let the person there answer what they look at (`valve-look-and-answer`)
 
@@ -2732,7 +2768,7 @@ A base's dormitory is a row of prison bed frames, some side by side 52 apart, ea
 - **Checked by:** review
 - **Tags:** valve, interiors, props
 
-- **See:** `valve_eli/03_eli01_kitchen_floor.png`
+- **See:** `valve_coast/03_coast03_odessa_house_cut.png`, `valve_coast/12_coast11_camp_cut.png`, `valve_eli/03_eli01_kitchen_floor.png`
 
 ### A hospital ward: the bed off the wall with its kit round it, a washroom to each ward (`valve-hospital-ward`)
 
@@ -2847,11 +2883,11 @@ Freight docks stand 96 over the gravel track bed, reached by steep metal steps; 
 A Resistance hideout in a block of flats is shown by a few things: its door is the slotted door (a door with a sliding peephole); tall barricade pieces lean back 30 degrees against the windows from inside, 40 to 46 off the wall, and boards are nailed across the others; a radio corner on a shelf (a radio, a hard drive, a receiver cart); the flat lived in (couch, several chairs, a TV, fridge, sink, stove and a pot, cupboards, a bed frame tipped); warm dome lights and bulbs; a hoist or a crank as the way up. Ask the owner first before any of our hideouts' doors change.
 
 - **Why:** ep1_c17_02b (21 November), the flats round x 1200, y 2000 (Barney and five citizens): door03_slotted_left (prop_door_rotating) with door03_slot (prop_dynamic at the same origin) twice (hideout_slit_door_1, barney_door_2); barricade_tall01a twice and tall02a at pitch 30, 39 to 46 off the wall, 52 up; barricade_short03a in a doorway; wood_board06a roll 105, flags 328, 41 to 61 out; citizenradio (prop_dynamic_override) 13 off the wall, harddrive02 12 off, reciever_cart 16 off; furniturecouch001a, chair02a 5, tv_monitor01, furniturefridge001a, sinkkitchen01a, kitchen_stove001a, metalpot001a, furniturecupboard001a 2, prison_bedframe001a pitch -7 roll 17; light_domelight02_on 5, lightbulb01a 3; pulleywheels_large01 with two w_crowbar wedged (pitch -71).
-- **How:** A hideout kit in map_town (props only): the radio corner, leaned barricades at windows (pitch 30, back 40 off), boards on others, the living props; the slotted door only where the owner says (it is a door: real-doors).
+- **How:** A hideout kit in map_town (props only): the radio corner, leaned barricades at windows (pitch 30, back 40 off), boards on others, the living props; the slotted door only where the owner says (it is a door: real-doors). The coast's Resistance posts have the same radio corner, bigger: New Little Odessa's house (d2_coast_03) has four receivers, two more on a cart, a radio, an antenna, a control desk and five storage closets, with six floodlamps outside; the lighthouse (d2_coast_10) two receivers, a radio and the canal map, which also hangs in d2_coast_01's dock post.
 - **Checked by:** proposed: map_lint notes a barricade prop pitched over 20 that is more than 64 from a wall (a lean needs something to lean on)
 - **Tags:** valve, props, interiors, story
 
-- **See:** `valve_ep1c17/11_c17_02b_hideout_cut.png`, `valve_ep1c17/12_c17_02b_hideout_radio.png`
+- **See:** `valve_coast/02_coast01_dock_outpost_cut.png`, `valve_coast/03_coast03_odessa_house_cut.png`, `valve_coast/10_coast10_lighthouse.png`, `valve_ep1c17/11_c17_02b_hideout_cut.png`, `valve_ep1c17/12_c17_02b_hideout_radio.png`
 
 ### The Combine's walls through the old city run in straight lengths, each turned a little from the last, battered on one face (`valve-combine-wall-chain`)
 
@@ -2937,6 +2973,8 @@ In a long fight through a city, most supply boxes and loose kits are not set: ea
 - **How:** Gamemode: a clinic cabinet, a Resistance cache or a supply drop could hand whoever opens it what they lack most (a medkit to the hurt, ammo for the gun in their hands), inside the owner's limits (docs/features/ammo-limits.md), instead of a fixed list.
 - **Checked by:** review
 - **Tags:** valve, gameplay, props
+
+- **See:** `valve_coast/02_coast01_dock_outpost_cut.png`
 
 ### A friendly marksman on the roofs moves to cover whichever street the player is in (`valve-rooftop-cover`)
 
@@ -3146,9 +3184,11 @@ A fight ends cleanly: when its boss or its last objective falls, the attackers s
 On open ground with antlions, keep only one or two out at a time, drawn from a small pool (3 to 5) that refills every 20 to 30 s, coming up at a random burrow. Killing them all buys a breather; lingering brings them back. Thumpers (512 reach) stand about 1400 to 1700 apart as safe islands to run between, and the way runs from one to the next. Our nest's makers have no end while its door is open: a pool would change that, so ask the owner first.
 
 - **Why:** ep2_outland_05: npc_antlion_template_maker antlion_maker_caves (maxlivechildren 1, pool_start 5, pool_max 5, pool_regen_amount 5, pool_regen_time 30, spawnflags 1040: random spawn node and fade corpse, frequency -1), antlion_maker_sand (2 alive, pool 3, refilled every 20 s), antlion_worker_maker_caves and _sand (1 alive, pool 2, 30 and 20 s). Three prop_thumper (combinethumper002, effectradius 512) at -80 1216, -752 2464, -80 4000: 1420 and 1680 apart. 35 burrow hints (hinttype 400) in the map. Valve's wiki: pool_max 0 turns the pool off; AddToPool, SetMaxPool, SetPoolRegenAmount and SetPoolRegenTime change it while running.
-- **How:** Map: lc_nest_maker could carry pool_max 5, pool_regen_amount 5, pool_regen_time 30 (ask first). Gamemode: if the gamemode sends the nest's antlions itself, count a pool per nest that refills on a timer. Forest pieces: thumpers 512 reach, about 1400 to 1700 apart, if the owner wants antlions loose in a forest.
+- **How:** Map: lc_nest_maker could carry pool_max 5, pool_regen_amount 5, pool_regen_time 30 (ask first). Gamemode: if the gamemode sends the nest's antlions itself, count a pool per nest that refills on a timer. Forest pieces: thumpers 512 reach, about 1400 to 1700 apart, if the owner wants antlions loose in a forest. HL2's coast (d2_coast_01, 03, 04): an env_player_surface_trigger (gamematerial 78, sand; Valve's wiki says it is meant for single player) Enables the antlion maker when the player steps on sand and Disables it 0 to 1 s after he steps off; the maker spawns round the player with two settings, on foot (pool regen 3 every 20 s, 4 alive, one every 0.2 s, radius 600) and in the car (regen 1 every 1 s, 3 alive, radius 700); point_antlion_repellant (radius 200 to 700) keep them off rocks, roads and docks; thumpers there reach 1000; d2_coast_11's sand crossing spawns 1000 round the player, 5 alive, one every 0.35 s.
 - **Checked by:** review
 - **Tags:** valve, npc, logic, gameplay
+
+- **See:** `valve_coast/13_coast11_sand_planks.png`
 
 ### A creature busy with its own thing until someone disturbs it: feeding, wandering to a lure, waiting to be seen (`valve-busy-until-disturbed`)
 
@@ -3437,4 +3477,66 @@ Stand a Resistance radio mast as Episode Two does: the mast model (props_radiost
 - **How:** If the owner wants a radio mast by a Resistance base: a helper that places the mast, three anchors and nine stays from one point and the ground's height at each anchor.
 - **Checked by:** proposed: none
 - **Tags:** valve, props, geometry
+
+### A held village keeps its people: each one is back 10 to 15 s after he falls, in the same job, where nobody is looking (`valve-village-respawn`)
+
+Where the Resistance holds a place and a fight goes on round it, its people do not run out: when one dies, the same person (the same job and kit: the man who hands out rockets, the medic) comes back 10 to 15 s later from a spot indoors close by, never while a player can see that spot, and his body fades. The few the story needs never die. When the fight is over the comebacks stop. Changing how the Resistance base's people die and come back: ask the owner first.
+
+- **Why:** d2_coast_03 (New Little Odessa): citizen_b_regular_respawn, citizen_a_ammo_respawn (ammosupply RPG_Round) and citizen_a_medic_respawn each OnDeath > their own npc_template_maker Enable @10; each maker sits under the house (radius 256, maxnpccount 1, maxlivechildren 1, spawnflags 176: fade corpse, infinite children, don't spawn while visible) and Disables itself OnSpawnNPC. The gatekeeper is critical: his death ends the game (killed_critical_npc, GAMEOVER_ALLY). d2_coast_10 (the lighthouse): citizen_spawner_1 and 2 spawnfrequency 15, Killed when the gunship comes (gunship1_spawner OnSpawnNPC). Valve's wiki (vdc.py --card npc_template_maker): the don't-spawn-while-visible flag is broken in multiplayer.
+- **How:** Gamemode (ask first): a Resistance base NPC who dies is made again after about 12 s at a spot inside, picked where no player has a line of sight (our own check in Lua: the maker's flag does not work in multiplayer), with the same name and job; no comebacks once the raid is over. Map modules: a hidden spawn spot inside each base room.
+- **Checked by:** review
+- **Tags:** valve, npc, gameplay, multiplayer
+
+- **See:** `valve_coast/03_coast03_odessa_house_cut.png`, `valve_coast/11_coast10_lighthouse_approach.png`
+
+### A village's lookout sits high with a hand siren: he sounds it, the attacker kills him first, and the siren dies with a squeal (`valve-lookout-siren`)
+
+A place the Resistance holds has one lookout up high (a tower or a roof, about 300 over the ground) who sits watching. When the attack comes he sounds a hand siren heard across the place (about 1250 round) that winds up over 10 s and down over 50; the attacker goes for him first; when he falls the siren stops with a squeal and the tower's loose things come down. Players learn the attack has begun from a sound and a man, not a line of text. A lookout or a siren at our base: ask the owner first.
+
+- **Why:** d2_coast_03: citizen_tower_guy (point_template at 6996 5013 708; the village floor is about 300 to 400) sits on an info_node_hint (hinttype 12, a look-about busy scene). gunship_arrival_relay > radio_siren > ag_siren PlaySound (two ambient_generic, coast.siren_citizen and coast.bunker_siren1, radius 1250, spinup 10, spindown 50); ai_relationship gunship_vs_tower_guy_hate (rank 999999) makes him the gunship's first target; his OnDeath > radio_sirensqueal (coast.siren_squeal) and ag_siren StopSound; gunship_arrival_relay2 > tower_props EnableMotion. The siren is stopped 60 s on in any case (ag_siren StopSound @60).
+- **How:** Map modules: a lookout seat (a hint, a siren prop and its sound) on the Resistance base's roof. Gamemode (ask first): a raid on the base starts with the siren from the lookout's spot, and his death stops it.
+- **Checked by:** review
+- **Tags:** valve, npc, sound, gameplay
+
+- **See:** `valve_coast/04_coast03_odessa_approach.png`
+
+### An aircraft attacking a place circles it on a few loops, switching at random every 7 to 12 s, and keeps pace with players along a long way (`valve-aircraft-loops`)
+
+A gunship attacking a village does not hover in one spot: it flies one of three loops round the place and picks another at random every 7 to 12 s, so cover that works now does not work for long. It goes for the lookout first and turns on the player once he hurts it. Along a long way (a bridge) it keeps pace with the player: zones along the way, 450 to 1900 apart, each send it to the stretch of path beside that zone and wake only the zones next to it. When it falls: music, the siren stops, people come out and talk, a save. NPC aircraft are new to our city: ask the owner first.
+
+- **Why:** d2_coast_03: gunship1_pathtimer (logic_timer, random 7 to 12 s) > gunship1_randompath (logic_case PickRandom) > gunship1 SetTrack path_village_a_1, b_1 or c_1; gunship1 OnFirstDamage > gunship_vs_player_hate (rank 3); citizens_vs_gunship (hate) starts active; OnDeath > gunshipdown_music @3, ag_siren StopSound, the follow goals Killed, ss_post* BeginSequence @2, autosave @7. d2_coast_08: gunship_trigger_1 to 9 along the bridge deck (y -2701 to 4544; gaps 669, 1328, 448, 1920, 448, 1152, 592, 688) each SetTrack path_a_N and Enable only their neighbours. d2_coast_10: the gunship and four dropships come from npc_template_makers.
+- **How:** Gamemode (ask first): if the owner wants a Combine aircraft over a raid, give it three loops over the place with a random switch every 7 to 12 s, turning on players who shoot it. Map modules: three path loops over the Resistance base and over the plaza.
+- **Checked by:** review
+- **Tags:** valve, npc, combine, gameplay
+
+- **See:** `valve_coast/04_coast03_odessa_approach.png`, `valve_coast/08_coast08_bridge.png`
+
+### A lambda on a wall marks a cache: one a map, the supplies a few steps from it (`valve-lambda-cache`)
+
+Along a long road the Resistance marks its caches with the lambda: one mark a map, and 25 to 250 from it (median 60) a cache of 2 to 9 things within 400: crates to break, a medkit, batteries, grenades, mostly on the ground under the mark. Players learn that the orange lambda means help close by and look round it. Our way marks point the way to Resistance ground; a cache by a mark is new: ask the owner first.
+
+- **Why:** infodecal or info_overlay lambdaspray in d2_coast_01, 03, 04, 05, 07, 09 and 11 (one each; none in 08, 10 or d1_trainstation_06). Nearest supply to the mark 58, 153, 24, 246, 30, 26 and 92 (median 58); within 400: item_item_crate 13, item_battery 4, item_ammo_smg1_grenade 4, item_healthkit 3, item_dynamic_resupply 2. The supply sits a median 20 below the mark.
+- **How:** Editor (ask first): a way mark could carry an optional stash beside it (a crate or a small box) that refills slowly. Map modules: a lambda and a crate together in the Resistance's back ways.
+- **Checked by:** review
+- **Tags:** valve, props, gameplay
+
+### A Combine squad mixes its guns: about half SMG, a quarter AR2, a fifth shotgun, and is named for the place it holds (`valve-squad-guns`)
+
+Soldiers are not armed alike: across a fight about 56% carry the SMG, 25% the AR2 and 19% the shotgun, and most squads of three or more carry at least two kinds. Each squad is named for the place it holds (the dock, the crane, warehouse 1, the gas station, the ruined house) and is 2 to 8 strong; half carry 5 grenades and half never run out. Changing what our Combine NPCs carry: ask the owner first. It would change what our Combine NPCs carry: ask the owner first.
+
+- **Why:** 100 npc_combine_s in d2_coast_03, 04, 05, 07, 08, 09 and 10 (all combine_soldier.mdl, skin 0): additionalequipment smg1 56, ar2 25, shotgun 19; numgrenades 5 on 51, 999999 on 48. 23 squads, 1 to 16 strong (median 3); 12 carry all three guns, 16 an AR2, 14 a shotgun. Names: dock_squad, crane_squad, warehouse1_squad, warehouse2_squad (d2_coast_04); gas_station_squad, ruined_house_gang, rockpile_gang (05); bridge_squad_1, bridgevillage_soldier_squad (07).
+- **How:** Gamemode (ask first): when the city spawns Combine NPCs for a raid or a post, deal guns in that mix within each squad.
+- **Checked by:** a test can count the guns in a spawned squad
+- **Tags:** valve, npc, combine
+
+- **See:** `valve_coast/05_coast04_combine_dock.png`
+
+### A train at a crossing: two red lamps blink in turn, a bell rings while it passes, and the train carries its own sounds and hurts whoever stands on the line (`valve-level-crossing`)
+
+Where a line crosses a way people walk, a passing train is announced: two red lamps side by side blink in turn every half second and a bell rings for as long as the train passes (25 s), then both stop; the train carries its own idle, horn and brake sounds, and a hurt brush rides with it (20 a touch) so the line is no place to stand. Blinking lamps cross the owner's rule against flickering lights, and trains belong to Civil Intake's arrivals: ask the owner first.
+
+- **Why:** d1_trainstation_06: first_train_rl (logic_relay) > first_train_1 to 4 SetSpeed 0.7; sprite_crossing_1 ShowSprite and sprite_crossing_2 HideSprite @1; timer_crossing_lights (refire 0.5) Enable @1 > both ToggleSprite; train_bell (train_crossing_bell, radius 2174) PlaySound @1, StopSound @25; the timer Disable @25, both sprites HideSprite @26. The two env_sprite (glow01, 255 0 0, scale 1) stand 13 apart. ambient_generic train_idle, train_horn_1 and train_brake have sourceentityname first_train_1 (radius 1250); first_train_hurtbrushes (trigger_hurt, damagecap 20) is parented to the train. 54 path_track OnPass > SetSpeed lines run the yard's trains.
+- **How:** Map modules (ask first): a crossing piece by the station (two lamps, a bell, the relay), fired when Civil Intake's train comes in.
+- **Checked by:** review
+- **Tags:** valve, sound, logic, props
 

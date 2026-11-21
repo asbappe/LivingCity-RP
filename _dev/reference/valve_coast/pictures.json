@@ -1,7 +1,6 @@
 {
  "title": "Valve's coast (d1_trainstation_06, d2_coast_01 to 11)",
- "draft": true,
- "about": "The rest of Half-Life 2's way out of the city: the train yard and the start of the canal (d1_trainstation_06), then Highway 17 and Sandtraps: the dock post where the buggy is lifted ashore, New Little Odessa (a Resistance village fighting off a gunship), the Combine-held dock and warehouses, the cliff road and its ruined houses, the great bridge and the village under it, the shacks and yards on the shore, the lighthouse the Resistance holds against dropships, and the vortigaunts' camp on the beach past the sand. d2_coast_12 is its own set (valve_d2_coast_12). Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the study in valve_coast/wip/notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs). Most of the coast is displacement ground and sea, so most eye views are of grass and sky: the cut-aways teach more.",
+ "about": "The rest of Half-Life 2's way out of the city: the train yard and the start of the canal (d1_trainstation_06), then Highway 17 and Sandtraps: the dock post where the buggy is lifted ashore, New Little Odessa (a Resistance village fighting off a gunship), the Combine-held dock and warehouses, the cliff road and its ruined houses, the great bridge and the village under it, the shacks and yards on the shore, the lighthouse the Resistance holds against dropships, and the vortigaunts' camp on the beach past the sand. d2_coast_12 is its own set (valve_d2_coast_12). Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the study in valve_coast/notes/notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs). Most of the coast is displacement ground and sea, so most eye views are of grass and sky: the cut-aways teach more.",
  "numbers": [
   "d1_trainstation_06: 240 props in play, 69% of AI nodes outdoors; 4 trains on path_track (54 OnPass > SetSpeed lines) and a level crossing (two red lamps blinking every 0.5 s, a bell for 25 s); Combine force fields across the tracks (five humming pairs at two places); 8 metrocops and 2 scanners chase the player while cop voices placed round the yard (radius 5000) call him out. The canal starts as a concrete tunnel 256 wide under a roof 352 up, with ledges 116 wide at 224 up. Ours: our canal pieces start in the open.",
   "d2_coast_01: the dock post: a crane (prop_vehicle_crane, npc_cranedriver, phys_magnet) lifts the buggy ashore; 18 item_dynamic_resupply; 9 caged tubes (prison_flourescentlight002b, light_spot 209 228 228 at 166, cone 70) light the post; the sea is 1344 across at the dock; 22 cables span a median 1764 with slack 105; poles 1773 apart along the road. Ours: no vehicles on our maps.",
@@ -19,104 +18,240 @@
    "file": "01_ts06_canal_start_cut.png",
    "where": "d1_trainstation_06, the start of the canal at the map's end, from the south-west, cut at -250",
    "teaches": "The canal does not open at once: it starts as a closed concrete tunnel about 256 wide that turns twice, its floor lit by lamps along one wall, before it comes out into the open canal (d1_canals_01). The frame is mostly empty: a brush far below the tunnel widens it (a known viewer fault). Ours: our canal pieces start in the open.",
-   "lessons": ["valve-canal-varies", "valve-canal-culverts"],
-   "view": {"iso": "SW", "box": [-10400, -1400, -7900, 800], "cut": -250}
+   "lessons": [
+    "valve-canal-varies",
+    "valve-canal-culverts"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -10400,
+     -1400,
+     -7900,
+     800
+    ],
+    "cut": -250
+   }
   },
   {
    "n": "K2",
    "file": "02_coast01_dock_outpost_cut.png",
    "where": "d2_coast_01, the dock post, the busiest knot of props (20 near -7456 -10448), from the south-west, cut at 1156",
    "teaches": "A Resistance dock post: a concrete block with a wooden deck on the water, lit by nine caged tubes and bare bulbs (17 spots and 8 point lights in this box), crates and drums along its walls, the canal map on a wall, a speaker cluster outside; 18 resupply points round the map.",
-   "lessons": ["valve-rebel-hideout", "valve-fixture-lights", "valve-supplies-by-need"],
-   "view": {"iso": "SW", "box": [-8352, -11344, -6560, -9552], "cut": 1156}
+   "lessons": [
+    "valve-rebel-hideout",
+    "valve-fixture-lights",
+    "valve-supplies-by-need"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -8352,
+     -11344,
+     -6560,
+     -9552
+    ],
+    "cut": 1156
+   }
   },
   {
    "n": "K3",
    "file": "03_coast03_odessa_house_cut.png",
    "where": "d2_coast_03 (New Little Odessa), Odessa's house, the busiest knot of props (47 near 8761 4299), from the south-west, cut at 486",
    "teaches": "The village's main house as a Resistance post: a radio room (four receivers, two on a cart, a radio, an antenna on the roof, a control desk, five storage closets), a mess of cafeteria tables and benches, a couch, six floodlamps on stands outside; the three rebels who come back are made under this house.",
-   "lessons": ["valve-rebel-hideout", "valve-base-quarters", "valve-village-respawn"],
-   "view": {"iso": "SW", "box": [7864, 3400, 9664, 5200], "cut": 486}
+   "lessons": [
+    "valve-rebel-hideout",
+    "valve-base-quarters",
+    "valve-village-respawn"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     7864,
+     3400,
+     9664,
+     5200
+    ],
+    "cut": 486
+   }
   },
   {
    "n": "K4",
    "file": "04_coast03_odessa_approach.png",
    "where": "d2_coast_03, the road into the village, eye 7776 2688 320 looking north-west (yaw 135)",
    "teaches": "How the road leads to the village: a line of wooden poles with their wires, trees and explosive drums by the way, the houses ahead; the gate opens only for the car, and the gatekeeper says one of three lines if you come on foot.",
-   "lessons": ["valve-overhead-cables", "valve-aircraft-loops", "valve-lookout-siren"],
-   "view": {"eye": [7776, 2688, 320], "yaw": 135, "pitch": 3}
+   "lessons": [
+    "valve-overhead-cables",
+    "valve-aircraft-loops",
+    "valve-lookout-siren"
+   ],
+   "view": {
+    "eye": [
+     7776,
+     2688,
+     320
+    ],
+    "yaw": 135,
+    "pitch": 3
+   }
   },
   {
    "n": "K5",
    "file": "05_coast04_combine_dock.png",
    "where": "d2_coast_04, the whole map from the south-west",
    "teaches": "The Combine-held dock on a cove: warehouses of cheap metal walls, a crane and a long pier, held by four squads named for what they hold (dock, crane, warehouse 1 and 2); the cliffs round it are displacements with rock cluster props.",
-   "lessons": ["valve-squad-guns", "combine-kit"],
-   "view": {"iso": "SW"}
+   "lessons": [
+    "valve-squad-guns",
+    "combine-kit"
+   ],
+   "view": {
+    "iso": "SW"
+   }
   },
   {
    "n": "K6",
    "file": "06_coast05_cliff_road.png",
    "where": "d2_coast_05, the road under the cliffs, eye -4615 -4194 1152 looking south-east (yaw 315)",
    "teaches": "The long road: a gravel roadway about 384 wide between a cliff and the sea, wooden poles and wires along one side, a wreck at the verge; the poles and the wires are what lead the eye along it.",
-   "lessons": ["valve-overhead-cables", "valve-terrain-into-brush"],
-   "view": {"eye": [-4615, -4194, 1152], "yaw": 315, "pitch": 3}
+   "lessons": [
+    "valve-overhead-cables",
+    "valve-terrain-into-brush"
+   ],
+   "view": {
+    "eye": [
+     -4615,
+     -4194,
+     1152
+    ],
+    "yaw": 315,
+    "pitch": 3
+   }
   },
   {
    "n": "K7",
    "file": "07_coast07_bridge_village.png",
    "where": "d2_coast_07, the village at the bridge's landward end, eye 2400 6378 1600 looking west (yaw 180)",
    "teaches": "A shore village: low plaster and wooden houses either side of a grass street, every window a frame with its bars twin, wires strung from house to house and to the poles.",
-   "lessons": ["valve-overhead-cables", "glass-variety"],
-   "view": {"eye": [2400, 6378, 1600], "yaw": 180, "pitch": 3}
+   "lessons": [
+    "valve-overhead-cables",
+    "glass-variety"
+   ],
+   "view": {
+    "eye": [
+     2400,
+     6378,
+     1600
+    ],
+    "yaw": 180,
+    "pitch": 3
+   }
   },
   {
    "n": "K8",
    "file": "08_coast08_bridge.png",
    "where": "d2_coast_08, the whole map from the south-west",
    "teaches": "The bridge: a truss about 1150 wide and 9000 long carrying the road deck at 1856 over the sea, crossed underneath on catwalks at 1240 to 1792; the Combine's control house and its force field at the far end; nine zones along it keep the gunship beside the player.",
-   "lessons": ["valve-aircraft-loops", "valve-forcefield"],
-   "view": {"iso": "SW"}
+   "lessons": [
+    "valve-aircraft-loops",
+    "valve-forcefield"
+   ],
+   "view": {
+    "iso": "SW"
+   }
   },
   {
    "n": "K9",
    "file": "09_coast09_fenced_yards.png",
    "where": "d2_coast_09, the shacks' yards, eye 376 -6491 -695 looking north-west (yaw 135)",
    "teaches": "Yards fenced in boards: board fence props end to end about 128 apart, a cinder block or two, a pole and its wires over the yard; the shacks behind.",
-   "lessons": ["valve-prop-groups"],
-   "view": {"eye": [376, -6491, -695], "yaw": 135, "pitch": 3}
+   "lessons": [
+    "valve-prop-groups"
+   ],
+   "view": {
+    "eye": [
+     376,
+     -6491,
+     -695
+    ],
+    "yaw": 135,
+    "pitch": 3
+   }
   },
   {
    "n": "K10",
    "file": "10_coast10_lighthouse.png",
    "where": "d2_coast_10, the lighthouse, the busiest knot of props (49 near 8191 1396), from the south-west",
    "teaches": "The lighthouse the Resistance holds: a round tower whose stair is one spiral model 128 high stacked ten times, each turned 180, handrails all round its gallery, the lamp at the top; a radio and the canal map inside the keeper's house at its foot.",
-   "lessons": ["valve-rebel-hideout", "valve-npc-dropship"],
-   "view": {"iso": "SW", "box": [7288, 496, 9088, 2296]}
+   "lessons": [
+    "valve-rebel-hideout",
+    "valve-npc-dropship"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     7288,
+     496,
+     9088,
+     2296
+    ]
+   }
   },
   {
    "n": "K11",
    "file": "11_coast10_lighthouse_approach.png",
    "where": "d2_coast_10, the farm below the lighthouse, eye 3603 593 984 looking east (yaw 0)",
    "teaches": "The approach: wooden houses, crates and poles, and the lighthouse standing over them as the landmark players head for.",
-   "lessons": ["valve-village-respawn", "valve-npc-dropship"],
-   "view": {"eye": [3603, 593, 984], "yaw": 0, "pitch": 3}
+   "lessons": [
+    "valve-village-respawn",
+    "valve-npc-dropship"
+   ],
+   "view": {
+    "eye": [
+     3603,
+     593,
+     984
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
   },
   {
    "n": "K12",
    "file": "12_coast11_camp_cut.png",
    "where": "d2_coast_11, the vortigaunts' camp, the busiest knot of props (22 near 2642 9604), from the south-west, cut at 374",
    "teaches": "A camp on the beach: seven mattresses on the floor, crates, bottles and takeout cartons, a generator trailer and a cooling tank, two vortigaunts and two rebels; it is the end of the sand crossing.",
-   "lessons": ["valve-base-at-work", "valve-base-quarters"],
-   "view": {"iso": "SW", "box": [1744, 8704, 3544, 10504], "cut": 374}
+   "lessons": [
+    "valve-base-at-work",
+    "valve-base-quarters"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1744,
+     8704,
+     3544,
+     10504
+    ],
+    "cut": 374
+   }
   },
   {
    "n": "K13",
    "file": "13_coast11_sand_planks.png",
    "where": "d2_coast_11, the clifftop where the sand begins, eye 1834 -6598 1565 looking south-east (yaw 315)",
    "teaches": "The way over the sand: rocks and boards laid as stepping stones between the cliffs; stepping off them onto sand wakes the antlions.",
-   "lessons": ["valve-antlion-pool"],
-   "view": {"eye": [1834, -6598, 1565], "yaw": 315, "pitch": 3}
+   "lessons": [
+    "valve-antlion-pool"
+   ],
+   "view": {
+    "eye": [
+     1834,
+     -6598,
+     1565
+    ],
+    "yaw": 315,
+    "pitch": 3
+   }
   }
  ]
 }
