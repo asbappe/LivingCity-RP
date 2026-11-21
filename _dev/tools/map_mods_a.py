@@ -2,11 +2,22 @@
 """
 Living City: canal modules, set A (picked up by map_modules.py; the guide is docs/dev/map-modules.md)
 
-    tram        a tram line's fallen bridge: a station in each wall, a derailed car hanging from one
-    tenement    a tenement block that has collapsed into the canal: the way on is through its rooms
-    quay        stairs up to a quay and a street doorway, a footbridge across
+    tram        a tram line's fallen bridge: a station in each wall (Half-Life 2's station kit), a derailed car hanging from one
+    tenement    a tenement block fallen, tilted, across the canal: the way on is through its rooms
+    quay        stairs up to a quay and a street doorway, a footbridge across to a store behind bars
     collapse    a street's retaining wall and roadway fallen in: a squeeze and a crawl
-    scrapyard   the canal widens into a yard of stacked containers under a crane
+    scrapyard   the canal widens into a yard of stacked containers under a crane, floodlit, a foreman's office
+    boathouse   a smugglers' boat shed under a pitched roof: a roll-up door, a slipway, a hatch to a brick cellar
+    arcade      a market arcade over the canal on three arches: stalls, shops behind bars, a stair on each bank
+    chimney     a many-sided yard with a hollow brick chimney to climb: a lookout over the whole canal
+    crypt       the left wall broken into a church crypt, lit by candles
+    lift        a freight lift with a counterweight up to a loading dock
+    barge       a river barge grounded askew: a hideout in its hold, a wheelhouse, a gangplank
+    busbridge   a bus hanging nose-down from the left street: climb through it to a pavement
+    shell       a headcrab canister in the right bank: a crater, steam, the dead, the Combine's line
+    aqueduct    a water trough crossing over the canal, lit from below, a leak falling into a pool
+    pipes       a tangle of steel service mains: duck and weave, or climb a steel stair to a plank and a bridge
+    camp        a refugee camp on a terrace: tents, a pallet shelter, a lean-to and a car round a fire
 
     python3 map_modules_check.py --only tram,tenement,quay,collapse,scrapyard --views /some/folder
 """
@@ -250,7 +261,7 @@ def m_tram(m, opt):
         for c in rows:
             for u in (676, 860):
                 m.static(P + "props_trainstation/trainstation_column001.mdl", u, c * s, 0, ceil - 257)
-        m.det([box(448, c - 8, ceil - 20, 1088, c + 8, ceil - 2) for c in rows], steel)
+        m.det([box(448, c - 7, ceil - 20, 1088, c + 9, ceil - 2) for c in rows], steel)          # (off the booth's wall by a unit)
         for u in (676, 860):
             for c1, c2 in zip(rows, rows[1:]):
                 m.static(P + "props_trainstation/column_arch001a.mdl", u, (c1 + c2) // 2 * s, 0, ceil - 109)
@@ -283,7 +294,7 @@ def m_tram(m, opt):
         m.blocked(e1, v(256, back)[0], e2, v(256, back)[1])
 
     # --- the left station: the booth, the barred stair, the end of the line ---
-    m.det([(504, 826, pz, 520, 838, ceil), (632, 826, pz, 648, 838, ceil), (504, 826, pz + 120, 648, 838, ceil)], steel)      # its frame round the gate
+    m.det([(504, 826, pz, 520, 838, pz + 120), (632, 826, pz, 648, 838, pz + 120), (504, 826, pz + 120, 648, 838, ceil)], steel)      # its frame round the gate
     m.static(P + "props_wasteland/prison_slidingdoor001a.mdl", 576, 842, 90, pz)                  # Nova Prospekt's sliding gate, shut
     clip(m, (520, 846, pz, 632, 848, pz + 120))
     m.steps(856, 520, 632, pz, pz + 48, "v", 1)
@@ -295,7 +306,7 @@ def m_tram(m, opt):
     bz = pz
     m.det(wall(448, 480, 544, 488, bz, ceil) + wall(448, 584, 544, 592, bz, ceil, [(472, 520, bz, bz + 88)]) +
           wall(536, 488, 544, 584, bz, ceil, [(500, 572, bz + 36, bz + 90)]), MM["wood"])
-    m.det([(528, 500, bz + 32, 556, 572, bz + 36)], WOODTRIM)                                   # the sill
+    m.det([(528, 500, bz + 32, 556, 572, bz + 37)], WOODTRIM)                                   # the sill
     for c in (518, 554):
         m.static(P + "props_wasteland/prison_cellwindow002a.mdl", 540, c, 0, bz + 36)
     m.static(P + "props_wasteland/controlroom_chair001a.mdl", 492, 536, 0, bz)
@@ -2694,20 +2705,25 @@ def tent(m, u1, v1, z, L, W, H, along, open_end, mat, mat_floor, guy=30):
 
 def m_camp(m, opt):
     """The camp. The canal widens to the left onto a broad terrace of beaten earth 128 over the floor (896 by 448, open
-    to the sky; the bank along its whole edge is the way up). People who have nowhere else live here: six ridge
-    tents (brushes: no tent model exists), no two the same size, patched from tar paper, carpet and sheeting, each
-    with a mat inside, a back pole and guy ropes to pegs, their open ends (crouch to go in) turned to a cooking fire
-    in the middle: a ring of the game's stones, a pot hung from a tripod, embers that glow and do not flicker, a thread
-    of smoke, two benches carried off from a station and two flat rocks to sit on round it. A washing line on two poles with what they own on it
-    and a laundry basket under it, a water barrel and buckets, a pushcart, a cork notice board on a pole where the bank
-    comes up, a few crates and a chair. Quiet, poor, lived in.
+    to the sky; the bank along its whole edge is the way up). People who have nowhere else live here, making do: three
+    ridge tents (brushes: no tent model exists), no two the same size, patched from tar paper, carpet and sheeting, each
+    with a mat inside, a back pole and guy ropes to pegs; a shelter of pallets stood on edge under a tarp; a lean-to of
+    sheeting against the back wall, open in front on two poles; a car's wreck with a tarp run off its side and a
+    mattress under it. A lantern (the city's oil lamp) burns low by each. Their open ends (crouch to go in) turn to a
+    cooking fire in the middle: a ring of the game's stones, a pot hung from a tripod, embers that glow and do not
+    flicker, a thread of smoke, two benches carried off from a station and two flat rocks to sit on round it. A washing
+    line on two poles with what they own on it and a laundry basket under it, a water barrel under a gutter pipe down the
+    back wall and buckets, a pushcart, a cork notice board on a pole where the bank comes up, a few crates, a chair and a
+    couch, a child's doll; chalk scrawls low on the back wall, a Breen poster high over them all, and a Combine camera
+    on the opposite rim watching. Quiet, poor, lived in (d1_trainstation.QuietCourtyard).
     Named for the game: lc_camp_fire (an info_target at the fire), lc_camp_tent_1 to lc_camp_tent_6 (an info_target
-    on the floor inside each tent: where someone sleeps).
-    Left as brushes: the tents, their poles and pegs, the tripod's three bars, the embers, the washing (no model of
-    cloth hung to dry).
-    Unchecked: which face of the cork board is its front; how props/tarpaperroof002a, props/carpetfloor003a and props/carpetfloor006a look as tent cloth (no
-    canvas is in the game's own materials); that thin sheared sides 3 thick stop a player cleanly; that the washing
-    line's rope hangs where its cloths are (the rope sags by itself)."""
+    on the floor inside each shelter: where someone sleeps; 2 is the pallet shelter, 3 the lean-to, 4 the car).
+    Left as brushes: the tents, the lean-to and the tarps, their poles and pegs, the tripod's three bars, the embers, the
+    washing (no model of cloth hung to dry).
+    Unchecked: which face of the cork board is its front and which way the camera looks; how props/tarpaperroof002a,
+    props/carpetfloor003a and props/carpetfloor006a look as tent cloth (no canvas is in the game's own materials); that
+    thin sheared sides 3 thick stop a player cleanly; that the washing line's rope hangs where its cloths are (the rope
+    sags by itself); that the pallets stood on edge (pitched 90) stand as worked out."""
     b = m.b
     tz = F + 128
     tarp, c3, c6, rug = "props/tarpaperroof002a", "props/carpetfloor003a", "props/carpetfloor006a", "props/carpetfloor001a"
