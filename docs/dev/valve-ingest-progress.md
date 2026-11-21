@@ -60,7 +60,10 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
   the way and their timed people), and the base at work (the work spots: cooks at the stove, vortigaunts at the
   machine, the walking loop). Lessons `valve-base-airlock`, `valve-turrets-follow-by-cells`, `valve-lift-diorama`,
   `valve-base-at-work`. The owner keeps `valve-look-and-answer`, `valve-raid-on-the-base` and `valve-play-teaches`
-  as references (not to build for now). Not done yet.
+  as references (not to build for now). **Done 21 November:** seven pieces `valve_eli_airlock`,
+  `valve_eli_lookalive_turrets`, `valve_eli_lift_ride` (the shaft alone), `valve_eli_lift_floor`,
+  `valve_eli_work_spots_kitchen`, `_repairs`, `_walker`, with their wiring and what to change for multiplayer in
+  `docs/dev/prefabs.md`, "Pieces with their wiring" (read it by grep: 37 KB).
 - **Approving findings (21 November):** at the end of each batch, put the findings most worth building to the owner
   to pick from; approved ones go on `TODO.md` under "Owner-approved Valve findings", and **nothing is built until
   all ingestion is done** (the owner's choice). City 17's four approved: timed holds with faster waves, squads topped

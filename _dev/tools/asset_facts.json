@@ -153,6 +153,24 @@
 "elsewhere": [],
 "game": null
 },
+"models/chefhat.mdl": {
+"bbox": [
+-7.1,
+-6.3,
+-2.8,
+4.6,
+5.2,
+8.4
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/cliffs/rockcluster01.mdl": {
 "bbox": [
 -378.7,
@@ -22494,6 +22512,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_wasteland/kitchen_fridge001a.mdl": {
+"bbox": [
+-24.3,
+-33.4,
+-0.2,
+24.6,
+33.5,
+112.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_wasteland/kitchen_shelf001a.mdl": {
