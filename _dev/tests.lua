@@ -43825,6 +43825,38 @@ function Nov21_CellsFullTests()
 end
 Nov21_CellsFullTests()
 
+function Nov21_MapNamesTests()
+    section("21 November: the map modules' names the game hears: the sludge tunnel's gas, the substation's fuse panel")
+    local at = Vector(46500, -46500, 0)
+    -- the sludge tunnel: its trigger's box is foul air for as long as the map stands
+    local gas = ents.Create("trigger_multiple") gas:SetPos(at) gas:SetName("lc_sludge_gas")
+    gas.obbmin, gas.obbmax = Vector(-600, -100, 0), Vector(600, 100, 160)
+    gas:Spawn()
+    ok(LC.MapGasEnsure() == 1, "the map's gas trigger is found")
+    LC.MapGasEnsure()
+    local n = 0
+    for _, g in ipairs(LC.GasClouds) do if g.map == "lc_sludge_gas" then n = n + 1 end end
+    ok(n == 1, "one cloud for it, however often it is looked for", n)
+    ok(LC.InGasCloud(at + Vector(550, 0, 40)) and not LC.InGasCloud(at + Vector(0, 300, 40)), "the tunnel's length is gas, beside it is not (a box, not a ball)")
+    local walker = newPlayer("SludgeWalker", "citizen")
+    walker:SetPos(at + Vector(300, 0, 0))
+    walker:SetHealth(100)
+    _run(2.1)
+    ok(walker:Health() < 100, "without a mask, you are hurt in it", walker:Health())
+    walker:SetPos(at + Vector(0, 2000, 0))
+    -- the substation: its panel broken, the district's transformer goes down
+    local tf = ents.Create("lc_transformer") tf:SetPos(at + Vector(0, 3000, 0)) tf:Spawn()
+    local relay = ents.Create("logic_relay") relay:SetPos(at + Vector(300, 3000, 0)) relay:SetName("lc_substation_cut") relay:Spawn()
+    local rebel = newPlayer("PanelBreaker", "resistance", nil, 200)
+    hook.Run("AcceptInput", relay, "Trigger", rebel, rebel)
+    ok(tf:GetNW2Bool("lc_down", false), "the substation's panel broken: its district's transformer is down")
+    if LC.TransformerRestore then LC.TransformerRestore(tf) end
+    for i = #LC.GasClouds, 1, -1 do if LC.GasClouds[i].map then table.remove(LC.GasClouds, i) end end
+    LC.MapNames.gas = {}
+    gas:Remove() tf:Remove() relay:Remove() walker:Remove() rebel:Remove()
+end
+Nov21_MapNamesTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

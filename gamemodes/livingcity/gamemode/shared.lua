@@ -172,6 +172,7 @@ LC_MODULES = {
         "sv_livingcity_squadtopup", -- (a Resistance squad topped up at each stage of a fight, one of them a medic)
         "sv_livingcity_roofdrop", -- (Resistance supplies thrown down from a roof between waves)
         "sv_livingcity_strongholds", -- (Combine strongholds' tripwires and turrets: the alarm heard, a job to shut them)
+        "sv_livingcity_mapnames", -- (names the map modules give the game: the sludge tunnel's gas, the substation's fuse panel)
         "sv_livingcity_slots",
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",

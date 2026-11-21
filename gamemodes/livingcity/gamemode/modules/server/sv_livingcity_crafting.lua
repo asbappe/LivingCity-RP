@@ -234,11 +234,21 @@ local function Masked(ply)
 end
 LC.GasMasked = Masked
 
+-- Is pos inside this cloud? A ball (pos, r), or a box (the map's own gas, a tunnel: g.box = { mins, maxs }).
+local function InCloud(g, pos)
+    if g.box then
+        local a, b = g.box[1], g.box[2]
+        return pos.x >= a.x and pos.x <= b.x and pos.y >= a.y and pos.y <= b.y and pos.z >= a.z - 16 and pos.z <= b.z
+    end
+    return pos:DistToSqr(g.pos) < g.r * g.r
+end
+LC.InGasCloudShape = InCloud
+
 -- The gas cloud someone is standing in, or nil.
 function LC.InGasCloud(pos)
     local now = CurTime()
     for _, g in ipairs(LC.GasClouds or {}) do
-        if now <= g.untilT and pos:DistToSqr(g.pos) < g.r * g.r then return g end
+        if now <= g.untilT and InCloud(g, pos) then return g end
     end
     return nil
 end
@@ -330,17 +340,16 @@ timer.Create("LivingCityGas", 1, 0, function()
         if now > g.untilT then
             table.remove(LC.GasClouds, i)
         else
-            local r2 = g.r * g.r
             local attacker = IsValid(g.owner) and g.owner or game.GetWorld()
             for _, ply in ipairs(player.GetAll()) do
                 -- a mask keeps it out (chlorine and poison alike), unless its filter has been fouled
                 local masked, fouled = Masked(ply)
                 local mul = masked and 0 or 1
-                if fouled and ply:Alive() and ply:GetPos():DistToSqr(g.pos) < r2 and (ply.lcFouledTold or 0) < now then
+                if fouled and ply:Alive() and InCloud(g, ply:GetPos()) and (ply.lcFouledTold or 0) < now then
                     ply.lcFouledTold = now + 30
                     if LC.Notice then LC.Notice(ply, "warn", "Your filter", "The gas is coming straight through your mask: the filter's no good. Get out of it!", 6) end
                 end
-                if ply:Alive() and ply:GetPos():DistToSqr(g.pos) < r2 and mul > 0 then
+                if ply:Alive() and InCloud(g, ply:GetPos()) and mul > 0 then
                     local dmg = DamageInfo and DamageInfo()
                     if dmg then
                         dmg:SetDamage(cvGasDmg:GetFloat() * mul * (g.poison and 1.5 or 1)) -- (weedkiller gas is worse than chlorine)
@@ -362,10 +371,10 @@ timer.Create("LivingCityGas", 1, 0, function()
                 if LC.IsSecurity(st) then nmul = (LC.FiltersFouled and LC.FiltersFouled()) and 1 or 0 end -- (masked, unless an Insider fouled the filters)
                 -- a Resistance fighter with a gas mask puts it on; anyone else covers their mouth and coughs
                 -- (the owner, 13 November; sv_livingcity_gasmask.lua)
-                if nmul > 0 and IsValid(npc) and npc:Health() > 0 and LC.GasNPC and npc:GetPos():DistToSqr(g.pos) < r2
+                if nmul > 0 and IsValid(npc) and npc:Health() > 0 and LC.GasNPC and InCloud(g, npc:GetPos())
                     and LC.GasNPC(npc, st, g, now) then nmul = 0 end
                 if IsValid(npc) and npc:Health() > 0 and nmul > 0 and st.role ~= "scanner"
-                    and npc:GetPos():DistToSqr(g.pos) < r2 then
+                    and InCloud(g, npc:GetPos()) then
                     npc:TakeDamage((cvGasDmg:GetFloat() + 2) * nmul * (g.poison and 1.5 or 1), attacker, attacker)
                     -- get out of it: a way out clear of Combine units first (LC.GasFlee)
                     if npc:Health() > 0 and LC.GasFlee and st.role ~= "zombie" then
