@@ -2987,7 +2987,9 @@ _setcvar("lc_roster_size", 3)
 _setcvar("lc_roster_cops", 2)
 _setcvar("lc_rebel_pct", 0)
 LC.TopUpPeople()
-ok(#P.list == math.max(3, GetConVar("lc_citizens"):GetInt()) + 2, "the roster is filled to its size (never fewer citizens than the streets want), citizens and units", #P.list)
+-- (units: never fewer named than the city has out, lc_cops and its extras, 21 November)
+local unitsWant = math.max(2, GetConVar("lc_cops"):GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.LedgerCops or 0))
+ok(#P.list == math.max(3, GetConVar("lc_citizens"):GetInt()) + unitsWant, "the roster is filled to its size (never fewer citizens than the streets want), citizens and units", #P.list)
 local n1, s1 = LC.Spawners.citizen(Vector(9000, 9100, 0))
 local prof = s1.profile
 ok(prof and LC.NPCStr(n1, "lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
@@ -7493,6 +7495,7 @@ porter.chat = {}
 local spotInZone = LC.SpotInZone
 LC.SpotInZone = function() return nil end -- (home is this section's doorway, not a block another section left across the map)
 -- off the train come only people new to the city (21 November): with nobody new, nobody gets off
+for _, pr in ipairs(LC.People.list) do pr.newcomer = nil end
 local okE, empty = LC.TrainArrive(true)
 ok(okE and #(empty or {}) == 0, "with nobody new to the city, the train comes in and nobody gets off", #(empty or {}))
 timer.Remove("LivingCityTrainLeaves")
@@ -10560,6 +10563,8 @@ local plat = LC.AddPoint(B0 + Vector(-600, 0, 0), 0, "platform", 0)
 local door = LC.AddPoint(B0 + Vector(0, 2400, 0), 0, "spawn", 0)
 -- (people free to step off: an earlier test may have left a tiny roster, and nobody nameless comes any more)
 _setcvar("lc_roster_size", math.max(GetConVar("lc_roster_size"):GetInt(), 30)) LC.TopUpPeople()
+-- (off the train come only people new to the city, 21 November)
+for _ = 1, 4 do local np = LC.NewPerson("citizen") np.newcomer = true end
 local okA, arrivals = LC.TrainArrive(true)
 arrivals = arrivals or {}
 local a1 = arrivals[1]
