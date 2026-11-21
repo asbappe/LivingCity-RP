@@ -1,0 +1,328 @@
+{
+ "title": "Valve's Nova Prospekt (d2_prison_01 to 08)",
+ "draft": true,
+ "about": "Valve's own Nova Prospekt maps d2_prison_01 to 08, measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props, craft and section study in valve_prison/wip/props_craft_notes.md, the logic and NPC study in valve_prison/wip/logic_npc_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, red ragdolls; big hollow models and see-through fences as outlines; green NPC markers, left out where a view says leave_out_npcs, and the train cars left out where a view lists them under leave_out: a scratch script dropped them before drawing) or cut away from above. Reference only, for Living City's Combine prison and holding cells: the VMFs are not in the repo, and the owner's own choices win where they differ (City 18's two tones with a dado rail, our cells module as it is).",
+ "numbers": [
+  "d2_prison_01: the way in, outdoors (80% of the AI nodes): yards wall to wall 420 to 1632 (median 1104 in 217 cuts), walls median 256 tall, no kerbs; the ground a grass and gravel blend; 7 gun towers (bunker_gun01, each with a point_spotlight 147 226 240, 1024 long, parented to it) and 5 combine_light002a on the walls, each with its blue beam.",
+  "d2_prison_01: a gun tower is an octagon of concrete 160 across (corners cut, func_detail) on the wall top, its floor 8 thick at z 1784 to 1792, about 450 over the yard; posts 32 by 44 and 128 high with gaps between them, and a roof slab 176 across and 8 thick on the posts; the gun 40 over the floor and 58 off the parapet, facing out.",
+  "d2_prison_01: the old prison's front has 16 barred windows, each a pair of props (plasterwall029g_window01a with its bars as a prop_dynamic) 40 apart; breaking the glass sets the bars' bodygroup (OnBreak > SetBodyGroup, 28 lines); 92% of wall columns over 256 tall change material, most often at 128 or 64 over the foot.",
+  "Ours: Living City has no yard or gun tower yet; Valve's yard walls are about 256 tall, lower than our canal's 384, and its towers stand about 450 over the yard, so a tower on our canal's rim would see the whole canal floor.",
+  "d2_prison_02: the first cellblock and the showers, almost all indoors (8% of the AI nodes outdoors): 440 prop_static to 113 prop_physics; ceilings most often 120 (41 nodes), then 256 (17) and 512 (14); corridors 134 wide under 128; 104 flights of 3 or more steps, every step 8 by 12.",
+  "d2_prison_02: the cellblock hall (x -1280 to -1056) is 224 wall to wall with a row of cells on each side, floors at 256 and 384; cells 128 wide and 176 deep behind partitions 16 thick at a pitch of 144; 15 barred doors (prison_celldoor001a) and 14 solid ones (prison_heavydoor001a), each under a prison_doortrack001a; a cage lamp on each cell's front 86 over its floor, 144 apart, only 4 of the map's 40 lit.",
+  "d2_prison_02: the showers are three shower_system001a 320 apart, 40 off one wall of a tiled room, under hanging tubes; 66 infodecal (stains 23, blood 9, trash 8), wall decals median 56 over the floor.",
+  "Ours: the cells module's three cells are 128 by 160 by 128 off a corridor 128 wide and 128 high, one storey; Valve's cellblock is 128 by 176 cells two storeys high on both sides of a hall 224 wide, with the upper walks 80 wide and a gap of 64 between them.",
+  "d2_prison_03: cellblocks, washrooms and showers: 267 prop_static to 169 prop_physics, 15 prison_toilet01 and 14 prison_sink001b; ceilings most often 256 (94 nodes), then 192 (45) and 128 (34); corridors 152 wide under 160; 334 trim strips; walls change at 128 over the foot, tile under plaster in the washrooms (tilewall009b under plasterwall026a).",
+  "d2_prison_03: the cells are the same everywhere in Nova Prospekt (71 found in 16 rows): 128 wide, 176 deep, partitions 16 thick at a pitch of 144, floor slabs 8 so a storey is 128 and a cell 120 clear; 36 of the 71 are empty and only 3 have the full kit (bed, toilet, sink, heater): the cells a player walks into.",
+  "d2_prison_03: washrooms have toilets 64 apart in two rows facing each other and sinks 64 apart in facing rows; the showers are shower_system001a 40 off the wall, 320 apart, on both long walls of a tiled hall.",
+  "Ours: our cells are 160 deep and 128 high inside where Valve's are 176 deep and 120 clear; ours have a toilet, a bucket and a drain each, and a mattress or a bed frame, where Valve leaves most cells bare and kits out only the ones a player enters.",
+  "d2_prison_04: the tall cellblock, guard offices and the camera room: 190 prop_static to 78 prop_physics; ceilings most often 192 (43 nodes), then 120 (39) and 128 (38); corridors 136 wide under 192; 12 controlroom_desk001b with 8 file cabinets; 30 flights of 3 or more steps (8 by 12, median 10 steps).",
+  "d2_prison_04: the tall cellblock (x -1088 to -448) is a hall 448 wide and about 512 high with cells on one side only, three tiers at 128, 256 and 384 (partitions at a pitch of 144, 176 deep), walks 80 wide and 8 thick hung off the cell fronts at 256 and 384, a column 32 across rising the full height in the hall, interior_fence002c panels closing the walks' ends.",
+  "d2_prison_04: guard office: the desk 24 to 58 off a wall, the chair 44 from it, file cabinets on the walls 73 to 131 away, a monitor on the desk, a switch box by the door 97 up; the camera room's Combine screens (combine_intmonitor001) each carry a faint light 147 226 240 at 50 and a spot at 225, cone 60.",
+  "Ours: our cells corridor is 128 wide and 128 high; this cellblock's hall is 448 wide and about 512 high, three tiers of cells looking onto it, so a guard on the floor or a walk sees every door at once.",
+  "d2_prison_05: the prison's service rooms (laundry, kitchen, offices) and a cellblock brought down: 422 prop_static to 136 prop_physics; ceilings most often 176 (121 nodes), then 256 (79) and 128 (34); corridors 139 wide under 190; rubble as props (rebar002d_96 23, plaster_ceilingpile001b 23, concrete_debris256pile001a 20); the fallen hall's columns are concrete_column001a in three physics pieces, 256 apart in two rows 480 apart.",
+  "d2_prison_05: the laundry (x -600 to 92, y 293 to 1744): 12 laundry_dryer002 (static) in rows of 2 or 3, 76 to 92 apart, 8 of them turned 1 to 12 degrees off the grid; washers along the walls; laundry carts as physics props turned freely (7 laundry_cart001, 5 laundry_cart002).",
+  "d2_prison_05: the kitchen (x -2160 to -1695, y -896 to -615, about 465 by 281): kitchen_counter001d in an L, two kitchen_stove001a 217 apart on one wall, two small stoves as physics props (named, for a scripted moment), gas cans on the counters, a shelf.",
+  "Ours: Living City has no prison kitchen or laundry; our cells' guard room is 256 by 192, the size of Valve's small guard office, where the laundry is about 690 by 1450 and the kitchen about 465 by 281.",
+  "d2_prison_06: the interrogation room, the depot and the train yard, all indoors: 325 prop_static, 102 prop_physics, 110 prop_dynamic (the trains and their pods: 56 cell_01_pod); ceilings most often 208 (93 nodes), then 184 (36) and 128 (33); corridors 126 wide under 192; 620 output lines, 44 relays, 7 counters.",
+  "d2_prison_06: the Combine's own metal is 20% of the map's brush area (0 to 1% in the old prison maps): its walls stand square in plan but 14% of the map's wall area leans 14 to 17 degrees off upright (panels 128 high leaning 32, or 40); its brushes are 8 thick (140) or 2 (82), and where a plate lies on an old wall it touches it (gap 0 on 23 of 25).",
+  "d2_prison_06: the train trench at x 3000: Combine walls 192 thick at the foot, the track bed 256 wide at z -592, the way between 336 wide up to -464, 400 to -336, 464 above: out 32 a side every 112 to 128; train cars (combine_train02a/b) 632 apart on two lines, each car a prop_dynamic parented to its train, the pods parented with it.",
+  "Ours: our depot hall is 768 by 384 by 192 with upright clad walls; Valve's Combine halls lean 14 to 23 degrees and stand under 184 to 208 most often, and its interrogation room is one Combine model (introomarea) set into an old room rather than built of brushes."
+ ],
+ "pictures": [
+  {
+   "n": "P1",
+   "file": "01_prison01_gun_tower_cut.png",
+   "where": "d2_prison_01, the gun tower at the yard's south-west corner from the south-west, box x 950 to 1750, y -5150 to -4350, cut at 1915 (under its roof), NPC markers left out",
+   "teaches": "A gun tower: an octagon 160 across with its corners cut, on the wall top about 450 over the yard; posts 32 by 44 and 128 high with gaps to shoot through, a floor and roof slab each 8 thick; the gun (bunker_gun01, cyan, a prop_dynamic) 40 over the floor and 58 off the parapet, facing out, with a point_spotlight 147 226 240 (1024 long, 64 wide) parented to it so the beam follows the gun; combine_light002a on the walls round it.",
+   "lessons": [
+    "valve-guard-tower",
+    "valve-combine-light-beam",
+    "valve-chamfer-8"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     950,
+     -5150,
+     1750,
+     -4350
+    ],
+    "cut": 1915,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P2",
+   "file": "02_prison01_yard.png",
+   "where": "d2_prison_01, the outer yard, eye 2852 -4773 1361 looking north-east (yaw 45)",
+   "teaches": "The yard the player crosses: open grass and gravel about 1100 wall to wall (the map's median 1104), walls about 256 tall in two bands, a gun tower over the wall top beyond, trees 451 apart (8), chain-link fence props along the yard's edges; nothing in the middle to hide behind, so the towers see all of it.",
+   "lessons": [
+    "valve-guard-tower",
+    "valve-wall-bands"
+   ],
+   "view": {
+    "eye": [
+     2852,
+     -4773,
+     1361
+    ],
+    "yaw": 45,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "P3",
+   "file": "03_prison01_barred_block.png",
+   "where": "d2_prison_01, the old prison's front from the inner yard, eye 3452 -1344 1514 looking south (yaw 270)",
+   "teaches": "The old prison block as the Combine found it: plaster and concrete walls banded at 128 over the foot, a tiled roof, barred windows as props in a row 40 apart (orange: plasterwall029g_window01a and its bars, 16 of each), the bars a prop_dynamic whose bodygroup changes when the glass is broken; the Combine adds only lights and guns to it, not walls.",
+   "lessons": [
+    "valve-wall-bands",
+    "combine-kit"
+   ],
+   "view": {
+    "eye": [
+     3452,
+     -1344,
+     1514
+    ],
+    "yaw": 270,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "P4",
+   "file": "04_prison02_cellblock_cut.png",
+   "where": "d2_prison_02, the first cellblock from the south-west, box x -1520 to -820, y 2560 to 3420, cut at 490 (over the upper tier's floor at 384), NPC markers left out",
+   "teaches": "A two-tier cellblock in plan: cells 128 wide and 176 deep behind partitions 16 thick at a pitch of 144, in rows of 4 and 5 facing each other across a hall 224 wall to wall; the upper tier's walks 80 wide and 8 thick hung off the cell fronts with handrail04_long (128 long) along their edges, a gap of 64 between the two walks; on the upper west side no cells but the guard room, its corner cut at 45 and a window band onto the hall, the desk turned 45 to face it.",
+   "lessons": [
+    "valve-prison-cell",
+    "valve-cellblock-tiers",
+    "valve-prison-rooms"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1520,
+     2560,
+     -820,
+     3420
+    ],
+    "cut": 490,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P5",
+   "file": "05_prison02_hall_stair.png",
+   "where": "d2_prison_02, the cellblock hall from its south end, eye -1168 2580 320 looking north (yaw 90), 8 degrees up, NPC markers left out",
+   "teaches": "The hall between two tiers of cells: cell fronts (orange doors) on both sides, the upper walks overhead, and the stair up between them in the well: 60 wide with open treads 2 thick, 15 steps of 8 by 12 from 256 to 376, so the stair takes no floor from the hall; hanging tubes and sprinklers under the roof.",
+   "lessons": [
+    "valve-cellblock-tiers",
+    "valve-prison-fixtures"
+   ],
+   "view": {
+    "eye": [
+     -1168,
+     2580,
+     320
+    ],
+    "yaw": 90,
+    "pitch": -8,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P6",
+   "file": "06_prison02_upper_walk.png",
+   "where": "d2_prison_02, on the cellblock's upper walk, eye -1234 2686 448 looking north (yaw 90)",
+   "teaches": "A tier walk as a guard walks it: the cell doors in a row 144 apart along one side (heavy doors on prison_doortrack001a), a cage lamp beside each door 86 up, the walk 80 wide with a handrail along the open edge, the other row's walk across the gap; the light comes in pools from the few lamps that are lit (4 of 40), dark between.",
+   "lessons": [
+    "valve-cellblock-tiers",
+    "valve-light-pools",
+    "valve-fixture-lights"
+   ],
+   "view": {
+    "eye": [
+     -1234,
+     2686,
+     448
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "P7",
+   "file": "07_prison03_cell_cut.png",
+   "where": "d2_prison_03, one cell with the full kit from the south-west, box x -3800 to -3540, y 3880 to 4160, cut at 112 (under its roof at 120), NPC markers left out",
+   "teaches": "One cell, inside 128 wide by 176 deep by 120 clear, partitions 16 thick: a metal bed (prison_metalbed001a) along one side wall; the toilet, the sink and the heater in a line along the other side wall, 12 to 16 off it, at 29, 74 and 135 from the back wall; the door slides along the front's outside face under its track, a cage lamp on the front beside it 86 up; a ceiling panel light in the middle. Nothing else: no table, no shelf.",
+   "lessons": [
+    "valve-prison-cell",
+    "valve-prison-rooms"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -3800,
+     3880,
+     -3540,
+     4160
+    ],
+    "cut": 112,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P8",
+   "file": "08_prison03_row_cut.png",
+   "where": "d2_prison_03, a row of cells two tiers high from the south-west, box x -3900 to -3100, y 3700 to 4400, cut at 240 (over the upper tier's floor at 128), NPC markers left out",
+   "teaches": "A row of cells two tiers high (floors at 0 and 128), partitions at a pitch of 144, the fronts facing north onto a hall; the upper tier's walk only 56 wide (func_detail 8 thick) with handrail04_long along its edge at 20 over the walk, a second rail 90 across the well; a door track and a cage lamp at 86 up on every cell's front, both tiers; most cells bare.",
+   "lessons": [
+    "valve-prison-cell",
+    "valve-cellblock-tiers"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -3900,
+     3700,
+     -3100,
+     4400
+    ],
+    "cut": 240,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P9",
+   "file": "09_prison04_tall_block.png",
+   "where": "d2_prison_04, the floor of the tall cellblock, eye -864 1888 192 looking north (yaw 90), NPC markers left out",
+   "teaches": "The tall cellblock from its floor: a hall 448 wide and about 512 high, three tiers of cells stacked on the right, each tier's walk 80 wide hung off the cell fronts with a handrail along it, the round column 32 across going up the middle of the hall, hanging tubes high overhead (567 to 631) and drums and crates on the floor (oildrum001 is the map's third commonest model, 23).",
+   "lessons": [
+    "valve-cellblock-tiers",
+    "valve-prison-cell"
+   ],
+   "view": {
+    "eye": [
+     -864,
+     1888,
+     192
+    ],
+    "yaw": 90,
+    "pitch": 3,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P10",
+   "file": "10_prison04_tiers_cut.png",
+   "where": "d2_prison_04, the tall cellblock from the south-west, box x -1150 to -380, y 1400 to 2500, cut at 500 (over the top tier's floor at 384), NPC markers left out",
+   "teaches": "The tall cellblock in plan: the open hall 448 wide on the west, the top tier of cells (176 deep, a pitch of 144) along the east wall with its walk 80 wide in front, two guard desks (controlroom_desk001b) at the top tier's level south of the cells, the walks' ends closed by fence panels; the tiers are the cell storey's own slab carried out 80 as the walk, 128 a storey.",
+   "lessons": [
+    "valve-cellblock-tiers",
+    "valve-prison-cell",
+    "valve-prison-rooms"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1150,
+     1400,
+     -380,
+     2500
+    ],
+    "cut": 500,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P11",
+   "file": "11_prison05_laundry_cut.png",
+   "where": "d2_prison_05, the laundry from the south-west, box x -680 to 140, y 260 to 1790, cut at 540 (about 150 over its floor), NPC markers left out",
+   "teaches": "The prison's laundry: big dryers (laundry_dryer002, orange) in rows of 2 or 3, 76 to 92 apart, most turned 1 to 12 degrees off square so the rows look set by hand; washers against the walls; carts (yellow, physics) loose and turned any way; hanging tubes overhead. A work room where prisoners did the Combine's chores, readable from its machines alone.",
+   "lessons": [
+    "valve-prison-rooms",
+    "valve-turn-the-loose"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -680,
+     260,
+     140,
+     1790
+    ],
+    "cut": 540,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P12",
+   "file": "12_prison05_kitchen_cut.png",
+   "where": "d2_prison_05, the kitchen from the south-west, box x -2220 to -1640, y -960 to -560, cut at 640 (128 over its floor at 512), NPC markers left out",
+   "teaches": "A prison kitchen about 465 by 281: counters (kitchen_counter001d, physics props set square) in an L, two big stoves (kitchen_stove001a, static) 217 apart against the far wall, two small stoves loose beside them, gas cans on the counters turned any way (yellow, physics), tile wall pieces.",
+   "lessons": [
+    "valve-prison-rooms",
+    "valve-physics-flags"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -2220,
+     -960,
+     -1640,
+     -560
+    ],
+    "cut": 640,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P13",
+   "file": "13_prison06_interrogation.png",
+   "where": "d2_prison_06, the interrogation room from just inside its Combine door, eye 480 100 64 looking east (yaw 0), NPC markers left out",
+   "teaches": "The interrogation room: an old room (hanging tubes, pipes, a shelf) with the Combine's room model (introomarea, drawn as outlines) set into it, and the pod arm (pod_extractor, cyan, a prop_dynamic) in the middle where the subject hangs; the door is a combine_door01 with a combine_lock01 on each side 54 up; two generators 182 apart, consoles at 225 and 270 degrees. Lit by narrow cold spots on the subject (155 220 255 at 500, cone 12, twice; 204 255 255 at 400 to 600, cone 21) and faint console glows (74 209 217 at 20); the rest dark.",
+   "lessons": [
+    "valve-interrogation-light",
+    "valve-prisoner-in-beams",
+    "valve-combine-aimed",
+    "combine-kit"
+   ],
+   "view": {
+    "eye": [
+     480,
+     100,
+     64
+    ],
+    "yaw": 0,
+    "pitch": 3,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P14",
+   "file": "14_prison06_depot_lean_cut.png",
+   "where": "d2_prison_06, the depot under the interrogation room from the south-west, box x 400 to 1800, y -350 to 950, cut at -250, the train cars and NPC markers left out",
+   "teaches": "Where the Combine built beside the old prison: its metal hall (dark grey plates of metalwall077a at scale 0.5) stands against the old concrete; in this box 42% of the wall area is the Combine's metal, a fifth of it leaning, 85% of the lean at 14 degrees (32 out for every 128 up), while the old walls stand upright (0.6% lean). The plates are 2 to 8 thick and laid flush on the old walls, never stood off them; the sections step out and in unevenly, not mirrored side to side.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-combine-cold",
+    "combine-kit"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     400,
+     -350,
+     1800,
+     950
+    ],
+    "cut": -250,
+    "leave_out_npcs": true,
+    "leave_out": [
+     "combine_train"
+    ]
+   }
+  }
+ ]
+}
