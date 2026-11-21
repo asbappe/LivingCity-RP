@@ -223,3 +223,15 @@ decalsigndanger001e 9.
 - Window sills could not be told from the street below (the glass side facing out), so sill numbers are not used.
 - Pictures: an eye view in d3_c17_13 landed inside a room and a canal edge view showed only water, and a cutaway
   from above was too small to show the cuts; none kept.
+
+## What our tools do with this (21 November, later)
+
+`map_build.craft` runs on every face our tools lay as a file is written (copied faces are left alone): lightmapscale
+8 on stairs, rails, ladders and bars, 64 more than 1024 from every path node, displacements 64 more than 256 from one
+and 32 nearer, 16 for the rest; the canal's concrete walls at texture scale 0.5; every upright face's texture starting
+at its wall's foot (where the floor in front of it is). `m.lamp` lights each fixture by the per-fixture table (dome
+and bell: glow 0.75, a spot down, cone 60/30, falloff 500/0/1, and a faint point light); `map_build.FALLOFF` holds
+presets (fill, lamp, cage, tube, flood) that `m.light` and `m.spot` take. `map_lint.py` kinds `lightmap`, `scale`
+and `seam` make checks 1, 2 and 3. Not done: 45 degree corners cut at 8; blends and rock at 0.5 or more (the lint
+names them: the mud is still 0.25); the canal walls' caged lamps keep their point lights. How any of it looks (the
+lamps' brightness, the wall textures' feet) waits on the owner's compile.

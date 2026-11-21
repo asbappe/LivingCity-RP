@@ -149,3 +149,15 @@ Pictures: `scratchpad/p2/pics/v2_kitchen_bath.png` (ts03 flats from the south-we
 - Floor raster misses props in water and on non-axis brushes: 40 to 60% of canal props land on a floor cell; densities are lower bounds for canals.
 - Model-name kinds are rough (payphone_reciever counted as a workshop anchor; kitchen_shelf001a is a canal-station shelf, so the "kitchen" numbers mix both).
 - Hidden-block objects were left out (not checked whether vbsp compiles them).
+
+## What our tools do with this (21 November, later)
+
+From section 8: `Mod.prop` and `m.static`, `m.loose`, `m.dynamic` take pitch and roll and still stand the thing on
+its floor by its turned box; `m.loose` turns a thing set square 3 to 17 degrees off three times in five, starts it
+asleep (1) and makes small junk debris (4); skins are mixed on models whose skins are only looks (`map_skins.py`,
+`model_skins.json`, read from the QCs: 304 models have more than one); small props nobody names fade (under 24:
+1024 to 1500, under 64: 1900 to 2500); a rope left without a slack gets 50, 100 or 120 by its span; a lamp's glow is
+0.75. The older pieces' helpers do the same (`map_build.dress_keys`). `map_lint.py` kind `props`: loose props mostly
+square (check 1 and 2), 8 or more small props that never fade (4), things in a door's way (6); kind `rope`: spans
+over 128 with slack under 25 (9). Not done: motion disabled (8) on anything, and furniture as physics props with
+motion disabled (the owner to decide); checks 3, 5, 7, 8, 10 to 12.
