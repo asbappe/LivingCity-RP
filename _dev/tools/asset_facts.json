@@ -18645,6 +18645,24 @@
 "static": true,
 "v": 2
 },
+"models/props_foliage/vine_wall1.mdl": {
+"bbox": [
+-3.6,
+-76.9,
+0.0,
+4.3,
+76.9,
+157.1
+],
+"built_static": true,
+"collides": false,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_forest/axe.mdl": {
 "bbox": [
 -2.6,
@@ -18715,6 +18733,42 @@
 "prop_data": false,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_forest/fence_barb_256.mdl": {
+"bbox": [
+-17.2,
+-121.5,
+-59.8,
+0.0,
+134.6,
+31.3
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_forest/fence_barb_512.mdl": {
+"bbox": [
+-3.7,
+-253.3,
+-62.7,
+13.9,
+278.0,
+28.4
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_forest/fence_border_128.mdl": {
@@ -18987,6 +19041,24 @@
 "static": true,
 "v": 2
 },
+"models/props_forest/lightfixture01.mdl": {
+"bbox": [
+-12.0,
+-12.0,
+-38.8,
+12.0,
+12.0,
+0.0
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_forest/log.mdl": {
 "bbox": [
 -87.4,
@@ -19049,6 +19121,24 @@
 16.7,
 25.3,
 76.0
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_forest/riverlogs.mdl": {
+"bbox": [
+-344.9,
+-191.2,
+-133.7,
+0.0,
+93.8,
+199.5
 ],
 "built_static": true,
 "collides": true,
@@ -28593,6 +28683,24 @@
 ],
 "built_static": true,
 "collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_silo/floorbolts.mdl": {
+"bbox": [
+-109.7,
+-90.2,
+-0.1,
+114.1,
+89.4,
+6.2
+],
+"built_static": true,
+"collides": false,
 "game": "ep2",
 "physics": false,
 "prop_data": false,
