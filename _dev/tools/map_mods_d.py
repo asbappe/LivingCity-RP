@@ -184,14 +184,21 @@ def m_substation(m, opt):
 
 def m_breach(m, opt):
     """The breach: the canal's floor has fallen into an old cellar. A pit 640 by 256 and 160 deep in the middle of
-    the canal, its bottom earth with standing water. Two slabs of the old floor lean down into it along its sides as
-    ramps (one from each end); a third still hangs over the downstream end on two old timber poles and makes a dark
-    undercut where things are kept; reinforcing bars stick out of the broken edge, rubble lies at the bottom. The
-    canal's banks pass either side, so nobody has to go down.
+    the canal: its edge broken, not cut (chunks of the canal's floor slab overhang it unevenly, the slab's thickness
+    showing over the cellar's old brick), cracks running out across the canal's floor from it. The cellar's walls are
+    old brick, a bricked-up doorway in a stone frame in one of them; its floor earth over old flagstones, with a pool of
+    standing water in the low end and drips from the edge. Two slabs of the old floor lean down into it along its
+    sides as ramps (one from each end); a third still hangs over the downstream end on two old timber poles and makes a
+    dark undercut where things are kept, a lantern burning under it; a shelf of old bottles against the upstream wall,
+    crates; reinforcing bars stick out of the broken edge, rubble lies at the bottom, dust hangs in the light from above.
+    The canal's banks pass either side, so nobody has to go down.
     Named for the game: lc_breach_bottom (the middle of the pit), lc_breach_stash (under the hanging slab).
-    Left as brushes: the pit and the three slabs of fallen floor (the ground itself).
+    Left as brushes: the pit, its broken edge and brick lining, the doorway's frame, the flagstones and the three slabs
+    of fallen floor (the ground itself).
     Unchecked: the look of it; the rebar is stood on its side (pitch 90), centred on its origin so it stays where it is
-    put."""
+    put; ambient/water/drip_loop1.wav."""
+    import random
+    from map_mods_c import dustmotes
     deep = F - 160      # (16 over the bottom of everything)
     m.open(0, -256, 1024, 256)
     m.open(192, -128, 832, 128, floor=deep, mat=DIRT)
@@ -200,21 +207,53 @@ def m_breach(m, opt):
     m.shapes([prism([(192, F), (476, deep), (448, deep), (192, F - 22)], "y", -128, -48, slab),            # a ramp down from the upstream end
               prism([(832, F), (832, F - 22), (576, deep), (548, deep)], "y", 48, 128, slab),               # ...and one from the downstream end
               prism([(640, F), (832, F), (832, F - 18), (640, F - 30)], "y", -48, 48, slab)])               # the slab still hanging
+    # the cellar's old brick, under the canal floor's broken slab; a bricked-up doorway in a stone frame
+    brick, old = "brick/brickwall017b", "brick/brickwall037a"
+    m.det([(192, -128, deep, 832, -122, F - 22), (192, 122, deep, 832, 128, F - 22), (192, -122, deep, 198, 122, F - 22), (826, -122, deep, 832, 122, F - 22)], brick)
+    m.det([(404, 118, deep, 460, 122, deep + 96)], old)
+    m.det([(396, 116, deep, 404, 122, deep + 96), (460, 116, deep, 468, 122, deep + 96), (396, 116, deep + 96, 468, 122, deep + 110)], "stone/stonewall050f")
+    m.det([(560, -96, deep, 760, 40, deep + 2)], "stone/stonefloor006f_c17")                               # (old flagstones showing through the earth)
+    # the broken edge: chunks of the slab overhanging the pit by uneven amounts, its thickness showing
+    rnd = random.Random(73)
+    chunks = []
+    for s in (1, -1):
+        u = 476 if s < 0 else 210
+        end = 814 if s < 0 else 548
+        while end - u >= 24:
+            w = min(end - u, rnd.choice((24, 32, 40, 56, 72)))
+            out = rnd.choice((6, 10, 14, 20, 26))
+            v1, v2 = (128 - out, 128) if s > 0 else (-128, -128 + out)
+            chunks.append((u, v1, F - rnd.choice((14, 18, 22)), u + w, v2, F))
+            u += w
+    for v1, v2, u1, u2 in ((-46, 122, 198, 210), (-122, -50, 814, 826)):                                  # (the ends, beside the ramps and the hanging slab)
+        chunks.append((u1, v1, F - 22, u2, v2, F))
+    m.det(chunks, slab)
+    for k, (u, v) in enumerate(((150, -60), (180, 90), (880, 40), (860, -100), (520, 170), (600, -170))):    # cracks running out from it
+        m.grime("crack", u, v, F + 1, k)
     for v in (-43, 43):                                                                                     # two old poles still holding it up
         m.static("models/props_docks/dock01_pole01a_128.mdl", 641, v, 0, z=deep)
     for k, (v, h, model) in enumerate(((-36, 34, "rebar002c_64"), (-8, 46, "rebar001c_64"), (18, 30, "rebar004c_64"), (44, 40, "rebar002c_64"))):
         m.point("prop_static", 200, v, F - h, {"model": "models/props_debris/%s.mdl" % model, "angles": "90 %d 0" % m.fr.yaw(10 * k - 15), "skin": "0", "solid": "0",
                                                 "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
     m.water(290, -44, 440, 44, deep, deep + 5)
+    m.sound("ambient/water/drip_loop1.wav", 360, 0, deep + 60, radius=500, volume=4)
     m.static("models/props_debris/concrete_chunk01a.mdl", 520, -90, 40, z=deep)
     m.static("models/props_debris/concrete_chunk02a.mdl", 500, 20, 110, z=deep)
     m.static("models/props_debris/broken_pile001a.mdl", 250, 80, 200, z=deep)
+    # the old cellar's things: a shelf of old bottles against the upstream wall, crates in the undercut, a lantern there
+    m.static("models/props_c17/shelfunit01a.mdl", 240, 108, 0, z=deep)
+    for k in range(3):
+        m.static("models/props_junk/glassbottle01a.mdl", 222 + 16 * k, 108, 0, z=deep + 46)
     m.loose("models/props_junk/wood_crate001a.mdl", 760, -14, 20, z=deep)
     m.loose("models/props_junk/wood_crate002a.mdl", 790, 30, 70, z=deep)
+    m.static("models/props_c17/lamp001a.mdl", 730, -50, 0, z=deep)
+    m.glow(730, -50, deep + 14, "255 190 110", 0.12)
     m.light(730, 0, deep + 70, "255 190 120 14")
+    dustmotes(m, (220, -110, deep + 24, 620, 110, F + 120))
     m.target("lc_breach_bottom", 512, 0, deep + 8)
     m.target("lc_breach_stash", 730, 0, deep + 8, 180)
     m.decal("decals/decalstain002a", 120, 0, F + 1)
+    m.soundscape(SCAPES["cave"], 512, 0, deep, radius=360)
     m.blocked(192, -128, 832, 128)
     for u, v, z in ((334, -88, F - 80), (690, 88, F - 80), (512, -10, deep), (700, 0, deep), (512, 190, F), (512, -190, F)):
         m.lane(u, v, z)
@@ -236,9 +275,13 @@ def use_door(m, name, box, mat, yaw, speed=70, unseen=False):
 
 def m_tunnel(m, opt):
     """The canal under the city: a covered stretch of any length ("tunnel 1536"), for passing under streets and
-    buildings. A raised kerb walk along each wall, roof beams, the city's pipe (pipeset32d) along the right wall,
-    capped at both ends, a dim dome lamp every 256 on one side then the other.
-    Left as brushes: the kerbs and the roof beams (the tunnel itself)."""
+    buildings. Its roof is vaulted (a polygonal barrel springing from the walls 96 under the crown) with a rib every
+    256, posts down the walls under each; a raised kerb walk along each wall, the city's handrail along its edge in
+    places; the city's pipe (pipeset32d) along the right wall, capped at both ends, a cable slung along over it;
+    caged lamps on the left wall between the ribs (one in three dead); in the left wall's middle a maintenance doorway,
+    planked over and boarded (nobody goes in); puddles under the roof's joints, drips, the tunnel's own soundscape.
+    Left as brushes: the kerbs, the vault and its ribs, the doorway's frame and planking (the tunnel itself)."""
+    from map_mods_c import cage_lamp, handrail, pipe_run
     L = m.fr.length
     roof = F + GATE_HIGH
     m.low(0, -256, L, 256, roof)
@@ -246,16 +289,51 @@ def m_tunnel(m, opt):
     if L > 256:
         m.portal(L - 64, -256, F, L - 62, 256, roof)
     m.det([(0, -256, F, L, -208, F + 14), (0, 208, F, L, 256, F + 14)], MAT["beam"], top=MAT["quay_floor"])
-    m.det([(u, -256, roof - 24, u + 16, 256, roof) for u in range(120, L - 60, 256)], MAT["beam"])
-    from map_mods_c import pipe_run
+    # the vault: strips from each wall's spring to the crown, each convex, no two in one plane overlapping
+    prof = [(256, roof - 96), (224, roof - 54), (176, roof - 24), (112, roof - 7), (48, roof)]
+    vault, ribs = [], []
+    for s in (1, -1):
+        for k in range(len(prof) - 1):
+            (x1, z1), (x2, z2) = prof[k], prof[k + 1]
+            q = [(s * x1, z1), (s * x2, z2), (s * x2, roof), (s * x1, roof)] if z2 < roof else [(s * x1, z1), (s * x2, roof), (s * x1, roof)]
+            vault.append(prism(q, "x", 0, L, "concrete/concretewall008a"))
+            for u in range(128, L - 60, 256):                 # the ribs: the same strips, 6 deep under the vault
+                ribs.append(prism([(s * x1, z1 - 6), (s * x2, z2 - 6), (s * x2, z2), (s * x1, z1)], "x", u, u + 16, MAT["beam"]))
+    m.shapes(vault + ribs)
+    m.det([(u, -256, F + 14, u + 16, -250, roof - 102) for u in range(128, L - 60, 256)] + [(u, 250, F + 14, u + 16, 256, roof - 102) for u in range(128, L - 60, 256)],
+          MAT["beam"])
+    # the pipe along the right wall, a cable over it; the handrail on the kerbs' edges in places
     p2 = 64 + (L - 128) // 128 * 128                     # (the pipe in 128s, 64 in from each end, a cap on each end)
     if p2 > 64:
-        pipe_run(m, (64, -236), (p2, -236), F + 170, "32d")
-        m.static("models/props_c17/pipe_cap005.mdl", 64, -236, 180, z=F + 151)
-        m.static("models/props_c17/pipe_cap005.mdl", p2, -236, 0, z=F + 151)
-    for k, u in enumerate(range(128, L - 60, 256)):
-        m.lamp(u, 214 if k % 2 else -214, roof - 32, "255 210 150 45")     # (its dome against the roof beam over it)
+        pipe_run(m, (64, -236), (p2, -236), F + 126, "32d")
+        m.static("models/props_c17/pipe_cap005.mdl", 64, -236, 180, z=F + 107)
+        m.static("models/props_c17/pipe_cap005.mdl", p2, -236, 0, z=F + 107)
+        m.rope([(u, -251, F + 160) for u in range(136, L - 60, 256)], slack=24, width=1)
+    for u in range(256, L - 255, 512):
+        handrail(m, (u, 206), (u + 128, 206), F + 14)
+        handrail(m, (u + 256, -206), (u + 384, -206), F + 14) if u + 384 <= L - 64 else None
+    # light: caged lamps on the left wall between the ribs, one in three dead
+    for k, u in enumerate(range(256, L - 60, 256)):
+        cage_lamp(m, u, 256, F + 120, 270, "255 214 160 45", lit=k % 3 != 2)
+    # a maintenance doorway in the left wall's middle, planked over and boarded
+    if L >= 768:
+        du = (L // 2) // 64 * 64
+        m.low(du, 256, du + 64, 320, F + 14 + 112, floor=F + 14)
+        m.side(du, 256, du + 64, 320)
+        m.blocked(du, 256, du + 64, 320)
+        m.det([(du, 314, F + 14, du + 64, 320, F + 126)], "wood/woodwall006a")
+        m.det([(du - 6, 248, F + 14, du + 2, 256, F + 126), (du + 62, 248, F + 14, du + 70, 256, F + 126), (du - 6, 248, F + 126, du + 70, 256, F + 134)], MAT["beam"])
+        from map_town import board
+        for z, roll in ((F + 50, 84), (F + 88, 97)):
+            board(m, du + 32, 310, z, 270, roll)
+        m.taken(du - 16, 240, F, du + 80, 256, F + 150)
+    for u in range(192, L - 60, 256):
+        m.grime("puddle", u + 8, ((u // 256) % 3 - 1) * 90, F + 1, u)
+    m.grime("stain", L // 3, 256, F + 60, 1)
+    m.grime("graffiti", 2 * L // 3, -256, F + 70, 2)
+    m.sound("ambient/water/drip_loop1.wav", L // 2, 0, F + 120, radius=700, volume=3)
     m.sound("ambient/atmosphere/tunnel1.wav", L // 2, 0, F + 120, radius=900, volume=3)
+    m.soundscape(SCAPES["tunnel"], L // 2, 0, F, radius=max(600, L // 2))
     for u in range(96, L - 60, 192):
         m.lane(u, 232, F + 14)
     m.view(100, 0, F, 0, 0, "inside")

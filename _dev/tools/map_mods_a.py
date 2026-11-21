@@ -2403,31 +2403,43 @@ def m_shell(m, opt):
 
 def m_aqueduct(m, opt):
     """The aqueduct. A smaller channel crosses OVER the canal at the trim's height: a concrete trough 112 wide on two
-    piers, from a culvert mouth in the left wall to one in the right, each shut by the canal's own bars (black behind),
-    24 of standing water in it. Along its entry side runs a maintenance walk 48 wide (the trough's rim and a grating on
-    brackets) with the city's handrail on its outer edge: a ladder climbs the left pier's buttress to it (256 up), and from it the whole
-    canal can be watched, or crossed up high from bank to bank (the walk ends at each wall; the way down is the
-    ladder or a drop to a bank). At mid-span the trough is cracked: a dark stain down its side, and under it a
-    shallow pool on the canal floor in a ring of mud, with a dripping sound. A sluice valve stands on the trough's rim
-    by the left wall.
+    piers, ribbed under its belly, pilasters down its far side every 64, a coping of the city's trim stone along both
+    rims, from a culvert mouth in the left wall to one in the right, each shut by the canal's own bars: behind the bars a
+    lit stretch of culvert, the trough's water flowing on into it, dark where it goes on. 24 of standing water in it.
+    Along its entry side runs a maintenance walk 48 wide (the trough's rim and a grating on brackets) with the city's
+    handrail on its outer edge: a ladder climbs the left pier's buttress to it (256 up), and from it the whole canal can
+    be watched, or crossed up high from bank to bank (the walk ends at each wall; the way down is the ladder or a drop to
+    a bank). It is lit from below: a caged lamp on each pier and a lamp washing each side of the trough. At mid-span the
+    trough is cracked (painted cracks): its water stains and greens its sides, falls in a thin stream onto the canal
+    floor, and lies there in a shallow pool in a ring of mud, with a dripping sound. A sluice valve stands on the trough's
+    rim by the left wall. It sounds of water (prison.watery_hallway).
     Named for the game: lc_aqueduct_walk (an info_target on the walk at mid-span: a lookout's place).
-    Left as brushes: the trough, its piers, ribs and buttress, the culverts' frames, the grating and its brackets.
-    Unchecked: which way canal_bars004 faces; the sound ambient/water/drip_loop1.wav (if it is not there, the place is silent); water standing in a
-    trough of detail brushes; the pool, a sheet of water 5 deep lying on the floor; the ladder against a buttress."""
+    Left as brushes: the trough, its piers, ribs, pilasters, coping and buttress, the culverts' frames, the grating and
+    its brackets.
+    Unchecked: which way canal_bars004 faces; the sound ambient/water/drip_loop1.wav (if it is not there, the place is
+    silent); water standing in a trough of detail brushes; the pool, a sheet of water 5 deep lying on the floor; the
+    ladder against a buttress; that a thin env_steam pointed down reads as falling water (Half-Life 2 has no falling
+    water material). Not done: the valve draining the trough to open a way along it (a route the game would have to
+    want)."""
     b = m.b
     top, bed = TRIM, TRIM - 32
     con = MAT["beam"]
     m.open(0, -256, 1024, 256)
     for s in (1, -1):
         v1, v2 = (256, 320) if s > 0 else (-320, -256)
-        m.low(448, v1, 576, v2, bed + 112, floor=bed)                      # (as high as the canal's bars that shut it)
-        m.side(448, v1, 576, v2)
+        c1, c2 = (256, 448) if s > 0 else (-448, -256)
+        m.low(448, c1, 576, c2, bed + 112, floor=bed)                      # (as high as the canal's bars that shut it; on a way into the wall)
+        m.side(448, c1, 576, c2)
         m.static(M_ + "props_canal/canal_bars004.mdl", 512, 264 * s, 90, bed)
         clip(m, (448, 272 if s > 0 else -274, bed, 576, 274 if s > 0 else -272, bed + 112))
-        m.det([(448, 280 if s > 0 else -320, bed, 576, 320 if s > 0 else -280, bed + 112)], MAT["black"])
-        m.det([(440, 248 if s > 0 else -256, bed - 16, 448, 256 if s > 0 else -248, bed + 120), (576, 248 if s > 0 else -256, bed - 16, 584, 256 if s > 0 else -248, bed + 120),
+        m.det([(448, 444 if s > 0 else -448, bed, 576, 448 if s > 0 else -444, bed + 112)], MAT["black"])         # where it goes on, dark
+        m.water(448, 264 if s > 0 else -444, 576, 444 if s > 0 else -264, bed - 8, top - 8)
+        m.static(M_ + "props_c17/light_cagelight02_on.mdl", 512, 444 * s - 1 * s, 270 if s > 0 else 90, bed + 70)
+        m.light(512, 420 * s, bed + 80, "200 220 210 30")
+        m.grime("stain", 449, 380 * s, bed + 60, 3 + s)
+        m.det([(440, 248 if s > 0 else -256, bed - 16, 449, 256 if s > 0 else -248, bed + 112), (575, 248 if s > 0 else -256, bed - 16, 584, 256 if s > 0 else -248, bed + 112),
                (440, 248 if s > 0 else -256, bed + 112, 584, 256 if s > 0 else -248, bed + 120)], con)
-        m.blocked(448, v1, 576, v2)
+        m.blocked(448, c1, 576, c2)
         m.taken(416, 192 if s > 0 else -256, F, 608, 256 if s > 0 else -192, b.rim)
     # --- the trough, its piers and their caps ---
     m.det([(464, -256, bed - 16, 576, 256, bed), (464, -256, bed, 480, 256, top), (560, -256, bed, 576, 256, top)], con)
@@ -2435,8 +2447,16 @@ def m_aqueduct(m, opt):
         m.det([(464, v, F, 576, v + 64, bed - 32), (456, v - 8, bed - 32, 584, v + 72, bed - 16)], con)
         m.blocked(432, v - 16, 608, v + 80)
     m.water(480, -256, 560, 256, bed, top - 8)
-    # ribs under the trough
+    # ribs under the trough, pilasters down its far side every 64, a coping of the city's trim stone along both rims
     m.det([(464, v, bed - 28, 576, v + 12, bed - 16) for v in (-250, -40, 28, 238)], con)
+    m.det([(576, v, bed - 16, 580, v + 8, top - 1) for v in range(-228, 229, 64)], con)
+    m.det([(462, -238, top, 482, 238, top + 4), (558, -238, top, 581, 238, top + 4)], "stone/stonewall050f")
+    # light under it: a caged lamp on each pier, a lamp washing each side of the trough from below
+    for (v, u, out) in ((128, 463, 180), (-128, 577, 0)):
+        m.static(M_ + "props_c17/light_cagelight02_on.mdl", u, v, out, F + 150)
+        m.light(u - 14 if out == 180 else u + 14, v, F + 156, "255 210 160 45")
+    m.spot(380, 0, F + 30, "220 225 210 120", 0, -40, 50)
+    m.spot(660, 0, F + 30, "220 225 210 120", 180, -40, 50)
     # --- the walk: a grating on brackets beside the trough's rim, a rail (a gap where the ladder comes up) ---
     m.det([(432, -256, top - 4, 464, 256, top)], "metal/metalgrate013a")
     m.shapes([prism([(464, top - 4), (434, top - 4), (464, top - 40)], "y", v, v + 4, MAT["bars"]) for v in range(-240, 241, 96)])
@@ -2450,13 +2470,19 @@ def m_aqueduct(m, opt):
     m.lane(456, -128, top)
     m.lane(380, 128, F)
     # --- the crack at mid-span: a stain down the trough's side, a broken lip, the pool under it in a ring of mud ---
-    m.shapes([para((463, -10, top - 2), (0, 6, 0), (0, 4, -44), (-1, 0, 0), MAT["black"]), para((463, 4, top - 20), (0, 3, 0), (0, -8, -30), (-1, 0, 0), MAT["black"]),
-              para((576, -6, top - 4), (0, 5, 0), (0, 6, -46), (1, 0, 0), MAT["black"]), para((464, -18, bed - 16), (112, 0, 0), (0, 5, 0), (0, 3, -2), MAT["black"])])
-    m.det([(576, -14, bed - 6, 580, 12, bed + 10)], MAT["black"])
+    for k, (u, v, z) in enumerate(((464, -6, top - 20), (464, 10, bed + 10), (580, 0, top - 24), (580, -12, bed + 4))):
+        m.decal("decals/plaster%03da" % (13, 16)[k % 2], u, v, z)
+    for k, (u, v, z) in enumerate(((464, 4, bed - 4), (580, -4, bed - 8), (464, -30, bed + 8))):
+        m.grime("stain", u, v, z, 10 + k)                                                  # the water's stain and the algae down its sides
+    m.point("env_steam", 528, 0, bed - 20, {"InitialState": "1", "type": "0", "SpreadSpeed": "2", "Speed": "120", "StartSize": "3", "EndSize": "6", "Rate": "40",
+                                           "rendercolor": "200 215 225", "JetLength": "200", "renderamt": "120", "angles": "90 0 0"})      # a thin fall of water
     m.water(432, -64, 624, 64, F, F + 5)
     px, py = m.fr.pt(528, 0)
     m.b.bumps.append(lambda x, y: 16 * max(0.0, 1 - abs(math.hypot(x - px, y - py) - 120) / 56.0))
     m.sound("ambient/water/drip_loop1.wav", 528, 0, F + 40, radius=700, volume=5)
+    m.soundscape(SCAPES["watery"], 528, 0, F, radius=560)
+    canal_grime(m, 16, 400, 6300)
+    canal_grime(m, 650, 1010, 6400)
     m.static(M_ + "props_pipes/valve002.mdl", 568, 204, 90, top)                # a sluice valve on the trough's rim by the left wall
     put(m, M_ + "props_debris/concrete_chunk01a.mdl", 620, -40, 30)
     m.loose(M_ + "props_junk/metalbucket01a.mdl", 440, 40, 0, z=top)
@@ -2495,33 +2521,43 @@ def m_pipes(m, opt):
     b = m.b
     pm, steel, wood = MAT["bars"], HULL, MM["wood"]
     top = F + 152
-    CP = M_ + "props_pipes/concrete_pipe001%s.mdl"
+    main = "metal/metalpipe003a"                     # (the owner's own pipe steel)
     m.open(0, -256, 1280, 256)
     plates = []
 
-    def run(axis, at, z, a, n, kinds="abcd"):
-        """n concrete sections end to end along axis ("u" or "v") at `at` across it, their middles z, from a."""
-        for k in range(n):
-            c = a + 56.3 + 112.6 * k
-            u, v = (c, at) if axis == "u" else (at, c)
-            m.prop("prop_static", CP % kinds[k % len(kinds)], int(round(u)), int(round(v)), 0 if axis == "u" else 90, z - 44,
-                   {"solid": "6", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "skin": str(k % 2)})
-        return int(round(a + 112.6 * n))
+    def run(axis, at, z, a, n, kinds=None):
+        """A steel main 87 across (an eight-sided pipe of brushes, as long as n of the old sections, 113 each) along
+        axis ("u" or "v") at `at` across it, its middle z, from a: a flange every 128 and a stencilled number."""
+        b_ = int(round(a + 112.6 * n))
+        ax = "x" if axis == "u" else "y"
+        plates.append(prism(octagon(at, z, 42), ax, a, b_, main))
+        for f in range(a + 64, b_ - 32, 128):
+            plates.append(prism(octagon(at, z, 48), ax, f, f + 6, MAT["bars"]))
+        mid = (a + b_) // 2 + 20
+        m.grime("number", mid if axis == "u" else at - 42, at - 42 if axis == "u" else mid, z, a)
+        return b_
 
     def plate(axis, at, z, e, way):
         """A bolted steel plate shutting a section's end at e (way: which side of e it lies, +1 or -1)."""
         a, c = (e, e + 4) if way > 0 else (e - 4, e)
         plates.append(prism(octagon(at, z, 46), "x" if axis == "u" else "y", a, c, steel))
     # --- the over route: steps, the valve platform, the main with its plank, the bridge, the second pipe, the ramp ---
-    m.steps(96, 72, 128, F, top, "u", 1)
-    m.det([(324, 72, top - 6, 428, 184, top)], "metal/metalgrate013a")
-    m.det([(u, v, F + (64 if v > 128 else 0), u + 6, v + 6, top - 6) for u in (324, 422) for v in (72, 178)] + [(324, 72, top - 12, 428, 78, top - 6), (324, 178, top - 12, 428, 184, top - 6)], pm)
+    treads = []
+    for i in range(10):
+        ua_, ub_ = 96 + 228 * i // 10, 96 + 228 * (i + 1) // 10
+        z = F + 152 * (i + 1) // 10
+        treads.append((ua_, 76, z - 4, ub_ + 2, 124, z))
+    m.det(treads, "metal/metalgrate013a")
+    m.shapes([para((96, 72, F - 20), (228, 0, 152), (0, 4, 0), (0, 0, 22), MAT["bars"]), para((96, 124, F - 20), (228, 0, 152), (0, 4, 0), (0, 0, 22), MAT["bars"])])
+    tilted(m, "prop_static", M_ + "props_c17/handrail04_doublerise.mdl", 210, 71, F + 112, 270)          # the city's stair rail on its open side
+    m.det([(324, 72, top - 6, 427, 184, top)], "metal/metalgrate013a")
+    m.det([(u, v, F + (64 if v > 128 else 0), u + 6, v + 6, top - 12) for u in (324, 421) for v in (72, 178)] + [(324, 72, top - 12, 427, 78, top - 6), (324, 178, top - 12, 427, 184, top - 6)], pm)
     m.static(M_ + "props_c17/handrail04_medium.mdl", 356, 73, 270, top)            # its rails, on the open sides
     m.static(M_ + "props_c17/handrail04_short.mdl", 406, 73, 270, top)
     m.static(M_ + "props_c17/handrail04_medium.mdl", 325, 156, 0, top)
     m.static(M_ + "props_pipes/valve002.mdl", 396, 166, 270, top)                  # the valve, the gas meter
     m.static(M_ + "props_c17/gasmeter001a.mdl", 356, 176, 270, top)
-    m.det([(374, 180, top, 378, 184, top + 118), (374, 150, top + 114, 378, 184, top + 118)], pm)          # the lamp's post and arm
+    m.det([(374, 180, top, 378, 184, top + 114), (374, 150, top + 114, 378, 184, top + 118)], pm)          # the lamp's post and arm
     m.lamp(376, 154, top + 100, "255 205 150 50", hang=14)
     e = run("u", 126, F + 108, 428, 4)                                             # the main
     plate("u", 126, F + 108, 428, -1)
@@ -2531,7 +2567,7 @@ def m_pipes(m, opt):
         m.static(M_ + "props_c17/handrail04_%s.mdl" % size, c, 141, 270, top + 4)
     m.det([(520, 86, F, 544, 166, F + 65), (780, 86, F, 804, 166, F + 65)], MAT["beam"])                       # saddles
     m.det([(832, -128, top - 4, 880, 128, top)], "metal/metalgrate013a")
-    m.det([(832, -128, top - 12, 836, 128, top - 4), (876, -128, top - 12, 880, 128, top - 4), (852, -4, F, 860, 4, top - 12), (840, -6, top - 18, 872, 6, top - 12)], pm)
+    m.det([(832, -128, top - 12, 836, 128, top - 4), (876, -128, top - 12, 880, 128, top - 4), (852, -4, F, 860, 4, top - 18), (840, -6, top - 18, 872, 6, top - 12)], pm)
     for u in (833, 879):
         for c in (-64, 64):
             m.static(M_ + "props_c17/handrail04_long.mdl", u, c, 0, top)
@@ -2567,6 +2603,19 @@ def m_pipes(m, opt):
     # --- the leak, odds and ends ---
     m.smoke(566, 84, F + 100, colour="215 215 215", size=7, length=70, rate=10)
     m.sound("ambient/gas/steam_loop1.wav", 566, 84, F + 100, radius=600, volume=4)
+    # a second leak, at a joint in the main by the bridge, that the valve on the platform shuts and opens again
+    m.point("env_steam", 812, 84, F + 112, {"targetname": "lc_pipes_leak", "InitialState": "1", "type": "0", "SpreadSpeed": "15", "Speed": "110", "StartSize": "10",
+                                            "EndSize": "30", "Rate": "30", "rendercolor": "225 225 225", "JetLength": "90", "renderamt": "200",
+                                            "angles": "0 %d 0" % m.fr.yaw(270)})
+    m.b.names.append(("lc_pipes_leak", "env_steam", m.tag))
+    m.button("lc_pipes_valve", 392, 183, top + 30, 270, [("lc_pipes_leak", "Toggle", "", 0)])
+    m.static(M_ + "props_pipes/valvewheel001.mdl", 812, 168, 90, F + 108)                 # the joint's valve wheel
+    for (u, sd) in ((200, 1), (640, 1), (760, -1), (1010, -1)):                            # caged lamps on the risers
+        m.static(M_ + "props_c17/light_cagelight02_on.mdl", u + 14, 255 * sd, 270 if sd > 0 else 90, F + 200)
+        m.light(u + 14, 240 * sd, F + 206, "255 210 160 40")
+    m.soundscape(SCAPES["pump"], 640, 0, F, radius=700)
+    canal_grime(m, 16, 90, 6500)
+    canal_grime(m, 1210, 1270, 6600)
     put(m, M_ + "props_c17/oildrum001.mdl", 700, -90, 0)
     m.loose(M_ + "props_junk/wood_crate001a.mdl", 560, -80, 20)
     m.loose(M_ + "props_junk/metalbucket01a.mdl", 400, 100, 0, z=top)
