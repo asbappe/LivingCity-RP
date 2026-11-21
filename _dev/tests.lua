@@ -43244,6 +43244,77 @@ function Nov21_CombineActsTests()
 end
 Nov21_CombineActsTests()
 
+function BaseTallPoleTests()
+-- the owner, 21 November: the silo's flagpole stands on its bottom floor, so tall that the flag flies at eye level on
+-- its top floor: an info_target named as a pole's marker with _top added, straight above it, marks the pole's top
+section("The Resistance's headquarters: a map's _top marker makes a tall pole (the silo)")
+local B = LC.Base
+local setupWas = GetConVar("lc_base_setup_time"):GetInt()
+_setcvar("lc_base_setup_time", 5)
+B.Reset()
+local S0 = Vector(-360000, 220000, 0)
+local zs = LC.AddZone(nil, nil, "rebel", 0, { mins = S0 + Vector(-600, -600, -16), maxs = S0 + Vector(600, 600, 2000) })
+local base = ents.Create("info_target") base:SetName("lc_hq_setup_silotest") base:SetPos(S0 + Vector(0, 0, 8)) base:Spawn()
+local top = ents.Create("info_target") top:SetName("lc_hq_setup_silotest_top") top:SetPos(S0 + Vector(6, 0, 1700)) top:Spawn()
+local O = S0 + Vector(0, 60000, 0)       -- (a tall pole outside any territory, and a plain marker)
+local obase = ents.Create("info_target") obase:SetName("lc_hq_setup_outtest") obase:SetPos(O + Vector(0, 0, 8)) obase:Spawn()
+local otop = ents.Create("info_target") otop:SetName("lc_hq_setup_outtest_top") otop:SetPos(O + Vector(-5, 0, 1200)) otop:Spawn()
+local P = S0 + Vector(0, 70000, 0)
+local plain = ents.Create("info_target") plain:SetName("lc_hq_setup_plaintest") plain:SetPos(P + Vector(0, 0, 8)) plain:Spawn()
+B.Poles()
+local tall = B.poles[LC.RebelLeader(zs)]
+ok(IsValid(tall) and tall:GetPos():DistToSqr(S0) < 4 and tall.lcHigh == 1700 and tall:GetNW2Float("lc_flag_top", 0) == 1700,
+    "a _top marker 1700 over its marker makes that territory's pole 1700 tall, standing on the marker's floor (no 330 limit)",
+    IsValid(tall) and tall.lcHigh, IsValid(tall) and tostring(tall:GetPos()))
+local named, atTop = 0, false
+for _, m in ipairs(B.Markers()) do
+    if m.ent == top or m.ent == otop then atTop = true end
+    if m.ent == base or m.ent == obase or m.ent == plain then named = named + 1 end
+end
+local outPole, plainPole, extra = nil, nil, 0
+for k, e in pairs(B.poles) do
+    if IsValid(e) and isstring(k) then
+        local p = e:GetPos()
+        if p:DistToSqr(O) < 4 then outPole = e elseif p:DistToSqr(P) < 4 then plainPole = e
+        elseif (p.x - O.x) ^ 2 + (p.y - O.y) ^ 2 < 400 then extra = extra + 1 end
+    end
+end
+ok(not atTop and named == 3 and IsValid(outPole) and extra == 0 and outPole.lcHigh == 1200,
+    "a _top marker is never a spot of its own: one pole at the marker below it, none for the _top (outside a territory too)", named, extra)
+ok(IsValid(plainPole) and plainPole.lcHigh == 330 and plainPole:GetModelScale() == 3 and plainPole.lcParts == nil and plainPole:GetNW2Float("lc_flag_top", 0) == 330,
+    "a marker without a _top is as before: one pole 330 tall in the open")
+local parts, reach, thick = tall.lcParts or {}, 0, tall:GetModelScale()
+for _, p in ipairs(parts) do
+    reach = math.max(reach, p:GetPos().z + 110 * p:GetModelScale())
+    thick = math.max(thick, p:GetModelScale())
+end
+ok(#parts == 5 and thick <= 3 and math.abs(reach - 1700) < 1 and parts[1].lcSceneProp == "baseflag",
+    "the tall pole is a stack of six pieces each about a pole in the open (as thick, not 15 times), reaching the top", #parts, thick, reach)
+-- raised from its foot like any pole: E at it, the same rules; at the top the flag flies at the _top marker
+local boss = newPlayer("SiloCommander", "resistance", nil, 99999)
+boss:SetPos(tall:GetPos() + Vector(40, 0, 0))
+ok(LC.BasePoleUse(boss) == true and B.S.state == "raising" and B.S.high == 1700 and B.S.flag == tall,
+    "a Commander pressing E at its foot raises the flag on that same tall pole", tostring(B.S.high))
+for _ = 1, 6 do B.Tick(1) end
+local hz = tall:GetPos().z + tall:GetNW2Float("lc_flag_top", 0) * tall:GetNW2Float("lc_flag_h", 0)
+ok(B.S.state == "live" and B.S.flag == tall and math.abs(hz - top:GetPos().z) < 1,
+    "at the top the flag's full height reaches the _top marker (the client draws it full size there)", tostring(B.S.state), hz)
+-- the stack goes with its pole
+local stack = outPole.lcParts or {}
+obase:Remove() otop:Remove()
+B.Poles()
+local left = 0
+for _, p in ipairs(stack) do if IsValid(p) then left = left + 1 end end
+ok(#stack == 3 and left == 0 and not IsValid(outPole), "a tall pole whose marker is gone goes, all of its stack with it", #stack, left)
+B.Reset()
+ok(not IsValid(tall) and not IsValid(parts[1]), "(and the tests' reset clears a tall pole's stack too)")
+base:Remove() top:Remove() plain:Remove()
+LC.RemoveZone(zs)
+boss:Remove()
+_setcvar("lc_base_setup_time", setupWas)
+end
+BaseTallPoleTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

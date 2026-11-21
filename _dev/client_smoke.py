@@ -3886,6 +3886,9 @@ do
     if (_calls["render.DrawQuad"] or 0) - q0 < 24 + 2 * 20 + 2 * 8 then return "the base's flag: not a cloth with the Lambda and its ring on both sides" end
     local fa, fb, fc, fd = LC_CL.BaseFlagCorners(Vector(0, 0, 0), 1, Vector(1, 0, 0), 330)
     if not (fa.z > fd.z and fb.x - fa.x > 100 and fa.z <= 330) then return "the base's flag: not a banner 100 or more wide under the pole's top" end
+    -- (a tall pole, a map's _top marker: the silo's, flies the flag full size at its top, not scaled up or down)
+    fa, fb, fc, fd = LC_CL.BaseFlagCorners(Vector(0, 0, 0), 1, Vector(1, 0, 0), 1700)
+    if not (math.abs(fa.z - 1688) < 1 and math.abs(fb.x - fa.x - 132) < 1 and math.abs(fa.z - fd.z - 84) < 1) then return "the base's flag on a tall pole: not full size just under its top" end
     hook.t.HUDPaint.LivingCityStealthMeter()
     unit.GetForward = function() return Vector(-1, 0, 0) end
     if LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: seen from behind his back" end
