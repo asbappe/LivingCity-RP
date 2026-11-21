@@ -33,3 +33,6 @@ like `only={{hls}}`, does not exist in Garry's Mod).
 **A newer copy:** the owner saves one with VDC Saver ("Download zip") and sends it; then
 `python3 _dev/tools/vdc.py --import PATH/vdc_wiki.zip` replaces the saved one (same em dash rule; translations and
 SteamVR/helper pages left out) and it is committed. The index side is `_dev/tools/vdc_find.py`.
+
+**The map lessons against the wiki:** `python3 _dev/tools/vdc_lessons.py` (exact name checks, and worksheets for a
+judged read); the first pass and what it found, for the owner to decide: `docs/dev/vdc-lessons-check.md`.
