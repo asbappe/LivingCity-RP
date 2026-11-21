@@ -259,26 +259,28 @@ class Piece:
         r, H = self.r, self.H
         L = (self.size[0] - 128) // 128 * 128
         a = r.choice([x for x in range(512, L - 255, 256) if 2 * x != L] or [L // 256 * 128])
-        T1, T2 = 128, r.choice((64, 128))
-        H2 = H - 128
+        T1, T2, H2 = 128, r.choice((64, 128)), H - 128
         # mass one, its top course set back (the face looks up)
-        self.add(ext(rect(0, -T1, a, 0), 2, 0, H - 128, self.mass))
-        self.add(ext([(-T1, H - 128), (0, H - 128), (-r.choice((32, 40, 16)), H), (-T1, H)], 0, 0, a, self.mass))
-        # mass two, lower, its far front corner cut by the first turn and a turned plate on the cut
+        self.mass(rect(0, -T1, a, 0), 0, H - 128)
+        self.course([(-T1, H - 128), (0, H - 128), (-r.choice((32, 40, 16)), H), (-T1, H)], 0, a)
+        # mass two, lower, its far front corner cut by the first turn, a turned plate on the cut
         ca, cb, k = legs(self.turns[0], 128, T2 - 16)
-        self.add(ext(cut(rect(a, -T2, L, 0), 2, ca, cb), 2, 0, H2, self.mass))
+        self.mass(cut(rect(a, -T2, L, 0), 2, ca, cb), 0, H2)
         if k > 1:
             self.turned_plate((L - ca, 0), (L, -cb), k, (0, 8), 32, H2 - 64)
-        # front: the stack on mass one, off centre; ribs in pairs on mass two
+        # front: the stack on mass one, off centre; on mass two a low band over part of it, ribs in pairs above
+        fr = ("v", 0, 1)
         s0 = r.randrange(32, max(48, a // 4), 16)
-        s1 = min(a - 32, s0 + a * r.choice((5, 6, 7)) // 160 * 16)
-        self.stack(("v", 0, 1), s0, s1, r.choice((0, 32, 64)), H - 128 - r.choice((32, 64)), r.randint(3, 6))
-        self.ribs(("v", 0, 1), a + 48, L - ca - 32, 0, H2 - r.choice((0, 64)), r.choice((16, 32)), max(self.thick[-1], 8), "pair")
-        # back: turned wedges on mass one; mass two's head leaning over (the face looks down) and small plates
-        fb, s = ("v", -T1, -1), r.choice((32, 96))
-        for i, x in enumerate(rib_run(s, a - 160, 96, r, None, r.choice((256, 384)))):
+        self.stack(fr, s0, min(a - 32, s0 + a * r.choice((5, 6, 7)) // 160 * 16), r.choice((0, 32, 64)), H - 128 - r.choice((32, 64)), r.randint(3, 6))
+        hb = r.choice((96, 128, 160))
+        self.fbox(fr, a + 32, a + 32 + (L - ca - a) * r.choice((7, 9, 11)) // 256 * 16, 0, hb, 0, self.thick[-1], self.plate)
+        self.ribs(fr, a + 48, L - ca - 32, hb, H2 - r.choice((0, 64)), r.choice((16, 32)), max(self.thick[-1], 8), "pair")
+        # back: turned wedges on mass one; on mass two a head leaning over part of it (looks down) and small plates
+        fb = ("v", -T1, -1)
+        for i, x in enumerate(rib_run(r.choice((32, 96)), a - 160, 96, r, None, r.choice((256, 384)))):
             self.wedge(fb, x, 0, r.choice((256, H - 128, H)), self.turns[-1], 96, i % 2 == 1)
-        self.add(ext([(-T2, H2 - 128), (-T2, H2), (-T2 - r.choice((32, 40, 16)), H2)], 0, a + 16, L - 16, self.mass))
+        c = a + (L - a) * r.choice((5, 7, 9)) // 192 * 16
+        self.course([(-T2, H2 - 128), (-T2, H2), (-T2 - r.choice((32, 40, 16)), H2)], *r.choice(((a + 16, c), (c, L - 16))))
         self.ribs(("v", -T2, -1), a + 32, L - 64, 96, 160, 32, self.thick[0], None, 128, self.plate)
         self.fbox(("u", 0, -1), -T1 + 16, -T1 + 64, 0, H - 160, 0, self.thick[-1], self.plate)
 
@@ -291,13 +293,13 @@ class Piece:
         wr, ho, HB = L - W - wl, 256, H - 128
         a1, b1, _ = legs(self.turns[0], 128, 160)
         a2, b2, _ = legs(self.turns[-1], 96, 128)
-        self.add(ext(cut(rect(0, -T, wl, 0), 3, a1, b1), 2, 0, H, self.mass))
-        self.add(ext(cut(rect(wl + W, -T, L, 0), 2, a2, b2), 2, 0, HB, self.mass))
+        self.mass(cut(rect(0, -T, wl, 0), 3, a1, b1), 0, H)
+        self.mass(cut(rect(wl + W, -T, L, 0), 2, a2, b2), 0, HB)
         # the lintel, its face leaning over the way in (looks down)
-        self.add(ext([(-T, ho), (0, ho), (32, ho + 128), (-T, ho + 128)], 0, wl, wl + W, self.mass))
+        self.course([(-T, ho), (0, ho), (32, ho + 128), (-T, ho + 128)], wl, wl + W)
         # the two sides of the way through: thin plates three to five deep on one, leaning in high and one band on the other
         self.stack(("u", wl, 1), -T + 16, -16 - r.choice((0, 32, 64)), 0, ho - 32, r.randint(3, 5), (16, 24), False)
-        self.add(ext([(wl + W, ho - 128), (wl + W, ho), (wl + W - 32, ho)], 1, -T, 0, self.mass))
+        self.add(ext([(wl + W, ho - 128), (wl + W, ho), (wl + W - 32, ho)], 1, -T, 0, self.mass_m))
         self.fbox(("u", wl + W, -1), -T + 48, -64, 32, 96, 0, self.thick[-1], self.plate)
         # front: the stack on the wider side, ribs in pairs on the narrower
         fr = ("v", 0, 1)
@@ -308,8 +310,7 @@ class Piece:
             self.stack(fr, wl + W + 32, L - a2 - 32, 0, HB - r.choice((32, 64)), r.randint(3, 6))
             self.ribs(fr, a1 + 32, wl - 32, 0, H - 64, 16, 16, "pair", 192)
         # back: turned wedges behind one side, a low plate band behind the other
-        bk = ("v", -T, -1)
-        x = 32
+        bk, x = ("v", -T, -1), 32
         while x + 160 < wl:
             x += self.wedge(bk, x, 0, H - 128, self.turns[-1], 96, x > 64) + r.choice((48, 112))
         self.fbox(bk, wl + W + 32, L - 64, 64, 128, 0, self.thick[0], self.plate)
@@ -320,17 +321,17 @@ class Piece:
         Hc = H - 256
         a1, b1, k1 = legs(self.turns[0], 128, 128)
         a2, b2, _ = legs(self.turns[-1], 64, 64)
-        self.add(ext(cut(cut(rect(0, -Y, X, 0), 3, a1, b1), 1, a2, b2), 2, 0, Hc, self.mass))
+        self.mass(cut(cut(rect(0, -Y, X, 0), 3, a1, b1), 1, a2, b2), 0, Hc)
 
         def c16(x):
             return -(-x * 6 // 10 // 16) * 16 + 16
         # crown: one course leaning over to the south (looks down) and back on the east (looks up); a cap on it
         bot = rect(c16(a1), -Y + c16(b2), X - c16(a2), -c16(b1))
         top = rect(c16(a1), -Y + c16(b2), X - c16(a2) - 40, -c16(b1) + 32)
-        self.add(loft(bot, top, Hc, Hc + 128, self.mass))
-        self.add(ext(top, 2, Hc + 128, H, self.mass))
+        self.add(loft(bot, top, Hc, Hc + 128, self.mass_m))
+        self.mass(top, Hc + 128, H)
         # foot: the west face battered (looks up)
-        self.add(ext([(0, 0), (-32, 0), (0, 128)], 1, -Y, -b1, self.mass))
+        self.add(ext([(0, 0), (-32, 0), (0, 128)], 1, -Y, -b1, self.mass_m))
         # south: a tall stack off centre with its light; west: bands in pairs up one side; east: a band and small plates
         s0 = a1 + 32
         self.stack(("v", 0, 1), s0, min(X - 32, s0 + (X - a1) * 6 // 160 * 16), r.choice((128, 192)), r.choice((640, 768)), r.randint(3, 6))
@@ -552,7 +553,7 @@ def check(path):
 
 # ---- the test map ----
 LAYOUT = (("skin", (0, 2304, 0, 768, 2944, 320)), ("wall", (896, 1408, 0, 2176, 1920, 512)),
-          ("gate", (2432, 640, 0, 3456, 1152, 512)), ("tower", (3712, -128, 0, 4224, 448, 1280)))
+          ("gate", (2432, 640, 0, 3456, 1152, 512)), ("tower", (3712, -64, 0, 4224, 448, 1280)))
 
 
 def tex_scale(text):
