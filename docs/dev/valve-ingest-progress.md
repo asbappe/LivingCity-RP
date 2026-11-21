@@ -53,8 +53,8 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 
 | # | Batch | Maps | M | P | S |
 |---|---|---|---|---|---|
-| 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | | |
-| 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | | |
+| 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | 01 to 09 done (U1 to U23, `valve_c17/`), 10a to 12b and the rubble rooms next | yes: 22 new lessons, 22 extended (149 in all) |
+| 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | | started: props and craft, logic and NPCs (`valve_ravenholm/wip/`) |
 | 3 | Nova Prospekt | d2_prison_01 to 08 | yes | | |
 | 4 | Black Mesa East | d1_eli_01, 02 | yes | | |
 | 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | | |
