@@ -82,6 +82,13 @@ maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Brie
 close the batch as batches 1 and 2 were (the `notes/` and draft steps above). Next to start: EP1 City 17's logic
 and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pieces and the architecture study).
 
+- **EP2, special attention (the owner, 21 November):** the forest layouts (tree spacing and clusters, clearings,
+  paths), how the forests are bordered (what stops the player at the edges and how it is hidden), prop layout and
+  design in the woods; the mines and the antlion nests and tunnels, for our own cave and forest; the White Forest
+  base for our own bunker map (`map_forest.py`, `lc_forest_bunker.vmf`). **Lift the core missile silo** (its brushes
+  and rooms, minus the missile) as a piece, to be added to our existing bunker. The EP2 props helper was told
+  (its notes get a section for each); the silo is lifted with batch 7's pieces.
+
 - **The Combine generator (the owner, 21 November: "build it next"):** right after batch 6 closes, build
   `_dev/tools/map_combine.py` as planned in TODO.md and `_dev/reference/valve_citadel/` (notes, `arch_scripts/`),
   show the owner one structure on a test map, then carry on with batch 7 (EP2).
