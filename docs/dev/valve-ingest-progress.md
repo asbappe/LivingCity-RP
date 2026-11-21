@@ -26,6 +26,10 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
 - **EP1 Citadel (batch 6):** copy and save for future use the **massive Combine doors built of 20 to 40 brushes**,
   and the **Citadel core reactor** with its effect, animation, damage, sounds and wiring, as pieces
   (`map_prefab.py extract`, with the logic noted in `docs/dev/prefabs.md`). Not done yet.
+- **HL2 Citadel walkway reactors (do with batch 6):** the small power reactors in the middle of the walkways in
+  d3_citadel_03 and 04: step in and you float (`trigger_vphysics_motion`, `SetGravityScale` 0; 9 in 03, 10 in 04),
+  float to the middle and it kills you (`trigger_physics_trap`, `trigger_hurt`). Lift one whole, brushes, effects,
+  sounds and wiring, as a piece. Not done yet.
 
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
