@@ -5,7 +5,7 @@ to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, styleguide_core and stylegu
 helpers): the architecture (`architecture_*`), and the owner's pieces lifted whole (the big doors, the core reactor,
 the walkway reactors, the pods: `_dev/reference/prefabs/`). Tools in the chat's scratch folder (`citlogic/`: an
 entity-only reader, `loops.py` for tracktrain rings, `ride.py` for a ride's timeline, `soldiers.py`).
-Status: d3_citadel_01 to 03 read, with first passes across all 15 maps.
+Status: d3_citadel_01 to 05 and d3_breen_01 read, with first passes across all 15 maps.
 
 ## 1. Machinery on loops
 
@@ -126,4 +126,35 @@ Status: d3_citadel_01 to 03 read, with first passes across all 15 maps.
   lift up the core Resumes at 147 and 162 in step with the calls. The end relay Cancels the pending calls and Kills
   the relay.
 
-(More to come: d3_citadel_04, 05, d3_breen_01's office, ep1_intro, ep1_citadel_00 to 04, the style rooms.)
+## 10. d3_citadel_04 and 05: waves at home, workers and the stalker pod
+
+- **The lift wait (d3_citadel_04).** While the lift is coming, soldiers arrive in random waves: a timer of 4 to 10 s
+  picks one of 8 cases (three doors with squads of 3 from env_entity_makers, or manhacks), but only while fewer than 4
+  are alive (a math_counter: each spawn Adds 3, each death Subtracts 1; its OutValue into a logic_compare against 4
+  Enables or Disables the timer). A wave counter allows 6 waves; calling the lift (the door's OnOpen) narrows the timer
+  to 2 to 5 s and allows 12 more; the lift's first stop Kills the timer. The stasis room does the same with a cap of 3
+  alive and 8 waves (`counter_stasis_wave`). Extends `valve-npc-steady-pressure`.
+- **Kill the hall's guard and the next thing wakes:** 6 soldiers' deaths fill a counter of 3 (any 3 of the 6), which
+  opens the strider hall's door, Kills the strider's calm relationship and Wakes it.
+- **The stalker pod (d3_citadel_05).** One pod with a stalker in it (a prop_dynamic stalker in a prisoner pod) passes
+  the player slowly (70, 1229 long), with a shriek at two nodes and breathing 2 s after: what the Citadel does to
+  prisoners, shown once in passing, never told.
+- **Synths at work (d3_citadel_05):** 1.5 s after the player's pod passes a node, two crab synths (monster_generic)
+  walk a 3-corner path through the gunship bay and are Killed at its end; four mortar synths stand as cyclers.
+- **Reinforcements open their own door (ep1_citadel_04):** the template spawns, one soldier walks to a console
+  (`ss_Soldier_useconsole` at 1 s), another opens the door (`ss_Soldier_opendoor` at 3 s), a standoff goal (stay at
+  cover, aggressiveness 1) at 5 s; the second squad goes straight to an assault at 0.1 to 0.4 s.
+
+## 11. Breen's office (d3_breen_01)
+
+- Breen's office talk is one chain: lcs_BreenOffice01 > 02 > 03 > 03b > 04 OnCompletion, with a jump-ahead relay
+  (`logic_goto4`: Cancel 02, Kill the soldier taking the gun, Start 04 at 0.1 s); 05 starts when Alyx's escape-pod
+  sequence ends, and then Breen plays an idle loop (`breenoffice_postidle_loop`) so he is never left frozen.
+- Breen pleads to the Advisor on his console's screen (func_monitor `Monitor_plead_console_1`, 6 brushes, showing
+  `cam_advisor_1`); the Advisor itself is a cycler in a sealed box.
+- On the climb Breen mocks the player in 7 lines (br_mock01 to 13), each started by a trigger_once at a place: one
+  line a place, never a timer.
+- The guards outside the door (valve-breach-buildup) and the end: `player_weaponstrip` at the end game, a speed mod
+  for the G-Man's scene.
+
+(More to come: ep1_intro, ep1_citadel_00 to 04, the style rooms.)

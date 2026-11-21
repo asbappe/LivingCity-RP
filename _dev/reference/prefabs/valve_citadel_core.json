@@ -1,0 +1,6657 @@
+{
+"name": "valve_citadel_core",
+"note": "draft",
+"from": "ep1_citadel_03.vmf",
+"box": [
+2240.0,
+11700.0,
+4880.0,
+3130.0,
+12590.0,
+7770.0
+],
+"anchor": [
+2687.0,
+12142.0,
+4988.0
+],
+"size": [
+890.0,
+890.0,
+2890.0
+],
+"solids": [
+{
+"from": "func_brush",
+"sides": [
+{
+"plane": [
+[
+171.0,
+44.0,
+644.9
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+419.12,
+-37.7,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+419.12,
+-37.7115,
+539.79
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+171.0,
+-44.0,
+644.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48675.996] 0.25",
+"vaxis": "[-1 0 0 -11164.003] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+423.52,
+37.7,
+532.09
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+-44.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+171.0,
+-44.0,
+639.1
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+423.52,
+37.6901,
+532.09
+],
+[
+423.52,
+-37.6,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48675.996] 0.25",
+"vaxis": "[-1 0 0 -11164.003] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+419.12,
+37.8,
+539.79
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+171.0,
+44.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+423.52,
+37.6901,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 11164.003] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+423.52,
+-37.6,
+532.09
+],
+[
+171.0,
+-44.0,
+639.1
+],
+[
+171.0,
+-44.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+423.52,
+-37.6,
+532.09
+],
+[
+419.12,
+-37.7115,
+539.79
+],
+[
+171.0,
+-44.0,
+644.9
+],
+[
+171.0,
+-44.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 11164.003] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+171.0,
+-44.0,
+639.1
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+44.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+171.0,
+-44.0,
+644.9
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+-44.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48675.996] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+423.52,
+37.7,
+532.09
+],
+[
+423.52,
+-37.6,
+532.09
+],
+[
+419.12,
+-37.7,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+423.52,
+-37.6,
+532.09
+],
+[
+423.52,
+37.6901,
+532.09
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+419.12,
+-37.7115,
+539.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48451.996] 0.25",
+"vaxis": "[0 0 -1 -19560] 0.25",
+"lightmapscale": "16"
+}
+],
+"live": "brush_rotator_collisionbits"
+},
+{
+"from": "func_brush",
+"sides": [
+{
+"plane": [
+[
+41.0,
+-172.0,
+645.9
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+-39.67,
+-420.1,
+540.79
+]
+],
+"verts": [],
+"corners": [
+[
+-39.67,
+-420.1,
+540.79
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+-47.0,
+-172.0,
+645.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10851.996] 0.25",
+"vaxis": "[0 1 0 48744] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+35.5,
+-424.5,
+533.09
+]
+],
+"verts": [],
+"corners": [
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+640.1
+],
+[
+35.5042,
+-424.5,
+533.09
+],
+[
+-39.54,
+-424.5,
+533.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10851.996] 0.25",
+"vaxis": "[0 1 0 48744] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+35.6,
+-420.1,
+540.79
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+41.0,
+-172.0,
+640.1
+]
+],
+"verts": [],
+"corners": [
+[
+41.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+35.5042,
+-424.5,
+533.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48744] 0.25",
+"vaxis": "[0 0 -1 -19887.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+-47.0,
+-172.0,
+645.9
+]
+],
+"verts": [],
+"corners": [
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+-39.67,
+-420.1,
+540.79
+],
+[
+-47.0,
+-172.0,
+645.9
+],
+[
+-47.0,
+-172.0,
+640.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48744] 0.25",
+"vaxis": "[0 0 -1 -19887.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+645.9
+]
+],
+"verts": [],
+"corners": [
+[
+-47.0,
+-172.0,
+645.9
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+41.0,
+-172.0,
+640.1
+],
+[
+-47.0,
+-172.0,
+640.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10851.996] 0.25",
+"vaxis": "[0 0 -1 -19887.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+35.5,
+-424.5,
+533.09
+],
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+-39.67,
+-420.1,
+540.79
+]
+],
+"verts": [],
+"corners": [
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+35.5042,
+-424.5,
+533.09
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+-39.67,
+-420.1,
+540.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -11139.996] 0.25",
+"vaxis": "[0 0 -1 -20068] 0.25",
+"lightmapscale": "16"
+}
+],
+"live": "brush_rotator_collisionbits"
+},
+{
+"from": "func_brush",
+"sides": [
+{
+"plane": [
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-423.12,
+34.0,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+-423.12,
+33.9714,
+539.79
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-175.0,
+38.0,
+644.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48576.008] 0.25",
+"vaxis": "[1 0 0 10867.992] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-427.52,
+-40.0,
+532.09
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+38.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+-175.0,
+38.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-427.52,
+-40.0308,
+532.09
+],
+[
+-427.52,
+33.9,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48576.008] 0.25",
+"vaxis": "[1 0 0 10867.992] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-175.0,
+-44.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-427.52,
+-40.0308,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10867.992] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-175.0,
+38.0,
+639.1
+],
+[
+-175.0,
+38.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-423.12,
+33.9714,
+539.79
+],
+[
+-175.0,
+38.0,
+644.9
+],
+[
+-175.0,
+38.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10867.992] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-175.0,
+38.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+-175.0,
+38.0,
+644.9
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+38.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48576.008] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-427.52,
+-40.0,
+532.09
+],
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-423.12,
+34.0,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-427.52,
+-40.0308,
+532.09
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-423.12,
+33.9714,
+539.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48800.008] 0.25",
+"vaxis": "[0 0 -1 -19560] 0.25",
+"lightmapscale": "16"
+}
+],
+"live": "brush_rotator_collisionbits"
+},
+{
+"from": "func_brush",
+"sides": [
+{
+"plane": [
+[
+-41.75,
+420.1,
+538.79
+],
+[
+34.64,
+420.1,
+538.79
+],
+[
+41.0,
+172.0,
+643.9
+]
+],
+"verts": [],
+"corners": [
+[
+34.64,
+420.1,
+538.79
+],
+[
+-41.7508,
+420.1,
+538.79
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+41.0,
+172.0,
+643.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10708] 0.25",
+"vaxis": "[0 -1 0 -48536] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-48.0,
+172.0,
+638.1
+],
+[
+41.0,
+172.0,
+638.1
+],
+[
+34.53,
+424.5,
+531.09
+]
+],
+"verts": [],
+"corners": [
+[
+41.0,
+172.0,
+638.1
+],
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-41.64,
+424.5,
+531.09
+],
+[
+34.5272,
+424.5,
+531.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10708] 0.25",
+"vaxis": "[0 -1 0 -48536] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-48.0,
+172.0,
+643.9
+],
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-41.64,
+424.5,
+531.09
+]
+],
+"verts": [],
+"corners": [
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+-41.7508,
+420.1,
+538.79
+],
+[
+-41.64,
+424.5,
+531.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48536] 0.25",
+"vaxis": "[0 0 -1 -19895.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+41.0,
+172.0,
+638.1
+],
+[
+41.0,
+172.0,
+643.9
+],
+[
+34.64,
+420.1,
+538.79
+]
+],
+"verts": [],
+"corners": [
+[
+34.5272,
+424.5,
+531.09
+],
+[
+34.64,
+420.1,
+538.79
+],
+[
+41.0,
+172.0,
+643.9
+],
+[
+41.0,
+172.0,
+638.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48536] 0.25",
+"vaxis": "[0 0 -1 -19895.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+41.0,
+172.0,
+643.9
+]
+],
+"verts": [],
+"corners": [
+[
+41.0,
+172.0,
+643.9
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+-48.0,
+172.0,
+638.1
+],
+[
+41.0,
+172.0,
+638.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10708] 0.25",
+"vaxis": "[0 0 -1 -19895.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+34.53,
+424.5,
+531.09
+],
+[
+34.64,
+420.1,
+538.79
+],
+[
+-41.75,
+420.1,
+538.79
+]
+],
+"verts": [],
+"corners": [
+[
+34.5272,
+424.5,
+531.09
+],
+[
+-41.64,
+424.5,
+531.09
+],
+[
+-41.7508,
+420.1,
+538.79
+],
+[
+34.64,
+420.1,
+538.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10932] 0.25",
+"vaxis": "[0 0 -1 -19564] 0.25",
+"lightmapscale": "16"
+}
+],
+"live": "brush_rotator_collisionbits"
+}
+],
+"points": [
+{
+"classname": "prop_static",
+"origin": [
+435.78999999999996,
+401.5,
+523.5100000000002
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 53 0",
+"disableshadows": "0",
+"fademaxdist": "1500",
+"fademindist": "1200",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/railing_128.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-27.0,
+6.0,
+628.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 90 0",
+"disableshadows": "1",
+"fademaxdist": "2500",
+"fademindist": "2000",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/combine_core_tube01.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-31.0,
+-6.0,
+1432.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 180 0",
+"disableshadows": "1",
+"fademaxdist": "2500",
+"fademindist": "2000",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/combine_core_tube01.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+261.3600000000001,
+0.3999999999996362,
+604.7299999999996
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "65 180 180",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/props_combine/combine_core_arm01.mdl",
+"parentname": "rot_door_spinner_8",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"skin": "0",
+"solid": "0",
+"targetname": "rot_upper_plate2"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-2.6399999999998727,
+-263.60000000000036,
+604.7299999999996
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "65 90 180",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/props_combine/combine_core_arm01.mdl",
+"parentname": "rot_door_spinner_7",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"skin": "0",
+"solid": "0",
+"spawnflags": "0",
+"targetname": "rot_upper_plate3"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-2.6399999999998727,
+264.39999999999964,
+604.7299999999996
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "65 270 180",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/props_combine/combine_core_arm01.mdl",
+"parentname": "rot_door_spinner_5",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"skin": "0",
+"solid": "0",
+"spawnflags": "0",
+"targetname": "rot_upper_plate5"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-266.6399999999999,
+0.3999999999996362,
+604.7299999999996
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "65 0 180",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/props_combine/combine_core_arm01.mdl",
+"parentname": "rot_door_spinner_6",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"skin": "0",
+"solid": "0",
+"spawnflags": "0",
+"targetname": "rot_upper_plate4"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+414.9899999999998,
+-386.2999999999993,
+642.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 128 0",
+"disableshadows": "0",
+"fademaxdist": "1500",
+"fademindist": "1200",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/railing_128.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+317.0,
+-358.60000000000036,
+642.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 203 0",
+"disableshadows": "0",
+"fademaxdist": "1500",
+"fademindist": "1200",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/railing_128.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "env_sprite",
+"origin": [
+5.0,
+1.0,
+175.0
+],
+"keys": {
+"classname": "env_sprite",
+"disablereceiveshadows": "0",
+"framerate": "18",
+"GlowProxySize": "512",
+"HDRColorScale": "1.0",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "materials/sprites/physring1.vmt",
+"renderamt": "60",
+"rendercolor": "60 60 60",
+"renderfx": "3",
+"rendermode": "9",
+"scale": "18"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+338.5,
+373.0,
+523.5100000000002
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 338 0",
+"disableshadows": "0",
+"fademaxdist": "1500",
+"fademindist": "1200",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/railing_128.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+250.05000000000018,
+-33.0,
+86.71000000000004
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "17.986 354.414 -0.302175",
+"disableshadows": "1",
+"ExplodeDamage": "0",
+"ExplodeRadius": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"maxdxlevel": "0",
+"MinAnimTime": "5",
+"mindxlevel": "0",
+"model": "models/props_combine/portalball.mdl",
+"PerformanceMode": "0",
+"pressuredelay": "0",
+"RandomAnimation": "0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"SetBodyGroup": "0",
+"skin": "0",
+"solid": "6",
+"StartDisabled": "1",
+"targetname": "core_ball_shield_01"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-153.34000000000015,
+-136.0,
+160.0
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "0 223 0",
+"disableshadows": "1",
+"ExplodeDamage": "0",
+"ExplodeRadius": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"maxdxlevel": "0",
+"MinAnimTime": "5",
+"mindxlevel": "0",
+"model": "models/props_combine/portalball.mdl",
+"PerformanceMode": "0",
+"pressuredelay": "0",
+"RandomAnimation": "0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"SetBodyGroup": "0",
+"skin": "0",
+"solid": "6",
+"StartDisabled": "1",
+"targetname": "core_ball_shield_03"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-106.11000000000013,
+151.0,
+227.52999999999975
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "-18.9334 139.654 -11.156",
+"disableshadows": "1",
+"ExplodeDamage": "0",
+"ExplodeRadius": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"maxdxlevel": "0",
+"MinAnimTime": "5",
+"mindxlevel": "0",
+"model": "models/props_combine/portalball.mdl",
+"PerformanceMode": "0",
+"pressuredelay": "0",
+"RandomAnimation": "0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"SetBodyGroup": "0",
+"skin": "0",
+"solid": "6",
+"StartDisabled": "1",
+"targetname": "core_ball_shield_02"
+}
+},
+{
+"classname": "light",
+"origin": [
+5.0,
+1.0,
+175.0
+],
+"keys": {
+"classname": "light",
+"_constant_attn": "0",
+"_distance": "0",
+"_fifty_percent_distance": "0",
+"_light": "220 247 252 10000",
+"_lightHDR": "-1 -1 -1 1",
+"_lightscaleHDR": "1",
+"_linear_attn": "0",
+"_quadratic_attn": "1",
+"_zero_percent_distance": "0",
+"spawnflags": "0",
+"style": "0"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-3.0,
+2.0,
+638.0
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "0 0 0",
+"disableshadows": "0",
+"ExplodeDamage": "0",
+"ExplodeRadius": "0",
+"fademaxdist": "1300",
+"fademindist": "1100",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"maxdxlevel": "0",
+"MinAnimTime": "5",
+"mindxlevel": "0",
+"model": "models/props_combine/combine_core_ring01.mdl",
+"parentname": "rot_upper_core_frame2",
+"PerformanceMode": "0",
+"pressuredelay": "0",
+"RandomAnimation": "0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"SetBodyGroup": "0",
+"skin": "0",
+"solid": "6",
+"StartDisabled": "0",
+"targetname": "upper_core_frame"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-125.0,
+2.0,
+-10.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 270 0",
+"fademindist": "-1",
+"fadescale": "1",
+"model": "models/props_combine/combine_core_platform01.mdl",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-33.0,
+0.0,
+-1192.0
+],
+"keys": {
+"angles": "0 180 0",
+"disableshadows": "1",
+"fademaxdist": "2500",
+"fademindist": "2000",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_combine/combine_core_tube01.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+}
+],
+"wiring": [
+{
+"classname": "func_door_rotating",
+"keys": {
+"angles": "0 0 0",
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"distance": "45",
+"dmg": "1",
+"forceclosed": "1",
+"health": "0",
+"lip": "0",
+"locked_sentence": "0",
+"loopmovesound": "0",
+"parentname": "rot_upper_core_frame2",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"spawnflags": "4694",
+"speed": "20",
+"targetname": "rot_door_spinner_5",
+"unlocked_sentence": "0",
+"wait": "-1"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+638.33
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19974.6875] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+-16.0,
+606.33
+],
+[
+13.0,
+16.0,
+606.33
+],
+[
+13.0,
+16.0,
+638.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19974.6875] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+13.0,
+16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+-16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+638.33
+],
+[
+13.0,
+16.0,
+638.33
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+638.33
+],
+[
+-19.0,
+-16.0,
+638.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+13.0,
+16.0,
+606.33
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+638.33
+],
+[
+13.0,
+16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19974.6875] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+-16.0,
+638.33
+],
+[
+13.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+606.33
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+638.33
+],
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19974.6875] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-3.0,
+0.0,
+622.33
+]
+},
+{
+"classname": "func_door_rotating",
+"keys": {
+"angles": "0 0 0",
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"distance": "45",
+"dmg": "1",
+"forceclosed": "1",
+"health": "0",
+"lip": "0",
+"locked_sentence": "0",
+"loopmovesound": "0",
+"parentname": "rot_upper_core_frame2",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"spawnflags": "4758",
+"speed": "20",
+"targetname": "rot_door_spinner_6",
+"unlocked_sentence": "0",
+"wait": "-1"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+638.33
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19910.6875] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+-16.0,
+606.33
+],
+[
+13.0,
+16.0,
+606.33
+],
+[
+13.0,
+16.0,
+638.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19910.6875] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+13.0,
+16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+-16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+638.33
+],
+[
+13.0,
+16.0,
+638.33
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+638.33
+],
+[
+-19.0,
+-16.0,
+638.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+638.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+13.0,
+16.0,
+606.33
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+606.33
+],
+[
+-19.0,
+16.0,
+638.33
+],
+[
+13.0,
+16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19910.6875] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+-16.0,
+638.33
+],
+[
+13.0,
+-16.0,
+606.33
+],
+[
+-19.0,
+-16.0,
+606.33
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+638.33
+],
+[
+-19.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+606.33
+],
+[
+13.0,
+-16.0,
+638.33
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19910.6875] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-3.0,
+0.0,
+622.33
+]
+},
+{
+"classname": "func_door_rotating",
+"keys": {
+"angles": "0 0 0",
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"distance": "45",
+"dmg": "1",
+"forceclosed": "1",
+"health": "0",
+"lip": "0",
+"locked_sentence": "0",
+"loopmovesound": "0",
+"parentname": "rot_upper_core_frame2",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"spawnflags": "4692",
+"speed": "20",
+"targetname": "rot_door_spinner_7",
+"unlocked_sentence": "0",
+"wait": "-1"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+638.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+-16.0,
+606.0
+],
+[
+13.0,
+16.0,
+606.0
+],
+[
+13.0,
+16.0,
+638.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+13.0,
+16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+-16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+638.0
+],
+[
+13.0,
+16.0,
+638.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+638.0
+],
+[
+-19.0,
+-16.0,
+638.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+13.0,
+16.0,
+606.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+638.0
+],
+[
+13.0,
+16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+-16.0,
+638.0
+],
+[
+13.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+606.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+638.0
+],
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-3.0,
+0.0,
+622.0
+]
+},
+{
+"classname": "func_door_rotating",
+"keys": {
+"angles": "0 0 0",
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"distance": "45",
+"dmg": "1",
+"forceclosed": "1",
+"health": "0",
+"lip": "0",
+"locked_sentence": "0",
+"loopmovesound": "0",
+"parentname": "rot_upper_core_frame2",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"spawnflags": "4756",
+"speed": "20",
+"targetname": "rot_door_spinner_8",
+"unlocked_sentence": "0",
+"wait": "-1"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+638.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+-16.0,
+606.0
+],
+[
+13.0,
+16.0,
+606.0
+],
+[
+13.0,
+16.0,
+638.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+13.0,
+16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+-16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+638.0
+],
+[
+13.0,
+16.0,
+638.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+638.0
+],
+[
+-19.0,
+-16.0,
+638.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+638.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+13.0,
+16.0,
+606.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+606.0
+],
+[
+-19.0,
+16.0,
+638.0
+],
+[
+13.0,
+16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+-16.0,
+638.0
+],
+[
+13.0,
+-16.0,
+606.0
+],
+[
+-19.0,
+-16.0,
+606.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+638.0
+],
+[
+-19.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+606.0
+],
+[
+13.0,
+-16.0,
+638.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[1 0 0 10762.6758] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-3.0,
+0.0,
+622.0
+]
+},
+{
+"classname": "func_rotating",
+"keys": {
+"angles": "90 0 0",
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"dmg": "1",
+"fanfriction": "20",
+"maxspeed": "10",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"spawnflags": "67",
+"targetname": "rot_upper_core_frame2",
+"volume": "10"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-19.0,
+-16.0,
+510.0
+],
+[
+-19.0,
+16.0,
+510.0
+],
+[
+-19.0,
+16.0,
+542.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+16.0,
+542.0
+],
+[
+-19.0,
+16.0,
+510.0
+],
+[
+-19.0,
+-16.0,
+510.0
+],
+[
+-19.0,
+-16.0,
+542.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+16.0,
+510.0
+],
+[
+13.0,
+-16.0,
+510.0
+],
+[
+13.0,
+-16.0,
+542.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+-16.0,
+510.0
+],
+[
+13.0,
+16.0,
+510.0
+],
+[
+13.0,
+16.0,
+542.0
+],
+[
+13.0,
+-16.0,
+542.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[0 -1 0 -48512] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+510.0
+],
+[
+-19.0,
+-16.0,
+510.0
+],
+[
+13.0,
+-16.0,
+510.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+510.0
+],
+[
+-19.0,
+16.0,
+510.0
+],
+[
+13.0,
+16.0,
+510.0
+],
+[
+13.0,
+-16.0,
+510.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6797] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+-16.0,
+542.0
+],
+[
+-19.0,
+16.0,
+542.0
+],
+[
+13.0,
+16.0,
+542.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+542.0
+],
+[
+-19.0,
+16.0,
+542.0
+],
+[
+-19.0,
+-16.0,
+542.0
+],
+[
+13.0,
+-16.0,
+542.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48512] 0.25",
+"vaxis": "[1 0 0 10762.6797] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-19.0,
+16.0,
+542.0
+],
+[
+-19.0,
+16.0,
+510.0
+],
+[
+13.0,
+16.0,
+510.0
+]
+],
+"verts": [],
+"corners": [
+[
+13.0,
+16.0,
+510.0
+],
+[
+-19.0,
+16.0,
+510.0
+],
+[
+-19.0,
+16.0,
+542.0
+],
+[
+13.0,
+16.0,
+542.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[1 0 0 10762.6797] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+13.0,
+-16.0,
+542.0
+],
+[
+13.0,
+-16.0,
+510.0
+],
+[
+-19.0,
+-16.0,
+510.0
+]
+],
+"verts": [],
+"corners": [
+[
+-19.0,
+-16.0,
+542.0
+],
+[
+-19.0,
+-16.0,
+510.0
+],
+[
+13.0,
+-16.0,
+510.0
+],
+[
+13.0,
+-16.0,
+542.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 0 1 19912] 0.25",
+"vaxis": "[1 0 0 10762.6797] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-2.99,
+0.0,
+654.0
+]
+},
+{
+"classname": "point_template",
+"origin": [
+-3.0,
+0.0,
+510.0
+],
+"keys": {
+"spawnflags": "0",
+"targetname": "ptemplate_rotations1",
+"Template01": "rot_d*",
+"Template02": "rot_upper_pl*",
+"Template03": "rot_upper_core_frame2",
+"Template05": "brush_rotator_collisionbits",
+"Template06": "upper_core_frame"
+},
+"connections": []
+},
+{
+"classname": "env_entity_maker",
+"origin": [
+0.0,
+0.0,
+510.0
+],
+"keys": {
+"angles": "0 0 0",
+"EntityTemplate": "ptemplate_rotations1",
+"PostSpawnDirection": "0 0 0",
+"PostSpawnDirectionVariance": "0.15",
+"PostSpawnSpeed": "0",
+"targetname": "entmaker_frame"
+},
+"connections": []
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_5",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"Solidity": "0",
+"spawnflags": "0",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-71.0,
+90.0,
+693.88
+],
+[
+-71.0,
+434.0,
+553.49
+],
+[
+65.0,
+434.0,
+553.49
+]
+],
+"verts": [],
+"corners": [
+[
+-71.0,
+434.0,
+553.49
+],
+[
+-71.0,
+90.0,
+693.88
+],
+[
+65.0,
+90.0,
+693.88
+],
+[
+65.0,
+434.0,
+553.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10748] 0.25",
+"vaxis": "[0 -1 0 -48536] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-71.0,
+434.0,
+506.0
+],
+[
+-71.0,
+90.0,
+654.39
+],
+[
+65.0,
+90.0,
+654.39
+]
+],
+"verts": [],
+"corners": [
+[
+65.0,
+90.0,
+654.39
+],
+[
+-71.0,
+90.0,
+654.39
+],
+[
+-71.0,
+434.0,
+506.0
+],
+[
+65.0,
+434.0,
+506.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10748] 0.25",
+"vaxis": "[0 -1 0 -48536] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-71.0,
+434.0,
+553.49
+],
+[
+-71.0,
+90.0,
+693.88
+],
+[
+-71.0,
+90.0,
+654.39
+]
+],
+"verts": [],
+"corners": [
+[
+-71.0,
+434.0,
+506.0
+],
+[
+-71.0,
+90.0,
+654.39
+],
+[
+-71.0,
+90.0,
+693.88
+],
+[
+-71.0,
+434.0,
+553.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48536] 0.25",
+"vaxis": "[0 0 -1 -19979.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+65.0,
+434.0,
+506.0
+],
+[
+65.0,
+90.0,
+654.39
+],
+[
+65.0,
+90.0,
+693.88
+]
+],
+"verts": [],
+"corners": [
+[
+65.0,
+434.0,
+553.49
+],
+[
+65.0,
+90.0,
+693.88
+],
+[
+65.0,
+90.0,
+654.39
+],
+[
+65.0,
+434.0,
+506.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48536] 0.25",
+"vaxis": "[0 0 -1 -19979.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+65.0,
+90.0,
+654.39
+],
+[
+-71.0,
+90.0,
+654.39
+],
+[
+-71.0,
+90.0,
+693.88
+]
+],
+"verts": [],
+"corners": [
+[
+65.0,
+90.0,
+693.88
+],
+[
+-71.0,
+90.0,
+693.88
+],
+[
+-71.0,
+90.0,
+654.39
+],
+[
+65.0,
+90.0,
+654.39
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10748] 0.25",
+"vaxis": "[0 0 -1 -19979.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-71.0,
+434.0,
+506.0
+],
+[
+65.0,
+434.0,
+506.0
+],
+[
+65.0,
+434.0,
+553.49
+]
+],
+"verts": [],
+"corners": [
+[
+65.0,
+434.0,
+506.0
+],
+[
+-71.0,
+434.0,
+506.0
+],
+[
+-71.0,
+434.0,
+553.49
+],
+[
+65.0,
+434.0,
+553.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10748] 0.25",
+"vaxis": "[0 0 -1 -19947.4668] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-3.0,
+262.0,
+599.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_8",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"Solidity": "0",
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+433.0,
+-66.0,
+551.49
+],
+[
+89.0,
+-66.0,
+691.88
+],
+[
+89.0,
+70.0,
+691.88
+]
+],
+"verts": [],
+"corners": [
+[
+433.0,
+70.0,
+551.49
+],
+[
+89.0,
+70.0,
+691.88
+],
+[
+89.0,
+-66.0,
+691.88
+],
+[
+433.0,
+-66.0,
+551.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 -1 0 -48583.9961] 0.25",
+"vaxis": "[-1 0 0 -10780.0029] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+433.0,
+70.0,
+504.0
+],
+[
+89.0,
+70.0,
+652.39
+],
+[
+89.0,
+-66.0,
+652.39
+]
+],
+"verts": [],
+"corners": [
+[
+89.0,
+-66.0,
+652.39
+],
+[
+89.0,
+70.0,
+652.39
+],
+[
+433.0,
+70.0,
+504.0
+],
+[
+433.0,
+-66.0,
+504.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 -1 0 -48583.9961] 0.25",
+"vaxis": "[-1 0 0 -10780.0029] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+433.0,
+70.0,
+551.49
+],
+[
+89.0,
+70.0,
+691.88
+],
+[
+89.0,
+70.0,
+652.39
+]
+],
+"verts": [],
+"corners": [
+[
+433.0,
+70.0,
+504.0
+],
+[
+89.0,
+70.0,
+652.39
+],
+[
+89.0,
+70.0,
+691.88
+],
+[
+433.0,
+70.0,
+551.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10780.0029] 0.25",
+"vaxis": "[0 0 -1 -19987.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+433.0,
+-66.0,
+504.0
+],
+[
+89.0,
+-66.0,
+652.39
+],
+[
+89.0,
+-66.0,
+691.88
+]
+],
+"verts": [],
+"corners": [
+[
+433.0,
+-66.0,
+551.49
+],
+[
+89.0,
+-66.0,
+691.88
+],
+[
+89.0,
+-66.0,
+652.39
+],
+[
+433.0,
+-66.0,
+504.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10780.0029] 0.25",
+"vaxis": "[0 0 -1 -19987.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+89.0,
+-66.0,
+652.39
+],
+[
+89.0,
+70.0,
+652.39
+],
+[
+89.0,
+70.0,
+691.88
+]
+],
+"verts": [],
+"corners": [
+[
+89.0,
+-66.0,
+691.88
+],
+[
+89.0,
+70.0,
+691.88
+],
+[
+89.0,
+70.0,
+652.39
+],
+[
+89.0,
+-66.0,
+652.39
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 -1 0 -48583.9961] 0.25",
+"vaxis": "[0 0 -1 -19987.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+433.0,
+70.0,
+504.0
+],
+[
+433.0,
+-66.0,
+504.0
+],
+[
+433.0,
+-66.0,
+551.49
+]
+],
+"verts": [],
+"corners": [
+[
+433.0,
+-66.0,
+504.0
+],
+[
+433.0,
+70.0,
+504.0
+],
+[
+433.0,
+70.0,
+551.49
+],
+[
+433.0,
+-66.0,
+551.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 -1 0 -48583.9961] 0.25",
+"vaxis": "[0 0 -1 -19955.4668] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+261.0,
+2.0,
+597.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_6",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"Solidity": "0",
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-437.0,
+66.0,
+553.49
+],
+[
+-93.0,
+66.0,
+693.88
+],
+[
+-93.0,
+-70.0,
+693.88
+]
+],
+"verts": [],
+"corners": [
+[
+-437.0,
+-70.0,
+553.49
+],
+[
+-93.0,
+-70.0,
+693.88
+],
+[
+-93.0,
+66.0,
+693.88
+],
+[
+-437.0,
+66.0,
+553.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48568.0078] 0.25",
+"vaxis": "[1 0 0 10803.9922] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-437.0,
+-70.0,
+506.0
+],
+[
+-93.0,
+-70.0,
+654.39
+],
+[
+-93.0,
+66.0,
+654.39
+]
+],
+"verts": [],
+"corners": [
+[
+-93.0,
+66.0,
+654.39
+],
+[
+-93.0,
+-70.0,
+654.39
+],
+[
+-437.0,
+-70.0,
+506.0
+],
+[
+-437.0,
+66.0,
+506.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48568.0078] 0.25",
+"vaxis": "[1 0 0 10803.9922] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-437.0,
+-70.0,
+553.49
+],
+[
+-93.0,
+-70.0,
+693.88
+],
+[
+-93.0,
+-70.0,
+654.39
+]
+],
+"verts": [],
+"corners": [
+[
+-437.0,
+-70.0,
+506.0
+],
+[
+-93.0,
+-70.0,
+654.39
+],
+[
+-93.0,
+-70.0,
+693.88
+],
+[
+-437.0,
+-70.0,
+553.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[-1 0 0 -10803.9922] 0.25",
+"vaxis": "[0 0 -1 -19979.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-437.0,
+66.0,
+506.0
+],
+[
+-93.0,
+66.0,
+654.39
+],
+[
+-93.0,
+66.0,
+693.88
+]
+],
+"verts": [],
+"corners": [
+[
+-437.0,
+66.0,
+553.49
+],
+[
+-93.0,
+66.0,
+693.88
+],
+[
+-93.0,
+66.0,
+654.39
+],
+[
+-437.0,
+66.0,
+506.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[-1 0 0 -10803.9922] 0.25",
+"vaxis": "[0 0 -1 -19979.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-93.0,
+66.0,
+654.39
+],
+[
+-93.0,
+-70.0,
+654.39
+],
+[
+-93.0,
+-70.0,
+693.88
+]
+],
+"verts": [],
+"corners": [
+[
+-93.0,
+66.0,
+654.39
+],
+[
+-93.0,
+66.0,
+693.88
+],
+[
+-93.0,
+-70.0,
+693.88
+],
+[
+-93.0,
+-70.0,
+654.39
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48568.0078] 0.25",
+"vaxis": "[0 0 -1 -19979.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-437.0,
+-70.0,
+506.0
+],
+[
+-437.0,
+66.0,
+506.0
+],
+[
+-437.0,
+66.0,
+553.49
+]
+],
+"verts": [],
+"corners": [
+[
+-437.0,
+-70.0,
+506.0
+],
+[
+-437.0,
+-70.0,
+553.49
+],
+[
+-437.0,
+66.0,
+553.49
+],
+[
+-437.0,
+66.0,
+506.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48568.0078] 0.25",
+"vaxis": "[0 0 -1 -19947.4668] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-265.0,
+-2.0,
+599.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_7",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "1",
+"Solidity": "0",
+"spawnflags": "0",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-69.0,
+-434.0,
+555.49
+],
+[
+-69.0,
+-90.0,
+695.88
+],
+[
+67.0,
+-90.0,
+695.88
+]
+],
+"verts": [],
+"corners": [
+[
+67.0,
+-434.0,
+555.49
+],
+[
+67.0,
+-90.0,
+695.88
+],
+[
+-69.0,
+-90.0,
+695.88
+],
+[
+-69.0,
+-434.0,
+555.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[-1 0 0 -10771.9961] 0.25",
+"vaxis": "[0 1 0 48552] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-69.0,
+-90.0,
+656.39
+],
+[
+-69.0,
+-434.0,
+508.0
+],
+[
+67.0,
+-434.0,
+508.0
+]
+],
+"verts": [],
+"corners": [
+[
+-69.0,
+-434.0,
+508.0
+],
+[
+-69.0,
+-90.0,
+656.39
+],
+[
+67.0,
+-90.0,
+656.39
+],
+[
+67.0,
+-434.0,
+508.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[-1 0 0 -10771.9961] 0.25",
+"vaxis": "[0 1 0 48552] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+67.0,
+-434.0,
+555.49
+],
+[
+67.0,
+-90.0,
+695.88
+],
+[
+67.0,
+-90.0,
+656.39
+]
+],
+"verts": [],
+"corners": [
+[
+67.0,
+-434.0,
+508.0
+],
+[
+67.0,
+-90.0,
+656.39
+],
+[
+67.0,
+-90.0,
+695.88
+],
+[
+67.0,
+-434.0,
+555.49
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 -1 0 -48552] 0.25",
+"vaxis": "[0 0 -1 -19971.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-69.0,
+-434.0,
+508.0
+],
+[
+-69.0,
+-90.0,
+656.39
+],
+[
+-69.0,
+-90.0,
+695.88
+]
+],
+"verts": [],
+"corners": [
+[
+-69.0,
+-434.0,
+555.49
+],
+[
+-69.0,
+-90.0,
+695.88
+],
+[
+-69.0,
+-90.0,
+656.39
+],
+[
+-69.0,
+-434.0,
+508.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 -1 0 -48552] 0.25",
+"vaxis": "[0 0 -1 -19971.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-69.0,
+-90.0,
+656.39
+],
+[
+67.0,
+-90.0,
+656.39
+],
+[
+67.0,
+-90.0,
+695.88
+]
+],
+"verts": [],
+"corners": [
+[
+-69.0,
+-90.0,
+695.88
+],
+[
+67.0,
+-90.0,
+695.88
+],
+[
+67.0,
+-90.0,
+656.39
+],
+[
+-69.0,
+-90.0,
+656.39
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[-1 0 0 -10771.9961] 0.25",
+"vaxis": "[0 0 -1 -19971.4687] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+67.0,
+-434.0,
+508.0
+],
+[
+-69.0,
+-434.0,
+508.0
+],
+[
+-69.0,
+-434.0,
+555.49
+]
+],
+"verts": [],
+"corners": [
+[
+67.0,
+-434.0,
+508.0
+],
+[
+67.0,
+-434.0,
+555.49
+],
+[
+-69.0,
+-434.0,
+555.49
+],
+[
+-69.0,
+-434.0,
+508.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[-1 0 0 -10771.9961] 0.25",
+"vaxis": "[0 0 -1 -20003.4668] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-1.0,
+-262.0,
+601.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_8",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "0",
+"Solidity": "1",
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+171.0,
+44.0,
+644.9
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+419.12,
+-37.7,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+419.12,
+-37.7115,
+539.79
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+171.0,
+-44.0,
+644.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48675.996] 0.25",
+"vaxis": "[-1 0 0 -11164.003] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+423.52,
+37.7,
+532.09
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+-44.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+171.0,
+-44.0,
+639.1
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+423.52,
+37.6901,
+532.09
+],
+[
+423.52,
+-37.6,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48675.996] 0.25",
+"vaxis": "[-1 0 0 -11164.003] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+419.12,
+37.8,
+539.79
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+171.0,
+44.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+423.52,
+37.6901,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 11164.003] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+423.52,
+-37.6,
+532.09
+],
+[
+171.0,
+-44.0,
+639.1
+],
+[
+171.0,
+-44.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+423.52,
+-37.6,
+532.09
+],
+[
+419.12,
+-37.7115,
+539.79
+],
+[
+171.0,
+-44.0,
+644.9
+],
+[
+171.0,
+-44.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 11164.003] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+171.0,
+-44.0,
+639.1
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+44.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+171.0,
+-44.0,
+644.9
+],
+[
+171.0,
+44.0,
+644.9
+],
+[
+171.0,
+44.0,
+639.1
+],
+[
+171.0,
+-44.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48675.996] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+423.52,
+37.7,
+532.09
+],
+[
+423.52,
+-37.6,
+532.09
+],
+[
+419.12,
+-37.7,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+423.52,
+-37.6,
+532.09
+],
+[
+423.52,
+37.6901,
+532.09
+],
+[
+419.12,
+37.8,
+539.79
+],
+[
+419.12,
+-37.7115,
+539.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48451.996] 0.25",
+"vaxis": "[0 0 -1 -19560] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+261.0,
+46.0,
+587.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_7",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "0",
+"Solidity": "1",
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+41.0,
+-172.0,
+645.9
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+-39.67,
+-420.1,
+540.79
+]
+],
+"verts": [],
+"corners": [
+[
+-39.67,
+-420.1,
+540.79
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+-47.0,
+-172.0,
+645.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10851.996] 0.25",
+"vaxis": "[0 1 0 48744] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+35.5,
+-424.5,
+533.09
+]
+],
+"verts": [],
+"corners": [
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+640.1
+],
+[
+35.5042,
+-424.5,
+533.09
+],
+[
+-39.54,
+-424.5,
+533.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10851.996] 0.25",
+"vaxis": "[0 1 0 48744] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+35.6,
+-420.1,
+540.79
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+41.0,
+-172.0,
+640.1
+]
+],
+"verts": [],
+"corners": [
+[
+41.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+35.5042,
+-424.5,
+533.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48744] 0.25",
+"vaxis": "[0 0 -1 -19887.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+-47.0,
+-172.0,
+645.9
+]
+],
+"verts": [],
+"corners": [
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+-39.67,
+-420.1,
+540.79
+],
+[
+-47.0,
+-172.0,
+645.9
+],
+[
+-47.0,
+-172.0,
+640.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 -1 0 -48744] 0.25",
+"vaxis": "[0 0 -1 -19887.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-47.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+640.1
+],
+[
+41.0,
+-172.0,
+645.9
+]
+],
+"verts": [],
+"corners": [
+[
+-47.0,
+-172.0,
+645.9
+],
+[
+41.0,
+-172.0,
+645.9
+],
+[
+41.0,
+-172.0,
+640.1
+],
+[
+-47.0,
+-172.0,
+640.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10851.996] 0.25",
+"vaxis": "[0 0 -1 -19887.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+35.5,
+-424.5,
+533.09
+],
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+-39.67,
+-420.1,
+540.79
+]
+],
+"verts": [],
+"corners": [
+[
+-39.54,
+-424.5,
+533.09
+],
+[
+35.5042,
+-424.5,
+533.09
+],
+[
+35.6,
+-420.1,
+540.79
+],
+[
+-39.67,
+-420.1,
+540.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -11139.996] 0.25",
+"vaxis": "[0 0 -1 -20068] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+37.0,
+-262.0,
+588.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_6",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "0",
+"Solidity": "1",
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-423.12,
+34.0,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+-423.12,
+33.9714,
+539.79
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-175.0,
+38.0,
+644.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48576.008] 0.25",
+"vaxis": "[1 0 0 10867.992] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-427.52,
+-40.0,
+532.09
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+38.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+-175.0,
+38.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-427.52,
+-40.0308,
+532.09
+],
+[
+-427.52,
+33.9,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48576.008] 0.25",
+"vaxis": "[1 0 0 10867.992] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-175.0,
+-44.0,
+639.1
+]
+],
+"verts": [],
+"corners": [
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-427.52,
+-40.0308,
+532.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10867.992] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-175.0,
+38.0,
+639.1
+],
+[
+-175.0,
+38.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-423.12,
+33.9714,
+539.79
+],
+[
+-175.0,
+38.0,
+644.9
+],
+[
+-175.0,
+38.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[-1 0 0 -10867.992] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-175.0,
+38.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+-44.0,
+644.9
+]
+],
+"verts": [],
+"corners": [
+[
+-175.0,
+38.0,
+644.9
+],
+[
+-175.0,
+-44.0,
+644.9
+],
+[
+-175.0,
+-44.0,
+639.1
+],
+[
+-175.0,
+38.0,
+639.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48576.008] 0.25",
+"vaxis": "[0 0 -1 -19891.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-427.52,
+-40.0,
+532.09
+],
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-423.12,
+34.0,
+539.79
+]
+],
+"verts": [],
+"corners": [
+[
+-427.52,
+33.9,
+532.09
+],
+[
+-427.52,
+-40.0308,
+532.09
+],
+[
+-423.12,
+-40.1,
+539.79
+],
+[
+-423.12,
+33.9714,
+539.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48800.008] 0.25",
+"vaxis": "[0 0 -1 -19560] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-265.0,
+-44.0,
+587.94
+]
+},
+{
+"classname": "func_brush",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"InputFilter": "0",
+"invert_exclusion": "0",
+"parentname": "rot_door_spinner_5",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"solidbsp": "0",
+"Solidity": "1",
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "brush_rotator_collisionbits"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-41.75,
+420.1,
+538.79
+],
+[
+34.64,
+420.1,
+538.79
+],
+[
+41.0,
+172.0,
+643.9
+]
+],
+"verts": [],
+"corners": [
+[
+34.64,
+420.1,
+538.79
+],
+[
+-41.7508,
+420.1,
+538.79
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+41.0,
+172.0,
+643.9
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10708] 0.25",
+"vaxis": "[0 -1 0 -48536] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-48.0,
+172.0,
+638.1
+],
+[
+41.0,
+172.0,
+638.1
+],
+[
+34.53,
+424.5,
+531.09
+]
+],
+"verts": [],
+"corners": [
+[
+41.0,
+172.0,
+638.1
+],
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-41.64,
+424.5,
+531.09
+],
+[
+34.5272,
+424.5,
+531.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10708] 0.25",
+"vaxis": "[0 -1 0 -48536] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-48.0,
+172.0,
+643.9
+],
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-41.64,
+424.5,
+531.09
+]
+],
+"verts": [],
+"corners": [
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+-41.7508,
+420.1,
+538.79
+],
+[
+-41.64,
+424.5,
+531.09
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48536] 0.25",
+"vaxis": "[0 0 -1 -19895.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+41.0,
+172.0,
+638.1
+],
+[
+41.0,
+172.0,
+643.9
+],
+[
+34.64,
+420.1,
+538.79
+]
+],
+"verts": [],
+"corners": [
+[
+34.5272,
+424.5,
+531.09
+],
+[
+34.64,
+420.1,
+538.79
+],
+[
+41.0,
+172.0,
+643.9
+],
+[
+41.0,
+172.0,
+638.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[0 1 0 48536] 0.25",
+"vaxis": "[0 0 -1 -19895.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-48.0,
+172.0,
+638.1
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+41.0,
+172.0,
+643.9
+]
+],
+"verts": [],
+"corners": [
+[
+41.0,
+172.0,
+643.9
+],
+[
+-48.0,
+172.0,
+643.9
+],
+[
+-48.0,
+172.0,
+638.1
+],
+[
+41.0,
+172.0,
+638.1
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10708] 0.25",
+"vaxis": "[0 0 -1 -19895.469] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+34.53,
+424.5,
+531.09
+],
+[
+34.64,
+420.1,
+538.79
+],
+[
+-41.75,
+420.1,
+538.79
+]
+],
+"verts": [],
+"corners": [
+[
+34.5272,
+424.5,
+531.09
+],
+[
+-41.64,
+424.5,
+531.09
+],
+[
+-41.7508,
+420.1,
+538.79
+],
+[
+34.64,
+420.1,
+538.79
+]
+],
+"material": "GLASS/GLASSWINDOW070C",
+"uaxis": "[1 0 0 10932] 0.25",
+"vaxis": "[0 0 -1 -19564] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-49.0,
+262.0,
+586.94
+]
+},
+{
+"classname": "prop_coreball",
+"origin": [
+-0.03,
+-0.3,
+172.96
+],
+"keys": {
+"angles": "0 0 0",
+"targetname": "core"
+},
+"connections": []
+},
+{
+"classname": "func_door",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"dmg": "0",
+"forceclosed": "0",
+"health": "0",
+"ignoredebris": "0",
+"lip": "-128",
+"locked_sentence": "0",
+"loopmovesound": "0",
+"movedir": "-90 0 0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"spawnflags": "4140",
+"speed": "256",
+"targetname": "door_core_mount",
+"unlocked_sentence": "0",
+"wait": "4"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-27.0,
+7.0,
+260.0
+],
+[
+-11.0,
+7.0,
+260.0
+],
+[
+-11.0,
+-9.0,
+260.0
+]
+],
+"verts": [],
+"corners": [
+[
+-11.0,
+7.0,
+260.0
+],
+[
+-27.0,
+7.0,
+260.0
+],
+[
+-27.0,
+-9.0,
+260.0
+],
+[
+-11.0,
+-9.0,
+260.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10796] 0.25",
+"vaxis": "[0 -1 0 -48552] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-27.0,
+-9.0,
+244.0
+],
+[
+-11.0,
+-9.0,
+244.0
+],
+[
+-11.0,
+7.0,
+244.0
+]
+],
+"verts": [],
+"corners": [
+[
+-27.0,
+-9.0,
+244.0
+],
+[
+-27.0,
+7.0,
+244.0
+],
+[
+-11.0,
+7.0,
+244.0
+],
+[
+-11.0,
+-9.0,
+244.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10796] 0.25",
+"vaxis": "[0 -1 0 -48552] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-27.0,
+7.0,
+260.0
+],
+[
+-27.0,
+-9.0,
+260.0
+],
+[
+-27.0,
+-9.0,
+244.0
+]
+],
+"verts": [],
+"corners": [
+[
+-27.0,
+-9.0,
+260.0
+],
+[
+-27.0,
+7.0,
+260.0
+],
+[
+-27.0,
+7.0,
+244.0
+],
+[
+-27.0,
+-9.0,
+244.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48552] 0.25",
+"vaxis": "[0 0 -1 -19952] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-11.0,
+7.0,
+244.0
+],
+[
+-11.0,
+-9.0,
+244.0
+],
+[
+-11.0,
+-9.0,
+260.0
+]
+],
+"verts": [],
+"corners": [
+[
+-11.0,
+7.0,
+244.0
+],
+[
+-11.0,
+7.0,
+260.0
+],
+[
+-11.0,
+-9.0,
+260.0
+],
+[
+-11.0,
+-9.0,
+244.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 48552] 0.25",
+"vaxis": "[0 0 -1 -19952] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-11.0,
+7.0,
+260.0
+],
+[
+-27.0,
+7.0,
+260.0
+],
+[
+-27.0,
+7.0,
+244.0
+]
+],
+"verts": [],
+"corners": [
+[
+-27.0,
+7.0,
+244.0
+],
+[
+-27.0,
+7.0,
+260.0
+],
+[
+-11.0,
+7.0,
+260.0
+],
+[
+-11.0,
+7.0,
+244.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10796] 0.25",
+"vaxis": "[0 0 -1 -19952] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-11.0,
+-9.0,
+244.0
+],
+[
+-27.0,
+-9.0,
+244.0
+],
+[
+-27.0,
+-9.0,
+260.0
+]
+],
+"verts": [],
+"corners": [
+[
+-11.0,
+-9.0,
+260.0
+],
+[
+-27.0,
+-9.0,
+260.0
+],
+[
+-27.0,
+-9.0,
+244.0
+],
+[
+-11.0,
+-9.0,
+244.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 10796] 0.25",
+"vaxis": "[0 0 -1 -19952] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-19.0,
+-1.0,
+252.0
+]
+}
+],
+"outside": [],
+"fired_from_outside": [
+{
+"name": "laser_01",
+"classname": "func_door_rotating",
+"origin": [
+3484,
+12144,
+4988
+],
+"outputs": [
+[
+"OnFullyClosed",
+"core_ball_shield_01,TurnOn,,1,-1"
+]
+]
+},
+{
+"name": "relay_core_enable",
+"classname": "logic_relay",
+"origin": [
+1696,
+12086,
+5321
+],
+"outputs": [
+[
+"OnTrigger",
+"entmaker_frame,ForceSpawn,,0,-1"
+]
+]
+},
+{
+"name": "relay_core_flareup",
+"classname": "logic_relay",
+"origin": [
+2496,
+11854,
+5016
+],
+"outputs": [
+[
+"OnTrigger",
+"core,SetScaleX,1.18 .21 0,0.1,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,1.2 .25 0,0.1,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,1.17 .3 0,0.1,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleX,.8 1.6 0,0.3,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,.82 1.8 0,0.3,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,.79 1.7 0,0.3,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleX,.85 1 0,1.9,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,.92 1 0,2.05,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,.9 1 0,2,-1"
+]
+]
+},
+{
+"name": "relay_core_shieldreact",
+"classname": "logic_relay",
+"origin": [
+2480,
+11784,
+5016
+],
+"outputs": [
+[
+"OnTrigger",
+"core,SetScaleX,1 .9 0,0.3,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,1.01 1.1 0,0.2,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,1.2 .02 0,0,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,1 .7 0,0.15,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleX,.7 .1 0,0,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,.8 .06 0,0,-1"
+]
+]
+},
+{
+"name": "relay_core_sealed",
+"classname": "logic_relay",
+"origin": [
+2496,
+11784,
+5016
+],
+"outputs": [
+[
+"OnTrigger",
+"core_ball_shield_02,Kill,,0,-1"
+],
+[
+"OnTrigger",
+"core_ball_shield_03,Kill,,0,-1"
+]
+]
+},
+{
+"name": "case_core_pulse_random_X",
+"classname": "logic_case",
+"origin": [
+2496,
+11834,
+5016
+],
+"outputs": [
+[
+"OnCase02",
+"core,SetScaleX,.95 1.5 0,0,-1"
+],
+[
+"OnCase01",
+"core,SetScaleX,1.05 1.2 0,0,-1"
+],
+[
+"OnCase03",
+"core,SetScaleX,.98 1.8 0,0,-1"
+],
+[
+"OnCase04",
+"core,SetScaleX,1.02 1.5 0,0,-1"
+],
+[
+"OnCase05",
+"core,SetScaleX,1.1 1 0,0,-1"
+],
+[
+"OnCase06",
+"core,SetScaleX,.92 1.3 0,0,-1"
+],
+[
+"OnCase08",
+"core,SetScaleX,.96 1.2 0,0,-1"
+],
+[
+"OnCase07",
+"core,SetScaleX,1.03 1.4 0,0,-1"
+],
+[
+"OnCase10",
+"core,SetScaleX,.93 1.5 0,0,-1"
+],
+[
+"OnCase09",
+"core,SetScaleX,1.07 1.4 0,0,-1"
+],
+[
+"OnCase12",
+"core,SetScaleX,.91 1 0,0,-1"
+],
+[
+"OnCase11",
+"core,SetScaleX,1.06 1.8 0,0,-1"
+],
+[
+"OnCase14",
+"core,SetScaleX,.99 1.2 0,0,-1"
+],
+[
+"OnCase13",
+"core,SetScaleX,1.01 1.2 0,0,-1"
+],
+[
+"OnCase16",
+"core,SetScaleX,.94 1.2 0,0,-1"
+],
+[
+"OnCase15",
+"core,SetScaleX,1.04 1.2 0,0,-1"
+]
+]
+},
+{
+"name": "case_core_pulse_random_Y",
+"classname": "logic_case",
+"origin": [
+2496,
+11818,
+5016
+],
+"outputs": [
+[
+"OnCase02",
+"core,SetScaleY,.95 1.5 0,0,-1"
+],
+[
+"OnCase01",
+"core,SetScaleY,1.05 1.2 0,0,-1"
+],
+[
+"OnCase03",
+"core,SetScaleY,.98 1.8 0,0,-1"
+],
+[
+"OnCase04",
+"core,SetScaleY,1.02 1.5 0,0,-1"
+],
+[
+"OnCase05",
+"core,SetScaleY,1.1 1 0,0,-1"
+],
+[
+"OnCase06",
+"core,SetScaleY,.92 1.3 0,0,-1"
+],
+[
+"OnCase08",
+"core,SetScaleY,.96 1.2 0,0,-1"
+],
+[
+"OnCase07",
+"core,SetScaleY,1.03 1.4 0,0,-1"
+],
+[
+"OnCase10",
+"core,SetScaleY,.93 1.5 0,0,-1"
+],
+[
+"OnCase09",
+"core,SetScaleY,1.07 1.4 0,0,-1"
+],
+[
+"OnCase12",
+"core,SetScaleY,.91 1 0,0,-1"
+],
+[
+"OnCase11",
+"core,SetScaleY,1.06 1.8 0,0,-1"
+],
+[
+"OnCase14",
+"core,SetScaleY,.99 1.2 0,0,-1"
+],
+[
+"OnCase13",
+"core,SetScaleY,1.01 1.2 0,0,-1"
+],
+[
+"OnCase16",
+"core,SetScaleY,.94 1.2 0,0,-1"
+],
+[
+"OnCase15",
+"core,SetScaleY,1.04 1.2 0,0,-1"
+]
+]
+},
+{
+"name": "case_core_pulse_random_Z",
+"classname": "logic_case",
+"origin": [
+2496,
+11802,
+5016
+],
+"outputs": [
+[
+"OnCase02",
+"core,SetScaleZ,.95 1.5 0,0,-1"
+],
+[
+"OnCase01",
+"core,SetScaleZ,1.05 1.2 0,0,-1"
+],
+[
+"OnCase03",
+"core,SetScaleZ,.98 1.8 0,0,-1"
+],
+[
+"OnCase04",
+"core,SetScaleZ,1.02 1.5 0,0,-1"
+],
+[
+"OnCase05",
+"core,SetScaleZ,1.1 1 0,0,-1"
+],
+[
+"OnCase06",
+"core,SetScaleZ,.92 1.3 0,0,-1"
+],
+[
+"OnCase08",
+"core,SetScaleZ,.96 1.2 0,0,-1"
+],
+[
+"OnCase07",
+"core,SetScaleZ,1.03 1.4 0,0,-1"
+],
+[
+"OnCase10",
+"core,SetScaleZ,.93 1.5 0,0,-1"
+],
+[
+"OnCase09",
+"core,SetScaleZ,1.07 1.4 0,0,-1"
+],
+[
+"OnCase12",
+"core,SetScaleZ,.91 1 0,0,-1"
+],
+[
+"OnCase11",
+"core,SetScaleZ,1.06 1.8 0,0,-1"
+],
+[
+"OnCase14",
+"core,SetScaleZ,.99 1.2 0,0,-1"
+],
+[
+"OnCase13",
+"core,SetScaleZ,1.01 1.2 0,0,-1"
+],
+[
+"OnCase16",
+"core,SetScaleZ,.94 1.2 0,0,-1"
+],
+[
+"OnCase15",
+"core,SetScaleZ,1.04 1.2 0,0,-1"
+]
+]
+},
+{
+"name": "case_core_sealed_random_Z",
+"classname": "logic_case",
+"origin": [
+2496,
+11732,
+5016
+],
+"outputs": [
+[
+"OnCase16",
+"core,SetScaleZ,.44 1.2 0,0,-1"
+],
+[
+"OnCase15",
+"core,SetScaleZ,.34 1.2 0,0,-1"
+],
+[
+"OnCase14",
+"core,SetScaleZ,.49 1.2 0,0,-1"
+],
+[
+"OnCase13",
+"core,SetScaleZ,.31 1.2 0,0,-1"
+],
+[
+"OnCase12",
+"core,SetScaleZ,.41 1 0,0,-1"
+],
+[
+"OnCase11",
+"core,SetScaleZ,.36 1.8 0,0,-1"
+],
+[
+"OnCase10",
+"core,SetScaleZ,.43 1.5 0,0,-1"
+],
+[
+"OnCase09",
+"core,SetScaleZ,.37 1.4 0,0,-1"
+],
+[
+"OnCase08",
+"core,SetScaleZ,.46 1.2 0,0,-1"
+],
+[
+"OnCase07",
+"core,SetScaleZ,.33 1.4 0,0,-1"
+],
+[
+"OnCase06",
+"core,SetScaleZ,.42 1.3 0,0,-1"
+],
+[
+"OnCase05",
+"core,SetScaleZ,.31 1 0,0,-1"
+],
+[
+"OnCase04",
+"core,SetScaleZ,.32 1.5 0,0,-1"
+],
+[
+"OnCase03",
+"core,SetScaleZ,.48 1.8 0,0,-1"
+],
+[
+"OnCase02",
+"core,SetScaleZ,.45 1.5 0,0,-1"
+],
+[
+"OnCase01",
+"core,SetScaleZ,.35 1.2 0,0,-1"
+]
+]
+},
+{
+"name": "case_core_sealed_random_Y",
+"classname": "logic_case",
+"origin": [
+2496,
+11748,
+5016
+],
+"outputs": [
+[
+"OnCase16",
+"core,SetScaleY,.44 1.2 0,0,-1"
+],
+[
+"OnCase15",
+"core,SetScaleY,.34 1.2 0,0,-1"
+],
+[
+"OnCase14",
+"core,SetScaleY,.49 1.2 0,0,-1"
+],
+[
+"OnCase13",
+"core,SetScaleY,.31 1.2 0,0,-1"
+],
+[
+"OnCase12",
+"core,SetScaleY,.41 1 0,0,-1"
+],
+[
+"OnCase11",
+"core,SetScaleY,.36 1.8 0,0,-1"
+],
+[
+"OnCase10",
+"core,SetScaleY,.43 1.5 0,0,-1"
+],
+[
+"OnCase09",
+"core,SetScaleY,.37 1.4 0,0,-1"
+],
+[
+"OnCase08",
+"core,SetScaleY,.46 1.2 0,0,-1"
+],
+[
+"OnCase07",
+"core,SetScaleY,.33 1.4 0,0,-1"
+],
+[
+"OnCase06",
+"core,SetScaleY,.42 1.3 0,0,-1"
+],
+[
+"OnCase05",
+"core,SetScaleY,.31 1 0,0,-1"
+],
+[
+"OnCase04",
+"core,SetScaleY,.32 1.5 0,0,-1"
+],
+[
+"OnCase03",
+"core,SetScaleY,.48 1.8 0,0,-1"
+],
+[
+"OnCase02",
+"core,SetScaleY,.45 1.5 0,0,-1"
+],
+[
+"OnCase01",
+"core,SetScaleY,.35 1.2 0,0,-1"
+]
+]
+},
+{
+"name": "case_core_sealed_random_X",
+"classname": "logic_case",
+"origin": [
+2496,
+11764,
+5016
+],
+"outputs": [
+[
+"OnCase02",
+"core,SetScaleX,.45 1.5 0,0,-1"
+],
+[
+"OnCase01",
+"core,SetScaleX,.35 1.2 0,0,-1"
+],
+[
+"OnCase03",
+"core,SetScaleX,.48 1.8 0,0,-1"
+],
+[
+"OnCase04",
+"core,SetScaleX,.32 1.5 0,0,-1"
+],
+[
+"OnCase05",
+"core,SetScaleX,.31 1 0,0,-1"
+],
+[
+"OnCase06",
+"core,SetScaleX,.42 1.3 0,0,-1"
+],
+[
+"OnCase08",
+"core,SetScaleX,.46 1.2 0,0,-1"
+],
+[
+"OnCase07",
+"core,SetScaleX,.33 1.4 0,0,-1"
+],
+[
+"OnCase10",
+"core,SetScaleX,.43 1.5 0,0,-1"
+],
+[
+"OnCase09",
+"core,SetScaleX,.37 1.4 0,0,-1"
+],
+[
+"OnCase12",
+"core,SetScaleX,.41 1 0,0,-1"
+],
+[
+"OnCase11",
+"core,SetScaleX,.36 1.8 0,0,-1"
+],
+[
+"OnCase14",
+"core,SetScaleX,.49 1.2 0,0,-1"
+],
+[
+"OnCase13",
+"core,SetScaleX,.31 1.2 0,0,-1"
+],
+[
+"OnCase16",
+"core,SetScaleX,.44 1.2 0,0,-1"
+],
+[
+"OnCase15",
+"core,SetScaleX,.34 1.2 0,0,-1"
+]
+]
+},
+{
+"name": "relay_core_sealed2",
+"classname": "logic_relay",
+"origin": [
+2512,
+11784,
+5016
+],
+"outputs": [
+[
+"OnTrigger",
+"rot_door_spinner_*,Toggle,,1,1"
+],
+[
+"OnTrigger",
+"core_ball_shield_02,Disable,,3,-1"
+],
+[
+"OnTrigger",
+"core_ball_shield_03,Disable,,3,-1"
+],
+[
+"OnTrigger",
+"core_ball_shield_01,Disable,,3,-1"
+],
+[
+"OnTrigger",
+"core_ball_shield_01,Disable,,3,-1"
+],
+[
+"OnTrigger",
+"core,Setparent,door_core_mount,2.99,-1"
+],
+[
+"OnTrigger",
+"door_core_mount,Open,,3,1"
+]
+]
+},
+{
+"name": "relay_laser_2b",
+"classname": "logic_relay",
+"origin": [
+2160,
+12688,
+5485
+],
+"outputs": [
+[
+"OnTrigger",
+"core_ball_shield_02,TurnOn,,1,-1"
+]
+]
+},
+{
+"name": "relay_laser_01b",
+"classname": "logic_relay",
+"origin": [
+3468,
+12132,
+4914
+],
+"outputs": [
+[
+"OnTrigger",
+"core_ball_shield_01,TurnOn,,1,-1"
+]
+]
+},
+{
+"name": "relay_laser_3b",
+"classname": "logic_relay",
+"origin": [
+2152,
+11488,
+5133
+],
+"outputs": [
+[
+"OnTrigger",
+"core_ball_shield_03,TurnOn,,1,-1"
+]
+]
+},
+{
+"name": "relay_core_flareup_hit",
+"classname": "logic_relay",
+"origin": [
+2512,
+11854,
+5016
+],
+"outputs": [
+[
+"OnTrigger",
+"core,SetScaleX,1.13 .21 0,0.1,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,1.14 .19 0,0.1,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,1.12 .4 0,0.1,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleX,.8 2.6 0,0.35,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleY,.82 2.8 0,0.35,-1"
+],
+[
+"OnTrigger",
+"core,SetScaleZ,.79 2.7 0,0.35,-1"
+]
+]
+}
+]
+}

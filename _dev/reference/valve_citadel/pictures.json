@@ -94,6 +94,49 @@
     "clip_below": 1000,
     "clip_above": 5200
    }
+  },
+  {
+   "n": "Z5",
+   "file": "05_c03_stasis_room.png",
+   "where": "d3_citadel_03, the stasis room, eye level looking south-east (eye 4192 520 2113, yaw 315); the auto view of map_ingest.py views",
+   "teaches": "A round Combine room around a field: the stasisfield model (orange outline, centre 4513 225 2562) over a stasisshield on the floor, three energy cores on one vertical line (z 2080, 2432, 2928, scales 2, 3 and 4, always on), a ring of rail, and columns of pipe 4000 tall (orange) rising past it from far below. The walls are flat plates turned at slightly different angles round the ring, not a true circle. Two squads of four soldiers (green) hold it. Ours: no Combine room built round a machine.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-combine-cold",
+    "valve-npc-assault-lanes"
+   ],
+   "view": {
+    "eye": [
+     4192,
+     520,
+     2113
+    ],
+    "yaw": 315,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z6",
+   "file": "06_c03_ball_room_cut.png",
+   "where": "d3_citadel_03, the first energy ball room (dispensers at 3336 to 3496, -48, 2304; the socket holding shield wall 3 at 3532 140 2446), from the south-west, cut at 2700 (box 2900 -700 4100 800; drawn from a copy without brushes reaching below 1200 or above 4200)",
+   "teaches": "The room hangs on a frame of struts set at angles, not posts: square tubes run off diagonally under the floor and end in the void. Three dispensers of 10 balls each (respawn 4 s) stand in a row 80 apart; one socket of a single ball powers the shield wall: pull the ball and the wall drops, put it back and it rises (with a 0.1 s kill pulse). Ours: nothing in our maps is powered by a thing you can carry.",
+   "lessons": [
+    "valve-ball-socket-power",
+    "valve-forcefield",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     2900,
+     -700,
+     4100,
+     800
+    ],
+    "cut": 2700,
+    "clip_below": 1200,
+    "clip_above": 4200
+   }
   }
  ]
 }
