@@ -35,8 +35,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   `_dev/reference/valve_*`, each batch's notes in its `notes/`. What was done and the owner's requests:
   docs/dev/valve-ingest-progress.md. Guide: docs/dev/map-ingestion.md; digest: docs/dev/valve-digest.md.
 - Pieces lifted at the owner's asking (docs/dev/prefabs.md, "Pieces with their wiring"): Black Mesa East (airlock,
-  turrets, lift, work spots), the Citadel (big doors, core, walkway reactor, pod; light bridge, vortex, ball socket,
-  weapon check room in progress), White Forest's silo (for the bunker: where it goes is the owner's call).
+  turrets, lift, work spots), the Citadel (big doors, core, walkway reactor, pod; light bridge, vortex, ball socket and
+  dispenser, weapon check room), White Forest's silo (for the bunker: where it goes is the owner's call).
 - New tool: `_dev/tools/map_combine.py` (Combine structures from the architecture study); its test map
   `lc_combine_test.vmf` waits on the owner's look before any module uses it.
 - Built after ingestion, owner-approved (TODO.md): timed holds with faster waves, squads topped up, supplies from

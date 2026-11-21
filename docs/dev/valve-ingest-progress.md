@@ -88,7 +88,11 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   if they belong to it); (3) the weapon check room (`valve-confiscation-field`: held, Overwatch at 2 s, cores at 7,
   weapons stripped at 11 and burned at 13, the exit opens). The owner's idea: the weapon check room could take
   prisoners' weapons. The other Citadel concepts (spoken countdown, the Advisor on screens, defenders woken in a
-  chain, a place falling apart) stay as lessons for later. Not done yet: next free helper.
+  chain, a place falling apart) stay as lessons for later. **Done 21 November:** `valve_citadel_light_bridge` (its deck
+  never solid: a clip holds you up; the tool drops clips, so the entry gives its box), `valve_citadel_wind_vortex`
+  (pulses 6 s in every 9.3 s; vphysics triggers, a negative physics explosion and a ragdoll magnet, no push),
+  `valve_citadel_ball_socket`, `valve_citadel_ball_dispenser`, `valve_citadel_weapon_check` (it ends only when a
+  gravity gun charges in it: a timed end must be added).
 
 - **EP2, special attention (the owner, 21 November):** the forest layouts (tree spacing and clusters, clearings,
   paths), how the forests are bordered (what stops the player at the edges and how it is hidden), prop layout and
