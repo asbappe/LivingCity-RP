@@ -34,9 +34,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 21 November (late), two chats. This one, from TODO with no input needed: garden plots (lc_garden_plot_N); people back
   out of their own block, newcomers off the train first, every unit named; dream breakout wakes beside the rescuer; a
   given gun stays hidden on a sympathizer; revenge / counter-raid / a harder cell after her answer; holds on one clock
-  with faster waves; squads topped up with a medic; supplies from roofs; strongholds (docs/features/strongholds.md).
-  Lists for the owner to mark: docs/dev/keep-park-cut.md, docs/dev/dead-weight.md. Map tool faults fixed; helpers'
-  map pieces and map_security.py: TODO.md.
+  with faster waves; squads topped up with a medic; supplies from roofs; strongholds (docs/features/strongholds.md);
+  arrests always find a cell; the sludge tunnel's gas and the substation panel heard (sv_livingcity_mapnames.lua).
+  Lists for the owner to mark: docs/dev/keep-park-cut.md, docs/dev/dead-weight.md. Map tools: faults fixed, props
+  stand on the floor, Valve's prop/craft rules, wire lint, map_security.py (tripwires): TODO.md.
 - The other chat: Valve ingestion DONE (docs/dev/valve-ingest-progress.md); the forest cave (Ravenholm's mine, the
   shaft head and EP2's alarm, a lift down to EP2's nest chambers: lc_forest_cave.vmf); the playable silo, the leader's
   office, bedroom and escape tunnel (map_silo.py); map-placed territories (lc_zone_..., CORE.md); the Combine
