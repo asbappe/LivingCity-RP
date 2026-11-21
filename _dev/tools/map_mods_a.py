@@ -129,6 +129,8 @@ def wall_stair(m, start, v1, v2, sign, rail_v):
     rising 128 over 192 as these stairs do (their origins are at their middles, so they are set by hand)."""
     run = m.steps(start, v1, v2, F, TRIM, "u", sign)
     end = start + sign * run
+    side = (rail_v - 8, rail_v) if rail_v == v1 else (rail_v, rail_v + 8)
+    m.stair_side(start, run, side[0], side[1], F, TRIM, sign)          # its open side solid from the floor (the module review)
     rv = rail_v + 2 if rail_v == v1 else rail_v - 2
     for d, z in ((96, F + 88), (288, F + 216)):
         tilted(m, "prop_static", P + "props_c17/handrail04_doublerise.mdl", start + sign * d, rv, z, 270 if sign > 0 else 90)
@@ -683,36 +685,46 @@ def m_tenement(m, opt):
 
 def m_quay(m, opt):
     """The quay: a way up to the streets. Stairs 64 wide climb along the left wall from the canal floor (u 64) to a
-    landing at the trim's height (u 448 to 512), with the city's own stair rail on the canal's side. The landing opens
-    onto a quay recessed into the left wall, 640 by 256 and open to the sky: a low wall along its edge, two of the
-    city's street lamps, mooring cleats with a boat roped below, three posts before the street doorway, a skip, a
-    bench, crates. At the back a street doorway 128 wide and 128 high stands in a concrete frame, closed 64 in by a cap
-    of the world in its own visgroup ("the quay's street end (delete to join a street)"). From the quay a footbridge
-    on two trestles, railed both sides, crosses to a barred door of Nova Prospekt's in the right wall, black behind.
+    landing at the trim's height (u 448 to 512), with the city's own stair rail on the canal's side; their open side is
+    made solid from the floor to a parapet over the flight, so from the canal it reads as one stair built against the
+    wall. The landing opens onto a quay recessed into the left wall, 640 by 256 and open to the sky: a low wall along
+    its edge, two of the city's street lamps at the edge with their arms over the quay, mooring cleats with a boat roped
+    below, tyres hung down the quay wall as fenders on short ropes, an iron ladder from the canal floor up through a gap
+    in the edge wall (a second way up), three posts before the street doorway, a skip, a bench, a payphone, crates. At
+    the back a street doorway 128 wide and 128 high stands in a concrete frame, a route sign over it, the city's notices
+    beside it and a Combine camera on the wall watching who comes down; it is closed 64 in by a cap of the world in its
+    own visgroup ("the quay's street end (delete to join a street)"). From the quay a footbridge on two trestles,
+    railed both sides, crosses to a barred door of Nova Prospekt's in the right wall: behind it a short passage to the
+    city's locked store for the quay (the Combine's supply crates on shelves, a lamp left on), seen through the bars.
+    Sounds: the quiet courtyard up on the quay, the watery hallway down in the canal (both the owner's map's own).
     Named for the game: lc_quay_street (an info_target in the street doorway, facing the quay: where people arrive
     from the street), lc_quay_far_door (an info_target on the bridge before the barred door).
-    Left as brushes: the stairs, the landing, the quay's low wall, the doorway's frame, the footbridge's deck, girders
-    and trestles (a structure, no model fits 512 by 64).
+    Left as brushes: the stairs and their solid side, the landing, the quay's low wall, the doorway's frame, the
+    store's walls, the footbridge's deck, girders and trestles (a structure, no model fits 512 by 64).
     Unchecked: that handrail04_doublerise rises toward its own +y end (if the stair rail falls the wrong way, turn
     both by 180) and where its posts meet the steps (they were made for steps of 8 and 12, these are 16 and 24); how
-    the boat, bench and payphone models face; the doorway's frame stands 24 above the walls' tops when the rim is at
-    its lowest (784), which may look odd from the street."""
+    the boat, bench, payphone and camera models face; that the hung tyres (turned up on edge) lie flat to the wall;
+    the doorway's frame stands 24 above the walls' tops when the rim is at its lowest (784), which may look odd from
+    the street."""
     b = m.b
     steel = HULL
     m.open(0, -256, 1024, 256)
     m.open(320, 256, 960, 512, floor=TRIM, mat=MAT["quay_floor"])
     m.low(576, 512, 704, 640, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
     m.low(832, -320, 896, -256, TRIM + 112, floor=TRIM)
+    m.low(768, -448, 960, -320, TRIM + 128, floor=TRIM)
     m.side(320, 256, 960, 640)
-    m.side(832, -320, 896, -256)
+    m.side(768, -448, 960, -256)
     m.world((576, 576, TRIM, 704, 640, TRIM + 128), MAT["black"], vis="%s: the quay's street end (delete to join a street)" % b.vis)
     b.plan.keep_out.append(m.fr.rect(512, 640, 768, 704))
     m.blocked(576, 512, 704, 640)
     m.target("lc_quay_street", 640, 544, TRIM + 8, 270)
     # --- the stairs along the wall, their landing, the rail ---
     m.no_bank(0, 248, 512, 264)
-    m.steps(64, 192, 256, F, TRIM, "u", 1)
+    run = m.steps(64, 192, 256, F, TRIM, "u", 1)
     m.det([(448, 192, F, 512, 256, TRIM)], MAT["canal_wall"], top=MAT["quay_floor"])
+    m.stair_side(64, run, 184, 192, F, TRIM, 1)                  # its open side solid, from the floor to a parapet over the flight
+    m.det([(448, 184, F, 513, 192, TRIM + 32)], MAT["beam"])
     # the stair rail: two of the city's rails for a flight (each rises 128 over 192, as these stairs do), then the
     # landing's rail round its open sides. (Their origins are at their middles: set by hand, not stood.)
     for uc, zc in ((160, F + 88), (352, F + 216)):
@@ -724,16 +736,16 @@ def m_quay(m, opt):
     for (u, z) in ((36, F), (160, F + 64), (304, F + 160), (480, TRIM)):
         m.lane(u, 224, z)
     # --- the quay: a low wall along its edge (a gap at the landing, a gap at the footbridge), its coping ---
-    edge = [(320, 448), (512, 832), (896, 960)]
+    edge = [(320, 448), (512, 672), (704, 832), (896, 960)]
     m.det([(a, 256, TRIM, c, 268, TRIM + 40) for a, c in edge], MAT["canal_wall"])
     m.det([(a - (0 if a == 320 else 2), 254, TRIM + 40, c + (0 if c == 960 else 2), 270, TRIM + 44) for a, c in edge], MAT["beam"])
     # the street doorway's frame, standing proud of the back wall
-    m.det([(556, 496, TRIM, 576, 512, TRIM + 128), (704, 496, TRIM, 724, 512, TRIM + 128), (548, 492, TRIM + 128, 732, 512, TRIM + 152)], MAT["beam"])
+    m.det([(556, 496, TRIM, 576, 512, TRIM + 128), (704, 496, TRIM, 724, 512, TRIM + 128), (548, 492, TRIM + 127, 732, 512, TRIM + 152)], MAT["beam"])
     # two of the city's street lamps, their arms over the quay (the arm reaches along the model's left)
-    for (u, v, yaw, way) in ((344, 290, 270, 1), (928, 484, 90, -1)):
-        m.static(P + "props_c17/lamppost03a_on.mdl", u, v, yaw, TRIM)
-        m.light(u + 100 * way, v, TRIM + 400, "255 214 170 300")
-        m.blocked(u - 24, v - 24, u + 24, v + 24)
+    for u in (392, 816):
+        m.static(P + "props_c17/lamppost03a_on.mdl", u, 286, 0, TRIM)
+        m.light(u, 386, TRIM + 400, "255 214 170 300")
+        m.blocked(u - 24, 262, u + 24, 310)
     # posts before the street doorway, cleats for mooring on the edge
     for u in (560, 640, 720):
         m.static(P + "props_trainstation/trainstation_post001.mdl", u, 440, 0, TRIM)
@@ -743,8 +755,8 @@ def m_quay(m, opt):
     put(m, P + "props_trainstation/benchoutdoor01a.mdl", 800, 494, 270, z=TRIM)
     put(m, P + "props_trainstation/payphone001a.mdl", 752, 500, 270, z=TRIM)
     put(m, P + "props_c17/oildrum001.mdl", 936, 300, 0, z=TRIM)
-    put(m, P + "props_c17/oildrum001.mdl", 906, 296, 0, z=TRIM)
-    m.loose(P + "props_junk/wood_crate001a.mdl", 928, 350, 20, z=TRIM)
+    put(m, P + "props_c17/oildrum001.mdl", 936, 332, 0, z=TRIM)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 928, 380, 20, z=TRIM)
     m.loose(P + "props_junk/wood_crate002a.mdl", 600, 300, 90, z=TRIM)
     m.loose(P + "props_junk/wood_pallet001a.mdl", 668, 300, 30, z=TRIM)
     put(m, P + "props_canal/boat001a.mdl", 690, 70, 12)
@@ -762,7 +774,7 @@ def m_quay(m, opt):
         for c in (-192, -64, 64, 192):
             m.static(P + "props_c17/handrail04_long.mdl", u, c, 0, TRIM)
     for v in (-100, 96):
-        br += [(836, v, F, 842, v + 6, TRIM - 24), (886, v, F, 892, v + 6, TRIM - 24), (836, v + 1, F + 120, 892, v + 5, F + 124), (832, v - 2, TRIM - 30, 896, v + 8, TRIM - 24)]
+        br += [(836, v, F, 842, v + 6, TRIM - 24), (886, v, F, 892, v + 6, TRIM - 24), (837, v + 1, F + 120, 891, v + 5, F + 124), (832, v - 2, TRIM - 30, 896, v + 8, TRIM - 24)]
         m.shapes([prism([(842, F + 4), (886, F + 116), (886, F + 120), (842, F + 8)], "y", v + 2, v + 4, MAT["bars"]),
                   prism([(886, F + 124), (842, F + 226), (842, F + 230), (886, F + 128)], "y", v + 2, v + 4, MAT["bars"])])
         m.blocked(816, v - 24, 912, v + 32)
@@ -775,15 +787,45 @@ def m_quay(m, opt):
     # caged lamp on the wall over it ---
     m.static(P + "props_wasteland/prison_celldoor001a.mdl", 864, -260, 90, TRIM)
     clip(m, (832, -266, TRIM, 896, -264, TRIM + 112))
-    m.det([(832, -320, TRIM, 896, -274, TRIM + 112)], MAT["black"])
-    m.det([(824, -264, TRIM, 839, -250, TRIM + 120), (889, -264, TRIM, 904, -250, TRIM + 120), (824, -264, TRIM + 103, 904, -250, TRIM + 120)], steel)
-    m.static(P + "props_c17/light_cagelight02_on.mdl", 864, -256, 90, TRIM + 128)
+    m.det([(824, -264, TRIM - 1, 839, -250, TRIM + 103), (889, -264, TRIM - 1, 904, -250, TRIM + 103), (824, -264, TRIM + 103, 904, -250, TRIM + 120)], steel)
+    # behind it, the city's store for the quay, locked up: the Combine's crates of supplies on shelves, a lamp left on
+    m.portal(832, -302, TRIM, 896, -300, TRIM + 112)
+    m.det([(768, -448, TRIM, 960, -446, TRIM + 128), (768, -448, TRIM, 770, -320, TRIM + 128), (958, -448, TRIM, 960, -320, TRIM + 128),
+           (770, -322, TRIM, 832, -320, TRIM + 128), (896, -322, TRIM, 958, -320, TRIM + 128)], "concrete/concretewall008a")
+    for (u, v, yaw) in ((800, -420, 0), (928, -420, 0)):
+        m.dynamic(P + "props_wasteland/kitchen_shelf001a.mdl", u, v, yaw, TRIM)
+    for (u, v, z, yaw) in ((790, -360, TRIM, 15), (790, -360, TRIM + 24, 40), (930, -370, TRIM, 80), (864, -420, TRIM, 0)):
+        m.static(P + "items/item_item_crate.mdl", u, v, yaw, z)
+    m.static(P + "props_c17/light_cagelight02_on.mdl", 864, -446, 90, TRIM + 96)
+    m.light(864, -420, TRIM + 100, "200 220 255 30")
+    m.grime("number", 959, -380, TRIM + 70, 3)
+    m.grime("stain", 769, -400, TRIM + 90, 4)
+    m.blocked(768, -448, 960, -320)
+    m.static(P + "props_c17/light_cagelight02_on.mdl", 864, -256, 90, TRIM + 130)
     m.light(864, -236, TRIM + 128, "255 120 90 25")
     m.blocked(832, -320, 896, -256)
     m.target("lc_quay_far_door", 864, -230, TRIM + 8, 270)
+    # a working quay: tyres hung down its wall as fenders, an iron ladder up from the canal, the street's sign and the
+    # city's notices by the doorway, a camera watching who comes down
+    m.no_bank(640, 248, 704, 264)
+    m.ladder(688, 254, F, TRIM, 270)
+    for u in (560, 760, 912):
+        tilted(m, "prop_dynamic_override", P + "props_vehicles/tire001c_car.mdl", u, 250, F + 210, 90, 0, 90, {"solid": "6"})
+        m.rope([(u, 262, TRIM + 40), (u, 252, F + 224)], slack=6)
+    m.taken(540, 236, F + 180, 932, 256, TRIM)
+    m.decal("decals/decal_signroute001a", 640, 492, TRIM + 166)
+    m.decal("decals/decal_posterbreen", 760, 511, TRIM + 80)
+    m.grime("poster", 520, 511, TRIM + 70, 2)
+    m.static(P + "props_combine/combinecamera001.mdl", 780, 495, 270, TRIM + 190)
+    for kind, u, v, z, seed in (("puddle", 500, 360, TRIM + 1, 1), ("puddle", 880, 420, TRIM + 1, 2), ("stain", 424, 380, TRIM + 1, 3), ("trash", 820, 470, TRIM + 1, 4),
+                                ("trash", 430, 500, TRIM + 1, 5), ("stain", 960 - 1, 400, TRIM + 60, 6), ("stain", 200, 184, F + 120, 7), ("graffiti", 300, 184, F + 60, 8)):
+        m.grime(kind, u, v, z, seed)
+    canal_grime(m, 32, 1000, 4500)
+    m.soundscape(SCAPES["courtyard"], 640, 380, TRIM, radius=520)
+    m.soundscape(SCAPES["watery"], 512, -100, F, radius=400)
     m.view(20, 150, F, 20, -8, "the stairs")
     m.view(480, 224, TRIM, 40, 6, "from the landing")
-    m.view(900, 300, TRIM, 160, 2, "the quay, the street doorway")
+    m.view(930, 450, TRIM, 195, 2, "the quay, the street doorway")
     m.view(864, 200, TRIM, 270, 6, "the footbridge")
     m.view(560, -110, F, 50, -22, "from the canal")
     b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its cap" % ((m.tag,) + m.fr.at(640, 640, TRIM)))
@@ -797,19 +839,25 @@ def m_collapse(m, opt):
     """The cave-in. The left street's retaining wall and a length of roadway have come down across the canal (the wall
     is bitten out to a ledge of earth at z 528, open to the sky). From the bite to v 32 two great slabs lean on each
     other like a tent, its ridge at z 640; from v 32 a wedge of roadway slopes down to a standing piece of the wall at
-    v -160. Every face is steeper than a player can walk. Two ways through:
-    the squeeze: 96 wide between that standing piece and the right wall (v -256 to -160), open to the sky, no bank;
-    the crawl: a hole 48 wide and 44 high at the foot of the near slab (v 72 to 120) into the hollow under the tent
-    (192 by 96 of flat floor, room to stand, earth sloping up behind), and another out through the far slab (v 40 to
-    88): the two holes do not line up, so nobody sees or shoots straight through. The hollow is a hide
-    (lc_collapse_hide). Each side also has a perch: the earth bank leads up to the end of the bite's ledge beside the
-    slabs. Rebar out of every broken edge, a car that came down with the road, broken slabs of road and rubble (all
-    real models).
+    v -160. Each slab is plainly a piece of the owner's street: cobbles on top (stonefloor006d_c17) with a sett gutter,
+    a kerb and a strip of pavement at its far end, raw concrete underneath with rebar standing out of every broken edge,
+    the broken ends rough; cracks and grit painted on them. Every face is steeper than a player can walk. Two ways
+    through: the squeeze: 96 wide between that standing piece and the right wall (v -256 to -160), open to the sky, no
+    bank; the crawl: a hole 40 wide (a beam props it) and 44 high at the foot of the near slab (v 72 to 112), torn at its
+    corner, into the hollow under the tent (192 by 96 of flat floor, room to stand, earth sloping up behind), and another
+    out through the far slab (v 40 to 88): the two holes do not line up, so nobody sees or shoots straight through. The
+    hollow is a hide (lc_collapse_hide): a slot 16 wide by the ridge lets one shaft of daylight in, dust hangs in it.
+    Each side also has a perch: the earth bank leads up to the end of the bite's ledge beside the slabs. What came down
+    with the street lies about: broken slabs of road, a bench, a cone, a car, rubble (all real models); the street's
+    cables still hang strung from the bite to the ridge. Sounds: metal and concrete settling (coast.util_metalstress),
+    the hollow a cave's quiet (d1_town.CaveTunnel), both the owner's map's own.
     Named for the game: lc_collapse_hide (an info_target in the hollow under the slabs).
     Left as brushes: the great slabs, the wedge and the standing piece of wall (the fallen street itself, too big for
-    any model), the cracks and road lines painted on them.
-    Unchecked: how far each rebar model sticks out of its slab (set by their boxes); that players cannot scramble up the slabs (they lean at 63 and 51 degrees; the game's limit is about
-    45); that the leaning hole reads as a way in; how the car lies."""
+    any model), the kerb, gutter and pavement on them, the prop beam.
+    Unchecked: how far each rebar model sticks out of its slab (set by their boxes); that players cannot scramble up
+    the slabs (they lean at 63 and 51 degrees; the game's limit is about 45); that the leaning hole reads as a way in;
+    how the car and the bench lie; the func_dustmotes keys (from Half-Life 2's own entity, not read from the owner's
+    map); how the cobbles' texture lies on the slopes."""
     b = m.b
     con = MAT["beam"]
     m.open(0, -256, 768, 256)
@@ -822,28 +870,47 @@ def m_collapse(m, opt):
     # --- the tent: two slabs leaning 1 in 2, 24 thick, a crawl hole at the foot of each ---
     near_low, near_up = [(264, F), (288, F), (310, F + 44), (286, F + 44)], [(286, F + 44), (310, F + 44), (408, F + 240), (384, F + 240)]
     far_low, far_up = [(504, F), (480, F), (458, F + 44), (482, F + 44)], [(482, F + 44), (458, F + 44), (360, F + 240), (384, F + 240)]
-    m.shapes([prism(near_low, "y", 32, 72, con), prism(near_low, "y", 120, 256, con), prism(near_up, "y", 32, 256, con, ROAD),
-              prism(far_low, "y", 32, 40, con), prism(far_low, "y", 88, 256, con), prism(far_up, "y", 32, 256, con, ROAD),
+    # each slab is a piece of the owner's own street: cobbles on top with a sett gutter, a kerb and a strip of pavement
+    # at its far end; raw concrete underneath; broken ends rough
+    raw, rough, road, walk, kerb, sett = "concrete/concretewall008a", "concrete/concretewall059e", MM["road"], MM["walk"], "concrete/concretefloor039b", "stone/stonefloor006f_c17"
+
+    def slab(profile, v1, v2, top_face, under_face):
+        f = prism(profile, "y", v1, v2, raw, rough)
+        f[2 + top_face] = (f[2 + top_face][0], road)
+        f[2 + under_face] = (f[2 + under_face][0], raw)
+        return f
+    far_up = [(482, F + 44), (458, F + 44), (384, F + 192), (396, F + 216)]          # (it stops against the near slab's underside)
+    m.shapes([slab(near_low, 32, 72, 3, 1), slab(near_low, 120, 256, 3, 1), slab(near_up, 32, 150, 3, 1), slab(near_up, 166, 256, 3, 1),
+              slab(far_low, 32, 40, 3, 1), slab(far_low, 88, 257, 3, 1), slab(far_up, 32, 257, 3, 1),
               # ...and on across the bite's ledge
-              prism([(328, F + 128), (352, F + 128), (408, F + 240), (384, F + 240)], "y", 256, 384, con),
-              prism([(440, F + 128), (416, F + 128), (360, F + 240), (384, F + 240)], "y", 256, 384, con),
+              prism([(328, F + 128), (352, F + 128), (408, F + 240), (384, F + 240)], "y", 256, 384, raw, rough),
+              prism([(440, F + 128), (416, F + 128), (396, F + 168), (380, F + 136)], "y", 257, 384, raw, rough),
               # the earth that came with the wall, in place of the bank
               prism([(256, F + 128), (128, F), (256, F)], "x", 256, 512, DIRT),
-              # the wedge of roadway from the tent down to the standing piece, its skin of road, and the piece itself
-              prism([(-144, F), (32, F), (32, F + 216)], "x", 288, 480, con),
-              para((276, -144, F), (216, 0, 0), (0, 176, 216), (0, 0, 10), ROAD),
+              # the wedge of roadway from the tent down to the standing piece, its skin of cobbles, and the piece itself
+              prism([(-144, F), (32, F), (32, F + 216)], "x", 288, 480, raw, rough),
+              para((276, -144, F), (216, 0, 0), (0, 176, 216), (0, 0, 10), raw, top=road),
               para((280, -160, F), (208, 0, 0), (0, 24, 150), (0, 16, 0), MAT["canal_wall"]),
-              ])
+              # the gutter, the kerb and the pavement on both slabs (lying on their faces)
+              para((264, 184, F), (0, 16, 0), (120, 0, 240), (-2, 0, 1), raw, top=sett), para((504, 184, F), (0, 16, 0), (-120, 0, 240), (2, 0, 1), raw, top=sett),
+              para((264, 200, F), (0, 55, 0), (120, 0, 240), (-6, 0, 3), kerb, top=walk), para((504, 200, F), (0, 55, 0), (-120, 0, 240), (6, 0, 3), kerb, top=walk),
+              # the crawl hole torn rather than cut, a beam propping it
+              prism([(72, F + 44), (84, F + 44), (72, F + 28)], "x", 284, 308, rough)])
+    m.det([(290, 110, F, 298, 118, F + 46)], WOODTRIM)
     # broken slabs of road lying about, both sides (two flat, one leaning on the wedge, one stood on end)
     D = P + "props_debris/"
     m.static(D + "concrete_section128floor001a.mdl", 176, 72, 12, F)
     m.static(D + "concrete_section128floor001b.mdl", 622, 132, 350, F)
     tilted(m, "prop_static", D + "concrete_section64floor001a.mdl", 236, -112, F + 8, 350, 0, 12)
     tilted(m, "prop_static", D + "concrete_section64floor001c.mdl", 540, -100, F + 4, 180, -62, 0)
-    # cracks and what is left of the road's lines on the slabs' faces (slivers lying on the lean)
-    m.shapes([para((274, 150, F + 20), (0, 5, 0), (70, 0, 140), (-2, 0, 0), MAT["black"]), para((300, 196, F + 72), (0, 3, 0), (40, 0, 80), (-2, 0, 0), MAT["black"]),
-              para((494, 120, F + 20), (0, 4, 0), (-60, 0, 120), (2, 0, 0), MAT["black"]), para((330, 60, F + 132), (0, 8, 0), (40, 0, 80), (-2, 0, 0), PLASTER),
-              para((452, 200, F + 104), (0, 8, 0), (-40, 0, 80), (2, 0, 0), PLASTER)])
+    # cracks and grit on the slabs (painted, on their faces), the street's things that came down with it
+    for kind, u, v, z, seed in (("crack", 324, 150, F + 120, 1), ("crack", 444, 110, F + 120, 2), ("debris", 344, 210, F + 160, 3), ("crack", 330, -60, F + 140, 4),
+                                ("stain", 456, 230, F + 96, 5), ("debris", 200, -20, F + 1, 6), ("debris", 600, -140, F + 1, 7), ("stain", 320, 383, F + 200, 8)):
+        m.grime(kind, u, v, z, seed)
+    m.static(P + "props_trainstation/benchoutdoor01a.mdl", 104, -40, 40, F)
+    m.loose(P + "props_junk/trafficcone001a.mdl", 660, 190, 0)
+    m.rope([(300, 383, b.rim - 30), (380, 300, F + 236)], slack=60)                     # cables torn out of the street, still strung
+    m.rope([(460, 383, b.rim - 44), (400, 290, F + 236)], slack=90)
     # rebar (the game's own): out of the ridge, out of the wedge's sides, out of the bite's lip, out of the standing
     # piece's top. Each half in its slab: their origins are at their middles.
     for (u, v, z, model, yaw, pitch, roll) in ((384, 70, F + 250, "rebar_cluster002a", 0, 0, 0), (386, 150, F + 252, "rebar_cluster002b", 90, 0, 0),
@@ -859,12 +926,20 @@ def m_collapse(m, opt):
     m.loose(P + "props_junk/wood_crate001a.mdl", 340, 52, 20)
     put(m, P + "props_c17/oildrum001.mdl", 440, 56, 0)
     m.light(384, 84, F + 150, "200 210 230 14")
+    m.spot(384, 158, F + 186, "210 220 240 60", 0, 80, 24)                              # one shaft of daylight in through the slot by the ridge
+    m.ent("func_dustmotes", {"SpawnRate": "30", "Color": "255 255 255", "SizeMin": "10", "SizeMax": "20", "Alpha": "255", "MinSpeed": "1", "MaxSpeed": "2",
+                             "LifetimeMin": "3", "LifetimeMax": "5", "DistMax": "1024", "Frozen": "0", "StartDisabled": "0"},
+          [(336, 48, F + 8, 432, 200, F + 150)], MAT["trigger"])
+    m.soundscape(SCAPES["metal"], 384, 0, F, radius=420)
+    m.soundscape(SCAPES["cave"], 384, 100, F, radius=120)
+    canal_grime(m, 16, 220, 4600)
+    canal_grime(m, 580, 760, 4700)
     # --- outside ---
     put(m, P + "props_vehicles/car004a_physics.mdl", 628, -36, 168)
     put(m, P + "props_debris/concrete_chunk01a.mdl", 226, 150, 30)
     put(m, P + "props_debris/broken_pile001a.mdl", 216, -40, 80)
-    put(m, P + "props_debris/concrete_chunk02a.mdl", 240, 60, 140)
-    put(m, P + "props_debris/concrete_chunk01a.mdl", 548, 170, 100)
+    put(m, P + "props_debris/concrete_chunk02a.mdl", 90, 150, 140)
+    put(m, P + "props_debris/concrete_chunk01a.mdl", 720, 104, 100)
     put(m, P + "props_debris/broken_pile001a.mdl", 560, -200, 10)
     m.loose(P + "props_debris/concrete_chunk02a.mdl", 250, -210, 60)
     m.loose(P + "props_vehicles/tire001c_car.mdl", 700, 60, 0)
@@ -874,7 +949,7 @@ def m_collapse(m, opt):
     m.blocked(520, -100, 740, 30)
     for u in (176, 300, 384, 470, 592):
         m.lane(u, -208, F)
-    m.view(120, -150, F, 350, 0, "the squeeze")
+    m.view(120, -120, F, 345, 0, "the squeeze")
     m.view(150, 110, F, 0, 2, "the crawl")
     m.view(320, 56, F, 50, -12, "in the hollow")
     m.view(290, 290, F + 128, 300, 14, "from the perch")
@@ -899,10 +974,14 @@ def cargo(m, kind, u, v, z, yaw, skin=0):
 
 
 def m_scrapyard(m, opt):
-    """The scrapyard. The canal widens 384 on both sides into a yard where the Combine dump what they clear from the
-    streets: the game's own shipping containers (133 by 388 by 130; the open ones hollow, to walk into), wrecked cars
-    stacked two high, tyres, and a tower crane on a plinth in the far right corner whose jib reaches over the yard, its
-    hook (the game's pulley hook) hanging over the open ground.
+    """The scrapyard. The canal widens 384 on both sides into a yard of dirt where the Combine dump what they clear from
+    the streets: the game's own shipping containers (133 by 388 by 130; the open ones hollow, to walk into), some of them
+    dumped off the square, wrecked cars stacked two high, tyres, and a tower crane on a plinth in the far right corner
+    whose jib reaches over the yard, Half-Life 2's crane magnet hanging from it on its cable over the open ground (its
+    hook lies in the dirt). Oil stains, puddles and trash on the ground. It is lit as a yard is: a floodlight on the
+    crane's cab and a lamp cluster on a utility pole at three corners, each throwing a beam down into it. In the right
+    corner by the entry the foreman's office, a wooden hut with a window over the yard: a desk, a radio, a filing
+    cabinet, a calendar on the wall, a bare bulb. The yard groans (coast.util_metalstress).
     On the ground: a container lies across the canal at each end of the yard (the near one open toward the left bank,
     the far one shut): go round their ends. Between them one lies along the middle, open toward the entry, a door swung
     out; left and right lanes run past more containers, open ones to hide in, and round the stacked wrecks. Nothing
@@ -915,17 +994,18 @@ def m_scrapyard(m, opt):
     to crouch behind. The second container of the middle stack is open toward the exit: a nest reached from its ledge.
     Named for the game: lc_scrap_perch (an info_target on the highest container: a sniper's or a lookout's place).
     Left as brushes: the plank ramps and bridges and their cleats (walkways; a board model is 128 long at most), the
-    crane's plinth, lattice tower, cab and jib (no crane model fits under the sky).
+    crane's plinth, lattice tower, cab and jib (no crane model fits under the sky), the office's walls and roof.
     Unchecked: which end of cargo_container01b and 01c is open (taken to be the +y end, where the model is 3 longer)
     and that their insides walk; the ladder on a container's end; that two planks 22 wide side by side walk as one
-    ramp; how the wrecks and the hook face."""
+    ramp; how the wrecks, the magnet, the floodlights and the desk face; where the lamp cluster sits on its pole (set
+    by their boxes). The magnet only hangs: making it lift (a phys_magnet) is left for later."""
     b = m.b
     steel = HULL
     wood = MM["wood"]
     L1Z, L2Z, L3Z = F + 130, F + 260, F + 390
     m.open(0, -256, 1536, 256)
-    m.open(192, 256, 1344, 640)
-    m.open(192, -640, 1344, -256)
+    m.open(192, 256, 1344, 640, mat=DIRT)                # (a yard of dirt, oil-black where the loaders stand)
+    m.open(192, -640, 1344, -256, mat=DIRT)
     m.side(192, -640, 1344, 640)
     # --- the containers: across the canal at each end, the middle stack of three, the left stack, the right lane ---
     cargo(m, "b", 448, 0, F, 0, 1)                  # across, entry side, open toward the left bank
@@ -937,8 +1017,8 @@ def m_scrapyard(m, opt):
     cargo(m, "c", 960, 320, F, 270, 0)
     cargo(m, "", 1024, 320, L1Z, 90, 1)
     cargo(m, "b", 512, -384, F, 270, 1)             # the right lane
-    cargo(m, "b", 1024, -384, F, 90, 0)
-    cargo(m, "", 512, -384, L1Z, 90, 2)
+    cargo(m, "b", 1024, -384, F, 97, 0)             # (dumped, not stacked by a surveyor: turned off the square)
+    cargo(m, "", 512, -384, L1Z, 103, 2)
     # --- planks: ramps (sheared, never steeper than 130 up over 192) and bridges ---
     planks = []
     for (v1, v2) in ((-168, -146), (-142, -120)):
@@ -971,22 +1051,33 @@ def m_scrapyard(m, opt):
     m.det([(1232, -576, F, 1344, -464, F + 136)], MAT["beam"], top=MAT["quay_floor"])
     legs = [(tu + du, tv + dv, F + 136, tu + du + 8, tv + dv + 8, top) for du in (-32, 24) for dv in (-32, 24)]
     for z in range(F + 240, top, 116):
-        legs += [(tu - 32, tv - 30, z, tu + 32, tv - 26, z + 4), (tu - 32, tv + 26, z, tu + 32, tv + 30, z + 4), (tu - 30, tv - 32, z, tu - 26, tv + 32, z + 4), (tu + 26, tv - 32, z, tu + 30, tv + 32, z + 4)]
+        legs += [(tu - 31, tv - 30, z, tu + 31, tv - 26, z + 4), (tu - 31, tv + 26, z + 1, tu + 31, tv + 30, z + 5), (tu - 30, tv - 31, z + 2, tu - 26, tv + 31, z + 6),
+                 (tu + 26, tv - 31, z + 3, tu + 30, tv + 31, z + 7)]
     m.det(legs + [(tu - 36, tv - 36, top, tu + 36, tv + 36, top + 6), (tu - 4, tv - 4, top + 6, tu + 4, tv + 4, top + 60)], MAT["bars"])
-    m.det([(tu - 30, tv - 30, top - 64, tu + 30, tv + 30, top - 8)], steel)
-    m.det([(tu - 31, tv - 8, top - 44, tu - 30, tv + 31, top - 20), (tu - 8, tv + 30, top - 44, tu + 31, tv + 31, top - 20)], MAT["black"])
+    m.det([(tu - 29, tv - 29, top - 66, tu + 29, tv + 29, top - 15)], steel)                                     # the cab, under the top ties
+    m.det([(tu - 30, tv - 8, top - 46, tu - 29, tv + 25, top - 22), (tu - 8, tv + 29, top - 46, tu + 25, tv + 30, top - 22)], "glass/glasswindow007a")
     m.det([(tu + 30, tv - 40, top - 60, tu + 54, tv - 4, top - 20)], MAT["beam"])                              # the counterweight
     jz = top - 56
-    jib = [para((tu - 20, tv + 28, jz), (-580, 580, 0), (6, 6, 0), (0, 0, 8), MAT["bars"]), para((tu - 34, tv + 14, jz), (-580, 580, 0), (6, 6, 0), (0, 0, 8), MAT["bars"]),
+    jib = [para((tu - 20, tv + 28, jz), (-580, 580, 0), (6, 6, 0), (0, 0, 8), MAT["bars"]), para((tu - 34, tv + 14, jz + 1), (-580, 580, 0), (6, 6, 0), (0, 0, 8), MAT["bars"]),
            para((tu - 27, tv + 21, jz + 48), (-560, 560, -40), (6, 6, 0), (0, 0, 8), MAT["bars"])]
     for k in range(0, 9):                                                                                   # ties between the chords
         o = (tu - 34 - 70 * k, tv + 14 + 70 * k, jz)
-        jib.append(para(o, (20, -20, 0), (4, 4, 0), (0, 0, 6), MAT["bars"]))
+        jib.append(para((o[0], o[1], jz + 2), (20, -20, 0), (4, 4, 0), (0, 0, 5), MAT["bars"]))
         if k:
             jib.append(para((o[0] + 9, o[1] - 5, jz + 8), (4, 4, 0), (-2, 2, 0), (0, 0, 40 - (40 * k) // 14), MAT["bars"]))
     m.shapes(jib)
-    m.static(P + "props_c17/pulleyhook01.mdl", 911, -156, 45, jz - 146)             # the hook, under the jib's middle, over open ground
-    m.spot(tu - 40, tv + 40, top - 70, "255 225 180 500", 135, pitch=42, cone=50)
+    # Half-Life 2's crane magnet hanging on its cable from the jib's middle over open ground, the hook left lying
+    m.dynamic(P + "props_wasteland/cranemagnet01a.mdl", 911, -150, 45, jz - 278)
+    m.rope([(911, -150, jz - 1), (911, -150, jz - 121)], slack=4, width=3)
+    m.static(P + "props_c17/pulleyhook01.mdl", 1180, -380, 30, F)
+    # floodlights: a lamp on the crane's cab and a cluster on a pole at each corner of the yard, beams down into it
+    m.static(P + "props_wasteland/light_spotlight01_lamp.mdl", tu - 36, tv + 36, 135, top - 68)
+    m.spot(tu - 44, tv + 44, top - 62, "255 225 180 400", 135, pitch=42, cone=50)
+    for (u, v, way, face) in ((260, 590, -1, 311), (1276, 590, -1, 229), (560, -610, 1, 71)):
+        m.static(P + "props_c17/utilitypole01a.mdl", u, v, 90 if way < 0 else 270, F)
+        m.static(P + "props_trainstation/lighttowercluster01.mdl", u, v + 24 * way, 90, F + 400)
+        m.spot(u, v + 50 * way, F + 400, "255 230 190 350", face, pitch=50, cone=60)
+        m.blocked(u - 48, v - 32, u + 48, v + 32)
     m.blocked(1216, -592, 1344, -448)
     # --- wrecks, tyres, drums ---
     put(m, P + "props_vehicles/car004a_physics.mdl", 940, 190, 185)
@@ -1010,6 +1101,33 @@ def m_scrapyard(m, opt):
     for (u, v, z) in ((330, 0, F), (448, 0, F + 4), (544, 0, F), (640, 0, F + 4), (820, 0, F + 4), (896, -36, F + 4), (896, -100, F), (1024, -20, F),
                       (1260, 0, F), (448, 230, F), (544, 96, F), (640, 300, F + 4), (736, 432, F), (448, -256, F), (760, -384, F), (1024, -384, F + 4), (1260, -384, F)):
         m.lane(u, v, z)
+    # --- the yard office: a hut on the right, a window over the yard, a desk, a radio, the foreman's calendar, a bare bulb ---
+    ou1, ov1, ou2, ov2, oh = 216, -632, 376, -496, 112
+    m.det(wall(ou1, ov1, ou2, ov1 + 8, F, F + oh) + wall(ou1, ov2 - 8, ou2, ov2, F, F + oh, [(320, 366, F, F + 96)]) +
+          wall(ou1, ov1 + 8, ou1 + 8, ov2 - 8, F, F + oh) + wall(ou2 - 8, ov1 + 8, ou2, ov2 - 8, F, F + oh, [(-600, -528, F + 44, F + 92)]), "wood/woodwall006a")
+    m.det([(ou1 - 12, ov1 - 12, F + oh, ou2 + 12, ov2 + 24, F + oh + 6)], MM["tin"])
+    m.det([(ou2 - 1, -604, F + 40, ou2 + 6, -524, F + 45)], WOODTRIM)
+    m.det([(318, ov2 - 9, F, 322, ov2 + 1, F + 95), (364, ov2 - 9, F, 368, ov2 + 1, F + 95), (318, ov2 - 9, F + 95, 368, ov2 + 1, F + 99)], WOODTRIM)
+    m.no_bank(176, -656, 400, -624)                                   # (no bank where the office stands)
+    m.no_bank(176, -640, 208, -384)
+    m.dynamic(P + "props_wasteland/controlroom_desk001b.mdl", 352, -566, 0, F)
+    m.loose(P + "props_c17/furniturechair001a.mdl", 320, -566, 270)
+    m.static(P + "props_lab/citizenradio.mdl", 352, -540, 180, F + 34)
+    m.dynamic(P + "props_wasteland/controlroom_filecabinet002a.mdl", 236, -612, 0, F)
+    m.static(P + "props_interiors/lightbulb01a.mdl", 296, -564, 0, F + oh - 49)
+    m.light(296, -564, F + oh - 56, "255 210 150 30")
+    m.grime("poster", ou1 + 8, -560, F + 60, 5)
+    m.blocked(ou1 - 16, ov1, ou2 + 16, ov2 + 16)
+    m.lane(290, -470, F)
+    m.lane(296, -540, F)
+    m.view(280, -420, F, 272, 4, "the yard office")
+    # --- grime: oil where the loaders stood, puddles, trash, numbers on the containers ---
+    for kind, u, v, z, seed in (("stain", 700, 420, F + 1, 1), ("stain", 900, -500, F + 1, 2), ("puddle", 400, 520, F + 1, 3), ("puddle", 1200, -460, F + 1, 4),
+                                ("trash", 330, 300, F + 1, 5), ("trash", 820, -320, F + 1, 6), ("stain", 1150, 560, F + 1, 7), ("burn", 600, -560, F + 1, 8)):
+        m.grime(kind, u, v, z, seed)
+    canal_grime(m, 16, 180, 4800)
+    canal_grime(m, 1360, 1520, 4900)
+    m.soundscape(SCAPES["metal"], 768, 0, F, radius=900)
     m.view(70, -40, F, 355, -4, "the ramp, the way through")
     m.view(448, 0, L1Z, 0, -4, "from the first roof: the stack, the porch")
     m.view(610, 0, F + 4, 0, 2, "inside the middle container")
@@ -1026,28 +1144,34 @@ def m_scrapyard(m, opt):
 
 def m_boathouse(m, opt):
     """The smugglers' boathouse: a boat shed built into the left wall, its floor 64 over the canal's. A slipway of
-    concrete with two launching rails climbs from the canal floor through a cut in the bank to a roll-up door of
-    corrugated tin 256 wide (lc_boathouse_door: a func_door that lifts). The door is worked by a button inside, to
-    the right of it, and by one outside on the canal wall, on the far side of a drain pipe so that nobody coming
-    along the canal sees it (stand on the bank to reach it). Inside: a boat on two crates on the rails, the canal's own
-    winch at the back with its cable on the bow, a workbench of two tables, shelves, fuel drums, two lamps. In the
-    floor at the back a steel
-    hatch (lc_boathouse_hatch: a func_door that slides aside, worked by the button over the workbench) covers steps
-    down to a cellar 192 square where the contraband is kept (lc_boathouse_cellar).
+    concrete with two launching rails climbs from the canal floor through a cut in the bank to a roll-up door of the
+    owner's corrugated steel (metaldoor032c) 256 wide, a slot of daylight under it (lc_boathouse_door: a func_door that
+    lifts). The door is worked by a button inside, to the right of it, and by one outside on the canal wall, on the far
+    side of a drain pipe so that nobody coming along the canal sees it (stand on the bank to reach it). Inside, under a
+    pitched tin roof on four timber trusses with a ridge beam: a boat on two crates on the rails' line, the canal's own
+    winch behind it with its cable on the bow, a chain hoist (the game's pulley hook on its cable) hanging from the ridge
+    over the slip, a workbench of two tables with an outboard engine on it and the tools on a board over it, shelves,
+    fuel drums, bare bulbs on their cables under the tie beams. In the floor at the back a steel hatch
+    (lc_boathouse_hatch: a func_door that slides aside, worked by the button over the workbench) covers steps down to a
+    cellar 192 square of damp brick where the contraband is kept: the Combine's own ammunition crates and a supply crate,
+    shelves, a radio (lc_boathouse_cellar). Sounds: the watery hallway in the shed, a dripping tunnel in the cellar.
     Named for the game: lc_boathouse_door (func_door: Open, Close, Toggle), lc_boathouse_hatch (func_door, the same),
     lc_boathouse_button_in, lc_boathouse_button_out, lc_boathouse_hatch_button (func_buttons that already work in the
     map), lc_boathouse_cellar (an info_target in the cellar: the cache).
     Left as brushes: the roll-up door and the hatch (plates the game moves; no roll-up door or floor hatch exists as a
-    model), the door's guides and roller housing, the slipway and its rails.
-    Unchecked: which way the winch faces; the buttons' model is Episode Two's (the shared button helper's choice); that the outside button can
-    be pressed past the pipe; that the hatch, sliding from under someone, lets them down the steps cleanly."""
+    model), the door's guides and roller housing, the slipway and its rails, the roof, its trusses and the tool board.
+    Unchecked: which way the winch, the engine and the ammunition crates face; how the corrugated door's ribs lie (the
+    owner's own way of laying it is the default one); the buttons' model is Episode Two's (the shared button helper's
+    choice); that the outside button can be pressed past the pipe; that the hatch, sliding from under someone, lets them
+    down the steps cleanly; that the tools hung on the board (rolled 90) lie flat to it."""
     b = m.b
     fz, ceil, cz = F + 64, F + 224, F - 64
+    roof = F + 352                                               # (the shed's own roof: high enough for a pitched roof under it)
     steel, tin, wood = HULL, MM["tin"], MM["wood"]
     m.open(0, -256, 1024, 256)
     m.low(448, 256, 704, 320, ceil, floor=fz)                    # the doorway
-    m.low(320, 320, 832, 704, ceil, floor=fz)                    # the shed
-    m.low(640, 512, 704, 704, ceil, floor=cz)                    # the stair's well in its floor
+    m.low(320, 320, 832, 704, roof, floor=fz)                    # the shed
+    m.low(640, 512, 704, 704, roof, floor=cz)                    # the stair's well in its floor
     m.low(576, 704, 768, 896, cz + 112, floor=cz)                # the cellar
     m.side(320, 256, 832, 896)
     m.portal(448, 283, fz, 704, 285, ceil)
@@ -1056,15 +1180,15 @@ def m_boathouse(m, opt):
     m.no_bank(448, 248, 704, 264)
     m.shapes([prism([(256, fz), (64, F), (256, F)], "x", 448, 704, MAT["beam"]),
               para((520, 64, F), (8, 0, 0), (0, 192, 64), (0, 0, 5), MAT["bars"]), para((624, 64, F), (8, 0, 0), (0, 192, 64), (0, 0, 5), MAT["bars"]),
-              para((448, 100, F + 12), (256, 0, 0), (0, 12, 4), (0, 0, 3), MAT["canal_wall"]), para((448, 190, F + 42), (256, 0, 0), (0, 12, 4), (0, 0, 3), MAT["canal_wall"])])
+              para((449, 100, F + 12), (254, 0, 0), (0, 12, 4), (0, 0, 3), MAT["canal_wall"]), para((449, 190, F + 42), (254, 0, 0), (0, 12, 4), (0, 0, 3), MAT["canal_wall"])])
     m.det([(520, 256, fz, 528, 640, fz + 5), (624, 256, fz, 632, 640, fz + 5)], MAT["bars"])
     m.blocked(448, 64, 704, 320)
     m.lane(576, 40, F)
     m.lane(576, 160, F + 32)
     m.lane(576, 300, fz)
     # --- the roll-up door, its guides and roller housing, the two buttons ---
-    m.door("lc_boathouse_door", [(448, 280, fz, 704, 288, ceil)], tin, "-90 0 0", speed=36, lip=14)
-    m.det([(440, 246, fz, 448, 256, ceil + 8), (704, 246, fz, 712, 256, ceil + 8), (436, 236, ceil + 8, 716, 256, ceil + 40)], steel)
+    m.door("lc_boathouse_door", [(448, 280, fz + 6, 704, 288, ceil)], "metal/metaldoor032c", "-90 0 0", speed=36, lip=14)    # (a slot of light under it)
+    m.det([(441, 246, fz, 449, 256, ceil + 8), (703, 246, fz, 711, 256, ceil + 8), (436, 236, ceil + 8, 716, 256, ceil + 40)], steel)
     m.det([(448, 276, fz, 452, 292, ceil), (700, 276, fz, 704, 292, ceil)], steel)
     m.taken(424, 200, F, 728, 256, ceil + 48)
     m.button("lc_boathouse_button_in", 740, 320, fz + 40, 90, [("lc_boathouse_door", "Toggle", "", 0)])
@@ -1073,47 +1197,77 @@ def m_boathouse(m, opt):
     m.taken(712, 220, F, 768, 256, b.rim)
     # --- the hatch over the cellar steps, its frame, the steps, the cellar ---
     m.door("lc_boathouse_hatch", [(640, 512, fz, 704, 704, fz + 5)], steel, "0 %d 0" % m.fr.yaw(180), speed=30, lip=0)
-    m.det([(636, 508, fz, 640, 704, fz + 2), (704, 508, fz, 708, 704, fz + 2), (636, 508, fz, 708, 512, fz + 2)], MAT["bars"])
+    m.det([(636, 512, fz, 640, 704, fz + 2), (704, 512, fz, 708, 704, fz + 2), (636, 508, fz, 708, 512, fz + 2)], MAT["bars"])
     m.steps(704, 640, 704, cz, fz, "v", -1)
     m.blocked(576, 448, 768, 704)
     m.button("lc_boathouse_hatch_button", 320, 560, fz + 52, 0, [("lc_boathouse_hatch", "Toggle", "", 0)])
     m.target("lc_boathouse_cellar", 672, 800, cz + 8, 270)
-    m.light(672, 800, cz + 96, "255 190 120 22")
+    m.light(672, 800, cz + 56, "255 190 120 22")
+    m.static(P + "props_interiors/lightbulb01a.mdl", 672, 800, 0, cz + 112 - 49)
+    m.det([(576, 704, cz, 578, 896, cz + 112), (766, 704, cz, 768, 896, cz + 112), (578, 894, cz, 766, 896, cz + 112), (578, 704, cz, 640, 706, cz + 112),
+           (704, 704, cz, 766, 706, cz + 112)], "brick/brickwall037a")                                    # damp brick
+    for kind, u, v, z, seed in (("stain", 579, 820, cz + 70, 1), ("stain", 765, 760, cz + 60, 2), ("crack", 700, 893, cz + 80, 3), ("puddle", 660, 760, cz + 1, 4)):
+        m.grime(kind, u, v, z, seed)
+    m.dynamic(P + "items/ammocrate_smg1.mdl", 720, 740, 180, cz)
+    m.dynamic(P + "items/ammocrate_ar2.mdl", 610, 860, 0, cz)
+    m.static(P + "items/item_item_crate.mdl", 700, 860, 20, cz)
+    m.soundscape(SCAPES["tunnel"], 672, 800, cz, radius=200)
     for u in (624, 720):                                                                                    # the cellar's racking
         m.static(P + "props_c17/shelfunit01a.mdl", u, 884, 0, cz)
     m.loose(P + "props_junk/wood_crate001a.mdl", 610, 740, 10, z=cz)
-    m.loose(P + "props_junk/wood_crate001a.mdl", 612, 790, 40, z=cz)
     m.loose(P + "props_junk/wood_crate002a.mdl", 736, 840, 90, z=cz)
-    put(m, P + "props_c17/canister01a.mdl", 744, 760, 0, z=cz)
     put(m, P + "props_c17/canister01a.mdl", 750, 780, 30, z=cz)
-    put(m, P + "props_c17/lockers001a.mdl", 588, 850, 0, z=cz)
+    put(m, P + "props_lab/citizenradio.mdl", 736, 840, 270, z=cz + 33)
     m.lane(672, 800, cz)
     m.lane(672, 490, fz)
     # --- the shed: the boat on trestles, the winch and its cable, the bench, shelves, drums ---
-    for u in (500, 652):                                                                                    # the boat's two crates
-        m.dynamic(P + "props_junk/wood_crate001a.mdl", u, 480, 0, fz)
-    put(m, P + "props_canal/boat001a.mdl", 576, 480, 0, z=fz + 40)
-    m.static(P + "props_canal/winch02.mdl", 400, 480, 0, fz)
-    m.rope([(404, 480, fz + 36), (470, 480, fz + 62)], slack=6)
+    for v in (452, 588):                                                                                    # the boat's two crates, on the rails' line
+        m.dynamic(P + "props_junk/wood_crate001a.mdl", 576, v, 0, fz)
+    put(m, P + "props_canal/boat001a.mdl", 576, 520, 90, z=fz + 40)
+    m.static(P + "props_canal/winch02.mdl", 576, 680, 270, fz)
+    m.rope([(576, 676, fz + 36), (576, 632, fz + 62)], slack=6)
+    ez, rz = F + 232, F + 332                                                                               # the eaves, the ridge
+    m.shapes([prism([(320, ez), (576, rz), (576, rz + 8), (320, ez + 8)], "y", 320, 704, tin), prism([(832, ez), (576, rz), (576, rz + 8), (832, ez + 8)], "y", 320, 704, tin)])
+    trusses = []
+    for v in (368, 464, 560, 656):
+        trusses += [(321, v - 4, ez - 8, 831, v + 4, ez), (572, v - 4, ez, 580, v + 4, rz - 8)]
+        m.shapes([prism([(400, ez), (408, ez), (572, ez + 72), (572, ez + 80)], "y", v - 3, v + 3, WOODTRIM),
+                  prism([(752, ez), (744, ez), (580, ez + 72), (580, ez + 80)], "y", v - 3, v + 3, WOODTRIM)])
+    m.det(trusses + [(572, 321, rz - 8, 580, 703, rz)], WOODTRIM)                                            # tie beams, king posts, the ridge beam
+    tilted(m, "prop_static", P + "props_c17/pulleyhook01.mdl", 576, 400, F + 160, 0)                        # the chain hoist over the slip
+    m.rope([(576, 400, F + 300), (576, 400, rz - 9)], slack=2, width=3)
     for v in (564, 636):                                                                                    # the workbench: two tables end to end
         m.dynamic(P + "props_c17/furnituretable002a.mdl", 350, v, 0, fz)
-    put(m, P + "props_c17/tools_wrench01a.mdl", 350, 640, 30, z=fz + 37)
-    put(m, P + "props_junk/metalbucket01a.mdl", 352, 590, 0, z=fz + 37)
+    m.static(P + "props_c17/trappropeller_engine.mdl", 350, 640, 0, fz + 37)                                 # an outboard on the bench
+    put(m, P + "props_junk/metalbucket01a.mdl", 352, 580, 0, z=fz + 37)
+    m.det([(320, 540, fz + 56, 322, 660, fz + 120)], "wood/woodwall006a")                                    # the tool board over it
+    for (v, model) in ((566, "tools_wrench01a"), (600, "tools_pliers01a"), (632, "tools_wrench01a")):
+        m.point("prop_dynamic_override", 323, v, fz + 90, {"model": P + "props_c17/%s.mdl" % model, "angles": "0 %d 90" % m.fr.yaw(0), "solid": "0",
+                                                           "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
+                                                           "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"}, m.pv)
     put(m, P + "props_c17/shelfunit01a.mdl", 440, 690, 0, z=fz)
     for (u, v) in ((790, 380), (800, 420), (766, 356)):
         put(m, P + "props_c17/oildrum001.mdl", u, v, 0, z=fz)
     put(m, P + "props_c17/oildrum001_explosive.mdl", 796, 470, 0, z=fz)
     m.loose(P + "props_junk/wood_pallet001a.mdl", 780, 640, 20, z=fz)
     m.loose(P + "props_vehicles/tire001c_car.mdl", 350, 370, 0, z=fz)
-    m.lamp(480, 480, ceil - 8, "255 205 150 45")
-    m.lamp(700, 420, ceil - 8, "255 205 150 35")
-    m.blocked(448, 416, 704, 544)
+    for (u, v) in ((440, 464), (720, 560), (440, 656)):                                                     # bare bulbs on their cables under the tie beams
+        m.static(P + "props_interiors/lightbulb01a.mdl", u, v, 0, ez - 8 - 49)
+        m.light(u, v, ez - 70, "255 205 150 40")
+    m.light(576, 300, fz + 10, "200 212 235 18")                                                             # day, in under the door
+    for kind, u, v, z, seed in (("puddle", 560, 136, F + 24, 1), ("stain", 600, 200, F + 45, 2), ("stain", 321, 420, fz + 60, 3), ("stain", 831, 500, fz + 90, 4),
+                                ("trash", 760, 600, fz + 1, 5), ("number", 576, 703, fz + 140, 6), ("drain", 731, 257, F + 140, 7)):
+        m.grime(kind, u, v, z, seed)
+    m.soundscape(SCAPES["watery"], 576, 500, fz, radius=420)
+    canal_grime(m, 16, 420, 5000)
+    canal_grime(m, 740, 1010, 5100)
+    m.blocked(528, 400, 624, 704)
     m.lane(400, 600, fz)
     m.lane(760, 560, fz)
     m.lane(420, 380, fz)
     m.view(576, -80, F, 90, -6, "the slipway and the door")
-    m.view(860, 150, F + 60, 160, 4, "the button behind the pipe")
-    m.view(770, 350, fz, 160, 6, "inside: the boat")
+    m.view(860, 110, F, 129, -12, "the button behind the pipe")
+    m.view(770, 350, fz, 150, 6, "inside: the boat")
     m.view(400, 650, fz, 320, 8, "from the bench: the hatch, the door")
     m.view(600, 730, cz, 50, 2, "the cellar")
     b.notes.append("%s: the shed's floor is z %d, the cellar's z %d; the door and the hatch both start shut" % (m.tag, fz, cz))
@@ -1154,7 +1308,15 @@ def m_arcade(m, opt):
     for (a, c) in ((-256, -128), (-64, 64), (128, 256)):
         haunch += arch(a, c, deck - 32, 64, 640, 896, stone)
     m.shapes(haunch)
-    m.det([(632, -256, deck - 12, 640, 256, deck + 4), (896, -256, deck - 12, 904, 256, deck + 4)], MAT["beam"])              # the cornice along each face
+    m.det([(632, -256, deck - 12, 640, 256, deck + 4), (896, -256, deck - 12, 904, 256, deck + 4)], "stone/stonewall050f")    # the cornice along each face
+    # dressed stone at the arches: a keystone at each crown on both faces, and a lamp under the middle arch on each pier
+    m.det([(u, c - 12, deck - 60, u + 6, c + 12, deck - 30) for u in (634, 896) for c in (-192, 0, 192)], "stone/stonewall050f")
+    for v, out in ((63, 270), (-63, 90)):
+        m.static(P + "props_c17/light_cagelight02_on.mdl", 768, v, out, F + 196)
+        m.light(768, v - 14 if out == 270 else v + 14, F + 202, "255 200 140 40")
+    for kind, u, v, z, seed in (("stain", 639, 96, F + 120, 1), ("stain", 639, -96, F + 100, 2), ("stain", 897, 96, F + 110, 3), ("stain", 897, -96, F + 130, 4),
+                                ("graffiti", 768, 63, F + 60, 5), ("drain", 639, 0, deck - 40, 6)):
+        m.grime(kind, u, v, z, seed)
     m.taken(600, 192, F, 936, 256, b.rim)
     m.taken(600, -256, F, 936, -192, b.rim)
     # --- the stairs: left bank from the entry side, right bank from the exit side ---
@@ -1173,7 +1335,7 @@ def m_arcade(m, opt):
     cols, brackets = [], []
     for (ua, ub, gap) in ((640, 652, (192, 256)), (884, 896, (-256, -192))):
         for c in (-256, -152, -56, 40, 136, 240):
-            cols.append((ua, c, deck, ub, c + 16, roof))
+            cols.append((ua, c, deck, ub, c + 16, roof - 16))
             for way in (-1, 1):
                 edge = c if way < 0 else c + 16
                 if -256 < edge + way * 24 < 256:
@@ -1189,9 +1351,23 @@ def m_arcade(m, opt):
     # barred shop fronts closing the walk's two ends: the city's storefront bars in a wooden frame, dark behind
     for s in (1, -1):
         v1, v2 = (248, 256) if s > 0 else (-256, -248)
-        m.det([(681, v1, deck, 743, v2, deck + 105), (793, v1, deck, 855, v2, deck + 105)], MAT["black"])
-        m.det([(664, v1, deck, 681, v2, deck + 113), (743, v1, deck, 793, v2, deck + 113), (855, v1, deck, 872, v2, deck + 113), (664, v1, deck + 105, 872, v2, deck + 113)],
+        m.det([(664, v1, deck, 681, v2, deck + 105), (743, v1, deck, 793, v2, deck + 105), (855, v1, deck, 872, v2, deck + 105), (664, v1, deck + 105, 872, v2, deck + 113)],
               WOODTRIM)
+        # behind the bars, a shallow shop: a counter, shelves with a few things left, a dead lamp
+        sv1, sv2 = (256, 320) if s > 0 else (-320, -256)
+        m.low(640, sv1, 896, sv2, deck + 112, floor=deck)
+        m.side(640, sv1, 896, sv2)
+        m.portal(640, 258 * s - (2 if s < 0 else 0), deck, 896, 258 * s + (2 if s > 0 else 0), deck + 112)
+        lining(m, 640, sv1, 896, sv2, lambda v: deck, deck + 112, {"u1": [], "u2": [], ("v2" if s > 0 else "v1"): []},
+               skin=("u1", "u2", "v2" if s > 0 else "v1"))
+        for u in (700, 836):
+            m.dynamic(P + "props_wasteland/kitchen_shelf001a.mdl", u, 302 * s, 0 if s > 0 else 180, deck)
+        m.dynamic(P + "props_wasteland/kitchen_counter001b.mdl", 768, 286 * s, 90 if s > 0 else 270, deck)
+        m.static(P + "props_c17/light_domelight02_off.mdl", 768, 290 * s, 0, deck + 112 - 7)
+        m.static(P + "props_junk/glassjug01.mdl", 700, 300 * s, 0, deck + 64)
+        m.static(P + "props_lab/jar01a.mdl", 836, 300 * s, 0, deck + 64)
+        m.light(768, 290 * s, deck + 60, "255 200 150 8")
+        m.grime("poster", 641, 290 * s, deck + 70, 7 + s)
         for u in (712, 824):
             m.static(P + "props_building_details/storefront_template001a_bars.mdl", u, 246 * s, 90, deck)
     # three empty stalls down the middle: the game's kitchen counters, a pushcart left by one
@@ -1199,9 +1375,20 @@ def m_arcade(m, opt):
         m.dynamic(P + "props_wasteland/kitchen_counter001d.mdl", 768, c, 0 if c else 180, deck)
     m.dynamic(P + "props_junk/pushcart01a.mdl", 852, 150, 100, deck)
     m.target("lc_arcade_upper", 768, 80, deck + 8, 0)
-    m.lamp(692, -80, roof - 8, "255 205 150 30")
-    m.lamp(844, 80, roof - 8, "255 205 150 30")
-    m.loose(P + "props_junk/cardboard_box001a.mdl", 770, -150, 20, z=deck + 41)
+    for c in (-160, 0, 160):
+        m.static(P + "props_c17/awning001a.mdl", 768, c, 0 if c else 180, roof - 45)
+    for (u, v, model) in ((760, -190, "props_junk/watermelon01"), (776, -168, "props_junk/watermelon01"), (764, -140, "props_junk/watermelon01"),
+                          (770, 20, "props_c17/metalpot001a"), (760, 150, "props_junk/plasticcrate01a")):
+        m.static(P + model + ".mdl", u, v, 0, deck + 40)
+    for v in (-80, 80, 230, -230):
+        m.rope([(768, v, roof - 1), (768, v, roof - 30)], slack=2)
+        m.static(P + "props_c17/lampfixture01a.mdl", 768, v, 0, roof - 50)
+        m.light(768, v, roof - 60, "255 205 150 32")
+    m.soundscape(SCAPES["house"], 768, 0, deck, radius=300)
+    m.soundscape(SCAPES["watery"], 768, 0, F, radius=360)
+    canal_grime(m, 16, 560, 5200)
+    canal_grime(m, 980, 1520, 5300)
+
     m.loose(P + "props_junk/wood_pallet001a.mdl", 850, -60, 30, z=deck)
     put(m, P + "props_trainstation/trashcan_indoor001b.mdl", 690, 120, 0, z=deck)
     m.loose(P + "props_junk/wood_crate002a.mdl", 690, -200, 90, z=deck)

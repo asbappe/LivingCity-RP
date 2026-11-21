@@ -408,6 +408,55 @@ def round_arch(m, lo, hi, spring, a, b, axis="y", mat=None, steps=5):
 # Helpers for the canal modules written in map_modules.py
 # ---------------------------------------------------------------------------
 
+def ring_segments(cu, cv, r_in, r_out, z1, z2, mat, n, phase=0.0, skip=(), alt=False):
+    """A round wall (or ring of slab) made of n straight segments: each from the circle of r_in out past r_out, from z1
+    to z2; segment k spans the angles (k + phase) * 360 / n to the next. skip: segment numbers left out (a way in). The
+    faces for m.shapes (corners rounded to whole numbers, shared between neighbours: no gaps). alt: every other
+    segment 1 deeper and 1 taller, so that no two neighbours' tops or bottoms lie in one plane (map_lint's flush check
+    reads faces by their boxes, and two angled neighbours' boxes overlap)."""
+    out_r = r_out / math.cos(math.pi / n)
+
+    def pt(r, k):
+        a = 2 * math.pi * (k + phase) / n
+        return (int(round(cu + r * math.cos(a))), int(round(cv + r * math.sin(a))))
+    shapes = []
+    for k in range(n):
+        if k in skip:
+            continue
+        d = 1 if alt and k % 2 else 0
+        shapes.append(vprism([pt(r_in, k), pt(out_r, k), pt(out_r, k + 1), pt(r_in, k + 1)], z1 - d, z2 + d, mat))
+    return shapes
+
+
+def ring_rail(m, cu, cv, r, z, n, phase=0.5, skip=()):
+    """The city's handrail round a circle of radius r (its middle at (cu, cv)), standing on z: n chords (pieces of 64 and
+    32 along each, map_mods_c.handrail_line), chord k from the angle (k + phase) * 360 / n to the next; skip: chords left
+    out (a ladder's head)."""
+    for k in range(n):
+        if k in skip:
+            continue
+        a, b = 2 * math.pi * (k + phase) / n, 2 * math.pi * (k + 1 + phase) / n
+        handrail_line(m, (int(round(cu + r * math.cos(a))), int(round(cv + r * math.sin(a)))), (int(round(cu + r * math.cos(b))), int(round(cv + r * math.sin(b)))), z)
+
+
+def chain(m, name, pts, slack=30, width=2):
+    """A chain slung from point to point, [(u, v, z), ...] (cable/chain.vmt on a rope): both ends on something."""
+    keys = {"Slack": str(slack), "Type": "0", "Subdiv": "2", "Barbed": "0", "Width": str(width), "TextureScale": "1", "Collide": "0", "Dangling": "0",
+            "Breakable": "0", "RopeMaterial": "cable/chain.vmt", "MoveSpeed": "64", "PositionInterpolator": "2", "NoWind": "1"}
+    names = ["%s_%d" % (name, k) for k in range(len(pts))]
+    for k, (u, v, z) in enumerate(pts):
+        kk = dict(keys, targetname=names[k])
+        if k + 1 < len(pts):
+            kk["NextKey"] = names[k + 1]
+        m.b.vmf.point("move_rope" if k == 0 else "keyframe_rope", m.fr.at(u, v, z), kk, m.b.vis + ": ropes")
+
+
+def dustmotes(m, box, colour="217 209 170"):
+    """Dust hanging in a beam of light (func_dustmotes, set as the owner's map sets its two)."""
+    m.ent("func_dustmotes", {"AffectedByWind": "1", "Alpha": "110", "Color": colour, "DistMax": "1024", "Frozen": "0", "LifetimeMax": "5", "LifetimeMin": "3",
+                             "SizeMax": "20", "SizeMin": "10", "SpawnRate": "40", "SpeedMax": "13", "StartDisabled": "0"}, [box], MAT["trigger"])
+
+
 # The shanty town's shacks, built from pieces (the module review: "walls of mismatched sheets ... roofs of tin sloping
 # and overhanging on visible posts"): every material here is one the owner's map uses.
 SHEETS = ("wood/woodwall006a", "metal/metalhull010c", "wood/woodfloor006b", "metal/metalroof008a", "plaster/plasterwall046b", "wood/wooddoor042a",
@@ -415,12 +464,12 @@ SHEETS = ("wood/woodwall006a", "metal/metalhull010c", "wood/woodfloor006b", "met
 POSTS = "wood/woodfloor006b"
 
 
-def shack(m, u1, v1, u2, v2, z, seed, high=112, door=56, window="boards", open_front=False, roof="metal/metalroof008a"):
+def shack(m, u1, v1, u2, v2, z, seed, high=112, door=56, window="boards", open_front=False, roof="metal/metalroof008a", front="lo"):
     """A shack whose front is its low-v side, standing on z: a post at each corner, walls of sheets 6 thick, each sheet
     of its own material, some 2 proud of the next, their tops uneven under a tin roof that slopes down to the front and
     overhangs it by 24 on two posts of its own; a doorway 'door' wide a third of the way along the front, and a window
     two thirds along it, 40 by 32 (window: "boards" nailed across, "glass" cracked, or None). open_front: no front wall
-    (a stall). Returns the doorway's middle (u)."""
+    (a stall). front "hi": the same shack facing the high-v side. Returns the doorway's middle (u)."""
     import random
     rnd = random.Random(seed)
     zf, zb = z + high, z + high + 14               # the roof's line over the front and the back walls
@@ -469,16 +518,26 @@ def shack(m, u1, v1, u2, v2, z, seed, high=112, door=56, window="boards", open_f
     boxes += [((u1 - 1, v1 - 1, z, u1 + 6, v1 + 6, zf + 2), POSTS), ((u2 - 6, v1 - 1, z, u2 + 1, v1 + 6, zf + 2), POSTS),
               ((u1 - 1, v2 - 6, z, u1 + 6, v2 + 1, zb), POSTS), ((u2 - 6, v2 - 6, z, u2 + 1, v2 + 1, zb), POSTS)]
     boxes += [((u1 - 10, v1 - 26, z, u1 - 6, v1 - 22, zf - 1), POSTS), ((u2 + 6, v1 - 26, z, u2 + 10, v1 - 22, zf - 1), POSTS)]   # the overhang's posts
-    for (bx, mat) in boxes:
-        m.det([bx], mat)
-    m.shapes(shapes)
     # the roof: one sheet of tin, sloping to the front, overhanging 24 there and 12 at the sides
     rf, rb = v1 - 24, v2 + 8
     zr1 = zf - (zb - zf) * 24 // (v2 - v1) - 1
     zr2 = zb + (zb - zf) * 8 // (v2 - v1) + 1
-    m.shapes([prism([(rf, zr1), (rb, zr2), (rb, zr2 + 3), (rf, zr1 + 3)], "x", u1 - 12, u2 + 12, roof)])
-    m.blocked(u1 - 16, v1 - 28, u2 + 16, v2 + 16)
-    m.taken(u1 - 12, v1 - 28, z, u2 + 12, v2 + 12, zr2 + 4)
+    shapes.append(prism([(rf, zr1), (rb, zr2), (rb, zr2 + 3), (rf, zr1 + 3)], "x", u1 - 12, u2 + 12, roof))
+    if front == "hi":          # (built facing low v, then turned over onto the high-v side: v becomes v1 + v2 - v)
+        boxes = [((b[0], v1 + v2 - b[4], b[2], b[3], v1 + v2 - b[1], b[5]), mat) for b, mat in boxes]
+        flipped = []
+        for faces in shapes:
+            flipped.append([([(p[0], v1 + v2 - p[1], p[2]) for p in pts[::-1]], mat) for pts, mat in faces])
+        shapes = flipped
+    for (bx, mat) in boxes:
+        m.det([bx], mat)
+    m.shapes(shapes)
+    if front == "hi":
+        m.blocked(u1 - 16, v1 - 16, u2 + 16, v2 + 28)
+        m.taken(u1 - 12, v1 - 12, z, u2 + 12, v2 + 28, zr2 + 4)
+    else:
+        m.blocked(u1 - 16, v1 - 28, u2 + 16, v2 + 16)
+        m.taken(u1 - 12, v1 - 28, z, u2 + 12, v2 + 12, zr2 + 4)
     return dm
 
 

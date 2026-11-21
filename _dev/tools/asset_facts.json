@@ -3117,6 +3117,24 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/light_domelight02_off.mdl": {
+"bbox": [
+-9.0,
+-9.3,
+-7.3,
+9.0,
+9.3,
+0.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/light_domelight02_on.mdl": {
 "bbox": [
 -9.0,

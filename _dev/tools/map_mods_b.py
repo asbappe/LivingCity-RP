@@ -171,6 +171,19 @@ def sounds(m, L, kind, u, v, z, radius):
     m.soundscape(SCAPES["courtyard"], L // 2, -128, F, max(512, L // 2))
 
 
+def rail_run(m, a, b, at, axis, z, piece=64):
+    """The city's handrail (handrail04, the model's length along its y) from a to b along axis "u" or "v", at `at`
+    across, standing on z: pieces of 64 end to end, and a short one to finish."""
+    yaw = 0 if axis == "v" else 90
+    n = (b - a) // piece
+    for k in range(n):
+        c = a + piece * k + piece // 2
+        m.static("models/props_c17/handrail04_medium.mdl", *((at, c) if axis == "v" else (c, at)), yaw=yaw, z=z)
+    if (b - a) - n * piece >= 30:
+        c = b - 17
+        m.static("models/props_c17/handrail04_short.mdl", *((at, c) if axis == "v" else (c, at)), yaw=yaw, z=z)
+
+
 def put(m, things, z, u0=0, v0=0):
     """Small things stood on a surface at z: [(model's short name under models/, du, dv, yaw), ...] from (u0, v0)."""
     for name, du, dv, yaw in things:
@@ -183,7 +196,7 @@ def cheeks(m, u1, u2, top=136, out=132, thick=12):
     if m.fr.dz:
         return
     shape = [(256, F), (256 - out, F), (256 - out, F + 14), (256, F + top)]
-    m.shapes([prism(shape, "x", u1 - thick, u1, MAT["beam"]), prism(shape, "x", u2, u2 + thick, MAT["beam"])])
+    m.shapes([prism(shape, "x", u1 - thick, u1 + 1, MAT["beam"]), prism(shape, "x", u2 - 1, u2 + thick, MAT["beam"])])      # (1 into the cut: the bank's cut end is buried, not flush with it)
 
 
 def swing(m, name, u, v, seat, bar):
@@ -248,43 +261,60 @@ def frustum(u, v, r1, z1, r2, z2, mat):
 # 1. The cells
 # ---------------------------------------------------------------------------
 
-def cell_front(m, cu, door, window, H):
-    """A cell's front wall, 8 thick, with a way through for its door and a hole for its barred window."""
+CELL_LOW, CELL_HIGH, CELL_RAIL = OLD_BRICK, "plaster/plasterwall041a", "stone/stonewall050f"     # City 18's own: brick to the dado, plaster above, a stone rail
+
+
+def cell_front(m, cu, door, window, H, dado=56):
+    """A cell's front wall, 8 thick, with a way through for its door and a hole for its barred window: brick below the
+    dado and plaster above it, as the rooms are lined, with the rail on both faces where the wall runs whole."""
     cuts = sorted([cu, door[0], door[1], window[0], window[1], cu + 128])
-    boxes = []
+    lows, highs, rails = [], [], []
     for a, b in zip(cuts, cuts[1:]):
         if (a, b) == tuple(door):
-            boxes.append((a, 536, F + 104, b, 544, H))
+            highs.append((a, 536, F + 104, b, 544, H))
         elif (a, b) == tuple(window):
-            boxes += [(a, 536, F, b, 544, F + 48), (a, 536, F + 102, b, 544, H)]
+            lows.append((a, 536, F, b, 544, F + 48))
+            highs.append((a, 536, F + 102, b, 544, H))
         elif a < b:
-            boxes.append((a, 536, F, b, 544, H))
-    m.det(boxes, MAT["beam"])
+            lows.append((a, 536, F, b, 544, F + dado))
+            highs.append((a, 536, F + dado + 4, b, 544, H))
+            rails.append((a, 535, F + dado, b, 545, F + dado + 4))
+    m.det(lows, CELL_LOW)
+    m.det(highs, CELL_HIGH)
+    m.det(rails, CELL_RAIL)
 
 
 def m_cells(m, opt):
-    """The cells: where the Resistance keeps captured Combine units. A heavy steel door at the foot of the left wall
-    (lc_cells_entry: Use swings it in) opens on a guard room (a table, a chair, lockers, a bench, a board with the
-    padlocks on it). A corridor runs on past three cells, each 128 by 160 behind a wall with a barred window and a
-    barred door (lc_cells_door_1 to _3) that slides aside behind the wall when the button beside it on the corridor's
-    pier is pressed (lc_cells_button_1 to _3, tally marks over each say which) or the game sends Open, Close or
-    Toggle. A mattress, a bucket and a toilet in each; lc_cells_spot_1 to _3 are where a prisoner stands. The far cell
-    has a loose grate low in its side wall (lc_cells_grate: Use swings it; the game can Lock it) onto a crawl duct 40
-    high that comes out at the canal's floor through a concrete pipe: the way to break out, or in.
+    """The cells: where the Resistance keeps captured Combine units, in an old cellar done up as City 18 does its
+    rooms: brick to the dado line, plaster above it, a stone rail between, a concrete floor and roof. A heavy steel
+    door at the foot of the left wall (lc_cells_entry: Use swings it in) opens on a guard room lit by a fluorescent
+    tube and a prison lamp: a table with a radio and a revolver, a chair set to watch the corridor, lockers, a bench,
+    a board with the padlocks on it, a shotgun on a rack, a Civil Protection helmet hung on the wall as a trophy, a
+    crate of what was taken off the prisoners. A corridor runs on past three cells, a lamp over each cell's door and
+    darker between, each cell 128 by 160 behind a wall with a barred window and a barred door (lc_cells_door_1 to _3)
+    that slides aside behind the wall when the button beside it on the corridor's pier is pressed (lc_cells_button_1
+    to _3, tally marks over each say which) or the game sends Open, Close or Toggle. Each cell has a toilet, a bucket
+    and a drain in the floor, a name or two scratched on the wall; the first a mattress on the floor, the middle one
+    an iron bed frame with the mattress on it and a pan of food on the floor (and the days scratched on its wall),
+    the far one a mattress and the way out. lc_cells_spot_1 to _3 are where a prisoner stands. The far cell has a
+    loose grate low in its side wall (lc_cells_grate: Use swings it; the game can Lock it), a few loose bricks and
+    grit trailing from it, onto a crawl duct 40 high that comes out at the canal's floor through a concrete pipe:
+    the way to break out, or in.
     The doors are Nova Prospekt's models (prison_heavydoor001a, prison_celldoor001a) riding on unseen brush doors
     of the same names and inputs as before; the windows are prison_cellwindow002a with an unseen wall in them.
-    Left as brushes: the grate (no model 62 by 38), the tally marks and scratches (paint, not things).
+    Left as brushes: the grate (no model 62 by 38), the tally marks (paint, not things), the gun rack's board.
     Unchecked: which way the door, window, bench and board models face (each is thin along its x, so its face looks
-    along x: turned here to look along v); the sound ambient/atmosphere/tunnel1.wav; whether a prisoner's Use can
-    reach a button round the pier's corner; the doors' sounds (doors/doormove1.wav, doors/gate_move1.wav)."""
+    along x: turned here to look along v); the helmet (models/barneyhelmet.mdl) hanging on its nail; whether a
+    prisoner's Use can reach a button round the pier's corner; the doors' sounds (doors/doormove1.wav,
+    doors/gate_move1.wav)."""
     L, H = 1024, F + 128
     m.open(0, -256, L, 256)
-    m.low(128, 256, 192, 320, F + 112)                      # the doorway
-    m.low(64, 320, 320, 512, H)                             # the guard room
-    m.low(320, 384, 832, 512, H)                            # the corridor
+    m.low(128, 256, 192, 320, F + 112)                                      # the doorway
+    m.low(64, 320, 320, 512, H, mat=CONC_FLOOR)                             # the guard room
+    m.low(320, 384, 832, 512, H, mat=CONC_FLOOR)                            # the corridor
     cells = (320, 512, 704)
     for cu in cells:
-        m.low(cu, 512, cu + 128, 704, H)
+        m.low(cu, 512, cu + 128, 704, H, mat=CONC_FLOOR)
     m.low(832, 640, 896, 704, F + 40, mat=DUCT)             # the crawl duct: out of the far cell's side wall,
     m.low(896, 256, 960, 704, F + 40, mat=DUCT)             # and down to the canal
     m.side(64, 256, L, 704)
@@ -293,6 +323,8 @@ def m_cells(m, opt):
     m.blocked(832, 256, 960, 704)
     m.taken(104, 200, F, 216, 256, F + 176)
     m.taken(872, 120, F, 984, 256, F + 80)
+    line_walls(m, [(64, 320, 320, 512, H), (320, 384, 832, 512, H)] + [(cu, 512, cu + 128, 704, H) for cu in cells],
+               dado=56, low=CELL_LOW, high=CELL_HIGH, roof=CONC_CEIL, rail=CELL_RAIL)
 
     # the way in: a heavy door in a cut in the bank, a caged lamp over it
     cheeks(m, 128, 192)
@@ -300,28 +332,42 @@ def m_cells(m, opt):
     rider(m, "lc_cells_entry", "models/props_wasteland/prison_heavydoor001a.mdl", 160, 287, 90, F)
     m.det([(124, 250, F + 112, 196, 256, F + 120)], MAT["beam"])
     cage(m, 160, 256, F + 136, 270, "255 200 140 90")
+    m.grime("number", 160, 256, F + 170, 1)                                 # (a number painted over the door, as on the city's service doors)
     m.lane(160, 288)
 
-    # the guard room
+    # the guard room: the brightest place here
     m.static("models/props_c17/furnituretable002a.mdl", 232, 420, 0)
-    m.static("models/props_c17/furniturechair001a.mdl", 232, 372, 90)
+    put(m, [("props_lab/citizenradio", 226, 404, 100), ("props_junk/garbage_coffeemug001a", 240, 440, 0)], F + 37)
+    m.dynamic("models/weapons/w_357.mdl", 236, 424, 30, z=F + 37, solid=False)
+    m.static("models/props_c17/furniturechair001a.mdl", 286, 448, 0)                      # set to watch down the corridor
     m.static("models/props_c17/lockers001a.mdl", 74, 452, 0)
     m.static("models/props_c17/bench01a.mdl", 78, 364, 0)
     m.static("models/props_lab/corkboard001.mdl", 264, 512, 270, z=F + 50)                # the board, and the padlocks hung on it
     put(m, [("props_wasteland/prison_padlock001a", 236 + 14 * k, 505, 270) for k in (0, 1, 2, 4)], F + 66)
-    m.static("models/props_wasteland/prison_lamp001c.mdl", 200, 416, 0, z=H - 12)
-    m.light(200, 416, H - 26, "255 205 150 110")
-    m.det([(316, 384, F, 320, 392, H), (316, 504, F, 320, 512, H), (316, 384, H - 8, 320, 512, H)], STEEL)    # the frame of the way through
+    gun_rack(m, 100, 156, 512, -1, F, "u", [(44, [("w_shotgun", 128)])])
+    m.det([(203, 509, F + 86, 205, 512, F + 88)], IRON)                                   # a nail, and the helmet of a unit who did not leave
+    m.dynamic("models/barneyhelmet.mdl", 204, 505, 270, z=F + 76, solid=False)
+    m.static("models/props_wasteland/prison_lamp001c.mdl", 140, 416, 0, z=H - 12)
+    m.light(140, 416, H - 26, "255 205 150 90")
+    tube(m, 232, 420, H, "220 232 240 80", along="u")
+    m.det([(316, 384, F, 321, 392, H), (316, 504, F, 321, 512, H), (316, 392, H - 8, 321, 504, H)], IRON)     # the frame of the way through
     m.static("models/props_junk/wood_crate001a.mdl", 284, 350, 10)                        # what was taken off the prisoners
-    m.decal("decals/decalposter014a", 64, 400, F + 80)
+    m.grime("poster", 66, 400, F + 80, 2)
+    m.grime("stain", 200, 322, F + 100, 3)
     m.lane(200, 448)
 
-    # the corridor and the cells
-    for u in (448, 672):
-        m.static("models/props_wasteland/prison_lamp001c.mdl", u, 448, 0, z=H - 12)
-        m.light(u, 448, H - 26, "215 220 200 70")
-    m.static("models/props_wasteland/prison_pipes001a.mdl", 576, 400, 0, z=H - 20)        # pipes under the corridor's roof
+    # the corridor: a prison lamp over each cell's door, darker between; pipes under its roof; the guard's stool
+    for k, cu in enumerate(cells):
+        du = cu + (32 if k == 2 else 96)
+        m.static("models/props_wasteland/prison_lamp001c.mdl", du, 500, 0, z=H - 12)
+        m.light(du, 492, H - 26, "215 220 200 60")
+    m.static("models/props_wasteland/prison_pipes001a.mdl", 576, 398, 0, z=H - 20)        # pipes under the corridor's roof
     m.static("models/props_c17/chair_stool01a.mdl", 808, 404, 0)                          # the guard's stool at the corridor's end
+    m.grime("grate", 576, 448, F, 4)                                                      # a drain in the floor
+    m.grime("stain", 704, 386, F + 90, 5)
+    m.grime("crack", 470, 386, F + 70, 6)
+
+    # the cells
     for k, cu in enumerate(cells):
         n = k + 1
         last = k == 2
@@ -334,28 +380,38 @@ def m_cells(m, opt):
         m.static("models/props_wasteland/prison_cellwindow002a.mdl", window[0] + 18, 540, 90, z=F + 48)
         m.world((window[0], 539, F + 48, window[1], 541, F + 102), MAT["clip"], seals=False)
         bu = cu - 20 if last else cu + 148                          # on the pier's face, 16 or more past the cell's edge
-        m.button("lc_cells_button_%d" % n, bu, 512, F + 40, 270, [(name, "Toggle", "", 0)])
-        m.det([(bu - 2 * n + 4 * j, 511, F + 72, bu - 2 * n + 4 * j + 2, 512, F + 84) for j in range(n)], PLASTER)
+        m.button("lc_cells_button_%d" % n, bu, 510, F + 40, 270, [(name, "Toggle", "", 0)])          # (on the pier's lining)
+        m.det([(bu - 2 * n + 4 * j, 509, F + 72, bu - 2 * n + 4 * j + 2, 510, F + 84) for j in range(n)], PLASTER)
         m.target("lc_cells_spot_%d" % n, cu + 64, 624, F + 8, 270)
-        mattress(m, cu + 30, 640, 90)
+        if k == 1:                                                  # the middle cell: an iron bed frame, the mattress on it, a pan of food
+            m.static("models/props_wasteland/prison_bedframe001b.mdl", cu + 30, 640, 90)
+            mattress(m, cu + 30, 640, 90, z=F + 31)
+            put(m, [("props_c17/metalpot002a", cu + 84, 600, 20), ("props_junk/garbage_metalcan002a", cu + 96, 590, 0)], F)
+        else:
+            mattress(m, cu + 30, 640, 90)
         m.loose("models/props_junk/metalbucket01a.mdl", cu + 108, 580, 0)
         m.static("models/props_wasteland/prison_toilet01.mdl", cu + (40 if last else 100), 694, 0)
         m.static("models/props_wasteland/prison_lamp001c.mdl", cu + 64, 620, 0, z=H - 12)
         m.light(cu + 64, 620, H - 26, "200 205 185 22")
+        m.grime("grate", cu + 64, 600, F, 10 + n)
+        m.grime("graffiti", cu + (126 if last else 2), 660, F + 64, 20 + n)              # (a name scratched on the side wall)
         m.lane(cu + 64, 448)
-    m.det([(639, 596 + 4 * j, F + 70, 640, 598 + 4 * j, F + 80) for j in range(9)]
-          + [(639, 594, F + 74, 640, 632, F + 76)], PLASTER)                            # days scratched on the middle cell's wall
+    m.det([(637, 596 + 4 * j, F + 70, 638, 598 + 4 * j, F + 80) for j in range(9)]
+          + [(635, 594, F + 74, 637, 632, F + 76)], PLASTER)                            # days scratched on the middle cell's wall
 
     # the far cell's loose grate, the duct, and the concrete pipe it comes out through (in a canal: the bank is cut for it)
     slats = [(833, 641, F + 1 + 8 * j, 836, 703, F + 5 + 8 * j) for j in range(5)]
     swing_door(m, "lc_cells_grate", slats + [(833, 641, F + 1, 837, 645, F + 39), (833, 699, F + 1, 837, 703, F + 39)], BARS, (835, 643, F + 20),
                sound="doors/gate_move1.wav")
+    put(m, [("props_debris/concrete_cynderblock001", 816, 650, 20), ("props_debris/concrete_cynderblock001", 812, 690, 75),
+            ("props_debris/concrete_chunk03a", 800, 668, 40)], F)
+    m.grime("debris", 796, 672, F, 7)
     if not m.fr.dz:
         m.prop("prop_static", "models/props_pipes/concrete_pipe001a.mdl", 928, 198, 90, F - 6, {"solid": "0", "disableshadows": "0", "fademindist": "-1", "fademaxdist": "0",
                                                                                           "fadescale": "1"})
-    m.sound("ambient/atmosphere/tunnel1.wav", 576, 448, F + 96, radius=500, volume=3)
+    sounds(m, L, "tunnel", 576, 448, F, 640)
 
-    m.view(160, 180, F, 90, 0, "the door in the wall")
+    m.view(160, 120, F, 90, 0, "the door in the wall")
     m.view(110, 350, F, 40, 4, "the guard room")
     m.view(336, 448, F, 0, 2, "the corridor")
     m.view(736, 448, F, 80, 6, "the far cell from the corridor")
@@ -378,17 +434,18 @@ def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER, rail=Non
     for room in rooms:
         u1, v1, u2, v2, ceil = room[:5]
         fl = room[5] if len(room) > 5 else F
+        top = ceil - 2 if roof else ceil          # (up to the roof's skin, not into it: their ends would lie flush at a doorway)
         edges = [("u", u, v1, 1, (u, v1 - CELL)) for u in range(u1, u2, CELL)] + [("u", u, v2, -1, (u, v2)) for u in range(u1, u2, CELL)]
         edges += [("v", v, u1, 1, (u1 - CELL, v)) for v in range(v1, v2, CELL)] + [("v", v, u2, -1, (u2, v)) for v in range(v1, v2, CELL)]
         for axis, a, line, side, nb in edges:
             n = spec(*nb)
             if n is None or n[0] == "solid":
                 if rail:
-                    parts = [(fl, fl + dado, low, 2), (fl + dado, fl + dado + 4, rail, 3), (fl + dado + 4, ceil, high, 2)]
+                    parts = [(fl, fl + dado, low, 2), (fl + dado, fl + dado + 4, rail, 3), (fl + dado + 4, top, high, 2)]
                 else:
-                    parts = [(fl, fl + dado, low, 2), (fl + dado, ceil, high, 2)]
+                    parts = [(fl, fl + dado, low, 2), (fl + dado, top, high, 2)]
             elif n[0] == "low" and n[3] - dz < ceil:      # (the plan keeps its heights lifted with the module: dz)
-                parts = [(n[3] - dz, ceil, high, 2)]
+                parts = [(n[3] - dz, top, high, 2)]
             else:
                 continue
             for z1, z2, mat, thick in parts:
@@ -415,18 +472,22 @@ BED_YAW = 90     # the way the clinic's bed frames are turned (their long side i
 # ---------------------------------------------------------------------------
 
 def m_clinic(m, opt):
-    """The clinic: a field hospital in a vault off the left wall, whitewashed and tiled against the canal's concrete.
-    A wide way in between two drawn curtains (a white cross on the wall over it); a ward of four beds along its back wall
-    with cloth screens between them (lc_clinic_bed_1 to _4: where a patient lies), a mattress and a bedside drawer
-    each, a hospital cart, a stove, a bench; a dispensary nook behind a shop's display counter (walk round its left
-    end), kitchen shelves behind, jars and kits on it; through a curtained opening an operating theatre with a long
-    steel-legged table under a bell lamp that shines straight down (lc_clinic_table: on the table), a cart, a closet
-    and shelves; and off the theatre a sluice room with a sink, a boiler, a bucket and a floor grille.
+    """The clinic: a field hospital in a vault off the left wall, whitewashed over a tiled dado against the canal's
+    concrete. A wide way in between two drawn curtains, light cloth hung from a rail and clear of the floor (a white
+    cross on the wall over it); a ward of four beds along its back wall under two fluorescent tubes, with cloth screens
+    between them (lc_clinic_bed_1 to _4: where a patient lies), a mattress and a bedside drawer each, a chart on two of
+    the drawers, a drip stand by two beds and oxygen bottles by the others, a hospital cart, a stove with a pot
+    steaming on it, a bench, the nurse's table; a dispensary nook behind a shop's display counter (walk round its left
+    end), kitchen shelves behind, jars and kits on it, under a warm dome light; through a curtained opening an
+    operating theatre: Episode One's operating table under its surgery lamp, which shines straight down
+    (lc_clinic_table: on the table), old stains under it, a drip stand, a cart, a closet and shelves under a cool tube;
+    and off the theatre a sluice room with a sink, a boiler, a bucket and a floor grille, and a leak.
     Left as brushes: the curtains and the screens between the beds (cloth: no model), the white cross (paint), the
     theatre's door frame.
     Unchecked: the sound ambient/water/leak_1.wav; which end of a bed frame is its head, and which way the sink,
     stove, radiator, drawers, closet, boiler and shelves face (sizes and places are from the models' own files;
-    BED_YAW turns the frames); how the loose mattresses settle on the frames."""
+    BED_YAW turns the frames); how the loose mattresses settle on the frames; that Episode One's surgery lamp
+    (props_c17/hospital_surgerylight01) hangs from its top (its box is 33 high: placed with its top on the roof)."""
     L = 1024
     m.open(0, -256, L, 256)
     m.low(384, 256, 576, 320, F + 144)                          # the way in
@@ -443,39 +504,46 @@ def m_clinic(m, opt):
     line_walls(m, [(384, 320, 576, 448, F + 144), (128, 448, 704, 768, F + 160), (128, 320, 320, 448, F + 128), (704, 576, 768, 704, F + 128),
                    (768, 448, 960, 768, F + 176), (832, 320, 960, 448, F + 128)])
 
-    # the way in: a white cross on the wall, a caged lamp, two curtains drawn aside under a valance
-    m.det([(474, 254, F + 168, 486, 256, F + 212), (458, 254, F + 184, 502, 256, F + 196)], PLASTER)
+    # the way in: a white cross on the wall, a caged lamp, two light curtains drawn aside under a valance, clear of the floor
+    m.det([(474, 254, F + 168, 486, 256, F + 212), (458, 252, F + 184, 502, 256, F + 196)], PLASTER)
     cage(m, 480, 256, F + 150, 270, "235 240 225 80")
     cloth = []
     for k in range(7):
         dv = 2 if k % 2 else 0
-        cloth.append((386 + 8 * k, 350 + dv, F + 2, 394 + 8 * k, 352 + dv, F + 124))
-        cloth.append((518 + 8 * k, 350 + dv, F + 2, 526 + 8 * k, 352 + dv, F + 124))
-    cloth.append((386, 349, F + 122, 574, 355, F + 136))
-    m.det(cloth, PLASTER)
-    m.det([(384, 351, F + 136, 576, 353, F + 138)], BARS)
+        cloth.append((386 + 8 * k, 350 + dv, F + 8, 394 + 8 * k, 351 + dv, F + 124))
+        cloth.append((518 + 8 * k, 350 + dv, F + 8, 526 + 8 * k, 351 + dv, F + 124))
+    m.det(cloth, CEILING)
+    m.det([(386, 349, F + 122, 574, 355, F + 136)], CEILING)                                        # the valance
+    m.det([(384, 351, F + 136, 576, 353, F + 138)], BARS)                                           # the rail
     m.lane(480, 352)
 
-    # the ward: four beds, a screen between each, a drawer at every bed
+    # the ward: four beds, a screen between each (posts, a rail, the cloth), a drawer at every bed
     for k in range(4):
         u, n = 200 + 128 * k, k + 1
         m.static("models/props_wasteland/prison_bedframe001b.mdl", u, 716, BED_YAW)
         mattress(m, u, 716, BED_YAW, z=F + 31)
         m.static("models/props_c17/furnituredrawer002a.mdl", u + 42, 754, 270)
         m.target("lc_clinic_bed_%d" % n, u, 716, F + 28, 270)
+        if k % 2 == 0:
+            m.static("models/props_c17/hospital_ivstand01.mdl", u - 34, 696, 0)                  # a drip stand
+            put(m, [("props_lab/clipboard", u + 42, 752, 80)], F + 34)                         # the chart
+        else:
+            m.static("models/props_c17/canister01a.mdl", u - 32, 752, 0)                       # oxygen
         if k < 3:
             s = u + 64
-            m.det([(s - 1, 652, F + 10, s + 1, 764, F + 78)], PLASTER)
-            m.det([(s - 1, 650, F, s + 1, 652, F + 80), (s - 1, 764, F, s + 1, 766, F + 80), (s - 1, 650, F + 78, s + 1, 766, F + 80),
-                   (s - 8, 650, F, s + 8, 652, F + 2), (s - 8, 764, F, s + 8, 766, F + 2)], BARS)
+            m.det([(s, 652, F + 10, s + 1, 764, F + 78)], CEILING)
+            m.det([(s - 1, 650, F, s + 1, 652, F + 80), (s - 1, 764, F, s + 1, 766, F + 80), (s - 1, 652, F + 78, s + 1, 764, F + 80)], BARS)
+            m.det([(s - 8, 648, F, s + 8, 654, F + 2), (s - 8, 762, F, s + 8, 768, F + 2)], BARS)          # (the feet hold the posts' feet: nothing flush)
     m.static("models/props_c17/furnitureradiator001a.mdl", 136, 520, 0)
     m.static("models/props_trainstation/bench_indoor001a.mdl", 148, 644, 0)                  # a bench for whoever waits
     m.static("models/props_c17/furnituretable001a.mdl", 656, 500, 0)                         # the nurse's table
     m.static("models/props_c17/furniturechair001a.mdl", 656, 544, 270)
     m.static("models/props_c17/furniturestove001a.mdl", 352, 474, 90)
+    put(m, [("props_c17/metalpot001a", 352, 470, 0)], F + 41)                                 # a pot boiling instruments, steaming
+    m.smoke(352, 470, F + 56, colour="235 235 235", size=4, length=40, rate=4)
     m.static("models/props_c17/hospital_cart01.mdl", 300, 620, 20)
     for u in (264, 520):
-        dome(m, u, 590, F + 158, "235 240 228 130")
+        tube(m, u, 640, F + 160, "225 235 240 110", along="u")
     for u, v in ((200, 600), (456, 600), (640, 560)):
         m.lane(u, v)
 
@@ -488,32 +556,42 @@ def m_clinic(m, opt):
     dome(m, 224, 392, F + 126, "255 215 160 80")
     m.lane(224, 392)
 
-    # through to the theatre: a steel frame and one curtain, drawn back
-    m.det([(732, 576, F, 740, 580, F + 126), (732, 700, F, 740, 704, F + 126), (732, 576, F + 118, 740, 704, F + 126)], STEEL)
-    m.det([(735, 580 + 6 * k, F + 2, 737, 586 + 6 * k, F + 118) for k in range(0, 5, 2)]
-          + [(733, 586 + 6 * k, F + 2, 735, 592 + 6 * k, F + 118) for k in range(0, 4, 2)], PLASTER)
+    # through to the theatre: a steel frame (the head between its jambs) and one curtain, drawn back
+    m.det([(732, 576, F, 740, 580, F + 126), (732, 700, F, 740, 704, F + 126), (732, 580, F + 118, 740, 700, F + 126)], IRON)
+    m.det([(735, 580 + 6 * k, F + 8, 737, 586 + 6 * k, F + 118) for k in range(0, 5, 2)]
+          + [(733, 586 + 6 * k, F + 8, 735, 592 + 6 * k, F + 118) for k in range(0, 4, 2)], CEILING)
     m.lane(736, 640)
 
-    # the operating theatre: the table under its lamp, a cart, a closet, shelves
+    # the operating theatre: the table under its lamp, stains under it, a drip stand, a cart, a closet, shelves
     cu, cv = 864, 640
-    m.static("models/props_wasteland/cafeteria_table001a.mdl", cu, cv, 0)
-    m.target("lc_clinic_table", cu, cv, F + 36, 270)
-    bell(m, cu, cv, F + 174, "240 244 235 60")
-    m.spot(cu, cv, F + 148, "255 250 235 900", 0, pitch=90, cone=56)
+    m.static("models/props_c17/hospital_surgerytable01.mdl", cu, cv, 0)
+    m.target("lc_clinic_table", cu, cv, F + 38, 270)
+    m.static("models/props_c17/hospital_surgerylight01.mdl", cu, cv, 0, z=F + 176 - 34)
+    m.spot(cu, cv, F + 138, "255 250 235 1400", 0, pitch=90, cone=36)
+    m.decal("decals/bloodstain_002", cu + 20, cv - 26, F)
+    m.decal("decals/bloodstain_001", cu - 40, cv + 22, F)
+    m.static("models/props_c17/hospital_ivstand01.mdl", 836, 690, 0)
     m.static("models/props_c17/hospital_cart01.mdl", 924, 580, 0)
     m.static("models/props_wasteland/kitchen_shelf002a.mdl", 864, 744, 270)
     m.static("models/props_wasteland/controlroom_storagecloset001a.mdl", 792, 730, 0)
+    tube(m, 820, 720, F + 176, "205 225 240 60", along="u")
     m.lane(820, 520)
 
     # the sluice room: a narrowed way in, the sink, a boiler, a grille in the floor
-    m.det([(832, 444, F, 864, 448, F + 128), (928, 444, F, 960, 448, F + 128)], TILE)
+    m.det([(832, 444, F, 864, 450, F + 128), (928, 444, F, 960, 450, F + 128)], TILE)
     m.static("models/props_interiors/sinkkitchen01a.mdl", 880, 336, 90)
     m.static("models/props_c17/furnitureboiler001a.mdl", 936, 352, 180)
     m.static("models/props_vents/vent_large_grill001.mdl", 896, 400, 0, z=F + 1)
     m.loose("models/props_junk/metalbucket01a.mdl", 852, 420, 0)
     dome(m, 896, 384, F + 126, "225 235 235 45")
     m.sound("ambient/water/leak_1.wav", 896, 350, F + 40, radius=320, volume=3)
+    m.grime("stain", 958, 400, F + 90, 1)
     m.lane(896, 400)
+
+    # the marks of use: damp at the way in, a crack high in the ward
+    m.grime("stain", 386, 400, F + 60, 2)
+    m.grime("crack", 702, 520, F + 130, 3)
+    sounds(m, L, "inside", 416, 600, F, 520)
 
     m.view(480, 150, F, 90, 0, "the way in")
     m.view(480, 420, F, 100, 4, "the ward")
@@ -528,11 +606,13 @@ def m_clinic(m, opt):
 
 def m_memorial(m, opt):
     """The wall of the dead: a shallow recess in the left wall, open to the sky, its floor one step above the canal's.
-    A stone wall stands against its back, covered in rows of small plaques (the upper rows half empty: room for more),
-    with a ledge at its foot where candle stubs burn steadily among framed pictures, bottles, tins and pots; a tall
-    candlestick at each end of it, posters on the side walls, a line strung across, and a bench out in the canal
-    facing it. lc_memorial_wall is the middle of the wall, facing out: the game may one day list there the names of
-    characters who died for good.
+    A stone wall stands against its back, covered in rows of small plaques of dark metal on pale stone backs, no two
+    quite the same size (the upper rows half empty: room for more), with a ledge at its foot where candle stubs burn
+    steadily among framed photographs turned this way and that, bottles, tins, pots, a child's doll and a shoe; a
+    tall candlestick at each end of it; names scratched on the recess's side walls where the plaques ran out, the
+    lambda once, small; posters; a line strung across, and a bench out in the canal facing it. lc_memorial_wall is
+    the middle of the wall, facing out: the game may one day list there the names of characters who died for good.
+    Lit by the candles alone: three small lights among them.
     Left as brushes: the stone wall, its plaques and the candle stubs (Half-Life 2 has no plaque and no candle).
     Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (a low wind); which way the picture frames
     face; the candlesticks are Lost Coast's (lostcoast/props_monastery/candlestick). No flowers: there is no model."""
@@ -543,43 +623,53 @@ def m_memorial(m, opt):
     m.no_bank(192, 240, 576, 272)
     m.taken(168, 100, F, 600, 256, F + 150)
     cheeks(m, 192, 576)
-    m.det([(192, 232, F, 576, 256, F + 8)], STONE, top=STONE_FLOOR)                      # the step up
-    m.det([(192, 252, F + 8, 576, 256, Z)], STONE, top=STONE_FLOOR)
+    m.det([(192, 232, F, 576, 256, F + 9)], STONE, top=STONE_FLOOR)                      # the step up (1 over the mud the dressing lays: never flush with it)
+    m.det([(192, 252, F + 9, 576, 256, Z)], STONE, top=STONE_FLOOR)
 
     # the stone wall: a plinth whose top is the ledge, the face, a coping
     m.det([(232, 380, Z + 24, 536, 384, Z + 200)], STONE)
     m.det([(224, 366, Z, 544, 384, Z + 24)], STONE, top=STONE_FLOOR)
     m.det([(224, 376, Z + 200, 544, 384, Z + 208), (368, 378, Z + 208, 400, 384, Z + 240)], STONE)
+    # the plaques: a pale stone back, a dark metal face 1 proud of it with a border showing, each a little different
     rnd = random.Random(11)
-    kinds = (STEEL, STEEL, STEEL, TIN, BEAM)
-    plaques = {}
+    backs, faces = [], {}
     for row in range(7):
-        z = Z + 38 + 22 * row
+        z = Z + 36 + 22 * row
         for col in range(12):
             if rnd.random() < (0.97, 0.95, 0.9, 0.8, 0.55, 0.3, 0.12)[row]:
+                w, h = rnd.choice(((20, 14), (18, 14), (20, 16), (16, 12), (22, 14)))
                 u = 242 + 24 * col + rnd.randrange(-1, 2)
-                plaques.setdefault(rnd.choice(kinds), []).append((u, 378, z, u + 20, 380, z + 14))
-    for mat, boxes in sorted(plaques.items()):
+                zz = z + rnd.randrange(0, 3)
+                backs.append((u, 378, zz, u + w, 380, zz + h))
+                faces.setdefault(rnd.choice((IRON, IRON, "metal/metalwall030a")), []).append((u + 2, 377, zz + 2, u + w - 2, 378, zz + h - 2))
+    m.det(backs, "stone/stonewall050f")
+    for mat, boxes in sorted(faces.items()):
         m.det(boxes, mat)
     m.target("lc_memorial_wall", 384, 372, Z + 112, 270)
 
-    # what people leave: candle stubs on the ledge and at its foot, pictures, bottles, tins, pots
+    # what people leave: candle stubs on the ledge and at its foot (three small lights among them), pictures, a doll,
+    # a shoe, bottles, tins, pots
     for k, (u, high) in enumerate(((236, 5), (251, 3), (270, 7), (296, 4), (309, 6), (338, 3), (352, 8), (377, 5), (391, 4), (415, 7), (440, 3),
                                    (458, 6), (476, 4), (497, 8), (512, 5), (531, 3))):
-        candle(m, u, 370 + (k * 5) % 7, Z + 24, high, light=k % 2 == 0)
-    for k, (u, v, high) in enumerate(((300, 356, 4), (310, 349, 7), (322, 358, 3), (384, 350, 6), (396, 357, 4), (452, 352, 5), (468, 359, 8), (250, 354, 3))):
-        candle(m, u, v, Z, high, light=k % 2 == 1)
-    put(m, [("props_lab/frame002a", 326, 374, 270), ("props_lab/frame002a", 406, 374, 270), ("props_lab/frame002a", 488, 374, 270),
-            ("props_junk/glassbottle01a", 262, 372, 0), ("props_junk/glassbottle01a", 366, 372, 0), ("props_junk/glassbottle01a", 448, 372, 0),
+        candle(m, u, 370 + (k * 5) % 7, Z + 24, high, light=False)
+    for u, v, high in ((300, 356, 4), (310, 349, 7), (322, 358, 3), (384, 350, 6), (396, 357, 4), (452, 352, 5), (468, 359, 8), (250, 354, 3)):
+        candle(m, u, v, Z, high, light=False)
+    for u in (290, 400, 500):
+        m.light(u, 360, Z + 40, "255 170 90 22")
+    put(m, [("props_lab/frame002a", 326, 374, 255), ("props_lab/frame002a", 406, 373, 282), ("props_lab/frame002a", 488, 374, 264),
+            ("props_c17/doll01", 449, 372, 250), ("props_junk/glassbottle01a", 262, 372, 0), ("props_junk/glassbottle01a", 366, 372, 0),
             ("props_junk/metal_paintcan001a", 284, 372, 0), ("props_junk/popcan01a", 430, 371, 0), ("props_junk/metal_paintcan001a", 524, 372, 0)], Z + 24)
-    put(m, [("props_junk/terracotta01", 360, 354, 0), ("props_junk/terracotta01", 500, 352, 40)], Z)
+    put(m, [("props_junk/terracotta01", 360, 354, 0), ("props_junk/terracotta01", 500, 352, 40), ("props_junk/shoe001a", 424, 352, 200)], Z)
     for u in (210, 558):                                                                 # a tall candlestick at each end
         m.static("models/lostcoast/props_monastery/candlestick.mdl", u, 364, 270, z=Z)
         m.glow(u, 364, Z + 106, "255 200 120", 0.12)
-        m.light(u, 364, Z + 112, "255 170 90 14")
-    m.decal("decals/decalposter014a", 192, 316, Z + 96)
-    m.decal("decals/decal_posters005a", 576, 322, Z + 100)
-    m.decal("decals/decal_posters005a", 208, 384, Z + 120)
+
+    # writing: names scratched on the side walls where the plaques ran out, the lambda once; posters; a line across
+    for k, (u, v, z) in enumerate(((192, 300, Z + 70), (192, 344, Z + 112), (576, 296, Z + 96), (576, 340, Z + 60))):
+        m.grime("graffiti", u, v, z, 40 + k)
+    m.grime("lambda", 576, 368, Z + 150, 5)
+    m.decal("decals/decalposter014a", 192, 316, Z + 160)
+    m.decal("decals/decal_posters005a", 576, 322, Z + 190)
     m.rope([(194, 300, Z + 216), (574, 300, Z + 216)], slack=70)
 
     # the bench out in the canal, facing the wall (far enough out to stand on a street's pavement too)
@@ -588,6 +678,7 @@ def m_memorial(m, opt):
     m.lane(384, 216)
     m.lane(384, 312, Z)
     m.sound("ambient/levels/canals/windmill_wind_loop1.wav", 384, 300, Z + 160, radius=600, volume=2)
+    sounds(m, L, "courtyard", 384, 320, Z, 384)
 
     m.view(384, 40, F, 90, 0, "from across the canal")
     m.view(384, 150, F, 90, -6, "from the bench")
@@ -605,15 +696,18 @@ def m_pit(m, opt):
     Prospekt's fence panels on a kerb; the one gate (lc_pit_gate, on the side toward the canal) swings open when the
     button on the post beside it is pressed (lc_pit_gate_button) or the game tells it to (Open, Close), and steps go
     down from it into the ring. lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool
-    in each). Three tiers of concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the
-    middle of each. By the mouth on the right the bookmaker's table, chair, till and lamp under a chalk board of odds
+    in each, a bucket by it, blood in the dirt). Three tiers of seats, 32 high each, concrete on brick risers, stand on
+    the three far sides, with stairs of 16 up the middle of each and the city's handrail along the fronts of the upper
+    two (the stairs left open); a caged lamp on the wall over each stair lights the crowd, and a painted cloth banner
+    hangs on each wall above the top tier; bottles and cans left on the tiers. By the mouth on the right the
+    bookmaker's table, chair, till and lamp under a chalk board of odds, betting slips trodden into the floor
     (lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over
     the ring from a gantry (the owner asked for these, not street lamps).
     The gate is Nova Prospekt's gate (interior_fence001g) in its own frame (interior_fence002e), riding on an unseen
     brush door of the same name and inputs that swings it out (Use opens it too); an
     unseen wall stands in the cage's line all round, so the cage holds whatever the panels' own shapes are.
     Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one), the
-    gantry and its lamps.
+    gantry and its lamps' rods, the banners (cloth: no model).
     Unchecked: which way the fence panels face and whether their meshes meet at the corners; whether a press of the
     gate's button can be made through the cage from inside; the button's model is Episode Two's."""
     L, cu, cv = 1280, 640, 704
@@ -666,6 +760,10 @@ def m_pit(m, opt):
     m.target("lc_pit_corner_b", 784, 848, F - 56, 225)
     m.static("models/props_c17/chair_stool01a.mdl", 466, 530, 0, z=F - 64)
     m.static("models/props_c17/chair_stool01a.mdl", 814, 878, 0, z=F - 64)
+    m.loose("models/props_junk/metalbucket01a.mdl", 480, 560, 0, z=F - 64)
+    m.loose("models/props_junk/metalbucket01a.mdl", 794, 850, 0, z=F - 64)
+    m.decal("decals/bloodstain_003", 640, 700, F - 64)
+    m.decal("decals/bloodstain_001", 590, 770, F - 64)
 
     # the gantry over the ring, two lamps hanging from it (as first built: the owner asked for these back)
     top = F + 144
@@ -678,10 +776,29 @@ def m_pit(m, opt):
     tiers, stairs = [], []
     for k in range(3):
         d, e, z = 256 + 64 * k, 384 - 64 * k, F + 32 * (k + 1)
-        tiers += [(cu - d - 64, cv - 192, F, cu - d, cv + e, z), (cu + d, cv - 192, F, cu + d + 64, cv + e, z), (cu - e, cv + d, F, cu + e, cv + d + 64, z)]
+        s = min(d, e)               # (the sides stop where the back's row of the same height starts: never two tops in one plane)
+        tiers += [(cu - d - 64, cv - 192, F, cu - d, cv + s, z), (cu + d, cv - 192, F, cu + d + 64, cv + s, z), (cu - e, cv + d, F, cu + e, cv + d + 64, z)]
         stairs += [(cu - d, cv - 32, F, cu - d + 16, cv + 32, z - 16), (cu + d - 16, cv - 32, F, cu + d, cv + 32, z - 16), (cu - 32, cv + d - 16, F, cu + 32, cv + d, z - 16)]
-    m.det(tiers, MAT["beam"], top=MAT["quay_floor"])
+        if k:                       # the city's handrail along the upper two rows' fronts, the stairs left open
+            for a, b in ((cv - 184, cv - 40), (cv + 40, cv + s - 8)):
+                rail_run(m, a, b, cu - d - 4, "v", z)
+                rail_run(m, a, b, cu + d + 4, "v", z)
+            for a, b in ((cu - s + 8, cu - 40), (cu + 40, cu + s - 8)):
+                rail_run(m, a, b, cv + d + 4, "u", z)
+    m.det(tiers, OLD_BRICK, top=MAT["quay_floor"])
     m.det(stairs, WALL, top=MAT["stairs"])
+    # the crowd's side lit: a caged lamp on the wall over each stair; a painted banner on each wall above the top row
+    for u, v, out in ((cu - 448, cv, 0), (cu + 448, cv, 180), (cu, cv + 448, 270)):
+        cage(m, u, v, F + 176, out, "255 205 150 110")
+    for cloth, rod, face, sign in (((cu - 448, cv - 200, cu - 447, cv - 72), (cu - 447, cv - 204, cu - 445, cv - 68), (cu - 447, cv - 136), "a"),
+                                   ((cu + 447, cv + 72, cu + 448, cv + 200), (cu + 445, cv + 68, cu + 447, cv + 204), (cu + 447, cv + 136), "b"),
+                                   ((cu + 80, cv + 447, cu + 208, cv + 448), (cu + 76, cv + 445, cu + 212, cv + 447), (cu + 144, cv + 447), "c")):
+        m.det([cloth[:2] + (F + 132,) + cloth[2:] + (F + 216,)], CLOTH)
+        m.det([rod[:2] + (F + 216,) + rod[2:] + (F + 218,)], BARS)                     # the pole it hangs from
+        m.decal("decals/decalsignpainted001%s" % sign, face[0], face[1], F + 176)
+    # what a fight night leaves: bottles and cans on the rows
+    put(m, [("props_junk/glassbottle01a", cu - 352, cv + 140, 0), ("props_junk/popcan01a", cu + 356, cv - 100, 40), ("props_junk/garbage_metalcan001a", cu - 150, cv + 340, 0)], F + 64)
+    put(m, [("props_junk/glassbottle01a", cu - 414, cv - 60, 0), ("props_junk/popcan01a", cu + 150, cv + 412, 0)], F + 96)
 
     # the bookmaker, right of the mouth: table, chair, till, a desk lamp, the board of odds on the wall
     m.static("models/props_c17/furnituretable002a.mdl", 948, 424, 90)
@@ -704,6 +821,9 @@ def m_pit(m, opt):
     m.loose("models/props_junk/metalbucket01a.mdl", 318, 410, 0)
     for u, v in ((640, 380), (480, 380), (800, 380), (640, 300)):
         m.lane(u, v)
+    m.grime("trash", 930, 450, F, 1)                                                   # betting slips trodden in
+    m.grime("trash", 980, 470, F, 2)
+    sounds(m, L, "square", cu, cv, F, 640)
 
     m.view(640, 100, F, 90, 2, "from the canal")
     m.view(608, 440, F, 90, 8, "at the gate")
@@ -718,40 +838,61 @@ def m_pit(m, opt):
 
 GRASS = "nature/grassfloor002a"
 CLOTH = "props/carpetfloor003a"
+POLE = "models/props_c17/signpole001.mdl"
+
+
+def lean(m, model, u, v, z, yaw, roll):
+    """A pole standing on z at (u, v) and leaning: roll tilts the model's top toward its -y (a pole the model's own
+    size: its foot at its origin). A tilted prop: the floating check leaves it alone."""
+    m.prop("prop_dynamic_override", model, u, v, yaw, z, {"angles": "0 %d %d" % (m.fr.yaw(yaw), roll), "solid": "6", "disableshadows": "1", "fademindist": "-1",
+                                                          "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"})
 
 
 def m_garden(m, opt):
-    """The walled garden: where the Resistance grows food. A gap in the left wall, three steps up, a fence of boards
-    and an iron gate (lc_garden_gate: Use swings it in), opens on a yard 640 by 448 under the open sky, its floor 24
-    above the canal's. Six raised soil beds edged with timber, three on each side of a path of flagstones
-    (lc_garden_bed_1 to _6: on the beds, for a farming job; 1 to 3 on the left going back, 4 to 6 on the right),
-    ridged. lc_garden_plot_1 to _8 are the planting spots for the game (melons, pumpkins): info_targets on the soil
-    of the four beds that have no bean poles, two a bed, each a little off the line and turned an odd way (the same
-    every build). Bean poles over the first bed on each side; a scarecrow in the middle bed on the right. Against the back wall a tool lean-to (a desk, pots, a shovel, a bucket, a bell lamp), a
-    barrel under a gutter pipe in the left corner, a compost heap behind boards in the right corner; a push cart, a
-    wheelbarrow and a crate of melons on the path.
+    """The walled garden: where the Resistance grows food. A gap in the left wall, a fence of boards and an iron gate
+    (lc_garden_gate: Use swings it in), opens on a yard 640 by 448 under the open sky: in a canal 24 above its floor and
+    three steps up, on a street level with the pavement (the owner, of the playground: places sit at the pavement's
+    height). Its ground is grass, worn to earth along a path of flagstones set into it from the gate to the lean-to.
+    Six raised soil beds edged with timber, three on each side of the path (lc_garden_bed_1 to _6: on the beds, for a
+    farming job; 1 to 3 on the left going back, 4 to 6 on the right), ridged. lc_garden_plot_1 to _8 are the planting
+    spots for the game (melons, pumpkins): info_targets on the soil of the four beds that have no bean poles, two a
+    bed, each a little off the line and turned an odd way (the same every build). Over the first bed on each side
+    bean poles stand in pairs leaning together, tied to a cane along the top, as a crop is grown; a scarecrow in the
+    middle bed on the right. Ivy climbs the side walls. Against the back wall a tool lean-to (a desk with pots, jars
+    and a sack, a shovel, a bucket, a bell lamp), a cold frame (an old window on a timber box over seedlings), a
+    barrel under a gutter pipe in the left corner with a puddle by it, a compost heap behind boards in the right
+    corner; a push cart, a wheelbarrow and a crate of melons on the path.
     The gate is props_c17/gate_door01a riding on an unseen brush door of the same name.
-    Left as brushes: the beds (timber and soil), the scarecrow (no model of one), the lean-to, the fence's two rails.
-    Unchecked: which way the gate and the boards face; how the loose things lie once the game drops them."""
-    L, Z = 1280, F + 24
+    Left as brushes: the beds (timber and soil), the canes along the bean poles, the scarecrow (no model of one), the
+    lean-to, the cold frame, the fence's two rails.
+    Unchecked: which way the gate, the boards and the ivy face (ivy_01 is thin along its x: its back put to the
+    wall); how far the bean poles lean (roll 16: they should meet over the bed's middle); how the loose things lie
+    once the game drops them."""
+    L = 1280
+    Z = F if m.fr.dz else F + 24
     m.open(0, -256, L, 256)
     m.open(576, 256, 704, 320, floor=Z, mat=CRACKED)
-    m.open(320, 320, 960, 768, floor=Z, mat=CRACKED)
+    m.open(320, 320, 960, 768, floor=Z, mat=GRASS)
     m.side(320, 256, 960, 768)
     m.no_bank(576, 240, 704, 272)
     m.taken(552, 100, F, 728, 256, F + 150)
     cheeks(m, 576, 704)
-    m.steps(220, 576, 704, F, Z, "v", 1)
-    m.blocked(576, 208, 704, 256)
+    if Z > F:
+        m.steps(220, 576, 704, F, Z, "v", 1)
+        m.blocked(576, 208, 704, 256)
     m.lane(640, 200)
     m.lane(640, 336, Z)
 
     # the fence of boards across half the gap, and the gate that swings in
     for k in range(6):
         m.static("models/props_debris/wood_board04a.mdl", 583 + 10 * k, 288, 90, z=Z)
-    m.det([(576, 289, Z + 14, 642, 291, Z + 18), (576, 289, Z + 46, 642, 291, Z + 50), (638, 286, Z, 642, 292, Z + 66)], BEAM)
+    m.det([(576, 289, Z + 14, 638, 291, Z + 18), (576, 289, Z + 46, 638, 291, Z + 50), (638, 286, Z, 642, 292, Z + 66)], BEAM)
     swing_door(m, "lc_garden_gate", [(646, 287, Z + 2, 702, 291, Z + 110)], STEEL, (702, 289, Z + 56), reverse=True, sound="doors/gate_move1.wav", unseen=True)
     rider(m, "lc_garden_gate", "models/props_c17/gate_door01a.mdl", 674, 289, 90, Z)
+
+    # the ground worn to earth along the path, and the flagstones in it
+    m.det([(600, 320, Z, 680, 688, Z + 1)], DIRT)
+    m.det([(616 + (k % 2) * 14, 348 + 62 * k, Z, 652 + (k % 2) * 14, 386 + 62 * k, Z + 2) for k in range(5)], STONE, top=STONE_FLOOR)
 
     # six raised beds: timber edges, soil, three ridges each
     beds = [(352, v) for v in (360, 472, 584)] + [(736, v) for v in (360, 472, 584)]
@@ -778,35 +919,50 @@ def m_garden(m, opt):
     m.blocked(336, 344, 560, 672)
     m.blocked(720, 344, 944, 672)
 
-    # bean poles over the first bed on each side
+    # bean poles over the first bed on each side: pairs leaning together from the bed's two long edges, a cane along the top
+    canes = []
     for (u, v) in (beds[0], beds[3]):
-        for row in (0, 2):
-            for k in range(u + 24, u + 190, 72):
-                m.static("models/props_c17/signpole001.mdl", k, v + 16 + 20 * row, 0, z=Z + 13)
+        for pu in range(u + 32, u + 190, 64):
+            lean(m, POLE, pu, v + 8, Z + 13, 0, -16)
+            lean(m, POLE, pu, v + 64, Z + 13, 0, 16)
+        canes.append((u + 16, v + 35, Z + 112, u + 176, v + 37, Z + 114))
+    m.det(canes, BEAM)
 
     # the scarecrow, in the middle bed on the right
     su, sv = 832, 508
-    m.det([(su - 2, sv - 2, Z + 13, su + 2, sv + 2, Z + 96), (su - 30, sv - 1, Z + 76, su + 30, sv + 1, Z + 80)], BEAM)
+    m.det([(su - 2, sv - 2, Z + 13, su + 2, sv + 2, Z + 96), (su - 28, sv - 1, Z + 76, su + 28, sv + 1, Z + 80)], BEAM)
     m.det([(su - 13, sv - 3, Z + 46, su + 13, sv + 3, Z + 82), (su - 30, sv - 2, Z + 70, su - 13, sv + 2, Z + 82), (su + 13, sv - 2, Z + 70, su + 30, sv + 2, Z + 82)], CLOTH)
     m.det([(su - 6, sv - 6, Z + 84, su + 6, sv + 6, Z + 97)], PLASTER)
     m.shapes([vpipe(su, sv, 11, Z + 97, Z + 99, TIN), vpipe(su, sv, 6, Z + 99, Z + 105, TIN)])
 
-    # the flagstones of the path
-    m.det([(616 + (k % 2) * 14, 348 + 62 * k, Z, 652 + (k % 2) * 14, 386 + 62 * k, Z + 2) for k in range(5)], STONE, top=STONE_FLOOR)
+    # ivy up the side walls
+    m.static("models/props_foliage/ivy_01.mdl", 344, 392, 0, z=Z)
+    m.static("models/props_foliage/ivy_01.mdl", 936, 569, 180, z=Z)
 
     # the tool lean-to against the back wall
     m.hut(560, 688, 720, 768, Z, WOOD, high=96, front="lo", open_front=True)
     m.static("models/props_interiors/furniture_desk01a.mdl", 640, 740, 90, z=Z)
-    for u in (616, 640, 666):
+    for u in (616, 640):
         m.loose("models/props_junk/terracotta01.mdl", u, 742, 0, z=Z + 40)
+    put(m, [("props_lab/jar01a", 662, 744, 0), ("props_lab/jar01b", 664, 732, 40)], Z + 40)
+    m.loose("models/props_junk/garbage_bag001a.mdl", 702, 744, 80, z=Z)
     m.loose("models/props_junk/metalbucket01a.mdl", 592, 712, 0, z=Z)
     m.loose("models/props_junk/shovel01a.mdl", 694, 712, 90, z=Z)
     bell(m, 640, 712, Z + 96, "255 200 130 90")
 
-    # a barrel under a gutter pipe in the left corner
+    # a cold frame by the back wall: a timber box, seedlings in it, an old window laid sloping over it
+    c1, c2, w1, w2 = 744, 848, 716, 764
+    m.det([(c1, w1, Z, c2, w1 + 3, Z + 12), (c1, w2 - 3, Z, c2, w2, Z + 24)], TIMBER)
+    side = [(w1 + 3, Z), (w2 - 3, Z), (w2 - 3, Z + 23), (w1 + 3, Z + 13)]
+    m.shapes([prism(side, "x", c1, c1 + 3, TIMBER), prism(side, "x", c2 - 3, c2, TIMBER)])
+    m.det([(c1 + 3, w1 + 3, Z, c2 - 3, w2 - 3, Z + 6)], DIRT)
+    m.shapes([prism([(w1, Z + 12), (w2, Z + 24), (w2, Z + 25), (w1, Z + 13)], "x", c1 + 1, c2 - 1, "glass/glasswindow007a")])
+
+    # a barrel under a gutter pipe in the left corner, a puddle where it overflows
     m.static("models/props_borealis/bluebarrel001.mdl", 348, 742, 0, z=Z)
     m.static("models/props_pipes/gutter_256_001a.mdl", 348, 760, 0, z=Z + 56)
     m.static("models/props_c17/oildrum001.mdl", 400, 744, 0, z=Z)
+    m.grime("puddle", 372, 712, Z, 1)
 
     # the compost heap behind a row of boards in the right corner
     for k in range(4):
@@ -822,6 +978,7 @@ def m_garden(m, opt):
         m.loose("models/props_junk/watermelon01.mdl", u, v, 30, z=Z)
     for v in (430, 560, 660):
         m.lane(640, v, Z)
+    sounds(m, L, "courtyard", 640, 540, Z, 512)
 
     m.view(640, 120, F, 90, 0, "the gate from the canal")
     m.view(640, 330, Z, 90, 10, "coming in")
