@@ -39,7 +39,7 @@ a fallen bridge to walk under, a goods wagon, containers, wrecks, a camp.
 
 import random
 
-from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, fence, gate_cap, octagon, prism, road_bridge, stand_z, test_extras
+from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, fence, gate_cap, octagon, prism, road_bridge, stand_z, dress_keys, loose_flags, loose_yaw, test_extras
 from map_forest import noise
 
 BANK = 128
@@ -523,10 +523,11 @@ def ring(args):
     def static(model, x, y, yaw, z=F):
         from map_build import standing_prop      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
         cls, keys = standing_prop(model)
-        vmf.point(cls, (x, y, stand_z(model, z)), dict(keys, model=model, angles="0 %d 0" % yaw), sv)      # (standing ON z, by its size)
+        vmf.point(cls, (x, y, stand_z(model, z)), dress_keys(model, x, y, dict(keys, model=model, angles="0 %d 0" % yaw)), sv)      # (standing ON z, by its size)
 
     def loose(model, x, y, yaw, z=F, roll=0):
-        vmf.point("prop_physics", (x, y, stand_z(model, z + 1, roll=roll)), {"model": model, "angles": "0 %d %d" % (yaw, roll), "skin": "0", "spawnflags": "0"}, sv)
+        vmf.point("prop_physics", (x, y, stand_z(model, z + 1, roll=roll)), dress_keys(model, x, y, {"model": model, "angles": "0 %d %d" % (loose_yaw(model, x, y, yaw), roll),
+                                                                                                    "spawnflags": loose_flags(model)}), sv)
 
     # 1. a street over the north leg, and under it somebody's camp
     taken.append(road_bridge(vmf, plan, "y", 6656, 6976, 5888, 6400, F, TRIM, sv))
@@ -631,7 +632,8 @@ def ring(args):
     for model, x, y in (("models/props_c17/oildrum001.mdl", 4300, 7700), ("models/props_junk/wood_pallet001a.mdl", 4380, 7760),
                         ("models/props_canal/boat002b.mdl", 300, 7250), ("models/props_vehicles/tire001c_car.mdl", -1900, 7200),
                         ("models/props_junk/wood_crate001a.mdl", -4520, 5500), ("models/props_canal/boat001a.mdl", -4500, 3500)):
-        vmf.point("prop_physics", (x, y, stand_z(model, F + 1)), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15), "skin": "0", "spawnflags": "0"}, "LC ring: props")
+        vmf.point("prop_physics", (x, y, stand_z(model, F + 1)), dress_keys(model, x, y, {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
+                                                                                         "spawnflags": loose_flags(model)}), "LC ring: props")
 
     # --- the checks -------------------------------------------------------------------------------------------------
     stopper = (-2608, 1856, base, -2544, 2624, road_sky)

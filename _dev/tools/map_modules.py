@@ -265,35 +265,48 @@ class Mod:
         import map_build
         return map_build.stand_z(model, z, pitch, roll)
 
-    def prop(self, cls, model, u, v, yaw, z, keys, vis=None):
-        """Any prop, standing on z. Its place and size go to the checks and the pictures."""
-        zo = self.stand(model, z)
+    def prop(self, cls, model, u, v, yaw, z, keys, vis=None, pitch=0, roll=0):
+        """Any prop, standing on z (pitch and roll lean it or lay it down: it still stands on z by its turned box). Its
+        place and size go to the checks and the pictures. As Valve dresses props (docs/dev/valve-prop-notes.md): a
+        model with several skins of looks only gets one of them (map_build.prop_skin) unless keys name a skin, and a
+        small thing nobody names fades far off (map_build.prop_fade) unless keys set its fade."""
+        import map_build
+        zo = self.stand(model, z, pitch, roll)
         wy = self.fr.yaw(yaw)
-        k = {"model": model, "angles": "0 %d 0" % wy, "skin": "0"}
+        x, y, _ = self.fr.at(u, v, zo)
+        k = {"model": model, "angles": "%d %d %d" % (pitch, wy, roll), "skin": map_build.prop_skin(model, x, y)}
         k.update(keys)
+        fade = map_build.prop_fade(model)
+        if fade and k.get("fademindist", "-1") == "-1" and not k.get("targetname") and not k.get("parentname"):
+            k.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
         self.point(cls, u, v, zo, k, vis or self.pv)
         self.b.props.append((cls, model, self.fr.at(u, v, zo), wy, self.tag))
 
-    def static(self, model, u, v, yaw=0, z=F):
+    def static(self, model, u, v, yaw=0, z=F, pitch=0, roll=0):
         """A prop that never moves, standing on z. A model that was not built to be static (map_assets.py knows) is
         placed as a prop_dynamic instead, since the compiler would leave it out."""
         import map_assets
         if map_assets.is_static(model) is False:
-            return self.dynamic(model, u, v, yaw, z)
-        self.prop("prop_static", model, u, v, yaw, z, {"solid": "6", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
+            return self.dynamic(model, u, v, yaw, z, pitch=pitch, roll=roll)
+        self.prop("prop_static", model, u, v, yaw, z, {"solid": "6", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"},
+                  pitch=pitch, roll=roll)
 
-    def loose(self, model, u, v, yaw=0, z=F):
-        """A prop that can be pushed about, standing on z."""
-        self.prop("prop_physics", model, u, v, yaw, z + 1, {"spawnflags": "0"})
+    def loose(self, model, u, v, yaw=0, z=F, pitch=0, roll=0):
+        """A prop that can be pushed about, standing on z: lean it or lay it down with pitch and roll (Valve lays 23% of
+        theirs on their sides). Set square, it is turned a little off the square three times in five, as Valve's are
+        (map_build.loose_yaw); it starts asleep, and small junk is debris players walk through (map_build.loose_flags)."""
+        import map_build
+        x, y = self.fr.pt(u, v)
+        self.prop("prop_physics", model, u, v, map_build.loose_yaw(model, x, y, yaw), z + 1, {"spawnflags": map_build.loose_flags(model)}, pitch=pitch, roll=roll)
 
-    def dynamic(self, model, u, v, yaw=0, z=F, name=None, solid=True):
+    def dynamic(self, model, u, v, yaw=0, z=F, name=None, solid=True, pitch=0, roll=0):
         """A prop that stays put but may be named for the game (any model will do), standing on z."""
         k = {"solid": "6" if solid else "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
              "renderamt": "255", "rendercolor": "255 255 255"}
         if name:
             k["targetname"] = name
         import map_assets      # (a physics prop standing still is a prop_dynamic_override: as a plain prop_dynamic the game objects to it)
-        self.prop("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic", model, u, v, yaw, z, k)
+        self.prop("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic", model, u, v, yaw, z, k, pitch=pitch, roll=roll)
 
     def body(self, model, u, v, yaw=0, z=F):
         self.point("prop_ragdoll", u, v, z + 16, {"model": model, "angles": "0 %d 0" % self.fr.yaw(yaw), "spawnflags": "4"}, self.b.vis + ": bodies")
@@ -313,11 +326,11 @@ class Mod:
         if hang:
             self.det([(u - 1, v - 1, z + 8, u + 1, v + 1, z + 8 + hang)], MM["steel"])
             self.static("models/props_c17/light_industrialbell01_on.mdl", u, v, 0, z - 15)
-            self.glow(u, v, z - 18, rgb, 0.25)
+            self.glow(u, v, z - 18, rgb, 0.75)      # (Valve's sprite at a lamp: light_glow03 at scale 0.75)
             self.light(u, v, z - 24, colour)
             return
         self.static("models/props_c17/light_domelight02_on.mdl", u, v, 0, z + 1)
-        self.glow(u, v, z - 2, rgb, 0.25)
+        self.glow(u, v, z - 2, rgb, 0.75)
         self.light(u, v, z - 10, colour)
 
     def soundscape(self, name, u, v, z, radius=768):
@@ -375,8 +388,15 @@ class Mod:
         self.point("logic_relay", u, v, z, {"targetname": name, "StartDisabled": "0" if on else "1", "spawnflags": "0"},
                    connections=[("OnTrigger", n, i, val, d) for n, i, val, d in wires])
 
-    def rope(self, pts, slack=40, width=2):
-        """A cable hung from point to point, [(u, v, z), ...]: it sags by itself."""
+    def rope(self, pts, slack=None, width=None):
+        """A cable hung from point to point, [(u, v, z), ...]: it sags by itself. Left out, slack and width are Valve's
+        for its longest span (781 ropes: under 128 slack 50 width 1, up to 1024 slack 100 width 2, longer 120 width 3);
+        a wire meant to be taut names its own."""
+        span = max([math.dist(pts[k], pts[k + 1]) for k in range(len(pts) - 1)] or [0])
+        if slack is None:
+            slack = 50 if span < 128 else 100 if span <= 1024 else 120
+        if width is None:
+            width = 1 if span < 128 else 2 if span <= 1024 else 3
         self.b.rope_n += 1
         names = ["lc_rope_%s_%d_%d" % (self.b.name, self.b.rope_n, k) for k in range(len(pts))]
         for k, (u, v, z) in enumerate(pts):

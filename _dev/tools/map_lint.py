@@ -4,7 +4,7 @@ Living City: the owner's corrections, checked by machine (_dev/reference/lessons
 map_lint).
 
     python3 map_lint.py FILE.vmf [more.vmf ...]      every finding, one line each
-    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, palette)
+    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, props, palette)
 
 Every build runs it on the file it writes and prints what it finds as LOOK lines (map_build.py), so
 map_modules_check.py shows them with the rest. A finding is a thing to look at, not always a fault: a model's box is
@@ -17,7 +17,9 @@ often bigger than the model. What each kind means:
   mattress  the loose mattress not turned over (it lies on its back unturned)
   view      a module's viewpoint inside a prop or a wall (its picture shows nothing)
   water     a water brush whose top is level with a floor (they flicker through each other)
-  rope      a rope or cable end tied to nothing
+  rope      a rope or cable end tied to nothing; a span over 128 with slack under 25 (Valve's have 100)
+  props     as Valve dresses props (docs/dev/valve-prop-notes.md): most loose props square on the 90s and flat,
+            8 or more small props that never fade, a thing standing in a door's way (48 in front or behind)
   palette   materials the owner's City 18 map never uses (listed once, the commonest first): use theirs where one fits
   flush     two visible faces of different brushes lying in the same plane, facing the same way and overlapping:
             they flicker through each other in game (z-fighting; the owner, 21 November). Faces made of
@@ -332,6 +334,63 @@ def check(path, views=None, only=None, air=None):
         o = origin(e)
         if not any(all(b[k] - 20 <= o[k] <= b[k + 3] + 20 for k in range(3)) for b in near_boxes):
             say("rope", "a rope's end at (%d %d %d) is tied to nothing" % o)
+    # rope slack: Valve hangs a span over 128 with slack 100 (120 over 1024); under 25 it is drawn as a rod
+    by_name = dict((e.get("targetname", "").lower(), e) for e in ents if e.get("classname") in ("move_rope", "keyframe_rope") and e.get("targetname"))
+    taut = []
+    for e in ents:
+        nxt = by_name.get(e.get("nextkey", "").lower()) if e.get("classname") in ("move_rope", "keyframe_rope") else None
+        if nxt is None:
+            continue
+        span = math.dist(origin(e), origin(nxt))
+        try:
+            slack = float(e.get("slack", "25"))
+        except ValueError:
+            continue
+        if span > 128 and slack < 25:
+            taut.append((span, slack, origin(e)))
+    for span, slack, o in sorted(taut, reverse=True)[:4]:
+        say("rope", "a cable %d long at (%d %d %d) hangs with slack %d: Valve's spans over 128 have 100 (m.rope's own when left out); keep it only for a wire meant to be taut" % ((span, slack) + o))
+    if len(taut) > 4:
+        say("rope", "... and %d more taut cables" % (len(taut) - 4))
+    # props as Valve dresses them (docs/dev/valve-prop-notes.md): loose things not all set square, small things that fade,
+    # no clutter in a doorway
+    if not only or only == "props":
+        loose = [e for e in ents if e.get("classname", "").startswith("prop_physics") and not e.get("parentname")]
+        square = [e for e in loose if angles(e)[1] % 90 == 0 and angles(e)[0] == 0 and angles(e)[2] == 0]
+        if len(loose) >= 6 and len(square) > 0.6 * len(loose):
+            say("props", "%d of %d loose props sit square on the 90s and flat (Valve: 41%% square, 43%% leaning or lying): turn some (m.loose does), lay some down (pitch, roll)" % (len(square), len(loose)))
+        import map_build
+        never = [e for e in ents if e.get("classname", "").startswith(("prop_static", "prop_physics", "prop_dynamic")) and not e.get("targetname") and not e.get("parentname")
+                 and map_build.prop_fade(e.get("model", "")) and (e.get("fademindist", "-1") in ("-1", "") or e.get("fademaxdist", "0") in ("0", ""))]
+        if len(never) >= 8:
+            say("props", "%d small props never fade (Valve fades a third of theirs, small ones at 1900 to 2500): give them fademindist and fademaxdist (m.static and m.loose do)" % len(never))
+        ways = []      # (the way through every door: as wide as the door, 48 out from it on both sides, at its foot)
+        for e in ents:
+            b = None
+            if e.get("classname") == "prop_door_rotating":
+                b = prop_box(e)
+            elif e.get("classname") in ("func_door", "func_door_rotating") and e.get("_solids"):
+                b = [min(s[0][k] for s in e["_solids"]) for k in range(3)] + [max(s[0][k] for s in e["_solids"]) for k in range(3)]
+            if not b or b[5] - b[2] < 64 or min(b[3] - b[0], b[4] - b[1]) > 24:
+                continue      # (standing and thin: a door across a way, not a hatch or a lift)
+            if b[3] - b[0] <= b[4] - b[1]:      # (thin along x: the way runs along x)
+                cx = (b[0] + b[3]) / 2
+                ways.append((cx - 48, b[1] + 4, b[2], cx + 48, b[4] - 4))
+            else:
+                cy = (b[1] + b[4]) / 2
+                ways.append((b[0] + 4, cy - 48, b[2], b[3] - 4, cy + 48))
+        cluttered = []
+        for e, bx in solid_props:
+            if e.get("classname") == "prop_door_rotating" or DOORS.search(e.get("model", "").lower()):
+                continue
+            for (x1, y1, wz, x2, y2) in ways:
+                if bx[0] < x2 and bx[3] > x1 and bx[1] < y2 and bx[4] > y1 and abs(bx[2] - wz) < 24:
+                    cluttered.append((short(e.get("model", "")), origin(e)))
+                    break
+        for m, o in cluttered[:6]:
+            say("props", "%s at (%d %d %d) stands in a doorway's way (within 48 of the door, in front or behind; Valve: 1 of 69 doors): move it aside" % ((m,) + o))
+        if len(cluttered) > 6:
+            say("props", "... and %d more things in doorways" % (len(cluttered) - 6))
     # flush: two faces in one plane, facing one way, overlapping (they flicker)
     if not only or only == "flush":
         HIDDEN = ("tools/", "effects/", "nature/water", "nature/toxicslime", "nature/sewer")

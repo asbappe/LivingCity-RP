@@ -71,7 +71,7 @@ delete it if the gamemode is to send them itself).
 
 import random
 
-from map_build import CELL, MAT, Plan, Vmf, check, stand_z, standing_prop, test_extras
+from map_build import CELL, MAT, Plan, Vmf, check, dress_keys, loose_flags, loose_yaw, stand_z, standing_prop, test_extras
 from map_forest import crusher
 
 R = {   # (the owner's own, from their streets and their sewer, but the last three)
@@ -496,10 +496,12 @@ def ravenholm(args):
         physics model is a prop_dynamic_override (the compiler deletes it as a prop_static). stand=False: z is the origin."""
         z = Z if z is None else z
         cls, keys = standing_prop(model)
-        vmf.point(cls, W(u, v, stand_z(model, z) if stand else z), dict(keys, model=model, angles="0 %d 0" % yaw), vis)
+        at = W(u, v, stand_z(model, z) if stand else z)
+        vmf.point(cls, at, dress_keys(model, at[0], at[1], dict(keys, model=model, angles="0 %d 0" % yaw)), vis)
 
     def loose(model, u, v, yaw, z=None):
-        vmf.point("prop_physics", W(u, v, stand_z(model, (Z if z is None else z) + 1)), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "spawnflags": "0"}, pv)
+        at = W(u, v, stand_z(model, (Z if z is None else z) + 1))
+        vmf.point("prop_physics", at, dress_keys(model, at[0], at[1], {"model": model, "angles": "0 %d 0" % loose_yaw(model, at[0], at[1], yaw), "spawnflags": loose_flags(model)}), pv)
     # 1. the shop, south of the street: a door and a wide window, a counter, a back room, a back door onto the alley
     thin("u", -144, 64, 384, [(96, 144) + DOOR, (192, 352, ZS + 40, ZS + 128)], ZS, HIGH, STYLES[0][0], world=True, inner={"south": rw})
     thin("u", -512, 64, 384, [(288, 336) + DOOR], ZS, HIGH, STYLES[0][0], world=True, inner={"north": rw})

@@ -27,7 +27,7 @@ import math
 import random
 
 import map_prefab as PF
-from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, stand_z, standing_prop, test_extras
+from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, dress_keys, stand_z, standing_prop, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
 
@@ -557,9 +557,10 @@ class Forest:
         sunk into the ground on purpose."""
         cls, keys = standing_prop(model)
         keys = dict(keys, model=model, angles="0 %d 0" % yaw)
-        if cls == "prop_static":
+        if cls == "prop_static" and fade[0] != -1:
             keys.update({"fademindist": fade[0], "fademaxdist": fade[1]})
-        self.vmf.point(cls, self.w(x, y, stand_z(model, z)), keys, self.vis(what))
+        at = self.w(x, y, stand_z(model, z))
+        self.vmf.point(cls, at, dress_keys(model, at[0], at[1], keys), self.vis(what))
 
     def plant(self, leafy_near=None):
         """Trees, undergrowth, rocks and fallen wood, by rule: thick on the ridge, none on paths, water or buildings."""

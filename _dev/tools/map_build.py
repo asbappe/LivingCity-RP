@@ -81,6 +81,78 @@ def stand_z(model, z, pitch=0, roll=0):
     return z - int(math.floor(low + 1e-6))
 
 
+# Props the way Valve dresses them (docs/dev/valve-prop-notes.md, 8,951 props in 22 maps; the owner said go ahead, 21
+# November): a mix of skins on things that come in several, small things that fade far off, loose things turned off
+# the square, asleep until touched, and small junk that players walk through (debris).
+SKIN_KINDS = ("oildrum", "crate", "container", "glassbottle", "popcan", "trashcluster", "/car00", "van001", "truck001", "coolingtank", "armchair",
+              "radiator", "concrete_barrier", "wood_fence", "rockgranite", "bicycle")      # (of the 304 models with skins: those whose skins are only looks)
+NO_SKIN = ("light", "lamp", "door", "sign", "combine", "monitor", "screen", "button", "keypad", "_on.", "_off.", "explosive", "clock", "tv", "radio",
+           "poster", "lever", "valve")
+DEBRIS = ("garbage", "trash", "popcan", "bottle", "paper", "cardboard", "box01", "box02", "shoe", "doll", "bucket", "cinderblock", "props_junk/glass",
+          "plasticcrate", "milkcarton", "takeout", "tincan", "garbage_")
+
+
+def _stable(*parts):
+    """A number from these parts, the same every build (Python's own hash of a string changes from run to run)."""
+    import zlib
+    return zlib.crc32(" ".join(str(p) for p in parts).encode())
+
+
+def prop_skin(model, x, y):
+    """A skin for a model that comes in several, as Valve mixes them (oil drums 45% not skin 0, containers 69%, crates
+    33%): half of them skin 0, the rest one of the others, the same every build for one place. "0" for a model with one
+    skin (map_skins.count) or whose skins mean something (a lamp lit or not, a door, a sign, a screen)."""
+    import map_skins
+    m = model.lower()
+    n = map_skins.count(m)
+    if n < 2 or not any(k in m for k in SKIN_KINDS) or any(k in m for k in NO_SKIN):
+        return "0"
+    h = _stable(m, int(x), int(y))
+    return "0" if h % 2 == 0 else str(1 + (h >> 1) % (n - 1))
+
+
+def prop_fade(model):
+    """Valve's fades for a small thing (their medians: tiny 1024 to 1500, small 1900 to 2500; a third of props have one),
+    as (start, end); None for anything 64 or bigger, a lamp (its light would stay) or a model of unknown size."""
+    import map_assets
+    m = model.lower()
+    bb = map_assets.size(m)
+    if not bb or "light" in m or "lamp" in m:
+        return None
+    big = max(bb[3] - bb[0], bb[4] - bb[1], bb[5] - bb[2])
+    return (1024, 1500) if big < 24 else (1900, 2500) if big < 64 else None
+
+
+def loose_yaw(model, x, y, yaw):
+    """A loose thing set square (a yaw on the exact 90s) is turned 3 to 17 degrees three times in five, as Valve's are
+    (41% of their physics props are square, 34% turned 1 to 20); the same every build for one place."""
+    if yaw % 90:
+        return yaw
+    h = _stable(model.lower(), int(x), int(y), "turn")
+    if h % 5 >= 3:
+        return yaw
+    turn = 3 + (h >> 3) % 15
+    return yaw + (turn if (h >> 8) & 1 else -turn)
+
+
+def loose_flags(model):
+    """Valve's physics prop flags for a thing left lying about: 1 asleep until something touches it (it was put down at
+    rest: the server need not move it), and 4 debris for small junk (players and other junk pass through it)."""
+    return str(1 + (4 if any(k in model.lower() for k in DEBRIS) else 0))
+
+
+def dress_keys(model, x, y, keys):
+    """A prop's keys with Valve's skin mix and small-thing fade added (prop_skin, prop_fade), as the modules' m.prop
+    does: for the older pieces' own prop helpers. A skin or fade already in keys, a name or a parent is kept as it is."""
+    k = dict(keys)
+    if k.get("skin", "0") == "0":
+        k["skin"] = prop_skin(model, x, y)
+    fade = prop_fade(model)
+    if fade and str(k.get("fademindist", "-1")) == "-1" and not k.get("targetname") and not k.get("parentname"):
+        k.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
+    return k
+
+
 def node_share(name):
     """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
     if name.startswith("mod_"):
@@ -875,7 +947,8 @@ def canal(args):
 
     def static(model, x, y, yaw):
         cls, keys = standing_prop(model)      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
-        vmf.point(cls, W(x, y, stand_z(model, floor_z)), dict(keys, model=model, angles="0 %d 0" % yaw), sv)      # (standing ON the floor, by its size)
+        at = W(x, y, stand_z(model, floor_z))      # (standing ON the floor, by its size)
+        vmf.point(cls, at, dress_keys(model, at[0], at[1], dict(keys, model=model, angles="0 %d 0" % yaw)), sv)
     # a container between the stairs and the pipes; cars pushed in beyond the pipes
     static("models/props_wasteland/cargo_container01.mdl", 1300, 590, 8)
     for model, x, y, yaw in (("models/props_vehicles/car002a_physics.mdl", 2080, 470, 25), ("models/props_vehicles/car005a_physics.mdl", 2260, 580, 190),
@@ -920,8 +993,9 @@ def canal(args):
     import map_assets
     for model, x, y, up in junk:      # (standing on the floor, by the model's own size: the dressing brings them down onto the mud)
         z = stand_z(model, floor_z + 1) if map_assets.size(model) else floor_z + 1 + up
-        vmf.point("prop_physics", W(x, y, z), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
-                                               "skin": "0", "spawnflags": "0"}, "LC canal: props")
+        at = W(x, y, z)
+        vmf.point("prop_physics", at, dress_keys(model, at[0], at[1], {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
+                                                                        "spawnflags": loose_flags(model)}), "LC canal: props")
 
     # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
     # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before)
