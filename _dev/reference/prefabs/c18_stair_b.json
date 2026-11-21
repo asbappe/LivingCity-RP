@@ -1,6 +1,6 @@
 {
 "name": "c18_stair_b",
-"note": "an outdoor stair along a wall: nine concrete steps 128 wide rising 144 toward +x, a solid stone balustrade wall with a sloped top on the open side, a newel post; it stands against a wall at y 0 and comes out 144 toward -y",
+"note": "an outdoor stair along a wall: nine concrete steps 128 wide rising 144 toward +x (16 high and 16 deep: steeper than our 16 by 24 rule), a solid stone balustrade wall with a sloped top on the open side, a newel post; it stands against a wall at y 0 and comes out 144 toward -y",
 "from": "c18_lc.vmf",
 "box": [
 3980,

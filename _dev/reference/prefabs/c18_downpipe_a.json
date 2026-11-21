@@ -1,6 +1,6 @@
 {
 "name": "c18_downpipe_a",
-"note": "a downpipe run: the city's 704 long downpipe with a 256 gutter piece at the top, on a brick facade; wall plane x 0, it stands out toward +x; props only",
+"note": "a downpipe run: the city's 704 long downpipe (props_pipes/gutter_704_001a) with a 256 gutter piece at its head, on a brick facade; wall plane x 0, it stands out toward +x; props only, no brushes",
 "from": "c18_lc.vmf",
 "box": [
 -1362,

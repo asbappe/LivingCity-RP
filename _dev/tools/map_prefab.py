@@ -29,6 +29,8 @@ LIB = os.path.join(HERE, "..", "reference", "prefabs")
 sys.path.insert(0, HERE)
 
 AXIS = re.compile(r"\[\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*\]\s*(\S+)")
+SEEN_TOOLS = ("tools/toolsblack",)      # (tool materials players see: the black behind a window)
+NAMED = ("targetname", "parentname", "slavename", "target", "spawnpos")      # (keys that name another thing of the piece)
 KEEP_POINTS = ("prop_static", "prop_dynamic", "prop_dynamic_override", "prop_physics", "light", "light_spot", "infodecal", "env_sprite", "prop_door_rotating")
 
 
@@ -79,8 +81,8 @@ def extract(path, name, box, anchor=None, note=""):
                               "lightmapscale": side.kv.get("lightmapscale", "16")})
             else:
                 if sides and all(inside(v) for v in allv):
-                    if all("tools/" in s["material"].lower() for s in sides):
-                        continue      # (clips, triggers, skybox, hint: the piece does not need them)
+                    if all("tools/" in s["material"].lower() and not s["material"].lower().startswith(SEEN_TOOLS) for s in sides):
+                        continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept)
                     for s in sides:
                         s["plane"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["plane"]]
                         s["verts"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["verts"]]
@@ -136,6 +138,9 @@ def load(name):
         return json.load(f)
 
 
+PLACED = [0]
+
+
 def place(m, name, u, v, z, turn=0, vis=None, props=True):
     """Put the prefab's anchor at (u, v, z) in the module's frame, turned `turn` quarter turns (anticlockwise seen from
     above) on top of the frame's own turning. Its brushes go in as one func_detail; its props, lights and decals as they
@@ -170,8 +175,14 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True):
     if pf["solids"]:
         vmf.ents.append(text)
     if props:
+        names = set(p["keys"].get("targetname") for p in pf["points"] if p["keys"].get("targetname"))
+        PLACED[0] += 1
+        tag = "_%s%d" % (name, PLACED[0])      # (each copy's names its own: two copies' doors never open together)
         for p in pf["points"]:
             keys = dict(p["keys"])
+            for k in NAMED:
+                if keys.get(k) in names:
+                    keys[k] = keys[k] + tag
             if "angles" in keys:
                 a = nums(keys["angles"])
                 keys["angles"] = "%s %s %s" % (fmt(a[0]), fmt((a[1] + 90 * q) % 360), fmt(a[2]))

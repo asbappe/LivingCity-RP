@@ -4152,7 +4152,7 @@
 "HDRColorScale": "1.0",
 "maxdxlevel": "0",
 "mindxlevel": "0",
-"model": "materials/Sprites/light_glow03.vmt",
+"model": "sprites/light_glow03.vmt",
 "renderamt": "255",
 "rendercolor": "238 226 162",
 "renderfx": "0",

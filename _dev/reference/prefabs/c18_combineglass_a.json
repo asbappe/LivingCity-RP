@@ -1,6 +1,6 @@
 {
 "name": "c18_combineglass_a",
-"note": "a Combine observation window: angled Combine glass in two panes with a metal mullion and frame; first look",
+"note": "a Combine observation window: two panes of Combine glass, 120 by 96 each, with a metal mullion, sloped head and sill and angled jambs; the sill line is 34 toward -y of the head line (y 0): the glass leans back toward +y as it rises; 280 wide, 112 high",
 "from": "c18_lc.vmf",
 "box": [
 2556,

@@ -1,6 +1,6 @@
 {
 "name": "c18_culvert_a",
-"note": "a sewer culvert: a stepped round arch (metal soffit, concrete face) over a floor slab, bars across the mouth at each end; fits between walls 128 apart, its mouth at y 0, the tunnel runs 184 toward +y; arch crown 84 over its floor",
+"note": "a sewer culvert: a stepped round arch (metal soffit, concrete face) over a floor slab, bars across the mouth at each end; fits between walls 128 apart, its mouth at y 0, the tunnel runs 184 toward +y; arch crown 84 over its floor. Uses concrete/concretewall056c, a Counter-Strike: Source material (the owner's map has it, so their server mounts it)",
 "from": "c18_lc.vmf",
 "box": [
 268,

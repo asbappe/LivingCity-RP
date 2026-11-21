@@ -1,6 +1,6 @@
 {
 "name": "c18_bathroom_a",
-"note": "x",
+"note": "a flat's bathroom: plain plaster walls round a room 104 by 152 inside, the door wall with its casing and the city's door01_left (that wall tiled to 64 on its outer face), bath, toilet, basin, bare bulb; z 0 is the floor, the anchor is the inner corner where the west and south walls meet, the room runs +x and +y; 144 by 162 outside, 120 high",
 "from": "c18_lc.vmf",
 "box": [
 -1730,

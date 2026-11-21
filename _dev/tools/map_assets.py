@@ -73,6 +73,8 @@ def read_vmf(path):
             models.setdefault(v, set()).add(cls)
         elif k in ("material", "texture", "ropematerial", "smokematerial") or (k == "model" and v.endswith((".vmt", ".spr"))):
             v = re.sub(r"\.(vmt|spr)$", "", v)
+            if v.startswith("materials/"):      # (a sprite may name its material with the folder in front: the game reads both)
+                v = v[len("materials/"):]
             if v and not v.isdigit():      # (a breakable's "material" is a number: what it breaks like)
                 materials.add(v)
     return models, materials
