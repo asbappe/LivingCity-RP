@@ -258,12 +258,12 @@ class Mod:
         if keys and keys.get("targetname"):
             self.b.names.append((keys["targetname"], cls, self.tag))
 
-    def stand(self, model, z):
+    def stand(self, model, z, pitch=0, roll=0):
         """The height to put a model's origin at for it to stand ON z (models' origins are often at their middles). Read
-        from the model's own build file (map_assets.py); a model whose size is not known is put at z itself."""
-        import map_assets
-        bb = map_assets.size(model)
-        return z - int(math.floor(bb[2])) if bb else z
+        from the model's own build file (map_assets.py), turned by pitch and roll; a model whose size is not known is put
+        at z itself (map_build.stand_z, which the older pieces use too)."""
+        import map_build
+        return map_build.stand_z(model, z, pitch, roll)
 
     def prop(self, cls, model, u, v, yaw, z, keys, vis=None):
         """Any prop, standing on z. Its place and size go to the checks and the pictures."""

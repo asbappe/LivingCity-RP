@@ -27,7 +27,7 @@ import math
 import random
 
 import map_prefab as PF
-from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, test_extras
+from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, stand_z, standing_prop, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
 
@@ -550,6 +550,17 @@ class Forest:
             "model": model, "angles": "%d %d 0" % (pitch, yaw), "skin": "0", "solid": solid, "disableshadows": "0",
             "screenspacefade": "0", "fademindist": fade[0], "fademaxdist": fade[1], "fadescale": "1"}, self.vis(what))
 
+    def stand(self, model, x, y, z, yaw, what, fade=(-1, 0)):
+        """A made thing standing ON z (furniture, the lorry, barriers), as the modules stand theirs: lifted by the model's
+        own size (tables, couches, lockers and the lorry have their origin at their middle), and a physics model as a
+        prop_dynamic_override (the compiler deletes it as a prop_static). Trees, plants and rocks keep static(): they are
+        sunk into the ground on purpose."""
+        cls, keys = standing_prop(model)
+        keys = dict(keys, model=model, angles="0 %d 0" % yaw)
+        if cls == "prop_static":
+            keys.update({"fademindist": fade[0], "fademaxdist": fade[1]})
+        self.vmf.point(cls, self.w(x, y, stand_z(model, z)), keys, self.vis(what))
+
     def plant(self, leafy_near=None):
         """Trees, undergrowth, rocks and fallen wood, by rule: thick on the ridge, none on paths, water or buildings."""
         rnd, n = self.rnd, {"trees": 0, "plants": 0, "rocks": 0, "logs": 0}
@@ -865,7 +876,7 @@ class BunkerForest(Forest):
         self.dress()
         for model, x, y, yaw in (("models/props_c17/concrete_barrier001a.mdl", bx + 380, by - 110, 80), ("models/props_c17/concrete_barrier001a.mdl", bx + 920, by - 130, 100),
                                  ("models/props_vehicles/truck001a.mdl", bx + 300, by - 360, 35)):
-            self.static(model, x, y, self.natural(x, y), yaw, "structures")
+            self.stand(model, x, y, self.natural(x, y), yaw, "structures", fade=(2800, 3400))
         self.plan_nodes(plan, self.B0, skip=[(576, 256, 704, 448), (-320, 640, 0, 768)])
         self.plan_nodes(deep, self.B0, skip=[(-704, 832, -576, 896)])
         for (u, w, z) in ((640, 296, zp - 32), (640, 364, zp - 72), (640, 420, zp - 116), (-60, 704, zl - 40), (-150, 704, zl - 100), (-240, 704, zl - 160), (-300, 704, zd)):
@@ -1932,7 +1943,7 @@ class CaveForest(Forest):
                                    (660, 400, 130, "225 235 255 80"), (384, 650, 130, "255 190 130 100")):
             v.point("light", PW(u, w, zf + up), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         v.point("env_cubemap", PW(240, 256, zf + 72), {"cubemapsize": "0"}, ov)
-        # what is in it (every one compiled as a static prop)
+        # what is in it (each standing by its own size; a physics model as a prop_dynamic_override)
         things = (
             ("models/props_wasteland/controlroom_desk001a.mdl", 436, 256, 90), ("models/props_wasteland/controlroom_chair001a.mdl", 376, 256, 270),
             ("models/props_wasteland/controlroom_filecabinet002a.mdl", 400, 482, 180), ("models/props_c17/furnituretable002a.mdl", 170, 410, 0),
@@ -1945,10 +1956,10 @@ class CaveForest(Forest):
             ("models/props_wasteland/kitchen_shelf002a.mdl", 478, 640, 270),
         )
         for model, u, w, yaw in things:
-            self.static(model, ax + u, ay + w, zf, yaw, "mine office", fade=(-1, 0))
+            self.stand(model, ax + u, ay + w, zf, yaw, "mine office")
         # left outside it in the chamber: a cart, cut timber
         for model, x, y, yaw in (("models/props_mining/flatbed_cart01.mdl", ax - 130, ay - 150, 80), ("models/props_mining/wood_stack.mdl", ax - 120, ay + 600, 10)):
-            self.static(model, x, y, self.cave_floor(x, y), yaw, "mine office", fade=(-1, 0))
+            self.stand(model, x, y, self.cave_floor(x, y), yaw, "mine office")
         for (u, w) in ((-90, 256), (40, 256), (120, 120), (120, 400), (300, 256), (420, 96), (420, 416), (540, 96), (680, 150), (540, 416), (680, 400),
                        (352, 470), (352, 560), (400, 660)):
             self.node(ax + u, ay + w, zf)

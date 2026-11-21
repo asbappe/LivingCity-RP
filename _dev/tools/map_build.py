@@ -65,6 +65,22 @@ def standing_prop(model):
     return ("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic"), keys
 
 
+def stand_z(model, z, pitch=0, roll=0):
+    """The height to put a model's origin at for it to stand ON z: many models have their origin at their middle
+    (tables, couches, lockers, the lorry), so placed at the floor they are half in it. Read from the model's own box
+    (map_assets.size), turned by pitch and roll (a thing lying on its side stands on its side); a model whose size is
+    not known is put at z itself. The modules' m.stand and the older pieces (canal, ring, forests, Ravenholm) both
+    use this."""
+    import map_assets
+    bb = map_assets.size(model)
+    if not bb:
+        return z
+    sp, cp = math.sin(math.radians(pitch)), math.cos(math.radians(pitch))
+    sr, cr = math.sin(math.radians(roll)), math.cos(math.radians(roll))
+    low = min(-sp * x + sr * cp * y + cr * cp * h for x in (bb[0], bb[3]) for y in (bb[1], bb[4]) for h in (bb[2], bb[5]))
+    return z - int(math.floor(low + 1e-6))
+
+
 def node_share(name):
     """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
     if name.startswith("mod_"):
@@ -859,7 +875,7 @@ def canal(args):
 
     def static(model, x, y, yaw):
         cls, keys = standing_prop(model)      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
-        vmf.point(cls, W(x, y, floor_z), dict(keys, model=model, angles="0 %d 0" % yaw), sv)
+        vmf.point(cls, W(x, y, stand_z(model, floor_z)), dict(keys, model=model, angles="0 %d 0" % yaw), sv)      # (standing ON the floor, by its size)
     # a container between the stairs and the pipes; cars pushed in beyond the pipes
     static("models/props_wasteland/cargo_container01.mdl", 1300, 590, 8)
     for model, x, y, yaw in (("models/props_vehicles/car002a_physics.mdl", 2080, 470, 25), ("models/props_vehicles/car005a_physics.mdl", 2260, 580, 190),
@@ -903,9 +919,9 @@ def canal(args):
     )
     import map_assets
     for model, x, y, up in junk:      # (standing on the floor, by the model's own size: the dressing brings them down onto the mud)
-        bb = map_assets.size(model)
-        vmf.point("prop_physics", W(x, y, floor_z + 1 - (int(math.floor(bb[2])) if bb else -up)), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
-                                                                                                  "skin": "0", "spawnflags": "0"}, "LC canal: props")
+        z = stand_z(model, floor_z + 1) if map_assets.size(model) else floor_z + 1 + up
+        vmf.point("prop_physics", W(x, y, z), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
+                                               "skin": "0", "spawnflags": "0"}, "LC canal: props")
 
     # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
     # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before)

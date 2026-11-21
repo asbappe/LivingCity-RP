@@ -71,7 +71,7 @@ delete it if the gamemode is to send them itself).
 
 import random
 
-from map_build import CELL, MAT, Plan, Vmf, check, test_extras
+from map_build import CELL, MAT, Plan, Vmf, check, stand_z, standing_prop, test_extras
 from map_forest import crusher
 
 R = {   # (the owner's own, from their streets and their sewer, but the last three)
@@ -288,7 +288,7 @@ def ravenholm(args):
             "health": "0", "ignoredebris": "0", "loopmovesound": "0", "noise1": "MetalGrate.ScrapeSmooth", "noise2": "MetalGrate.ImpactSoft", "locked_sentence": "0",
             "unlocked_sentence": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"},
             [leaf], MAT["nodraw"], gv)
-        vmf.point("prop_dynamic", at, {"model": "models/props_junk/vent001.mdl", "angles": "0 %d 0" % yaw, "parentname": name, "skin": "0", "solid": "0", "disableshadows": "1",
+        vmf.point("prop_dynamic_override", at, {"model": "models/props_junk/vent001.mdl", "angles": "0 %d 0" % yaw, "parentname": name, "skin": "0", "solid": "0", "disableshadows": "1",
                                        "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
                                        "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0",
                                        "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, gv)
@@ -491,12 +491,15 @@ def ravenholm(args):
             boards.append(B(u1 - 6, min(line, line + 3 * out), z, u2 + 6, max(line, line + 3 * out), z + 12))
         signs.append(B(u1, min(line, line + 4 * out), zc + 14, u2, max(line, line + 4 * out), zc + 46))
 
-    def static(model, u, v, yaw, z=None, vis=pv):
-        vmf.point("prop_static", W(u, v, Z if z is None else z), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6", "disableshadows": "0",
-                                                                  "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+    def static(model, u, v, yaw, z=None, vis=pv, stand=True):
+        """Standing ON z (by the model's size: many have their origin at their middle), as the modules' m.static does: a
+        physics model is a prop_dynamic_override (the compiler deletes it as a prop_static). stand=False: z is the origin."""
+        z = Z if z is None else z
+        cls, keys = standing_prop(model)
+        vmf.point(cls, W(u, v, stand_z(model, z) if stand else z), dict(keys, model=model, angles="0 %d 0" % yaw), vis)
 
     def loose(model, u, v, yaw, z=None):
-        vmf.point("prop_physics", W(u, v, (Z if z is None else z) + 24), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "spawnflags": "0"}, pv)
+        vmf.point("prop_physics", W(u, v, stand_z(model, (Z if z is None else z) + 1)), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "spawnflags": "0"}, pv)
     # 1. the shop, south of the street: a door and a wide window, a counter, a back room, a back door onto the alley
     thin("u", -144, 64, 384, [(96, 144) + DOOR, (192, 352, ZS + 40, ZS + 128)], ZS, HIGH, STYLES[0][0], world=True, inner={"south": rw})
     thin("u", -512, 64, 384, [(288, 336) + DOOR], ZS, HIGH, STYLES[0][0], world=True, inner={"north": rw})
@@ -627,7 +630,7 @@ def ravenholm(args):
     for model, u, v, yaw, z in (("models/props_trainstation/benchoutdoor01a.mdl", 440, -100, 0, ZS), ("models/props_trainstation/benchoutdoor01a.mdl", 1000, 540, 180, Z),
                                 ("models/props_trainstation/payphone001a.mdl", 730, 490, 180, ZS + 44), ("models/props_trainstation/trashcan_indoor001b.mdl", 610, -100, 0, ZS),
                                 ("models/props_trainstation/trashcan_indoor001b.mdl", 250, 480, 0, ZS)):
-        static(model, u, v, yaw, z)
+        static(model, u, v, yaw, z, stand="payphone" not in model)      # (the payphone hangs on the wall at the height given)
     for model, u, v, yaw in (("models/props_vehicles/car002a_physics.mdl", 300, 250, 20), ("models/props_vehicles/car004a_physics.mdl", 600, 130, 200),
                              ("models/props_debris/barricade_tall01a.mdl", 700, 300, 100), ("models/props_foliage/tree_dead01.mdl", 992, 200, 0),
                              ("models/props_junk/trashdumpster02.mdl", 760, -576, 90), ("models/props_wasteland/barricade001a.mdl", 928, -330, 90),
