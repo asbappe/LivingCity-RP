@@ -29,6 +29,9 @@
        instead: at a player close by, at the unit, at the screen. A player brushing past gets
        a glance, never "Excuse me". Out of the Combine's sight two citizens still chat (and
        the owner's small talk lines are still said there). Pressing E still greets you.
+    4. The city finds idle spots by itself as well (the owner, 21 November): couches, chairs and
+       beds among the map's props, glass under a roof beside a walking node, and plain walls by a
+       path, a few of each (section 4 below).
 
     No settings and nothing new on anyone's screen.
 ]]
@@ -436,3 +439,239 @@ function LC.CrowdGlance(npc, st, ply)
     if not IsValid(npc) or not IsValid(ply) then return false end
     return LC.CrowdLook(npc, st, ply:EyePos(), "player")
 end
+
+------------------------------------------------------------------------
+-- 4. Idle spots the city finds by itself (the owner, 21 November: "surely you can make any couch have
+--    this entity automatically, or any window texture that is below a ceiling (not under the skybox) can
+--    just automatically have a chance of a civilian standing and looking out? ... any seat/chair ... any
+--    bed frame prop/entity can have a small chance ... arms crossed could just be anywhere against a wall
+--    (but not against a window/glass) facing a path node path?")
+--
+--    From the map's props (entities and the map's own static props, sv_livingcity_staticprops.lua):
+--    couches and sofas (a couch spot), chairs, stools and benches (a drinker's seat), beds and bed frames
+--    (a bed's edge), the seat found the way the Resistance's people find theirs (in front, facing out:
+--    LC.RebelSeatSpots). From the map's walking nodes (LC.NavGraph): glass or a window texture in a wall
+--    beside a node under a ceiling, not the sky (a window spot facing it), and a solid wall, not glass,
+--    beside a node (arms crossed, back to the wall, looking at the path). Sparing: each thing has a chance
+--    (the same each time the map loads), at most two in an area (512 units square, a floor at a time) and
+--    one of a kind; never within 64 units of a point the editor placed, never in a Combine-only zone, the
+--    prison, rebel ground or the infestation. They live only while the map runs (nothing is saved) and
+--    are looked for again every 10 minutes (props move); FreePoints offers them with the placed ones.
+------------------------------------------------------------------------
+
+local AUTO = LC.AutoSpots or { byKind = {}, byKey = {}, counts = {} }
+LC.AutoSpots = AUTO
+LC.AUTO_CHANCE = LC.AUTO_CHANCE or { couch = 0.5, bedside = 0.25, drinker = 0.15, window = 0.35, armscrossed = 0.06 }
+local AUTO_ORDER = { couch = 1, bedside = 2, drinker = 3, window = 4, armscrossed = 5 } -- (furniture first, when an area is full)
+local AUTO_CELL, AUTO_FLOOR, AUTO_PER_CELL, AUTO_APART = 512, 256, 2, 48
+local AUTO_KEEP_OFF = 64        -- never this close to a point the editor placed
+local AUTO_NODE = 128           -- furniture this close to a walking node (somewhere people get to)
+local AUTO_RESCAN = 600
+local AUTO_STEP = 400           -- walking nodes looked at in one go
+local REST_KIND = { couch = "couch", seat = "drinker", bed = "bedside" }
+local PROP_CLASSES = { "prop_physics", "prop_physics_multiplayer", "prop_physics_override", "prop_dynamic", "prop_dynamic_override" }
+local NOT_HERE = { combine = true, prison = true, rebel = true, infest = true, nogo = true, dream = true }
+local DIRS8 = {}
+for i = 0, 7 do local a = math.rad(i * 45) DIRS8[#DIRS8 + 1] = Vector(math.cos(a), math.sin(a), 0) end
+
+-- The same answer for the same place every time the map loads.
+local function Chance(pos, kind)
+    local h = tonumber(util.CRC(string.format("%s:%d:%d:%d", kind, math.floor(pos.x), math.floor(pos.y), math.floor(pos.z)))) or 0
+    return (h % 10000) / 10000 < (LC.AUTO_CHANCE[kind] or 0)
+end
+
+-- Somewhere a citizen idling would fit: not on top of what the editor placed, not on Combine ground, in
+-- the cells, on rebel ground or in the infestation.
+local function Fits(pos)
+    if LC.NearestPoint and LC.NearestPoint(pos, AUTO_KEEP_OFF) then return false end
+    if LC.CombineZoneAt and LC.CombineZoneAt(pos) then return false end
+    for _, z in ipairs(LC.Zones or {}) do
+        if NOT_HERE[z.kind] and LCZ and LCZ.Contains and LCZ.Contains(z, pos) then return false end
+    end
+    return true
+end
+
+local function NearNode(pos)
+    if not LC.NavNodesNear then return false end
+    for _, nd in ipairs(LC.NavNodesNear(pos, AUTO_NODE)) do
+        if math.abs(nd.pos.z - pos.z) < 64 then return true end
+    end
+    return false
+end
+
+local function FloorAt(p)
+    local tr = util.TraceLine({ start = p + Vector(0, 0, 30), endpos = p - Vector(0, 0, 90), mask = MASK_NPCSOLID_BRUSHONLY })
+    if tr and tr.Hit and not tr.StartSolid then return tr.HitPos end
+    return nil
+end
+
+-- Glass, or a window in the wall's texture.
+local function IsGlass(tr)
+    local tex = string.lower(tr.HitTexture or "")
+    if string.find(tex, "glass", 1, true) or string.find(tex, "window", 1, true) then return true end
+    if MAT_GLASS and tr.MatType == MAT_GLASS then return true end
+    return IsValid(tr.Entity) and tr.Entity:GetClass() == "func_breakable_surf"
+end
+LC.AutoIsGlass = IsGlass
+
+-- A ceiling over it, not the sky.
+local function UnderRoof(pos)
+    local tr = util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos + Vector(0, 0, 512), mask = MASK_SOLID_BRUSHONLY })
+    return tr ~= nil and tr.Hit and not tr.HitSky and not tr.StartSolid
+end
+
+local function Wall(from, dir, len, mask)
+    local tr = util.TraceLine({ start = from, endpos = from + dir * len, mask = mask })
+    if tr and tr.Hit and not tr.StartSolid and tr.HitNormal and math.abs(tr.HitNormal.z) < 0.3 then return tr end
+    return nil
+end
+
+-- Couches, chairs and beds among the props, each with a seat in front of it.
+local function PropCandidates(list)
+    if not LC.RebelSeatSpots or not LC.RestKindForModel then return end
+    local things = {}
+    for _, cls in ipairs(PROP_CLASSES) do
+        for _, e in ipairs(ents.FindByClass(cls)) do
+            local k = IsValid(e) and not e.lcCarried and not e.lcViceProp and LC.RestKindForModel(e:GetModel())
+            if k and REST_KIND[k] then things[#things + 1] = { ent = e, kind = k, pos = e:GetPos() } end
+        end
+    end
+    for _, s in ipairs(LC.StaticRest or {}) do
+        if REST_KIND[s.kind] then things[#things + 1] = { kind = s.kind, pos = s.pos, ang = s.ang } end
+    end
+    for _, t in ipairs(things) do
+        local kind = REST_KIND[t.kind]
+        if Chance(t.pos, kind) and NearNode(t.pos) then
+            local sp = (LC.RebelSeatSpots(t) or {})[1]
+            if sp and Fits(sp.pos) then
+                list[#list + 1] = { kind = kind, pos = sp.pos, yaw = sp.yaw, ent = t.ent, entAt = t.ent and t.ent:GetPos() }
+            end
+        end
+    end
+end
+
+-- The nearest wall round a spot (the one straight in front of it), glass or not as asked.
+local function NearestWall(from, len, mask, glass)
+    local best, bd
+    for _, d in ipairs(DIRS8) do
+        local tr = Wall(from, d, len, mask)
+        if tr and IsGlass(tr) == glass then
+            local dd = tr.HitPos:DistToSqr(from)
+            if not bd or dd < bd then best, bd = { tr = tr, d = d }, dd end
+        end
+    end
+    return best
+end
+
+-- A window beside a walking node under a roof, and a wall to stand against.
+local function NodeCandidates(list, nodes, from, to)
+    for i = from, to do
+        local nd = nodes[i]
+        local at = nd and nd.pos
+        if at and Chance(at, "window") and UnderRoof(at) then
+            local w = NearestWall(at + Vector(0, 0, 56), 128, MASK_SOLID, true)
+            if w then
+                local n = Vector(w.tr.HitNormal.x, w.tr.HitNormal.y, 0):GetNormalized()
+                local p = FloorAt(Vector(w.tr.HitPos.x, w.tr.HitPos.y, at.z) + n * 22)
+                if p and math.abs(p.z - at.z) < 32 and Fits(p) then list[#list + 1] = { kind = "window", pos = p, yaw = (n * -1):Angle().y } end
+            end
+        end
+        if at and Chance(at, "armscrossed") then
+            local w = NearestWall(at + Vector(0, 0, 40), 96, MASK_SOLID_BRUSHONLY, false)
+            local top = w and Wall(at + Vector(0, 0, 80), w.d, 96, MASK_SOLID_BRUSHONLY)
+            -- a solid wall from chest to head height (not a railing, not glass)
+            if top and not IsGlass(top) and math.abs(top.HitPos:Distance(at + Vector(0, 0, 80)) - w.tr.HitPos:Distance(at + Vector(0, 0, 40))) < 12 then
+                local n = Vector(w.tr.HitNormal.x, w.tr.HitNormal.y, 0):GetNormalized()
+                local p = FloorAt(Vector(w.tr.HitPos.x, w.tr.HitPos.y, at.z) + n * 20)
+                if p and math.abs(p.z - at.z) < 32 and Fits(p) and (not LC.ClearSpot or LC.ClearSpot(p)) then
+                    local look = at - p
+                    look.z = 0
+                    local yaw = look:LengthSqr() > 24 * 24 and look:Angle().y or n:Angle().y -- (looking at the path)
+                    list[#list + 1] = { kind = "armscrossed", pos = p, yaw = yaw }
+                end
+            end
+        end
+    end
+end
+
+local function KeyOf(c) return string.format("%s:%d:%d:%d", c.kind, math.floor(c.pos.x / 8), math.floor(c.pos.y / 8), math.floor(c.pos.z / 8)) end
+
+-- The candidates, thinned to the caps; a spot found again keeps the same table (whoever sits there keeps it).
+local function Finish(list)
+    for _, c in ipairs(list) do c.key = KeyOf(c) end
+    table.sort(list, function(a, b)
+        if AUTO_ORDER[a.kind] ~= AUTO_ORDER[b.kind] then return AUTO_ORDER[a.kind] < AUTO_ORDER[b.kind] end
+        return a.key < b.key
+    end)
+    local byKind, byKey, counts, cells, kept = {}, {}, {}, {}, {}
+    for _, c in ipairs(list) do
+        local ck = string.format("%d:%d:%d", math.floor(c.pos.x / AUTO_CELL), math.floor(c.pos.y / AUTO_CELL), math.floor(c.pos.z / AUTO_FLOOR))
+        local cell = cells[ck] or { n = 0 }
+        cells[ck] = cell
+        local apart = not byKey[c.key]
+        for _, o in ipairs(apart and kept or {}) do
+            if o.pos:DistToSqr(c.pos) < AUTO_APART * AUTO_APART then apart = false break end
+        end
+        if apart and cell.n < AUTO_PER_CELL and not cell[c.kind] then
+            local p = AUTO.byKey[c.key] or { kind = c.kind, group = 0, auto = true }
+            p.pos, p.yaw, p.ent, p.entAt = c.pos, c.yaw, c.ent, c.entAt
+            byKey[c.key] = p
+            byKind[c.kind] = byKind[c.kind] or {}
+            table.insert(byKind[c.kind], p)
+            kept[#kept + 1] = p
+            cell.n, cell[c.kind] = cell.n + 1, true
+            counts[c.kind] = (counts[c.kind] or 0) + 1
+        end
+    end
+    AUTO.byKind, AUTO.byKey, AUTO.counts, AUTO.built = byKind, byKey, counts, CurTime()
+    if LC.Log then
+        LC.Log("info", string.format("Idle spots found by the city: %d couches, %d beds' edges, %d drinkers' seats, %d windows, %d walls to stand against",
+            counts.couch or 0, counts.bedside or 0, counts.drinker or 0, counts.window or 0, counts.armscrossed or 0))
+    end
+end
+
+-- Still there: a couch or chair someone has moved or knocked over is no seat until it is found again.
+function LC.AutoSpotOK(p)
+    if not p.ent and not p.entAt then return true end
+    if not IsValid(p.ent) or p.ent:GetPos():DistToSqr(p.entAt) > 16 * 16 then return false end
+    local a = p.ent:GetAngles()
+    return not a or (math.abs(a.p or 0) < 25 and math.abs(a.r or 0) < 25)
+end
+
+-- Look for them. now: all at once (the tests); else the walking nodes a few hundred at a time.
+function LC.AutoSpotsScan(now)
+    local list = {}
+    PropCandidates(list)
+    local nodes = (LC.NavGraph and LC.NavGraph.nodes) or {}
+    if now or #nodes <= AUTO_STEP then
+        NodeCandidates(list, nodes, 1, #nodes)
+        Finish(list)
+    else
+        AUTO.job = { list = list, nodes = nodes, i = 1 }
+    end
+    return true
+end
+
+function LC.AutoSpotsStep()
+    local j = AUTO.job
+    if not j then return false end
+    local to = math.min(#j.nodes, j.i + AUTO_STEP - 1)
+    NodeCandidates(j.list, j.nodes, j.i, to)
+    j.i = to + 1
+    if j.i > #j.nodes then
+        AUTO.job = nil
+        Finish(j.list)
+    end
+    return true
+end
+
+-- First once the map's props and walking nodes are read (a little after the map starts), then every 10 minutes.
+hook.Add("InitPostEntity", "LivingCityAutoSpots", function() AUTO.nextScan = CurTime() + 15 end)
+timer.Create("LivingCityAutoSpots", 0.5, 0, function()
+    if LC.TimeStopped then return end
+    local fn = AUTO.job and LC.AutoSpotsStep or (AUTO.nextScan and CurTime() >= AUTO.nextScan and LC.AutoSpotsScan)
+    if not fn then return end
+    if not AUTO.job then AUTO.nextScan = CurTime() + AUTO_RESCAN end
+    local ok, err = LC.Try(fn)
+    if not ok and LC.Error then LC.Error("idle life (spots found)", err) end
+end)

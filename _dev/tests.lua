@@ -42717,6 +42717,126 @@ a:Remove() b:Remove()
 end
 QuietCrowdTests()
 
+function AutoSpotTests()
+section("21 November: the city finds idle spots by itself: couches, chairs, beds, windows under a roof, walls not of glass; sparingly")
+local A0 = Vector(164000, -116000, 0)
+local savedWalls, graphWas, staticWas, chanceWas, traceWas, czWas = _walls, LC.NavGraph, LC.StaticRest, LC.AUTO_CHANCE, util.TraceLine, LC.CombineZoneAt
+_walls = {}
+LC.AUTO_CHANCE = { couch = 1, bedside = 1, drinker = 1, window = 1, armscrossed = 1 } -- (every one found is a spot, so the caps can be seen)
+LC.StaticRest = {}
+local nodes, props, made = {}, {}, {}
+local function node(x, y) nodes[#nodes + 1] = { pos = A0 + Vector(x, y, 0), adj = {}, comp = 1 } end
+local function prop(model, x, y, yaw, mins, maxs)
+    local e = ents.Create("prop_physics")
+    e:SetModel(model) e:SetPos(A0 + Vector(x, y, 0)) e:SetAngles(Angle(0, yaw or 0, 0))
+    e.obbmin, e.obbmax = mins, maxs
+    props[#props + 1] = e
+    return e
+end
+local function wall(x1, y1, x2, y2, glass) _walls[#_walls + 1] = { a = A0 + Vector(x1, y1, 0), b = A0 + Vector(x2, y2, 0), glass = glass } end
+-- the world: a roof over the first part of it (sky beyond x 2100), and glass where a wall says so
+local function onGlass(p)
+    for _, w in ipairs(_walls) do
+        if w.glass and math.abs(p.x - w.a.x) < 1 and p.y >= math.min(w.a.y, w.b.y) - 1 and p.y <= math.max(w.a.y, w.b.y) + 1 then return true end
+    end
+    return false
+end
+util.TraceLine = function(t)
+    if t.endpos.z > t.start.z + 100 and math.abs(t.endpos.x - t.start.x) < 1 and math.abs(t.endpos.y - t.start.y) < 1 then -- straight up
+        if t.start.x < A0.x + 2100 then return { Hit = true, HitSky = false, HitPos = t.start + Vector(0, 0, 120), Fraction = 0.25 } end
+        return { Hit = true, HitSky = true, HitPos = t.endpos, Fraction = 0.9 }
+    end
+    local tr = traceWas(t)
+    if tr.Hit and t.endpos.z >= t.start.z - 100 then tr.HitTexture = onGlass(tr.HitPos) and "GLASS/WINDOW001A" or "CONCRETE/CONCRETEWALL001A" end
+    return tr
+end
+-- a couch with its back to a wall, a chair, a bed, a window under the roof, a window under the sky
+local couch = prop("models/props_c17/furniturecouch001a.mdl", 0, 0, 0, Vector(-16, -40, 0), Vector(16, 40, 30))
+wall(-20, -60, -20, 60) node(100, 0)
+local chair = prop("models/props_c17/chair02a.mdl", 600, 0, 0) node(700, 0)
+local bed = prop("models/props_c17/furniturebed001a.mdl", 1200, 0, 0) node(1300, 0)
+wall(1900, -100, 1900, 100, true) node(1800, 0)
+wall(2500, -100, 2500, 100, true) node(2400, 0)
+-- a plain wall, and a glass one, under the sky (somewhere to stand, and not)
+wall(3060, -100, 3060, 100) node(3000, 0)
+wall(3660, -100, 3660, 100, true) node(3600, 0)
+-- a couch where the editor already placed a spot, and one in a Combine-only zone
+prop("models/props_c17/furniturecouch001a.mdl", 4200, 0, 0) node(4300, 0)
+made[#made + 1] = LC.AddPoint(A0 + Vector(4220, 0, 0), 0, "sitchair", 0)
+prop("models/props_c17/furniturecouch001a.mdl", 4800, 0, 0) node(4900, 0)
+LC.CombineZoneAt = function(p) if p.x > A0.x + 4700 and p.x < A0.x + 5000 then return { kind = "combine" } end return czWas and czWas(p) end
+-- a crowded room: three couches, two chairs and a bed in one area
+for i = 0, 2 do prop("models/props_c17/furniturecouch001a.mdl", 6050 + i * 100, 0, 0) end
+prop("models/props_c17/chair02a.mdl", 6050, 150, 0) prop("models/props_c17/chair02a.mdl", 6250, 150, 0)
+prop("models/props_c17/furniturebed001a.mdl", 6400, 150, 0)
+node(6150, 80) node(6350, 80)
+-- one of the map's own static props
+LC.StaticRest = { { kind = "couch", pos = A0 + Vector(7200, 0, 0), ang = Angle(0, 90, 0), model = "models/props_interiors/sofa01.mdl" } }
+node(7300, 0)
+LC.NavGraph = { nodes = nodes, main = 1, links = 0 }
+LC.NavGraphReady()
+LC.AutoSpotsScan(true)
+local function spotsNear(x, y, r, kind)
+    local out = {}
+    for k, list in pairs(LC.AutoSpots.byKind) do
+        for _, p in ipairs(list) do
+            if (not kind or k == kind) and p.pos:Distance(A0 + Vector(x, y, 0)) < r then out[#out + 1] = p end
+        end
+    end
+    return out
+end
+local cs = spotsNear(0, 0, 60, "couch")[1]
+ok(cs and cs.pos.x > couch:GetPos().x and math.abs(((cs.yaw or 0) + 180) % 360 - 180) < 1, "a couch: a spot in front of it, facing out, away from the wall behind it", cs and tostring(cs.pos))
+ok(spotsNear(600, 0, 60, "drinker")[1] ~= nil, "a chair: a drinker's seat")
+ok(spotsNear(1200, 0, 60, "bedside")[1] ~= nil, "a bed: a spot on its edge")
+local ws = spotsNear(1878, 0, 10, "window")[1]
+ok(ws and math.abs(((ws.yaw or 0) + 180) % 360 - 180) < 1, "glass in a wall by a walking node, under a roof: someone can stand there looking out", ws and tostring(ws.pos))
+ok(#spotsNear(2478, 0, 60, "window") == 0, "the same under the open sky: no")
+local as = spotsNear(3040, 0, 10, "armscrossed")[1]
+ok(as and math.abs(math.abs(((as.yaw or 0) + 180) % 360 - 180) - 180) < 1, "a solid wall by a path: someone stands against it, arms crossed, looking at the path", as and tostring(as.yaw))
+ok(#spotsNear(3640, 0, 60, "armscrossed") == 0, "never against glass")
+ok(#spotsNear(4200, 0, 100) == 0, "never where the editor already placed a spot")
+ok(#spotsNear(4800, 0, 100) == 0, "never in a Combine-only zone")
+local crowd = spotsNear(6200, 75, 260)
+local kinds = {}
+for _, p in ipairs(crowd) do kinds[p.kind] = (kinds[p.kind] or 0) + 1 end
+ok(#crowd == 2 and kinds.couch == 1 and kinds.bedside == 1, "a room full of furniture: two spots at most, one of a kind (a room never fills with posers)", #crowd)
+ok(spotsNear(7200, 0, 60, "couch")[1] ~= nil, "the map's own static props count too")
+-- citizens are offered them with the placed spots, and use Valve's poses there
+local offered = {}
+for _, p in ipairs(LC.FreePoints(LC.SITTABLE, nil)) do offered[p] = true end
+ok(offered[cs] and offered[ws] and offered[as], "citizens are offered them along with the placed spots")
+local cit, cst = LC.SpawnCitizen(A0 + Vector(100, 0, 0))
+cit.seqs, cit.sim, cst.test = { sitcouch1 = 1 }, false, nil
+ok(LC.StartBusy(cit, cst, cs) and cst.ss and cst.ss.kv.m_iszPostIdle == "sitcouch1", "and sit there in Valve's couch pose")
+LC.EndBusy(cit, cst, false)
+cit:Remove()
+-- looked for again: the same spot (whoever sits there keeps it); a chair moved off is no seat until found again
+LC.AutoSpotsScan(true)
+ok(spotsNear(0, 0, 60, "couch")[1] == cs, "looked for again, a spot found again is the same one")
+local ds = spotsNear(600, 0, 60, "drinker")[1]
+chair:SetPos(chair:GetPos() + Vector(0, 120, 0))
+offered = {}
+for _, p in ipairs(LC.FreePoints({ drinker = true }, nil)) do offered[p] = true end
+ok(ds and not offered[ds], "a chair someone has moved is no seat until it is found again")
+-- sparing in the real city: only some of them, the same ones each time
+LC.AUTO_CHANCE = chanceWas
+LC.AutoSpotsScan(true)
+local some = 0
+for _, list in pairs(LC.AutoSpots.byKind) do some = some + #list end
+LC.AutoSpotsScan(true)
+local again = 0
+for _, list in pairs(LC.AutoSpots.byKind) do again = again + #list end
+ok(some < 12 and some == again, "with the real chances only some are spots, and the same ones every time", some)
+for _, e in ipairs(props) do e:Remove() end
+for _, p in ipairs(made) do LC.RemovePoint(p) end
+util.TraceLine, LC.CombineZoneAt, LC.StaticRest, _walls = traceWas, czWas, staticWas, savedWalls
+LC.NavGraph = graphWas
+LC.NavGraphReady()
+LC.AutoSpots.byKind, LC.AutoSpots.byKey, LC.AutoSpots.job = {}, {}, nil
+end
+AutoSpotTests()
+
 ----------------------------------------------------------------------
 -- 21 November: Valve's ways with the Combine (docs/dev/valve-npc-notes.md, section 5): a unit at
 -- each Combine door, guards at ease, the raid's breach, squads in lanes, the Combine at work. Each unit
