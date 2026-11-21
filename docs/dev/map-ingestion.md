@@ -79,6 +79,10 @@ batches, what is done and next, the owner's requests on the way, and how to get 
 3. **Pictures.** `views` scores candidate eye-level views by their pixels (sky, darkness, one surface filling the
    frame) before anyone looks, renders the best at 800x520 with two iso overviews and a cut-away, leaves out
    Hammer-hidden things and the 3D skybox room, draws poles thin and trees as trunk and crown, and makes one sheet.
+   Since 21 November (later) it never chooses an eye view over 60% dark or 80% one colour, takes shorter views and
+   eyes closer together in a map of small rooms, uses Hammer-hidden nodes when a map has no others (the style rooms)
+   and points beside the props when it has none, and cuts a covered knot at its floor plus about 150 (less under a
+   low ceiling) rather than over its props.
    Look at the sheet once; replace the bad ones (a cut-away of part of the map, `map_view.py --iso SW --box X1 Y1 X2
    Y2 --cut Z`, is the most reliable); then write each picture's "teaches" and "lessons" in `pictures.json`, and give
    the set a "title" and take out "draft" (the reference page lists every `valve_*` folder with a pictures.json that

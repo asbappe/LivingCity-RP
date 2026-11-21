@@ -4,8 +4,9 @@
 
 nodes:    floor to ceiling over every node, outdoor share, rooms and corridors from 16 rays at waist height.
 streets:  a cut along x and along y through every outdoor node (the earlier helpers' streets.py): wall to wall,
-          the floor every 4 units, kerbs (a step of 3 to 20 down, a roadway, a step up again), crown, gutter,
-          pavements, how tall the walls stand.
+          the floor every 4 units, kerbs (a step of 3 to 20 down, a roadway, a step up again; steps down to the
+          road count as the kerb, the last of them), crown (only of a roadway with no step in it), gutter,
+          pavements, how tall the walls stand. Examples with a clean roadway come first.
 stairs:   flights of 3 or more steps from the tops of brushes; doorways at the doors.
 channels: canal-style profiles across the shortest way (channels.py).
 draw_cut: a true slice drawn as a picture (dark solid, white air, blue water, pale sky, a grid every 128).
@@ -91,14 +92,14 @@ def streets(m, s, out_pts):
          "road_width": dist([q["road"] for q in st], 32, 12),
          "pavement_width": dist([v for q in st for v in (q["pavL"], q["pavR"])], 16, 12),
          "kerb_height": dist([v for q in st for v in q["kerb"]], 1, 8),
-         "crown": dist([q["crown"] for q in st], 2, 8), "gutter": dist([q["gutter"] for q in st], 2, 6),
+         "crown": dist([q["crown"] for q in st if q["crown"] is not None], 2, 8), "gutter": dist([q["gutter"] for q in st], 2, 6),
          "road_mats_top": top(C(q["roadmat"] for q in st), 4, short=True),
          "pavement_mats_top": top(C(q["pavmat"] for q in st if q["pavmat"]), 4, short=True),
          "kerb_mats_top": top(C(q["kerbmat"] for q in st if q.get("kerbmat")), 4, short=True),
          "wall_height": dist(wh, 64, 14),
          "height_over_width": med([min(h for h in q["walls"] if h) / q["W"] for q in secs if all(q["walls"])])}
     mr = med([q["road"] for q in st]) or 0
-    good = sorted([q for q in st if all(q["walls"])] or st, key=lambda q: abs(q["road"] - mr))
+    good = sorted([q for q in st if all(q["walls"])] or st, key=lambda q: (q["crown"] is None, abs(q["road"] - mr)))      # (a clean road first: not a yard of steps)
     R["examples"] = [{k: q[k] for k in ("x", "y", "z", "axis", "W", "road", "pavL", "pavR", "kerb", "crown", "walls")} for q in good[:4]]
     return R
 
@@ -139,6 +140,14 @@ def _street(m, s, x, y, fz, a):
             break
         if best:
             break
+    if best:      # (steps down to the road, a tread apart: the kerb is the last of them, so the road is only between the kerbs)
+        i, j = best
+        k = i + 1
+        while k < min(j - 16, i + 12):
+            if not np.isnan(d[k]) and -20 <= d[k] <= -3:
+                i = k
+            k += 1
+        best = (i, j)
     walls = []
     for sgn, t0 in ((1, tp), (-1, tn)):
         topz = None
@@ -152,8 +161,9 @@ def _street(m, s, x, y, fz, a):
     if best:
         i, j = best
         road = prof[i + 1:j + 1]
+        stepped = np.nanmax(np.abs(np.diff(road))) >= 3 if len(road) > 1 else False      # (a step inside: no road's crown, d3_c17_03's square)
         sec.update(road=(j - i) * 4, pavL=i * 4, pavR=rnd(W - (j + 1) * 4), kerb=[rnd(-d[i]), rnd(d[j])],
-                   crown=rnd(np.nanmax(road) - (road[0] + road[-1]) / 2), gutter=rnd(road[0] - np.nanmin(road[:6])),
+                   crown=None if stepped else rnd(np.nanmax(road) - (road[0] + road[-1]) / 2), gutter=rnd(road[0] - np.nanmin(road[:6])),
                    roadmat=C(mats[i + 1:j + 1]).most_common(1)[0][0],
                    pavmat=C(mats[:i] + mats[j + 1:]).most_common(1)[0][0] if i > 0 else "")
         kz = (prof[i] + prof[i + 1]) / 2
