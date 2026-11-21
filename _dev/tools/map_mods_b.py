@@ -11,7 +11,7 @@ Living City: canal modules, set B: places where the Resistance lives (map_module
     market     the black market: a vaulted arcade of five stalls with roll shutters
     press      the pamphlet press: a printing room behind a door in a side tunnel
     still      a distillery in a cellar: a pot still, mash casks, shelves of bottles
-    plaza      half a round amphitheatre of five tiers, a rostrum at the canal's edge
+    plaza      five rows of seats stepping down from the street to a stage at the back wall
     playground a rusted playground on a terrace: a relic of before
 
 How to write one, and what every call does: docs/dev/map-modules.md.
@@ -29,9 +29,9 @@ STONE_FLOOR = "stone/stonefloor006d_c17"
 CRACKED = "concrete/concretefloor016a"
 DIRT = "nature/dirtfloor005c"
 SAND = "nature/sandfloor010a"
-DUCT = "metal/metalfloor001a"
+DUCT = "metal/metalfloor005a"
 BRICK = "brick/brickwall037a"
-WOOD, TIN, STEEL, BEAM = MM["wood"], MM["tin"], MM["steel"], MM["beam_wood"]
+WOOD, TIN, STEEL = MM["wood"], MM["tin"], MM["steel"]
 BARS, WALL = MAT["bars"], MAT["canal_wall"]
 WARM = "255 190 120"
 # What is new here is made of the owner's own materials (all in their City 18 map: _dev/reference/city18/palette.json)
@@ -200,10 +200,43 @@ def in_town(m):
 def front_face(m, z):
     """Where the face of the left wall is at height z over the floor, for a thing hung on it: at v 256, but in the town
     the house fronts stand out from it (map_town.facade: a plinth 9 out to 24, the walls 6 out, a trim 10 out from 136
-    to 152), and a lamp or a sign goes on their face, not inside them."""
-    if not in_town(m):
-        return 256
-    return 247 if z < 24 else 246 if 136 <= z < 152 else 250
+    to 152), and on the street beside the canal the courses street_front lays; a lamp or a sign goes on their face,
+    not inside them."""
+    if in_town(m):
+        return 247 if z < 24 else 246 if 136 <= z < 152 else 250
+    if m.fr.dz:
+        return 250 if z < 24 else 248 if 136 <= z < 152 else 256
+    return 256
+
+
+def street_front(m, L):
+    """On the street beside the canal (lifted, but not into the town, whose house fronts do it), the module's front
+    wall laid in courses as City 18 and Valve band their walls (map_lessons.py --tag valve): a concrete plinth to 24,
+    a stone string course from 136 to 152 and a stone cornice under the wall's top, each a little proud, broken
+    wherever the module opens. In a canal the canal's own dressing does the walls."""
+    if not m.fr.dz or in_town(m):
+        return
+    cells, dz = m.b.plan.cells, m.fr.dz
+
+    def wall_from(u):        # (how high over the floor the wall starts at this 64: None where the module is open ground)
+        x, y = m.fr.pt(u + 32, 288)
+        spec = cells.get((x // CELL, y // CELL))
+        if spec is None or spec[0] == "solid":
+            return 0
+        return spec[3] - dz - F if spec[0] == "low" else None
+    top = m.b.rim - F
+    for z1, z2, out, mat in ((0, 24, 6, "concrete/concretewall002c"), (136, 152, 8, "stone/stonewall050f"), (top - 20, top - 4, 10, "stone/stonewall050f")):
+        boxes, start = [], None
+        for u in list(range(0, L, CELL)) + [L]:
+            w = wall_from(u) if u < L else None
+            ok = w is not None and w <= z1
+            if ok and start is None:
+                start = u
+            elif not ok and start is not None:
+                boxes.append((start, 256 - out, F + z1, u, 256, F + z2))
+                start = None
+        if boxes:
+            m.det(boxes, mat)
 
 
 def cheeks(m, u1, u2, top=136, out=132, thick=12):
@@ -427,6 +460,7 @@ def m_cells(m, opt):
         m.prop("prop_static", "models/props_pipes/concrete_pipe001a.mdl", 928, 198, 90, F - 6, {"solid": "0", "disableshadows": "0", "fademindist": "-1", "fademaxdist": "0",
                                                                                           "fadescale": "1"})
     sounds(m, L, "tunnel", 576, 448, F, 640)
+    street_front(m, L)
 
     m.view(160, 120, F, 90, 0, "the door in the wall")
     m.view(110, 350, F, 40, 4, "the guard room")
@@ -489,8 +523,8 @@ BED_YAW = 90     # the way the clinic's bed frames are turned (their long side i
 # ---------------------------------------------------------------------------
 
 def m_clinic(m, opt):
-    """The clinic: a field hospital in a vault off the left wall, whitewashed over a tiled dado against the canal's
-    concrete. A wide way in between two drawn curtains, light cloth hung from a rail and clear of the floor (a white
+    """The clinic: a field hospital in a vault off the left wall, whitewashed over a tiled dado with a stone rail
+    between (City 18's dado line), against the canal's concrete. A wide way in between two drawn curtains, light cloth hung from a rail and clear of the floor (a white
     cross on the wall over it); a ward of four beds along its back wall under two fluorescent tubes, with cloth screens
     between them (lc_clinic_bed_1 to _4: where a patient lies), a mattress and a bedside drawer each, a chart on two of
     the drawers, a drip stand by two beds and oxygen bottles by the others, a hospital cart, a stove with a pot
@@ -519,7 +553,7 @@ def m_clinic(m, opt):
     m.taken(360, 180, F, 600, 256, F + 230)
     cheeks(m, 384, 576)
     line_walls(m, [(384, 320, 576, 448, F + 144), (128, 448, 704, 768, F + 160), (128, 320, 320, 448, F + 128), (704, 576, 768, 704, F + 128),
-                   (768, 448, 960, 768, F + 176), (832, 320, 960, 448, F + 128)])
+                   (768, 448, 960, 768, F + 176), (832, 320, 960, 448, F + 128)], rail=CELL_RAIL)
 
     # the way in: a white cross on the wall, a caged lamp, two light curtains drawn aside under a valance, clear of the floor
     cf = front_face(m, 168)
@@ -610,6 +644,7 @@ def m_clinic(m, opt):
     m.grime("stain", 386, 400, F + 60, 2)
     m.grime("crack", 702, 520, F + 130, 3)
     sounds(m, L, "inside", 416, 600, F, 520)
+    street_front(m, L)
 
     m.view(480, 150, F, 90, 0, "the way in")
     m.view(480, 420, F, 100, 4, "the ward")
@@ -699,6 +734,7 @@ def m_memorial(m, opt):
     m.lane(384, 312, Z)
     m.sound("ambient/levels/canals/windmill_wind_loop1.wav", 384, 300, Z + 160, radius=600, volume=2)
     sounds(m, L, "courtyard", 384, 320, Z, 384)
+    street_front(m, L)
 
     m.view(384, 40, F, 90, 0, "from across the canal")
     m.view(384, 150, F, 90, -6, "from the bench")
@@ -827,7 +863,7 @@ def m_pit(m, opt):
     put(m, [("props_c17/cashregister01a", 966, 420, 270), ("props_lab/desklamp01", 926, 426, 60)], F + 38)
     m.light(926, 426, F + 72, "255 205 140 120")
     m.det([(964, 384, F + 44, 1020, 386, F + 104)], MAT["black"])
-    m.det([(962, 384, F + 42, 1022, 387, F + 44), (962, 384, F + 104, 1022, 387, F + 106), (962, 384, F + 44, 964, 387, F + 104), (1020, 384, F + 44, 1022, 387, F + 104)], BEAM)
+    m.det([(962, 384, F + 42, 1022, 387, F + 44), (962, 384, F + 104, 1022, 387, F + 106), (962, 384, F + 44, 964, 387, F + 104), (1020, 384, F + 44, 1022, 387, F + 104)], TIMBER)
     chalk = [(968, 386, F + 92, 1016, 387, F + 93), (991, 386, F + 50, 992, 387, F + 92)]
     for row in range(4):
         z = F + 82 - 9 * row
@@ -844,6 +880,7 @@ def m_pit(m, opt):
     m.grime("trash", 930, 450, F, 1)                                                   # betting slips trodden in
     m.grime("trash", 980, 470, F, 2)
     sounds(m, L, "square", cu, cv, F, 640)
+    street_front(m, L)
 
     m.view(640, 100, F, 90, 2, "from the canal")
     m.view(608, 440, F, 90, 8, "at the gate")
@@ -871,7 +908,7 @@ def lean(m, model, u, v, z, yaw, roll):
 def m_garden(m, opt):
     """The walled garden: where the Resistance grows food. A gap in the left wall, a fence of boards and an iron gate
     (lc_garden_gate: Use swings it in), opens on a yard 640 by 448 under the open sky: in a canal 24 above its floor and
-    three steps up, on a street level with the pavement (the owner, of the playground: places sit at the pavement's
+    two steps up, on a street level with the pavement (the owner, of the playground: places sit at the pavement's
     height). Its ground is grass, worn to earth along a path of flagstones set into it from the gate to the lean-to.
     Six raised soil beds edged with timber, three on each side of the path (lc_garden_bed_1 to _6: on the beds, for a
     farming job; 1 to 3 on the left going back, 4 to 6 on the right), ridged. lc_garden_plot_1 to _8 are the planting
@@ -906,7 +943,7 @@ def m_garden(m, opt):
     # the fence of boards across half the gap, and the gate that swings in
     for k in range(6):
         m.static("models/props_debris/wood_board04a.mdl", 583 + 10 * k, 288, 90, z=Z)
-    m.det([(576, 289, Z + 14, 638, 291, Z + 18), (576, 289, Z + 46, 638, 291, Z + 50), (638, 286, Z, 642, 292, Z + 66)], BEAM)
+    m.det([(576, 289, Z + 14, 638, 291, Z + 18), (576, 289, Z + 46, 638, 291, Z + 50), (638, 286, Z, 642, 292, Z + 66)], TIMBER)
     swing_door(m, "lc_garden_gate", [(646, 287, Z + 2, 702, 291, Z + 110)], STEEL, (702, 289, Z + 56), reverse=True, sound="doors/gate_move1.wav", unseen=True)
     rider(m, "lc_garden_gate", "models/props_c17/gate_door01a.mdl", 674, 289, 90, Z)
 
@@ -926,7 +963,7 @@ def m_garden(m, opt):
             c = v + 16 + 20 * row
             ridges.append(prism([(c - 7, Z + 13), (c + 7, Z + 13), (c, Z + 17)], "x", u + 6, a - 6, DIRT))
         m.target("lc_garden_bed_%d" % (n + 1), u + 96, v + 36, Z + 18, 270)
-    m.det(edges + stakes, BEAM)
+    m.det(edges + stakes, TIMBER)
     m.det(soil, DIRT)
     m.shapes(ridges)
     rnd = random.Random(8)                               # the planting spots: two on each bed that has no bean poles, none quite in line
@@ -946,11 +983,11 @@ def m_garden(m, opt):
             lean(m, POLE, pu, v + 8, Z + 13, 0, -16)
             lean(m, POLE, pu, v + 64, Z + 13, 0, 16)
         canes.append((u + 16, v + 35, Z + 112, u + 176, v + 37, Z + 114))
-    m.det(canes, BEAM)
+    m.det(canes, TIMBER)
 
     # the scarecrow, in the middle bed on the right
     su, sv = 832, 508
-    m.det([(su - 2, sv - 2, Z + 13, su + 2, sv + 2, Z + 96), (su - 28, sv - 1, Z + 76, su + 28, sv + 1, Z + 80)], BEAM)
+    m.det([(su - 2, sv - 2, Z + 13, su + 2, sv + 2, Z + 96), (su - 28, sv - 1, Z + 76, su + 28, sv + 1, Z + 80)], TIMBER)
     m.det([(su - 13, sv - 3, Z + 46, su + 13, sv + 3, Z + 82), (su - 30, sv - 2, Z + 70, su - 13, sv + 2, Z + 82), (su + 13, sv - 2, Z + 70, su + 30, sv + 2, Z + 82)], CLOTH)
     m.det([(su - 6, sv - 6, Z + 84, su + 6, sv + 6, Z + 97)], PLASTER)
     m.shapes([vpipe(su, sv, 11, Z + 97, Z + 99, TIN), vpipe(su, sv, 6, Z + 99, Z + 105, TIN)])
@@ -999,6 +1036,7 @@ def m_garden(m, opt):
     for v in (430, 560, 660):
         m.lane(640, v, Z)
     sounds(m, L, "courtyard", 640, 540, Z, 512)
+    street_front(m, L)
 
     m.view(640, 120, F, 90, 0, "the gate from the canal")
     m.view(640, 330, Z, 90, 10, "coming in")
@@ -1162,6 +1200,7 @@ def m_stash(m, opt):
     m.grime("lambda", R2 - 2, 440, Z + 76, 10)
     m.grime("trash", 470, 520, Z, 11)
     sounds(m, L, "tunnel", 544, 448, Z, 384)
+    street_front(m, L)
 
     m.view(150, 40, F, 75, -8, "the pipes: nothing to see")
     m.view(256, 40, F, 90, -12, "at the wall that opens")
@@ -1269,6 +1308,7 @@ def m_market(m, opt):
     m.grime("trash", 450, 360, F, 7)
     m.grime("lambda", 1150, 420, F + 120, 8)
     sounds(m, L, "inside", 640, 420, F, 560)
+    street_front(m, L)
 
     m.view(320, 120, F, 90, 0, "an archway from the canal")
     m.view(180, 416, F, 0, 2, "down the arcade")
@@ -1318,7 +1358,7 @@ def m_press(m, opt):
     pu, pv = 300, 664
     m.det([(pu - 28, pv - 30, F, pu - 22, pv - 24, F + 30), (pu + 22, pv - 30, F, pu + 28, pv - 24, F + 30),
            (pu - 28, pv + 24, F, pu - 22, pv + 30, F + 30), (pu + 22, pv + 24, F, pu + 28, pv + 30, F + 30),
-           (pu - 34, pv - 8, F, pu - 26, pv + 8, F + 102), (pu + 26, pv - 8, F, pu + 34, pv + 8, F + 102), (pu - 38, pv - 10, F + 102, pu + 38, pv + 10, F + 114)], BEAM)
+           (pu - 34, pv - 8, F, pu - 26, pv + 8, F + 102), (pu + 26, pv - 8, F, pu + 34, pv + 8, F + 102), (pu - 38, pv - 10, F + 102, pu + 38, pv + 10, F + 114)], TIMBER)
     m.det([(pu - 30, pv - 34, F + 30, pu + 30, pv + 34, F + 36)], WOOD)                         # the bed
     m.det([(pu - 18, pv - 22, F + 36, pu + 18, pv + 22, F + 39), (pu - 17, pv - 18, F + 52, pu + 17, pv + 18, F + 60)], STEEL)   # the forme, the platen
     m.det([(pu - 15, pv - 19, F + 39, pu + 15, pv + 19, F + 40)], PLASTER)                      # a sheet, just pulled
@@ -1377,6 +1417,7 @@ def m_press(m, opt):
     for u, v in ((320, 480), (400, 600), (500, 620)):
         m.lane(u, v)
     sounds(m, L, "inside", 416, 640, F, 420)
+    street_front(m, L)
 
     m.view(320, 150, F, 90, 0, "the tunnel and its door")
     m.view(320, 530, F, 80, 4, "the printing room")
@@ -1389,7 +1430,7 @@ def m_press(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_still(m, opt):
-    """The still: a distillery in a cellar off the left wall. A short tunnel, then eight steps down, walled on both
+    """The still: a distillery in a cellar off the left wall. A short tunnel, then four steps down, walled on both
     open sides, into a cellar 64 below the canal's floor: stone to the knee and brick above, sweating, two brick ribs
     carrying its low vault, lit by the fire's glow and one bare bulb. Against its far side the still: a brick firebox
     open at the front with a small steady fire in it, a boiler standing on it with its flue up through the vault
@@ -1476,6 +1517,7 @@ def m_still(m, opt):
     m.lane(400, 520, C)
     m.lane(330, 620, C)
     sounds(m, L, "cave", 416, 560, C, 400)
+    street_front(m, L)
 
     m.view(384, 150, F, 90, 0, "the tunnel from the canal")
     m.view(384, 370, F, 80, 16, "down the steps")
@@ -1574,6 +1616,7 @@ def m_plaza(m, opt):
     for u in (cu - 420, cu - 140, cu + 140, cu + 420):
         m.lane(u, v1 + 28)
     sounds(m, L, "courtyard", cu, vb - 200, low, 640)
+    street_front(m, L)
 
     m.view(cu, 60, F, 90, 6, "from across the canal: looking down the rows")
     m.view(cu, sv + 40, top, 270, -4, "from the stage")
@@ -1626,7 +1669,7 @@ def m_playground(m, opt):
 
     # the sandpit
     g1, g2, h1, h2 = 520, 680, 430, 580
-    m.det([(g1, h1, T, g2, h1 + 6, T + 10), (g1, h2 - 6, T, g2, h2, T + 10), (g1, h1 + 6, T, g1 + 6, h2 - 6, T + 10), (g2 - 6, h1 + 6, T, g2, h2 - 6, T + 10)], BEAM)
+    m.det([(g1, h1, T, g2, h1 + 6, T + 10), (g1, h2 - 6, T, g2, h2, T + 10), (g1, h1 + 6, T, g1 + 6, h2 - 6, T + 10), (g2 - 6, h1 + 6, T, g2, h2 - 6, T + 10)], TIMBER)
     m.det([(g1 + 6, h1 + 6, T, g2 - 6, h2 - 6, T + 5)], SAND)
     put(m, [("props_c17/doll01", g1 + 30, h1 + 3, 200)], T + 10)                        # left on the sandpit's edge
     m.shapes([prism([(470, T + 5), (506, T + 5), (490, T + 12)], "x", 590, 634, SAND)])
@@ -1645,6 +1688,7 @@ def m_playground(m, opt):
     m.grime("stain", 760, 640, T + 110, 4)
     m.grime("poster", 832, 450, T + 80, 5)
     sounds(m, L, "courtyard", 512, 450, T, 520)
+    street_front(m, L)
     for u, v in ((480, 300), (480, 400), (760, 480), (220, 600)):
         m.lane(u, v, T)
 
@@ -1659,11 +1703,11 @@ MODULES = {
     "memorial": (768, m_memorial, "the wall of the dead: plaques and candles in a recess under the open sky (left)"),
     "pit": (1280, m_pit, "the fighting pit: a caged sunken ring, tiers of seats, a bookmaker (left)"),
     "garden": (1280, m_garden, "the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left)"),
-    "stash": (768, m_stash, "the stash: an arms room behind a section of wall that a pipe valve opens (left)"),
+    "stash": (768, m_stash, "the stash: a brick arms room with guns on racks, behind a section of wall that a pipe valve opens (left)"),
     "market": (1280, m_market, "the black market: a vaulted arcade of five shuttered stalls (left)"),
     "press": (768, m_press, "the pamphlet press: a printing room behind a door in a side tunnel (left)"),
     "still": (768, m_still, "the still: a pot still, mash casks and bottles in a cellar (left)"),
-    "plaza": (1536, m_plaza, "the plaza: five rows of seats stepping down from the street to a rostrum at the back wall (left)"),
+    "plaza": (1536, m_plaza, "the plaza: five rows of seats stepping down from the street to a stage at the back wall (left)"),
     "playground": (1024, m_playground, "the playground: a rusted relic on a terrace over the canal (left)"),
     "clinic": (1024, m_clinic, "the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left)"),
 }

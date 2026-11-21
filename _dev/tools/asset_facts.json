@@ -15779,6 +15779,24 @@
 "static": true,
 "v": 2
 },
+"models/props_wasteland/buoy01.mdl": {
+"bbox": [
+-28.9,
+-29.4,
+-85.7,
+28.9,
+29.4,
+85.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_wasteland/cafeteria_bench001a.mdl": {
 "bbox": [
 -7.3,
@@ -18635,6 +18653,24 @@
 8.4,
 2.9,
 5.9
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/weapons/w_stunbaton.mdl": {
+"bbox": [
+-12.3,
+-1.6,
+-3.6,
+10.7,
+2.3,
+2.3
 ],
 "built_static": false,
 "collides": true,
