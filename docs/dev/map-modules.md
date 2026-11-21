@@ -144,6 +144,30 @@ build checks them (`map_lint.py`, kind `wire`). What does what:
 - Also kept, as the owner asked: the **alarm**, the **switch that shows its state**, the **intact set swapped for a
   broken one** and the **door the map closes again when blocked** (`map_lessons.py --tag recipe`).
 
+## Tripwires and turret rooms (`_dev/tools/map_security.py`; 21 November, not compiled yet, no module uses it yet)
+
+Valve's Overwatch Nexus security (d3_c17_10b; lessons `valve-tripwire-turrets`, `valve-counter`), for Combine
+strongholds. Owner-approved; turrets are the Overwatch's, so ask the owner where a room goes before placing one.
+
+- `tripwire(m, name, a, b, room=None)`: a red laser (env_beam, Valve's 170 0 0, width 0.2) from `a` to `b` (u, v, z;
+  level, along u or v), touched by players or NPCs but passed by the Combine's own (filter `lc_security_notcombine`:
+  not npc_combine_s, npc_metropolice, npc_manhack, npc_cscanner, npc_hunter), with a backup trigger along it (the
+  beam's touch can miss a runner). In a room it fires `lc_<room>_alarm`; alone, its own `<name>_alarm` (turns it
+  off) and `<name>_arm` (on again).
+- `turret_room(m, name, wires, lifts, pit=16)`: ground turrets on floor lifts (a pit 64 square, 64 deep; `pit` is
+  the floor's thickness, the lining laid under it; 0 when the module painted the pit square 72 lower itself). A broken
+  wire: lasers off, the alarm for 1.5 s, the turrets rise; each sinks when it sees no one (OnAreaClear); all sunk
+  (counter `lc_<room>_rearm`, max = the lifts): the lasers come back. All dead (`lc_<room>_dead`): the room is off.
+- `switches(m, name, rooms, count, u, v, z)`: a stronghold's control rooms; each switch sends `lc_<name>_switches`
+  Add 1, and at `count` every room's `lc_<room>_off` fires.
+- **The gamemode's side is the relays' names:** `lc_<room>_alarm` (the map fires it; its activator is who broke the
+  wire, so the gamemode can block it for the Union's own players in its AcceptInput hook: the map cannot tell them
+  apart) and `lc_<room>_off` (Trigger it to shut the room for good, as a control room switch would; the map fires it
+  itself when every turret is dead).
+- `python3 map_security.py check` writes a test room (`lc_security_test.vmf`: two wired doorways, two turrets, a red
+  button that throws the switch) and checks it; `python3 map_security.py lint FILE.vmf` checks any file: a tripwire
+  with no filter, a re-arm counter whose max differs from its lifts (or starts below it), a ground turret on no lift.
+
 ## Areaportals (what keeps one place from being drawn while standing in another)
 
 `m.portal(u1, v1, z1, u2, v2, z2)`: a sheet 2 thick across a doorway or tunnel into a side room. It must fill the opening from wall to wall and floor to roof, with open air on both faces and solid past all four edges (the check fails it otherwise), so it goes a little way INSIDE a tunnel, never at its mouth, never under the open sky, and never through water. A door that shuts an opening needs the portal inside its own thickness. Every roofed side room should have one in its way in.

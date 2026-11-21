@@ -43667,6 +43667,8 @@ function Nov21_StrongholdTests()
     intruder:SetPos(at + Vector(40, 0, 0))
     local unit = newPlayer("WireUnit", "cp")
     unit.chat = {}
+    ok(hook.Run("AcceptInput", alarm, "Trigger", unit, unit) == true and not has(unit.chat, "tripwire broken"),
+        "a unit's player walks through a wire: the alarm is swallowed (the map lets Combine NPCs pass, and can't tell players apart)")
     hook.Run("AcceptInput", alarm, "Trigger", intruder, intruder)
     ok(LC.PlayerIsWanted(intruder), "breaking a wire: whoever did it is wanted")
     ok(has(unit.chat, "tripwire broken"), "and the units hear it on the CP net")
@@ -43785,6 +43787,37 @@ function Nov21_BreakoutWithdrawTests()
     LC.Running = runWas
 end
 Nov21_BreakoutWithdrawTests()
+
+function Nov21_CellsFullTests()
+    section("21 November: every cell taken, an arrest still has a cell: the prisoner nearest release goes home")
+    local cells = LC.PointsOfKind("cell")
+    local made
+    if #cells == 0 then made = LC.AddPoint(Vector(-47500, 47500, 0), 0, "cell", 0) cells = LC.PointsOfKind("cell") end
+    local held = {}
+    -- fill every free cell with a jailed citizen
+    for _ = 1, #cells + 2 do
+        local npc, st = LC.Spawners.citizen(Vector(-47000, 47000, 0) + Vector(math.random(-200, 200), math.random(-200, 200), 0))
+        if npc and st then
+            local okA = LC.ArrestNPC(npc, nil)
+            if okA then held[#held + 1] = { npc, st } end
+        end
+    end
+    _run(2)
+    local soonest
+    for _, h in ipairs(held) do
+        if IsValid(h[1]) and h[2].state == "jailed" and (not soonest or (h[2].jailUntil or 0) < (soonest[2].jailUntil or 0)) then soonest = h end
+    end
+    ok(#held >= #cells and soonest ~= nil, "(more arrests than cells were made, all in cells)", #held, #cells)
+    local extra, est = LC.Spawners.citizen(Vector(-47000, 47300, 0))
+    local okX, why = LC.ArrestNPC(extra, nil)
+    ok(okX, "a cell found for one more arrest", why)
+    ok(soonest and soonest[2].state ~= "jailed" and not soonest[2].jailUntil, "the prisoner nearest the end of their sentence was let out for it")
+    for _, h in ipairs(held) do if IsValid(h[1]) then LC.NPCs[h[1]] = nil h[1]:Remove() end end
+    if IsValid(extra) then LC.NPCs[extra] = nil extra:Remove() end
+    if made then LC.RemovePoint(made) end
+    LC.Occupied = {}
+end
+Nov21_CellsFullTests()
 
 ----------------------------------------------------------------------
 section("Stop")

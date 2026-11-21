@@ -7,7 +7,8 @@
     map_security.py): each room has two logic_relays, lc_<room>_alarm (fired when a wire is broken) and
     lc_<room>_off (shuts the room's defences for good). On a map without them nothing here happens.
 
-      A wire broken    every Civil Protection and Overwatch player hears it on the CP net, with where;
+      A wire broken    (by a unit's player: nothing, the alarm is swallowed, as the map lets Combine NPCs pass)
+                       every Civil Protection and Overwatch player hears it on the CP net, with where;
                        whoever broke it (a player who isn't Combine) is wanted for trespass, and the
                        units near turn on them.
       Cut the defences a Resistance job, while any room's defences are up: get to the room's control point
@@ -68,6 +69,9 @@ hook.Add("AcceptInput", "LivingCityStrongholds", function(ent, input, activator,
     local room = RoomOf(name, "alarm")
     if room then
         local who = (IsValid(activator) and activator:IsPlayer() and activator) or (IsValid(caller) and caller:IsPlayer() and caller) or nil
+        -- (the map's filter lets the Combine's NPCs through, but it can't tell a unit's player from anyone else:
+        -- a Civil Protection or Overwatch player passes too. Returning true swallows the input: no turrets rise.)
+        if IsValid(who) and Combine(who) then return true end
         LC.Try(LC.StrongholdAlarm, room, IsValid(who) and who:GetPos() or ent:GetPos(), who)
         return
     end
