@@ -10,7 +10,8 @@
                           the player's companions there), so every citizen who is not one of the
                           Resistance's fighters is told not to (the engine's DisableWeaponPickup), and
                           one found with a weapon in hand all the same puts it back down.
-      Sympathizers        one who passes a weapon lying loose, with no unit near, takes it and hides it:
+      Sympathizers        one who passes a weapon lying loose, with no unit near, takes it and hides it
+                          (and so does one handed a gun, F2 > Give: LC.NPCHideGun):
                           nothing shows in their hands. It stays with that person (a named citizen who
                           goes home and comes back still has it). When they are free they carry it to
                           the nearest Resistance supply crate (two supplies for the stores), or with no
@@ -76,6 +77,14 @@ local function SetHidden(npc, st, cls)
     if p then p.hidGun = cls end
 end
 LC.NPCHiddenGun = Hidden
+-- A gun handed to a sympathizer (F2 > Give, sv_livingcity_talk.lua) is hidden the same way, and goes the same
+-- way: to the Resistance's crate when they are free, or found on them by a unit's search. One at a time.
+function LC.NPCHideGun(npc, st, cls)
+    if not (IsValid(npc) and st and cls) or Hidden(npc, st) then return false end
+    SetHidden(npc, st, cls)
+    N.given = (N.given or 0) + 1
+    return true
+end
 
 -- Taken into custody: no weapon in the hands, none hidden either (it is found on them).
 function LC.NoWeaponsInCustody(npc, st)

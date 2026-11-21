@@ -12954,6 +12954,9 @@ ok(LC.HasItem(giver, "gun_pistol") and LC.Feeling(s, giver) == before - 1 and st
 cs.rebel = true
 said = LC.GiveToCitizen(giver, c, "gun_pistol")
 ok(not LC.HasItem(giver, "gun_pistol") and string.find(said or "", "under their coat", 1, true), "a sympathizer hides it under their coat", said)
+ok(LC.NPCHiddenGun and LC.NPCHiddenGun(c, cs) == "weapon_pistol" and LC.SearchNPCRoll(cs) == "a hidden firearm",
+    "and keeps it hidden: it goes to the Resistance's crate, or a unit's search finds it (21 November)", tostring(cs.hidGun))
+cs.hidGun = nil if c.lcProfile then c.lcProfile.hidGun = nil end
 -- Civil Protection never sees arms in the menu
 local giverCP = newPlayer("GiverUnit", "cp")
 LC.GiveItem(giverCP, "gun_pistol", 1) LC.GiveItem(giverCP, "ration", 1)
