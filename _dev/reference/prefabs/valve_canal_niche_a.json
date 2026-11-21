@@ -1,6 +1,6 @@
 {
-"name": "valve_canal_vent_a",
-"note": "x",
+"name": "valve_canal_niche_a",
+"note": "a drain sump niche: a half round concrete wall (radius 64) at the foot of a canal wall, roofed with a metal grate, a shaft of light (Valve's vol_light model) falling through it; the curved back is at y 0, it opens toward +y; 128 wide, 81 deep, 64 high From Valve's d1_canals_01a (Source SDK sample).",
 "from": "d1_canals_01a.vmf",
 "box": [
 -2502,

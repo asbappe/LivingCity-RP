@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_jetty_a",
-"note": "x",
+"note": "a timber jetty for the airboat: a plank deck 314 by 214 on posts, 34 high; one long edge is y 0, it runs out toward +y From Valve's d1_canals_05 (Source SDK sample).",
 "from": "d1_canals_05.vmf",
 "box": [
 7225,

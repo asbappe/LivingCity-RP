@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_platform_a",
-"note": "x",
+"note": "a Resistance stilt platform over the canal (canals_03): a plank deck on timber legs with a plank ramp up, corrugated metal sheets, pipes, crates, drums, cooking pots and a bulb (physics props, two of them Valve's story pipes); the ramp's foot is y 0; 287 by 367, 334 high From Valve's d1_canals_03 (Source SDK sample).",
 "from": "d1_canals_03.vmf",
 "box": [
 -935,

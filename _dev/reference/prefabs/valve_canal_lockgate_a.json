@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_lockgate_a",
-"note": "x",
+"note": "a lock gate: one metal leaf 360 wide, 324 high and 8 thick, metal door panels under a grated top band in a truss frame, taken shut as a fixed slab; the gate plane is x 0, centred on y 0 From Valve's d1_canals_13 (Source SDK sample).",
 "from": "d1_canals_13.vmf",
 "box": [
 3150,

@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_lookout_a",
-"note": "x",
+"note": "a timber lookout: a sloped frame of heavy beams (a way up) to a small plank landing with metal sheets, three metal ladders and rebar, as Valve sets it on canals_10 and 11; centred on the anchor; 210 by 331, 150 high From Valve's d1_canals_11 (Source SDK sample).",
 "from": "d1_canals_11.vmf",
 "box": [
 9740,

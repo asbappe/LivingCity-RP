@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_railing_a",
-"note": "x",
+"note": "Valve's canal edge railing and its lamp post version (props_canal/canal_bridge_railing02 and canal_bridge_railing_lamps), as they stand together on the stone canal of canals_03; props only, the railing's foot at the anchor From Valve's d1_canals_03 (Source SDK sample).",
 "from": "d1_canals_03.vmf",
 "box": [
 -1400,

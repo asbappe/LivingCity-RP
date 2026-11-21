@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_scaffold_a",
-"note": "x",
+"note": "timber shoring against a stone arch: one pier and part of the ring of the twin arch (valve_canal_arch_a) with heavy leaning timber props and plank decks against it, and a barricade; the arch face is y 0, the timbers stand out toward +y; 263 by 217, 288 high From Valve's d1_canals_01a (Source SDK sample).",
 "from": "d1_canals_01a.vmf",
 "box": [
 -3040,

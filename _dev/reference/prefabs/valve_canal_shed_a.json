@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_shed_a",
-"note": "x",
+"note": "a small gabled timber shed on a stone base with a tile and shingle roof; one long side is y 0; 288 by 416, 248 high From Valve's d1_canals_06 (Source SDK sample).",
 "from": "d1_canals_06.vmf",
 "box": [
 3440,

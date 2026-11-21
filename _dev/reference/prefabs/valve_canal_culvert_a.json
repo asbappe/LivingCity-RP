@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_culvert_a",
-"note": "x",
+"note": "a round culvert: a 256 bore through a concrete headwall 384 wide and 352 high, the tube lined in ring segments and running 160 along +y from the face at y 0; the bore's invert is 96 over z 0; a shrub grows on the headwall From Valve's d1_canals_12 (Source SDK sample).",
 "from": "d1_canals_12.vmf",
 "box": [
 1020,

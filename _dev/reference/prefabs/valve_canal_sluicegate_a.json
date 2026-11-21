@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_sluicegate_a",
-"note": "x",
+"note": "a sliding sluice gate: two metal leaves 188 wide side by side (376 in all), metal door panels with a grate band and a truss frame, 206 high, taken shut as fixed slabs, with a timber post and Valve's valve wheel beside it at +x; the gate plane is x 0, centred on y 0 From Valve's d1_canals_05 (Source SDK sample).",
 "from": "d1_canals_05.vmf",
 "box": [
 -40,

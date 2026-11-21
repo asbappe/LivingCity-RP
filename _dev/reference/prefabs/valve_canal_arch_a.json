@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_arch_a",
-"note": "x",
+"note": "a twin arched tunnel portal: two round arches 192 wide side by side, each a ring of stone voussoirs (stonewall006b) set in a concrete face, springing from impost blocks at 16 to a crown at 112, Valve's tall barricade in one arch; face plane y 0, faces -y, 32 deep; 384 wide. z 0 is the tunnels' floor; the piers below and the walls beside are not in it From Valve's d1_canals_01a (Source SDK sample).",
 "from": "d1_canals_01a.vmf",
 "box": [
 -3138,

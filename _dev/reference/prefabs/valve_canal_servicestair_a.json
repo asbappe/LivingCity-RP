@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_servicestair_a",
-"note": "x",
+"note": "a service stair out of the canal: a straight concrete stair 64 wide (8 high per step) in a passage between two concrete walls 16 thick, climbing toward +x to a landing, gravel and concrete floor at the top; the foot is x 0, centred on y 0; 320 long, 256 high From Valve's d1_canals_01 (Source SDK sample).",
 "from": "d1_canals_01.vmf",
 "box": [
 700,

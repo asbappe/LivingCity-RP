@@ -1,6 +1,6 @@
 {
 "name": "valve_canal_boathouse_a",
-"note": "x",
+"note": "the Resistance boathouse of canals_06: a long timber house on piles with a shingle roof partly broken in, barred windows (Valve's woodwall030b window props), a tower room, winch and gears, a radio, a canal map on the wall, drums and crates (physics props) and lights; one long side is y 0; 702 by 360, 409 high From Valve's d1_canals_06 (Source SDK sample).",
 "from": "d1_canals_06.vmf",
 "box": [
 3920,
