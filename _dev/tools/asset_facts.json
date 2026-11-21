@@ -3849,6 +3849,24 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/playground_jungle_gym01b.mdl": {
+"bbox": [
+-49.8,
+-2.9,
+-0.3,
+50.1,
+3.0,
+88.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/playground_swingset01.mdl": {
 "bbox": [
 -92.6,
@@ -3937,6 +3955,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_c17/playgroundtick-tack-toe_block01a.mdl": {
+"bbox": [
+-7.3,
+-5.8,
+-6.3,
+7.3,
+5.8,
+6.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_c17/playgroundtick-tack-toe_post01.mdl": {
