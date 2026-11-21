@@ -60,6 +60,10 @@ def extract(path, name, box, anchor=None, note=""):
             if sol.name != "solid":
                 continue
             sides, allv = [], []
+            side_blocks = [k for k in sol.kids if k.name == "side"]
+            worked = None
+            if side_blocks and not any(k.name == "vertices_plus" for sb in side_blocks for k in sb.kids):
+                worked = mv.from_planes(side_blocks)      # (an older Hammer's file: corners from the planes, for boxes and checks only)
             for side in sol.kids:
                 if side.name != "side":
                     continue
@@ -68,8 +72,9 @@ def extract(path, name, box, anchor=None, note=""):
                 plane = nums(side.kv.get("plane", ""))
                 if len(plane) != 9:
                     break
-                allv += verts or [plane[0:3], plane[3:6], plane[6:9]]
-                sides.append({"plane": [plane[0:3], plane[3:6], plane[6:9]], "verts": verts, "material": side.kv.get("material", "TOOLS/TOOLSNODRAW"),
+                corners = verts or ([list(v) for v in worked[len(sides)]] if worked and len(sides) < len(worked) and worked[len(sides)] else [])
+                allv += corners or [plane[0:3], plane[3:6], plane[6:9]]
+                sides.append({"plane": [plane[0:3], plane[3:6], plane[6:9]], "verts": verts, "corners": corners, "material": side.kv.get("material", "TOOLS/TOOLSNODRAW"),
                               "uaxis": side.kv.get("uaxis", "[1 0 0 0] 0.25"), "vaxis": side.kv.get("vaxis", "[0 -1 0 0] 0.25"),
                               "lightmapscale": side.kv.get("lightmapscale", "16")})
             else:
@@ -79,6 +84,7 @@ def extract(path, name, box, anchor=None, note=""):
                     for s in sides:
                         s["plane"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["plane"]]
                         s["verts"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["verts"]]
+                        s["corners"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["corners"]]
                         s["uaxis"] = shift_axis(s["uaxis"], ax)
                         s["vaxis"] = shift_axis(s["vaxis"], ax)
                     solids.append({"from": cls, "sides": sides})
@@ -151,7 +157,7 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True):
         for s in sol["sides"]:
             pl = [[a + b for a, b in zip(rot(p, q), d)] for p in s["plane"]]
             vs = [[a + b for a, b in zip(rot(p, q), d)] for p in s["verts"]]
-            allv += vs or pl
+            allv += vs or [[a + b for a, b in zip(rot(p, q), d)] for p in s.get("corners", [])] or pl
             text += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, vmf.new_id(), t, " ".join("(%s %s %s)" % tuple(fmt(c) for c in p) for p in pl))
             if vs:
                 text += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%s %s %s"\n' % ((t,) + tuple(fmt(c) for c in p)) for p in vs), t)

@@ -58,9 +58,35 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 | 29 | `29_payphone.png` | the station's arched hall (eye 3145 -1856 820, looking north-west) | A barrel-vaulted hall with arched ribs, two-tone walls (brick below, plaster above), a row of windows high up, lamps on the walls at one height: an arched roof makes a hall. | true-curves, city18-interiors, city18-lighting |
 | 30 | `30_waiting.png` | a train platform (eye -2165 4233 683, looking south-west) | A platform under a deck on steel columns and beams, the track in a channel, brick walls behind, lights in a row along the far wall and under the deck: structure shown, light in rhythm. | city18-lighting, true-curves |
 
+## Valve's d1_trainstation_01 (reference only) (`_dev/reference/valve_d1_trainstation_01/`)
+
+Valve's own d1_trainstation_01 (the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Valve's map is reference only: its VMF is not in the repo.
+
+- Things: 299 prop_static, 178 prop_physics, 74 prop_dynamic, 116 infodecal, 29 info_overlay, 35 keyframe_rope, 122 func_detail: about as many loose physics bits (bottles, crates, suitcases, boxes, push carts) as fixed props.
+- Lights: only 23 light, 40 light_spot and 19 point_spotlight in the whole station: it is dim, lit in pools where Valve wants the eye to go (the way on, a door, a guard).
+- Walls in bands: stonewall050c from the floor to 96 (base), 050a to about 192 (body), 050b from 192 to 320 (a band course), 050a again to about 448, 050e at the top: one wall, five courses, each a ledge of its own.
+- Rhythm: columns and canopy posts every 368 along the platforms (198 in the narrower halls); ceiling trusses (Ceiling_Truss001a) 20 times over the platforms.
+- Stairs: 8 high per step (under a player clip ramp so they walk smooth).
+- Sound: 10 env_soundscape, two at each change of place: d1_trainstation.Platform, .Turnstyle, .Interrogation, .QuietCourtyard and general.concrete_quiet.
+- Commonest models: outdoor benches 29, ceiling trusses 20, suitcases 20, train seats and racks 18 each, chain-link fence pieces (exterior_fence002b/c/d) 38, file cabinets 13, bottles 13, push carts 13, wooden crates 22, cardboard boxes 11.
+- Commonest materials (faces): stonewall050c 1515, 050a 1028, 050b 726, metalwall085a 476, metalwall074a 264, metaltrain001a/b 478, 050e 235, 050d 221, concretewall037d 210, concretewall004a 203, metalwall077a 200, building_trainstation_template001c 174, plasterwall024b 169, metalwall076a 166, concretewall041e 143, metalwall013d 140, metalstair002a 124.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| V1 | `valve_d1_trainstation_01/01_overview_sw.png` | the whole station from the south-west | One long hall of platforms under canopies, the queue halls beside it, the courtyard beyond: big simple volumes, every one a different height. | valve-wall-bands, skyline-corners |
+| V2 | `valve_d1_trainstation_01/02_overview_ne.png` | the whole station from the north-east | The roofs step down from the station to the courtyard; the walls are banded, not one flat texture. | valve-wall-bands |
+| V3 | `valve_d1_trainstation_01/03_platform.png` | a platform passage looking east (eye -4928 -1215 27) | Dark passage, one lit doorway at the end leading the eye; crates and a cabinet along one wall, the walking line kept clear. | valve-light-pools, valve-clutter |
+| V5 | `valve_d1_trainstation_01/05_payphone.png` | the queue hall by the payphones looking north (eye -4034 -2540 28) | Fences and barriers make the queue; benches and a bin on the edges; columns marching away at a steady rhythm. | valve-column-rhythm, valve-clutter |
+| V6 | `valve_d1_trainstation_01/06_trash.png` | the turnstile hall by the bins looking south (eye -3888 -1992 28) | Columns with beams over them frame the hall into bays; bins and litter at the column feet. | valve-column-rhythm |
+| V7 | `valve_d1_trainstation_01/07_interrogation.png` | the interrogation rooms | Small Combine rooms: metal walls, one hard light each, the furniture pushed to the walls. | valve-light-pools, combine-kit |
+| V8 | `valve_d1_trainstation_01/08_platform.png` | the west platform looking south (eye -5528 -753 27) | How dark Valve lets a big hall get: shapes read from a few pools of light and the columns' silhouettes. | valve-light-pools, valve-column-rhythm |
+| V10 | `valve_d1_trainstation_01/10_hall_plan.png` | the station hall from above | The plan: bays of a fixed width, everything (benches, fences, kiosks) set out on the same rhythm. | valve-column-rhythm |
+| V11 | `valve_d1_trainstation_01/11_platform_plan.png` | the platforms cut at z 420, from the north-east | Canopy beams every 368, the trains between platforms, crates and benches along the platform edges. | valve-column-rhythm, valve-clutter |
+| V12 | `valve_d1_trainstation_01/12_courtyard_plan.png` | the courtyard from above | A quiet open square with trees and benches round the edges and banded walls all round. | valve-wall-bands, soundscapes |
+
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -120,7 +146,7 @@ Never put the door01_left model (or any door that looks openable) where it does 
 
 ### Steps about 16 high and 24 deep (`stairs-16-24`)
 
-Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps).
+Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps). (Valve's train station steps rise 8 under a player clip ramp, as the owner's own map does.)
 
 - **Why:** "It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map.
 - **How:** m.steps does it; hand-made stairs should match.
@@ -260,9 +286,11 @@ Every place gets overlays and decals: water stains down walls and under drains, 
 Each module and each part of the town names a soundscape (env_soundscape with a radius), not only an ambient_generic loop.
 
 - **Why:** The owner's map: 155 env_soundscapes (d1_trainstation.*, d1_town.*, prison.*, d1_canals.*, construct.inside...) and only 41 ambient_generics.
-- **How:** m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop).
+- **How:** m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop). Valve's station puts two env_soundscape at each change of place (d1_trainstation.Platform, .Turnstyle, .Interrogation, .QuietCourtyard, general.concrete_quiet).
 - **Checked by:** review
 - **Tags:** sound, city18
+
+- **See:** `valve_d1_trainstation_01/12_courtyard_plan.png`
 
 ### Streets as the owner's: pavements, kerbs, a crowned road (`street-profile`)
 
@@ -304,7 +332,7 @@ Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines g
 - **Checked by:** review
 - **Tags:** facades, city18
 
-- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`
+- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_trainstation_01/01_overview_sw.png`
 
 ### A town is not one straight line (`town-shape`)
 
@@ -355,7 +383,7 @@ Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses 
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -497,4 +525,48 @@ Where a piece needs architecture, take it from the owner's map: their materials 
 - **How:** python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 --anchor X Y Z --note ...; in a module: from map_prefab import place; place(m, NAME, u, v, z, turn). The library: _dev/reference/prefabs/ (python3 map_prefab.py list).
 - **Checked by:** review
 - **Tags:** facades, materials, city18, owner
+
+### Tall walls in bands (`valve-wall-bands`)
+
+A wall taller than about 256 is never one texture. Lay it in courses: a base (stonewall050c, floor to 96), the body (050a), a band course (050b, about 192 to 320), the body again, a top course (050e). Each course is its own brush, the base and the band 4 to 8 proud of the body, so the wall casts a line of shadow at each change.
+
+- **Why:** Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age.
+- **How:** Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.
+- **Checked by:** Not checked by a tool yet: look at the piece in map_view.py.
+- **Tags:** facades, materials, valve
+
+- **See:** `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`
+
+### Columns on a rhythm (`valve-column-rhythm`)
+
+Big halls and long walls are broken into bays by columns, pilasters or posts at one steady spacing (Valve: 368 along the platforms, 198 in narrower halls), with beams or trusses over them; benches, bins and fences are set out on the same rhythm.
+
+- **Why:** Valve's station (pictures V5, V6, V10, V11): a long blank wall or open hall gives the eye nothing to measure; bays make the space read and give cover and corners.
+- **How:** In a hall module, place a column every 320 to 384 (a multiple of 64 that divides the length), a beam between their tops, and dress each bay the same way with small variations.
+- **Checked by:** Not checked by a tool yet: look at the plan in map_view.py.
+- **Tags:** geometry, interiors, valve
+
+- **See:** `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`
+
+### Light in pools, not floods (`valve-light-pools`)
+
+Let places be dim and light them in pools: a fixture over each door, each way on and each thing to look at, with darker stretches between. Valve lights the whole train station with 23 light, 40 light_spot and 19 point_spotlight.
+
+- **Why:** Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat.
+- **How:** One fixture per bay or door, about a third left off (as the canal walls do), light_spot under lamps that hang; brighter where people gather.
+- **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
+- **Tags:** lighting, valve
+
+- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`
+
+### Clutter on the edges (`valve-clutter`)
+
+Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, crates, push carts) along walls, at column feet and in corners, never in the walking line, plus decals and overlays (Valve: 178 physics props, 116 decals and 29 overlays in one station).
+
+- **Why:** Picture V3: the crates and the cabinet hug one wall and leave the way clear; clutter in the walking line only blocks people, clutter on the edges makes a place lived in.
+- **How:** Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door.
+- **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
+- **Tags:** props, valve
+
+- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`
 

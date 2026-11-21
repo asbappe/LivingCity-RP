@@ -80,7 +80,7 @@
     "owner"
    ],
    "title": "Steps about 16 high and 24 deep",
-   "rule": "Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps).",
+   "rule": "Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps). (Valve's train station steps rise 8 under a player clip ramp, as the owner's own map does.)",
    "why": "\"It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger\" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map.",
    "how": "m.steps does it; hand-made stairs should match.",
    "check": "review"
@@ -259,7 +259,7 @@
    "title": "Every place sounds like itself",
    "rule": "Each module and each part of the town names a soundscape (env_soundscape with a radius), not only an ambient_generic loop.",
    "why": "The owner's map: 155 env_soundscapes (d1_trainstation.*, d1_town.*, prison.*, d1_canals.*, construct.inside...) and only 41 ambient_generics.",
-   "how": "m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop).",
+   "how": "m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop). Valve's station puts two env_soundscape at each change of place (d1_trainstation.Platform, .Turnstyle, .Interrogation, .QuietCourtyard, general.concrete_quiet).",
    "check": "review"
   },
   {
@@ -551,6 +551,56 @@
    "why": "The owner, 21 November: \"don't be afraid to more or less rip off and copy the design principles, textures, etc from city 18; the modules are really bad with texture choice and architecture\".",
    "how": "python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 --anchor X Y Z --note ...; in a module: from map_prefab import place; place(m, NAME, u, v, z, turn). The library: _dev/reference/prefabs/ (python3 map_prefab.py list).",
    "check": "review"
+  },
+  {
+   "id": "valve-wall-bands",
+   "tags": [
+    "facades",
+    "materials",
+    "valve"
+   ],
+   "title": "Tall walls in bands",
+   "rule": "A wall taller than about 256 is never one texture. Lay it in courses: a base (stonewall050c, floor to 96), the body (050a), a band course (050b, about 192 to 320), the body again, a top course (050e). Each course is its own brush, the base and the band 4 to 8 proud of the body, so the wall casts a line of shadow at each change.",
+   "why": "Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age.",
+   "how": "Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.",
+   "check": "Not checked by a tool yet: look at the piece in map_view.py."
+  },
+  {
+   "id": "valve-column-rhythm",
+   "tags": [
+    "geometry",
+    "interiors",
+    "valve"
+   ],
+   "title": "Columns on a rhythm",
+   "rule": "Big halls and long walls are broken into bays by columns, pilasters or posts at one steady spacing (Valve: 368 along the platforms, 198 in narrower halls), with beams or trusses over them; benches, bins and fences are set out on the same rhythm.",
+   "why": "Valve's station (pictures V5, V6, V10, V11): a long blank wall or open hall gives the eye nothing to measure; bays make the space read and give cover and corners.",
+   "how": "In a hall module, place a column every 320 to 384 (a multiple of 64 that divides the length), a beam between their tops, and dress each bay the same way with small variations.",
+   "check": "Not checked by a tool yet: look at the plan in map_view.py."
+  },
+  {
+   "id": "valve-light-pools",
+   "tags": [
+    "lighting",
+    "valve"
+   ],
+   "title": "Light in pools, not floods",
+   "rule": "Let places be dim and light them in pools: a fixture over each door, each way on and each thing to look at, with darker stretches between. Valve lights the whole train station with 23 light, 40 light_spot and 19 point_spotlight.",
+   "why": "Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat.",
+   "how": "One fixture per bay or door, about a third left off (as the canal walls do), light_spot under lamps that hang; brighter where people gather.",
+   "check": "map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer."
+  },
+  {
+   "id": "valve-clutter",
+   "tags": [
+    "props",
+    "valve"
+   ],
+   "title": "Clutter on the edges",
+   "rule": "Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, crates, push carts) along walls, at column feet and in corners, never in the walking line, plus decals and overlays (Valve: 178 physics props, 116 decals and 29 overlays in one station).",
+   "why": "Picture V3: the crates and the cabinet hug one wall and leave the way clear; clutter in the walking line only blocks people, clutter on the edges makes a place lived in.",
+   "how": "Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door.",
+   "check": "map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer."
   }
  ]
 }

@@ -1,0 +1,112 @@
+{
+ "about": "Valve's own d1_trainstation_01 (the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Valve's map is reference only: its VMF is not in the repo.",
+ "numbers": [
+  "Things: 299 prop_static, 178 prop_physics, 74 prop_dynamic, 116 infodecal, 29 info_overlay, 35 keyframe_rope, 122 func_detail: about as many loose physics bits (bottles, crates, suitcases, boxes, push carts) as fixed props.",
+  "Lights: only 23 light, 40 light_spot and 19 point_spotlight in the whole station: it is dim, lit in pools where Valve wants the eye to go (the way on, a door, a guard).",
+  "Walls in bands: stonewall050c from the floor to 96 (base), 050a to about 192 (body), 050b from 192 to 320 (a band course), 050a again to about 448, 050e at the top: one wall, five courses, each a ledge of its own.",
+  "Rhythm: columns and canopy posts every 368 along the platforms (198 in the narrower halls); ceiling trusses (Ceiling_Truss001a) 20 times over the platforms.",
+  "Stairs: 8 high per step (under a player clip ramp so they walk smooth).",
+  "Sound: 10 env_soundscape, two at each change of place: d1_trainstation.Platform, .Turnstyle, .Interrogation, .QuietCourtyard and general.concrete_quiet.",
+  "Commonest models: outdoor benches 29, ceiling trusses 20, suitcases 20, train seats and racks 18 each, chain-link fence pieces (exterior_fence002b/c/d) 38, file cabinets 13, bottles 13, push carts 13, wooden crates 22, cardboard boxes 11.",
+  "Commonest materials (faces): stonewall050c 1515, 050a 1028, 050b 726, metalwall085a 476, metalwall074a 264, metaltrain001a/b 478, 050e 235, 050d 221, concretewall037d 210, concretewall004a 203, metalwall077a 200, building_trainstation_template001c 174, plasterwall024b 169, metalwall076a 166, concretewall041e 143, metalwall013d 140, metalstair002a 124."
+ ],
+ "pictures": [
+  {
+   "n": "V1",
+   "file": "01_overview_sw.png",
+   "where": "the whole station from the south-west",
+   "teaches": "One long hall of platforms under canopies, the queue halls beside it, the courtyard beyond: big simple volumes, every one a different height.",
+   "lessons": [
+    "valve-wall-bands",
+    "skyline-corners"
+   ]
+  },
+  {
+   "n": "V2",
+   "file": "02_overview_ne.png",
+   "where": "the whole station from the north-east",
+   "teaches": "The roofs step down from the station to the courtyard; the walls are banded, not one flat texture.",
+   "lessons": [
+    "valve-wall-bands"
+   ]
+  },
+  {
+   "n": "V3",
+   "file": "03_platform.png",
+   "where": "a platform passage looking east (eye -4928 -1215 27)",
+   "teaches": "Dark passage, one lit doorway at the end leading the eye; crates and a cabinet along one wall, the walking line kept clear.",
+   "lessons": [
+    "valve-light-pools",
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "V5",
+   "file": "05_payphone.png",
+   "where": "the queue hall by the payphones looking north (eye -4034 -2540 28)",
+   "teaches": "Fences and barriers make the queue; benches and a bin on the edges; columns marching away at a steady rhythm.",
+   "lessons": [
+    "valve-column-rhythm",
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "V6",
+   "file": "06_trash.png",
+   "where": "the turnstile hall by the bins looking south (eye -3888 -1992 28)",
+   "teaches": "Columns with beams over them frame the hall into bays; bins and litter at the column feet.",
+   "lessons": [
+    "valve-column-rhythm"
+   ]
+  },
+  {
+   "n": "V7",
+   "file": "07_interrogation.png",
+   "where": "the interrogation rooms",
+   "teaches": "Small Combine rooms: metal walls, one hard light each, the furniture pushed to the walls.",
+   "lessons": [
+    "valve-light-pools",
+    "combine-kit"
+   ]
+  },
+  {
+   "n": "V8",
+   "file": "08_platform.png",
+   "where": "the west platform looking south (eye -5528 -753 27)",
+   "teaches": "How dark Valve lets a big hall get: shapes read from a few pools of light and the columns' silhouettes.",
+   "lessons": [
+    "valve-light-pools",
+    "valve-column-rhythm"
+   ]
+  },
+  {
+   "n": "V10",
+   "file": "10_hall_plan.png",
+   "where": "the station hall from above",
+   "teaches": "The plan: bays of a fixed width, everything (benches, fences, kiosks) set out on the same rhythm.",
+   "lessons": [
+    "valve-column-rhythm"
+   ]
+  },
+  {
+   "n": "V11",
+   "file": "11_platform_plan.png",
+   "where": "the platforms cut at z 420, from the north-east",
+   "teaches": "Canopy beams every 368, the trains between platforms, crates and benches along the platform edges.",
+   "lessons": [
+    "valve-column-rhythm",
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "V12",
+   "file": "12_courtyard_plan.png",
+   "where": "the courtyard from above",
+   "teaches": "A quiet open square with trees and benches round the edges and banded walls all round.",
+   "lessons": [
+    "valve-wall-bands",
+    "soundscapes"
+   ]
+  }
+ ]
+}

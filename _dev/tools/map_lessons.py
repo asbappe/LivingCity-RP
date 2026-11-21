@@ -21,12 +21,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REF = os.path.join(HERE, "..", "reference")
 LESSONS = os.path.join(REF, "lessons.json")
 PICTURES = os.path.join(REF, "city18", "pictures.json")
+OTHER_SETS = [("valve_d1_trainstation_01", "Valve's d1_trainstation_01 (reference only)")]      # (more picture sets: folder, title)
 DOC = os.path.join(HERE, "..", "..", "docs", "dev", "city18-reference.md")
 
 
 def load():
     lessons = json.load(open(LESSONS))["lessons"]
     pictures = json.load(open(PICTURES)) if os.path.exists(PICTURES) else {"pictures": [], "numbers": []}
+    pictures["sets"] = []
+    for folder, title in OTHER_SETS:
+        f = os.path.join(REF, folder, "pictures.json")
+        if os.path.exists(f):
+            pictures["sets"].append((folder, title, json.load(open(f))))
     return lessons, pictures
 
 
@@ -58,6 +64,13 @@ def markdown(lessons, pictures):
         for p in pictures["pictures"]:
             out.append("| %s | `%s` | %s | %s | %s |" % (p["n"], p["file"], p["where"], p["teaches"], ", ".join(p.get("lessons", []))))
         out += [""]
+    for folder, title, ps in pictures.get("sets", []):
+        out += ["## %s (`_dev/reference/%s/`)" % (title, folder), "", ps.get("about", ""), ""]
+        out += ["- %s" % n for n in ps.get("numbers", [])]
+        out += ["", "| # | File | Where | What it teaches | Lessons |", "|---|---|---|---|---|"]
+        for p in ps.get("pictures", []):
+            out.append("| %s | `%s/%s` | %s | %s | %s |" % (p["n"], folder, p["file"], p["where"], p["teaches"], ", ".join(p.get("lessons", []))))
+        out += [""]
     out += ["## The lessons", ""]
     tags = []
     for l in lessons:
@@ -73,9 +86,11 @@ def markdown(lessons, pictures):
                 "- **Checked by:** %s" % l["check"],
                 "- **Tags:** %s" % ", ".join(l["tags"]), ""]
         pics = [p["file"] for p in pictures.get("pictures", []) if l["id"] in p.get("lessons", [])]
+        pics += ["%s/%s" % (folder, p["file"]) for folder, _, ps in pictures.get("sets", []) for p in ps.get("pictures", []) if l["id"] in p.get("lessons", [])]
         if pics:
             out += ["- **See:** %s" % ", ".join("`%s`" % f for f in pics), ""]
-    missing = [i for p in pictures.get("pictures", []) for i in p.get("lessons", []) if i not in by_id]
+    every = pictures.get("pictures", []) + [p for _, _, ps in pictures.get("sets", []) for p in ps.get("pictures", [])]
+    missing = [i for p in every for i in p.get("lessons", []) if i not in by_id]
     if missing:
         raise SystemExit("pictures.json names lessons that do not exist: %s" % ", ".join(sorted(set(missing))))
     return "\n".join(out) + "\n"
@@ -94,7 +109,7 @@ def main():
         if chr(0x2014) in text:
             raise SystemExit("an em dash in the lessons or pictures: take it out")
         open(DOC, "w").write(text)
-        print("written: %s (%d lessons, %d pictures)" % (os.path.relpath(DOC), len(lessons), len(pictures.get("pictures", []))))
+        print("written: %s (%d lessons, %d pictures)" % (os.path.relpath(DOC), len(lessons), len(pictures.get("pictures", [])) + sum(len(ps.get("pictures", [])) for _, _, ps in pictures.get("sets", []))))
         return
     if a.tags:
         counts = {}

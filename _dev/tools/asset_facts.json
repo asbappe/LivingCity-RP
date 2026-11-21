@@ -69,6 +69,24 @@
 "static": false,
 "v": 2
 },
+"models/combine_camera/combine_camera.mdl": {
+"bbox": [
+-16.0,
+-16.0,
+-72.0,
+16.0,
+16.0,
+0.0
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/combine_dropship_container.mdl": {
 "bbox": [
 -243.5,
@@ -123,6 +141,24 @@
 "static": true,
 "v": 2
 },
+"models/combine_room/combine_monitor003a.mdl": {
+"bbox": [
+-136.3,
+-133.5,
+-241.4,
+143.4,
+135.9,
+236.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/combine_room/combine_wire001.mdl": {
 "bbox": [
 -77.1,
@@ -131,6 +167,24 @@
 77.8,
 173.7,
 40.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/combine_room/combine_wire002.mdl": {
+"bbox": [
+-62.4,
+-62.3,
+-1.6,
+62.4,
+62.3,
+1.3
 ],
 "built_static": true,
 "collides": true,
@@ -545,6 +599,24 @@
 3.1,
 9.5,
 11.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/items/car_battery01.mdl": {
+"bbox": [
+-5.7,
+-8.6,
+-6.0,
+5.9,
+8.5,
+6.0
 ],
 "built_static": true,
 "collides": true,
@@ -1035,6 +1107,24 @@
 "static": true,
 "v": 2
 },
+"models/props_buildings/project_building03.mdl": {
+"bbox": [
+-625.0,
+-312.8,
+-0.5,
+572.9,
+878.9,
+1543.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_buildings/row_church_fullscale.mdl": {
 "bbox": [
 -2407.7,
@@ -1287,6 +1377,10 @@
 "static": false,
 "v": 2
 },
+"models/props_c17/chain01?.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_c17/chair02a.mdl": {
 "bbox": [
 0.0,
@@ -1303,6 +1397,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_c17/chair_kleiner03a.mdl": {
+"bbox": [
+-32.7,
+-22.0,
+0.0,
+35.9,
+22.5,
+71.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_c17/chair_office01a.mdl": {
@@ -2681,6 +2793,60 @@
 "static": false,
 "v": 2
 },
+"models/props_c17/hospital_ivstand01.mdl": {
+"bbox": [
+-12.0,
+-12.2,
+-36.2,
+12.0,
+10.5,
+36.0
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_c17/hospital_railing_160_01.mdl": {
+"bbox": [
+-80.2,
+-3.2,
+-4.2,
+80.2,
+0.2,
+1.2
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/hospital_railing_64_01.mdl": {
+"bbox": [
+-32.2,
+-3.2,
+-4.2,
+32.2,
+0.2,
+1.2
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/hospital_shelf01.mdl": {
 "bbox": [
 -12.8,
@@ -3511,6 +3677,24 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/pushbroom.mdl": {
+"bbox": [
+-21.5,
+-33.4,
+-6.3,
+56.8,
+7.1,
+20.2
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_c17/shelfunit01a.mdl": {
 "bbox": [
 -39.5,
@@ -4059,6 +4243,24 @@
 22.8,
 46.9,
 487.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/utilitypole01b.mdl": {
+"bbox": [
+-22.8,
+-47.3,
+-0.3,
+6.3,
+46.9,
+483.4
 ],
 "built_static": true,
 "collides": true,
@@ -5015,6 +5217,60 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/cell_array_01.mdl": {
+"bbox": [
+-102.3,
+-492.4,
+0.0,
+15.3,
+460.4,
+1160.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/cell_array_02.mdl": {
+"bbox": [
+-102.3,
+-300.4,
+0.0,
+15.3,
+268.4,
+1160.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/citadel_pods.mdl": {
+"bbox": [
+-234.3,
+-399.1,
+-114.8,
+162.3,
+404.4,
+118.5
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_combine/combine_barricade_bracket01a.mdl": {
 "bbox": [
 -18.3,
@@ -5332,6 +5588,24 @@
 ],
 "built_static": true,
 "collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/combine_citadel001b.mdl": {
+"bbox": [
+-4168.3,
+-4278.3,
+-4229.9,
+4962.7,
+3044.0,
+4201.0
+],
+"built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
@@ -6327,6 +6601,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_combine/strut_array_01.mdl": {
+"bbox": [
+-103.5,
+-492.4,
+0.0,
+5.5,
+460.4,
+1160.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_combine/suit_charger001.mdl": {
@@ -8105,6 +8397,24 @@
 "static": false,
 "v": 2
 },
+"models/props_docks/channelmarker_gib01.mdl": {
+"bbox": [
+-5.6,
+-5.6,
+-29.2,
+5.6,
+5.6,
+28.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_docks/dock01_cleat01a.mdl": {
 "bbox": [
 -18.3,
@@ -8321,6 +8631,24 @@
 "static": true,
 "v": 2
 },
+"models/props_doors/door03_slot.mdl": {
+"bbox": [
+-0.5,
+14.0,
+6.6,
+0.5,
+32.1,
+13.0
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_doors/door03_slotted_left.mdl": {
 "bbox": [
 -5.9,
@@ -8337,6 +8665,42 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_foliage/bramble001a.mdl": {
+"bbox": [
+-95.5,
+-116.8,
+-17.3,
+123.5,
+119.2,
+89.4
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/cattails.mdl": {
+"bbox": [
+-51.9,
+-42.6,
+0.0,
+41.0,
+27.6,
+109.2
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_foliage/driftwood_01a.mdl": {
@@ -8429,6 +8793,42 @@
 "static": true,
 "v": 2
 },
+"models/props_foliage/ivy_01.mdl": {
+"bbox": [
+-23.7,
+-71.5,
+0.0,
+7.5,
+189.0,
+115.1
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/shrub_01a.mdl": {
+"bbox": [
+-47.9,
+-35.5,
+-1.6,
+34.6,
+30.2,
+70.0
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_foliage/tree_dead01.mdl": {
 "bbox": [
 -159.1,
@@ -8441,6 +8841,24 @@
 "built_static": true,
 "collides": true,
 "game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/tree_deciduous_01a-lod.mdl": {
+"bbox": [
+-196.4,
+-206.6,
+-0.5,
+180.7,
+188.1,
+409.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
@@ -8473,6 +8891,24 @@
 83.7,
 126.4,
 249.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/tree_deciduous_03b.mdl": {
+"bbox": [
+-75.1,
+-83.4,
+-1.4,
+43.7,
+60.2,
+136.6
 ],
 "built_static": true,
 "collides": true,
@@ -8951,6 +9387,24 @@
 "static": false,
 "v": 2
 },
+"models/props_interiors/vendingmachinesoda01a_door.mdl": {
+"bbox": [
+-4.1,
+-26.3,
+-46.9,
+4.1,
+26.3,
+46.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_junk/bicycle01a.mdl": {
 "bbox": [
 -42.3,
@@ -8977,6 +9431,24 @@
 16.4,
 19.6,
 12.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/cardboard_box001b.mdl": {
+"bbox": [
+-17.3,
+-22.1,
+-13.7,
+17.4,
+22.1,
+13.5
 ],
 "built_static": true,
 "collides": true,
@@ -9131,6 +9603,24 @@
 "static": true,
 "v": 2
 },
+"models/props_junk/garbage256_composite001b.mdl": {
+"bbox": [
+-26.5,
+-130.2,
+-4.3,
+26.4,
+127.2,
+4.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_junk/garbage256_composite002a.mdl": {
 "bbox": [
 -39.1,
@@ -9239,6 +9729,24 @@
 "static": false,
 "v": 2
 },
+"models/props_junk/garbage_glassbottle002a.mdl": {
+"bbox": [
+-3.9,
+-3.8,
+-8.8,
+4.2,
+3.9,
+8.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_junk/garbage_glassbottle003a.mdl": {
 "bbox": [
 -2.3,
@@ -9293,6 +9801,24 @@
 "static": false,
 "v": 2
 },
+"models/props_junk/garbage_milkcarton001a.mdl": {
+"bbox": [
+-6.3,
+-6.3,
+-8.2,
+6.2,
+6.1,
+8.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_junk/garbage_milkcarton002a.mdl": {
 "bbox": [
 -3.4,
@@ -9319,6 +9845,42 @@
 12.2,
 12.0,
 2.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/garbage_plasticbottle001a.mdl": {
+"bbox": [
+-5.3,
+-5.3,
+-10.9,
+5.3,
+5.2,
+11.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/garbage_plasticbottle002a.mdl": {
+"bbox": [
+-2.3,
+-4.5,
+-9.2,
+2.3,
+4.5,
+9.4
 ],
 "built_static": true,
 "collides": true,
@@ -9711,6 +10273,24 @@
 "static": false,
 "v": 2
 },
+"models/props_junk/shoe001a.mdl": {
+"bbox": [
+-7.1,
+-3.5,
+-5.2,
+7.2,
+3.5,
+5.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_junk/shoppingcart001a.mdl": {
 "elsewhere": [],
 "game": null
@@ -9895,6 +10475,42 @@
 "static": false,
 "v": 2
 },
+"models/props_junk/wood_crate001a_damaged.mdl": {
+"bbox": [
+-21.1,
+-20.5,
+-20.3,
+21.7,
+21.5,
+21.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/wood_crate001a_damagedmax.mdl": {
+"bbox": [
+-23.7,
+-21.3,
+-20.3,
+20.2,
+21.5,
+21.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_junk/wood_crate002a.mdl": {
 "bbox": [
 -20.3,
@@ -9950,6 +10566,24 @@
 "v": 2
 },
 "models/props_lab/binderblue.mdl": {
+"bbox": [
+-5.9,
+-2.0,
+-0.4,
+5.8,
+1.7,
+12.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/bindergreen.mdl": {
 "bbox": [
 -5.9,
 -2.0,
@@ -10032,6 +10666,24 @@
 ],
 "built_static": false,
 "collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/blastwindow.mdl": {
+"bbox": [
+-4.2,
+-32.0,
+0.0,
+4.2,
+32.0,
+96.0
+],
+"built_static": false,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
@@ -10237,6 +10889,24 @@
 "static": false,
 "v": 2
 },
+"models/props_lab/frame001a.mdl": {
+"bbox": [
+-0.8,
+-10.5,
+-8.0,
+0.8,
+10.5,
+8.0
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/frame002a.mdl": {
 "bbox": [
 -5.9,
@@ -10383,6 +11053,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_lab/hl1teleport.mdl": {
+"bbox": [
+-443.8,
+-390.7,
+-531.9,
+489.7,
+449.3,
+631.5
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_lab/huladoll.mdl": {
@@ -10901,6 +11589,42 @@
 7.4,
 11.2,
 3.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/reciever01b.mdl": {
+"bbox": [
+-7.4,
+-8.9,
+-3.7,
+7.4,
+8.9,
+3.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/reciever01d.mdl": {
+"bbox": [
+-2.9,
+-5.8,
+-2.5,
+6.6,
+5.6,
+1.5
 ],
 "built_static": true,
 "collides": true,
@@ -12881,6 +13605,24 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/cable_1152connection001b.mdl": {
+"bbox": [
+-576.3,
+-21.9,
+-65.5,
+576.3,
+21.8,
+64.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_trainstation/ceiling_arch001a.mdl": {
 "bbox": [
 -6.8,
@@ -13299,6 +14041,24 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/payphone_reciever001a.mdl": {
+"bbox": [
+0.0,
+-2.3,
+0.0,
+10.0,
+2.1,
+25.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_trainstation/pole_384connection001a.mdl": {
 "bbox": [
 -78.8,
@@ -13306,6 +14066,24 @@
 -192.3,
 91.5,
 15.6,
+192.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/pole_384connection001b.mdl": {
+"bbox": [
+-78.8,
+-16.5,
+-192.3,
+143.8,
+15.5,
 192.1
 ],
 "built_static": true,
@@ -13325,6 +14103,42 @@
 61.1,
 15.3,
 223.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/pole_448connection002a.mdl": {
+"bbox": [
+-48.9,
+-24.0,
+-224.3,
+49.0,
+21.9,
+349.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/pole_448connection002b.mdl": {
+"bbox": [
+-8.3,
+-21.7,
+-224.3,
+8.3,
+21.9,
+224.5
 ],
 "built_static": true,
 "collides": true,
@@ -13469,6 +14283,42 @@
 11.9,
 23.4,
 25.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/tracksign09.mdl": {
+"bbox": [
+-10.3,
+-11.9,
+-20.0,
+10.6,
+11.8,
+19.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/tracksign10.mdl": {
+"bbox": [
+-10.3,
+-11.7,
+-14.6,
+10.6,
+11.8,
+14.4
 ],
 "built_static": true,
 "collides": true,
@@ -13648,6 +14498,42 @@
 -0.3,
 5.0,
 318.3,
+134.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/traincar_bars002.mdl": {
+"bbox": [
+-5.0,
+-128.3,
+-0.3,
+5.0,
+128.0,
+134.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/traincar_bars003.mdl": {
+"bbox": [
+-5.0,
+-128.0,
+-0.3,
+5.0,
+128.3,
 134.3
 ],
 "built_static": true,
@@ -17355,6 +18241,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_wasteland/woodwall030b_window02a_bars.mdl": {
+"bbox": [
+-24.0,
+-8.0,
+-28.0,
+24.0,
+0.0,
+31.0
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/weapons/w_357.mdl": {

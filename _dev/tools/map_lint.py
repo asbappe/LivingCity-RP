@@ -65,6 +65,43 @@ def in_brush(p, box, pad=1.0):
     return True
 
 
+def corners_from_planes(planes):
+    """Each face's corners from the planes alone (three points each), in the planes' order; None where it fails."""
+    import numpy as np
+    pl = []
+    for p in planes:
+        if len(p) < 9:
+            return None
+        a, b, c = np.array(p[0:3]), np.array(p[3:6]), np.array(p[6:9])
+        n = np.cross(c - a, b - a)
+        ln = np.linalg.norm(n)
+        if ln < 1e-9:
+            return None
+        n = n / ln
+        pl.append((n, float(n @ a)))
+    N = np.array([q[0] for q in pl])
+    D = np.array([q[1] for q in pl])
+    pts = []
+    k = len(pl)
+    for i in range(k):
+        for j in range(i + 1, k):
+            for l in range(j + 1, k):
+                M = N[[i, j, l]]
+                if abs(np.linalg.det(M)) < 1e-6:
+                    continue
+                v = np.linalg.solve(M, D[[i, j, l]])
+                if (N @ v - D <= 0.05).all() or (N @ v - D >= -0.05).all():
+                    pts.append(v)
+    out = []
+    for n, d in pl:
+        on = []
+        for v in pts:
+            if abs(n @ v - d) < 0.05 and not any(np.linalg.norm(v - w) < 0.05 for w in on):
+                on.append(v)
+        out.append([tuple(round(float(x), 3) for x in v) for v in on] if len(on) >= 3 else None)
+    return out
+
+
 def nums(text):
     return [float(t) for t in text.replace("(", " ").replace(")", " ").replace("[", " ").replace("]", " ").split()]
 
@@ -95,15 +132,21 @@ def read(path):
         for sm in re.finditer(r"^\tsolid\s*\n\t\{(.*?)^\t\}", body, re.M | re.S):
             vs = [nums(v) for v in re.findall(r'"v" "([^"]+)"', sm.group(1))]
             mats = set(x.lower() for x in re.findall(r'"material" "([^"]+)"', sm.group(1)))
+            plane_only = not vs
+            if plane_only:      # (a file from an older Hammer: no corner lists; work the corners out from the planes)
+                faces = corners_from_planes([nums(pl) for pl in re.findall(r'"plane" "([^"]+)"', sm.group(1))])
+                vs = [list(v) for f in faces for v in f] if faces else []
             if vs:
                 box = tuple(min(v[k] for v in vs) for k in range(3)) + tuple(max(v[k] for v in vs) for k in range(3))
                 planes = [nums(pl) for pl in re.findall(r'"plane" "([^"]+)"', sm.group(1))]
                 boxes.append((box, mats))
                 SHAPES[box] = planes
                 sides = []
-                for side in re.findall(r"side\s*\{(.*?)\n\t\t\}", sm.group(1), re.S):
+                for k, side in enumerate(re.findall(r"side\s*\{(.*?)\n\t\t\}", sm.group(1), re.S)):
                     mt = re.search(r'"material" "([^"]+)"', side)
                     pv = [nums(v) for v in re.findall(r'"v" "([^"]+)"', side)]
+                    if not pv and plane_only and faces and k < len(faces) and faces[k]:
+                        pv = [list(v) for v in faces[k]]
                     if mt and len(pv) >= 3:
                         sides.append((mt.group(1).lower(), pv))
                 SIDES[box] = (sides, kind_of)
