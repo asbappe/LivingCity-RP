@@ -50,8 +50,8 @@ until one of its men is hurt by a player: `OnDamagedByPlayer > tower_N_under_att
 two sirens (coast.bunker_siren1 and 2, radius 10000, looped) for the whole yard; one stop relay ends them.
 Barred windows: 28 func_breakable panes, each `OnBreak > bars.SetBodyGroup(1)` (the bars model shows broken).
 
-**Camera rooms (p2, p3, p4, p5): watch the block from a console.** One func_monitor, 3 or 4 point_cameras (FOV 60 to
-75, pitched down 8 to 32 degrees, fog 2048 to 4096), one func_button (flags 1025, wait 0.3). A press: counter Add 1
+**Camera rooms (p2, p3, p4, p5): watch the block from a console.** One func_monitor, 3 or 4 point_cameras (FOV 20 to
+75, 60 on 9 of 15, pitched down 0 to 60 degrees, 10 to 32 on most, fog 2048 to 4096), one func_button (flags 1025, wait 0.3). A press: counter Add 1
 (max 3 or 4, back to 0 at max) > `OutValue > logic_case.InValue` > that channel's relay: monitor SetCamera, a click
 (k_lab.monitorbutton, 48), one of four small glow sprites lit (scale .05) and the rest hidden, the button's own
 sprite red then green @0.3. Each camera has an env_microphone beside it (MaxRange 512 to 1024, flags 31 all sounds,
@@ -113,7 +113,7 @@ through-train relay calls itself again 35 s after it is over.
 B2, Freeman spotted, kill prisoners A7, mission failure punish, alyx reprograms turret, freeman in block D8,
 communications out) and 10 soldier radio lines (`prison.sradio_<block>_controlroom`), all one-shot (48 or 49),
 radius 1250 (10000 for 'kill prisoners', 8000 for 'communications out'). Fired by a trigger_once at a stage (16), a
-relay (33), a counter of deaths (p4 radio_counter: 5 dead > the next radio line @2), a gate opening (p7). Each line
+relay (33), a counter of deaths (p4 radio_counter: 12 dead > the next radio line @2), a gate opening (p7). Each line
 names the block (A5, A7, B2, B4, D7, D8, D9): the prison's places are lettered and numbered and the voice says where.
 
 **Soundscapes by combat level.** 186 env_soundscape, all placed, none switched by logic; each kind of room comes in
@@ -132,7 +132,7 @@ backwards (below).
   scripted walks and exits). Soldiers hold places: 50 of 170 have a hint group, the groups name the place (cell2_far_end
   27 hints, cell2_floor2_section1 20, cafe_center 18, defense_2 17, teleport_platform_defense 16, laundry_catwalk 15).
 - Busy poses for soldiers (39 hinttype 12, 12 ai_goal_actbusy, busysearchrange 32 to 500, visibleonly on 1):
-  LeanWall_CrouchLeft_B 7, Cover_crouch_B 8, Idle_Alert 5, LeanWall_corner_Right 6, LeanWall_Left_B 5, Signal_Advance 3;
+  LeanWall_CrouchLeft_B 8, Cover_crouch_B 8, Idle_Alert 5, LeanWall_corner_Right 6, LeanWall_Left_B 5, Signal_Advance 3;
   ForceNPCToActBusy 'soldier hint teleport 0' as the template spawns (p1, p3). Dropped when he is hurt (p3
   post_fan_camper OnDamaged > Deactivate) or sees the player (a sight blocker brush Killed, the hint disabled).
 - Fall back by deaths: ai_changehintgroup (12) moves survivors to the next group: p4 cell2_floor1_start >
@@ -158,7 +158,7 @@ that tower's gunner spot (`turret_N_standhere`), its burrow hints (hinttype 400)
 tower whose 3 men die gets a blocker brush (counter max 3 > Enable).
 
 **The player's turret hold (p7, p8), Valve's comments quoted.** Lockers open on a button (the locker brush Killed
-@0.9); turrets set down are counted (PhysGunDrop > Add; max 2 in control room 2, 3 in room 5 and the teleport room).
+@0.9); turrets set down are counted (PhysGunDrop > Add; max 2 in control room 2 and the teleport room, 3 in room 5).
 Then: radio @0.2, warnings @5 and @10, the assault @15. Control room 2: "This counter counts the number of assault
 waves, and automatically spawns the next one": counter > logic_case > wave relay; wave 1 two SMG (the death counter
 starts at 2 of 4), wave 2 two SMG and a shotgun (starts at 1), wave 3 all four, wave 4 four and a manhack plus the
@@ -170,16 +170,16 @@ Room 5 and the teleport room keep the pressure level instead: each death Adds 1 
 replacement @1 at a random maker (logic_case PickRandom over 4 to 5 lower and 3 upper makers); the first 4 deaths
 each add an extra man or manhack ("At intervals, this case is used to add extra bad guys"); a manhack comes back 10
 s after it dies; the timer (190 s room 5; the teleporter's 184 s) stops the spawning, then "Whenever it finds itself
-at 0, it triggers the finish-assault relay". p8 opens a second way in ('behind') only after 5 deaths and when no
-player is in its trigger. Pressure lines from Alyx at 45 s intervals (three one-shot timers).
+at 0, it triggers the finish-assault relay". p8 opens a second way in ('behind') only after 8 deaths, 5 s later and
+once no player is in its trigger, and its door 30 s after that. Pressure lines from Alyx at 45 s intervals (three one-shot timers).
 Teaching (p7, comment): "When a turret is first tipped ... once a turret gets deployed after tipping once, we know the
 player has learned to pick them up again": a tipped turret starts a reminder @2 and every 20 s (four lines in turn)
 until one is set up again; all cancelled at the end of the hold.
 
 **The breach (p8, soldiers forcing the blast door).** Behind the door: guards talking on a random timer 0.8 to 3 s,
-a logic_case of 5 where only case 1 plays (d3_citadel.guards_talk): a line one time in five. Before the turrets are
-set: a crash (explode_4, radius 5000) and a shake (amplitude 1, 0.75 s, radius 1240) every 16 s. Turrets set: crashes
-@0, 5, 7, 12, 14 in each 16 s. Then the charge: beeps @0, 3, 4, 5, 6, 6.5, 7, 7.5 (from @2), crashes @2, 2.5, 4, 5,
+a logic_case of 5 where only case 1 plays (d3_citadel.guards_talk): a line one time in five. Before a turret is
+set: a crash (explode_4, radius 5000) and a shake (amplitude 1, 0.75 s, radius 1240) every 16 s. The first turret set:
+crashes @0, 5, 7, 12, 14 in each 16 s. Both set, the charge: beeps @0, 3, 4, 5, 6, 6.5, 7, 7.5 (from @2), crashes @2, 2.5, 4, 5,
 6.5, 7, 7.5, 8.5, 9, shakes @2, 6.5, 7.5, 9, 10, and @10 the door breaks (explosion @0.2, smoke 8 s), the first two
 come in, the assault goal Activates @0.4 and BeginAssault @0.5, the guard chatter is Killed.
 
