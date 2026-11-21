@@ -393,6 +393,24 @@
 "static": true,
 "v": 2
 },
+"models/effects/vol_light128x384.mdl": {
+"bbox": [
+-107.1,
+-120.8,
+-383.9,
+105.9,
+104.5,
+0.0
+],
+"built_static": true,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/gibs/antlion_gib_large_1.mdl": {
 "bbox": [
 -14.4,
@@ -4933,6 +4951,24 @@
 "static": true,
 "v": 2
 },
+"models/props_canal/canal_bridge_railing_lamps.mdl": {
+"bbox": [
+0.0,
+-524.2,
+-0.3,
+112.7,
+515.8,
+447.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_canal/canal_cap001.mdl": {
 "bbox": [
 -7.0,
@@ -5075,6 +5111,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_canal/manhackmatt_doorslider.mdl": {
+"bbox": [
+0.0,
+-18.5,
+0.0,
+21.5,
+10.3,
+70.6
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_canal/mattpipe.mdl": {
@@ -6997,6 +7051,24 @@
 56.6,
 52.9,
 61.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/barricade_tall02a.mdl": {
+"bbox": [
+-39.1,
+-53.9,
+-61.8,
+39.1,
+53.9,
+61.8
 ],
 "built_static": true,
 "collides": true,
@@ -18659,6 +18731,42 @@
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_wasteland/woodwall030b_window01a.mdl": {
+"bbox": [
+-16.0,
+-4.3,
+-28.1,
+16.0,
+4.3,
+28.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/woodwall030b_window01a_bars.mdl": {
+"bbox": [
+-12.0,
+-4.0,
+-24.0,
+12.0,
+4.0,
+27.0
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
 "ragdoll": false,
 "static": false,
 "v": 2
