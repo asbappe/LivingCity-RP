@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1968104. Admin-only console messages and log lines are left out.
+Made from version 4846bb3. Admin-only console messages and log lines are left out.
 
 13426 lines, from 381 files.
 
@@ -1792,11 +1792,11 @@ Made from version 1968104. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What the pole says to a member of the Resistance standing at it (nil: nothing).
 
-- "Resistance Commander or Lieutenant is required to establish a Resistance HQ"  (text, line 61)
-- "{+use} Raise the flag"  (text, line 62)
-- "{+use} Leave the flag"  (text, line 64)
-- "{+use} Strike the flag"  (text, line 64)
-- "{+use} Hoist it again"  (text, line 64)
+- "Resistance Commander or Lieutenant is required to establish a Resistance HQ"  (text, line 112)
+- "{+use} Raise the flag"  (text, line 113)
+- "{+use} Leave the flag"  (text, line 115)
+- "{+use} Strike the flag"  (text, line 115)
+- "{+use} Hoist it again"  (text, line 115)
 
 ## cl_livingcity_bodysigns.lua (cl_livingcity_bodysigns.lua)
 
@@ -6425,37 +6425,37 @@ Made from version 1968104. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The leader's F2 line
 
-- "No headquarters on this server."  (text, line 340)
-- "A Resistance Commander or Lieutenant is required."  (text, line 341)
-- "Not now."  (text, line 342)
-- "The headquarters is overrun: clear it out first."  (text, line 344)
-- "Strike the flag at the old headquarters first."  (text, line 345)
+- "No headquarters on this server."  (text, line 350)
+- "A Resistance Commander or Lieutenant is required."  (text, line 351)
+- "Not now."  (text, line 352)
+- "The headquarters is overrun: clear it out first."  (text, line 354)
+- "Strike the flag at the old headquarters first."  (text, line 355)
 
 > Note for you (not shown in game): part of: base raise
 
-- "Only in rebel territory."  (text, line 347)
-- "Not with them here."  (text, line 365)
+- "Only in rebel territory."  (text, line 357)
+- "Not with them here."  (text, line 375)
 
 > Note for you (not shown in game): part of: base strike
 
-- "A Resistance Commander or Lieutenant is required."  (text, line 374)
-- "No headquarters to pack up."  (text, line 375)
-- "Go to the headquarters."  (text, line 376)
-- "Too soon: %d minutes yet."  (message, line 378)
+- "A Resistance Commander or Lieutenant is required."  (text, line 384)
+- "No headquarters to pack up."  (text, line 385)
+- "Go to the headquarters."  (text, line 386)
+- "Too soon: %d minutes yet."  (message, line 388)
 
 > Note for you (not shown in game): One line on the leader's F2 does whatever comes next.
 
-- "A Resistance Commander or Lieutenant is required."  (text, line 387)
-- "The headquarters is overrun: clear it out first."  (text, line 391)
+- "A Resistance Commander or Lieutenant is required."  (text, line 397)
+- "The headquarters is overrun: clear it out first."  (text, line 401)
 
 > Note for you (not shown in game): part of: base
 
-- "[Resistance] {why}"  (text, line 397)
+- "[Resistance] {why}"  (text, line 407)
 
 > Note for you (not shown in game): part of: ransack
 
-- "the headquarters ransacked"  (text, line 432)
-- "the Resistance's headquarters"  (text, line 435)
+- "the headquarters ransacked"  (text, line 442)
+- "the Resistance's headquarters"  (text, line 445)
 
 ## The Battle Line, a propaganda dream (sv_livingcity_battleline.lua) (sv_livingcity_battleline.lua)
 

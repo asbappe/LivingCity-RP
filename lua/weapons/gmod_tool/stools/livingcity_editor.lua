@@ -108,6 +108,7 @@ local MODES = {
     { id = "loudspeaker", label = "Street: loudspeaker (the PA and broadcasts; broken, nobody near it hears them)" },
     { id = "screen_big",  label = "Street: Breencast screen, giant" },
     { id = "screen_mid",  label = "Street: Breencast screen, medium (half the giant; low enough for a room)" },
+    { id = "screen_station", label = "Street: Breencast screen, the train station's (Valve's curved giant)" },
     { id = "tv",          label = "Street: small TV (set it on a table)" },
     { id = "transformer", label = "Street: transformer (powers the district: lights, loudspeakers, screens, forcefields, Combine locks)" },
     { id = "forcefield",  label = "Fixture: Combine forcefield (place it facing you, across a doorway; Civil Protection units pass)" },

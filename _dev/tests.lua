@@ -42206,6 +42206,33 @@ train:Remove() reb:Remove() cop:Remove()
 end
 IEDTests()
 
+function Nov21_StationScreenTests()
+section("21 November: the train station's giant Breencast screen, Valve's curved one, as an editor entry")
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_screen.lua"], "lc_screen"))()
+local def = ENT
+ENT = was
+local S, strips = def.ScreenSizes, def.StationStrips
+ok(S and S.screen_station and S.screen_station.station == true, "a station screen kind")
+ok(strips and #strips == 14, "Valve's 13 strips (14 edges)", strips and #strips)
+local wide = strips and (strips[1][1] - strips[#strips][1])
+ok(wide and math.abs(wide - 184) < 1, "184 wide, as Valve's", wide)
+ok(strips and strips[7][5] > 320 and strips[7][4] > 90, "321 tall, its top leaning toward the watcher", strips and strips[7][4])
+local M0 = Vector(-96000, -50000, 0)
+local p = LC.AddPoint(M0, 0, "screen_station", 0)
+ok(p ~= nil and p.kind == "screen_station", "the editor can place one")
+LC.SyncFixtures()
+local e
+for _, f in pairs(LC.Fixtures) do if IsValid(f) and f.lcFixturePoint == p then e = f end end
+ok(IsValid(e) and e:GetClass() == "lc_screen" and e.lcFixtureKind == "screen_station", "it is a city screen like the others (broadcasts show on it)")
+ok(IsValid(e) and e:GetPos().z - M0.z >= 150, "and it hangs high, as Valve's does", IsValid(e) and e:GetPos().z)
+LC.RemovePoint(p)
+LC.SyncFixtures()
+ok(not IsValid(e), "taken away with its point")
+end
+Nov21_StationScreenTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

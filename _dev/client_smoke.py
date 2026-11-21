@@ -2424,6 +2424,46 @@ return bad
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "Combine monitors (client): " + str(err)
+# the train station's giant screen (lc_screen, kind screen_station: Valve's curved strips): drawn live and dark, and
+# the picture it shows is made a few times a second
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_screen.lua")).read()
+err = L.execute(r"""
+local entWas, grtWas = ENT, GetRenderTarget
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_screen"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+GetRenderTarget = function(name) return { GetName = function() return name end } end
+local bad
+local function n(k) return _calls[k] or 0 end
+local ok, e = pcall(function()
+    local s = ents.Create("lc_screen")
+    s.Draw, s.Think, s.DrawModel = def.Draw, def.Think, function() end
+    s.GetWorldTransformMatrix = s.GetWorldTransformMatrix or function() return Matrix() end
+    s.SetRenderBounds = s.SetRenderBounds or function() end
+    s:SetNW2String("lc_screen_kind", "screen_station")
+    s:SetPos(_me:GetPos() + Vector(300, 0, 200))
+    s:Think()
+    local m0 = n("mesh.Begin")
+    s:Draw()
+    if n("mesh.Begin") < m0 + 2 then bad = "the strips and their back weren't drawn" return end
+    local pre = hook.t.PreRender and hook.t.PreRender.LivingCityStationScreen
+    if not pre then bad = "no picture is made for it" return end
+    _advance(1)
+    local c0 = n("cam.Start2D")
+    pre()
+    if n("cam.Start2D") ~= c0 + 1 then bad = "the broadcast wasn't drawn into its picture" return end
+    s:SetNW2Bool("lc_nopower", true)
+    s:Draw()
+    s:Remove()
+end)
+GetRenderTarget = grtWas
+if not ok then return "error: " .. tostring(e) end
+return bad
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the station screen (client): " + str(err)
 # the radio held up (a weapon, next to Hands): drawn in your view and in your hand, and the soft static
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_radio.lua")).read()
 err = L.execute(r"""
