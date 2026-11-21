@@ -110,6 +110,9 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
 
 - **Silo joined to the bunker (the owner, 21 November: "connect the silo to the bunker so that the silo sits just
   outside the existing map area (then seal it off obviously)"):** in progress (`BunkerForest`, `lc_forest_bunker.vmf`).
+  With it (the owner, same day): "update/revamp the bunker to match the EP2 whiteforest bunker aesthetic and designs
+  ... the bunker/silo doors for whiteforest from EP2 and such too": White Forest's materials, lights and dressing on
+  the bunker's rooms (layout kept), its big door lifted (`valve_ep2_bunker_door`) for the main entrance. In progress.
 - **The teleporter's power-up (the owner, 21 November):** the "below the floor" Combine laser and lightning effect
   that powers up the teleporter in Entanglement (d2_prison_08, maybe 07), lifted as `valve_prison_teleport_charge`.
   In progress.
