@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-282 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+283 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -280,8 +280,9 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `theme` | How every window looks, by who you are and where you stand | - | `client/cl_livingcity_theme.lua` 29K | - | `LC_CL.SetTheme`, `LC_CL.ThemeOn`, `LC_CL.ThemeWindow`, `LC_CL.ThemeName`, `LC_CL.PaintThemePanel`, `LC_CL.PaintThemeBack` | - |
 | `trail` | The quest trail on the ground | - | `client/cl_livingcity_trail.lua` 8K | - | `LC_CL.TrailActive`, `LC_CL.TrailPrune`, `LC_CL.SetTrail`, `LC_CL.TrailChevrons`, `LC_CL.Trail` | - |
 | `trains` | The trains | `server/sv_livingcity_trains.lua` 6K | - | - | `LC.TrainBoardingPos`, `LC.TrainPlatforms`, `LC.TrainArrive` | TrainTests (3); IntakeTests (1); Nov15_PeopleStayTests (1) |
-| `turret` | The Combine's mounted gun on its barricade (server and client) | - | - | `shared/sh_livingcity_turret.lua` 19K | `T.Clamp`, `T.Approach`, `T.ToWorld`, `T.Ignore`, `T.ToLocal`, `T.AimFrom` | TurretTests (2) |
+| `turret` | The Combine's mounted gun on its barricade (server and client) | - | - | `shared/sh_livingcity_turret.lua` 33K | `T.Clamp`, `T.Approach`, `T.ToWorld`, `T.Ignore`, `T.Pivot`, `T.AimAt` | TurretTests (2) |
 | `underground` | The underground | `server/sv_livingcity_underground.lua` 96K | - | - | `LC.RadioNotice`, `LC.Search`, `LC.DisguisedAsCP`, `LC.Stash`, `LC.BlackPrice`, `LC.PassesAsCitizen` | UndergroundTests (26); DisguiseTests (7); Nov19_ResistanceMoneyTests (5) |
+| `unitposts` | Units at their posts (the owner, 21 November: "build ALL of the | `server/sv_livingcity_unitposts.lua` 24K | - | - | `LC.RelaxEnd`, `LC.DoorFloor`, `LC.PostWarn`, `LC.RelaxAtPost`, `LC.DoorNormal`, `LC.CombineDoorPosts` | - |
 | `unittools` | Unit tools | - | `client/cl_livingcity_unittools.lua` 11K | - | `LC_CL.IsUnit`, `LC_CL.OpenUnitTools` | - |
 | `vest` | Powered vests ("suit power") | `server/sv_livingcity_vest.lua` 5K | - | - | `LC.HasVest`, `LC.VestCap`, `LC.ChargeVest`, `LC.PutOnVest`, `LC.IssueVest` | VestTests (3) |
 | `vices` | Cigarettes, alcohol and stimulants (and how a night's dream leaves you) | `server/sv_livingcity_vices.lua` 15K | `client/cl_livingcity_vices.lua` 4K | - | `LC.Unbroken`, `LC.DreamOutcome`, `LC.Drunk`, `LC.Wired`, `LC.DreamScarred`, `LC.SecondWind` | ViceTests (8); DreamGameTests (5); DreamCrowdTests (2) |

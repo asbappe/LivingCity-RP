@@ -42332,7 +42332,7 @@ local n = #gun.shots
 ok(n >= 28 and n <= 31, "15 rounds a second, Valve's rate (two seconds held)", n)
 local b = gun.shots[1] or {}
 ok(b.Attacker == cit and b.Inflictor == gun, "every bullet is the gunner's: they are the attacker, the gun the inflictor (the laws and kills see who shot)")
-ok(math.abs((b.Damage or 0) - 26 / 3) < 1e-6, "each does a third of Valve's 26 (the owner, 21 November: \"cut that damage down to 1/3\")", b.Damage)
+ok(b.Damage == 5, "each does 5, Valve's own against players, to anyone (the owner, 21 November: \"this is the damage we want universally\")", b.Damage)
 ok(b.TracerName == "AR2Tracer" and b.Tracer == 1 and b.AmmoType == "AR2" and b.Spread ~= nil and math.abs(b.Spread.x - 0.025) < 1e-6,
     "AR2 rounds and tracers, in Valve's small cone")
 local snd = 0
@@ -42396,6 +42396,58 @@ _advance(0.5) Behind(cit) press(cit, IN_USE)
 ok(LC.TurretOf(cit) == gun, "(on it again)")
 cit:Kill()
 ok(LC.TurretOf(cit) == nil and gun:GetNW2Entity("lc_turret_gunner") == nil, "dying lets go")
+
+-- an officer on it (the owner, 21 November: "if there is an enemy within range of the turret and relatively in front of it, then yes")
+local runWas = LC.Running
+LC.Running = false -- (no city about: the officer is the test's)
+local officer, ost = LC.SpawnCop(T.ToWorld(gun, -300, 200, -33))
+local rebel = ents.Create("npc_citizen")
+LC.NPCs[rebel] = { role = "rebel", state = "idle" }
+rebel:SetPos(T.ToWorld(gun, -900, 0, -33))
+gun.lcNPCNext = 0
+LC.TurretWatch(CurTime())
+ok(IsValid(officer) and ost ~= nil and ost.turretGun == nil and T.Gunners[gun] == nil, "a rebel behind it: no officer is sent to it")
+rebel:SetPos(T.ToWorld(gun, 900, 100, -33))
+LC.TurretWatch(CurTime())
+ok(ost ~= nil and ost.turretGun == gun and ost.state == "turretgun" and T.Gunners[gun] == officer, "a rebel in front of it, in range: the nearest free officer is sent to it")
+local function Steps(n) for _ = 1, n do _advance(0.1) _simulate(0.1) think() end end
+local before2 = #gun.shots
+Steps(30)
+local spot = T.ToWorld(gun, T.SPOT.x, T.SPOT.y, T.SPOT.z)
+ok(ost.turretPhase == "manning" and IsValid(officer) and officer:GetPos():Distance(spot) <= 40 and gun:GetNW2Entity("lc_turret_gunner") == officer,
+    "he runs to the spot behind it, where Valve's Metrocop stands, and mans it", IsValid(officer) and officer:GetPos():Distance(spot))
+last = gun.shots[#gun.shots] or {}
+local toRebel = last.Src and (rebel:WorldSpaceCenter() - last.Src):GetNormalized()
+ok(#gun.shots > before2 + 10 and last.Attacker == officer and last.Damage == 5 and toRebel and last.Dir:Dot(toRebel) > 0.995,
+    "and fires it at the rebel, at Valve's rate, every round his own", #gun.shots - before2)
+rebel:SetPos(T.ToWorld(gun, -900, 0, -33))
+Steps(20)
+ok(ost.turretGun == gun, "the rebel gone from in front of it: he stays on it a moment (Valve's persistence)")
+Steps(20)
+ok(ost.turretGun == nil and ost.state == "idle" and not ost.questLock and T.Gunners[gun] == nil and gun:GetNW2Entity("lc_turret_gunner") == nil,
+    "then lets go, back to his beat")
+_advance(T.RECALL + 0.1)
+rebel:SetPos(T.ToWorld(gun, 900, 100, -33))
+LC.TurretWatch(CurTime())
+Steps(3)
+ok(ost.turretGun == gun and ost.turretPhase == "manning", "(sent to it again for the next one)")
+officer:SetHealth(10)
+Steps(1)
+ok(ost.turretGun == nil and T.Gunners[gun] == nil, "badly hurt, he breaks off")
+officer:SetHealth(officer:GetMaxHealth())
+_advance(T.RECALL + 0.1)
+LC.TurretWatch(CurTime())
+Steps(3)
+ok(ost.turretGun == gun and ost.turretPhase == "manning", "(on it again)")
+Behind(cop)
+press(cop, IN_USE)
+ok(LC.TurretOf(cop) == gun and T.Gunners[gun] == cop and ost.turretGun == nil and ost.state == "idle", "a player of the Combine pressing E takes it from him: a player comes first")
+_advance(0.5)
+press(cop, IN_USE)
+ok(LC.TurretOf(cop) == nil, "(and lets it go)")
+LC.NPCs[rebel] = nil rebel:Remove()
+LC.NPCs[officer] = nil officer:Remove()
+LC.Running = runWas
 
 -- anyone may man it; the gun going lets its gunner go
 _advance(0.5) Behind(cop)

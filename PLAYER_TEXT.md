@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 174add4. Admin-only console messages and log lines are left out.
+Made from version 1413944. Admin-only console messages and log lines are left out.
 
-13427 lines, from 382 files.
+13428 lines, from 383 files.
 
 ## Contents
 
@@ -367,6 +367,7 @@ Made from version 174add4. Admin-only console messages and log lines are left ou
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
 - [the underground](#the-underground-svlivingcityundergroundlua) (200)
+- [units at their posts (the owner, 21 November: "build ALL of the](#units-at-their-posts-the-owner-21-november-build-all-of-the-svlivingcityunitpostslua) (1)
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
 - [cigarettes, alcohol and stimulants (and how a night's dream leaves you)](#cigarettes-alcohol-and-stimulants-and-how-a-nights-dream-leaves-you-svlivingcityviceslua) (31)
 - [the Administrator's spoken decrees (the owner, 11 November: "Please build it but I](#the-administrators-spoken-decrees-the-owner-11-november-please-build-it-but-i-svlivingcityvoicelua) (23)
@@ -5723,40 +5724,40 @@ Made from version 174add4. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3194)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3195)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 3198)
+- "[Civil Protection] "{Pick}""  (chat message, line 3199)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3216)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3217)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 3274)
-- "Assaulting Civil Protection"  (text, line 3277)
-- "Assaulting a citizen"  (text, line 3277)
+- "Damaging city property"  (text, line 3275)
+- "Assaulting Civil Protection"  (text, line 3278)
+- "Assaulting a citizen"  (text, line 3278)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 3313)
+- "Civil Protection has stood down."  (chat message, line 3314)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3320)
-- "Added %s point (%d total on this map)."  (message, line 3323)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3321)
+- "Added %s point (%d total on this map)."  (message, line 3324)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 3329)
-- "No point within 150 Civil Protection units."  (chat message, line 3329)
+- "Removed nearest {kind} point."  (text, line 3330)
+- "No point within 150 Civil Protection units."  (chat message, line 3330)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3340)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3344)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3341)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3345)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -25054,6 +25055,15 @@ Made from version 174add4. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): (one line, not two: the owner, 18 November, "merge the pair of lines to a single line")
 
 - "[Resistance] You're in plain clothes: keep your gun out of sight. F2 > Gear up when it's time to fight."  (chat message, line 1902)
+
+## units at their posts (the owner, 21 November: "build ALL of the (sv_livingcity_unitposts.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_unitposts.lua`
+
+
+> Note for you (not shown in game): part of: post knock out
+
+- "Trespassing in a Combine area"  (text, line 415)
 
 ## powered vests ("suit power") (sv_livingcity_vest.lua)
 

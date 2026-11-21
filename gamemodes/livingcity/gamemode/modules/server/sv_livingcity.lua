@@ -1321,6 +1321,8 @@ function Arrive(npc, st, now)
     FaceYaw(npc, poi.yaw)
 
     local k = poi.kind
+    -- arrivals other modules handle (a unit's door post, the garrison's posts, a lane's bounds: sv_livingcity_unitposts.lua)
+    if LC.ArriveHandlers and LC.ArriveHandlers[k] and LC.ArriveHandlers[k](npc, st, now, poi) then return end
     if k == "lineslot" then
         SetState(npc, st, "inline")
     elseif k == "lineapproach" then
@@ -2041,6 +2043,7 @@ local function TryStartInspection(cop, cst, now)
     local sweep = LC.Event == "sweep"
     cst.nextInspect = now + (sweep and math.Rand(10, 20) or math.Rand(40, 90))
     if not sweep and math.random() > 0.6 then return end
+    if LC.WallFriskTry and LC.WallFriskTry(cop, cst, now) then return end -- (two against a wall: sv_livingcity_unitmoves.lua)
     for cit, ist in pairs(LC.NPCs) do
         if IsValid(cit) and ist.role == "citizen" and not ist.test and (ist.state == "idle" or ist.state == "moving")
             and cit:GetPos():DistToSqr(cop:GetPos()) < 500 * 500 then
@@ -2061,6 +2064,7 @@ local function TryArrestCitizen(cop, cst, cit, ist, now)
     if math.random(100) > cvArrestChance:GetInt() then return false end
     if not LC.ArrestNPC then return false end
     cop:EmitSound(Pick(COP_ARREST), 75)
+    if LC.ArrestPunch and LC.ArrestPunch(cop, cst, cit, ist, now, LC.ArrestNPC) then return true end -- (a punch first, now and then: sv_livingcity_unitmoves.lua)
     CitSay(cit, ist, Vo(ist.gender, Pick(CIT_PROTEST)), 70)
     if LC.Cue then LC.Cue(cit, ist, "say_break_beaten", { force = true }) end
     cst.subject = nil
@@ -3153,7 +3157,8 @@ function LC.UnitsSpotMonsters()
     if #list == 0 then return 0 end
     local n = 0
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and IsSecurity(st) and not st.test and st.state ~= "hostile" and st.state ~= "workescort" and st.state ~= "event" then
+        if IsValid(npc) and IsSecurity(st) and not st.test and st.state ~= "hostile" and st.state ~= "workescort" and st.state ~= "event"
+            and st.state ~= "turretgun" then -- (an officer on a mounted gun deals with them with it: sh_livingcity_turret.lua)
             local pos, best, bd = npc:GetPos(), nil, 400 * 400
             for _, m in ipairs(list) do
                 local d = m:GetPos():DistToSqr(pos)
