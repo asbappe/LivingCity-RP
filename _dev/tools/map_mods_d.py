@@ -438,7 +438,7 @@ def m_morgue(m, opt):
     use_door(m, "lc_morgue_door", (455, 314, F, 569, 326, F + 120), steel, 0, unseen=True)
     ride(m, "lc_morgue_door", "models/props_wasteland/prison_slidingdoor001a.mdl", 512, 320, 90, F)
     m.portal(448, 319, F, 576, 321, F + 128)
-    m.det([(436, 244, F, 448, 256, F + 140), (576, 244, F, 588, 256, F + 140), (436, 244, F + 128, 588, 256, F + 140)], MAT["beam"])
+    m.det([(436, 244, F, 450, 256, F + 128), (574, 244, F, 588, 256, F + 128), (436, 244, F + 128, 588, 256, F + 140)], MAT["beam"])   # (the banks' ends hide in its posts)
     m.taken(428, 232, F, 596, 256, F + 160)
     from map_mods_c import cage_lamp, pipe_v, tube
     cage_lamp(m, 512, 256, F + 146, 270, "200 225 255 40")
@@ -482,7 +482,7 @@ def m_morgue(m, opt):
     for u, v in ((384, 600), (640, 600), (512, 440)):
         tube(m, u, v, F + 176, "200 222 240 45", along="v")
     # the body chute in the right wall, a roller conveyor up to it
-    m.det([(760, 600, F + 40, 768, 608, F + 116), (760, 680, F + 40, 768, 688, F + 116), (760, 600, F + 108, 768, 688, F + 116), (760, 600, F + 40, 768, 688, F + 48)],
+    m.det([(760, 600, F + 48, 768, 608, F + 108), (760, 680, F + 48, 768, 688, F + 108), (760, 600, F + 108, 768, 688, F + 116), (760, 600, F + 40, 768, 688, F + 48)],
           "metal/metalhull010c")
     m.det([(764, 608, F + 48, 766, 680, F + 108)], MAT["black"])
     m.target("lc_morgue_chute", 750, 644, F + 60, 0)

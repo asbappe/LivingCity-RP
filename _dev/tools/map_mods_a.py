@@ -2728,9 +2728,10 @@ def m_camp(m, opt):
     m.shapes([para((936, 426, tz + 62), (86, 0, 8), (0, 98, 0), (0, 0, 3), c3)])
     m.det([(946, 440, tz, 1008, 510, tz + 2)], rug)
     beds[2] = (976, 475)
-    m.shapes([para((440, 600, tz), (120, 0, 0), (0, 104, 112), (0, 0, 3), PLASTER),           # the lean-to against the back wall
-              prism([(600, tz), (703, tz), (703, tz + 111)], "x", 441, 443, c6), prism([(600, tz), (703, tz), (703, tz + 111)], "x", 557, 559, c6)])
-    m.det([(450, 640, tz, 550, 700, tz + 2)], c6)
+    m.shapes([para((440, 610, tz + 56), (120, 0, 0), (0, 94, 64), (0, 0, 3), PLASTER),        # the lean-to against the back wall, open in front
+              prism([(610, tz), (703, tz), (703, tz + 119), (610, tz + 55)], "x", 441, 443, c6), prism([(610, tz), (703, tz), (703, tz + 119), (610, tz + 55)], "x", 557, 559, c6)])
+    m.det([(444, 612, tz, 448, 616, tz + 56), (552, 612, tz, 556, 616, tz + 56)], WOODTRIM)
+    m.det([(450, 630, tz, 550, 700, tz + 2)], c6)
     beds[3] = (500, 668)
     m.static(M_ + "props_vehicles/car002b_physics.mdl", 764, 642, 0, tz)                       # the car's wreck, a tarp off its side
     m.shapes([para((690, 548, tz), (140, 0, 0), (0, 52, 50), (0, 0, 3), tarp)])
@@ -2796,7 +2797,7 @@ def m_camp(m, opt):
     m.view(730, 290, tz, 115, 4, "coming up the bank: the fire, the tents")
     m.view(420, 470, tz, 0, 6, "from the first tent's mouth")
     m.view(980, 680, tz, 225, 10, "from the back corner")
-    m.view(500, 640, tz, 90, 4, "under the lean-to")
+    m.view(500, 684, tz, 270, 4, "under the lean-to, looking out at the fire")
     b.notes.append("%s: the terrace is at z %d, from u 192 to 1088 and v 256 to 704; the fire is at (%d %d)" % ((m.tag, tz) + m.fr.pt(fu, fv)))
 
 
