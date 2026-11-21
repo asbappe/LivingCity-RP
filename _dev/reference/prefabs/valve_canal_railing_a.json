@@ -1,0 +1,58 @@
+{
+"name": "valve_canal_railing_a",
+"note": "x",
+"from": "d1_canals_03.vmf",
+"box": [
+-1400,
+-830,
+-560,
+-1360,
+-790,
+-500
+],
+"anchor": [
+-1376,
+-800,
+-547
+],
+"size": [
+40,
+40,
+60
+],
+"solids": [],
+"points": [
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+-0.40300000000002
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 0 0",
+"fademindist": "-1",
+"fadescale": "1",
+"model": "models/props_canal/canal_bridge_railing02.mdl",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-12.0,
+-16.0,
+-0.40300000000002
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 180 0",
+"fademindist": "-1",
+"fadescale": "1",
+"model": "models/props_canal/canal_bridge_railing_lamps.mdl",
+"solid": "6"
+}
+}
+]
+}
