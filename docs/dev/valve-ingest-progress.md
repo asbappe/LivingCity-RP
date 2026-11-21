@@ -77,6 +77,10 @@ maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Brie
 close the batch as batches 1 and 2 were (the `notes/` and draft steps above). Next to start: EP1 City 17's logic
 and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pieces and the architecture study).
 
+- **The Combine generator (the owner, 21 November: "build it next"):** right after batch 6 closes, build
+  `_dev/tools/map_combine.py` as planned in TODO.md and `_dev/reference/valve_citadel/` (notes, `arch_scripts/`),
+  show the owner one structure on a test map, then carry on with batch 7 (EP2).
+
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
 All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 23).
