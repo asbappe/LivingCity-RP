@@ -39,7 +39,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `press` | 768 | the pamphlet press: a printing room behind a door in a side tunnel (left) | `lc_press_door`, `lc_press_machine`, `lc_press_stack` | `map_mods_b.py` |
 | `still` | 768 | the still: a pot still, mash casks and bottles in a cellar (left) | `lc_still_pot`, `lc_still_shelf` | `map_mods_b.py` |
 | `plaza` | 1536 | the plaza: five rows of seats stepping down from the street to a stage at the back wall (left) | `lc_hq_setup_plaza`, `lc_plaza_crowd`, `lc_plaza_rostrum` | `map_mods_b.py` |
-| `playground` | 1024 | the playground: a rusted relic on a terrace over the canal (left) | `lc_playground_bench`, `lc_playground_roundabout`, `lc_playground_roundabout_hinge`, `lc_playground_swing_1`, `lc_playground_swing_1_hinge`, `lc_playground_swing_2`, `lc_playground_swing_2_hinge` | `map_mods_b.py` |
+| `playground` | 1024 | the playground: Half-Life 2's own from the train station's courtyard, a path through it (left) | `lc_playground_bench`, `lc_playground_roundabout`, `lc_playground_roundabout_hinge`, `lc_playground_swing_1`, `lc_playground_swing_1_hinge`, `lc_playground_swing_2`, `lc_playground_swing_2_hinge`, `lc_playground_teeter`, `lc_playground_teeter_hinge` | `map_mods_b.py` |
 | `clinic` | 1024 | the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left) | `lc_clinic_bed_1`, `lc_clinic_bed_2`, `lc_clinic_bed_3`, `lc_clinic_bed_4`, `lc_clinic_table` | `map_mods_b.py` |
 | `lock` | 1536 | a lock house: two steel gates and the control house that works them | `lc_lock_a_klaxon`, `lc_lock_a_lamp_open`, `lc_lock_a_lamp_shut`, `lc_lock_a_move`, `lc_lock_a_open`, `lc_lock_a_shake`, `lc_lock_a_shut`, `lc_lock_a_slam`, `lc_lock_a_warn_1`, `lc_lock_a_warn_2`, `lc_lock_a_warn_3`, `lc_lock_a_warn_4`, `lc_lock_b_klaxon`, `lc_lock_b_lamp_open`, `lc_lock_b_lamp_shut`, `lc_lock_b_move`, `lc_lock_b_open`, `lc_lock_b_shake`, `lc_lock_b_shut`, `lc_lock_b_slam`, `lc_lock_b_warn_1`, `lc_lock_b_warn_2`, `lc_lock_b_warn_3`, `lc_lock_b_warn_4`, `lc_lock_button_a`, `lc_lock_button_b`, `lc_lock_gate_a`, `lc_lock_gate_b`, `lc_lock_house` | `map_mods_c.py` |
 | `pumphouse` | 1280 | a pumping station: a machine hall, a flywheel, a turbine pit, a pipe bridge | `lc_pump_button`, `lc_pump_down`, `lc_pump_glow`, `lc_pump_hall`, `lc_pump_sound`, `lc_pump_start`, `lc_pump_stop`, `lc_pump_up`, `lc_pump_wheel` | `map_mods_c.py` |
@@ -864,18 +864,22 @@ aim (yaw 15 and pitch 13 from the side walls toward the lectern).
 
 ### `playground`
 
-The playground: a relic of before. A yard on the left, open to the sky: in a canal a terrace 128 above its floor
-(the bank is the way up), on a street level with the pavement. Its ground is earth, worn to mud under the swings
-and at the slide's foot, the city's handrail along its front with a gap in the middle to come in by. In it, City
-17's own playground models: a swing set whose two seats swing on their chains (lc_playground_swing_1 and _2, each
-on a phys_hinge under the bar); a slide; a roundabout that turns (lc_playground_roundabout on a phys_hinge); and,
-built here, a sandpit edged with timber, a doll left on its edge; a bench with its back to the wall, facing it all
-(lc_playground_bench: on the bench); a bin overflowing in the corner. Chalk on the ground, rust down the walls, a
-Combine notice. No lamp.
-Left as brushes: the sandpit (timber and sand in the ground), the worn patches.
-Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); which end of the slide is
-its ladder and which way the bench faces; how high the swing set's bar is (its box says 144: the seats hang
-from 138); how freely the hinges turn.
+The playground: Half-Life 2's own, copied from the courtyard by the train station (sdk_d1_trainstation_02.vmf,
+the prefab valve_playground_a), each thing where Valve put it and turned as Valve turned it (vpg). A yard on the
+left, open to the sky: in a canal a terrace 128 above its floor (the bank is the way up), on a street level with the
+pavement. Valve's grass, and Valve's path through the middle of it, concrete between stone kerbs, coming in from the
+pavement between the posts of Valve's low stone wall with its metal fence on top. On the right of the path: the
+noughts and crosses post, its eight blocks turning on their rods; a bench turned toward the swings
+(lc_playground_bench: on the bench); two climbing frames; the swing set, whose two seats swing on their chains
+(lc_playground_swing_1 and _2, each on a phys_hinge under the bar), worn to mud under them; a tree over it; the doll
+lying in the grass; the see-saw, its seat rocking on a hinge (lc_playground_teeter); in the far corner Valve's
+terrace, paved 64 up behind a raised grass bed and its stone wall, with steps up. On the left: a bin overflowing,
+our sandpit edged with timber, a dumpster, the roundabout that turns (lc_playground_roundabout on a phys_hinge) and
+the slide. Leaves on the grass, chalk on the path, rust down the walls, a Combine notice. No lamp.
+Left as brushes: the sandpit, the worn patches; the path, the terrace, its steps, the low wall and its fence (Valve's
+own brushes too).
+Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); how freely the hinges turn
+(the see-saw's and the blocks' are Valve's settings, the swings' and the roundabout's ours).
 
 ### `clinic`
 

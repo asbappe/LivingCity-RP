@@ -3615,6 +3615,24 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/metalladder002d.mdl": {
+"bbox": [
+0.0,
+-12.1,
+-0.2,
+9.5,
+12.3,
+128.2
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/metalladder003.mdl": {
 "bbox": [
 0.0,
@@ -3627,6 +3645,24 @@
 "built_static": true,
 "collides": true,
 "game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/metalladder004.mdl": {
+"bbox": [
+-1.5,
+-12.3,
+-256.2,
+17.5,
+12.3,
+249.2
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
@@ -5673,6 +5709,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_combine/bunker_gun01.mdl": {
+"bbox": [
+-24.6,
+-8.1,
+0.0,
+21.2,
+7.7,
+20.3
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_combine/cell_01_pod.mdl": {
