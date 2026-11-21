@@ -1605,6 +1605,7 @@ def m_plaza(m, opt):
     m.det([(cu - 14, sv + 4, top, cu + 14, sv + 14, top + 38)], TIMBER)
     m.shapes([prism([(sv + 2, top + 38), (sv + 16, top + 38), (sv + 16, top + 40), (sv + 2, top + 46)], "x", cu - 16, cu + 16, DECK)])
     m.target("lc_plaza_rostrum", cu, sv + 30, top + 8, 270)
+    m.target("lc_hq_setup_plaza", cu + 96, sv + 30, top + 8, 270)      # the town's flagpole beside the rostrum (the owner, 21 November: "the plaza can hold the flagpole")
     # behind the speaker: the banner on the wall, the canopy on its posts, the loudspeakers over it, a lamp each side
     m.det([(cu - 112, vb - 1, low + 60, cu + 112, vb, low + 196)], CLOTH)
     m.det([(cu - 118, vb - 4, low + 196, cu + 118, vb - 2, low + 198)], BARS)
