@@ -521,8 +521,9 @@ def ring(args):
     taken, blocked, lanes = [west_stairs, bridge, pier], [], []
 
     def static(model, x, y, yaw, z=F):
-        vmf.point("prop_static", (x, y, z), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6", "disableshadows": "0", "screenspacefade": "0",
-                                             "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, sv)
+        from map_build import standing_prop      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
+        cls, keys = standing_prop(model)
+        vmf.point(cls, (x, y, z), dict(keys, model=model, angles="0 %d 0" % yaw), sv)
 
     def loose(model, x, y, yaw, z=F):
         vmf.point("prop_physics", (x, y, z + 24), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "spawnflags": "0"}, sv)

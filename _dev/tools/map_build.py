@@ -51,6 +51,20 @@ NODE_SHARE_OTHER = 400      # (a layout not planned for the merge yet: kept to a
 NODE_CLASSES = ("info_node", "info_node_air", "info_node_hint", "info_node_air_hint", "info_node_climb")
 
 
+def standing_prop(model):
+    """The class and keys for a model that stands still: a prop_static only when the model was built to be one and is
+    no physics prop (the compiler deletes those: the owner, "tons of the static props you put in aren't showing in the
+    compiled map"; lesson physics-props-dynamic), a prop_dynamic_override for a physics model, a prop_dynamic else (as
+    the modules' m.static does, from map_assets' facts)."""
+    import map_assets
+    keys = {"skin": "0", "solid": "6", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
+    if map_assets.is_static(model) is not False:
+        keys.update({"disableshadows": "0", "screenspacefade": "0"})
+        return "prop_static", keys
+    keys.update({"disableshadows": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"})
+    return ("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic"), keys
+
+
 def node_share(name):
     """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
     if name.startswith("mod_"):
@@ -844,8 +858,8 @@ def canal(args):
     set_blocked, lanes = [], []
 
     def static(model, x, y, yaw):
-        vmf.point("prop_static", W(x, y, floor_z), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6", "disableshadows": "0", "screenspacefade": "0",
-                                                    "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, sv)
+        cls, keys = standing_prop(model)      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
+        vmf.point(cls, W(x, y, floor_z), dict(keys, model=model, angles="0 %d 0" % yaw), sv)
     # a container between the stairs and the pipes; cars pushed in beyond the pipes
     static("models/props_wasteland/cargo_container01.mdl", 1300, 590, 8)
     for model, x, y, yaw in (("models/props_vehicles/car002a_physics.mdl", 2080, 470, 25), ("models/props_vehicles/car005a_physics.mdl", 2260, 580, 190),
