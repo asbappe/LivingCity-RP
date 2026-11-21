@@ -7,7 +7,8 @@
   "d3_citadel_02: 1120 entities, 3241 brushes, 387 static props; 25 AI nodes; the player's pod ride is 56 path_tracks and 24581 units, about 147 s at 100 to 250, with 13 stops that set something off (a thing to see about every 11 s); 3 container trains on one ring of 15206 (72 s a lap), 2 razor trains of 7488; 6 stalkers, 6 soldiers, 3 striders, 5 scanners, all seen from the pod.",
   "d3_citadel_03: 1564 entities, 4877 brushes; 245 AI nodes (indoor ceilings 192 to 320 in half the rooms, up to 2815 in the shafts); 25 soldiers (5 elites), 17 of them in point_templates; 8 energy ball spawners, 7 shield walls, the confiscation field, 12 consoles that tear off the wall, 26 spark timers; materials 97% metal by area (citadel_metalwall063a and 077a).",
   "d3_citadel_04: 2297 entities; 58 soldiers (12 elites), 37 of them in point_templates, 5 env_entity_makers; 37 assault rally and 37 assault points; 50 timers (42 for sparks); the walkway reactors in the stasis room (three pairs of energy cores at x 144 to 160, y -1464, -1728, -2104, z 6377 to 6767, each with a trigger_vphysics_motion of gravity 0 and a trigger_physics_trap); the lift wait's waves capped at 4 soldiers alive.",
-  "d3_citadel_05: 1224 entities; a ring of 7 pods (10 path_tracks, 4058 long, 7 stops), 4 more on a ring of 6931; the player's pod climbs one shaft from z -808 to 3788 and then the Citadel's height from -15328 to 10304 at up to 1000 (about 25 s); one pod carries a stalker past at 70; two crab synths walk the gunship bay 1.5 s after the pod passes; 3 stalkers on act busy hints."
+  "d3_citadel_05: 1224 entities; a ring of 7 pods (10 path_tracks, 4058 long, 7 stops), 4 more on a ring of 6931; the player's pod climbs one shaft from z -808 to 3788 and then the Citadel's height from -15328 to 10304 at up to 1000 (about 25 s); one pod carries a stalker past at 70; two crab synths walk the gunship bay 1.5 s after the pod passes; 3 stalkers on act busy hints.",
+  "d3_breen_01: 2027 entities; 43 choreographed scenes (Breen's office chain of six, seven mocking lines on the climb, Alyx's lines); 16 soldiers (9 elites); Breen's countdown of 190 s spoken by Overwatch at 3, 2, 1 min, 45, 30, 15, 10 s; Breen's lift (path_breen_lift, 1552) and the main lift (5 stops, 1424) up the portal chamber; the office holds breendesk, breenbust, breenconsole, masterinterface, 3 breenwindow and 4 combinebuttress models, 12 cell pods."
  ],
  "pictures": [
   {
@@ -220,6 +221,53 @@
     "cut": 4400,
     "clip_below": 2600,
     "clip_above": 5200
+   }
+  },
+  {
+   "n": "Z11",
+   "file": "11_breen_office_cut.png",
+   "where": "d3_breen_01, Breen's office, from the south-west, cut at 860 (box -2900 -500 -1100 1700; drawn from a copy keeping only brushes between 300 and 1200 and the props inside the box)",
+   "teaches": "Breen's office is a pale floor (the only light floor in the Citadel) set off-centre in Combine metal: the window wall is held by four combinebuttress models (orange) leaning in at an angle, the desk and console on a raised part to one side, a pod frame and Breen's pod at another; the room's sides are not parallel. The talk here is one chain of six scenes with a jump-ahead and an idle loop at the end. Ours: the Administrator's office is a room of our own; Valve's is the Combine's office, not the city's.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-overseer-on-screens"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -2900,
+     -500,
+     -1100,
+     1700
+    ],
+    "cut": 860,
+    "clip_below": 300,
+    "clip_above": 1200,
+    "props_in_box_only": true
+   }
+  },
+  {
+   "n": "Z12",
+   "file": "12_breen_portal_chamber.png",
+   "where": "d3_breen_01, the portal chamber where Breen's lift climbs to the dark-energy reactor (lifts on path_lift_start from z -1007 to 1364), from the south-west, cut at 1500 (box -1100 -1300 1300 1300; drawn from a copy keeping brushes between -1500 and 2600 and the props inside the box)",
+   "teaches": "The chamber is a tower of balconies stacked unevenly up one side, the other side bare metal, struts leaving its foot at angles over the drop. Breen's lift climbs through it in stops, two of them in step with Overwatch's calls of the time left (at 147 and 162 s). Ours: no tower; the climb as the clock is the idea to keep.",
+   "lessons": [
+    "valve-countdown-spoken",
+    "valve-progress-in-the-world",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1100,
+     -1300,
+     1300,
+     1300
+    ],
+    "cut": 1500,
+    "clip_below": -1500,
+    "clip_above": 2600,
+    "props_in_box_only": true
    }
   }
  ]
