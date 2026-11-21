@@ -106,6 +106,31 @@ Materials: `MAT` (canal_wall, canal_floor, quay_floor, ceiling, stairs, beam, ba
 - **Names start `lc_` and say the module** (`lc_lock_gate_a`). A name used twice in one chain is a PROBLEM. Everything named is listed in the report: put what each is for in the docstring.
 - A brush entity that turns needs `"origin": "%d %d %d" % (m.fr.pt(u, v) + (z,))` for its hinge.
 
+## Wiring the way Valve does (read before wiring anything; the owner, 21 November: "save it for use")
+
+Measured in 34,753 entities and 7,711 outputs of 23 Valve maps; each rule is a lesson with Valve's keys and
+examples (`python3 _dev/tools/map_lessons.py --tag logic`, the recipes in `docs/dev/valve-logic-recipes.md`). Our
+helpers do not follow all of them yet (`TODO.md`): new wiring should, and changing what an existing piece does needs
+the owner's yes.
+
+- **Valves turn** (`valve-wheel-gate`): a wheel is a `momentary_rot_button` whose `Position` drives a
+  `func_movelinear`'s `SetPosition`, so the gate moves as far as the wheel is turned; fully closed, it plays its lock
+  sound and locks itself. Ours fire once on a press.
+- **Doors work their areaportals** (`valve-portal-door`): a portal in a doorway names its door in `target`; a gate
+  sends the portal `Open` on OnOpen and `Close` on OnFullyClosed. Ours start open (`StartOpen` 1) and nothing ever
+  closes them, so a room behind a shut door is still drawn.
+- **One-shot sounds are flagged not looped** (`valve-sound-flags`): an `ambient_generic` the wiring plays has
+  spawnflags 48 (starts silent, not looped); 16 for a loop that waits for PlaySound and StopSound; 0 only for a loop
+  that runs from the start. `m.sound` never sets 32.
+- **Timers sleep** (`valve-timer-asleep`): a `logic_timer` that only dresses a place starts disabled, with a random
+  time, and is enabled while players are near (a `trigger_multiple`'s OnStartTouchAll and OnEndTouchAll). Ours run
+  all day.
+- **Triggers name who touches them** (`valve-trigger-who`): set spawnflags on every trigger (1 players, 2 NPCs, 8
+  physics, 64 everything); on our shared server use OnStartTouchAll / OnEndTouchAll and `!activator`, never
+  `!player` (it means player 1). A `trigger_once` fires for the first player only.
+- Also kept, as the owner asked: the **alarm**, the **switch that shows its state**, the **intact set swapped for a
+  broken one** and the **door the map closes again when blocked** (`map_lessons.py --tag recipe`).
+
 ## Areaportals (what keeps one place from being drawn while standing in another)
 
 `m.portal(u1, v1, z1, u2, v2, z2)`: a sheet 2 thick across a doorway or tunnel into a side room. It must fill the opening from wall to wall and floor to roof, with open air on both faces and solid past all four edges (the check fails it otherwise), so it goes a little way INSIDE a tunnel, never at its mouth, never under the open sky, and never through water. A door that shuts an opening needs the portal inside its own thickness. Every roofed side room should have one in its way in.

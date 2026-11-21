@@ -147,7 +147,7 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   (47 to 79% of 256 squares empty); shelves and radiators on walls, chairs free about 42 from their table; stacks
   turned about 7 degrees; fades by size; skins varied, never tints; glow sprites 0.75.
 - **Logic** (tag `logic`, recipes in `valve-logic-recipes.md`, the four the owner kept: `map_lessons.py --tag
-  recipe`): a wheel moving a gate as far as it turns; areaportals opened and closed by their doors; one-shot sounds
+  recipe`; the five rules for our own wiring are in `docs/dev/map-modules.md`, "Wiring the way Valve does"): a wheel moving a gate as far as it turns; areaportals opened and closed by their doors; one-shot sounds
   flagged not looped; timers asleep until needed; counters; one relay per event; switches showing their state; an
   intact set swapped for a broken one; alarms; doors that close again when blocked; triggers that name who touches
   them.
@@ -155,9 +155,21 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   `valve-terrain-into-brush`): lightmapscale 16 near, 8 on stairs and rails, 64 far; texture scale 0.25 in the
   city, 0.5 on big canal concrete, 1 to 2 on rock; wall textures shifted to start at the floor; decals outnumber
   overlays 4.5 to 1; displacements power 2, their edges run into brushes.
-- **Canals** (tag `canal`, `valve_canals/pictures.json`): city canal 512 between walls on a dished floor, walls
-  about 384; walk ledges 72 wide at 212 up; outfalls 128 across in rings about 384 apart; cage lamps about 800
-  apart at 300 up; steps 8 by 12.
+- **Canals** (tag `canal`, `valve_canals/pictures.json`; the owner asked for all of it to be built, 21 November):
+
+  | | Valve | Ours before |
+  |---|---|---|
+  | Width | 512 in the city canal, 1024 in the airboat canals | 512 everywhere |
+  | Floor | dips toward the middle, about 8 to 10 degrees | flat, with mud |
+  | Wall height | median 384 in the city canal | 384 |
+  | Banks | mostly upright walls; 45 degree banks in one map | 45 degree banks on every wall |
+  | Walk ledges | 72 wide at 212 up in most city stretches (102 at 316 in the wide ones) | none |
+  | Pipe outfalls | 128 across in a ring, about 384 apart, about 140 up | 48 across, one every 1024 |
+  | Cage lamps | about 800 apart at about 300 up | 1536 apart at 260 |
+
+  Being built (21 November; this line says "Built" once it is in): a dished floor, wide stretches with their widening and narrowing, upright walls where there are ledges and
+  in the wide stretches (the owner's 45 degree banks kept on the plain city stretches: they asked for sloped sides),
+  ledges, Valve's outfalls and lamp spacing (`docs/dev/map-modules.md`, the shared dressing). Steps are 8 by 12.
 - **Ravenholm, for the infestation quarter** (tag `infestation`): no kerbs or pavements; timber and plaster houses
   on a concrete plinth, roofs 20 to 35 degrees; no blood decals (litter, ivy, one pinned corpse with crows); traps
   are loose physics props; zombies come from makers walked in by scripted schedules; rooftops joined by planks; a
