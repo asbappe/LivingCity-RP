@@ -239,7 +239,8 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   Coast), Garry's Mod, Source SDK 2013 or exactly "Source"; Help: pages (about editing the wiki) are not followed; checked against 1414 real pages (21 November): game icon templates like {{tf2}} are NOT a signal
   (generic pages such as "Your First Map" carry only other games' icons). "Remove other games" cleans what was saved
   before: by name at once, then by asking the wiki for the categories of the rest. The zip's index.tsv has each
-  page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
+  page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). The owner's save (10,220
+  pages, 21 November) is in the repo: `python3 _dev/tools/vdc.py NAME` (`docs/dev/vdc-reference.md`). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
   `vdc/text/...txt` for visited pages, `vdc/index.tsv`. Load it in Chrome or Chromium: `chrome://extensions`,
   Developer mode, Load unpacked, pick the folder. `node _dev/tools/vdc_saver_check.js` checks it against a fake wiki
   (ends `VDC SAVER CHECK PASS`).

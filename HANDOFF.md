@@ -40,8 +40,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   Valve's five rules (map_wiring.py; map_lint kind wire).
 - New in the game: the station's Breencast screen (editor Street, kind screen_station) and the Combine mounted gun
   (editor Fixture, kind mounted_gun: anyone can man it, a third of Valve's damage). Playground module from Valve's.
-- VDC Saver, a Chrome extension (_dev/tools/vdc_saver/, docs/dev/map-ingestion.md "The tools") that saves the Valve
-  Developer Community wiki past its bot check; linked pages and "Skip other games" keep it to HL2.
+- Valve's wiki is saved: 10,220 HL2/GMod/Source pages in _dev/reference/vdc/; `python3 _dev/tools/vdc.py func_door`
+  (docs/dev/vdc-reference.md). Saved with VDC Saver, the owner's Chrome extension (_dev/tools/vdc_saver/).
 - Open questions for the owner: the gun's damage (Valve: 15 manned by a player, 5 against players; ours 26/3); an
   NPC manning the gun; lock gates crush (Valve's) or stop; outfalls on banks as pipes or notched holes; the ring and
   first canal to the new dressing; which NPC ideas from docs/dev/valve-npc-notes.md to build.
