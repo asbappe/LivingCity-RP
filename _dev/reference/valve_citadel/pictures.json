@@ -1,6 +1,5 @@
 {
  "title": "Valve's Citadel (d3_citadel_01 to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, and two style rooms)",
- "draft": true,
  "about": "The Combine's own stronghold, in Half-Life 2 and Episode One: the pod bays and their rings of pods, the shafts the pod rides cross, the confiscation field, the energy ball rooms, the walkway reactors, Breen's office and the dark-energy core, and the Citadel falling apart in Episode One; with Valve's style rooms for the core and the destroyed Citadel. Chosen for the Combine's odd, lopsided build (the owner's special interest), the pods' rails, the core and the walkways. Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the logic and NPC study in valve_citadel/wip/logic_npc_notes.md; the architecture study in valve_citadel/wip/architecture_*) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; big hollow models and fences drawn as outlines). Many Citadel brushes reach thousands of units below the play floors, which shrinks a framed cut-away to a sliver; those views are drawn from a scratch copy of the VMF without the brushes reaching below a set height (said in each 'where'). d3_citadel_01's own set (C1 to C6) stays in valve_d3_citadel_01/.",
  "numbers": [
   "d3_citadel_01: 733 entities, 1859 brushes, 110 static props, 29 dynamic, 2 physics; 13 AI nodes only (the player rides); 22 func_tracktrain on 46 path_tracks: two rings of 7 prisoner pods (4749 and 4549 long) that stop together, a ring of 3 pods (6858 long, 46 s a lap) and three diggers started 1, 4 and 6 s apart. The map reaches from z -14336 to 3104. Ours: no Combine machine moves on its own anywhere in our map.",
@@ -8,7 +7,16 @@
   "d3_citadel_03: 1564 entities, 4877 brushes; 245 AI nodes (indoor ceilings 192 to 320 in half the rooms, up to 2815 in the shafts); 25 soldiers (5 elites), 17 of them in point_templates; 8 energy ball spawners, 7 shield walls, the confiscation field, 12 consoles that tear off the wall, 26 spark timers; materials 97% metal by area (citadel_metalwall063a and 077a).",
   "d3_citadel_04: 2297 entities; 58 soldiers (12 elites), 37 of them in point_templates, 5 env_entity_makers; 37 assault rally and 37 assault points; 50 timers (42 for sparks); the walkway reactors in the stasis room (three pairs of energy cores at x 144 to 160, y -1464, -1728, -2104, z 6377 to 6767, each with a trigger_vphysics_motion of gravity 0 and a trigger_physics_trap); the lift wait's waves capped at 4 soldiers alive.",
   "d3_citadel_05: 1224 entities; a ring of 7 pods (10 path_tracks, 4058 long, 7 stops), 4 more on a ring of 6931; the player's pod climbs one shaft from z -808 to 3788 and then the Citadel's height from -15328 to 10304 at up to 1000 (about 25 s); one pod carries a stalker past at 70; two crab synths walk the gunship bay 1.5 s after the pod passes; 3 stalkers on act busy hints.",
-  "d3_breen_01: 2027 entities; 43 choreographed scenes (Breen's office chain of six, seven mocking lines on the climb, Alyx's lines); 16 soldiers (9 elites); Breen's countdown of 190 s spoken by Overwatch at 3, 2, 1 min, 45, 30, 15, 10 s; Breen's lift (path_breen_lift, 1552) and the main lift (5 stops, 1424) up the portal chamber; the office holds breendesk, breenbust, breenconsole, masterinterface, 3 breenwindow and 4 combinebuttress models, 12 cell pods."
+  "d3_breen_01: 2027 entities; 43 choreographed scenes (Breen's office chain of six, seven mocking lines on the climb, Alyx's lines); 16 soldiers (9 elites); Breen's countdown of 190 s spoken by Overwatch at 3, 2, 1 min, 45, 30, 15, 10 s; Breen's lift (path_breen_lift, 1552) and the main lift (5 stops, 1424) up the portal chamber; the office holds breendesk, breenbust, breenconsole, masterinterface, 3 breenwindow and 4 combinebuttress models, 12 cell pods.",
+  "ep1_intro: 443 entities, 624 brushes, 16 dynamic props, 7 AI nodes: a cinematic built as closed sets for the camera; the blast is a sprite whose scale is multiplied by 1.0065 every 0.05 s from 8; debris on tracktrains at 170 to 2000. No picture: its views show only the camera sets.",
+  "ep1_citadel_00: 1942 entities, 4063 brushes, 181 static and 56 physics props; 137 AI nodes; the van ride (51 path_tracks, 15156 long, up to 2000), a ring of 7 prisoner pods (7 stops), a razor train ring of 13576; a chunk shot off the Citadel's top every 6 to 12 s from 5 env_shooters at z 13532 to 13580.",
+  "ep1_citadel_01: 2522 entities, 5823 brushes, 317 static props, 325 AI nodes; 10 soldiers whose guns dissolve on death, 7 rollermines, 3 stalkers; the confiscation field again; the advisor pod room with 9 docked advisor pods; rumbles every 12 to 49 s.",
+  "ep1_citadel_02: 2299 entities, 4855 brushes, 314 static props, 305 AI nodes; 26 soldiers (8 elites), 16 of them asleep until woken, 13 woken by a comrade's death; 2 stalkers, 2 striders, 6 enemy finders; 5 ball spawners and 3 launchers.",
+  "ep1_citadel_02b: 929 entities, 2217 brushes, 68 AI nodes; the lift up the shaft (13 path_tracks, 4124 long, up to 400) with tremors every 6 to 12 s and one stalker.",
+  "ep1_citadel_03: 3411 entities, 6592 brushes, 214 AI nodes; 59 soldiers (26 elites), 52 asleep until woken; 12 manhacks; 29 energy cores, 7 ball spawners, 9 launchers; the core (prop_coreball at 2687 12142 5161) mended by 6 balls and 3 lasers, its loop changed from unstable to partly stable to stable; 51 timers.",
+  "ep1_citadel_04: 1282 entities, 2895 brushes, 81 dynamic props, 122 AI nodes; 13 soldiers whose guns dissolve on death; the escape train standing still while a ring of spotlights passes it every 1.2 s; the wrecked stalker train.",
+  "styleguide_core: 90 entities, 348 brushes, no AI nodes: the core alone in its shaft, its wobble on three timers of 0.2 to 0.9 s.",
+  "styleguide_destroyed_citadel: 960 entities, 2888 brushes, 138 AI nodes; ep1_citadel_02's bridges as a sample with 9 soldiers (7 elites) and 8 stalkers; rumbles every 12 to 49 s."
  ],
  "pictures": [
   {
@@ -148,7 +156,7 @@
    "teaches": "The walkways cross the room as a lopsided frame: one arm runs out long to the left, another short to the right, a ring sits off the middle, and each walkway has a reactor in it (the energy cores, scale 3, at y -1464, -1728 and -2104): step in and you float, float to its middle and it kills you. Tall columns (orange) drop from it far below. Soldiers (green) stand off to one side. Nothing in it is mirrored. Ours: no Combine walkway; the reactors are being lifted as a piece by the other helper.",
    "lessons": [
     "valve-combine-lean",
-    "valve-forcefield"
+    "valve-combine-cold"
    ],
    "view": {
     "iso": "SW",
@@ -268,6 +276,264 @@
     "clip_below": -1500,
     "clip_above": 2600,
     "props_in_box_only": true
+   }
+  },
+  {
+   "n": "Z13",
+   "file": "13_e00_citadel_foot.png",
+   "where": "ep1_citadel_00, the ground at the Citadel's foot after the blast, eye level looking south-west (eye -6320 6112 -32, yaw 225); the auto view of map_ingest.py views",
+   "teaches": "The ground at the foot is broken into tilted slabs with piles of concrete (concrete_debris128pile, spawnchunk) between, a pole stands crooked, wires hang, and a Combine slab rises at the side. Above it a chunk breaks off the Citadel's top every 6 to 12 s at random (5 env_shooters), with lightning every 4 to 12 s and its thunder 1 and 2 s after. Ours: the endings could break the city's ground this way only with the owner's yes.",
+   "lessons": [
+    "valve-place-falling-apart",
+    "valve-collapsed-deck",
+    "valve-blast-lean"
+   ],
+   "view": {
+    "eye": [
+     -6320,
+     6112,
+     -32
+    ],
+    "yaw": 225,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z14",
+   "file": "14_e00_citadel_base_inside.png",
+   "where": "ep1_citadel_00, inside the Citadel's base where the ride comes in, eye level looking south-east (eye 4480 4352 -6293, yaw 315); the auto view",
+   "teaches": "Walls of upright plates of many widths, each standing proud of the next by its own depth, the ceiling stepping down in a different rhythm; Combine wires (combine_wire001 and 002, 7 near) strung across; broken explosive panels on the floor as physics shards. Ours: our Combine walls are one flat material.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "eye": [
+     4480,
+     4352,
+     -6293
+    ],
+    "yaw": 315,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z15",
+   "file": "15_e01_leaning_corridor.png",
+   "where": "ep1_citadel_01, a corridor near the confiscation field, eye level looking east (eye -5060 5178 2656, yaw 0); the auto view",
+   "teaches": "A corridor that leans: the left wall tilts outward, the ceiling slopes down to one side in ribs, panels stand off the right wall at different depths, and the only level surface is the floor; a weaponstripper (the confiscation field's machine) and combine locks and viewers (orange) along it. Ours: our corridors are square boxes.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-confiscation-field"
+   ],
+   "view": {
+    "eye": [
+     -5060,
+     5178,
+     2656
+    ],
+    "yaw": 0,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z16",
+   "file": "16_e01_stalker_gate_room.png",
+   "where": "ep1_citadel_01, the room where the stalkers are met before the gate, eye level looking north-west (eye -3808 7328 2584, yaw 135); the auto view",
+   "teaches": "Generators (combine_generator01, 5) and interfaces along the walls, one wall leaning in at a sharp angle over the floor, a bridge through it; three stalkers here, not fighters: one's death opens the gate (OnDeath relay_releaseGate), another's powers down the rollermines. Ours: no Combine work room.",
+   "lessons": [
+    "valve-work-shown-in-passing",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "eye": [
+     -3808,
+     7328,
+     2584
+    ],
+    "yaw": 135,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z17",
+   "file": "17_e02_bridge_over_the_drop.png",
+   "where": "ep1_citadel_02, a bridge over the drop between two walls, eye level looking east (eye -3796 1004 864, yaw 0); the auto view",
+   "teaches": "A walk over the void between two cliffs of plates, each plate standing out by a different depth, beams crossing at angles overhead; combine locks and viewers (orange) on the walk. The defenders here (4 soldiers, 3 enemy finders) are asleep until woken, and down these bridges each elite's death wakes the next (13 OnDeath > Wake). Ours: no bridge; the order of waking is the idea.",
+   "lessons": [
+    "valve-wake-chain",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "eye": [
+     -3796,
+     1004,
+     864
+    ],
+    "yaw": 0,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z18",
+   "file": "18_e02_long_bridge.png",
+   "where": "ep1_citadel_02, the long bridge seen end to end, eye level looking east (eye -5328 960 859, yaw 0); the auto view",
+   "teaches": "The long bridge: the walls lean in and out in bands, strut arrays and weaponstrippers (3) at its sides, a raised walk at the far end where two soldiers and two stalkers wait (green). Its symmetry is only in the walk; every plate beside it differs. Ours: no such approach; a raid on the Nexus could borrow the one-at-a-time defence.",
+   "lessons": [
+    "valve-wake-chain",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "eye": [
+     -5328,
+     960,
+     859
+    ],
+    "yaw": 0,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z19",
+   "file": "19_e02b_door_frames.png",
+   "where": "ep1_citadel_02b, a corridor at the lift's foot, eye level looking east (eye 3472 4624 -6656, yaw 0); the auto view",
+   "teaches": "Combine doorways nest frame in frame, each frame chamfered at its corners and stepped in from the last, so the corridor reads as a tunnel of gates closing down to a dark slot; railings (orange) in front. The lift above rides with tremors every 6 to 12 s. Ours: our Combine doors are props in a flat wall.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-chamfer-8"
+   ],
+   "view": {
+    "eye": [
+     3472,
+     4624,
+     -6656
+    ],
+    "yaw": 0,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z20",
+   "file": "20_e03_core_control.png",
+   "where": "ep1_citadel_03, the core transmission room, eye level looking south-east (eye 1610 11426 5056, yaw 315); the auto view",
+   "teaches": "A Combine work room over a pit: consoles and monitors (yellow: physics interfaces and monitors, 3 each), teleport controllers with their screens, wall units and generators round the edge, and many soldiers (green: 8 soldiers and 7 elites near) placed asleep until woken. Nearby, in the control room, elites work consoles under the Advisor on the screens until the player looks in. Ours: no Combine control room.",
+   "lessons": [
+    "valve-overseer-on-screens",
+    "valve-wake-chain"
+   ],
+   "view": {
+    "eye": [
+     1610,
+     11426,
+     5056
+    ],
+    "yaw": 315,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z21",
+   "file": "21_e03_core_chamber_cut.png",
+   "where": "ep1_citadel_03, the core chamber, from the south-west, cut at 5250 (box 1600 11000 3800 13300; drawn from a copy keeping brushes between 3600 and 6600 and the props inside the box)",
+   "teaches": "Rooms and walkways cling to the core's shaft at different heights and angles, none opposite another; ball sockets and lasers round it, control rooms stuck on above. The core (prop_coreball at 2687 12142 5161) wobbles on three axes on its own timers and its sound tells how far it is mended: unstable, partly stable, stable. Ours: the endings' motherlode is the owner's; the core as a piece is being lifted by the other helper.",
+   "lessons": [
+    "valve-progress-in-the-world",
+    "valve-ball-socket-power",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1600,
+     11000,
+     3800,
+     13300
+    ],
+    "cut": 5250,
+    "clip_below": 3600,
+    "clip_above": 6600,
+    "props_in_box_only": true
+   }
+  },
+  {
+   "n": "Z22",
+   "file": "22_e04_stalker_train_wreck.png",
+   "where": "ep1_citadel_04, the wrecked stalker train in its tunnel, from the south-west, cut at 3605 (box 3164 7090 4964 8890); the auto cut-away of map_ingest.py views",
+   "teaches": "A stalker train thrown about in a broken tunnel: train cars (combine_train02a and 02b), six stalker pods lying loose (stalkerpod ragdolls) and two stalker torsos (npc_furniture), broken Citadel wall models (combine_citadelwall_destroyed02) and piles of debris; the soundscape is stalkercar_ambient. One wreck tells what the trains carried. Ours: a wreck kit of this kind would be new.",
+   "lessons": [
+    "valve-story-props",
+    "valve-work-shown-in-passing"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     3164,
+     7090,
+     4964,
+     8890
+    ],
+    "cut": 3605
+   }
+  },
+  {
+   "n": "Z23",
+   "file": "23_e04_last_control_room.png",
+   "where": "ep1_citadel_04, the last control room before the train, eye level looking west (eye 3992 11768 3664, yaw 180); the auto view",
+   "teaches": "A hall with a leaning glass wall on one side and plated wall on the other, consoles (combine_interface002, 7) along it, two Combine doors at the far end. The reinforcements come in by themselves: one soldier works a console (1 s), another opens the door (3 s), a standoff at cover at 5 s (ai_goal_standoff at 3856 11582). Ours: our units never open their own doors in a scene.",
+   "lessons": [
+    "valve-npc-spawn-job",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "eye": [
+     3992,
+     11768,
+     3664
+    ],
+    "yaw": 180,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z24",
+   "file": "24_style_core_cut.png",
+   "where": "styleguide_core, Valve's style room for the core, from the south-west, cut at 5250 (box 1600 11000 3800 13300; drawn from a copy keeping brushes between 3600 and 6600 and the props inside the box)",
+   "teaches": "The core alone: a shaft walled in panels of different heights, the coreball in its middle (2703 12142 5161) ringed by four tall barricades, teleport rings (cyan outlines, combine_teleport_2) above and below, three ball sockets on the floor and three portalballs round it; the wobble runs on three timers of 0.2 to 0.9 s. Ours: reference for any core or reactor piece.",
+   "lessons": [
+    "valve-progress-in-the-world",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1600,
+     11000,
+     3800,
+     13300
+    ],
+    "cut": 5250,
+    "clip_below": 3600,
+    "clip_above": 6600,
+    "props_in_box_only": true
+   }
+  },
+  {
+   "n": "Z25",
+   "file": "25_style_destroyed_bridge.png",
+   "where": "styleguide_destroyed_citadel, Valve's style room for the broken Citadel (ep1_citadel_02's bridges), eye level looking west (eye -6848 960 859, yaw 180); the auto view",
+   "teaches": "The bridge as a sample: tall walls of plates each standing out by its own depth, a walk with rails, a lit doorway at the end; soldiers and stalkers on it (9 and 8 in the room), the rumble timer of 12 to 49 s. Ours: reference for a broken Combine approach.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-place-falling-apart"
+   ],
+   "view": {
+    "eye": [
+     -6848,
+     960,
+     859
+    ],
+    "yaw": 180,
+    "pitch": 0
    }
   }
  ]

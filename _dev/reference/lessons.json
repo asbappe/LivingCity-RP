@@ -1040,7 +1040,7 @@
    "title": "An alarm is a turning red light, a siren and makers, on two relays",
    "rule": "A start relay turns on a red beacon (func_rotating carrying two red point_spotlights back to back, in a caged lamp), plays a siren or bell loop (16) a moment later and Spawns from disabled npc_template_makers; a stop relay (fired by the gamemode, or by the start relay after a set time) turns all of it off. A one-shot klaxon (48) can be fired several times a second apart instead of a loop.",
    "why": "d1_canals_07 logic_start_redlight: spot_doors and spot_doors2 LightOn (point_spotlight 255 0 0, length 96, width 25, spawnflags 2, angles 0 0 -180 and 0 180 -180, parented to rot_redlight1), rot_redlight1 Start (func_rotating 16 cube, spawnflags 64, maxspeed 350, fanfriction 20) inside props_c17/light_cagelight01_on, sound_redlight1 PlaySound at 2 and StopSound at 14, logic_stop_redlight at 120. d2_coast_12 bunker_1_alarm_relay: coast.bunker_siren1 and 2 (16, radius 10000) and a red glow sprite. d1_canals_08 klaxon at 0, 1, 2, 3. 194 of 197 npc_template_maker start disabled and are fired by Spawn.",
-   "how": "m.alarm(name, u, v, z, makers=()) giving lc_NAME_alarm_on / _off for the gamemode (a raid on a checkpoint). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R7 Alarm (d1_canals_07 logic_start_redlight, d2_coast_12 bunker_1_alarm_relay, d1_canals_08 relay_locks_opengates): Beacon: func_rotating 16 cube nodraw, `spawnflags` 64, `maxspeed` 350, `fanfriction` 20; two point_spotlight parented to it, `angles` 0 0 -180 and 0 180 -180, `rendercolor` 255 0 0, `spotlightlength` 96, `spotlightwidth` 25, `spawnflags` 2, `HDRColorScale` 0.6; inside props_c17/light_cagelight01_on. Start relay: `spot.LightOn`, `rot.Start`, `bell.PlaySound @2`, `bell.StopSound @14`, `stop_relay.Trigger @120`. Stop relay: `LightOff`, `rot.Stop`. Sirens coast.bunker_siren1/2 (16, radius 10000) or a one-shot klaxon d1_canals.Floodgate_Klaxon (48) fired `@0, @1, @2, @3`. Makers: npc_template_maker `StartDisabled` 1, `MaxNPCCount` 1, `MaxLiveChildren` 1 to 5, `SpawnFrequency` 5, `Radius` 256, `CriterionVisibility` 2, `CriterionDistance` 2; fired by `Spawn` from triggers and relays (100 lines) or `Enable`; `OnSpawnNPC > schedule.StartSchedule` (aiscripted_schedule, goal an info_target, never !player). d2_prison_01: a guard tower gun's first shot (func_tank OnFire > tower_N_alarm_relay @1) shows that tower's glow sprite and starts two looped sirens (coast.bunker_siren1 and 2, radius 10000, flags 17) for the whole yard; one relay_stop_alarms stops both. d2_prison_08 logic_warning: a klaxon (radius 3000, 48), a warning light and screen on for 1.75 s, the relay calling itself every 2.5 s until logic_warning_kill. Black Mesa East's alarm (d1_eli_02) has no turning beacon: four lights with glow sprites blink on a relay that calls itself (on 1.2 s, off @1.2, again @1.9) over a fire bell loop (eli_lab.firebell_loop_1, flags 16).",
+   "how": "m.alarm(name, u, v, z, makers=()) giving lc_NAME_alarm_on / _off for the gamemode (a raid on a checkpoint). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R7 Alarm (d1_canals_07 logic_start_redlight, d2_coast_12 bunker_1_alarm_relay, d1_canals_08 relay_locks_opengates): Beacon: func_rotating 16 cube nodraw, `spawnflags` 64, `maxspeed` 350, `fanfriction` 20; two point_spotlight parented to it, `angles` 0 0 -180 and 0 180 -180, `rendercolor` 255 0 0, `spotlightlength` 96, `spotlightwidth` 25, `spawnflags` 2, `HDRColorScale` 0.6; inside props_c17/light_cagelight01_on. Start relay: `spot.LightOn`, `rot.Start`, `bell.PlaySound @2`, `bell.StopSound @14`, `stop_relay.Trigger @120`. Stop relay: `LightOff`, `rot.Stop`. Sirens coast.bunker_siren1/2 (16, radius 10000) or a one-shot klaxon d1_canals.Floodgate_Klaxon (48) fired `@0, @1, @2, @3`. Makers: npc_template_maker `StartDisabled` 1, `MaxNPCCount` 1, `MaxLiveChildren` 1 to 5, `SpawnFrequency` 5, `Radius` 256, `CriterionVisibility` 2, `CriterionDistance` 2; fired by `Spawn` from triggers and relays (100 lines) or `Enable`; `OnSpawnNPC > schedule.StartSchedule` (aiscripted_schedule, goal an info_target, never !player). d2_prison_01: a guard tower gun's first shot (func_tank OnFire > tower_N_alarm_relay @1) shows that tower's glow sprite and starts two looped sirens (coast.bunker_siren1 and 2, radius 10000, flags 17) for the whole yard; one relay_stop_alarms stops both. d2_prison_08 logic_warning: a klaxon (radius 3000, 48), a warning light and screen on for 1.75 s, the relay calling itself every 2.5 s until logic_warning_kill. Black Mesa East's alarm (d1_eli_02) has no turning beacon: four lights with glow sprites blink on a relay that calls itself (on 1.2 s, off @1.2, again @1.9) over a fire bell loop (eli_lab.firebell_loop_1, flags 16). The Citadel's own alarm has no turning beacon (ep1_citadel_03, 04): relay_alarm1 plays the siren and blinks a glow sprite (ShowSprite @0, 0.9, 1.8, 2.7, 3.6, 4.5; HideSprite @0.7, 1.6 ... 5.2: 0.7 s on, 0.2 off, six times), the alarm light off @5.2; timer_alarm (refire 8) repeats it until a scene Disables the timer. A blinking light crosses the owner's no-flicker rule for map pieces: ask the owner first.",
    "check": "review"
   },
   {
@@ -1762,7 +1762,7 @@
    "title": "In a long fight, only a few dropped guns stay on the ground",
    "rule": "Where NPCs die again and again (waves, a held zone), keep only 2 to 4 dropped guns of each kind; older ones go. Fewer loose weapons, fewer physics objects. It changes what players can pick up: ask the owner first.",
    "why": "6 game_weapon_manager in d3_c17_07 (the timed hold), 11 and 12 (long street fights): weaponname weapon_ar2 (3) or weapon_smg1 (2), maxpieces 3 (3), 2 (2) or 4, ammomod 1. One is misspelt 'waepon_ar2' in Valve's file and so does nothing.",
-   "how": "Gamemode: when an NPC's dropped weapon is made, count those of its class and remove the oldest beyond the limit (or never drop, as the owner prefers).",
+   "how": "Gamemode: when an NPC's dropped weapon is made, count those of its class and remove the oldest beyond the limit (or never drop, as the owner prefers). Where the player must fight with the gravity gun alone, Valve leaves no guns at all: in ep1_citadel_01 and 04 every soldier's death dissolves his weapon (10 of 10 and 13 of 13: OnDeath > env_entity_dissolver Dissolve soldierX_weapon).",
    "check": "review"
   },
   {
@@ -2360,7 +2360,7 @@
    "title": "A Combine force field is a see-through shield and a clip that lets the Combine through",
    "rule": "Build a field from two parts: the shield you see (never solid) and a clip that does the blocking, either for everyone but Combine soldiers or for players only. Its poles show it is on, and turn dark with it. It hums within about 500 and buzzes while someone stands in it. Switched off, its sound fades out over half a second, sparks fly, the poles go dark. Our checkpoint forcefields block people by the gamemode: matching Valve's build, or letting Combine NPCs walk through, changes them: ask the owner first.",
    "why": "d2_prison_03 vort_field and hall_field: a nodraw brush with effects/combineshield/comshieldwall3 on two faces (func_brush Solidity 1, never solid) and a toolsclip brush with excludednpc npc_combine_s; d2_prison_07 func_croom2_field and func_room5_field_gate_1 to 4: the shield brush and a toolsplayerclip brush (only players held). Poles combine_fence01a and 01b Skin(1) when off. Sound: combine.sheild_loop (radius 500) and combine.sheild_touch started by a trigger_multiple round the field (StartTouch PlaySound, EndTouch StopSound). d2_prison_03 plug_pull2: hall_field Kill, forcefield3_sound_close and far Volume(.1) then Kill @1, sparks, turret_hall_poles Skin(1); d2_prison_06 logic_shield_off2: shutdown sound @0.2, Volume(0) @0.5. d2_prison_07 logic_room5_begin_assault turns four fields on across the gates @3 while the gates open and their node links TurnOn @5: players shut in, soldiers through.",
-   "how": "Map modules: m.forcefield(name, a, b, combine_pass=True) writing the shield brush, the clip (toolsclip with excludednpc, or toolsplayerclip), two pole props and the hum and buzz with their trigger. Gamemode: the checkpoint field (city-people.md) could buzz while touched and fade its hum when the power bank dies.",
+   "how": "Map modules: m.forcefield(name, a, b, combine_pass=True) writing the shield brush, the clip (toolsclip with excludednpc, or toolsplayerclip), two pole props and the hum and buzz with their trigger. Gamemode: the checkpoint field (city-people.md) could buzz while touched and fade its hum when the power bank dies. The Citadel's shield walls (d3_citadel_03, 7 of them) add two things: a trigger_hurt of 10000 that the on relay Enables and Disables 0.1 s later, so whatever stands in the field as it rises dies; and the field fed by an energy ball in a socket (func_combine_ball_spawner flag 8192: OnLastBallGrabbed > off relay, OnBallReinserted > on relay; valve-ball-socket-power). The clip brush's excludednpc npc_combine_s lets the soldiers through; the poles' Skin 1 when off.",
    "check": "map_lint 'wire': a combineshield brush entity that is solid (Solidity not 1), or one with no clip twin in its box"
   },
   {
@@ -2405,7 +2405,7 @@
    "title": "A held room under steady pressure: each attacker killed is replaced a second later, until the time is up",
    "rule": "Besides waves, Valve holds a room by keeping a set number of attackers alive: each death spawns one replacement a second later at a randomly chosen spawn point, the first few deaths each add one more (it gets harder), a manhack comes back ten seconds after it falls. When the time is up nobody new comes, and the hold ends when the last attacker is dead. An attacker who is stuck must not keep it open: a trigger over every place they reach notices when none are left, and a failsafe ends it a few minutes after the time anyway. Fits the owner's exception to house rule 9 (holding ground against attacks); changes how our counterattacks run: ask the owner first.",
    "why": "d2_prison_07 room 5 (Valve's comments quoted): template soldier OnDeath > counter_room5_total_living_enemies Subtract 1 and logic_room5_on_combine_death: 'Spawn a single combine in the lower level' @1 (logic_case PickRandom over 5 lower makers, AddMaxChildren 1 and Enable; 3 upper makers likewise), counter_room5_combine_deaths Add @1 > OutValue > logic_spawn_extra_badguys ('At intervals, this case is used to add extra bad guys': cases 1 to 4 add a lower soldier, a manhack, a lower, an upper); manhack OnDeath > logic_room5_spawn_manhack @10. timer_room5_assault (RefireTime 190) > logic_room5_assault_can_finish: spawning Killed, compare_all_enemies_dead ('Whenever it finds itself at 0, it triggers the finish-assault relay'). d2_prison_08 the same with 184 s, the third way in opened only after 8 deaths, 5 s later and once no player is in its trigger. Control room 2: 'Trigger fires when all combine in the wave are killed. Should stretch over all the places combine get to' (trigger_multiple filter Combine and manhacks, EndTouchAll > finished @6) and logic_croom2_failsafe 180 s after the 480 s timer: 'on the assumption it's because a combine's stuck somewhere'.",
-   "how": "Gamemode: a counterattack on a held zone (city.md) could take a cap N, replace each death after 1 s at a random spawn of the zone's (never one a player can see), add 1 for each of the first 4 deaths, stop at the time limit, end when the zone holds no attacker or 180 s after the limit. Tests: the count never passes N plus 4; the hold ends with a stuck attacker.",
+   "how": "Gamemode: a counterattack on a held zone (city.md) could take a cap N, replace each death after 1 s at a random spawn of the zone's (never one a player can see), add 1 for each of the first 4 deaths, stop at the time limit, end when the zone holds no attacker or 180 s after the limit. Tests: the count never passes N plus 4; the hold ends with a stuck attacker. d3_citadel_04's lift wait caps the living, not the dead: a logic_timer of 4 to 10 s picks one of 8 cases (three doors with env_entity_makers of 3 soldiers, or manhacks) only while fewer than 4 are alive (soldier_counter: each spawn Adds 3, each death Subtracts 1; OutValue > logic_compare 4 Enables or Disables the timer); 6 waves are allowed until the lift is called, then the timer narrows to 2 to 5 s and 12 more are allowed; the lift's first stop Kills the timer. The stasis room does the same with 3 alive and 8 waves.",
    "check": "a unit test of the cap and the failsafe; robots.py: a hold where attackers cannot path still ends"
   },
   {
@@ -2448,7 +2448,7 @@
    "title": "The prison's machines run on a beat of their own: pod lines halt and go, trains come through",
    "rule": "The Combine's machinery keeps moving with nobody watching, on loops that call themselves: prisoner pods on their conveyors halt for 2 or 3 s every 18 to 22 s and move on; a train sounds its horn, moves off a second later, shakes the ground in steps as it passes and is removed at the end of its track; the next comes some 35 s after. Prisoners are shown this way, in pods and on monitors, not kept standing in cells. Changes how our trains and depot behave: ask the owner first.",
    "why": "d2_prison_06 logic_podtrains_L_control_1 (logic_relay): logic_podtrains_L_toggle_1 @0 and @2 (podTrain_L_3 and L_4 Toggle), itself @22; the upper line toggles @0 and @3, itself @18; pods are func_tracktrain (startspeed 100, novaprospekt.pods_track_move_1 and stop_1); five PodPerson citizens in pods play np_podperson.vcd and are Killed when the next scene starts. logic_Train_comethrough_start_1: outside_traindoors_1 Toggle, razortrain_horn (radius 6000) @4, StartForward @5, SetSpeed 500 @5.1; TrainPath_L2_2b OnPass: Idle_Trains_shake_1 (radius 700, frequency 5) StartShake, Amplitude 2 @2, 3 @6, 2 @9, 1 @12, StopShake @18; logic_Train_comethrough_over_1 calls the next @35; TrainPath_L_X OnPass > KillHierarchy @0.5; steam TurnOff as it passes. No npc_citizen stands in a cell in the eight maps.",
-   "how": "Gamemode: the train (city-people.md, lc_train_minutes) could sound its horn 1 s before it moves and shake those nearby 2, 3, 2, 1 over 18 s. Map modules: a depot or prison piece with a pod conveyor (func_tracktrain on a looped path) and the relay that halts it 2 s in every 22.",
+   "how": "Gamemode: the train (city-people.md, lc_train_minutes) could sound its horn 1 s before it moves and shake those nearby 2, 3, 2, 1 over 18 s. Map modules: a depot or prison piece with a pod conveyor (func_tracktrain on a looped path) and the relay that halts it 2 s in every 22. The Citadel's pod rings keep in step another way (d3_citadel_01, 04, 05, ep1_citadel_00): 7 pods on a ring of 14 path_tracks (4749 long, speed 100), each stopping at its own node (OnPass !activator Stop) and adding 1 to one math_counter (max 7); OnHitMax fires the resume relay 3 s later (4 s on the other ring) and resets the counter, so the slowest pod holds the rest and the ring never drifts; one stop is a job (the zapper: warm-up @2.5, energy core discharge, beam, sparks and a trigger_hurt @4, all off 6 s later), another opens the pod (rotator Open @0, pod @1, Close @4 and @5). Diggers on 2-node rings are started by one logic_auto at 1, 4 and 6 s so they never move together. A train that seems to leave without moving (ep1_citadel_04): the escape train stands still while a ring of three point_spotlights and a brush on a func_tracktrain (train_trainlights_1) runs past it at 2200 round 9 path_tracks 2560 long (a pass every 1.2 s), with the razor-train wheel loop and shakes every 12 to 30 s.",
    "check": "map_lint 'wire': a relay that calls itself with no delay (Valve's loops wait 18 to 35 s)"
   },
   {
@@ -2560,7 +2560,7 @@
    "title": "A long lift ride down into a base shows its life floor by floor",
    "rule": "When the way into a base goes down a long way, use the ride: an open cage in a shaft that passes floors you can see into but not reach (sleeping quarters, a kitchen, a workshop), each with a few people at work started just before it comes into view and removed once the lift is past. The floor ahead is opened to sight as the lift reaches it and the one behind is shut a moment later. A guide rides along. A lift, or floors only seen, would be new to our bases: ask the owner first.",
    "why": "d1_eli_01 (21 November): func_tracktrain elevator_lab (startspeed 65) carrying a freightelevator prop on seven path_tracks from z -1214 to -2672 (1458, about 22 s); shaft 176 by 800, 1456 high. Floors passed at z -1584 (dormitory), -1872 (kitchen), -2160 (repairs): 288 apart, no AI nodes on any of them, only elevatordoor props as gates. elevator_trigger_go_up_1 starts them on the ride's clock: logic_loungers_start @4, logic_kitchenscene_start @6.5, logic_RepairmenScene_Start @14.2, lift Resume @3. path_tracks 2a, 2b, 2c: OnPass > portal_elevator_ride_N+1 Open @0 and portal_elevator_ride_N Close @3. The last stop: shake, ding @1, doors open, logic_KILL_EM_ALL KillHierarchy on the vignettes' NPCs. The lift moves only once the guide is in (trigger_once for NPCs enabling the player's trigger).",
-   "how": "Map modules: a `lift` piece (a func_tracktrain or func_movelinear cage, doors of two leaves at top and bottom, lip 16, speed 100, wait 4) with lc_life_N spots on the floors it passes. Gamemode: life spots on a passing floor are filled when a rider is within reach and emptied after, like the camps' fighters who slip away out of sight (city.md).",
+   "how": "Map modules: a `lift` piece (a func_tracktrain or func_movelinear cage, doors of two leaves at top and bottom, lip 16, speed 100, wait 4) with lc_life_N spots on the floors it passes. Gamemode: life spots on a passing floor are filled when a rider is within reach and emptied after, like the camps' fighters who slip away out of sight (city.md). d3_citadel_02's pod ride is the same idea at the Citadel's scale: 56 path_tracks, 24581 units, about 147 s at 100 to 250, 13 nodes that set something off (a thing to see about every 11 s): the next hall's door Opens as the pod nears and the last Closes behind it, workers and guards are ForceSpawned ahead and Killed behind, container trains on a 15206 ring start 0, 2 and 4 s apart as the pod passes.",
    "check": "map_lint: each areaportal a lift opens on the way is shut again by a later stop"
   },
   {
@@ -2941,7 +2941,7 @@
    "title": "A broadcast loops on the city's screens and is joined midway; when the Combine see you, the screens cut to them",
    "rule": "A message on the city's screens runs as a loop of short scenes that starts partway in, so whoever walks up joins it in the middle; between loops the screen is blank a few seconds. When a Combine camera finds the players, every screen near them cuts to static, then the Combine's face for a few seconds, static, and off, and the lights by them go out. Changes our screens and broadcasts: ask the owner first.",
    "why": "ep1_c17_01, 01a, 02b, 05: lcs_kleinercast to lcs_kleinercast13 chained OnCompletion on monitor_breencast_jumbotron4 through point_camera camera_tv_klienercast; logic_auto starts the loop at scene 5 @0.5; after scene 13 the screen shows camera_tv_blank @2 and the loop starts again @5. ep1_c17_05: pen_camera_1 (npc_combine_camera, inner 288, outer 408, invulnerable until then) OnFoundEnemy > relay_advisor_scene: monitor_room* static @0, the advisor @0.5, static @3, off @3.5, the broadcast's scenes Cancelled, sound_advisors @0.5 to 3, the hospital exit's light off with a spark. ep1_c17_01: the Combine's wall crushes the screen showing Kleiner when it falls.",
-   "how": "Gamemode: the Administrator's broadcasts and a Resistance hijack (docs/features/city-administration.md) could loop their recorded lines starting partway in; when a Combine camera or scanner spots a wanted player, the screens near him show static and the Combine's face for 3 s. Sound and picture, no text.",
+   "how": "Gamemode: the Administrator's broadcasts and a Resistance hijack (docs/features/city-administration.md) could loop their recorded lines starting partway in; when a Combine camera or scanner spots a wanted player, the screens near him show static and the Combine's face for 3 s. Sound and picture, no text. Breen's broadcasts in d3_citadel_03 and 04 come through one point_camera (fov 20) aimed at npc_breen in a booth far from the play, shown on every console's func_monitor; a func_brush slate in front of that camera blanks all the screens at once: the slate tone plays (at 2 and 5 s), the slate is Disabled (at 6 s, or 0.5 s after the tone) and Breen's scene starts (at 9 s, or 0.6 s); his speeches chain OnCompletion 2 s apart.",
    "check": "review"
   },
   {
@@ -2954,7 +2954,7 @@
    ],
    "title": "A Combine structure is a centred mass with an off-centre skin: plates, layers, leans and turns, and no mirror",
    "rule": "Build a Combine wall, gate, tower or hall side in five passes: (1) masses on a 256 bay in 128 courses, which may be centred; (2) plates 2 to 16 thick laid over them; (3) 3 to 6 layers on about a third of the wall; (4) 2 or 3 leans and turns from a short list of simple ratios; (5) the relief of each wall and the two sides of each opening made to differ. It is not random: the rhythm stays on 256, the oddness is in the skin. New Combine pieces only; ask the owner first before changing the checkpoint, depot or armoury, which stand upright and square.",
-   "why": "d3_citadel_01 to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, styleguide_core (21 November): single detail groups are mirror-true (median 0.91 to 1.0; d3_citadel_03's shaft walls 0.93 to 0.998, d3_breen_01's pillars in mirrored pairs), but 30% of 1082 articulated Combine walls match their mirror below 0.6 (old City 17: 15% of 206), 18.1% of the Combine's visible area is off the axes (old City 17 1.4%), plates are 32 to 74% of its brushes, 3+ layers cover 17 to 67% of its wall area. Notes: _dev/reference/valve_citadel/wip/architecture_notes.md.",
+   "why": "d3_citadel_01 to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, styleguide_core (21 November): single detail groups are mirror-true (median 0.91 to 1.0; d3_citadel_03's shaft walls 0.93 to 0.998, d3_breen_01's pillars in mirrored pairs), but 30% of 1082 articulated Combine walls match their mirror below 0.6 (old City 17: 15% of 206), 18.1% of the Combine's visible area is off the axes (old City 17 1.4%), plates are 32 to 74% of its brushes, 3+ layers cover 17 to 67% of its wall area. Notes: _dev/reference/valve_citadel/notes/architecture_notes.md.",
    "how": "A map_combine.py generator (proposed): combine_piece(kind, box, seed) lays mass, plate stacks, lean courses and turns by the recipe in the notes and returns convex solids for Vmf.detail_shapes; it throws away a seed whose walls mirror (see valve-combine-no-mirror).",
    "check": "proposed: map_combine.py checks its own pieces (mirror match, layer share, off-axis share) before writing"
   },
@@ -3047,6 +3047,123 @@
    "rule": "Light a Combine wall with light-panel brushes (lights/white004_nochop or white003_nochop) set flush in the plate layer, 16 to 64 thick, 64 to 192 by 140 to 1150 (small rooms 8 to 16 by 16 to 100 by 48 to 256), upright 3 to 2 over lying, coloured 147 226 240 or 122 173 188; warm 254 95 48 or 249 177 106 only where the place is failing. No flickering (the owner's rule). New pieces only. Pieces already built keep their look: ask the owner first before changing them.",
    "why": "Citadel maps (21 November): 11 to 74 light-panel brushes a map; their face flush with the plate beside it on 77 to 100%; d3_citadel_03 to 05 panels 16 to 128 thick, 64 to 457 by 128 to 1280; ep1_citadel_03 2.7 to 23 thick, 15 to 192 by 16 to 392; upright 214 to lying 135. light and light_spot colours: 147 226 240 leads, 122 173 188 in d3_citadel_04, 05; ep1_citadel_01, 02b (the core failing) 254 95 48, 249 177 106, 235 114 33. Glow sprites 1 to 92 a map.",
    "how": "map_combine.py swaps one plate of a stack for a light panel of the same size and plane, with a light behind it in the panel's colour.",
+   "check": "review"
+  },
+  {
+   "id": "valve-confiscation-field",
+   "tags": [
+    "valve",
+    "combine",
+    "logic",
+    "sound",
+    "gameplay"
+   ],
+   "title": "The Combine's weapon check is a room that announces, holds you, charges, then takes and burns what you carry",
+   "rule": "A Combine weapon check is a timed room, never a popup: whoever steps in is held still, a voice announces the check, machines round the room charge with a rising sound, then what is carried floats out of the hands and burns away, the room flares bright, and the way out opens. What cannot be taken (Valve's gravity gun) makes the machines spark and fail, a voice says the check failed, and the way opens anyway with a security warning. A check that takes players' things changes our contraband and checkpoint features: ask the owner first.",
+   "why": "d3_citadel_03 room0 and ep1_citadel_01 (the same build): a trigger_once in the middle; at 0 trigger_vphysics_motion pins the player (gravity 2, velocity limit 8); at 2 s (1.5 in EP1) citadel.overwatch_weaponstrip (radius 1250); at 7 s strip_core1, four env_citadel_energy_core (scale 3) at the room's corners, StartCharge 4 with weapon_zapper_start and a loop; at 11 s trigger_weapon_strip Enable (killweapons No), the dropped weapons float in a second vphysics trigger (gravity 0, velocity limit 2, air density 0.5); at 13 s trigger_weapon_dissolve Enable, emitter info_targets at the four cores, the room light bright. trigger_weapon_dissolve OnChargingPhyscannon > sparks, overwatch_weaponstrip_fail at +1 s, the end relay at +4 s (strip and dissolve off, the exit wall Killed, the shield wall off, autosave), overwatch_weaponstrip_fail_security at +8 s. With nothing to fail, strip_stop does the same and the first squad comes 2 s later.",
+   "how": "Gamemode (ask first): a Combine entry check for the Nexus or a Combine-only zone (docs/features/contraband.md, patdown-and-cuffs.md): stepping into a marked spot holds the player about 10 s, plays the Overwatch weapon-strip line and a charge sound, then takes the contraband (as a search does) with a dissolve effect on what is taken, and opens the door; told by sound and effect, no text (house rule 10). Map modules: a check-room piece with four energy-core points at the corners and an exit door the gamemode opens.",
+   "check": "review"
+  },
+  {
+   "id": "valve-ball-socket-power",
+   "tags": [
+    "valve",
+    "combine",
+    "logic",
+    "gameplay"
+   ],
+   "title": "Combine power is a thing you can carry: pull the energy ball from its socket and what it feeds goes dark",
+   "rule": "In the Citadel what powers a field, a lift or a bridge is an energy ball held in a socket, marked by a pair of glowing cores. Take the ball out and the thing it feeds switches off; put a ball back and it comes on again. Elsewhere dispensers hold a few balls that come back a few seconds after one is lost, and catchers count balls thrown in until enough are in. A new kind of job game or sabotage: ask the owner first.",
+   "why": "d3_citadel_03: func_combine_ball_spawner with flag 8192 (power supply), ballcount 1, ballrespawntime -1 (never comes back), speed 75: ballspawner_ballgenerator1 OnLastBallGrabbed > relay_combineshieldwall3_off, OnBallReinserted > _on; ball_spawner_room3 holds wall 7; two env_citadel_energy_core (scale 1.5, one up, one down) at each socket. Dispensers: ballcount 10, respawn 4 s, speed 125 to 350, start inactive (4096), in rows 80 apart. ep1_citadel_03: catchers are trigger_multiples with filter_combineball_type (ball_trap_10 Add 1, its reset Subtracts 1): 2 balls per bridge section, 3 for the upper bridge, 6 for the core (counter_balltrap). 44 spawners in 9 maps, 17 launchers in EP1.",
+   "how": "Gamemode (ask first): a sabotage or repair job game in the Nexus or a Combine post (docs/features/jobs-and-quests.md): carry a glowing ball (a prop) from a dispenser to a socket to power a door or field, or pull one out to drop a field; a hands-on step in place of any waiting (house rule 9). Map modules: a socket point with two core glows, wired to a named field or door.",
+   "check": "map_lint 'wire': a ball socket (func_combine_ball_spawner flag 8192) wires both OnLastBallGrabbed and OnBallReinserted; review"
+  },
+  {
+   "id": "valve-countdown-spoken",
+   "tags": [
+    "valve",
+    "combine",
+    "logic",
+    "sound",
+    "gameplay"
+   ],
+   "title": "A deadline is counted out loud by the Combine's voice, closer together near the end, while a machine climbs with it",
+   "rule": "When something will happen at a set moment (Breen's teleport), the time left is spoken by Overwatch at 3 minutes, 2, 1, 45 seconds, 30, 15 and 10: the calls come closer together as the end nears, and a machine everyone can see moves on a step with the late calls. No clock on the screen. Ending the threat cancels the calls still to come. Our endings and the collapse are the owner's: changing how they count down, or adding spoken calls, is ask the owner first.",
+   "why": "d3_breen_01: a trigger_once fires countdown (info_teleporter_countdown) StartCountdown 190 at 12 s (the wiki: its HUD was never finished) and citadel_relay_overwatch at 19 s: citadel.overwatch_3min_to_teleport @0, 2min @57, 1min @117, 45sec @132, 30sec @147, 15sec @162, 10sec @167 (ambient_generic, radius 1250, flags 49); Train_main_lift (Breen's lift up the core) Resume @147 and @162. logic_portal_final_end: citadel_relay_overwatch CancelPending @0 and Kill @0.1, countdown StopCountdown.",
+   "how": "Gamemode (ask first): an ending or the collapse (docs/features/endings.md, collapse.md) that comes at a set time could have the city's dispatcher voice speak the time left at 3, 2, 1 min, 45, 30, 15 and 10 s, and stop the moment it is averted; a sound, never a line of text (house rule 10).",
+   "check": "review"
+  },
+  {
+   "id": "valve-overseer-on-screens",
+   "tags": [
+    "valve",
+    "combine",
+    "npc",
+    "logic",
+    "sound"
+   ],
+   "title": "The Combine's masters are seen only on screens; staff work consoles under them, and the alarm comes when you are noticed",
+   "rule": "The Advisor is never met in the Citadel: it is a face on the screens, cut in and out between other pictures with its hum, screens round the room coming on one by one with a click each. In the control room elites work consoles while it watches; when a player looks into the room (about half a second in sight) or a timeout runs out, the Advisor alerts, an alarm sounds and repeats, the screens go dark and the staff turn to fight. New for our Nexus or Combine quarter: ask the owner first.",
+   "why": "ep1_citadel_01, 03, d3_breen_01: no npc_advisor; a cycler with models/Advisor.mdl in a sealed room, point_cameras fov 70 to 90, func_monitors. ep1_citadel_01 relay_advisor_monitor_fx: SetCamera between camera_advisor and camera_tv_breen 9 times from 0.5 to 3.6 s with the Advisor's ambient loop on and off in step; monitors 2 to 7 Enable at 4.3, 4.6, 4.9, 5.6, 6.2, 6.5 s with a monitor-on sound each; AdvisorAlert @3.5, AdvisorTalk @5; relay_bringoutpod_1 @7 (door, rail, turning light, alarm). ep1_citadel_03: console_actBusy ForceNPCToActBusy npc_elite_controltype_1 and _2 at console hints; Trigger_look_advisor (fieldofview .975, looktime 0.6) OnTrigger and OnTimeout > relay_enteringcorecontrol: AdvisorAlert @0, the elites Wake @0, assault Activate @0.13, relay_alarm1 @1, timer_alarm (8 s) Enable @1, Monitor_advisor_1 Disable @3. d3_breen_01: Breen pleads to it on Monitor_plead_console_1.",
+   "how": "Gamemode (ask first): the Nexus or a Combine control room (docs/features/factions.md) could show an overseer's face on its screens for a few seconds at a time, cut in with static, and have Combine NPC staff at console spots who drop their work and fight when an intruder is seen for half a second. Map modules: console work spots (act busy hints) in Combine rooms and a screen surface named for the gamemode.",
+   "check": "review"
+  },
+  {
+   "id": "valve-wake-chain",
+   "tags": [
+    "valve",
+    "combine",
+    "npc",
+    "logic",
+    "gameplay"
+   ],
+   "title": "Defenders of the Citadel sleep until woken, and on a bridge each one's death wakes the next",
+   "rule": "Most of the Citadel's soldiers are placed asleep, waiting for a word, and are woken by what the player does (a door opened, a pipe broken, a look into a room) or by a comrade's death; on long bridges each defender's death wakes the next, so they come one at a time, in order, never all at once. Changing how our Combine defenders are spawned or woken: ask the owner first.",
+   "why": "ep1_citadel_03: sleepstate 3 (waiting for an input) on 52 of 59 npc_combine_s; Wake from logic_relays (8), trigger_onces (8), comrades' OnDeath (6), func_physbox OnMotionEnabled (a ball pipe's door broken open, 4), path_track OnPass (1). ep1_citadel_02: 16 of 26 asleep; 13 OnDeath > Wake down the bridge squads (npc_elite_bridge2 > 2d > 2f, 2i > _3d...). Elites (combine_super_soldier) are 20 to 44% of the Citadel's soldiers (5 of 25 in d3_citadel_03, 12 of 58 in 04, 26 of 59 in ep1_citadel_03).",
+   "how": "Gamemode (ask first): a raid on the Nexus (docs/features/city.md) could keep its inner defenders idle at posts until the raiders reach their stretch, and wake the next post when one falls, instead of all at once.",
+   "check": "review"
+  },
+  {
+   "id": "valve-place-falling-apart",
+   "tags": [
+    "valve",
+    "logic",
+    "sound",
+    "combine"
+   ],
+   "title": "A place falling apart rumbles at random and its broken machines spark on their own",
+   "rule": "Once a place is breaking, let it say so by itself: every 12 to 49 seconds at random, a shake felt across the area with a far explosion and a scrape heard further still, and a second sound some time later, and, seen from afar, a chunk breaking off its top every 6 to 12 seconds; a story beat gets a harder, shorter shake. Each broken console sparks on its own random timer (every half a second to 2 seconds), switched on by whatever broke it and off a while after. No text. Fits our endings and the collapse, which are the owner's: ask the owner first before adding it to them.",
+   "why": "ep1_citadel_01, 03, styleguide_destroyed_citadel: timer_rumble random 12 to 49 s (8 to 33 in ep1_citadel_02) > relay_rumble_random: shake_rumble_02 (amplitude 4, 4 s, frequency 120, radius 5000), citadel_ep01.ambient_explosion (radius 9000), a second sound @25. Story rumble relay_rumble_01: amplitude 12 for 1 s, then 4 for 4 s at 0.95, two sounds. 121 of the 15 maps' 209 logic_timers drive sparks, random 0.4 to 2 s, all start disabled and are Enabled by the relay that breaks the thing (d3_citadel_03 relay_consoleN_start_fx: explosion, sparks 2 s, timers on, stop at 10 s, the console's skin to 1). Seen from outside (ep1_citadel_00): timer_citadel_gibs (random 6 to 12 s) > case_citadel_gibs PickRandom over 5 env_shooters gib_citadel_chunk_1 to 5 (a chunk off the Citadel's top), timer_lightning (4 to 12 s, thunder @1 and @2). ep1_citadel_02b: small tremors every 6 to 12 s on the lift.",
+   "how": "Gamemode (ask first): during the collapse or an ending's run-up (docs/features/collapse.md, endings.md), a city-wide random rumble every 12 to 49 s (screen shake 4 for 4 s, a far explosion sound); a Combine console or terminal that is wrecked sparks on a random 0.4 to 2 s timer for about 10 s.",
+   "check": "map_lint 'wire': a spark timer starts disabled and something Disables or Kills it again; review"
+  },
+  {
+   "id": "valve-work-shown-in-passing",
+   "tags": [
+    "valve",
+    "combine",
+    "npc",
+    "logic",
+    "performance"
+   ],
+   "title": "The Citadel shows its work in passing: workers busy at their task, a guard watching, there only while someone goes by",
+   "rule": "What the Combine does is shown, not told: stalkers at work with cables hanging to what they mend and sparks beside them, a soldier standing watching one, synths walking through a bay, one pod carrying a stalker past with a shriek. They appear just before someone comes past and are removed after. Fits a Combine quarter or Nexus as scenery; new NPC kinds there: ask the owner first.",
+   "why": "d3_citadel_02: npc_stalker_busy1 to 3 on scripted_sequences (play working or idle2, flags 480 and 496), move_rope and keyframe_rope to their work, env_spark beside; npc_soldier_watchstalker3 beside busy3; spawned by point_templates when the player's pod passes pod_player12 (ForceSpawn @0 and @2) and Killed at pod_player2 and pod_player23; the gunship bay's stalker walks a 6-corner loop (aiscripted_schedule 4 s after the template spawns). d3_citadel_05: stalkerpod1 (a prop_dynamic stalker in a prisoner pod) at speed 70 over 1229, d3_citadel.stalker_shriek2 and breathing @2 at one node, shriek1 at the next; two crab synths walk path_gunshipbay_synths 1.5 s after the player's pod passes pod_player32 and are Killed at the path's end.",
+   "how": "Gamemode (ask first): Combine scenery spots in the Nexus or Combine quarter, filled with a working NPC (a stalker at a panel with sparks, a guard idling beside) while a player is within reach and emptied after, as the life spots of valve-lift-diorama.",
+   "check": "review"
+  },
+  {
+   "id": "valve-blast-grows",
+   "tags": [
+    "valve",
+    "logic",
+    "lighting",
+    "story"
+   ],
+   "title": "A great blast seen from afar is a light that keeps growing, a fog that turns white, then a fade",
+   "rule": "Show a huge explosion far off (the Citadel's) as a bright sprite whose size keeps multiplying by a small step many times a second, so it swells slowly and then fast, while the fog over everything lerps to white and the screen fades. No text, no countdown. For our endings, which are the owner's: ask the owner first.",
+   "why": "ep1_intro: counter_explosion (math_counter, startvalue 8, max 999999) OutValue > sprite_end_final_explosion_1 SetScale; Timer_explosion (refire 0.05) > counter_explosion Multiply 1.0065, so about 14% a second (x1.14 a second, x49 in 30 s); Enabled 15 s after lrelay_alyx_vanish, Disabled when the G-Man's scene starts. relay_citadel_end: fog_controller_explo SetColorLerpTo 255 255 255 and SetEndDistLerpTo 1 with StartFogTransition @0.21, fade_explo_01 Fade, the camera's FOV blended from 1 to 80 over 2.7 s.",
+   "how": "Gamemode (ask first): an ending that ends in a blast (docs/features/endings.md: the motherlode, the collapse) could grow a glow sprite at the blast's place by 14% a second and fade the fog to white before the fade to black, in place of words on screen.",
    "check": "review"
   }
  ]

@@ -5,7 +5,11 @@ to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, styleguide_core and stylegu
 helpers): the architecture (`architecture_*`), and the owner's pieces lifted whole (the big doors, the core reactor,
 the walkway reactors, the pods: `_dev/reference/prefabs/`). Tools in the chat's scratch folder (`citlogic/`: an
 entity-only reader, `loops.py` for tracktrain rings, `ride.py` for a ride's timeline, `soldiers.py`).
-Status: all 15 maps read (21 November).
+Status: all 15 maps read (21 November). The classes that matter, across the 15 maps: 222 npc_combine_s, 24
+npc_stalker, 6 npc_strider, 18 npc_manhack, 17 npc_cscanner, 9 npc_rollermine, no npc_advisor; 116 func_tracktrain on
+528 path_track; 117 env_citadel_energy_core; 44 func_combine_ball_spawner, 17 point_combine_ball_launcher; 55
+trigger_vphysics_motion, 52 trigger_physics_trap; 3 trigger_weapon_strip, 2 trigger_weapon_dissolve; 209 logic_timer;
+160 logic_choreographed_scene; 59 func_monitor and 39 point_camera; 137 assault rally points.
 
 ## 1. Machinery on loops
 
@@ -28,8 +32,8 @@ Status: all 15 maps read (21 November).
   thing (26 of 26 timers in d3_citadel_03, 42 of 50 in 04, 28 of 51 in ep1_citadel_03). In d3_citadel_03 the 12
   consoles come off the wall with the gravity gun: picking one up strains (sound, shake, physics pushes at 0, 0.1,
   0.25 ... 0.6 s); held 0.6 s its two sockets Break and it comes away (dropped sooner, `CancelPending`); then a blast,
-  sparks for 2 s, the random spark timers for 10 s, and its screen skin goes dark. The dying Citadel (EP1) rumbles on its own: a timer of
-  12 to 49 s (8 to 33 in ep1_citadel_02) fires a shake (amplitude 4, 4 s, radius 5000) with a far explosion (radius
+  sparks for 2 s, the random spark timers for 10 s, and its screen skin goes dark.
+- **The dying Citadel (EP1) rumbles on its own:** a timer of 12 to 49 s (8 to 33 in ep1_citadel_02) fires a shake (amplitude 4, 4 s, radius 5000) with a far explosion (radius
   9000) and a second sound 25 s later; a story beat's rumble is harder (amplitude 12 for 1 s, then 4 for 4 s).
 
 ## 2. Stalkers and their pods
@@ -92,8 +96,9 @@ Status: all 15 maps read (21 November).
 
 ## 6. The super gravity gun
 
-- One `env_global super_phys_gun` (initialstate 1) in each map after the strip room (d3_citadel_04, 05, d3_breen_01,
-  ep1_citadel_02, 03), beside the newgame physcannon spawner; the strip room's charge turns it on in d3_citadel_03.
+- The dissolve field itself charges the gun (the engine does it; the maps only hear `OnChargingPhyscannon`, in
+  d3_citadel_03 and ep1_citadel_01); every later map sets `env_global super_phys_gun` (initialstate 1) beside the
+  newgame physcannon spawner (d3_citadel_04, 05, d3_breen_01, ep1_citadel_02, 03).
 - With it, soldiers' guns must not be picked up: in ep1_citadel_01 and 04 every soldier's death dissolves his weapon
   (10 of 10, 13 of 13: `OnDeath weapon_dissolver Dissolve soldierX_weapon`).
 
@@ -170,13 +175,14 @@ Status: all 15 maps read (21 November).
   the core control room (section 3); the confiscation field again, the gravity gun charged by it (section 5); every
   soldier's gun dissolved on death (section 6); defenders asleep and woken in a chain (section 7). Ball launchers
   (ep1_citadel_02): 3 balls, back 5 s after one is lost, launched up at 20 to 30 degrees, 8 bounces.
-- **The lift (ep1_citadel_02b):** small tremors every 6 to 12 s while it rides; a stalker in the shaft is the trouble, and
-  once it is dead the lift runs on fast (SetSpeedReal 180 at the next node); Alyx's nag repeats every 16 s until the player acts.
+- **The lift (ep1_citadel_02b):** small tremors every 6 to 12 s while it rides; a stalker in the shaft is the
+  trouble, and once it is dead the lift runs on fast (SetSpeedReal 180 at the next node);
+  Alyx's nag repeats every 16 s until the player acts.
 - **The core's state is heard (ep1_citadel_03):** the core's loop (radius 3250) is swapped as it is mended: unstable
   (and a nearer unstable loop), then partial stable 1 s after the third laser, then stable; 6 balls into the catchers
   complete it. The core itself wobbles on three axes, each on its own random timer (0.9 to 1.1 s; 0.2 to 0.9 in
-  styleguide_core) picking one of 12 to 16 scales between 0.91 and 1.1, and flares to 1.2 every 3 s while a flare-up timer runs, with
-  three touch zones that follow its size. (The core as a piece is the other helper's.)
+  styleguide_core) picking one of 12 to 16 scales between 0.91 and 1.1, and flares to 1.2 every 3 s while a
+  flare-up timer runs, with three touch zones that follow its size. (The core as a piece is the other helper's.)
 - **The alarm in the Citadel:** a siren and a glow sprite that shows 0.7 s and hides 0.2 s, six times over 5.2 s, then
   the room's alarm light off; a timer repeats it every 8 s until a scene stops it (ep1_citadel_03, 04). No turning
   beacon here.
@@ -185,4 +191,43 @@ Status: all 15 maps read (21 November).
   lights sweeping by are the motion.
 - **styleguide_destroyed_citadel** is ep1_citadel_02's bridge with 8 stalkers and the same rumble timer;
   **styleguide_core** is the core's wobble alone.
+
+## 13. For Living City ([owner] ask the owner first; [map] map pieces)
+
+The Combine quarter, the Nexus and the endings could borrow, in order of use:
+1. [owner] A Combine entry check for the Nexus or a Combine-only zone: held about 10 s, the Overwatch line, the charge,
+   contraband taken with a dissolve effect, the door opens (`valve-confiscation-field`; contraband.md searches today).
+2. [owner] The overseer on screens and Combine staff at console spots in the Nexus; seen for half a second, they
+   alarm and fight (`valve-overseer-on-screens`).
+3. [owner] The endings and the collapse: time left spoken at 3, 2, 1 min, 45, 30, 15, 10 s (`valve-countdown-spoken`);
+   a random rumble every 12 to 49 s and wrecked consoles sparking (`valve-place-falling-apart`); a blast that grows 14%
+   a second and fades the fog to white (`valve-blast-grows`). Sound and effect only (house rule 10).
+4. [owner] A job game of energy balls: carry one to a socket to power a door or field, or pull one to drop a field
+   (`valve-ball-socket-power`): hands-on, never a wait (house rule 9).
+5. [owner] Nexus defenders idle at posts and woken stretch by stretch, the next when one falls (`valve-wake-chain`);
+   elites one in five to one in two.
+6. [owner] Combine scenery that works: a stalker at a panel with sparks, a guard watching, synths passing, there
+   only while a player is near (`valve-work-shown-in-passing`).
+7. [map] Machinery on loops in the Combine quarter: a pod ring in lockstep, starts staggered 1, 4 and 6 s, a light
+   ring for a train that seems to leave (extras on `valve-machines-on-a-beat`).
+8. [owner] Fields that kill for 0.1 s as they come on and let Combine NPCs through (extra on `valve-forcefield`); the
+   Administrator's broadcast behind a slate and its tone (extra on `valve-screens-cut-in`); waves capped by the living
+   (extra on `valve-npc-steady-pressure`); soldiers' guns gone on death (extra on `valve-weapon-pile-limit`).
+
+## Check ideas
+
+- map_lint 'wire': a counter that restarts a ring has a max equal to the trains that report to it (d3_citadel_01: 7).
+- map_lint 'wire': a ball socket (flag 8192) wires both OnLastBallGrabbed and OnBallReinserted.
+- map_lint 'wire': a relay that Enables a trigger_hurt of 1000 or more Disables it within 0.5 s (the field's pulse).
+- map_lint 'wire': a spark timer starts disabled and something stops it.
+
+## What did not work
+
+- No npc_advisor to study: the Advisor is only a cycler on screens in these maps.
+- d3_citadel_04's Breen relays (relay_freemanatlast, relay_circum, relay_mentors...) have no caller in the VMF: copies
+  left from 03, or fired from outside the map.
+- info_teleporter_countdown's HUD was never finished (the wiki); Valve counts down by voice instead.
+- Pictures: eye views in the Citadel are mostly dark, and framed cut-aways shrank to slivers (brushes reaching far
+  down, props outside the box): drawn from scratch copies of the VMFs (`citlogic/clipvmf.py`, `clipents.py`);
+  three lines in `valve_c17/notes/tool_faults.md`.
 
