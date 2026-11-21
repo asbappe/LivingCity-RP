@@ -542,7 +542,7 @@ def facade(b, fr, L, rnd, tag, first=0):
         for h1, h2, s, t in holes:
             if s == 44 and h2 - h1 > 140:
                 m.static("models/props_c17/awning00%da.mdl" % (1 if h2 - h1 > 140 else 2), (h1 + h2) // 2, 240, 270, F + t + 4)
-                m.det([(h1, 250, F + t + 10, h2, 256, F + t + 40)], R["frame"])            # the shop's name board
+                m.det([(h1, 249, F + t + 10, h2, 256, F + t + 40)], R["frame"])            # the shop's name board (1 proud of the wall's face at 250: never flush with it)
     for i, e in enumerate(cuts):                             # between the houses: a pilaster, and here and there a downpipe
         if (e == 0 or whole(e // CELL - 1)) and (e == L or whole(e // CELL)):
             near = [lot[2] for lot in lots if lot[0] == e or lot[1] == e]
