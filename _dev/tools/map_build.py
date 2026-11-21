@@ -46,7 +46,7 @@ CELL = 64
 # engine's node limit"): City 18 already has about 1826 walking and 580 flying, and our pieces are merged into it, so
 # each piece has a share of what is left (1690), and its nodes are thinned to fit (map_ring.lane_cells, NODE_LEVELS).
 NODE_CAP, CITY18_NODES = 4096, 2406
-NODE_SHARES = {"canal": 150, "ring": 300, "forest_bunker": 150, "forest_cave": 260, "ravenholm": 150, "south": 300, "town": 330}
+NODE_SHARES = {"canal": 150, "ring": 300, "forest_bunker": 150, "forest_cave": 270, "ravenholm": 150, "south": 300, "town": 330}
 NODE_SHARE_OTHER = 400      # (a layout not planned for the merge yet: kept to a piece's size all the same)
 NODE_CLASSES = ("info_node", "info_node_air", "info_node_hint", "info_node_air_hint", "info_node_climb")
 
