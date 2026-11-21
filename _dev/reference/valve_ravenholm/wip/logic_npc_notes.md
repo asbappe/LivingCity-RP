@@ -79,8 +79,9 @@ clears it on leaving (t02), so the dead walk through a burning street to reach y
 14 apart, plus env_firesource (45, damage 100) and a hurt; wheel shut puts it out @0.5 to @2. Re-usable.
 
 **The car on the rope** (`raven-car-drop-trap`; t01, two). Car prop on a length constraint from an unseen ballast on a
-slide constraint; a lever toggles drop (velocity 10) and stop; pulleys spin; a physics-only trigger filtered to the car
-detects the hit; a winch lifts it back (speed 500); rope creaks every 3 to 7 s while it hangs.
+slide constraint; the lever releases it (slide velocity 0, the car falls), and 2 s later the lift relay winds it back
+up (velocity 10, motor loop, pulleys spinning); physics-only triggers filtered to the car mark the bottom (crash) and the
+top (rope creaks every 3 to 7 s while it hangs).
 
 **The spinning blade** (t01 three, t04 one). Blade prop on a phys_motor (-1200); toggle lever (flags 1057, wait 5);
 spin-up, loop, spin-down, a sputter every 3 to 8 s; the first is running when the player first sees it (logic_auto
@@ -88,8 +89,8 @@ Press); one relay turns all off once the player has moved on.
 
 **The bladed mine cart** (t04). A func_physbox cart pushed by a phys_thruster (force 1000) along the rails, a
 func_rotating blade (1500) with a trigger_hurt 250 parented to it; a lever starts it; four trigger_onces 640 to 770 apart
-spawn 2 to 4 zombies each that run at the player, through the blade's path; at each end a physics trigger filtered to the
-cart flips its thruster.
+spawn 2 to 4 zombies each that run at the player; at each end a physics trigger filtered to the cart switches its
+thruster and its own hurt (damage 100, players) on or off.
 
 **The live fence** (`raven-live-fence`; t01). Pulsed shock (10, cap 20; off 0.3 s after each hurt), a push of 500, one
 of four zaps, three sparks; the power switch kills it and enables the ladder on. No electrified water in these maps.
@@ -122,8 +123,9 @@ player only).
   itself, spawns fast zombies @0 and @1, TurnOns the shaft's node link and the squad's enemyfinder, and fast zombies break
   in through windows @5; at the top the door opens and a bell rings.
 - Cable car to the church (t02): lever (func_door_rotating with a button), wheels spinning while it moves, 784 at speed
-  40; Grigori holds the cave zombies about a minute (two makers of 6, one alive, one of two routes by PickRandom); the
-  car's own trigger ends the attack.
+  40 (about 20 s). After Grigori's guard line the cave zombies come (two makers of 6, Enabled @1 and @6, one alive each,
+  one of two routes by PickRandom); the car's motor is heard map-wide from @45 (radius 7000 to 12000) and it sets off
+  @64; stepping into it ends the attack.
 - Graveyard gate (t02a): a momentary wheel turns the gate (func_movelinear 60) and seven pulleys follow it; motor
   spin-up, loop and spin-down sounds; Grigori's nags until it turns.
 

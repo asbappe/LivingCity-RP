@@ -650,7 +650,7 @@
    "title": "Boards nailed across, at Valve's size",
    "rule": "Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 wide and 64 to 112 long), a few across the opening at slightly different angles, in a door or floor wood (wooddoor045b, wooddoor048a, wooddoor015a, woodfloor005a).",
    "why": "Plank brushes counted (21 November): 172 in d1_trainstation_03 (78 of them 4 by 8 by 112), 39 in Ravenholm (4x8x112, 4x16x64), 30 in d3_c17_13 (4x16x112, wooddoor015a), 35 in d1_trainstation_04. Pictures R3, T4.5.",
-   "how": "A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways. Three more Ravenholm maps agree: plank brushes 119 in d1_town_01, 71 in 02, 49 in 01a (woodfloor005a most, then wooddoor004a, 015a, 032a; func_detail 176 of 239), and two in three are turned off the axes (78 of 119 in 01); 22 more boards are physics props held still, 14 of them freed when grabbed, 73% touching a wall.",
+   "how": "A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways. Three more Ravenholm maps agree: plank brushes 119 in d1_town_01, 71 in 02, 49 in 01a (woodfloor005a most, then wooddoor004a, 015a, 032a; func_detail 176 of 239), and two in three are turned off the axes (78 of 119 in 01); 22 more boards are physics props held still, 14 of them freed when grabbed, 73% touching a wall. Ravenholm: a zombie behind boards breaks through: d1_town_01 bldg1's four board props Spawn the zombie behind them from OnHealthChanged (template flags 2690, wait for script); its sequence (Idle01, then attackE) Breaks the boards, and its OnDeath Breaks all four; d1_town_02 bldg1_zombie3 the same with brush boards Killed.",
    "check": "review"
   },
   {
@@ -733,7 +733,7 @@
    "title": "Traps lying ready, the dead from makers",
    "rule": "Leave traps as loose physics props where the dead come: propane tanks in clusters of 2 to 6, explosive barrels in twos and threes, saw blades to throw, one rigged machine trap at a choke point; bring the dead with npc_maker and npc_template_maker and walk them in with aiscripted_schedule; health kits as rewards.",
    "why": "d1_town_03: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, a propeller trap (engine, blade, lever, func_rotating); 15 npc_zombie and 2 npc_fastzombie, 10 npc_maker, 7 npc_template_maker, 14 aiscripted_schedule; 18 item_healthkit. The same machinery map_raven.py uses. Pictures R5, R7.",
-   "how": "map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic). Across d1_town_01 to 05: 28 of 31 propane tanks lie on their side, 5 on a table, 58% within 16 of a wall, about 36 apart; explosive barrels stand (65 of 67), spread (nearest other explosive median 128, q25 57) among plain oildrum001 (91), skins not 0 on 28%; graveyard canisters stand in twos and fours 33 apart. Ours: three single blades, three explosive drums and a pallet, all upright, spawnflags 0.",
+   "how": "map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic). Across d1_town_01 to 05: 28 of 31 propane tanks lie on their side, 5 on a table, 58% within 16 of a wall, about 36 apart; explosive barrels stand (65 of 67), spread (nearest other explosive median 128, q25 57) among plain oildrum001 (91), skins not 0 on 28%; graveyard canisters stand in twos and fours 33 apart. Ours: three single blades, three explosive drums and a pallet, all upright, spawnflags 0. The rest of Ravenholm (d1_town_01, 04): the spinning blade is a TrapPropeller_Blade prop_physics (Damagetype 1) on a phys_motor (speed -1200, inertiafactor 5) switched by a toggle func_button (flags 1057, wait 5) with spin-up, loop and spin-down sounds and a sputter on a random 3 to 8 s timer, the first already running at map start (logic_auto Press); the mine's bladed cart (func_physbox, massScale 4) is pushed down the rails by a phys_thruster (force 1000) with a trigger_hurt (damage 250, flags 3) parented to its func_rotating (maxspeed 1500), while four trigger_onces 640 to 770 apart along the rails each spawn 2 to 4 zombies that run at the player (the cart's run is the blade's line); 142 of the 154 makers hold one NPC, fired once by Spawn (raven-gas-fire-trap, raven-car-drop-trap, raven-live-fence).",
    "check": "map_lint (physics props); review"
   },
   {
@@ -761,7 +761,7 @@
    "title": "The quarter's sound: four soundscapes and placed scares",
    "rule": "Name d1_town.Street outside, d1_town.WoodBuilding or d1_town.ConcreteBuilding inside by what the house is made of, d1_town.CorpseRoom where the dead wait; put one-shot sounds (a metal grate, a far fast-zombie call, an attack, a fire loop) where something should startle.",
    "why": "d1_town_03: 7 env_soundscape (ConcreteBuilding 3, Street 2, WoodBuilding 1, CorpseRoom 1), radius 128; 27 ambient_generic: zo_attack2 4, metalgrate3 4, fz_alert_far1 3, tram_hit1 2, smallfireloop 2.",
-   "how": "m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house').",
+   "how": "m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house'). The other six Ravenholm maps: 101 env_soundscape (d1_town.WoodBuilding 23, Street 22, Start 15, Rooftop 14, ConcreteBuilding 11, CorpseRoom 5; in the mine WaterCave 2, CaveTunnel 2, MineshaftDown 1, HeadcrabCave 1), all radius 128; 183 ambient_generic, 142 one-shot (flags 48), radius median 1250; d1_town.Flies from trigger_multiples 13 to 45 from six corpses; board creaks from func_physbox OnAwakened (d1_town_04); distant poison zombie calls (radius 3000) @0, 0.7, 1.2 and 2 from 556 to 1316 away as the graveyard opens.",
    "check": "review"
   },
   {
@@ -1479,7 +1479,7 @@
    "title": "Start a staged moment where a player is looking",
    "rule": "Before a staged moment (a beating, an arrest, a break, an approach), wait until a player is near (128 to 1000) with the spot in a 25 to 60 degree cone and in sight for half a second to two; after a timeout do it anyway. Seen, it needs no text.",
    "why": "35 ai_script_conditions: playertargetfov 25 to 60 (true cone) with line of sight, proximity 128 to 1000, requiredtime 0.4 to 2.5 s, a 15 s timeout; ts01's luggage shove waits for the player within 500 with the citizen in a 50 degree cone (3 s at most); ts01's interrogation room shuts its door slot when the player is within 150.",
-   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded. City 17 (15 maps) adds: 30 ai_script_conditions, 25 with the actor FOV left at 360 and 6 with a player proximity of 200 to 650; d3_c17_03's supply thrower waits for a 20 degree true cone with line of sight; 5 of the 30 send the same output from OnConditionsTimeout after 3 to 10 s (d3_c17_06a rubble_citizen_aisc_1, 8 s), so the moment happens even if no one looks.",
+   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded. City 17 (15 maps) adds: 30 ai_script_conditions, 25 with the actor FOV left at 360 and 6 with a player proximity of 200 to 650; d3_c17_03's supply thrower waits for a 20 degree true cone with line of sight; 5 of the 30 send the same output from OnConditionsTimeout after 3 to 10 s (d3_c17_06a rubble_citizen_aisc_1, 8 s), so the moment happens even if no one looks. Ravenholm (d1_town_01, 02): 7 ai_script_conditions wake a slumped zombie or start Grigori's scene when the player looks: PlayerActorFOV 60 to 65 (45 for Grigori) with line of sight, or PlayerTargetFOV 75 at the zombie's spot; d1_town_01's are Enabled only by another zombie's OnFoundPlayer, so the house wakes once one zombie has seen you.",
    "check": "review"
   },
   {
@@ -1549,7 +1549,7 @@
    "title": "A gate NPCs walk through switches its node link",
    "rule": "Across every gate, shutter or breakable wall NPCs path through, put an info_node_link_controller: a thin box (16 deep, as wide and high as the gap) that starts off when the gate starts shut; the gate's own OnFullyOpen turns it on and OnClose turns it off. Turn a link off to keep units back during a scene.",
    "why": "9 controllers (d1_town_03 side_alley_gate, c01a, c03 grate, c05, d3_c17_13 5), mostly 16 deep, 96 to 208 wide, 32 to 84 high; 14 info_node_link; switched by func_door_rotating OnFullyOpen TurnOn and OnClose TurnOff (c01 backalley_gate), by scenes and counters; ts03 link_prevent_cop_movement is turned off to keep cops back.",
-   "how": "Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link. City 17 (15 maps): 55 info_node_link_controller in 11 maps, commonest box 16 by 64 by 72; prop_physics OnMotionEnabled sends TurnOn (10 lines: a barricade knocked loose opens the way), a strider-breached wall's bullseye OnDeath TurnOn (d3_c17_12), and d3_c17_10b's links and controllers with AllowUse npc_combine_s let soldiers path through force fields while they are up.",
+   "how": "Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link. City 17 (15 maps): 55 info_node_link_controller in 11 maps, commonest box 16 by 64 by 72; prop_physics OnMotionEnabled sends TurnOn (10 lines: a barricade knocked loose opens the way), a strider-breached wall's bullseye OnDeath TurnOn (d3_c17_12), and d3_c17_10b's links and controllers with AllowUse npc_combine_s let soldiers path through force fields while they are up. Ravenholm: junk props blocking a corridor TurnOn its node links OnBreak (d1_town_01 blocked_corridor_nodelink_1 and 2); two broken windows Add to a math_counter whose OnHitMax TurnOns a link controller 336 by 324 (d1_town_02 bldg2_window2_linkcontroller); doors switch their links on FullyOpen and FullyClosed; the freight lift's button TurnOns elevator_nodelink and the down button TurnOffs it @10.",
    "check": "proposed map_lint: a func_door or func_door_rotating gate across a node line with no link controller."
   },
   {
@@ -1576,7 +1576,7 @@
    "title": "Violence out of sight is heard and felt, not told",
    "rule": "What happens behind a wall (a beating, a search, a fight) reaches players as sound and moving things: a one-shot sound fired on short random timers for a few seconds, furniture knocked about, then what is left (a person cowering, a broken chair). No text line.",
    "why": "ts03 relay_beating_start: the citizen_beating sound (one-shot, flags 48, radius 508) on two logic_timers (random 0.4 to 1.5 s) for 6 and 8 s; physics explosions at 2.1, 3, 4.1, 5.6 and 7.1 s throw chairs, a table and an armoire spawned from templates; the victim is left in a cower post idle. House rule 10: prefer the world to text.",
-   "how": "Gamemode: raids (sv_livingcity_raids.lua) and unit brutality (sv_livingcity_mindsact.lua) in a closed room: EmitSound on a short random timer and a few physics pushes on the room's props, instead of a chat line. Changes those features: ask the owner. Map modules: interiors keep a few loose physics props a search can knock over (valve-busy-and-quiet).",
+   "how": "Gamemode: raids (sv_livingcity_raids.lua) and unit brutality (sv_livingcity_mindsact.lua) in a closed room: EmitSound on a short random timer and a few physics pushes on the room's props, instead of a chat line. Changes those features: ask the owner. Map modules: interiors keep a few loose physics props a search can knock over (valve-busy-and-quiet). Ravenholm: Grigori's fights are heard before they are seen: d1_town_02 plays a zombie @1, shotgun @1.5, 2.4, 4.2 and 5, a mad laugh scene @3 and a zombie @3.5, 521 from the trigger; d1_town_01a a shotgun pair @0 and @0.75 with a window shattered.",
    "check": "review"
   },
   {
@@ -1634,7 +1634,7 @@
    "title": "A timed hold runs on one clock, and each wave comes on faster",
    "rule": "When players must hold a place against attacks for a set time (the owner's exception to house rule 9: holding ground against waves, a post, a zone taken), drive the whole fight from one clock: one start event whose delayed outputs bring the landings, the fronts, the music, the radio lines and the end. Each front is a small squad that walks forward through two or three lines and then storms; when the whole squad is dead it resets and the next, quicker wave comes about 6 s later. A few seconds before the end, cancel every pending wave and send one last assault from both sides; after it, keep spawning attackers until the players have left and shut the way behind them. Changing how our counterattacks run: ask the owner first.",
    "why": "d3_c17_07 alyx_atwork_seq (about 285 s): OnBeginSequence sends dropship_maker Spawn @20, balcony_cop1_maker Enable @40, northfront_begin_relay @50, combatsong @55, dropship2 @60, southfront_begin_relay @80, comm tower doors @110, 210, 260, radio scenes @150, 210, 240, 260, 275, elite_soldier_makers @250, 4_seconds_togo_relay @266. Each front: point_template of 3 soldiers via env_entity_maker; wave relays move them battle line 1, 2, 3 then the assault at @0, 15, 40, 70 (wave 1), @0, 10, 30, 50 (wave 2), @0, 5, 20, 40, @0, 5, 15, 25, @0, 5, 7, 9 (wave 5). northfront_soldiers_respawn_counter (max 3, fed by OnDeath) fires northfront_battle_reset (CancelPending on all five wave relays, lines and goals Deactivate, counter SetValue 0) and ForceSpawn @6; a logic_case on the wave counter picks the next wave relay (OnDefault: the last). 4_seconds_togo_relay Kills and CancelPendings the waves, Activates finalassault_north and _south @0.5, BeginAssault @1, and Enables northfront_ and southfront_pressuresoldiers_maker @4 (stock 100, 2 alive, every 1.5 s, schedule 'set enemy and run'), Killed by gate_close_counter OnHitMax @3. 17 of the 19 CancelPending lines in the 15 City 17 maps are in this fight.",
-   "how": "Gamemode: a counterattack or held-zone event gets one table of timed steps (landing, fronts, voices, the end) and a wave loop per front: spawn 3, walk them to line 1, 2, 3 then at the defenders, the windows shrinking each wave (70, 50, 40, 25, 9 s to the assault), a wipe counted by deaths starts the next wave 6 s later; timers cancelled at the end. Map modules where holds are expected: three lc_line_<place>_N spots 380 to 480 apart toward the held place.",
+   "how": "Gamemode: a counterattack or held-zone event gets one table of timed steps (landing, fronts, voices, the end) and a wave loop per front: spawn 3, walk them to line 1, 2, 3 then at the defenders, the windows shrinking each wave (70, 50, 40, 25, 9 s to the assault), a wipe counted by deaths starts the next wave 6 s later; timers cancelled at the end. Map modules where holds are expected: three lc_line_<place>_N spots 380 to 480 apart toward the held place. Ravenholm's holds are timed by a slow machine players can see and hear: the freight lift climbs 385 at speed 12 (about 32 s) while fast zombies spawn at the button press, @1, and through the windows @5; after Grigori's guard line the cable car's motor is heard map-wide from @45 (radius 7000 to 12000), the car sets off @64 and needs about 20 s more (784 at speed 40), while two makers of 6 (Enabled @1 and @6) send one fast zombie at a time along one of two routes (logic_case PickRandom); Grigori's propane fire holds the way for 47 s. For our flush job, the gate's own slow opening and motor sound can be the clock.",
    "check": "review; robots.py can count a hold's waves and that pending timers stop at its end."
   },
   {
@@ -1775,7 +1775,7 @@
    "title": "A reminder stops the moment it is done, and the way opens anyway",
    "rule": "When a player must learn to do something, a person says it (not text) a few times about 10 s apart; the moment the player does it, every pending reminder is cancelled; and after about 50 s the way on opens regardless, so no one is stuck. Text on screen is kept for the one key to press. Valve's 15 City 17 maps put text on screen only 7 times.",
    "why": "d3_c17_03 command_send_nag_relay: command_send_nag_1 to 4 (squad_train01 to 04.vcd, spoken) @10, 20, 30, 40, the key hint (env_hudhint valve_hint_command_send) @0.5, 11, 21, 31, 41, plaza_exit_conditions Enable @50. Any citizen's OnStationOrder fires command_recall_hudhint_relay: command_send_nag_relay CancelPending @0 and Kill @0.1, the send hint Killed, the next hint @7, the exit @10. Text entities in the 15 maps: 2 env_hudhint (squad commands), 4 env_message (GAMEOVER_ALLY), 1 game_text ('You have failed.').",
-   "how": "Gamemode: tutorials and job steps that wait for an action: voice lines on a timer, all cancelled (timer.Remove) on success, and a timeout that moves on; one notice at most (house rule 10).",
+   "how": "Gamemode: tutorials and job steps that wait for an action: voice lines on a timer, all cancelled (timer.Remove) on success, and a timeout that moves on; one notice at most (house rule 10). Ravenholm: Grigori's gate nag is a logic_timer (RefireTime 20, StartDisabled 1) starting three nag scenes @0, 7 and 13, Enabled 1 s after his gate sequence begins and Killed with all three scenes by the trigger_once the player reaches (d1_town_02a); in d1_town_01 his voice goes ahead as three rant sounds placed 387 to 936 ahead of their triggers, each trigger stopping the last; no env_hudhint in the six maps.",
    "check": "review; house_rules.py already counts text on screen."
   },
   {
@@ -2046,6 +2046,156 @@
    "why": "d1_town_01 to 05 (21 November): 41 light_spotlight02_lamp, all prop_static, 80% touching a wall, 38 pitched down, yaw free on 22; every one of the 41 has a light_spot and a point_spotlight within 48 (the spot a median 5 away): warm 26, cool 15, brightness median 600 (q75 1000, q90 2000), cone 35 on 14, 45 and 50 on 8 each, 30 on 6, inner 20 on 15, 30 on 13, 25 on 9, pitch median -50 (q10 -65, q90 -20); point_spotlight nearest neighbour median 294 (t01), 452 (t01a), 368 (t02), 540 (t02a), 780 (t04); lightbulb01a with light '254 216 146 8' on 13 and spot 300 75/30 -90 on 8. Same sun in t01 to t02a ('175 230 239 50', ambient '43 45 57 5'); fog only in the graveyard ('0 0 0', 1500 to 4000).",
    "how": "map_raven.py: replace the lit lamp posts' role in the lanes with clamp lamps on house walls about every 300, alternating warm and cool, with the spot and a point_spotlight; with raven-dusk-light. Ask the owner first: the quarter's light is theirs to settle.",
    "check": "map_lint offlamp (a lit lamp model without its light within 64)"
+  },
+  {
+   "id": "raven-stream-follows-front",
+   "tags": [
+    "valve",
+    "npc",
+    "infestation",
+    "ravenholm",
+    "logic",
+    "gameplay"
+   ],
+   "title": "An endless stream of the dead follows the front, and stops when players stop",
+   "rule": "Where the dead keep coming, use one maker with spawn points in small named groups along the way: each stage moves the stream to the next group, sets how many may be alive at once (6, then 8, then 4) and starts a 15 to 20 s timer that stops the stream if nobody moves on; moving on cancels the timer. Spawn only at points out of sight. When the stage's reason ends, stop the makers and send the living off to a spot out of sight, one a second, and remove them there. Progress, not time, brings the dead. Changing how our infestation spawns its zombies: ask the owner first.",
+   "why": "d1_town_02a graveyard_zombie_maker: npc_template_maker MaxNPCCount 10000, MaxLiveChildren 6, SpawnFrequency 1, CriterionVisibility 1 (only points out of sight), DestinationGroup zombie_dest_group_1; 13 info_npc_spawn_destination in four groups of 3 or 4 (ReuseDelay 1). Each stage's trigger_once: ChangeDestinationGroup(zombie_dest_group_2, 3, then 4), Enable @0.2, SetMaxLiveChildren 8 then 4, Trigger its own cull relay @20 or @15 (whose one output is the maker's Disable), and CancelPending and Kill on the last stage's cull relay; the last stage also Disables @15. d1_town_02 cable car: stepping in Kills cavezombies_maker1 and 2 (6 each, 1 alive) and a 1 s logic_timer runs each fast zombie's away sequence (run to a spot, Kill there), a math_counter of 2 stopping it. Elsewhere 142 of the 154 makers in the six maps hold one NPC and are fired once by Spawn from a trigger_once (101 lines).",
+   "how": "Gamemode (FindSpawnPos in sv_livingcity.lua, the cleanup jobs): zombies now come up at zspawn points or anywhere in a zone, unseen and 400 from players, with no cap tied to a job. Valve's way would give a cleanup crew a cap of 6 to 8 alive near it, pick spawn points from the cluster nearest the crew's next growth, go quiet when the crew has done nothing for 20 s, and at the job's end walk the zombies left near the crew off out of sight before removing them. Map modules: lc_zspawn points in clusters of 3 or 4, the clusters 300 to 900 apart along the quarter's way in.",
+   "check": "review; a robot-player run of a cleanup job counting zombies alive near the crew (never over the cap)"
+  },
+  {
+   "id": "raven-slumped-dead",
+   "tags": [
+    "valve",
+    "npc",
+    "infestation",
+    "ravenholm",
+    "gameplay"
+   ],
+   "title": "Some of the dead lie slumped, and rise when someone comes near or hurts them",
+   "rule": "Lay a few zombies slumped against walls and on floors (slump_a or slump_b) where people pass; each rises (slumprise_a, slumprise_a2, slumprise_b) when a player comes within about 100 to 400, looks at it, or hurts it, then goes for the nearest player. Rise them a fraction of a second apart, never all at once. In the dark, any body on the floor is a threat. Changes how our infestation's zombies appear: ask the owner first.",
+   "why": "d1_town_01 and 01a: 17 scripted_sequences hold a zombie in slump_a (13) or slump_b (2) and play slumprise_a (11), slumprise_a2 (2) or slumprise_b (2); m_fMoveTo 4 (in place), spawnflags 624 (start on spawn 16, no interruptions 32, override AI 64, priority 512) or 608; a trigger_once fires BeginSequence, the zombie's own OnDamaged fires it too and Kills that trigger, and OnEndSequence > StartSchedule (set enemy to the player and run). Three rise @0.5, @1 and @1.3 (town_getup_06 to 08). d1_town_02: three more rise when the player looks at them (ai_script_conditions PlayerActorFOV 60 to 65 with line of sight), enabled 0 to 0.4 s after they are spawned or by a trigger.",
+   "how": "Gamemode: a share of infestation zombies (the owner's call, say 1 in 5) spawned against a wall in the slump pose, held by a scripted_sequence as MakeSequence in sv_livingcity.lua does, and woken by a player within 300, a player looking at it within 60 degrees, or damage; neighbours woken 0.3 to 0.5 s apart. Check in game that the zombie models have these sequences. Map modules: lc_slump spots on the floor against the walls of the quarter's rooms.",
+   "check": "review; a test that a slumped zombie wakes on damage and on a player within 300"
+  },
+  {
+   "id": "raven-gas-fire-trap",
+   "tags": [
+    "valve",
+    "logic",
+    "infestation",
+    "ravenholm",
+    "gameplay"
+   ],
+   "title": "A gas trap: open the valve, light it, shut it to put it out",
+   "rule": "A fire trap is a gas valve and a way to light it. Turning the wheel lets gas hiss out (a loop and a heat haze); a press of the igniter, any fire close to the gas, or a shot or blast next to it lights it; a carpet of small fires then covers the gassed ground and sets alight whatever walks in; turning the wheel back puts it out, and it can be used again. Players burn as well as the dead: the wheel and the igniter stand outside the fire.",
+   "why": "d1_town_01 zombiepyre, hallfire and zombiecage traps, wired alike. Wheel: func_door_rotating distance 180, speed 80, wait 9999; OnOpen: d1_town.GasJet loop (flag 16, radius 600), env_steam type 1 heat haze (Speed 120, StartSize 10, EndSize 20, JetLength 80, Rate 26), arms the light relay. Lighting: the igniter (func_door_rotating 90, wait 0.5, four clicks @0, 0.3, 0.6, 0.9 with env_spark), an env_firesensor (fireradius 39, heatlevel 1, HeatLevelStart), an env_microphone (MaxRange 100, Sensitivity 1, flags 40: bullet impacts and explosions, OnHeardSound). Lit: 40 env_fire over 274 by 234 (pyre) or 32 over 328 by 85 (corridor), nearest 8 to 14 apart, firesize 25 to 130, flags 3, fireattack 0.05, ignitionpoint 10; env_firesource fireradius 45, firedamage 100 (5 in the pyre); a trigger_hurt; d1_town.FlameTrapIgnite and d1_town.LargeFireLoop. Wheel shut: d1_town.FlameTrapExtinguish, ExtinguishTemporary(1) @0.5, the fires Disabled @2, the light off @0.5.",
+   "how": "Map modules: a gas trap piece for the sealed quarter (lc_ravenholm.vmf) and the infestation's yards: a propane canister and a valvewheel002 wheel by a wall, a Firetrap_button01a igniter outside the gassed patch, the fire carpet as env_fire about 12 apart (fewer if the server's frame time suffers: test it). Gamemode, new: a growth or zombie burned in it counts for a cleanup job (the owner's call).",
+   "check": "review; map_lint 'wire': a trap's env_fire start off and are Enabled and Disabled by name; an env_microphone has MaxRange and flags"
+  },
+  {
+   "id": "raven-car-drop-trap",
+   "tags": [
+    "valve",
+    "logic",
+    "infestation",
+    "ravenholm",
+    "props"
+   ],
+   "title": "The car on the rope drops on a lever and winds itself back up",
+   "rule": "Hang a heavy wreck over a choke point where the dead gather; a lever lets it go, it lands with a crash, and two seconds later a winch hauls it back up with a motor sound and spinning pulleys, so the next player can use it again; while it hangs, the rope creaks now and then.",
+   "why": "d1_town_01 crushtrap_01 and 02: car004a_physics prop_physics (massScale 4) on a phys_lengthconstraint from an unseen func_physbox ballast on a phys_slideconstraint, in one phys_constraintsystem. A func_rot_button lever (distance 10, wait 4) fires the release relay (slide SetVelocity(0), d1_town.CarRelease: the car falls), which re-arms the lift relay and fires it @2 (SetVelocity(10) or (8), Town.d1_town_01_spinup and d1_town.CarTrapMotorLoop, func_rotating pulleys maxspeed 900 to 1200 reversed at SetSpeed(500)). Two trigger_multiple of flag 8 (physics objects) filtered to the car's name: at the bottom d1_town.CarHit and the pulleys stop; at the top a logic_timer (random 3 to 7 s) starts d1_town.CarStraining while it hangs. A trigger_once lifts it as the player first comes near (Press). The arena's three zombie makers fire @0, @0.5 and @1.",
+   "how": "Map modules: a car trap piece over a lane or yard of the quarter (lc_ravenholm.vmf), its lever on a wall out of the drop; the winch makes it a trap for every player, not one use. Test the constraint system on a server (physics can jitter).",
+   "check": "review; map_assets: the car is a physics model"
+  },
+  {
+   "id": "raven-live-fence",
+   "tags": [
+    "valve",
+    "logic",
+    "infestation",
+    "ravenholm",
+    "gameplay"
+   ],
+   "title": "A live fence shocks in pulses and throws you back, until someone cuts the power",
+   "rule": "A charged fence or wire hurts in pulses, not as a steady drain: a jolt, a spark, a zap and a shove back, then a third of a second off. It stays live until someone finds the power box and switches it off, which opens the way on (a ladder, a gate). The step is to find and throw the switch, never to wait it out (house rule 9).",
+   "why": "d1_town_01 electric_fence: trigger_hurt damage 10, damagecap 20, damagetype 256 (shock), flags 11; OnHurt: env_physexplosion, one of four Town.d1_town_01_LoudSpark sounds by logic_case PickRandom, env_spark @0, 0.1 and 0.3, Disable itself, and a logic_timer Enables it again @0.3; OnHurtPlayer: a trigger_push of speed 500 for 0.2 s. A transformer hum (radius 400) and an electric loop (radius 500) mark it. The power switch (tram_button) Kills the hurt and the pushes, breaks the hanging corpse's constraint and Enables func_useableladder electric_fence_ladder. (Its blue light flickers: not for us.) No electrified water in these six maps.",
+   "how": "A new step for the sealed quarter's jobs (the flush squad, the Resistance shutting the sewer door): a live fence or flooded floor across the way, its power box hidden nearby; finding it is a hold-E search (LC.QuestSearchStage) and switching it off opens the way. The owner's call.",
+   "check": "review"
+  },
+  {
+   "id": "raven-ally-blast-safety",
+   "tags": [
+    "valve",
+    "npc",
+    "logic",
+    "infestation",
+    "ravenholm"
+   ],
+   "title": "An ally sets off the trap, never with a player in it",
+   "rule": "When an NPC ally sets off explosives or fire for the players (to block the dead, to clear the way), only the ally's shot counts, he aims at it only once he is at his post, and he stops while any player stands in the blast area. Our NPCs that use fire near players (the Cremator escort, soldiers with grenades) would follow the same rule: ask the owner first.",
+   "why": "d1_town_02a propanetanks: an npc_bullseye (health 50) with damagefilter filter_multi (Grigori only, and not blast damage); the tanks themselves damagefilter filter_monk; ai_relationship monk hates the bullseye (rank 100) is applied 2 s after his assault point's OnArrival, reverted by trigger_multiple player_near_propanetanks_trigger OnStartTouch and applied again OnEndTouch. The bullseye's OnDeath runs the relay: env_explosion @0.2 and @0.4 (iMagnitude 100), env_shake, three env_fire (firesize 64, health 160) and two of 40, the tanks Break @0.4, scorch decals Activated @3, 5.5, 7 and 12, a light; Extinguish @47, the hold going on to @48 and @91. d1_town_01a: Grigori is given a bullseye behind each window to shoot through, Killed by the window's OnBreak.",
+   "how": "Gamemode: before the Cremator (sv_livingcity_cremator.lua) or a soldier starts a fire or throws a grenade at a target, check no player is inside the blast radius; the target is the thing or the zombie, never the spot a player stands on. Changes how they fight: ask the owner.",
+   "check": "a test: no ally fire or grenade starts with a player inside its radius"
+  },
+  {
+   "id": "raven-fast-zombie-show",
+   "tags": [
+    "valve",
+    "npc",
+    "sound",
+    "infestation",
+    "ravenholm"
+   ],
+   "title": "Fast zombies are heard far off and glimpsed on the roofs before they come",
+   "rule": "Before fast zombies attack, let players hear their call from far off, then glimpse one or two running over the roofs to a place out of sight where they are removed; the real attack comes a few seconds later. A sound and a glimpse instead of a warning line (house rule 10). For our infestation spreading from one district to the next: ask the owner first.",
+   "why": "d1_town_02: 11 npc_fastzombie, 13 Town.d1_town_02_fz_alert_far1 (one-shot, radius 2500). first_fz_seq plays BR2_Roar with its call, then three more calls 1185 to 1589 away @0.5, 1.5 and 2; first_fz_a and _b, spawned @1 and @2, run (m_fMoveTo 2) to a spot and are Killed there on arrival (seven such runs in the map: roofs, the lift shaft, the cave); the freight lift's show: one in view with its call, two more @8 and @8.5. d1_town_02a's graveyard fast zombie makers play the call @2 after each spawn.",
+   "how": "Gamemode: when a district's infestation leaks next door (sv_livingcity_districtinfest.lua) or a cleanup job starts, play a far fast-zombie call at the zone's edge and run one fast zombie across a roof or street to a hidden spot, removed there; no notice. Map modules: the quarter's roofs keep jump and climb nodes for the runs.",
+   "check": "review"
+  },
+  {
+   "id": "raven-climb-heard",
+   "tags": [
+    "valve",
+    "npc",
+    "sound",
+    "infestation",
+    "ravenholm"
+   ],
+   "title": "A climbing zombie is heard on the pipe",
+   "rule": "Where the dead can climb (drainpipes, ladders up the houses), put an NPC-only trigger at the foot and at the top: as one climbs, the pipe clanks and shakes a little, so players hear it coming. Climbing routes open by script when the attack starts.",
+   "why": "d1_town_02: 7 ladders, each with a trigger_multiple of flag 2 (NPCs only) at the foot and one about 300 up; each plays Town.d1_town_02_metalgrate3 (14 sounds, radius 1000) and Toggles a func_door_rotating 'wobble door' (distance 3, speed 200, wait 0.5) @0.1. 14 info_node_climb; info_node_link bldg4_climbnode_link_east and west (linktype 1) TurnOn 5 s after the player looks at Grigori (church_monk_conditions), so fast zombies can climb that side only then.",
+   "how": "Map modules: the sealed quarter's drainpipes get climb nodes, the two NPC-only triggers with a metal clank, and a short pipe on a small rotating door to shake. Check in game that fast zombies use climb nodes from our .ain.",
+   "check": "review"
+  },
+  {
+   "id": "raven-crows-lead",
+   "tags": [
+    "valve",
+    "npc",
+    "sound",
+    "infestation",
+    "ravenholm"
+   ],
+   "title": "Crows lift ahead of a player and fly into the place he is going",
+   "rule": "Leave crows on the ground and on the dead where the infestation starts; as a player comes they lift a second or two apart and fly ahead into the overrun place, where they are quietly removed out of sight. The way in is shown by birds, not text. For our infested districts: ask the owner first.",
+   "why": "43 npc_crow (d1_town_01 19, 02 10, 02a 14), spawnflags 4. d1_town_01: a trigger_once DisableHints crow_node_0, EnableHints crow_node_1 (info_node_air_hint type 700, crow fly-to) 1133 ahead, crow1 FlyAway @0.1, crow_node_2 Enabled @2 (2582 further), crow2 @2.1, crow3 @3.1; NPC-only trigger_multiples (flag 2) at the fly-to hints Kill them where they land (7 in d1_town_01, up in the air where only birds reach; 2 in 02, filtered to crows). 7 crow npc_makers spawn crows that FlyAway at once as the player passes. d1_town_03's pinned corpse has 5 crows (raven-litter-not-gore).",
+   "how": "Gamemode: our birds (BIRDS in sv_livingcity_survival.lua) could gather on the edges of infested districts and lift into the zone when a player comes near, removed out of sight. Map modules: crow perch and fly-to hints in the quarter.",
+   "check": "review"
+  },
+  {
+   "id": "raven-pod-aftermath",
+   "tags": [
+    "valve",
+    "props",
+    "infestation",
+    "ravenholm"
+   ],
+   "title": "Spent headcrab canisters stay stuck in the ground, open",
+   "rule": "Show that a place was shelled with a few spent headcrab canisters left stuck nose-down in lanes, yards and roofs, open and empty, rather than live headcrabs beside them. Our shelling's canisters go after 180 s: keeping some longer in the infested quarter is the owner's call.",
+   "why": "12 prop_dynamic headcrabcannister01b named pod in d1_town_01 (4), 01a (1), 02 (4) and 02a (3), each set to idle_open by logic_auto OnMapSpawn (SetAnimation), pitched -43 to -58 (nose down at about 45 degrees), any yaw, solid 6; the nearest live headcrab is 300 to 4000 away (one at 81). No env_headcrabcanister in the six maps.",
+   "how": "Map modules: 3 or 4 headcrabcannister01b props (prop_dynamic, DefaultAnim idle_open, pitch -45) in lc_ravenholm.vmf's lanes and yards. Gamemode: sv_livingcity_shelling.lua removes its wreckage at FLIGHT + 180 s; in the sealed quarter it could stay until cleaned up (ask).",
+   "check": "map_assets: the model is a dynamic prop"
   }
  ]
 }
