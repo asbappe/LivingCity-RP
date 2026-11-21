@@ -57,7 +57,7 @@
    ],
    "title": "A door that opens is the city's own, fitted as the owner's",
    "rule": "Doors players use are prop_door_rotating with door01_left, set up as the owner's 134 are, in an opening 50 wide (from 2 behind the hinge) and 110 high, the door's middle 55 up. The jambs fill the reveal so nothing is seen past the door.",
-   "why": "\"The apartments' door frames are slightly too large for the doors and I can see past the door into the apartments\" (20 November). Measured round 42 of the owner's doors.",
+   "why": "\"The apartments' door frames are slightly too large for the doors and I can see past the door into the apartments\" (20 November). Measured round 42 of the owner's doors. Valve fits door01_left (49 wide, 109 tall) in a doorway 48 wide and 108 high, two side by side in 96 by 108 (d1_trainstation_02 to 05).",
    "how": "map_town.real_door and door_hole.",
    "check": "review"
   },
@@ -81,7 +81,7 @@
    ],
    "title": "Steps about 16 high and 24 deep",
    "rule": "Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps). (Valve's train station steps rise 8 under a player clip ramp, as the owner's own map does.)",
-   "why": "\"It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger\" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map.",
+   "why": "\"It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger\" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map. Valve's other maps (21 November): 8 by 12 in all six with stairs (100 to 251 steps a map); 16 by 24 only at d1_trainstation_02's outdoor steps (42).",
    "how": "m.steps does it; hand-made stairs should match.",
    "check": "review"
   },
@@ -234,7 +234,7 @@
    ],
    "title": "Light as City 18 does: many small fixtures, some with beams",
    "rule": "Light a room with two or three fixtures, not one; point some (light_spot, point_spotlight); use the city's own fixtures: dome lights, lab fluorescent tubes indoors, cage lights in service places, the Combine's light on Combine places, lampposts outside.",
-   "why": "The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47. Lampposts in City 18 stand 360 to 870 apart (most about 600 to 750).",
+   "why": "The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47. Lampposts in City 18 stand 360 to 870 apart (most about 600 to 750). Valve's day streets use the unlit lamppost03a_off with no light on it, 818 (d3_c17_13) and 962 (d1_trainstation_04) apart; lampfixture01a 784 apart round the plaza (d1_trainstation_02).",
    "how": "m.lamp, m.spot, m.light; every canal stretch now gets a caged lamp on every third rib, a third of them dead (dress_canal_walls).",
    "check": "review"
   },
@@ -271,7 +271,7 @@
    ],
    "title": "Streets as the owner's: pavements, kerbs, a crowned road",
    "rule": "Pavements 96 wide at the floor's height with a kerb of 8; gutters 8 down; cobbles (stonefloor006d_c17, sett strips 006e/006f) rising to a crown 4 over the gutters.",
-   "why": "\"The street is just flat cobblestone? We have sidewalks and a sloped street (higher in middle) all over the main map\"; \"sidewalks are not 2 feet tall irl, they are like 6-12 inches\" (20 November). Measured in the owner's map.",
+   "why": "\"The street is just flat cobblestone? We have sidewalks and a sloped street (higher in middle) all over the main map\"; \"sidewalks are not 2 feet tall irl, they are like 6-12 inches\" (20 November). Measured in the owner's map. Valve's own City 17 streets for comparison (measured 21 November): roadway 256 (d1_trainstation_03, 04) or 320 (d3_c17_13), flat (crown 0 in 34 of 36 and 79 of 83 sections), the kerb a plain step of 4 (8 on 62 of 166 kerbs of the war street), pavements 128 to 192 of concretefloor028c, roads concretefloor033c or stonefloor006d_c17 with 006f_c17 edge strips. The owner's crown and kerb of 8 are their own choice: keep them.",
    "how": "map_town.lay_street. The street corridor beside the canal does not have it yet.",
    "check": "review"
   },
@@ -356,7 +356,7 @@
    ],
    "title": "Interiors in City 18's way",
    "rule": "Plaster walls in two tones split by a dado rail, wooden floors, door casings proud of the wall, a ceiling trim; stoves, sinks, toilets, fridges, iron bunks backs to the wall; radiators; fluorescent tubes. Never a plain cream box. Each kind of place in its own materials: a cellar is brick or stone, a Combine room is Combine metal, a culvert is damp concrete.",
-   "why": "The owner's flats (picture), their 14 toilets and sinks; review, 20 November (cream rooms in a dozen modules).",
+   "why": "The owner's flats (picture), their 14 toilets and sinks; review, 20 November (cream rooms in a dozen modules). Valve's flats (d1_trainstation_03) for comparison: four inside walls in five are one material floor to ceiling; where two-toned the change is at 64.",
    "how": "Line rooms with thin detail brushes; the plan's own walls are concrete or brick.",
    "check": "review"
   },
@@ -561,7 +561,7 @@
    ],
    "title": "Tall walls in bands",
    "rule": "A wall taller than about 256 is never one texture. Lay it in courses: a base (stonewall050c, floor to 96), the body (050a), a band course (050b, about 192 to 320), the body again, a top course (050e). Each course is its own brush, the base and the band 4 to 8 proud of the body, so the wall casts a line of shadow at each change.",
-   "why": "Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age.",
+   "why": "Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age. In every old-city Valve map measured the first change of material is most often 128 over the wall's foot (d1_trainstation_02: 870 wall columns, 04: 1343, 03: 290, d3_c17_13: 781, Ravenholm: 426), then 64; 64 to 83% of wall length over 256 tall is banded, against 15% in the Citadel.",
    "how": "Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.",
    "check": "map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare)."
   },
@@ -586,7 +586,7 @@
    ],
    "title": "Light in pools, not floods",
    "rule": "Let places be dim and light them in pools: a fixture over each door, each way on and each thing to look at, with darker stretches between. Valve lights the whole train station with 23 light, 40 light_spot and 19 point_spotlight.",
-   "why": "Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat.",
+   "why": "Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat. Ravenholm: 26 lights in the whole town, its 11 spotlights about 500 apart; the flats: plain lights at 8 as fill and light_spot at 400.",
    "how": "One fixture per bay or door, about a third left off (as the canal walls do), light_spot under lamps that hang; brighter where people gather.",
    "check": "map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer."
   },
@@ -601,6 +601,168 @@
    "why": "Picture V3: the crates and the cabinet hug one wall and leave the way clear; clutter in the walking line only blocks people, clutter on the edges makes a place lived in.",
    "how": "Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door.",
    "check": "map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer."
+  },
+  {
+   "id": "valve-street-proportions",
+   "tags": [
+    "streets",
+    "valve"
+   ],
+   "title": "Streets in Valve's proportions",
+   "rule": "A City 17 street is about 640 to 768 wall to wall: a roadway of 256 (320 on the main war street), pavements of 128 to 192 each side, fronts 576 to 672 tall over it (height about half the width). Side streets and war-torn ones are lower (walls 256 to 384).",
+   "why": "Cross-sections through outdoor AI nodes (21 November): d1_trainstation_04, 36 with a kerb each side: road 256 (30 of 36), pavements 192, 128, 256, wall to wall 640, walls median 576 (height over width 0.56); d1_trainstation_03: road 256, walls 672; d3_c17_13, 83 sections: road 320 (64), pavements 128 (45) and 192, wall to wall 640, walls median 256 (0.31); d1_trainstation_02 plaza roads 416 to 608, walls 672 (0.41). Pictures T3.3, T4.4, W3.",
+   "how": "Size street modules on these where the owner has not settled a number; where it differs from the owner's own streets (street-profile: pavements 96), the owner's wins: ask before changing.",
+   "check": "review (the viewer from a pavement eye)"
+  },
+  {
+   "id": "valve-template-fronts",
+   "tags": [
+    "facades",
+    "valve"
+   ],
+   "title": "Upper storeys and far blocks as painted fronts",
+   "rule": "Where the player cannot reach, Valve's fronts are flat walls in building_template textures (windows, sills and cornices painted on), with window models (building_tem002_window01 and its _bars) set into them near the player; built detail (plinth, shopfronts, doors, real windows) only at street level.",
+   "why": "building_template share of all vertical wall area: 46% in d1_trainstation_02, 39% in 04, 38% in d3_c17_13, 35% in 03 (3% in the lab, 0 in Ravenholm, the coast and the Citadel); d1_trainstation_03 has building_tem002_window01 14, the same with bars 14, courtyard_template002_window 10. Pictures T2.1, T2.7, T4.6.",
+   "how": "Backdrop blocks and storeys out of reach: one template face per storey band instead of brush windows; keep map_town.facade where players walk. Check the materials exist in the owner's content first (map_assets.py).",
+   "check": "map_assets.py (the materials exist); the look in the viewer"
+  },
+  {
+   "id": "valve-flat-interiors",
+   "tags": [
+    "interiors",
+    "valve"
+   ],
+   "title": "Flats at Valve's size",
+   "rule": "A City 17 flat: ceiling 120 over the floor (112 to 128), corridors 64 to 128 wide, rooms about 160 to 232 by 224 to 376, doorways 48 wide and 108 high (door01_left; 96 for a pair), stairs 8 by 12 in their own shaft; furniture only against the walls (radiators under windows, shelves, a couch, a TV), a bulb or dome light per room and every few doors in a corridor.",
+   "why": "d1_trainstation_03: floor to ceiling 120 at 81 of 125 indoor AI nodes (112: 17, 128: 11); rooms median 160 by 324; doorways 48x108 and 60x108; radiator01a 16 (the commonest model), shelves 23, couches 7, lightbulb01a 12, light_domelight02_on 8. Ceilings are 120 in Ravenholm too (19 of 41) and d3_c17_13 (87 of 157), 128 in d1_trainstation_04 (32 of 75); halls and labs 248 to 352. Pictures T3.4 to T3.7, R7.",
+   "how": "Interior modules: 120 to 128 in flats and houses, taller only for halls, shops and Combine places; doorway 48 by 108 for door01_left. Small rooms work because they are sparse (room-to-move).",
+   "check": "review"
+  },
+  {
+   "id": "valve-boarded-openings",
+   "tags": [
+    "interiors",
+    "facades",
+    "valve",
+    "infestation",
+    "ravenholm"
+   ],
+   "title": "Boards nailed across, at Valve's size",
+   "rule": "Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 wide and 64 to 112 long), a few across the opening at slightly different angles, in a door or floor wood (wooddoor045b, wooddoor048a, wooddoor015a, woodfloor005a).",
+   "why": "Plank brushes counted (21 November): 172 in d1_trainstation_03 (78 of them 4 by 8 by 112), 39 in Ravenholm (4x8x112, 4x16x64), 30 in d3_c17_13 (4x16x112, wooddoor015a), 35 in d1_trainstation_04. Pictures R3, T4.5.",
+   "how": "A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways.",
+   "check": "review"
+  },
+  {
+   "id": "valve-overhead-cables",
+   "tags": [
+    "streets",
+    "props",
+    "valve"
+   ],
+   "title": "Wires over the streets",
+   "rule": "Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 100, width 1 to 2; poles 700 to 1400 apart, or utilitypolemount01a on the walls.",
+   "why": "Rope spans median 734 (d1_trainstation_02, 25 spans), 736 (04, 46), 914 (Ravenholm, 32 spans from 41 rope entities), slack 100 in all; utilitypole02b 693 and 1411 apart, utilitypole01b 887 in Ravenholm; utilitypolemount01a 8 in d1_trainstation_04. Pictures R3, T2.4, T4.4.",
+   "how": "keyframe_rope and move_rope from pole to pole and pole to wall mount, never ending in the air (no-floating-ropes).",
+   "check": "no-floating-ropes check; review"
+  },
+  {
+   "id": "valve-combine-cold",
+   "tags": [
+    "combine",
+    "lighting",
+    "valve"
+   ],
+   "title": "The Combine is one cold metal; the old city is banded and warm",
+   "rule": "Combine places: one metal over whole walls, no courses, lit cold and bright (light_spot and point_spotlight '144 224 240' to '159 237 215'), clean (no decals), teal or blue fog where there is fog. The old city round them: banded walls, warm light ('255 224 144'), grime.",
+   "why": "d3_citadel_01: citadel_metalwall077a on 6816 faces, only 15% of tall wall length changes material (the old-city maps: 64 to 83%), 28 light_spot at a median 2000, 17 point_spotlight '147 226 240', fog '67 107 107', 0 decals and 0 overlays; d2_coast_12 bunkers: 27 point_spotlight, light_spot median 2500, '144 224 240'; the flats of d1_trainstation_03: 25 of 37 lights '255 224 144'. Pictures C1, C3, C5, K3.",
+   "how": "Combine modules: one Combine metal per wall, cold spots, no grime decals (combine-kit for the props); old-city modules: valve-wall-bands, warm lights, grime.",
+   "check": "review"
+  },
+  {
+   "id": "raven-dusk-light",
+   "tags": [
+    "lighting",
+    "infestation",
+    "ravenholm",
+    "valve"
+   ],
+   "title": "Ravenholm's dark: weak cold light and warm pools",
+   "rule": "Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under a dusk sky, then pools of warm light from spotlights on the houses (a point_spotlight with a light_spot at the same spot, '255 245 145', 400 to 1000) about 500 apart, dim fills of 8 under them, and the orange glow of a fire.",
+   "why": "d1_town_03: light_environment '175 230 239' at 50, ambient '43 45 57' at 5 (the City 17 maps: '237 218 143' at 800, ambient 100); sky_day01_09; no env_fog_controller; 11 point_spotlight each paired with a light_spot, nearest 506 apart; 8 light at 8; an env_fire with '254 174 10' at 300; 22 of its 26 lights warm. Pictures R3, R4.",
+   "how": "One map has one sun, so map_raven.py's sheet of toolsblocklight under the quarter's sky is the right stand-in for Valve's weak sun; what Valve adds is the pools: a light_spotlight01_lamp on a house wall every 500 or so with a point_spotlight and a light_spot, a fire in a drum, against the gloom lights (now four at 7, cold grey). Ask the owner before changing the quarter's light.",
+   "check": "review (a screenshot from the owner: the quarter's light is a first guess)"
+  },
+  {
+   "id": "raven-streets-and-houses",
+   "tags": [
+    "streets",
+    "facades",
+    "infestation",
+    "ravenholm",
+    "valve"
+   ],
+   "title": "Ravenholm's lanes: house to house, timber and plaster",
+   "rule": "Ravenholm's lanes have no kerb and no pavement: cobbles and uneven ground run house to house, 384 to 768 wall to wall; houses two or three storeys (walls 256 to 512 over the lane), timber and plaster on a concrete plinth (to 128, 48 or 16), roofs pitched 20 to 35 degrees in corrugated metal or tile, a steep mansard or spire for a landmark; boards on openings, wires overhead.",
+   "why": "d1_town_03: no kerb in 119 cross-sections; 36% of the floor is displacement; wall to wall most often 640; walls median 352 (height over width 0.42); woodfloor005a the commonest material (961 faces), plasterwall029a/c/d/g, brickwall048a/d/i, concretewall032d under plaster or metal (first change at 128, 48, 16); roof pitch 25 degrees (31 faces), 20, 35, steep faces 65 to 70; metalwall026a and 014a, tileroof003a and 004b. Pictures R1 to R3.",
+   "how": "The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks.",
+   "check": "review"
+  },
+  {
+   "id": "raven-rooftop-refuge",
+   "tags": [
+    "layout",
+    "infestation",
+    "ravenholm",
+    "valve"
+   ],
+   "title": "A way over the roofs",
+   "rule": "Give an overrun quarter a second way through above the dead: low roofs joined by plank bridges and ladders, timber scaffolds, one high place to hold (Grigori's roof), reached from inside a house.",
+   "why": "d1_town_03: 74% of the AI nodes are outdoors, many on roofs; metalladder002 4 and 002b 2, plank bridges of woodfloor005a; npc_monk on a roof at z -3096, about 500 over the streets; explosive barrels set on roofs for the roof zombies. Pictures R4, R6.",
+   "how": "In map_raven.py: two or three houses with a stair to a flat roof, planks to the next roof, a ladder down at the far end.",
+   "check": "review; valid-viewpoints for spots on the roofs"
+  },
+  {
+   "id": "raven-traps-and-makers",
+   "tags": [
+    "props",
+    "infestation",
+    "ravenholm",
+    "valve"
+   ],
+   "title": "Traps lying ready, the dead from makers",
+   "rule": "Leave traps as loose physics props where the dead come: propane tanks in clusters of 2 to 6, explosive barrels in twos and threes, saw blades to throw, one rigged machine trap at a choke point; bring the dead with npc_maker and npc_template_maker and walk them in with aiscripted_schedule; health kits as rewards.",
+   "why": "d1_town_03: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, a propeller trap (engine, blade, lever, func_rotating); 15 npc_zombie and 2 npc_fastzombie, 10 npc_maker, 7 npc_template_maker, 14 aiscripted_schedule; 18 item_healthkit. The same machinery map_raven.py uses. Pictures R5, R7.",
+   "how": "map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic).",
+   "check": "map_lint (physics props); review"
+  },
+  {
+   "id": "raven-litter-not-gore",
+   "tags": [
+    "grime",
+    "infestation",
+    "ravenholm",
+    "valve"
+   ],
+   "title": "Abandoned shows as litter, ivy and leaves; one corpse tells the rest",
+   "rule": "Dress an overrun quarter with trash, ivy and dead-leaf decals and a few scorch marks rather than blood (Valve's Ravenholm has none); a corpse is a single set piece (a pinned ragdoll with crows round it), not scattered.",
+   "why": "d1_town_03: 82 infodecal, 0 of them blood: trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5, graffiti; 2 info_overlay, both scorch1; 1 prop_ragdoll (corpse1) with 5 npc_crow. Picture R6.",
+   "how": "Mod.grime with trash, ivy and leaves in the quarter; at most one corpse scene a yard (the zombies bring their own blood in game).",
+   "check": "review"
+  },
+  {
+   "id": "raven-sound",
+   "tags": [
+    "sound",
+    "infestation",
+    "ravenholm",
+    "valve"
+   ],
+   "title": "The quarter's sound: four soundscapes and placed scares",
+   "rule": "Name d1_town.Street outside, d1_town.WoodBuilding or d1_town.ConcreteBuilding inside by what the house is made of, d1_town.CorpseRoom where the dead wait; put one-shot sounds (a metal grate, a far fast-zombie call, an attack, a fire loop) where something should startle.",
+   "why": "d1_town_03: 7 env_soundscape (ConcreteBuilding 3, Street 2, WoodBuilding 1, CorpseRoom 1), radius 128; 27 ambient_generic: zo_attack2 4, metalgrate3 4, fz_alert_far1 3, tram_hit1 2, smallfireloop 2.",
+   "how": "m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house').",
+   "check": "review"
   }
  ]
 }

@@ -84,9 +84,270 @@ Valve's own d1_trainstation_01 (the Source SDK copy the owner uploaded, 21 Novem
 | V11 | `valve_d1_trainstation_01/11_platform_plan.png` | the platforms cut at z 420, from the north-east | Canopy beams every 368, the trains between platforms, crates and benches along the platform edges. | valve-column-rhythm, valve-clutter |
 | V12 | `valve_d1_trainstation_01/12_courtyard_plan.png` | the courtyard from above | A quiet open square with trees and benches round the edges and banded walls all round. | valve-wall-bands, soundscapes |
 
+## Valve's d1_trainstation_02: City 17's plaza and streets (`_dev/reference/valve_d1_trainstation_02/`)
+
+Valve's own d1_trainstation_02 (the City 17 plaza and streets after the station) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 305 prop_static, 66 prop_physics, 6 prop_dynamic, 6 prop_door_rotating, 0 prop_ragdoll, 162 infodecal, 27 info_overlay, 27 keyframe_rope and 19 move_rope, 126 func_detail, 47 npc entities (makers included).
+- Lights: 7 light (median brightness 2.0), 21 light_spot (median 600.0), 10 point_spotlight, 21 env_sprite; sun "237 218 143 800" at pitch -35, ambient "190 201 220 100"; fog "223 216 173" from 512 to 20000; sky sky_day01_01.
+- Sound: 12 env_soundscape (d1_trainstation.QuietCourtyard 3, d1_trainstation.Turnstyle 2, d1_trainstation.Interrogation 2, d1_trainstation.TerminalSquare 2, d1_trainstation.AppartmentCourtyard 2, d1_trainstation.Appartments 1), median radius 96; 15 ambient_generic (combine.sheild_loop, combine.sheild_touch, trainyard.sodamachine_dispense, trainyard.sodamachine_empty).
+- Commonest models: handrail_64decoration001a 17, bench_indoor001a 14, trainstation_post001 13, tree_deciduous_03b 12, benchoutdoor01a 10, trainstation_column001 10, tree_poplar_01 9, trainstation_arch001 9, awning001a 9, antennaclusters01a 9, combine_lock01 9, awning002a 8, playgroundtick-tack-toe_block01a 8, tree_deciduous_01a-lod 8, gutterlarge_512_001a 8.
+- Commonest materials (faces): concretefloor028c 405, stonewall050c 379, stonewall050b 370, stonewall040f 293, stonewall050a 267, stonefloor006b 209, concretewall037d 183, building_template028a 179, stonefloor006a 166, stonestair001a 139, building_template012j 137, metalroof006a 116, courtyard_template002b 109, dev_lowermetaldoor02a 108, building_trainstation_window001b 100, building_template003e 94, metalcombine001 93, metalhull003a 93, building_template011c 92, red_grass 91.
+- Ceilings: floor to ceiling indoors (cast up from 50 AI nodes) is most often 352 (11 of them), then 192 and 256; 64% of the nodes are outdoors; rooms at those nodes measure about 211 by 704 (median, wall to wall).
+- Stairs: 54 flights of 3 or more steps; steps rise 8 and tread 12 (251 steps), then 16 by 24 (42); median 6 steps a flight.
+- Walls in bands: 83% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 144 and 64; commonest pairs (below > above): stonewall050c > stonewall050a, building_template011f > building_template011c, stonewall040f > brickwall017a, stonewall050c > stonewall050b.
+- Fronts: 46% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template028a, building_template012j, building_template011c, courtyard_template002b.
+- Streets (cross-sections through 243 outdoor AI nodes, 112 with a kerb each side): roadway most often 416 wide; kerbs 4 (190) or 8 (34) high; pavements most often 128, 32 wide; the road is flat (crown 0 in 78 of 112); road stonefloor006a, pavement concretefloor028c; wall to wall most often 768; street walls median 672 tall (height over width 0.41).
+- Doors: door01_left 6 (model 12x49x109); doorways measured at them (jamb to jamb, floor to head): 96x108 (4), 48x108 (2).
+- Cables: 25 rope spans, median 734 long, slack 100, width 1.0.
+- Spacing (nearest of the same model): utilitypole02b 693 apart (n 3), tree_poplar_01 512 apart (n 9), lampfixture01a 784 apart (n 5), benchoutdoor01a 192 apart (n 10), tree_deciduous_03b 384 apart (n 12).
+- Slopes: 107 sloped faces over 2000 square units; pitch most often 70, 35, 45 degrees; metalroof006a, roof_template001b, tileroof002a.
+- Steps: the outdoor steps by the station front are 16 by 24 (42 steps found); every other flight is 8 by 12.
+- Plaza furniture: benchoutdoor01a 10 at 192 apart, tree_deciduous_03b 12 at 384 apart and tree_poplar_01 9 at 512, trainstation_post001 13, awnings 17 (awning001a, 002a), gutterlarge_512 downpipes 8, antennaclusters01a 9 on the roofs, combine_lock01 9 on doors.
+- Grime: 162 infodecal and 27 info_overlay in one plaza and its yards.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| T2.1 | `valve_d1_trainstation_02/01_overview_sw.png` | the plaza, the station and the blocks from the south-west | The station is one long banded hall; the blocks round the plaza stand 576 to 768 tall, their upper storeys painted building_template fronts. | valve-wall-bands, valve-template-fronts, valve-street-proportions |
+| T2.2 | `valve_d1_trainstation_02/02_overview_ne.png` | the same from the north-east | Roofs at many heights with chimneys and aerials; the Combine wall and towers stand over the old blocks. | skyline-corners, valve-combine-cold |
+| T2.3 | `valve_d1_trainstation_02/03_station_front.png` | the station front (eye -2816 -2720 64) | Wide steps, bollards in a row, trees on a rhythm, a banded wall with tall windows. | valve-wall-bands, valve-column-rhythm |
+| T2.4 | `valve_d1_trainstation_02/04_plaza.png` | across the plaza (eye -3014 -2042 128) | Barricades and wires; the middle kept open, the things at its edges. | valve-clutter, valve-overhead-cables, combine-kit |
+| T2.5 | `valve_d1_trainstation_02/05_courtyard.png` | the apartment courtyard (eye -4648 -3648 64) | A quiet yard behind the blocks, its own soundscape (d1_trainstation.AppartmentCourtyard). | soundscapes, valve-template-fronts |
+| T2.6 | `valve_d1_trainstation_02/06_station_hall_cut.png` | the station hall from above, roof cut away | Columns (trainstation_column001) and posts on one rhythm, benches in rows between them. | valve-column-rhythm |
+| T2.7 | `valve_d1_trainstation_02/07_apartment_block.png` | an apartment block and its courtyard from the south-west | A block is a few big volumes with painted fronts; detail only where the player walks. | valve-template-fronts |
+
+## Valve's d1_trainstation_03: flats and rooftops (`_dev/reference/valve_d1_trainstation_03/`)
+
+Valve's own d1_trainstation_03 (the apartments and the rooftop chase) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 151 prop_static, 146 prop_physics, 22 prop_dynamic, 8 prop_door_rotating, 5 prop_ragdoll, 83 infodecal, 54 info_overlay, 24 keyframe_rope and 17 move_rope, 91 func_detail, 33 npc entities (makers included).
+- Lights: 17 light (median brightness 8.0), 20 light_spot (median 400.0), 7 point_spotlight, 5 env_sprite; sun "237 218 143 800" at pitch -35, ambient "190 201 220 100"; fog "184 218 231" from 600 to 4000.0; sky sky_day01_01.
+- Sound: 2 env_soundscape (d1_trainstation.Appartments 1, d1_trainstation.RaidAppartments 1), median radius 160; 16 ambient_generic (breakable.spark, d1_trainstation.sinkdrips, d1_trainstation.boots_on_stairs, d1_trainstation_03.citizen_beating).
+- Commonest models: radiator01a 16, building_tem002_window01 14, building_tem002_window01_bars 14, furnitureshelf001b 12, lightbulb01a 12, furnitureshelf002a 11, courtyard_template002_window 10, playgroundtick-tack-toe_block01a 9, tree_deciduous_01a-lod 9, light_domelight02_on 8, furniturechair001a 8, combine_lock01 8, furniturecouch001a 7, tv_monitor01_screen 5, tv_monitor01 5.
+- Commonest materials (faces): woodstair002c 652, wooddoor045b 633, plasterwall030c 410, plasterwall041a 403, stonestair001a 332, wooddoor048a 317, plasterwall005c 313, plasterwall012a 301, plasterwall030a 300, plasterwall005a 288, plasterwall044b 275, plasterwall042c 259, concretefloor028c 215, plasterwall040a 190, concretefloor013a 159, metalfence007a 156, glasswindow070a 148, stonewall040f 134, tilefloor009a 128, woodstair002a 128.
+- Ceilings: floor to ceiling indoors (cast up from 125 AI nodes) is most often 120 (81 of them), then 112 and 128; 12% of the nodes are outdoors; rooms at those nodes measure about 160 by 324 (median, wall to wall).
+- Stairs: 45 flights of 3 or more steps; steps rise 8 and tread 12 (238 steps), then 8 by 8 (14); median 7 steps a flight.
+- Walls in bands: 83% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 80 and 120; commonest pairs (below > above): plasterwall030c > plasterwall030a, stonewall040f > stonewall050c, plasterwall005c > plasterwall005a, building_template011f > building_template011c.
+- Fronts: 35% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template012j, building_template002a, courtyard_template002b, building_template002b.
+- Streets (cross-sections through 4 outdoor AI nodes, 4 with a kerb each side): roadway most often 256 wide; kerbs 4 (8) high; pavements most often 128, 288, 192 wide; the road is flat (crown 0 in 4 of 4); road concretefloor033c, pavement concretefloor028c; wall to wall most often 704; street walls median 672 tall (height over width 1.05).
+- Doors: door01_left 4 (model 12x49x109), door02_double 4 (model 12x46x109); doorways measured at them (jamb to jamb, floor to head): 60x108 (4), 48x108 (3), 32x108 (1).
+- Cables: 26 rope spans, median 328 long, slack 100, width 1.0.
+- Spacing (nearest of the same model): utilitypole02b 1411 apart (n 3), tree_deciduous_03b 635 apart (n 5), tree_deciduous_01a-lod 597 apart (n 9).
+- Slopes: 51 sloped faces over 2000 square units; pitch most often 35, 70, 65 degrees; metalroof006a, tileroof002a, plasterwall005a.
+- Inside walls: 337 of 423 walls sampled from the corridors and flats are one material floor to ceiling; where a wall is two-toned the change is most often at 64 (plasterwall030c below, 030a above), then 128 (tile to wallpaper).
+- Flats are furnished on the walls: radiator01a 16 (the commonest model), furnitureshelf001b 12 and 002a 11, furniturechair001a 8, furniturecouch001a 7, tv_monitor01 5; lit by lightbulb01a 12 and light_domelight02_on 8; 25 of the 37 lights are warm ('255 224 144'), the plain light at brightness 8 as fill and light_spot at 400.
+- Windows from outside are models on painted fronts: building_tem002_window01 14 with the same number of _bars, courtyard_template002_window 10; glass faces most often 40 wide by 72 tall.
+- Boards: 172 plank brushes, most 4 thick, 8 wide and 112 long (78 of them), in wooddoor045b and wooddoor048a: doors and windows nailed shut.
+- Lived in: decals of power outlets 10, stains 9, wallstain_frame (where pictures hung) 11, plaster damage; 54 overlays (stains, ivy, posters); 36 func_breakable; combine_lock01 8 on the doors.
+- Sound: 2 soundscapes (d1_trainstation.Appartments, .RaidAppartments) and one-shots: sink drips, boots on stairs, a crying loop, a citizen being beaten.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| T3.1 | `valve_d1_trainstation_03/01_overview_sw.png` | the apartments chase from the south-west | A deep block of flats, courtyards and roofs; the street on one side. | valve-template-fronts |
+| T3.2 | `valve_d1_trainstation_03/02_overview_ne.png` | the same from the north-east | The rooftop way out: low roofs, sheds and walls stepping down. | skyline-corners |
+| T3.3 | `valve_d1_trainstation_03/03_street.png` | the street below the flats (eye -4223 -5336 60) | Road 256, kerb 4, pavements 128 to 288, trees on the pavement edge, fronts 672 tall. | valve-street-proportions, street-profile |
+| T3.4 | `valve_d1_trainstation_03/04_corridor.png` | a tenement corridor (eye -4896 -4616 448) | Corridor 64 to 128 wide, ceiling 120, a dome light every few doors, doors in proud frames both sides. | valve-flat-interiors, valve-light-pools |
+| T3.5 | `valve_d1_trainstation_03/05_flat.png` | inside a flat (eye -4468 -4664 320) | Small rooms, things on the walls (fridge, shelves, boxes), the doorway on to the next room. | valve-flat-interiors, room-to-move |
+| T3.6 | `valve_d1_trainstation_03/06_stairwell.png` | the stairwell (eye -4984 -4832 576) | Flights of 8 by 12, a light on each landing. | valve-flat-interiors |
+| T3.7 | `valve_d1_trainstation_03/07_block_cut.png` | the tenement block cut at 190 over the floor | The plan: a corridor down the middle, flats each side about 160 to 232 by 224 to 376, the stair in its own shaft. | valve-flat-interiors |
+
+## Valve's d1_trainstation_04: streets to Kleiner's (`_dev/reference/valve_d1_trainstation_04/`)
+
+Valve's own d1_trainstation_04 (the streets on the way to Kleiner) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 185 prop_static, 61 prop_physics, 10 prop_dynamic, 6 prop_door_rotating, 8 prop_ragdoll, 69 infodecal, 4 info_overlay, 39 keyframe_rope and 24 move_rope, 91 func_detail, 25 npc entities (makers included).
+- Lights: 10 light (median brightness 29.0), 16 light_spot (median 400.0), 1 point_spotlight, 6 env_sprite; sun "237 218 143 800" at pitch -35, ambient "190 201 220 100"; fog "223 216 173" from 2048 to 15000; sky sky_day01_01.
+- Sound: 10 env_soundscape (d1_trainstation.QuietCourtyard 4, d1_trainstation.TerminalSquare 2, general.concrete_quiet 2, Automatic_Dialog 1, d1_trainstation.RaidAppartments 1), median radius 128; 9 ambient_generic (eli_lab.elevator_ding, npc_metropolice.onecontained, npc_metropolice.takedown, npc_metropolice.stay).
+- Commonest models: antennaclusters01a 12, tree_deciduous_01a-lod 11, wood_crate002a 11, exterior_fence002d 9, wood_pallet001a 9, utilitypolemount01a 8, chimneysmokestack_cluster01a 7, oildrum001 7, door01_left 6, popcan01a 6, metal_paintcan001b 6, police 6, utilitypole02b 5, lightbulb01a 5, tree_deciduous_03b 5.
+- Commonest materials (faces): woodwall043a 404, metalwall061f 360, concretewall047a 331, concretewall032d 326, concretewall041b 266, woodwall006a 262, concretewall026h 198, building_template014g 198, plasterwall041a 193, metalroof006a 178, concretefloor028c 172, metalduct003a 141, rubberroof002a 128, concretewall041c 114, concretefloor036a 112, concretewall041a 110, metalwall026a 107, building_template007f 103, tileroof003a 100, building_template007a 98.
+- Ceilings: floor to ceiling indoors (cast up from 75 AI nodes) is most often 128 (32 of them), then 232 and 144; 35% of the nodes are outdoors; rooms at those nodes measure about 184 by 376 (median, wall to wall).
+- Stairs: 28 flights of 3 or more steps; steps rise 8 and tread 12 (120 steps), then 8 by 8 (14); median 6 steps a flight.
+- Walls in bands: 72% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 64 and 72; commonest pairs (below > above): concretewall032d > metalwall070f, concretewall041c > concretewall041a, concretewall032d > metalwall032c, building_template002h > building_template002a.
+- Fronts: 39% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template014g, building_template007f, building_template002a, building_template002k.
+- Streets (cross-sections through 52 outdoor AI nodes, 36 with a kerb each side): roadway most often 256 wide; kerbs 4 (70) or 8 (2) high; pavements most often 192, 128, 256 wide; the road is flat (crown 0 in 34 of 36); road concretefloor033c, pavement concretefloor028c; wall to wall most often 640; street walls median 576 tall (height over width 0.56).
+- Doors: door01_left 6 (model 12x49x109); doorways measured at them (jamb to jamb, floor to head): 48x108 (5), 56x112 (1).
+- Cables: 46 rope spans, median 736 long, slack 100, width 2.0.
+- Spacing (nearest of the same model): utilitypole02b 1411 apart (n 5), utilitypolemount01a 697 apart (n 8), tree_poplar_01 288 apart (n 3), lamppost03a_off 962 apart (n 4), tree_deciduous_01a-lod 597 apart (n 11).
+- Slopes: 101 sloped faces over 2000 square units; pitch most often 70, 35, 25 degrees; metalroof006a, tileroof003a, metalwall014a.
+- Kerb in detail: a plain step of 4 from concretefloor028c pavement to concretefloor033c road, nothing else (probed at 1-unit steps); 70 of 72 kerbs measured are 4.
+- Inside walls: 140 of 183 sampled are one material; the rest change at 120 (concretewall047c below, 047a above, 26) or 32.
+- Street things: lamppost03a_off 4 (the unlit model: a day map hangs no light on its lamps) 962 apart, utilitypole02b 5 and utilitypolemount01a 8 (wires off the walls), antennaclusters01a 12 and chimneysmokestack_cluster01a 7 on the roofs, wood_crate002a 11 and wood_pallet001a 9 in the yards, 8 prop_ragdoll.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| T4.1 | `valve_d1_trainstation_04/01_overview_sw.png` | the streets from the south-west | Streets of 640 between fronts 576 tall; yards and a train yard behind. | valve-street-proportions, valve-template-fronts |
+| T4.2 | `valve_d1_trainstation_04/02_overview_ne.png` | the same from the north-east | Roofscape of aerials and chimney stacks; the Combine wall pieces cutting through. | skyline-corners, valve-combine-cold |
+| T4.3 | `valve_d1_trainstation_04/03_alley.png` | a back street (eye -7036 -4568 0) | Narrow back street, steps up at the side, crates and bins on the edges. | valve-clutter |
+| T4.4 | `valve_d1_trainstation_04/04_street.png` | a street between tall blocks (eye -6416 -4616 40) | Road 256, kerb 4, a fence along the pavement, wires overhead; walls 576 tall over a 640 street. | valve-street-proportions, valve-overhead-cables |
+| T4.5 | `valve_d1_trainstation_04/05_attic.png` | from the raided flats' attic (eye -4016 -3456 628) | Timber attic, planks, and the square seen past the roofs. | valve-boarded-openings |
+| T4.6 | `valve_d1_trainstation_04/06_block.png` | a block of flats and its roofs from the north-east | Pitched roofs (35 and 25 degrees) and flat ones with sheds; painted fronts below. | valve-template-fronts |
+
+## Valve's d1_trainstation_05: Kleiner's lab (`_dev/reference/valve_d1_trainstation_05/`)
+
+Valve's own d1_trainstation_05 (Kleiner's lab) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 259 prop_static, 65 prop_physics, 63 prop_dynamic, 3 prop_door_rotating, 0 prop_ragdoll, 23 infodecal, 16 info_overlay, 45 keyframe_rope and 19 move_rope, 88 func_detail, 37 npc entities (makers included).
+- Lights: 18 light (median brightness 29.5), 74 light_spot (median 140.0), 2 point_spotlight, 40 env_sprite; sun "237 218 143 800" at pitch -35, ambient "190 201 220 100"; fog "255 220 200" from 0 to 5000; sky sky_day01_01.
+- Sound: 6 env_soundscape (Automatic_Dialog 2, d1_trainstation.QuietCourtyard 2, general.concrete_quiet 1, d1_trainstation.city 1), median radius 128; 73 ambient_generic (k_lab.teleport_sound, k_lab.teleport_heartbeat, k_lab.teleport_breathing, k_lab.teleport_rings_high).
+- Commonest models: teleportring 12, cell_01_pod_cheap 12, lab_flourescentlight001b 11, utilityconnecter006c 10, exterior_fence002d 9, substation_stripebox01a 8, utilityconnecter006b 8, exterior_fence002c 7, lab_flourescentlight001a 7, wood_crate002a 7, oildrum001 7, powerbox01a 6, prison_cagedlight001a 6, exterior_fence003a 6, teleportgate 6.
+- Commonest materials (faces): metalwall063a 902, metalwall061f 502, brickwall052e 477, brickwall052d 373, concretewall002a 355, metalduct003a 306, concretewall032d 294, metalwall062a 231, concretewall041b 183, stonewall050c 154, metalwall033a 145, metaltruss016a 128, metalroof008a 121, woodwall006a 115, concretewall047a 112, concretefloor013a 108, woodfloor005a 106, metalwall087a 97, concretestair005a 87, concretewall004a 81.
+- Ceilings: floor to ceiling indoors (cast up from 73 AI nodes) is most often 320 (24 of them), then 248 and 184; 12% of the nodes are outdoors; rooms at those nodes measure about 288 by 701 (median, wall to wall).
+- Stairs: 20 flights of 3 or more steps; steps rise 8 and tread 12 (100 steps); median 6 steps a flight.
+- Walls in bands: 26% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 256 and 64; commonest pairs (below > above): brickwall052e > brickwall052d, concretewall020a > concretewall047a, concretewall032d > metalwall021f.
+- Doors: door01_left 3 (model 12x49x109); doorways measured at them (jamb to jamb, floor to head): 48x108 (3).
+- Cables: 42 rope spans, median 585 long, slack 100, width 1.0.
+- Spacing (nearest of the same model): utilitypole01b 1861 apart (n 3), tree_deciduous_01a-lod 322 apart (n 4).
+- Slopes: 43 sloped faces over 2000 square units; pitch most often 20, 35, 45 degrees; metalwall063a, brickwall052e, metalroof006a.
+- A lit lab: 74 light_spot (median 140) and 40 env_sprite, under lab_flourescentlight001a/b 18 and prison_cagedlight001a 6; half the lights are cool ('160 224 240') and half warm: the lab's own light, not the street's.
+- Big rooms: ceilings most often 320 (24 of 73 nodes), then 248; the walls are mostly one material (only 26% of tall wall length banded), metalwall063a and brickwall052d/e.
+- 73 ambient_generic, most of them the teleport's sounds (k_lab.teleport_*): a machine room tells what it does by sound.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| T5.1 | `valve_d1_trainstation_05/01_overview_sw.png` | the lab and the block over it from the south-west | The lab is hidden under an ordinary old block; the teleporter room is a separate volume. |  |
+| T5.2 | `valve_d1_trainstation_05/02_overview_ne.png` | the same from the north-east | Two parts joined by a passage; every room a simple box. |  |
+| T5.3 | `valve_d1_trainstation_05/03_lab.png` | the lab (eye -6608 -1524 134) | Benches and machines along the walls, monitors (cyan) at head height, the floor left clear. | valve-clutter |
+| T5.4 | `valve_d1_trainstation_05/04_teleport.png` | the teleporter room (eye -13460 -607 72) | One pool of light on a round pad under a ring; everything else dark. | valve-light-pools |
+| T5.5 | `valve_d1_trainstation_05/05_lab_cut.png` | the lab cut at 190 over the floor | Rooms of 288 by 700, machines at the walls. | room-to-move |
+| T5.6 | `valve_d1_trainstation_05/06_entrance_block.png` | the old block over the lab's way in, from the north-east | An ordinary courtyard building as the cover for a secret place. |  |
+
+## Valve's d3_c17_13: City 17's streets at war (`_dev/reference/valve_d3_c17_13/`)
+
+Valve's own d3_c17_13 (City 17 streets at war) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 440 prop_static, 56 prop_physics, 54 prop_dynamic, 0 prop_door_rotating, 4 prop_ragdoll, 86 infodecal, 3 info_overlay, 2 keyframe_rope and 0 move_rope, 121 func_detail, 109 npc entities (makers included).
+- Lights: 24 light (median brightness 100.0), 19 light_spot (median 600.0), 10 point_spotlight, 0 env_sprite; sun "238 200 128 450" at pitch -12, ambient "75 96 116 250"; fog "214 207 189" from 1024 to 12285; sky sky_day03_05.
+- Sound: 5 env_soundscape (d3_citadel_01.pipe_entrance 2, streetwar.general_indoor_heavy_combat 1, streetwar.general_outdoor_heavy_combat 1, d3_citadel_01.cliffside1 1), median radius 144; 45 ambient_generic (streetwar.d3_c17_13_fire, streetwar.d3_c17_13_metal_large_debris2, streetwar.d3_c17_13_explode_2, streetwar.d3_c17_13_metal_barrel_impact_hard7).
+- Commonest models: concrete_section64floor001c 46, concrete_section64floor001a 46, concrete_section64floor001b 34, concrete_section128wall001a 34, combine_soldier 23, rebar_cluster001a 22, rebar_cluster001b 19, concrete_section128floor001a 16, walldestroyed08a 14, walldestroyed01a 11, walldestroyed07b 11, lights_florescent01a 11, barricade_short04a 10, concrete_debris128pile001a 10, concrete_debris256pile001a 10.
+- Commonest materials (faces): plasterwall021a 1415, concretefloor013a 415, stonefloor006d_c17 363, concretefloor028c_c17 335, stonewall044a 285, plasterwall039d 282, building_template025m 248, concretefloor002a 194, stonefloor006f_c17 185, concretefloor007a 158, plasterwall041a 156, building_template002b 155, storefront_template001g 133, concretefloor026a 127, stonewall044c 124, roof_template001b 117, plasterwall039b 106, concretefloor020a 104, concretefloor019a 103, building_template002i 102.
+- Ceilings: floor to ceiling indoors (cast up from 157 AI nodes) is most often 120 (87 of them), then 128 and 248; 63% of the nodes are outdoors; rooms at those nodes measure about 284 by 896 (median, wall to wall).
+- Stairs: 17 flights of 3 or more steps; steps rise 8 and tread 12 (151 steps); median 10 steps a flight.
+- Walls in bands: 64% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 64 and 16; commonest pairs (below > above): plasterwall021a > plasterwallpaper006a, building_template004c > building_template004b, building_template013e > building_template013l.
+- Fronts: 38% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template002b, building_template025m, storefront_template001g, building_template002i.
+- Streets (cross-sections through 340 outdoor AI nodes, 83 with a kerb each side): roadway most often 320 wide; kerbs 4 (100) or 8 (62) high; pavements most often 128, 192, 144 wide; the road is flat (crown 0 in 79 of 83); road stonefloor006d_c17, pavement concretefloor028c_c17; wall to wall most often 640; street walls median 256 tall (height over width 0.31).
+- Spacing (nearest of the same model): signpole001 823 apart (n 5), lamppost03a_off 818 apart (n 6), tree_deciduous_01a-lod 576 apart (n 8).
+- Slopes: 92 sloped faces over 2000 square units; pitch most often 45, 40, 65 degrees; roof_template001b, stonewall044a, concretefloor007a.
+- The cobbles are the owner's own: roadway stonefloor006d_c17 with stonefloor006f_c17 edge strips (18 of 83 sections), pavements concretefloor028c_c17; but Valve's road is flat (crown 0 in 79 of 83) and the kerb 4 (100) or 8 (62).
+- Ruin as props: concrete_section64floor001a/b/c 126 and concrete_section128wall001a 34 (broken floors and walls), rebar_cluster001a/b 41, walldestroyed01a/05a/07b/08a 45, concrete_debris piles 20, barricade_short04a 10, car004a_physics 7, ibeam01a 5: 440 prop_static in all.
+- The Combine's wall pushes through the city: combineinnerwallcluster1024_001a/002a 8 pieces, 1024 tall; lamppost03a_off 6 at 818 apart.
+- Light: a low sun (pitch -12, '238 200 128' at 450) with a strong ambient (250); fog '214 207 189' from 1024.
+- Sound: streetwar.general_outdoor_heavy_combat and _indoor_heavy_combat soundscapes and 45 ambient_generic (fire, falling debris, explosions).
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| W1 | `valve_d3_c17_13/01_overview_sw.png` | the war streets from the south-west | Low, broken blocks (street walls median 256) round squares, the Combine wall at the edge. | valve-street-proportions, valve-combine-cold |
+| W2 | `valve_d3_c17_13/02_overview_ne.png` | the same from the north-east | Debris props (orange) fill the streets: the ruin is mostly props over whole brush buildings. | valve-clutter |
+| W3 | `valve_d3_c17_13/03_street.png` | a cobbled street (eye 6739 582 60) | Cobbles with sett edge strips, kerb 4 to 8, pavement 128, the Combine wall closing the view. | street-profile, valve-street-proportions, valve-combine-cold |
+| W4 | `valve_d3_c17_13/04_square.png` | a square in the fighting (eye 7330 330 64) | Trees, barricades and broken walls make cover; the middle stays open. | valve-clutter |
+| W5 | `valve_d3_c17_13/05_barricade.png` | a barricade at a corner (eye 6522 510 60) | Debris and barricade_short pieces across the cobbles at a corner, leaving a gap to pass. | valve-clutter |
+| W6 | `valve_d3_c17_13/06_block.png` | a block of houses with pitched roofs and a yard, from the south-west | Roofs of 40 to 45 degrees (roof_template001b), a yard inside the block, rubble in it. | skyline-corners |
+
+## Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py) (`_dev/reference/valve_d1_town_03/`)
+
+Valve's own d1_town_03 (Ravenholm, the town) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo. It is the reference for the infestation quarter still to be built (the zombie-overrun quarter behind the sealed gate, map_raven.py), not for the Resistance town.
+
+- Things: 117 prop_static, 61 prop_physics, 17 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 82 infodecal, 2 info_overlay, 21 keyframe_rope and 20 move_rope, 85 func_detail, 40 npc entities (makers included).
+- Lights: 8 light (median brightness 8.0), 18 light_spot (median 700.0), 11 point_spotlight, 5 env_sprite; sun "175 230 239 50" at pitch -45, ambient "43 45 57 5"; no fog controller; sky sky_day01_09.
+- Sound: 7 env_soundscape (d1_town.ConcreteBuilding 3, d1_town.Street 2, d1_town.WoodBuilding 1, d1_town.CorpseRoom 1), median radius 128; 27 ambient_generic (town.d1_town_03_zo_attack2, town.d1_town_03_metalgrate3, town.d1_town_03_fz_alert_far1, town.d1_town_03_tram_hit1).
+- Commonest models: pipe02_straight01_long 17, propane_tank001a 13, pulleywheels_small01 12, tree_deciduous_01a-lod 11, oildrum001_explosive 10, pipe02_connector01 9, handrail04_long 6, light_spotlight01_lamp 6, pipe02_straight01_short 5, utilitypole01b 5, lightbulb01a 5, garbage256_composite002b 5, handrail04_corner 4, metalladder002 4, sawblade001a 4.
+- Commonest materials (faces): woodfloor005a 961, plasterwall029d 458, concretefloor013c 403, concretewall032d 342, stonefloor006a 327, plasterwall029a 285, brickwall048i 222, metaltruss022c 221, plasterwall029g 184, brickwall048d 171, brickwall048a 166, rubberroof002a 166, metalwall026a 163, metalwall014a 162, stonewall002a 146, metalwall070a 139, plasterwall029c 132, plasterwall041a 111, metalwall070f 103, metaltruss002a 96.
+- Ceilings: floor to ceiling indoors (cast up from 41 AI nodes) is most often 120 (19 of them), then 168 and 152; 74% of the nodes are outdoors; rooms at those nodes measure about 232 by 376 (median, wall to wall).
+- Stairs: 17 flights of 3 or more steps; steps rise 8 and tread 12 (147 steps), then 8 by 32 (3); median 10 steps a flight.
+- Walls in bands: 82% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 48 and 16; commonest pairs (below > above): concretewall032d > metalwall070f, brickwall048d > brickwall048a, stonewall016a > plasterwall029c, concretefloor013c > rubberroof002a.
+- Cables: 32 rope spans, median 914 long, slack 100, width 2.0.
+- Spacing (nearest of the same model): utilitypole01b 887 apart (n 5), tree_deciduous_01a-lod 487 apart (n 11), lampfixture01a 374 apart (n 4), light_spotlight01_lamp 870 apart (n 6), tree_cliff_02a 910 apart (n 3).
+- Slopes: 95 sloped faces over 2000 square units; pitch most often 25, 70, 20 degrees; metalwall026a, tileroof003a, metalwall014a.
+- How dark: no env_fog_controller at all; the sun is cold and weak ('175 230 239' at 50, where the City 17 maps use '237 218 143' at 800) and the ambient is '43 45 57' at 5 (the city's: 100). The gloom is a dim cold sun and a dusk sky (sky_day01_09), not fog and not a blocked sky.
+- Pools of light: 11 point_spotlight, each with a light_spot at the same place (warm '255 245 145' or '254 233 146', 400 to 1000), most hung on light_spotlight01_lamp props on house walls, about 500 apart (nearest neighbour median 506); 8 plain light at brightness 8 fill under them; an env_fire with an orange light ('254 174 10', 300). 22 of the 26 lights are warm.
+- Traps lie ready as loose physics props: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, one propeller trap (trappropeller_engine, _blade, _lever, a func_rotating); 18 item_healthkit and 6 weapon_frag as rewards.
+- The dead: 15 npc_zombie and 2 npc_fastzombie placed, 10 npc_maker and 7 npc_template_maker, 14 aiscripted_schedule walking them at the player (the same machinery map_raven.py uses); 1 prop_ragdoll (corpse1, a pinned zombie) with 5 npc_crow round it; 1 npc_monk on a roof.
+- No gore decals: 0 blood decals among 82 infodecal. The ground reads abandoned through trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5 and a little graffiti; the 2 overlays are scorch marks.
+- Streets: no kerbs and no pavements (0 of 119 cross-sections found one); cobbles (stonefloor006a) and displaced ground (36% of the floor area) run house to house; wall to wall most often 640 (384 to 768); house walls along the streets median 352 tall (256 to 512), height over width 0.42.
+- Houses: timber and plaster (woodfloor005a is the commonest material, 961 faces; plasterwall029a/c/d/g; brickwall048a/d/i); a concrete plinth (concretewall032d) under plaster or sheet metal, its top most often at 128, 48 or 16; pitched roofs most often 25 degrees (20 to 35) in corrugated metal (metalwall026a, 014a) and tile (tileroof003a, 004b), and steep 65 to 70 degree faces for mansards and the spire.
+- Boards: 39 plank brushes (most 4 thick, 8 wide, 112 long, or 4 by 16 by 64) in woodfloor005a and wooddoor015a; 25 timber beams 6 to 16 square.
+- Overhead: 21 keyframe_rope and 20 move_rope, spans median 914, slack 100, width 2; utilitypole01b about 887 apart; 12 pulleywheels_small01 and 9 path_track for the cable tram. 74% of the AI nodes are outdoors, many of them on roofs joined by planks and metalladder002 (4).
+- Indoors: ceilings most often 120 over the floor (19 of 41 nodes), rooms about 232 by 376; inside walls are one material in 118 of 163 sampled, else a concrete base to 32 or 64 under plaster.
+- Sound: four soundscapes (d1_town.Street, .WoodBuilding, .ConcreteBuilding, .CorpseRoom, radius 128) and 27 ambient_generic one-shots placed where a scare happens (zombie attack, a metal grate, a fast zombie's far call, the tram hitting, a small fire loop).
+- This part of Ravenholm has no church; its refuges are the rooftops (pictures R4 and R6).
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| R1 | `valve_d1_town_03/01_overview_sw.png` | the whole of this part of Ravenholm from the south-west | Tight blocks of two and three storey houses, every roof a different height and pitch, wires strung over the streets, a cliff and trees behind. | raven-streets-and-houses, skyline-corners |
+| R2 | `valve_d1_town_03/02_overview_ne.png` | the same from the north-east | Streets are narrow gaps between houses, no pavements; yards and passages behind; roofs joined by planks into a second way through. | raven-streets-and-houses, raven-rooftop-refuge |
+| R3 | `valve_d1_town_03/03_street.png` | a street at eye height looking east (eye -3328 -1064 -3544) | House walls straight onto uneven cobbles, a utility pole and its wires, boards and a ladder on the walls, the street closing in at the far end. | raven-streets-and-houses, valve-overhead-cables, valve-boarded-openings |
+| R4 | `valve_d1_town_03/04_rooftops.png` | over the rooftops (eye -2800 -1352 -3416) | The refuge route: plank bridges, ladders and timber scaffolds between roofs, the spire as a landmark; a corpse (red) and the dead (green) below and on the roofs. | raven-rooftop-refuge |
+| R5 | `valve_d1_town_03/05_trap_passage.png` | from a walkway down through timber props to the propeller trap (eye -1479 -1385 -3392) | A trap is a place: a narrow passage under leaning timbers where the dead are drawn in, the trap (engine, blade, lever) at its throat. | raven-traps-and-makers |
+| R6 | `valve_d1_town_03/06_corpse_alley.png` | down onto the yard of the pinned corpse and the crows (eye -1642 -1328 -3326) | One corpse with crows round it tells the story; the yard is otherwise litter and leaves, seen from a roof. | raven-litter-not-gore, raven-rooftop-refuge |
+| R7 | `valve_d1_town_03/07_houses_cut.png` | the houses round the corpse room and the saw blades, cut at 190 over the floor | Small rooms, low ceilings (120), stairs of 8 by 12, furniture on the walls, the corpse room full of the dead waiting. | valve-flat-interiors, raven-traps-and-makers |
+
+## Valve's d3_citadel_01: the Citadel (`_dev/reference/valve_d3_citadel_01/`)
+
+Valve's own d3_citadel_01 (the Citadel's flank) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 111 prop_static, 2 prop_physics, 29 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 0 infodecal, 0 info_overlay, 21 keyframe_rope and 8 move_rope, 109 func_detail, 7 npc entities (makers included).
+- Lights: 7 light (median brightness 10.0), 28 light_spot (median 2000.0), 17 point_spotlight, 0 env_sprite; sun "238 200 128 450" at pitch -12, ambient "75 96 116 250"; fog "67 107 107" from 200.0 to 8000; sky sky_day03_05.
+- Sound: 9 env_soundscape (d3_citadel.generic_moody 3, d3_citadel_01.pipe_entrance 2, d3_citadel_01.cliffside1 2, d3_citadel.generic 1, d3_citadel_01.citadel_entrance 1), median radius 128; 18 ambient_generic (d3_citadel.digger_hit1, d3_citadel.digger_move1, boulder.impacthard, d3_citadel.digger_stop1).
+- Commonest models: prisoner_pod_inner 14, inner_pod_rotator 14, inner_pod_arm 14, combine_light002a 12, combine_bridge_b 11, pipes03_single02b 6, combineinnerwallcluster1024_001a 6, pipes01_single01a 5, combine_light001a 5, pipes03_single02c 5, pipes03_single02a 4, combine_bridge 3, pipes01_single01b 3, pipes01_single01c 3, concrete_section64floor001b 3.
+- Commonest materials (faces): citadel_metalwall077a 6816, stonewall044a 301, dirtwall001a 295, citadel_tilefloor016a 252, metalpipe002a 140, citadel_metalwall090a 121, stonewall044c 120, citadel_metalwall063a 115, black 109, citadel_metalwall072a 80, metalpipe005a 74, reflectivity_50b 70, concreteceiling002a 68, citadel_metalwall074a 46, citadel_metalwall076a 45, metaltrack001a 31, building_template004d 23, building_template004b 14, building_template004a 10, gravelfloor005a 9.
+- Walls in bands: 15% of wall length over 256 tall changes material at least once; the first change is most often 48 over the wall's foot, then 128 and 2912; commonest pairs (below > above): citadel_metalwall090a > citadel_metalwall077a, black > citadel_metalwall077a, citadel_metalwall077a > citadel_metalwall090a.
+- Cables: 21 rope spans, median 600 long, slack 25, width 2.0.
+- Slopes: 70 sloped faces over 2000 square units; pitch most often 45, 70, 25 degrees; stonewall044a, concreteceiling002a, citadel_metalwall077a.
+- One metal: citadel_metalwall077a on 6816 faces (with 090a, 072a/c, 063a); only 15% of tall wall length changes material, where the old-city maps change on 64 to 83%.
+- Cold light: 28 light_spot at a median 2000 and 17 point_spotlight ('147 226 240'), the lights '144 224 240' and '128 176 192'; fog teal ('67 107 107') from 200 to 8000. No decals and no overlays at all: the Combine's surfaces are clean.
+- Combine props: prisoner_pod_inner, inner_pod_rotator and inner_pod_arm 14 each, combine_light002a 12 and 001a 5, combine_bridge and _b 14, combineinnerwallcluster1024_001a 6.
+- The old city is left at the Citadel's foot as stonewall044a/c, dirtwall001a and a little building_template004a/b/d.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| C1 | `valve_d3_citadel_01/01_overview_sw.png` | the Citadel's flank from the south-west | A sheer wall of one metal over 9000 units tall, the pit and the cliff at its foot. | valve-combine-cold |
+| C2 | `valve_d3_citadel_01/02_overview_ne.png` | the same from the north-east | Bridges and pods cling to the wall; the scale is the lesson. | valve-combine-cold |
+| C3 | `valve_d3_citadel_01/03_cliff_cut.png` | where rock meets the Citadel, cut at z 700 | Broken rock and old stone against smooth metal: the Combine cuts into the old world. | valve-combine-cold, combine-kit |
+| C4 | `valve_d3_citadel_01/04_pipe.png` | into the pipe toward the Citadel (eye 6404 2843 -242) | A round pipe as the way in, one light at its end. | valve-light-pools |
+| C5 | `valve_d3_citadel_01/05_combine_inside.png` | inside (eye 7012 4576 -1535) | Combine metal in leaning frames, all one material, lit cold. | valve-combine-cold |
+| C6 | `valve_d3_citadel_01/06_rock_and_metal.png` | old stone and cliff against a Combine pillar (eye 6180 4494 -514) | The pillar is plain and dark; the rock and brick round it carry the texture. | valve-combine-cold |
+
+## Valve's d2_coast_12: the coast (`_dev/reference/valve_d2_coast_12/`)
+
+Valve's own d2_coast_12 (the coast and the Combine bunkers) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 151 prop_static, 47 prop_physics, 15 prop_dynamic, 0 prop_door_rotating, 3 prop_ragdoll, 78 infodecal, 22 info_overlay, 29 keyframe_rope and 5 move_rope, 45 func_detail, 80 npc entities (makers included).
+- Lights: 17 light (median brightness 50.0), 24 light_spot (median 2500.0), 27 point_spotlight, 27 env_sprite; sun "237 232 209 70" at pitch -5, ambient "122 140 169 60"; fog "68 84 99" from 1000 to 6600; sky sky_day02_09.
+- Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6, coast.cliffside 2, coast.generic_ambient_01 1), median radius 96; 18 ambient_generic (novaprospekt.flare_fire, coast.bunker_siren1, coast.bunker_siren2, coast.wind_01).
+- Commonest models: combine_soldier_prisonguard 39, rockgranite01a 16, bunker_gun01 11, wood_crate001a 9, oildrum001_explosive 9, tree_deciduous_card_01 9, rockgranite01b 8, oildrum001 8, tree_deciduous_01a-lod 8, driftwood_01a 7, powertower01 7, dock01_pole01a_128 7, driftwood_clump_02a 6, combine_bunker01 6, combine_light001a 6.
+- Commonest materials (faces): metalwall077a 774, brickwall020a 743, brickwall046a 415, metalpipe002a 230, concretewall036a 220, metaldoor005a 186, reflectivity_10 132, concretewall010a 77, woodfloor005a 73, concretewall022b 66, blenddirtgrass008a 62, metalrail003a 62, concretefloor009a 57, metalgrate014a 56, cliffface001a 46, concretefloor011a 42, gravelfloor004a 37, metaltruss004a 36, metalgate005a 30, concreteceiling002a 28.
+- Ceilings: floor to ceiling indoors (cast up from 132 AI nodes) is most often 144 (81 of them), then 96 and 128; 72% of the nodes are outdoors; rooms at those nodes measure about 372 by 975 (median, wall to wall).
+- Cables: 29 rope spans, median 3897 long, slack 120, width 4.0.
+- Spacing (nearest of the same model): light_spotlight01_lamp 112 apart (n 5), tree_deciduous_01a-lod 725 apart (n 8), tree_deciduous_card_01 1615 apart (n 9).
+- Slopes: 57 sloped faces over 2000 square units; pitch most often 60, 20, 30 degrees; metalpipe002a, brickwall046a, brickwall020a.
+- Bunkers: combine_bunker01 6 and bunker_gun01 11 set into the slopes; 39 Combine soldiers placed (combine_soldier_prisonguard), 11 npc_template_maker, antlion makers.
+- Dusk light: the sun is low and weak ('237 232 209' at 70, pitch -5), ambient '122 140 169' at 60, fog dark blue ('68 84 99') from 1000 to 6600; the bunkers lit cold by 27 point_spotlight and 24 light_spot (median 2500, '144 224 240'), with red lights ('240 48 32') at alarms.
+- Open ground: half the floor is displacement; power lines on powertower01 (7) with spans of about 3900, slack 120, width 4; dock01_pole01a_128 posts 148 apart.
+- Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6) and sirens and wind one-shots.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| K1 | `valve_d2_coast_12/01_overview_sw.png` | the coast from the south-west | A long strip of shore and cliff, the bunkers dug in along it. |  |
+| K2 | `valve_d2_coast_12/02_overview_ne.png` | the same from the north-east | Concrete rooms and a bridge set into the land, power lines along the shore. | valve-combine-cold |
+| K3 | `valve_d2_coast_12/03_bunker_mouth.png` | a Combine bunker dug into the slope (eye 2343 -976 736) | A dark mouth in a low concrete face, a curved trench in front; the Combine builds low and heavy outside the city. | combine-kit, valve-combine-cold |
+| K4 | `valve_d2_coast_12/04_clifftop.png` | the cliff-top (eye 4683 4545 799) | Trees, rocks and crates on uneven ground; the old prison tower on the skyline. |  |
+| K5 | `valve_d2_coast_12/05_bunker_cut.png` | the concrete bridge room and bunker from the north-east, roof cut away | Rooms of brick and concrete (brickwall020a, 046a), ceilings 144, one long room after another. |  |
+| K6 | `valve_d2_coast_12/06_shore.png` | the shoreline under the cliffs (eye 8350 6746 822) | Water against cliff faces, posts of the old docks. |  |
+
+## Valve's vehicles test map (`_dev/reference/valve_vehicles/`)
+
+Valve's own sdk_vehicles (a vehicle test map in the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Reference only: the VMF is not in the repo.
+
+- Things: 31 prop_static (rockcliff_cluster03a 20, 03b 9, driftwood_01a 2), one prop_vehicle_jeep (the buggy), one info_player_start, one light_environment; no lights, no sound, no decals.
+- Ground: 49 world brushes; every floor is displacement (blendsandgrass008a, blenddirtgrass001a/b) over about 7600 by 12900.
+- Light: sun '255 244 213' at 512, pitch -45, ambient '172 196 204' at 50; sky sky_wasteland02; no fog.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| VH1 | `valve_vehicles/01_overview_sw.png` | the whole test map from the south-west | One big rolling displacement field ringed by rock cliff props: room to drive, nothing else. |  |
+
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -128,7 +389,7 @@ Every prop_dynamic(_override), prop_physics and prop_door_rotating is an entity 
 
 Doors players use are prop_door_rotating with door01_left, set up as the owner's 134 are, in an opening 50 wide (from 2 behind the hinge) and 110 high, the door's middle 55 up. The jambs fill the reveal so nothing is seen past the door.
 
-- **Why:** "The apartments' door frames are slightly too large for the doors and I can see past the door into the apartments" (20 November). Measured round 42 of the owner's doors.
+- **Why:** "The apartments' door frames are slightly too large for the doors and I can see past the door into the apartments" (20 November). Measured round 42 of the owner's doors. Valve fits door01_left (49 wide, 109 tall) in a doorway 48 wide and 108 high, two side by side in 96 by 108 (d1_trainstation_02 to 05).
 - **How:** map_town.real_door and door_hole.
 - **Checked by:** review
 - **Tags:** doors, owner
@@ -148,7 +409,7 @@ Never put the door01_left model (or any door that looks openable) where it does 
 
 Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps). (Valve's train station steps rise 8 under a player clip ramp, as the owner's own map does.)
 
-- **Why:** "It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map.
+- **Why:** "It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map. Valve's other maps (21 November): 8 by 12 in all six with stairs (100 to 251 steps a map); 16 by 24 only at d1_trainstation_02's outdoor steps (42).
 - **How:** m.steps does it; hand-made stairs should match.
 - **Checked by:** review
 - **Tags:** stairs, owner
@@ -265,7 +526,7 @@ Where a light shines, the fixture is its _on model (light_cagelight02_on, not _o
 
 Light a room with two or three fixtures, not one; point some (light_spot, point_spotlight); use the city's own fixtures: dome lights, lab fluorescent tubes indoors, cage lights in service places, the Combine's light on Combine places, lampposts outside.
 
-- **Why:** The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47. Lampposts in City 18 stand 360 to 870 apart (most about 600 to 750).
+- **Why:** The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47. Lampposts in City 18 stand 360 to 870 apart (most about 600 to 750). Valve's day streets use the unlit lamppost03a_off with no light on it, 818 (d3_c17_13) and 962 (d1_trainstation_04) apart; lampfixture01a 784 apart round the plaza (d1_trainstation_02).
 - **How:** m.lamp, m.spot, m.light; every canal stretch now gets a caged lamp on every third rib, a third of them dead (dress_canal_walls).
 - **Checked by:** review
 - **Tags:** lighting, city18
@@ -290,18 +551,18 @@ Each module and each part of the town names a soundscape (env_soundscape with a 
 - **Checked by:** review
 - **Tags:** sound, city18
 
-- **See:** `valve_d1_trainstation_01/12_courtyard_plan.png`
+- **See:** `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/05_courtyard.png`
 
 ### Streets as the owner's: pavements, kerbs, a crowned road (`street-profile`)
 
 Pavements 96 wide at the floor's height with a kerb of 8; gutters 8 down; cobbles (stonefloor006d_c17, sett strips 006e/006f) rising to a crown 4 over the gutters.
 
-- **Why:** "The street is just flat cobblestone? We have sidewalks and a sloped street (higher in middle) all over the main map"; "sidewalks are not 2 feet tall irl, they are like 6-12 inches" (20 November). Measured in the owner's map.
+- **Why:** "The street is just flat cobblestone? We have sidewalks and a sloped street (higher in middle) all over the main map"; "sidewalks are not 2 feet tall irl, they are like 6-12 inches" (20 November). Measured in the owner's map. Valve's own City 17 streets for comparison (measured 21 November): roadway 256 (d1_trainstation_03, 04) or 320 (d3_c17_13), flat (crown 0 in 34 of 36 and 79 of 83 sections), the kerb a plain step of 4 (8 on 62 of 166 kerbs of the war street), pavements 128 to 192 of concretefloor028c, roads concretefloor033c or stonefloor006d_c17 with 006f_c17 edge strips. The owner's crown and kerb of 8 are their own choice: keep them.
 - **How:** map_town.lay_street. The street corridor beside the canal does not have it yet.
 - **Checked by:** review
 - **Tags:** streets, owner, city18
 
-- **See:** `03_street.png`, `09_payphone.png`, `10_waiting.png`, `11_street_main.png`, `13_toilet.png`, `17_street.png`, `21_waiting.png`, `22_street_section.png`
+- **See:** `03_street.png`, `09_payphone.png`, `10_waiting.png`, `11_street_main.png`, `13_toilet.png`, `17_street.png`, `21_waiting.png`, `22_street_section.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d3_c17_13/03_street.png`
 
 ### Building fronts, not brick walls (`facades`)
 
@@ -332,7 +593,7 @@ Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines g
 - **Checked by:** review
 - **Tags:** facades, city18
 
-- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_trainstation_01/01_overview_sw.png`
+- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`, `valve_d1_town_03/01_overview_sw.png`
 
 ### A town is not one straight line (`town-shape`)
 
@@ -361,13 +622,13 @@ Leave walking room: furniture against walls, a clear path through every room and
 - **Checked by:** map_lint.py overlap (a solid prop inside another), printed as LOOK lines by every build
 - **Tags:** interiors, owner
 
-- **See:** `14_flats_plan.png`
+- **See:** `14_flats_plan.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_05/05_lab_cut.png`
 
 ### Interiors in City 18's way (`city18-interiors`)
 
 Plaster walls in two tones split by a dado rail, wooden floors, door casings proud of the wall, a ceiling trim; stoves, sinks, toilets, fridges, iron bunks backs to the wall; radiators; fluorescent tubes. Never a plain cream box. Each kind of place in its own materials: a cellar is brick or stone, a Combine room is Combine metal, a culvert is damp concrete.
 
-- **Why:** The owner's flats (picture), their 14 toilets and sinks; review, 20 November (cream rooms in a dozen modules).
+- **Why:** The owner's flats (picture), their 14 toilets and sinks; review, 20 November (cream rooms in a dozen modules). Valve's flats (d1_trainstation_03) for comparison: four inside walls in five are one material floor to ceiling; where two-toned the change is at 64.
 - **How:** Line rooms with thin detail brushes; the plan's own walls are concrete or brick.
 - **Checked by:** review
 - **Tags:** interiors, city18
@@ -383,7 +644,7 @@ Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses 
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d2_coast_12/03_bunker_mouth.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -530,12 +791,12 @@ Where a piece needs architecture, take it from the owner's map: their materials 
 
 A wall taller than about 256 is never one texture. Lay it in courses: a base (stonewall050c, floor to 96), the body (050a), a band course (050b, about 192 to 320), the body again, a top course (050e). Each course is its own brush, the base and the band 4 to 8 proud of the body, so the wall casts a line of shadow at each change.
 
-- **Why:** Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age.
+- **Why:** Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age. In every old-city Valve map measured the first change of material is most often 128 over the wall's foot (d1_trainstation_02: 870 wall columns, 04: 1343, 03: 290, d3_c17_13: 781, Ravenholm: 426), then 64; 64 to 83% of wall length over 256 tall is banded, against 15% in the Citadel.
 - **How:** Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** facades, materials, valve
 
-- **See:** `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`
+- **See:** `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
 
 ### Columns on a rhythm (`valve-column-rhythm`)
 
@@ -546,18 +807,18 @@ Big halls and long walls are broken into bays by columns, pilasters or posts at 
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** geometry, interiors, valve
 
-- **See:** `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`
+- **See:** `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_d1_trainstation_02/06_station_hall_cut.png`
 
 ### Light in pools, not floods (`valve-light-pools`)
 
 Let places be dim and light them in pools: a fixture over each door, each way on and each thing to look at, with darker stretches between. Valve lights the whole train station with 23 light, 40 light_spot and 19 point_spotlight.
 
-- **Why:** Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat.
+- **Why:** Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat. Ravenholm: 26 lights in the whole town, its 11 spotlights about 500 apart; the flats: plain lights at 8 as fill and light_spot at 400.
 - **How:** One fixture per bay or door, about a third left off (as the canal walls do), light_spot under lamps that hang; brighter where people gather.
 - **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
 - **Tags:** lighting, valve
 
-- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`
+- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
 
 ### Clutter on the edges (`valve-clutter`)
 
@@ -568,5 +829,133 @@ Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, c
 - **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
 - **Tags:** props, valve
 
-- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`
+- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
+
+### Streets in Valve's proportions (`valve-street-proportions`)
+
+A City 17 street is about 640 to 768 wall to wall: a roadway of 256 (320 on the main war street), pavements of 128 to 192 each side, fronts 576 to 672 tall over it (height about half the width). Side streets and war-torn ones are lower (walls 256 to 384).
+
+- **Why:** Cross-sections through outdoor AI nodes (21 November): d1_trainstation_04, 36 with a kerb each side: road 256 (30 of 36), pavements 192, 128, 256, wall to wall 640, walls median 576 (height over width 0.56); d1_trainstation_03: road 256, walls 672; d3_c17_13, 83 sections: road 320 (64), pavements 128 (45) and 192, wall to wall 640, walls median 256 (0.31); d1_trainstation_02 plaza roads 416 to 608, walls 672 (0.41). Pictures T3.3, T4.4, W3.
+- **How:** Size street modules on these where the owner has not settled a number; where it differs from the owner's own streets (street-profile: pavements 96), the owner's wins: ask before changing.
+- **Checked by:** review (the viewer from a pavement eye)
+- **Tags:** streets, valve
+
+- **See:** `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`
+
+### Upper storeys and far blocks as painted fronts (`valve-template-fronts`)
+
+Where the player cannot reach, Valve's fronts are flat walls in building_template textures (windows, sills and cornices painted on), with window models (building_tem002_window01 and its _bars) set into them near the player; built detail (plinth, shopfronts, doors, real windows) only at street level.
+
+- **Why:** building_template share of all vertical wall area: 46% in d1_trainstation_02, 39% in 04, 38% in d3_c17_13, 35% in 03 (3% in the lab, 0 in Ravenholm, the coast and the Citadel); d1_trainstation_03 has building_tem002_window01 14, the same with bars 14, courtyard_template002_window 10. Pictures T2.1, T2.7, T4.6.
+- **How:** Backdrop blocks and storeys out of reach: one template face per storey band instead of brush windows; keep map_town.facade where players walk. Check the materials exist in the owner's content first (map_assets.py).
+- **Checked by:** map_assets.py (the materials exist); the look in the viewer
+- **Tags:** facades, valve
+
+- **See:** `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/05_courtyard.png`, `valve_d1_trainstation_02/07_apartment_block.png`, `valve_d1_trainstation_03/01_overview_sw.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/06_block.png`
+
+### Flats at Valve's size (`valve-flat-interiors`)
+
+A City 17 flat: ceiling 120 over the floor (112 to 128), corridors 64 to 128 wide, rooms about 160 to 232 by 224 to 376, doorways 48 wide and 108 high (door01_left; 96 for a pair), stairs 8 by 12 in their own shaft; furniture only against the walls (radiators under windows, shelves, a couch, a TV), a bulb or dome light per room and every few doors in a corridor.
+
+- **Why:** d1_trainstation_03: floor to ceiling 120 at 81 of 125 indoor AI nodes (112: 17, 128: 11); rooms median 160 by 324; doorways 48x108 and 60x108; radiator01a 16 (the commonest model), shelves 23, couches 7, lightbulb01a 12, light_domelight02_on 8. Ceilings are 120 in Ravenholm too (19 of 41) and d3_c17_13 (87 of 157), 128 in d1_trainstation_04 (32 of 75); halls and labs 248 to 352. Pictures T3.4 to T3.7, R7.
+- **How:** Interior modules: 120 to 128 in flats and houses, taller only for halls, shops and Combine places; doorway 48 by 108 for door01_left. Small rooms work because they are sparse (room-to-move).
+- **Checked by:** review
+- **Tags:** interiors, valve
+
+- **See:** `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`, `valve_d1_town_03/07_houses_cut.png`
+
+### Boards nailed across, at Valve's size (`valve-boarded-openings`)
+
+Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 wide and 64 to 112 long), a few across the opening at slightly different angles, in a door or floor wood (wooddoor045b, wooddoor048a, wooddoor015a, woodfloor005a).
+
+- **Why:** Plank brushes counted (21 November): 172 in d1_trainstation_03 (78 of them 4 by 8 by 112), 39 in Ravenholm (4x8x112, 4x16x64), 30 in d3_c17_13 (4x16x112, wooddoor015a), 35 in d1_trainstation_04. Pictures R3, T4.5.
+- **How:** A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways.
+- **Checked by:** review
+- **Tags:** interiors, facades, valve, infestation, ravenholm
+
+- **See:** `valve_d1_trainstation_04/05_attic.png`, `valve_d1_town_03/03_street.png`
+
+### Wires over the streets (`valve-overhead-cables`)
+
+Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 100, width 1 to 2; poles 700 to 1400 apart, or utilitypolemount01a on the walls.
+
+- **Why:** Rope spans median 734 (d1_trainstation_02, 25 spans), 736 (04, 46), 914 (Ravenholm, 32 spans from 41 rope entities), slack 100 in all; utilitypole02b 693 and 1411 apart, utilitypole01b 887 in Ravenholm; utilitypolemount01a 8 in d1_trainstation_04. Pictures R3, T2.4, T4.4.
+- **How:** keyframe_rope and move_rope from pole to pole and pole to wall mount, never ending in the air (no-floating-ropes).
+- **Checked by:** no-floating-ropes check; review
+- **Tags:** streets, props, valve
+
+- **See:** `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d1_town_03/03_street.png`
+
+### The Combine is one cold metal; the old city is banded and warm (`valve-combine-cold`)
+
+Combine places: one metal over whole walls, no courses, lit cold and bright (light_spot and point_spotlight '144 224 240' to '159 237 215'), clean (no decals), teal or blue fog where there is fog. The old city round them: banded walls, warm light ('255 224 144'), grime.
+
+- **Why:** d3_citadel_01: citadel_metalwall077a on 6816 faces, only 15% of tall wall length changes material (the old-city maps: 64 to 83%), 28 light_spot at a median 2000, 17 point_spotlight '147 226 240', fog '67 107 107', 0 decals and 0 overlays; d2_coast_12 bunkers: 27 point_spotlight, light_spot median 2500, '144 224 240'; the flats of d1_trainstation_03: 25 of 37 lights '255 224 144'. Pictures C1, C3, C5, K3.
+- **How:** Combine modules: one Combine metal per wall, cold spots, no grime decals (combine-kit for the props); old-city modules: valve-wall-bands, warm lights, grime.
+- **Checked by:** review
+- **Tags:** combine, lighting, valve
+
+- **See:** `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`
+
+### Ravenholm's dark: weak cold light and warm pools (`raven-dusk-light`)
+
+Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under a dusk sky, then pools of warm light from spotlights on the houses (a point_spotlight with a light_spot at the same spot, '255 245 145', 400 to 1000) about 500 apart, dim fills of 8 under them, and the orange glow of a fire.
+
+- **Why:** d1_town_03: light_environment '175 230 239' at 50, ambient '43 45 57' at 5 (the City 17 maps: '237 218 143' at 800, ambient 100); sky_day01_09; no env_fog_controller; 11 point_spotlight each paired with a light_spot, nearest 506 apart; 8 light at 8; an env_fire with '254 174 10' at 300; 22 of its 26 lights warm. Pictures R3, R4.
+- **How:** One map has one sun, so map_raven.py's sheet of toolsblocklight under the quarter's sky is the right stand-in for Valve's weak sun; what Valve adds is the pools: a light_spotlight01_lamp on a house wall every 500 or so with a point_spotlight and a light_spot, a fire in a drum, against the gloom lights (now four at 7, cold grey). Ask the owner before changing the quarter's light.
+- **Checked by:** review (a screenshot from the owner: the quarter's light is a first guess)
+- **Tags:** lighting, infestation, ravenholm, valve
+
+### Ravenholm's lanes: house to house, timber and plaster (`raven-streets-and-houses`)
+
+Ravenholm's lanes have no kerb and no pavement: cobbles and uneven ground run house to house, 384 to 768 wall to wall; houses two or three storeys (walls 256 to 512 over the lane), timber and plaster on a concrete plinth (to 128, 48 or 16), roofs pitched 20 to 35 degrees in corrugated metal or tile, a steep mansard or spire for a landmark; boards on openings, wires overhead.
+
+- **Why:** d1_town_03: no kerb in 119 cross-sections; 36% of the floor is displacement; wall to wall most often 640; walls median 352 (height over width 0.42); woodfloor005a the commonest material (961 faces), plasterwall029a/c/d/g, brickwall048a/d/i, concretewall032d under plaster or metal (first change at 128, 48, 16); roof pitch 25 degrees (31 faces), 20, 35, steep faces 65 to 70; metalwall026a and 014a, tileroof003a and 004b. Pictures R1 to R3.
+- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks.
+- **Checked by:** review
+- **Tags:** streets, facades, infestation, ravenholm, valve
+
+- **See:** `valve_d1_town_03/01_overview_sw.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/03_street.png`
+
+### A way over the roofs (`raven-rooftop-refuge`)
+
+Give an overrun quarter a second way through above the dead: low roofs joined by plank bridges and ladders, timber scaffolds, one high place to hold (Grigori's roof), reached from inside a house.
+
+- **Why:** d1_town_03: 74% of the AI nodes are outdoors, many on roofs; metalladder002 4 and 002b 2, plank bridges of woodfloor005a; npc_monk on a roof at z -3096, about 500 over the streets; explosive barrels set on roofs for the roof zombies. Pictures R4, R6.
+- **How:** In map_raven.py: two or three houses with a stair to a flat roof, planks to the next roof, a ladder down at the far end.
+- **Checked by:** review; valid-viewpoints for spots on the roofs
+- **Tags:** layout, infestation, ravenholm, valve
+
+- **See:** `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`
+
+### Traps lying ready, the dead from makers (`raven-traps-and-makers`)
+
+Leave traps as loose physics props where the dead come: propane tanks in clusters of 2 to 6, explosive barrels in twos and threes, saw blades to throw, one rigged machine trap at a choke point; bring the dead with npc_maker and npc_template_maker and walk them in with aiscripted_schedule; health kits as rewards.
+
+- **Why:** d1_town_03: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, a propeller trap (engine, blade, lever, func_rotating); 15 npc_zombie and 2 npc_fastzombie, 10 npc_maker, 7 npc_template_maker, 14 aiscripted_schedule; 18 item_healthkit. The same machinery map_raven.py uses. Pictures R5, R7.
+- **How:** map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic).
+- **Checked by:** map_lint (physics props); review
+- **Tags:** props, infestation, ravenholm, valve
+
+- **See:** `valve_d1_town_03/05_trap_passage.png`, `valve_d1_town_03/07_houses_cut.png`
+
+### Abandoned shows as litter, ivy and leaves; one corpse tells the rest (`raven-litter-not-gore`)
+
+Dress an overrun quarter with trash, ivy and dead-leaf decals and a few scorch marks rather than blood (Valve's Ravenholm has none); a corpse is a single set piece (a pinned ragdoll with crows round it), not scattered.
+
+- **Why:** d1_town_03: 82 infodecal, 0 of them blood: trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5, graffiti; 2 info_overlay, both scorch1; 1 prop_ragdoll (corpse1) with 5 npc_crow. Picture R6.
+- **How:** Mod.grime with trash, ivy and leaves in the quarter; at most one corpse scene a yard (the zombies bring their own blood in game).
+- **Checked by:** review
+- **Tags:** grime, infestation, ravenholm, valve
+
+- **See:** `valve_d1_town_03/06_corpse_alley.png`
+
+### The quarter's sound: four soundscapes and placed scares (`raven-sound`)
+
+Name d1_town.Street outside, d1_town.WoodBuilding or d1_town.ConcreteBuilding inside by what the house is made of, d1_town.CorpseRoom where the dead wait; put one-shot sounds (a metal grate, a far fast-zombie call, an attack, a fire loop) where something should startle.
+
+- **Why:** d1_town_03: 7 env_soundscape (ConcreteBuilding 3, Street 2, WoodBuilding 1, CorpseRoom 1), radius 128; 27 ambient_generic: zo_attack2 4, metalgrate3 4, fz_alert_far1 3, tram_hit1 2, smallfireloop 2.
+- **How:** m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house').
+- **Checked by:** review
+- **Tags:** sound, infestation, ravenholm, valve
 
