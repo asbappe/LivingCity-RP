@@ -291,14 +291,15 @@ local function TrainsBring()
 end
 LC.TrainsBringNewcomers = TrainsBring
 
--- Could this person come out now, as asked? Alive, indoors, their time at home over; someone new to the
--- city only off a train (want.newcomer), while trains run, and off a train only someone new.
-local function Free(p, role, want, trains)
+-- Could this person come out now, as asked? Alive, indoors, their time at home over; off a train
+-- (want.newcomer) only someone new to the city. (Someone new comes out onto the street too, but last:
+-- LC.NextPerson. So the streets never run short, and the train brings who is left of them.)
+local function Free(p, role, want)
     if not (p.alive and p.role == role and not InWorld(p) and not AtHome(p)) then return false end
     if want.rebel and not p.rebel then return false end
     if want.gender and p.gender ~= want.gender then return false end
     if want.newcomer then return p.newcomer == true end
-    return not (p.newcomer and trains)
+    return true
 end
 
 -- Is there anyone of this role who could come out now (alive, indoors, their time at home over)?
@@ -307,9 +308,8 @@ function LC.PersonAvailable(role, want)
     if not P.loaded then LC.LoadPeople() end
     LC.TopUpPeople()
     want = want or {}
-    local trains = TrainsBring()
     for _, p in ipairs(P.list) do
-        if Free(p, role, want, trains) then return true end
+        if Free(p, role, want) then return true end
     end
     return false
 end
@@ -340,9 +340,11 @@ function LC.NextPerson(role, want)
     for _, p in ipairs(P.list) do if p.alive and InWorld(p) and p.job then working[p.job] = true end end
     local best, bt
     for _, p in ipairs(P.list) do
-        if Free(p, role, want, trains) then
+        if Free(p, role, want) then
             local t = (p.lastSeen or 0) + math.random() * 30 -- a little shuffle among equals
             if role == "citizen" and p.job and not working[p.job] then t = t - 1e9 end
+            -- someone new to the city waits for the train while trains run: onto the street only when nobody else can
+            if p.newcomer and trains and not want.newcomer then t = t + 1e12 end
             if not bt or t < bt then best, bt = p, t end
         end
     end
@@ -375,7 +377,7 @@ function LC.ClaimProfile(role, want)
     LC.TopUpPeople()
     want = want or {}
     local best
-    if want.person and Free(want.person, role, want, TrainsBring()) then best = want.person end
+    if want.person and Free(want.person, role, want) then best = want.person end
     best = best or LC.NextPerson(role, want)
     if not best and (want.rebel or want.gender) then
         best = LC.NewPerson(role, want) -- the Resistance can always find someone, and a story its character

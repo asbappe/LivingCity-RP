@@ -31,15 +31,16 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late). The forest cave, expanded from Valve's maps (the owner: "reference the Episode 2 antlion caves and
-  mineshafts, and the HL2 ravenholm caves/mines"; copying Valve's VMFs is allowed). Behind the emergency door: 1280 of
-  Ravenholm's mine tunnel lifted whole from d1_town_04 (rock, timber sets, clamp lamps, rails, flooded floor), the
-  breach into the hive, Episode Two's antlion alarm post (`lc_nest_mouth_1_*`, not wired). The hive dressed to EP2's
-  measures (grub groups with their lights, cold fills, sacks, web plugs, stalactites). docs/dev/map-building.md.
-- `map_prefab.py` now lifts displacements (caves); pieces in docs/dev/prefabs.md, "Cave and mine pieces"; next lifts
-  listed there and on TODO.md. Valve's VMF zip: on the owner's Drive, found by name with the Drive connector.
-- Not compiled yet: `lc_forest_cave.vmf` (mine and hive), `lc_forest_bunker.vmf` (bunker and silo).
-- Valve map ingestion is DONE (145 maps, 279 lessons): docs/dev/valve-ingest-progress.md, docs/dev/map-ingestion.md.
-- Lifted and joined earlier: the silo into the bunker; Citadel and Black Mesa East pieces as modules.
-- Open with the owner (TODO.md): whether the nest's mouth sounds before a wave; the bunker door's speed; the mounted
-  gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).
+- 21 November (late, this chat): from TODO, no input needed. Built: garden plots (lc_garden_plot_N, melons and pumpkins);
+  people back out of their own block, new people only off the train, every unit named; dream breakout wakes beside the
+  rescuer; a gun given to a sympathizer stays hidden on them; Answer the reprisal / counter-raid / a harder cell after
+  her answer; holds on one clock with faster waves; squads topped up with a medic; supplies thrown from roofs;
+  strongholds' tripwire alarm and Cut the defences (docs/features/strongholds.md). Headcrab hunt robot fixed.
+- Lists for the owner to mark (nothing changed by them): docs/dev/keep-park-cut.md, docs/dev/dead-weight.md.
+- Map tool faults fixed (map_assets facts, prefab wiring, views, sections, viewer). Helpers' work on map pieces
+  (props, wire lint, Valve's prop and craft rules, path nodes) and on map_security.py + the Combine generator: TODO.md.
+- Another chat (same day): the forest cave from Valve's mines, the playable silo (map_silo.py), zone markers. Not
+  compiled: lc_forest_cave.vmf, lc_forest_bunker.vmf. Leave the silo to that work.
+- Open with the owner: HQ later stages and Advisor screens (shape first); Combine sleep and the lab's dark look (models);
+  the south canal layout (needs c18_lc.vmf); the bunker door's speed; the mounted gun's damage; lock gates.
+- Full parallel run after the merge: see TODO.md, end, for the flaky tests (the recorder, res_breakout pay).

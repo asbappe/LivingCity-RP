@@ -7501,8 +7501,10 @@ ok(okE and #(empty or {}) == 0, "with nobody new to the city, the train comes in
 timer.Remove("LivingCityTrainLeaves")
 local newcomers = {}
 for i = 1, 4 do local np = LC.NewPerson("citizen") np.newcomer = true newcomers[i] = np end
-ok(not LC.PersonAvailable("citizen") or LC.NextPerson("citizen") == nil or not LC.NextPerson("citizen").newcomer,
-    "someone new to the city doesn't come out onto the street while trains run: they wait for the train")
+local nobodyElse = true
+for _, pr in ipairs(LC.People.list) do if pr.alive and pr.role == "citizen" and not pr.newcomer and not IsValid(pr.npc) and (pr.homeUntil or 0) <= CurTime() then nobodyElse = false end end
+ok(nobodyElse or not LC.NextPerson("citizen").newcomer,
+    "someone new to the city comes out onto the street only when nobody else can: they wait for the train")
 local okA, arrivals = LC.TrainArrive(true)
 LC.SpotInZone = spotInZone
 arrivals = arrivals or {}
@@ -37926,7 +37928,7 @@ ok(heard(stayer, "We saw what you did") == 0, "(he has said nothing yet: he is s
 -- a unit shoots at him: he does not turn on it
 local cop = LC.Spawners.cop(AWAY + Vector(0, -8000, 0))
 cop.sim = false
-hook.Run("EntityTakeDamage", c1, _dmg(cop, 5))
+if IsValid(c1) then hook.Run("EntityTakeDamage", c1, _dmg(cop, 5)) end -- (no contact came: the checks above already failed; don't stop the run)
 ok(c1st and c1st.state == "event" and c1st.foe == c1 and c1:GetEnemy() ~= cop, "hit by a unit he does not fight back: nobody's enemy")
 cop:Remove()
 -- a unit comes into the square while he is on his way: he turns back, and it is tried again later
