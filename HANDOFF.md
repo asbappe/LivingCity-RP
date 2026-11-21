@@ -37,6 +37,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Pieces lifted at the owner's asking (docs/dev/prefabs.md, "Pieces with their wiring"): Black Mesa East (airlock,
   turrets, lift, work spots), the Citadel (big doors, core, walkway reactor, pod; light bridge, vortex, ball socket and
   dispenser, weapon check room), White Forest's silo (for the bunker: where it goes is the owner's call).
+- The forest bunker (21 November): the silo joined just outside the north wall, sealed; the bunker in White Forest's
+  style with its round blast door (about 11 s to open: the owner decides). `lc_forest_bunker.vmf` is not compiled yet.
 - New tool: `_dev/tools/map_combine.py` (Combine structures from the architecture study); its test map
   `lc_combine_test.vmf` waits on the owner's look before any module uses it.
 - Built after ingestion, owner-approved (TODO.md): timed holds with faster waves, squads topped up, supplies from
