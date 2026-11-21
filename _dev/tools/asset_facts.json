@@ -681,6 +681,42 @@
 "static": false,
 "v": 2
 },
+"models/humans/group01/male_01.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/humans/group01/male_02.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
 "models/items/ammocrate_ar2.mdl": {
 "bbox": [
 -16.3,
@@ -1331,6 +1367,24 @@
 1.3,
 31.3,
 52.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/project_building01.mdl": {
+"bbox": [
+-644.1,
+-187.2,
+-0.3,
+597.4,
+699.6,
+2022.7
 ],
 "built_static": true,
 "collides": true,
@@ -2855,6 +2909,24 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/handrail04_brokencorner.mdl": {
+"bbox": [
+-16.3,
+-19.4,
+-0.3,
+51.4,
+14.3,
+40.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/handrail04_brokenlong.mdl": {
 "bbox": [
 -5.0,
@@ -3631,6 +3703,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_c17/overpass_001b.mdl": {
+"bbox": [
+-192.0,
+-553.6,
+-168.9,
+299.9,
+548.5,
+240.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_c17/paper01.mdl": {
@@ -7187,6 +7277,24 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/beam01c.mdl": {
+"bbox": [
+-114.7,
+-7.0,
+-4.8,
+143.4,
+38.2,
+26.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/broken_floor001a.mdl": {
 "bbox": [
 -64.3,
@@ -7266,6 +7374,24 @@
 -64.3,
 21.0,
 128.3,
+64.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/building_brokenexterior002c.mdl": {
+"bbox": [
+-8.3,
+-128.4,
+-64.1,
+31.5,
+128.5,
 64.4
 ],
 "built_static": true,
@@ -8953,6 +9079,24 @@
 9.1,
 9.1,
 197.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock_broken01b_256.mdl": {
+"bbox": [
+-255.2,
+-89.3,
+-129.3,
+254.6,
+110.8,
+126.7
 ],
 "built_static": true,
 "collides": true,
@@ -15525,6 +15669,24 @@
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_vehicles/car004a.mdl": {
+"bbox": [
+-113.8,
+-43.4,
+-25.0,
+89.1,
+42.8,
+36.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
 "ragdoll": false,
 "static": true,
 "v": 2

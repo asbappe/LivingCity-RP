@@ -82,7 +82,7 @@
    "title": "Steps about 16 high and 24 deep",
    "rule": "Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps). (Valve's train station steps rise 8 under a player clip ramp, as the owner's own map does.)",
    "why": "\"It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger\" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map. Valve's other maps (21 November): 8 by 12 in all six with stairs (100 to 251 steps a map); 16 by 24 only at d1_trainstation_02's outdoor steps (42).",
-   "how": "m.steps does it; hand-made stairs should match.",
+   "how": "m.steps does it; hand-made stairs should match. Valve's canals: every one of 205 brush steps measured rises 8 and runs 12; ladders are metalladder002 pieces of 128, most one or two pieces high.",
    "check": "review"
   },
   {
@@ -247,7 +247,7 @@
    "title": "Lay grime on: stains, cracks, trash, posters, signs",
    "rule": "Every place gets overlays and decals: water stains down walls and under drains, cracks, trash in corners, posters where people are, the lambda where the Resistance is, danger signs on hazards, numbers on machines.",
    "why": "The owner's map: 249 info_overlays and 267 infodecals (decalstain002a 26 times, trashdecal04a, plaster cracks, Breen posters, danger signs, metal grates, speaker grilles, graffiti 059a, the lambda spray). The modules had almost none.",
-   "how": "m.grime(kind, u, v, z) with GRIME's kinds (stain, drain, trash, crack, poster, danger, graffiti, number, lambda, burn, puddle, grate, debris, police: all checked in Valve's lists); every canal stretch now gets drain stains and some graffiti by itself (map_modules.dress_canal_walls).",
+   "how": "m.grime(kind, u, v, z) with GRIME's kinds (stain, drain, trash, crack, poster, danger, graffiti, number, lambda, burn, puddle, grate, debris, police: all checked in Valve's lists); every canal stretch now gets drain stains and some graffiti by itself (map_modules.dress_canal_walls). Valve's 13 canal maps: 613 infodecal and 75 info_overlay; the commonest are ivy (ivy01 to ivy03: 187), trash (trashdecal01a and 02a: 121), decalstain002a 17, decalconcretedrain002a 17 (and 11 overlays), lambdaspray_2a 14 (1 to 5 a map: the Resistance's way marks), graffiti001b/c/d 31. GRIME has no ivy: add a kind \"ivy\" (decals/ivy01, ivy02, ivy03) for canal walls.",
    "check": "review"
   },
   {
@@ -259,7 +259,7 @@
    "title": "Every place sounds like itself",
    "rule": "Each module and each part of the town names a soundscape (env_soundscape with a radius), not only an ambient_generic loop.",
    "why": "The owner's map: 155 env_soundscapes (d1_trainstation.*, d1_town.*, prison.*, d1_canals.*, construct.inside...) and only 41 ambient_generics.",
-   "how": "m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop). Valve's station puts two env_soundscape at each change of place (d1_trainstation.Platform, .Turnstyle, .Interrogation, .QuietCourtyard, general.concrete_quiet).",
+   "how": "m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop). Valve's station puts two env_soundscape at each change of place (d1_trainstation.Platform, .Turnstyle, .Interrogation, .QuietCourtyard, general.concrete_quiet). Valve's 13 canal maps: 173 env_soundscape (8 to 24 a map), commonest canals_slime_tunnel 17, d1_canals.general_dripping_tunnel 13, canals_river 12, canals_slime_outside 10, canals_canal_water_industrial 10; also canals_canal_water, canals_canal_nowater (a dry canal: fits ours), canals_tunnel_dry and canals_tunnel_wet.",
    "check": "review"
   },
   {
@@ -439,7 +439,7 @@
    "title": "The owner's sewers carry water; the open canal is dry",
    "rule": "Under the city the owner's sewers (floor about z 268, water nature/sewer_waterdarkfog2 to z 291) run water in a channel with raised walks either side and round-arched tunnel mouths: a piece that joins the sewers (the drain module's far end) should match that. The open canal, built by these tools and compiled by the owner (the ring and the first canal), is dry with mud: canal modules match it as they are.",
    "why": "Measured in c18_lc.vmf, 20 November: the water in reference pictures 06 and 15 is the sewer's (4 water brushes in the whole map: the sewers' two, a pool, and the sea), not a canal's. An earlier note here said the canal had water: wrong, corrected.",
-   "how": "Sewer pieces: a water brush at z 267 to 291 in the channel, walks at about z 400 to 420 either side.",
+   "how": "Sewer pieces: a water brush at z 267 to 291 in the channel, walks at about z 400 to 420 either side. Valve's Route Kanal (reference for shape only; the owner's canal stays dry): water stands 92 deep (60 to 106) in the city canal's dish (168 in d1_canals_01a), 34 (28 to 95) in the wide airboat canals, slime 15 to 32; the depth comes from the floor's dish, the walls stay the same (Route Kanal pictures R1, R3, R17).",
    "check": "review"
   },
   {
@@ -562,7 +562,7 @@
    "title": "Tall walls in bands",
    "rule": "A wall taller than about 256 is never one texture. Lay it in courses: a base (stonewall050c, floor to 96), the body (050a), a band course (050b, about 192 to 320), the body again, a top course (050e). Each course is its own brush, the base and the band 4 to 8 proud of the body, so the wall casts a line of shadow at each change.",
    "why": "Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age. In every old-city Valve map measured the first change of material is most often 128 over the wall's foot (d1_trainstation_02: 870 wall columns, 04: 1343, 03: 290, d3_c17_13: 781, Ravenholm: 426), then 64; 64 to 83% of wall length over 256 tall is banded, against 15% in the Citadel.",
-   "how": "Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.",
+   "how": "Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme. Route Kanal's deep canals (d1_canals_08, 12, 13): walls lean back about 14 degrees off upright, step 36 at about 352 up and carry a coping at the top, 476 to 508 over the floor (Route Kanal picture R4).",
    "check": "map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare)."
   },
   {
@@ -587,7 +587,7 @@
    "title": "Light in pools, not floods",
    "rule": "Let places be dim and light them in pools: a fixture over each door, each way on and each thing to look at, with darker stretches between. Valve lights the whole train station with 23 light, 40 light_spot and 19 point_spotlight.",
    "why": "Pictures V3 and V8: the lit doorway at the end of a dark passage leads the player there without a word (house rule 10, let the world show it). Evenly lit rooms look flat. Ravenholm: 26 lights in the whole town, its 11 spotlights about 500 apart; the flats: plain lights at 8 as fill and light_spot at 400.",
-   "how": "One fixture per bay or door, about a third left off (as the canal walls do), light_spot under lamps that hang; brighter where people gather.",
+   "how": "One fixture per bay or door, about a third left off (as the canal walls do), light_spot under lamps that hang; brighter where people gather. Route Kanal: cage lamps on the canal walls about 811 apart (581 to 956), 311 up, each with its own light (brightness about 70); light_spot brightness 1200 (500 to 1850); 346 of 523 lights warm.",
    "check": "map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer."
   },
   {
@@ -599,7 +599,7 @@
    "title": "Clutter on the edges",
    "rule": "Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, crates, push carts) along walls, at column feet and in corners, never in the walking line, plus decals and overlays (Valve: 178 physics props, 116 decals and 29 overlays in one station).",
    "why": "Picture V3: the crates and the cabinet hug one wall and leave the way clear; clutter in the walking line only blocks people, clutter on the edges makes a place lived in.",
-   "how": "Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door.",
+   "how": "Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door. Route Kanal: within 224 of the canal's middle about 4 fixed and 4 loose props per 1024 of city canal, about 1 in the wide canals (the boat's lane clear); commonest oildrum001 264 (and 141 explosive), shrub_01a 190, driftwood 238, ivy_01 110, wood crates 184, rebar 97, cargo containers 93, concrete debris piles 74. Ours scatters about 2.4 per 1024 in a plain stretch.",
    "check": "map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer."
   },
   {
@@ -763,6 +763,110 @@
    "why": "d1_town_03: 7 env_soundscape (ConcreteBuilding 3, Street 2, WoodBuilding 1, CorpseRoom 1), radius 128; 27 ambient_generic: zo_attack2 4, metalgrate3 4, fz_alert_far1 3, tram_hit1 2, smallfireloop 2.",
    "how": "m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house').",
    "check": "review"
+  },
+  {
+   "id": "valve-canal-dish",
+   "tags": [
+    "canal",
+    "valve",
+    "geometry"
+   ],
+   "title": "A canal floor falls to its middle",
+   "rule": "Let the canal's floor fall gently from the walls to the middle line: Valve's city canal dishes about 88 over its 512 (the floor meets the walls 44 up, median), its wide canals 36 to 48 over 1024 (8 to 10 degrees). Keep the owner's 45 degree banks at the walls (they asked for the sloped sides) and the dry mud; sag the mud between the banks' feet 16 to 32 toward the middle line, so water would run down the middle.",
+   "why": "Measured across 372 open cuts of the 13 Route Kanal maps (21 November): the floor meets the walls 44 up (city canal) and 90 up (wide canals) at the median, few floors are flat; true 45 degree banks only in d1_canals_10, and there 284 high. Route Kanal pictures (_dev/reference/valve_canals/) R1, R3, R5, R17.",
+   "how": "The canal's mud displacement (Channel.dress / dress_canal_walls): lower its middle rows 16 to 32 under F, keeping the edges at F where they meet the banks and at every module's ends (u 0 and L stay the plain section).",
+   "check": "review (a cut across in the viewer: map_view.py --eye on the floor looking along, or a slice)"
+  },
+  {
+   "id": "valve-canal-ledges",
+   "tags": [
+    "canal",
+    "valve",
+    "layout"
+   ],
+   "title": "Long canal stretches get a walk along one wall",
+   "rule": "Most of Valve's canal has a ledge a person can walk along on at least one side: in the city canal 72 wide (42 to 106) at 212 up (146 to 256), in the wide canals 102 wide (64 to 148) at 316 up, railed with handrail04 props (40 high) where it is high. Give some modules (not every one) a walk on one wall, 64 to 128 wide, 128 to 256 over the floor, reached by steps or a ladder, ending on the plain section at u 0 and L.",
+   "why": "28 of 36 city canal cuts and 200 of 318 wide canal cuts have a walkable ledge (32 wide or more, 72 clear over it). Route Kanal pictures (_dev/reference/valve_canals/) R2, R7, R8, R18.",
+   "how": "m.det for the slab (canal_wall material, a quay_floor top) with m.taken over it so ribs and stubs keep clear; m.no_bank under it; handrail04_long props every 128 along its open edge when it is over 64 up; a ladder (m.ladder, pieces of 128) or m.steps to reach it.",
+   "check": "review"
+  },
+  {
+   "id": "valve-canal-outfalls",
+   "tags": [
+    "canal",
+    "valve",
+    "props"
+   ],
+   "title": "Drain outfalls: big round holes in a ring",
+   "rule": "An outfall in a canal wall is a round hole 128 across running deep into the wall (Valve: 588 deep, 420 to 966), framed by the canal_cap001 ring (154 across), its middle about 139 over the floor (93 to 172), in groups about 384 apart (288 to 768), sometimes a pair either side of a wall's middle; a concrete drain stain (decalconcretedrain002a) under each.",
+   "why": "65 canal_cap001 placed across the 13 maps, 58 with their holes measured. Our drain stubs are 48 across at 176 up, one per wall per 1024: too small and too even. Route Kanal pictures (_dev/reference/valve_canals/) R13.",
+   "how": "Channel.dress's stubs: a hole 128 across (an octagon prism of black inside, as now, 40 to 64 deep is enough to read) with canal_cap001 on the wall face, centre at F + 140; place them in twos or threes 384 apart rather than one every 1024; keep the drain decal under each.",
+   "check": "map_assets.py (canal_cap001 is a static model: check it passes), then review"
+  },
+  {
+   "id": "valve-canal-lamps",
+   "tags": [
+    "canal",
+    "valve",
+    "lighting"
+   ],
+   "title": "Canal lamps every 600 to 950, each with its own light",
+   "rule": "Valve hangs light_cagelight02_on on the canal walls about 811 apart (581 to 956), 311 over the canal floor (233 to 342), and gives every lit one its own light within 96 (brightness about 70). Ours are 1536 apart at 260 up: halve the spacing in long stretches and lift them, keeping the dead ones and the dark gaps the pools need.",
+   "why": "100 cage lamps measured in the 13 maps; 99 have a light within 96. The whole of Route Kanal has only 208 light, 315 light_spot and 68 point_spotlight: few lights, but on a steady rhythm along the water. Route Kanal pictures (_dev/reference/valve_canals/) R12.",
+   "how": "dress_canal_walls: a lamp on every other rib (1024) or on ribs set 768 apart, at F + 300, about one in four dead; the light 30 out from the wall, brightness 60 to 80.",
+   "check": "map_lint.py offlamp (an off lamp has no light), then review"
+  },
+  {
+   "id": "valve-canal-fence-props",
+   "tags": [
+    "canal",
+    "valve",
+    "props"
+   ],
+   "title": "The canal's top fence is mostly fence props",
+   "rule": "Fence the canal's wall tops with Valve's fence props end to end rather than brush sheets: fence03a (108 high, 260 long) or exterior_fence002e (152 high, 512 long), feet on the wall top; canal_bridge_railing01 or 02 (32 to 40 high) on bridges. Ask the owner before changing the fence they already have (they asked for fencing along the top).",
+   "why": "Valve placed 190 fence03a (258 apart: end to end) and 171 exterior_fence002e on canal tops; its brush rails (metalrail013a/b/c, 1,292 faces) are railings on walks and stairs, and brush chain link (metalfence004a, 205 faces) is rare. The house lesson props-not-brushes says the same. Ours is a brush chain link (metalfence007a).",
+   "how": "map_build.fence: along each run, a fence03a every 260 (or exterior_fence002e every 512) at the wall's top, yawed along the run; posts come with the model.",
+   "check": "map_assets.py, map_floating.py (each fence touches the wall top), then review"
+  },
+  {
+   "id": "valve-canal-culverts",
+   "tags": [
+    "canal",
+    "valve",
+    "geometry"
+   ],
+   "title": "Culverts and pipes in Valve's sizes",
+   "rule": "Culverts off a canal: box culverts 512 wide by 224 to 256 high (our gate is already this) with their floors dished 64 into the walls; round pipes 344 to 384 across; arches 320 wide and 256 to 352 high; big box tunnels 704 by 288 to 352. A culvert's mouth is a hole 252 to 260 high in a wall 48 to 80 thick; small openings are closed by canal_bars002 (128 wide, 124 high).",
+   "why": "128 tunnel cuts across the 13 maps: round pipes 384 across the commonest (19), then box culverts 512 by 256 (9). Route Kanal pictures (_dev/reference/valve_canals/) R6, R9, R12.",
+   "how": "New tunnel or drain modules: use these sizes; round pipes as octagon or 16-sided prisms (true-curves), bars as canal_bars002 props, a little water or slime only where the owner's sewers join (canal-water).",
+   "check": "review"
+  },
+  {
+   "id": "valve-canal-varies",
+   "tags": [
+    "canal",
+    "valve",
+    "layout"
+   ],
+   "title": "Vary the canal between its ends",
+   "rule": "Valve's canal changes its cross-section from stretch to stretch: 512 (city) and 1024 (wide canals) are the commonest widths, but cuts run from 320 to 1216, walls step between 256 and 512 high, and in d1_canals_01 a narrow wet channel (432 wide, 188 deep) runs inside a wider dry one. Modules must start and end on our plain section (512, floor F), but in their middle they may widen into a basin, step a wall back to a ledge, or sink a narrower channel in the floor.",
+   "why": "372 open cuts: width 128 up 1024 in 70, 896 in 23, 832 in 21, 512 in 20, 704 in 19; wall tops 512 in 68 and 256 in 64. Route Kanal pictures (_dev/reference/valve_canals/) R2, R3, R4, R7, R9, R11.",
+   "how": "m.open with a wider v range in the middle of a module (side rooms go out in +v), m.low for a stepped wall, m.water or a lower floor for a sunken channel; join back to v -256 to 256 before u L.",
+   "check": "map_modules_check.py (the ends still match), then review"
+  },
+  {
+   "id": "valve-canal-locks",
+   "tags": [
+    "canal",
+    "valve",
+    "props"
+   ],
+   "title": "A lock is Valve's lock gates in a recess",
+   "rule": "A lock across a canal is a pair of Valve's gate props, locks_large and locks_large_b (each leaf about 205 thick, 446 wide, 572 high), set 441 apart so the pair closes about 885, standing in recesses of the walls; the next pair stands 5,185 to 7,300 down the canal.",
+   "why": "Eight pairs measured in d1_canals_08 (3), 12 (3) and 13 (2). Route Kanal pictures (_dev/reference/valve_canals/) R15, R18.",
+   "how": "m.static or m.dynamic (named, to open) for each leaf; widen the canal to about 896 at the gates with m.open, or use one leaf in our 512 canal; m.taken round the gates.",
+   "check": "map_assets.py, then review"
   }
  ]
 }
