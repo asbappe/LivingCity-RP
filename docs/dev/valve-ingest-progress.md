@@ -71,7 +71,7 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
 
 ## If the work was cut off (21 November, at the usage limit)
 
-Running when the session neared its limit (Nova Prospekt, Black Mesa East and EP1 City 17's props finished since; now running: EP1 City 17's logic and its pictures): EP1 City 17's props and craft
+Batches 3, 4 and 5 finished since (21 November). Now running, batch 6: the Combine architecture study, the Citadel's logic and pictures, and the lifting of the owner's Citadel pieces. Earlier note: EP1 City 17's props and craft
 (`valve_ep1c17/wip/`). Whatever they saved is committed. To carry on: read what each saved, finish the missing
 maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Briefing a helper"), then merge and
 close the batch as batches 1 and 2 were (the `notes/` and draft steps above). Next to start: EP1 City 17's logic
@@ -88,7 +88,7 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 | 3 | Nova Prospekt | d2_prison_01 to 08 | yes | yes: 17 pictures P1 to P17 (`valve_prison/`) | yes: 23 new lessons, 16 extended; notes in `valve_prison/notes/` |
 | 4 | Black Mesa East | d1_eli_01, 02 | yes | yes: 8 pictures E1 to E8 (`valve_eli/`) | yes: 9 new lessons, 5 extended; notes in `valve_eli/notes/` |
 | 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | yes: 19 pictures C1 to C19 (`valve_ep1c17/`) | yes: 22 new lessons, 15 extended; notes in `valve_ep1c17/notes/` |
-| 6 | The Citadel, HL2 and EP1 | d3_citadel_01 (in before; studied again), 02, 03, 04, 05, d3_breen_01; ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | | |
+| 6 | The Citadel, HL2 and EP1 | d3_citadel_01 (in before; studied again), 02, 03, 04, 05, d3_breen_01; ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | running (`valve_citadel/`) | running: architecture study, logic and NPCs; the owner's pieces being lifted |
 | 7 | EP2 | ep2_outland_01, 01a, 02, 03, 04, 05, 06, 06a, 07, 08, 09, 10, 10a, 11, 11a, 11b, 12, 12a; styleguide_01_antenna, 06_elev_tower, 11a, barn, barn_deterioration, bunkers, caves, farmhouse1, farmhouse2, farmyard, forest_01, inn, logging, radiotower, radiotower_a, radiotower_b, silo, silo_derilict, vista_01, riverbed, riverbed2; outland_building_large_01, medium_01, medium_02 | yes | | |
 | 8 | The rest of HL2 | d1_trainstation_06; d2_coast_01, 03, 04, 05, 07, 08, 09, 10, 11 | yes | | |
 
