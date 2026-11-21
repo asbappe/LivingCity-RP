@@ -37,9 +37,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   findings wait on TODO.md, built only after all ingestion.
 - Valve map ingestion so far: 127 lessons, 54 prefab pieces, studies docs/dev/valve-*.md, the tool
   _dev/tools/map_ingest.py, statistics _dev/reference/valve_stats.json. THE GUIDE: docs/dev/map-ingestion.md.
-- Canals: the owner's Valve table is built (dished floor, 1024-wide stretches, upright walls where there are ledges,
-  Valve's outfalls and lamps) and `lockgate` (Valve's d1_canals_08 gates; map_layouts/wide.txt). Wiring follows
-  Valve's five rules (map_wiring.py; map_lint kind wire).
+- Canals: the owner's Valve table is built (dished floor, wide stretches, ledges, outfalls, lamps) and `lockgate`
+  (map_layouts/wide.txt); wiring follows Valve's five rules (map_wiring.py; map_lint kind wire).
 - New in the game: the station's Breencast screen (editor Street, kind screen_station) and the Combine mounted gun
   (editor Fixture, kind mounted_gun: anyone can man it, a third of Valve's damage). Playground module from Valve's.
 - VDC Saver (_dev/tools/vdc_saver/, map-ingestion.md "The tools"): saves the Valve Developer Community wiki;
