@@ -274,8 +274,16 @@ def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None
     only what is in it."""
     from PIL import Image, ImageDraw
     polys, lights = scene(path)
-    if box:
-        polys = [p for p in polys if all(box[0] - 1 <= v[0] <= box[2] + 1 and box[1] - 1 <= v[1] <= box[3] + 1 for v in p[0])]
+    if box:      # (cut every face to the rectangle: a wall or floor running past its edge keeps the part inside)
+        kept = []
+        for verts, col, thru in polys:
+            v = list(verts)
+            for axis, limit, below in ((0, box[0], False), (0, box[2], True), (1, box[1], False), (1, box[3], True)):
+                if len(v) >= 3:
+                    v = clip(v, axis, limit, below)
+            if len(v) >= 3:
+                kept.append((v, col, thru))
+        polys = kept
     # where nothing is overhead: the highest thing over each 32-unit square
     allv = np.array([v for p in polys for v in p[0]])
     if not len(allv):
