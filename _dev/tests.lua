@@ -42233,6 +42233,183 @@ ok(not IsValid(e), "taken away with its point")
 end
 Nov21_StationScreenTests()
 
+function TurretTests()
+section("21 November: the Combine's barricade with its mounted gun (Valve's, by the canals' double gate), as an editor entry")
+local T = LC.Turret
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_turret.lua"], "lc_turret"))()
+local def = ENT
+ENT = was
+-- the gun as the game makes it (the harness doesn't give entities their scripts' methods): its own functions,
+-- Spawn running Initialize, Remove running OnRemove, and what the engine does with its model
+local createWas, effectWas = ents.Create, util.Effect
+local flashes = 0
+util.Effect = function(name) if name == "MuzzleFlash" then flashes = flashes + 1 end end
+ents.Create = function(cls)
+    local e = createWas(cls)
+    if cls == "lc_turret" then
+        for k, v in pairs(def) do e[k] = v end
+        e.poses, e.shots, e.seqs = {}, {}, { idle = 1, idle_inactive = 2, activate = 3, retract = 4, fire = 5 }
+        local none = function() end
+        e.PhysicsInit, e.SetMoveType, e.SetSolid, e.SetCycle, e.NextThink, e.MuzzleFlash = none, none, none, none, none, none
+        e.SetPoseParameter = function(self, k, v) self.poses[k] = v end
+        e.ResetSequence = function(self, s) self.seq = s end
+        e.SequenceDuration = function() return 0.4 end
+        e.LookupAttachment = function() return 0 end
+        e.GetAttachment = function() return nil end
+        e.FireBullets = function(self, b) self.shots[#self.shots + 1] = b end
+        e.Spawn = function(self) self:Initialize() end
+        local rm = e.Remove
+        e.Remove = function(self) if self.valid and self.OnRemove then self:OnRemove() end return rm(self) end
+    end
+    return e
+end
+local function Restore() ents.Create, util.Effect = createWas, effectWas end
+
+-- placed with the editor, facing 90
+local M0 = Vector(-97000, -52000, 0)
+local p = LC.AddPoint(M0, 90, "mounted_gun", 0)
+ok(p ~= nil and p.kind == "mounted_gun", "the editor can place one")
+LC.SyncFixtures()
+_run(0.3)
+local gun
+for _, f in pairs(LC.Fixtures) do if IsValid(f) and f.lcFixturePoint == p then gun = f end end
+ok(IsValid(gun) and gun:GetClass() == "lc_turret" and gun.lcFixtureKind == "mounted_gun" and gun:GetModel() == "models/props_combine/bunker_gun01.mdl",
+    "it is Valve's Combine bunker gun (lc_turret)")
+if not IsValid(gun) then Restore() if p then LC.RemovePoint(p) LC.SyncFixtures() end return end
+ok(math.abs(gun:GetPos().z - (M0.z + 33)) < 0.01 and math.abs(gun:GetPos().x - M0.x) < 0.01, "its foot 33 above the floor, as Valve's", gun:GetPos().z)
+local parts = gun.lcParts or {}
+ok(#parts == 2 and IsValid(parts[1]) and IsValid(parts[2]) and parts[1]:GetModel() == "models/props_combine/combine_barricade_short02a.mdl"
+    and parts[2]:GetModel() == "models/props_combine/combine_barricade_short01a.mdl", "between Valve's two short Combine barricades")
+local l, r = IsValid(parts[1]) and parts[1]:GetPos(), IsValid(parts[2]) and parts[2]:GetPos()
+ok(l and r and l.x < M0.x - 30 and r.x > M0.x + 30 and math.abs(l.z - (M0.z + 23.03)) < 0.01, "one either side of it (its left is -x here), standing where Valve's do", l and l.x)
+ok(IsValid(parts[1]) and parts[1].kv.solid == "6" and parts[1]:GetClass() == "prop_dynamic_override" and parts[1].lcTurretGun == gun,
+    "solid, and part of the gun (E on a barricade is E on the gun)")
+ok(gun.seq == gun.seqs.idle_inactive, "folded up while nobody mans it, as Valve's")
+
+local cit = newPlayer("TGunner", "citizen")
+local cop = newPlayer("TCop", "cp")
+_run(1)
+cit:SelectWeapon("weapon_pistol")
+local press, keys, think = hook.t.KeyPress.LivingCityTurret, hook.t.StartCommand.LivingCityTurret, hook.t.Think.LivingCityTurret
+local function Behind(ply) ply:SetPos(T.ToWorld(gun, -41, 0, -33)) ply.lookingAt = gun ply.aim = T.Dir(90, 0) end
+local function Cmd(b)
+    local c = { b = b or 0, cleared = false }
+    function c:KeyDown(k) return k ~= nil and bit.band(self.b, k) ~= 0 end
+    function c:RemoveKey(k) if k then self.b = bit.band(self.b, bit.bnot(k)) end end
+    function c:GetButtons() return self.b end
+    function c:SetButtons(v) self.b = v end
+    function c:ClearMovement() self.cleared = true end
+    function c:ClearButtons() self.b = 0 end
+    return c
+end
+
+-- manned from behind, as in Valve's map
+cit:SetPos(T.ToWorld(gun, 60, 0, -33)) cit.lookingAt = gun
+press(cit, IN_USE)
+ok(LC.TurretOf(cit) == nil, "E from in front of it does nothing: the gunner stands behind it")
+Behind(cit)
+press(cit, IN_USE)
+ok(LC.TurretOf(cit) == gun and gun:GetNW2Entity("lc_turret_gunner") == cit and cit:GetNW2Entity("lc_turret") == gun, "E on it from behind mans it")
+local w = cit:GetActiveWeapon()
+ok(w and w:GetClass() == "weapon_lc_hands", "their own weapon is put away", w and w:GetClass())
+ok(gun.seq == gun.seqs.activate, "and the gun unfolds")
+Behind(cop) cop:SetPos(cop:GetPos() + Vector(20, 0, 0))
+press(cop, IN_USE)
+ok(LC.TurretOf(cop) == nil, "one gunner at a time")
+
+-- holding attack: the gun fires, never their own weapon, and they stay put
+local c = Cmd(bit.bor(IN_ATTACK, IN_FORWARD))
+keys(cit, c)
+ok(c.cleared and not c:KeyDown(IN_ATTACK) and gun.lcFire == true, "holding attack fires the gun, not their own weapon, and they stay put")
+c = Cmd(T.FIRE_RELAY)
+keys(cit, c)
+ok(gun.lcFire == true and not c:KeyDown(T.FIRE_RELAY), "(the click their own computer passes on, on a key no weapon uses, fires it too)")
+local s0 = #_sounds
+for _ = 1, 20 do _advance(0.1) keys(cit, Cmd(IN_ATTACK)) think() end
+local n = #gun.shots
+ok(n >= 28 and n <= 31, "15 rounds a second, Valve's rate (two seconds held)", n)
+local b = gun.shots[1] or {}
+ok(b.Attacker == cit and b.Inflictor == gun, "every bullet is the gunner's: they are the attacker, the gun the inflictor (the laws and kills see who shot)")
+ok(math.abs((b.Damage or 0) - 26 / 3) < 1e-6, "each does a third of Valve's 26 (the owner, 21 November: \"cut that damage down to 1/3\")", b.Damage)
+ok(b.TracerName == "AR2Tracer" and b.Tracer == 1 and b.AmmoType == "AR2" and b.Spread ~= nil and math.abs(b.Spread.x - 0.025) < 1e-6,
+    "AR2 rounds and tracers, in Valve's small cone")
+local snd = 0
+for i = s0 + 1, #_sounds do if _sounds[i] == "Weapon_functank.Single" then snd = snd + 1 end end
+ok(flashes >= n and snd == n, "a muzzle flash and Valve's func_tank shot for every round", snd)
+ok(b.Src ~= nil and T.ToLocal(gun, b.Src) > 15 and b.Dir ~= nil and b.Dir.y > 0.99, "from the muzzle, straight ahead where they look", b.Dir and b.Dir.y)
+ok(cit.lcFiredAt ~= nil and cit.lcFiredAt > CurTime() - 0.2, "and they count as having fired a gun (armed and fighting)")
+
+-- the aim: toward their crosshair at Valve's rates, no further than 60 degrees from its facing
+gun.lcFire = false
+cit.aim = T.Dir(0, 0) -- (a quarter turn to its right)
+_advance(0.1) think()
+ok(math.abs(gun.lcYaw + 20) < 0.01, "it turns at Valve's 200 degrees a second", gun.lcYaw)
+for _ = 1, 20 do _advance(0.1) think() end
+ok(math.abs(gun.lcYaw + 60) < 0.01 and math.abs(gun:GetNW2Float("lc_turret_yaw", 0) + 60) < 0.06, "and no further than 60 degrees across", gun.lcYaw)
+ok(math.abs((gun.poses.aim_yaw or 0) + 60) < 0.01, "(the model's own aim_yaw set to match)")
+local before = #gun.shots
+keys(cit, Cmd(IN_ATTACK)) _advance(0.1) think()
+local last = gun.shots[#gun.shots] or {}
+ok(#gun.shots > before and last.Dir and last.Dir.x > 0.85 and math.abs(last.Dir.y - 0.5) < 0.02, "the rounds go where the barrel points", last.Dir and last.Dir.x)
+gun.lcFire = false
+local traceWas = util.TraceLine
+util.TraceLine = function(t) return { Hit = false, HitPos = t.endpos, Fraction = 1 } end
+cit.aim = T.Dir(90, 80)
+for _ = 1, 20 do _advance(0.1) think() end
+ok(math.abs(gun.lcPitch - 60) < 0.01 and math.abs((gun.poses.aim_pitch or 0) - 67.5) < 0.01, "60 down at most (the model is level at its aim_pitch 7.5, as Valve set it)", gun.lcPitch)
+cit.aim = T.Dir(90, -80)
+for _ = 1, 20 do _advance(0.1) think() end
+ok(math.abs(gun.lcPitch + 60) < 0.01, "and 60 up", gun.lcPitch)
+util.TraceLine = traceWas
+-- Valve's aim assistance for a player on the gun
+local victim = { IsValid = function() return true end, IsNPC = function() return true end, IsPlayer = function() return false end,
+    Health = function() return 50 end, WorldSpaceCenter = function() return T.ToWorld(gun, 400, 30, 10) end }
+local hullWas = util.TraceHull
+util.TraceHull = function(t) return { Hit = true, Entity = victim, HitPos = t.endpos } end
+gun.lcYaw, gun.lcPitch = 0, 0
+LC.TurretFire(gun, cit)
+util.TraceHull = hullWas
+last = gun.shots[#gun.shots] or {}
+ok(last.Src and last.Dir and last.Dir:Dot((victim:WorldSpaceCenter() - last.Src):GetNormalized()) > 0.9999, "someone a round would just graze is hit square (Valve's aim assistance)")
+
+-- letting go: E again, a jump, knocked off it, dying
+_advance(0.5)
+press(cit, IN_USE)
+w = cit:GetActiveWeapon()
+ok(LC.TurretOf(cit) == nil and gun:GetNW2Entity("lc_turret_gunner") == nil and cit:GetNW2Entity("lc_turret") == nil, "E again lets go")
+ok(w and w:GetClass() == "weapon_pistol", "and their pistol is back in hand", w and w:GetClass())
+ok(gun.seq == gun.seqs.retract, "the gun folds up")
+c = Cmd(IN_ATTACK)
+keys(cit, c)
+ok(c:KeyDown(IN_ATTACK) and not c.cleared, "off it, their keys are their own again")
+_advance(0.5) Behind(cit) press(cit, IN_USE)
+ok(LC.TurretOf(cit) == gun, "(on it again)")
+keys(cit, Cmd(IN_JUMP))
+ok(LC.TurretOf(cit) == nil, "a jump lets go")
+_advance(0.5) Behind(cit) press(cit, IN_USE)
+cit:SetPos(cit:GetPos() + Vector(80, 0, 0))
+_advance(0.1) think()
+ok(LC.TurretOf(cit) == nil, "knocked off it, they let go")
+_advance(0.5) Behind(cit) press(cit, IN_USE)
+ok(LC.TurretOf(cit) == gun, "(on it again)")
+cit:Kill()
+ok(LC.TurretOf(cit) == nil and gun:GetNW2Entity("lc_turret_gunner") == nil, "dying lets go")
+
+-- anyone may man it; the gun going lets its gunner go
+_advance(0.5) Behind(cop)
+press(cop, IN_USE)
+ok(LC.TurretOf(cop) == gun and LC.TurretMayUse(cop, gun) and LC.TurretMayUse(cit, gun), "anyone may man it, a unit as well as a citizen (as the rebels take the Combine's guns)")
+LC.RemovePoint(p)
+LC.SyncFixtures()
+ok(not IsValid(gun) and not IsValid(parts[1]) and not IsValid(parts[2]), "taken away with its editor point, its barricades with it")
+ok(LC.TurretOf(cop) == nil and cop:GetNW2Entity("lc_turret") == nil, "and its gunner lets go")
+Restore()
+cit:Remove() cop:Remove()
+end
+TurretTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

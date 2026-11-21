@@ -38,6 +38,7 @@ LC.POINT_KINDS = {
     monitor_hang = true, camera = true, -- the Combine monitor (the hanging one) and the cameras it steps through (entities/lc_monitor.lua)
     transformer = true, forcefield = true, -- the power grid, and Combine forcefields (sv_livingcity_power.lua)
     powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, -- checkpoints (sv_livingcity_checkpoints.lua)
+    mounted_gun = true, -- the Combine's barricade with its mounted gun, manned from behind (sh_livingcity_turret.lua)
     platform = true, -- where the trains stop (sv_livingcity_trains.lua)
     intake = true, housingterm = true, arrival = true, -- Civil Intake, Housing Allocation, where new people arrive (sv_livingcity_intake.lua)
     laborterm = true, -- Labor Assignment: Union work is given out and changed here (sv_livingcity_labor.lua)

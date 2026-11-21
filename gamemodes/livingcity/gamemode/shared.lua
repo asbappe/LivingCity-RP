@@ -49,6 +49,7 @@ LC_MODULES = {
         "sh_livingcity_shop",
         "sh_livingcity_illness",
         "sh_livingcity_zones",
+        "sh_livingcity_turret", -- (the Combine's mounted gun on its barricade: manned from behind with E; entities/lc_turret.lua)
     },
     server = {
         "sv_livingcity_perf", -- (first of the server modules: every timer after it is timed and staggered)

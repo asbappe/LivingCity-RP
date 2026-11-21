@@ -2472,6 +2472,67 @@ return bad
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "the station screen (client): " + str(err)
+# the Combine's mounted gun (lc_turret, sh_livingcity_turret.lua): on every screen the barrel turns smoothly toward where
+# the server has it, at Valve's 200 degrees a second, and on the gunner's own toward their crosshair, never past 60
+# degrees; a gunner's click is passed on to the server on a key no weapon uses, and their feet are kept still
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_turret.lua")).read()
+err = L.execute(r"""
+local entWas = ENT
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_turret"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+if not def.Draw then return "no Draw" end
+local T = LC.Turret
+local bad
+local aimWas = _me.aim
+local ok, e = pcall(function()
+    local g = ents.Create("lc_turret")
+    g.poses, g.drawn = {}, 0
+    g.Draw = def.Draw
+    g.DrawModel = function(self) self.drawn = self.drawn + 1 end
+    g.SetPoseParameter = function(self, k, v) self.poses[k] = v end
+    g.InvalidateBoneCache = function() end
+    g:SetPos(_me:GetPos() + Vector(41, 0, 33))
+    g:SetAngles(Angle(0, 0, 0))
+    g:SetNW2Float("lc_turret_yaw", 30)
+    g:SetNW2Float("lc_turret_pitch", 10)
+    g:Draw()
+    if g.drawn ~= 1 then bad = "the gun isn't drawn" return end
+    if math.abs((g.poses.aim_yaw or 0) - 30) > 0.01 or math.abs((g.poses.aim_pitch or 0) - 17.5) > 0.01 then
+        bad = "the barrel isn't where the server has it (aim_yaw " .. tostring(g.poses.aim_yaw) .. ", aim_pitch " .. tostring(g.poses.aim_pitch) .. ")" return
+    end
+    g:SetNW2Float("lc_turret_yaw", -60)
+    _advance(0.1)
+    g:Draw()
+    if math.abs(g.poses.aim_yaw - 10) > 0.01 then bad = "it doesn't turn at Valve's 200 degrees a second (aim_yaw " .. tostring(g.poses.aim_yaw) .. ")" return end
+    for _ = 1, 10 do _advance(0.1) g:Draw() end
+    if math.abs(g.poses.aim_yaw + 60) > 0.01 then bad = "it never gets there" return end
+    g:SetNW2Entity("lc_turret_gunner", _me)
+    _me.aim = Vector(0, 1, 0) -- (a quarter turn to its left)
+    for _ = 1, 10 do _advance(0.1) g:Draw() end
+    if math.abs(g.poses.aim_yaw - 60) > 0.01 then bad = "on the gunner's screen it doesn't follow their crosshair, or turns past 60 (aim_yaw " .. tostring(g.poses.aim_yaw) .. ")" return end
+    _me:SetNW2Entity("lc_turret", g)
+    local c = { b = bit.bor(IN_ATTACK, IN_FORWARD) }
+    function c:KeyDown(k) return k ~= nil and bit.band(self.b, k) ~= 0 end
+    function c:RemoveKey(k) if k then self.b = bit.band(self.b, bit.bnot(k)) end end
+    function c:GetButtons() return self.b end
+    function c:SetButtons(v) self.b = v end
+    function c:ClearMovement() self.cleared = true end
+    hook.t.StartCommand.LivingCityTurret(_me, c)
+    _me:SetNW2Entity("lc_turret", nil)
+    if c:KeyDown(IN_ATTACK) then bad = "a gunner's click reaches their own weapon" return end
+    if not c:KeyDown(T.FIRE_RELAY) then bad = "a gunner's click doesn't reach the server" return end
+    if not c.cleared then bad = "a gunner can walk off" return end
+    g:Remove()
+end)
+_me.aim = aimWas
+if not ok then return "error: " .. tostring(e) end
+return bad
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the mounted gun (client): " + str(err)
 # the radio held up (a weapon, next to Hands): drawn in your view and in your hand, and the soft static
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_radio.lua")).read()
 err = L.execute(r"""
@@ -5665,7 +5726,7 @@ _modes = _re.findall(r'^\s*\{ id = "([^"]+)",[^\n]*?label = "((?:[^"\\]|\\.)*)"'
 _cats = ("Point: ", "Fixture: ", "Street: ", "Path: ", "Zone: ", "Door: ", "Prop: ")
 _tools = {"inspect", "walker"}
 _side = {"Resistance ": "rspawn rlookout bunk graffiti way_left way_right way_up way_down way_freedom rebelboard interrochair rebelcage workbench zone_rebel",
-         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall dataterm masterterm sspawn sterm lz suppressor zone_combine monitor camera",
+         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall mounted_gun dataterm masterterm sspawn sterm lz suppressor zone_combine monitor camera",
          "Civil Protection ": "patrol checkpoint cpsupply cpfeed evidlocker door_cp",
          "Administrator's ": "desk adminpower speech speechcrowd studio door_office",
          "Union ": "terminal recycler"}

@@ -1106,6 +1106,7 @@ local FIXTURE_CLASS = {
     adminpower = "lc_adminpower", -- the Administrator's power: her shield in her last stand (sv_livingcity_collapse.lua)
     powerbank = "lc_powerbank", turret = "npc_turret_floor", -- checkpoints (sv_livingcity_checkpoints.lua)
     barricade_low = "lc_barricade", barricade = "lc_barricade", barricade_tall = "lc_barricade",
+    mounted_gun = "lc_turret", -- Valve's barricade with its mounted gun, manned from behind (sh_livingcity_turret.lua)
     citybin = "lc_citybin", streetlight = "lc_streetlight", loudspeaker = "lc_loudspeaker", screen_big = "lc_screen", screen_mid = "lc_screen", screen_station = "lc_screen", tv = "lc_screen",
     intake = "lc_intake", housingterm = "lc_intake", -- Civil Intake and Housing Allocation (sv_livingcity_intake.lua)
     laborterm = "lc_intake", -- Labor Assignment: Union work is given out here (sv_livingcity_labor.lua)
