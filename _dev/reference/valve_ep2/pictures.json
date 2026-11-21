@@ -154,6 +154,48 @@
     "cut": -600,
     "clip_below": -1300
    }
+  },
+  {
+   "n": "W7",
+   "file": "07_o04_nest_chambers_cut.png",
+   "where": "ep2_outland_04, the nest round x 2700 y -2700 (floors about -1453), from the south-west, cut at -1150 (box 1390 -4000 3950 -1440; drawn without what lies below -1900)",
+   "teaches": "The nest from above: linked chambers round a central mass, a tunnel leaving to one side. Its floors are covered in flat nests (nest_lrg_flat 30, nest_med_flat 22, the orange slabs), web sacks on the walls (websackhalf 4, _c 3, _b 2), 10 stalactites; 6 light_spot and 5 light. Across the map: nest_lrg_flat 78, nest_med_flat 30, grubtunnel_door 15 plugging side holes, 96 grubs; the guardian's ground 190 to 380 across at the narrowest, 1000 to 1740 long, 230 to 290 high. Ours: the nest about 345 wide and 760 in its chambers, 6 lights.",
+   "lessons": [
+    "valve-nest-dressing",
+    "valve-guardian-run",
+    "valve-cave-proportions"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1390,
+     -4000,
+     3950,
+     -1440
+    ],
+    "cut": -1150,
+    "clip_below": -1900
+   }
+  },
+  {
+   "n": "W8",
+   "file": "08_o04_nest_tunnel_eye.png",
+   "where": "ep2_outland_04, eye level in a tunnel of the nest, looking north-west (eye 5295 -2797 -1224, yaw 135); soundscape ep2_caves.quiet_tunnel_flies",
+   "teaches": "A nest tunnel at eye level: a round tube of displacements a little over head height, no flat floor, rock clusters (caverocks_cluster01 2) and a flat nest on the floor; 4 grubs and 4 small lights within 800. The map's corridors are 178 wide under 200 (medians by the cast), ceilings most often 192. Ours: the nest tube (NestTube) radius 150 to 330.",
+   "lessons": [
+    "valve-cave-proportions",
+    "valve-grub-groups",
+    "valve-cave-light"
+   ],
+   "view": {
+    "eye": [
+     5295,
+     -2797,
+     -1224
+    ],
+    "yaw": 135,
+    "pitch": 3
+   }
   }
  ]
 }
