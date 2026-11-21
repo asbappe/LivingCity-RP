@@ -167,7 +167,7 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   | Pipe outfalls | 128 across in a ring, about 384 apart, about 140 up | 48 across, one every 1024 |
   | Cage lamps | about 800 apart at about 300 up | 1536 apart at 260 |
 
-  Being built (21 November; this line says "Built" once it is in): a dished floor, wide stretches with their widening and narrowing, upright walls where there are ledges and
+  Built (21 November): a dished floor, wide stretches with their widening and narrowing, upright walls where there are ledges and
   in the wide stretches (the owner's 45 degree banks kept on the plain city stretches: they asked for sloped sides),
   ledges, Valve's outfalls and lamp spacing (`docs/dev/map-modules.md`, the shared dressing). Steps are 8 by 12.
 - **Ravenholm, for the infestation quarter** (tag `infestation`): no kerbs or pavements; timber and plaster houses

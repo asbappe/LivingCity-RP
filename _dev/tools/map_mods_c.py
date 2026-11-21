@@ -1737,8 +1737,8 @@ def m_floodroom(m, opt):
     up to it inside the chamber, a steel plate along their open side); from the gallery's far side a passage leads
     round the chamber and back to the canal through a second door (lc_flood_door_out, one of the city's doors: Use
     opens it), steps up from the canal's floor. In the chamber's middle the main (the city's 32 pipe) stands from floor
-    to roof with a valve wheel on it (props_pipes valvewheel001); a button on it (lc_flood_valve_b) and one on the
-    gallery's wall by a small wheel (lc_flood_valve_a) flood the chamber: a klaxon sounds, a red beacon under the roof
+    to roof with a hand wheel on it (props_pipes valvewheel001, lc_flood_valve_b) and a small wheel on the gallery's
+    wall (lc_flood_valve_a): turning either all the way floods the chamber (turning it back drains it): a klaxon sounds, a red beacon under the roof
     starts turning and sweeps its beam round the walls, the steel door at the foot of the way in drops, then water
     rises 90 from under the floor to just under the gallery, in about fifteen seconds. Pressed again, it drains (the
     pipes knock) and the door lifts. Nobody is hurt: whoever is on the floor swims up to the gallery and walks out. The
@@ -1749,7 +1749,8 @@ def m_floodroom(m, opt):
     Named for the game:
       lc_flood_water      the water: a func_water_analog, its top 2 under the chamber's floor (so the two never share a
                           plane), rising 90 (Open floods, Close drains; 6 a second).
-      lc_flood_valve_a    the button on the gallery.     lc_flood_valve_b    the button on the main, at the floor.
+      lc_flood_valve_a    the wheel on the gallery.      lc_flood_valve_b    the hand wheel round the main, at the floor
+                          (both momentary_rot_buttons: hold E to turn; all the way floods, back drains).
       lc_flood_fill, lc_flood_drain   relays: Trigger one to flood or drain with the door and the sound. A press of
                           either button triggers both; only the one that makes sense is live.
       lc_flood_door       the door at the foot of the way in: a func_button used as a mover, as the bunker's (PressOut
@@ -1844,12 +1845,15 @@ def m_floodroom(m, opt):
         m.point("prop_static", u, v, zc, {"model": model, "angles": "%d %d %d" % (pitch, m.fr.yaw(0), roll), "skin": "0", "solid": "6", "disableshadows": "0",
                                           "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
     stood("models/props_pipes/pipeset32d_256_001a.mdl", cu, cv, FL + 112, pitch=90)
-    m.point("prop_static", cu, cv - 17, FL + 50, {"model": "models/props_pipes/valvewheel001.mdl", "angles": "-90 %d 0" % m.fr.yaw(270), "skin": "0", "solid": "6",
-                                                  "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
-    m.static("models/props_borealis/door_wheel001a.mdl", cu - 189, cv + 30, 0, z=G + 44)
-    wires = [("lc_flood_fill", "Trigger", "", 0), ("lc_flood_drain", "Trigger", "", 0)]
-    m.button("lc_flood_valve_a", cu - 192, cv, G + 40, 0, wires, wait="18")
-    m.button("lc_flood_valve_b", cu, cv - 19, FL + 18, 270, wires, wait="18")
+    # the valves are wheels (Valve's wiring, the owner said go ahead): turned all the way the room floods, turned back
+    # it drains (the relays keep only the one that makes sense live), the hand wheel round the main and the small one
+    # on the gallery's wall turning as they are turned
+    import map_wiring
+    fill, drain = [("lc_flood_fill", "Trigger", "", 0)], [("lc_flood_drain", "Trigger", "", 0)]
+    map_wiring.wheel(m, "lc_flood_valve_b", cu, cv - 17, FL + 50, 270, on_open=fill, on_closed=drain, lock_open=False,
+                     model="models/props_pipes/valvewheel001.mdl", pitch=-90, distance=360, speed=90)
+    map_wiring.wheel(m, "lc_flood_valve_a", cu - 192, cv + 30, G + 44, 0, on_open=fill, on_closed=drain, lock_open=False,
+                     model="models/props_borealis/door_wheel001a.mdl", pitch=0, model_out=3, distance=360, speed=90)
 
     # the water: one slab under the whole chamber, its top the water's face
     wbox = m.fr.box(cu - 192, cv - 192, FL - 90, cu + 192, cv + 192, FL - 2)          # (its top 2 under the floor: never one plane with it)

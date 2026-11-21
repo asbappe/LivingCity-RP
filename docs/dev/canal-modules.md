@@ -11,9 +11,9 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `relay` | 1024 | 7. Cubbage's relay shack and mast, on a pier (right) | `lc_relay_hum`, `lc_relay_lamp`, `lc_relay_mast`, `lc_relay_radio`, `lc_relay_seat` | `map_modules.py` |
 | `checkpoint` | 1280 | 8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight | `lc_checkpoint_field`, `lc_checkpoint_hum`, `lc_checkpoint_light`, `lc_checkpoint_light_b`, `lc_checkpoint_pen`, `lc_checkpoint_pen_spot`, `lc_checkpoint_post`, `lc_checkpoint_queue` | `map_modules.py` |
 | `ash` | 768 | 10. the ash outfall: trash and burnt corpses (left) | `lc_ash_clatter`, `lc_ash_dust`, `lc_ash_grate`, `lc_ash_heap`, `lc_ash_timer`, `lc_ash_tip` | `map_modules.py` |
-| `sludge` | 2048 | 11. the sludge tunnel: a shortcut through the long way round (left) | `lc_sludge_gas`, `lc_sludge_haze` | `map_modules.py` |
+| `sludge` | 2048 | 11. the sludge tunnel: a shortcut through the long way round (left) | `lc_sludge_gas`, `lc_sludge_gurgle`, `lc_sludge_gurgle_timer`, `lc_sludge_gurgle_timer_near`, `lc_sludge_haze` | `map_modules.py` |
 | `cistern` | 1536 | 12. the cistern for the hive boss (right) | `lc_cistern_gallery`, `lc_hive_boss_spot` | `map_modules.py` |
-| `underpass` | 1536 | 13. the barnacle underpass | `lc_underpass_body_1`, `lc_underpass_body_2`, `lc_underpass_body_3`, `lc_underpass_body_4`, `lc_underpass_body_5`, `lc_underpass_dust`, `lc_underpass_dust_timer` | `map_modules.py` |
+| `underpass` | 1536 | 13. the barnacle underpass | `lc_underpass_body_1`, `lc_underpass_body_2`, `lc_underpass_body_3`, `lc_underpass_body_4`, `lc_underpass_body_5`, `lc_underpass_dust`, `lc_underpass_dust_timer`, `lc_underpass_dust_timer_near` | `map_modules.py` |
 | `tram` | 1536 | a fallen tram bridge: a station in each wall, a derailed car to climb, a beam walk | `lc_tram_exit`, `lc_tram_stash` | `map_mods_a.py` |
 | `tenement` | 1280 | a tenement block fallen across the canal: the way on is through its rooms | `lc_tenement_lookout`, `lc_tenement_stash` | `map_mods_a.py` |
 | `quay` | 1024 | stairs up to a quay with a street doorway (a cap to delete), a footbridge to a barred door | `lc_quay_far_door`, `lc_quay_street` | `map_mods_a.py` |
@@ -632,10 +632,11 @@ a bank). It is lit from below: a caged lamp on each pier and a lamp washing each
 trough is cracked (painted cracks): its water stains and greens its sides, falls in a thin stream onto the canal
 floor, and lies there in a shallow pool in a ring of mud, with a dripping sound. A sluice valve stands on the trough's
 rim by the left wall. It sounds of water (prison.watery_hallway).
-The sluice valve (the owner, 21 November: "sure"): a button on the left wall beside the walk (lc_aqueduct_valve,
-once a round) drains the trough and the culverts' water (lc_aqueduct_water sinks out of sight), stops the fall and
-the drip, and lifts both culverts' bars into the wall (lc_aqueduct_bars, their clip lc_aqueduct_bars_clip turned
-off): the dry trough is then a way across into either culvert.
+The sluice valve (the owner, 21 November: "sure"; a wheel as Valve's are, the owner said go ahead): a wheel on the
+left wall beside the walk (lc_aqueduct_valve, a momentary_rot_button: hold E to turn it) drains the trough and the
+culverts' water (lc_aqueduct_water sinks) and lifts both culverts' bars into the wall (lc_aqueduct_bars) as far as
+it is turned; turned all the way it locks with a clunk for the round, stops the fall and the drip and turns the
+bars' clip off (lc_aqueduct_bars_clip): the dry trough is then a way across into either culvert.
 Named for the game: lc_aqueduct_walk (an info_target on the walk at mid-span: a lookout's place), lc_aqueduct_valve,
 lc_aqueduct_water, lc_aqueduct_fall, lc_aqueduct_drip, lc_aqueduct_bars, lc_aqueduct_bars_clip.
 Left as brushes: the trough, its piers, ribs, pilasters, coping and buttress, the culverts' frames, the grating and
@@ -660,11 +661,12 @@ plank 32 wide with the city's handrail runs along the top of the main (u 428 to 
 crosses the canal there to a second fat main on the right, and from its end a ramp of planks (144 down over 244)
 comes back to the floor at u 1192. That is also the only way for anyone who cannot duck.
 Two steam leaks on the main: a pale one with a hiss, and one at a joint by the bridge (lc_pipes_leak) that the
-button by the platform's valve shuts and opens again (lc_pipes_valve). Risers of the city's pipe up the walls, each
+wheel by the platform's valve shuts and opens again (lc_pipes_valve: turned all the way the steam stops, turned
+back it starts again). Risers of the city's pipe up the walls, each
 with a caged lamp. The mains are cover from end to end, and the plank is a firing step over all of it
 (lc_pipes_top). It hums like a pump room (d1_canals.waterpuzzleroom).
 Named for the game: lc_pipes_top (an info_target on the main's plank), lc_pipes_leak (an env_steam: TurnOn,
-TurnOff, Toggle; it starts on), lc_pipes_valve (a func_button that already works: it toggles the leak).
+TurnOff, Toggle; it starts on), lc_pipes_valve (a valve wheel, momentary_rot_button: hold E to turn it; Valve's wiring, the owner said go ahead).
 Left as brushes: the mains, their flanges and end plates (no pipe model of the game is 87 across), the saddles and
 posts they rest on, the platform's deck and posts, the stair's treads and stringers, the bridge's grating and
 girders, the planks.
@@ -1181,8 +1183,8 @@ eight-sided chamber 384 across. A steel gallery runs round it 96 over its floor 
 up to it inside the chamber, a steel plate along their open side); from the gallery's far side a passage leads
 round the chamber and back to the canal through a second door (lc_flood_door_out, one of the city's doors: Use
 opens it), steps up from the canal's floor. In the chamber's middle the main (the city's 32 pipe) stands from floor
-to roof with a valve wheel on it (props_pipes valvewheel001); a button on it (lc_flood_valve_b) and one on the
-gallery's wall by a small wheel (lc_flood_valve_a) flood the chamber: a klaxon sounds, a red beacon under the roof
+to roof with a hand wheel on it (props_pipes valvewheel001, lc_flood_valve_b) and a small wheel on the gallery's
+wall (lc_flood_valve_a): turning either all the way floods the chamber (turning it back drains it): a klaxon sounds, a red beacon under the roof
 starts turning and sweeps its beam round the walls, the steel door at the foot of the way in drops, then water
 rises 90 from under the floor to just under the gallery, in about fifteen seconds. Pressed again, it drains (the
 pipes knock) and the door lifts. Nobody is hurt: whoever is on the floor swims up to the gallery and walks out. The
@@ -1193,7 +1195,8 @@ is flooded: a reason to flood it, or to dive).
 Named for the game:
   lc_flood_water      the water: a func_water_analog, its top 2 under the chamber's floor (so the two never share a
                       plane), rising 90 (Open floods, Close drains; 6 a second).
-  lc_flood_valve_a    the button on the gallery.     lc_flood_valve_b    the button on the main, at the floor.
+  lc_flood_valve_a    the wheel on the gallery.      lc_flood_valve_b    the hand wheel round the main, at the floor
+                      (both momentary_rot_buttons: hold E to turn; all the way floods, back drains).
   lc_flood_fill, lc_flood_drain   relays: Trigger one to flood or drain with the door and the sound. A press of
                       either button triggers both; only the one that makes sense is live.
   lc_flood_door       the door at the foot of the way in: a func_button used as a mover, as the bunker's (PressOut

@@ -435,6 +435,7 @@ def check(path, views=None, only=None, air=None):
     # wire: Valve's five wiring rules
     if not only or only == "wire":
         import map_wiring
+        import map_build
         names = set(e.get("targetname", "").lower() for e in ents if e.get("targetname"))
         classes = set(e.get("classname", "").lower() for e in ents)
         played, missing, player = set(), [], 0
@@ -481,14 +482,15 @@ def check(path, views=None, only=None, air=None):
                 ins = [i.lower() for _, _, i in e.get("_outputs", [])]
                 if ins and all(i in DRESS for i in ins):
                     say("wire", "the timer %s only dresses the place and runs all day: let it sleep until players are near (map_wiring.sleepy_timer)" % who)
-            elif cls == "func_button" and any(w in who.lower() for w in ("valve", "wheel")):
+            elif cls == "func_button" and "valve" in who.lower():      # (the swing bridge's winch buttons are named wheels: the owner kept them buttons)
                 say("wire", "%s is a valve pressed like a button: make it a wheel that turns (map_wiring.wheel)" % who)
-            if cls in ("prop_door_rotating", "func_door", "func_door_rotating", "func_movelinear") :
-                if "origin" in e and cls == "prop_door_rotating":
-                    o = origin(e)
-                    doors.append((o[0] - 4, o[1] - 4, o[2] - 4, o[0] + 4, o[1] + 4, o[2] + 4))
-                for bx, _ in e.get("_solids", []):
-                    doors.append(bx)
+            if cls == "prop_door_rotating" and "origin" in e and e.get("model", "").lower() in map_build.SOLID_DOORS:
+                o = origin(e)
+                doors.append((o[0] - 4, o[1] - 4, o[2] - 4, o[0] + 4, o[1] + 4, o[2] + 4))
+            elif cls in ("func_door", "func_door_rotating"):      # (only solid ones: a portal behind bars or glass stays open)
+                for bx, mats in e.get("_solids", []):
+                    if mats and not any(m.startswith("tools/") or any(w in m for w in map_build.SEE_THROUGH) for m in mats):
+                        doors.append(bx)
         for e in ents:
             if e.get("classname") == "func_areaportal" and not e.get("target"):
                 for bx, _ in e.get("_solids", []):

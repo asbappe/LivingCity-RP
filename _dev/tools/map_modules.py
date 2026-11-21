@@ -345,10 +345,12 @@ class Mod:
             keys["targetname"] = name
         self.point("point_spotlight", u, v, z, keys, self.lv)
 
-    def sound(self, message, u, v, z, radius=1100, volume=7, name=None, on=True):
+    def sound(self, message, u, v, z, radius=1100, volume=7, name=None, on=True, loops=None):
         """A sound in the air, playing from the start (on) or waiting to be told (PlaySound). Only a sound file made to
-        loop goes on for ever: one that is not plays once."""
-        keys = {"message": message, "health": str(volume), "pitch": "100", "pitchstart": "100", "radius": str(radius), "spawnflags": "0" if on else "16",
+        loop goes on for ever: one that is not plays once. Its spawnflags are Valve's (map_wiring.sound_flags): a
+        one-shot the wiring plays says 'not looped' (48), a loop never does; loops: None guesses from the file's name."""
+        import map_wiring
+        keys = {"message": message, "health": str(volume), "pitch": "100", "pitchstart": "100", "radius": str(radius), "spawnflags": map_wiring.sound_flags(message, on, loops),
                 "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0", "preset": "0",
                 "spindown": "0", "spinup": "0", "volstart": "0"}
         if name:
@@ -1414,7 +1416,10 @@ def m_sludge(m, opt):
     for u, s in ((1250, 1), (840, -1), (1080, -1)):          # three of them still running
         pour(m, u, s * 62, F + 36, length=50, colour="110 150 40", size=5, yaw=270 if s > 0 else 90, pitch=65)
         m.grime("drain", u, s * 128, F + 20, u)
-    m.sound("ambient/levels/canals/toxic_slime_gurgle2.wav", 1080, -60, F + 20, radius=500, volume=5)
+    m.sound("ambient/levels/canals/toxic_slime_gurgle2.wav", 1080, -60, F + 20, radius=500, volume=5, name="lc_sludge_gurgle", on=False)
+    import map_wiring      # (a gurgle now and then while anyone is in the tunnel, never a timer running all day: Valve's way)
+    map_wiring.sleepy_timer(m, "lc_sludge_gurgle_timer", 1080, -40, F + 60, [(640, -256, F - 64, 1408, 256, F + 192)],
+                            [("lc_sludge_gurgle", "PlaySound", "", 0)], low=4, high=12)
     for u, v, yaw, pitch, roll in ((900, -96, 0, 8, 14), (1130, 92, 40, -12, 6)):           # drums standing tilted in it
         m.prop("prop_dynamic_override", "models/props_c17/oildrum001.mdl", u, v, yaw, floor + 2, {"angles": "%d %d %d" % (pitch, m.fr.yaw(yaw), roll), "solid": "6",
                "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"})
@@ -1654,8 +1659,9 @@ def m_underpass(m, opt):
     m.spot(896, -192, roof + 120, "230 236 240 220", 0, pitch=90, cone=50)
     dustmotes(m, (840, -250, F + 16, 952, -136, roof + 100))
     m.point("env_dustpuff", 896, -128, roof - 8, {"targetname": "lc_underpass_dust", "scale": "16", "speed": "10", "color": "120 116 108", "angles": "90 0 0"})
-    m.point("logic_timer", 896, -100, roof - 40, {"targetname": "lc_underpass_dust_timer", "UseRandomTime": "1", "LowerRandomBound": "20", "UpperRandomBound": "70",
-                                                 "StartDisabled": "0", "spawnflags": "0"}, connections=[("OnTimer", "lc_underpass_dust", "SpawnDust", "", 0)])
+    import map_wiring      # (the dust falls only while someone is under the bridge to see it: Valve's sleeping timer)
+    map_wiring.sleepy_timer(m, "lc_underpass_dust_timer", 896, -100, roof - 40, [(0, -256, F - 64, 1536, 256, roof)],
+                            [("lc_underpass_dust", "SpawnDust", "", 0)], low=20, high=70)
     m.grime("danger", 840, -128, F + 180, 8)
     m.blocked(800, -256, 990, -60)
     # the barnacles, and under each the tell

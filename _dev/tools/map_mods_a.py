@@ -27,6 +27,7 @@ import math
 from map_build import CELL, FACE_ORDER, GATE_HIGH, MAT, prism, octagon
 from map_modules import F, TRIM, BASE, SEWER, MM, SCAPES, canal_grime, walk_ledge
 from map_mods_b import fire, mattress, rider
+import map_wiring
 
 TILE = "tile/tilefloor018a_c17"
 BRICK = "brick/brickwall045d"
@@ -2433,10 +2434,11 @@ def m_aqueduct(m, opt):
     trough is cracked (painted cracks): its water stains and greens its sides, falls in a thin stream onto the canal
     floor, and lies there in a shallow pool in a ring of mud, with a dripping sound. A sluice valve stands on the trough's
     rim by the left wall. It sounds of water (prison.watery_hallway).
-    The sluice valve (the owner, 21 November: "sure"): a button on the left wall beside the walk (lc_aqueduct_valve,
-    once a round) drains the trough and the culverts' water (lc_aqueduct_water sinks out of sight), stops the fall and
-    the drip, and lifts both culverts' bars into the wall (lc_aqueduct_bars, their clip lc_aqueduct_bars_clip turned
-    off): the dry trough is then a way across into either culvert.
+    The sluice valve (the owner, 21 November: "sure"; a wheel as Valve's are, the owner said go ahead): a wheel on the
+    left wall beside the walk (lc_aqueduct_valve, a momentary_rot_button: hold E to turn it) drains the trough and the
+    culverts' water (lc_aqueduct_water sinks) and lifts both culverts' bars into the wall (lc_aqueduct_bars) as far as
+    it is turned; turned all the way it locks with a clunk for the round, stops the fall and the drip and turns the
+    bars' clip off (lc_aqueduct_bars_clip): the dry trough is then a way across into either culvert.
     Named for the game: lc_aqueduct_walk (an info_target on the walk at mid-span: a lookout's place), lc_aqueduct_valve,
     lc_aqueduct_water, lc_aqueduct_fall, lc_aqueduct_drip, lc_aqueduct_bars, lc_aqueduct_bars_clip.
     Left as brushes: the trough, its piers, ribs, pilasters, coping and buttress, the culverts' frames, the grating and
@@ -2510,11 +2512,11 @@ def m_aqueduct(m, opt):
     m.b.bumps.append(lambda x, y: 16 * max(0.0, 1 - abs(math.hypot(x - px, y - py) - 120) / 56.0))
     m.sound("ambient/water/drip_loop1.wav", 528, 0, F + 40, radius=700, volume=5, name="lc_aqueduct_drip")
     m.soundscape(SCAPES["watery"], 528, 0, F, radius=560)
-    # the valve: on the left wall beside the walk; turned once, the trough drains, the fall and the drip stop and the
-    # culverts' bars lift, so the dry trough is a way across into either culvert (once a round: wait -1)
-    m.button("lc_aqueduct_valve", 420, 256, top + 16, 270, [("lc_aqueduct_water", "Open", "", 0), ("lc_aqueduct_fall", "TurnOff", "", 2),
-                                                          ("lc_aqueduct_drip", "StopSound", "", 4), ("lc_aqueduct_bars", "Open", "", 1),
-                                                          ("lc_aqueduct_bars_clip", "Disable", "", 4)], wait="-1")
+    # the valve: a wheel on the left wall beside the walk; the water sinks and the bars lift as far as it is turned,
+    # and turned all the way it locks for the round, the fall and the drip stop and the bars' clip goes (Valve's wheel)
+    map_wiring.wheel(m, "lc_aqueduct_valve", 420, 256, top + 44, 270, drives=["lc_aqueduct_water", "lc_aqueduct_bars"],
+                     on_open=[("lc_aqueduct_fall", "TurnOff", "", 0), ("lc_aqueduct_drip", "StopSound", "", 0), ("lc_aqueduct_bars_clip", "Disable", "", 0)],
+                     distance=720, speed=90)
     canal_grime(m, 16, 400, 6300)
     canal_grime(m, 650, 1010, 6400)
     m.static(M_ + "props_pipes/valve002.mdl", 568, 204, 90, top)                # a sluice valve on the trough's rim by the left wall
@@ -2547,11 +2549,12 @@ def m_pipes(m, opt):
     crosses the canal there to a second fat main on the right, and from its end a ramp of planks (144 down over 244)
     comes back to the floor at u 1192. That is also the only way for anyone who cannot duck.
     Two steam leaks on the main: a pale one with a hiss, and one at a joint by the bridge (lc_pipes_leak) that the
-    button by the platform's valve shuts and opens again (lc_pipes_valve). Risers of the city's pipe up the walls, each
+    wheel by the platform's valve shuts and opens again (lc_pipes_valve: turned all the way the steam stops, turned
+    back it starts again). Risers of the city's pipe up the walls, each
     with a caged lamp. The mains are cover from end to end, and the plank is a firing step over all of it
     (lc_pipes_top). It hums like a pump room (d1_canals.waterpuzzleroom).
     Named for the game: lc_pipes_top (an info_target on the main's plank), lc_pipes_leak (an env_steam: TurnOn,
-    TurnOff, Toggle; it starts on), lc_pipes_valve (a func_button that already works: it toggles the leak).
+    TurnOff, Toggle; it starts on), lc_pipes_valve (a valve wheel, momentary_rot_button: hold E to turn it; Valve's wiring, the owner said go ahead).
     Left as brushes: the mains, their flanges and end plates (no pipe model of the game is 87 across), the saddles and
     posts they rest on, the platform's deck and posts, the stair's treads and stringers, the bridge's grating and
     girders, the planks.
@@ -2648,7 +2651,8 @@ def m_pipes(m, opt):
     m.point("env_steam", 812, 84, F + 112, {"targetname": "lc_pipes_leak", "InitialState": "1", "type": "0", "SpreadSpeed": "15", "Speed": "110", "StartSize": "10",
                                             "EndSize": "30", "Rate": "30", "rendercolor": "225 225 225", "JetLength": "90", "renderamt": "200",
                                             "angles": "0 %d 0" % m.fr.yaw(270)})
-    m.button("lc_pipes_valve", 392, 183, top + 30, 270, [("lc_pipes_leak", "Toggle", "", 0)])
+    map_wiring.wheel(m, "lc_pipes_valve", 392, 183, top + 44, 270, on_open=[("lc_pipes_leak", "TurnOff", "", 0)],
+                     on_closed=[("lc_pipes_leak", "TurnOn", "", 0)], lock_open=False, distance=360, speed=120)
     m.static(M_ + "props_pipes/valvewheel001.mdl", 812, 168, 90, F + 108)                 # the joint's valve wheel
     for (u, sd) in ((200, 1), (640, 1), (760, -1), (1010, -1)):                            # caged lamps on the risers
         m.static(M_ + "props_c17/light_cagelight02_on.mdl", u + 14, 255 * sd, 270 if sd > 0 else 90, F + 200)

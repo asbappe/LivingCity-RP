@@ -32,6 +32,11 @@ mouth, the other is capped where the forest will join), a low bay to hide in, tw
 import argparse
 import bisect
 import random
+import re
+
+# Doors an areaportal may be linked to: ones nobody can see through (Valve never shuts a portal behind bars or glass).
+SOLID_DOORS = ("models/props_c17/door01_left.mdl", "models/props_c17/door01_right.mdl", "models/props_c17/door02_double.mdl")
+SEE_THROUGH = ("bar", "glass", "fence", "grate", "window", "cage", "chain", "mesh", "grill")
 import sys
 
 CELL = 64
@@ -170,6 +175,8 @@ class Vmf:
         self.shapes = 0     # solids that aren't boxes
         self.shape_boxes = []   # (the box round each of them, for the checks)
         self.portals = []   # the areaportals' boxes, for the checks
+        self.portal_ents = []   # (where each areaportal's text is in ents, its box): linked to their doors at the end
+        self.door_ents = []     # (where each door's text is in ents, its box, whether it starts open)
 
     def new_id(self):
         self.next += 1
@@ -296,6 +303,9 @@ class Vmf:
         s += self.wires(connections)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
+        if cls == "prop_door_rotating" and str((keys or {}).get("model", "")).lower() in SOLID_DOORS:      # (a solid hinged door, its origin at its middle)
+            opens = str((keys or {}).get("spawnpos", "0")) not in ("0", "")
+            self.door_ents.append((len(self.ents) - 1, (pos[0] - 56, pos[1] - 56, pos[2] - 56, pos[0] + 56, pos[1] + 56, pos[2] + 56), opens))
 
     def brush_entity(self, cls, keys, boxes, sides, vis, top=None, faces=None, connections=None):
         """An entity made of brushes: a moving door, a button, a trigger, an areaportal. None of them seals."""
@@ -303,6 +313,7 @@ class Vmf:
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
         s += self.wires(connections)
+        got = []
         for b in boxes:
             mat, fc, ax = sides, faces, None
             if len(b) == 3:      # (a box, {face: material}, {face: (uaxis, vaxis)})
@@ -313,8 +324,17 @@ class Vmf:
                 mat, fc = (own, faces) if isinstance(own, str) else (sides, own)
             s += self.box_text(b, mat, top or mat, mat, vis, faces=fc, axes=ax)
             self.boxes.append((b, False))
+            got.append(b)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
+        mats = [m.lower() for m in ([sides] if isinstance(sides, str) else []) + [x[1] for x in boxes if len(x) == 2 and isinstance(x[1], str)]]
+        solid = mats and not any(m.startswith("tools/") or any(w in m for w in SEE_THROUGH) for m in mats)
+        if cls in ("func_door", "func_door_rotating") and got and solid:      # (a solid door: an areaportal it hangs in is linked to it)
+            try:
+                opens = int(float((keys or {}).get("spawnflags", "0") or 0)) & 1
+            except ValueError:
+                opens = 0
+            self.door_ents.append((len(self.ents) - 1, tuple(min(b[k] for b in got) for k in range(3)) + tuple(max(b[k + 3] for b in got) for k in range(3)), opens))
 
     def areaportal(self, box, vis, name=None):
         """A sheet across an opening that the game sees through only as far as the opening shows (and not at all when
@@ -325,8 +345,35 @@ class Vmf:
             keys["targetname"] = name
         self.portals.append(box)
         self.brush_entity("func_areaportal", keys, [box], MAT["portal"], vis)
+        self.portal_ents.append((len(self.ents) - 1, box))
+
+    def link_portal_doors(self):
+        """Valve's way (the owner said go ahead, 21 November; lesson valve-portal-door): an areaportal with a door hanging
+        in it names that door in its target, so it shuts when the door shuts and a room behind a shut door is not drawn.
+        It starts as the door does. A door with no name gets one (door_N). Done once, as the file is written. (The
+        gamemode's kick opens a door before it takes it off its hinges, so a kicked-in doorway is never left dark.)"""
+        if getattr(self, "_portals_linked", False):
+            return
+        self._portals_linked = True
+        for pi, pb in self.portal_ents:
+            near = (pb[0] - 24, pb[1] - 24, pb[2] - 8, pb[3] + 24, pb[4] + 24, pb[5] + 8)
+            best, most = None, 0.0
+            for di, db, opens in self.door_ents:
+                d = [min(near[k + 3], db[k + 3]) - max(near[k], db[k]) for k in range(3)]
+                if min(d) > 0 and d[0] * d[1] * d[2] > most:
+                    best, most = (di, opens), d[0] * d[1] * d[2]
+            if not best:
+                continue
+            di, opens = best
+            m = re.search(r'\t"targetname" "([^"]+)"', self.ents[di])
+            name = m.group(1) if m else "door_%d" % di
+            if not m:
+                self.ents[di] = self.ents[di].replace('\t"classname"', '\t"targetname" "%s"\n\t"classname"' % name, 1)
+            t = self.ents[pi].replace('"StartOpen" "1"', '"StartOpen" "%d"' % (1 if opens else 0), 1)
+            self.ents[pi] = t.replace('\t"classname" "func_areaportal"\n', '\t"classname" "func_areaportal"\n\t"target" "%s"\n' % name, 1)
 
     def text(self):
+        self.link_portal_doors()
         s = 'versioninfo\n{\n\t"editorversion" "400"\n\t"editorbuild" "8873"\n\t"mapversion" "1"\n\t"formatversion" "100"\n\t"prefab" "0"\n}\n'
         s += "visgroups\n{\n"
         for name, i in self.visgroups.items():

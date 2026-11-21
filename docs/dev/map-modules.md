@@ -112,9 +112,19 @@ Materials: `MAT` (canal_wall, canal_floor, quay_floor, ceiling, stairs, beam, ba
 ## Wiring the way Valve does (read before wiring anything; the owner, 21 November: "save it for use")
 
 Measured in 34,753 entities and 7,711 outputs of 23 Valve maps; each rule is a lesson with Valve's keys and
-examples (`python3 _dev/tools/map_lessons.py --tag logic`, the recipes in `docs/dev/valve-logic-recipes.md`). Our
-helpers do not follow all of them yet (`TODO.md`): new wiring should, and changing what an existing piece does needs
-the owner's yes.
+examples (`python3 _dev/tools/map_lessons.py --tag logic`, the recipes in `docs/dev/valve-logic-recipes.md`). The
+owner said go ahead (21 November): our tools follow them, with the helpers in `_dev/tools/map_wiring.py`, and every
+build checks them (`map_lint.py`, kind `wire`). What does what:
+
+- `m.sound` sets Valve's flags itself (`map_wiring.sound_flags`: 0 or 16 for a loop, 32 or 48 for a one-shot; `loops=`
+  when the file's name doesn't say). The bunker's, the trains', the canal bells' and the quarter's sounds already did.
+- `map_wiring.wheel(m, name, u, v, z, out, drives=[...], on_open=[...], on_closed=[...], lock_open=True)`: a valve
+  players turn (the aqueduct's sluice and the pipes' steam valve are wheels now).
+- `map_wiring.sleepy_timer(m, name, u, v, z, near_boxes, wires, low, high)`: a timer that only dresses a place (the
+  underpass's dust, the sludge tunnel's gurgle). Timers that run the game (trains, the thumper) stay as they are.
+- `map_wiring.trigger(m, name, boxes, wires, who=1)`: a trigger that names who touches it (ours all did already).
+- Areaportals: the builder links each one to the solid door hanging in it (`Vmf.link_portal_doors`, as the file is
+  written; a plain wooden door or a solid brush door, never one behind bars or glass, so a cell stays seen through).
 
 - **Valves turn** (`valve-wheel-gate`): a wheel is a `momentary_rot_button` whose `Position` drives a
   `func_movelinear`'s `SetPosition`, so the gate moves as far as the wheel is turned; fully closed, it plays its lock

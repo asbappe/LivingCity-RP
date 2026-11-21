@@ -48,12 +48,13 @@ LOCK_SOUND = "Doors.Lock"      # (what Valve's wheel plays as it locks; any soun
 
 
 def wheel(m, name, u, v, z, out, drives=(), on_open=(), on_closed=(), lock_open=True, model=WHEEL_MODEL,
-          distance=360, speed=90, start=0.0):
+          distance=360, speed=90, start=0.0, pitch=90, model_out=0):
     """A valve wheel on a wall at (u, v), its middle at z, facing `out` (module degrees). Turning it (hold E) moves
     everything in `drives` as far as it is turned: [name, ...] each told SetPosition with the wheel's 0 to 1. Turned
     all the way open it fires `on_open` [(name, input, value, delay), ...] and, if lock_open, locks itself with
     Valve's lock sound; turned all the way back it fires `on_closed`. distance: degrees of turning from shut to open;
-    speed: degrees a second while held."""
+    speed: degrees a second while held. pitch and model_out: how the wheel's model stands (Valve's small pipe wheel is
+    stood up, pitch 90; a model already upright, pitch 0) and how far out from the wall its origin sits."""
     z += m.fr.dz
     x, y = m.fr.pt(u, v)
     dx, dy = m.fr.way(out)
@@ -73,9 +74,11 @@ def wheel(m, name, u, v, z, out, drives=(), on_open=(), on_closed=(), lock_open=
     m.b.vmf.brush_entity("momentary_rot_button", keys, [box], "tools/toolsinvisible", m.dv, connections=wires)
     m.b.names.append((name, "momentary_rot_button", m.tag))
     yaw = m.fr.yaw(out)
-    m.b.vmf.point("prop_dynamic", (x, y, z), {"model": model, "parentname": name, "angles": "90 %d 0" % yaw, "solid": "0",
-                                              "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, m.pv)
-    m.b.props.append(("prop_dynamic", model, (x, y, z), yaw, m.tag))
+    at = (x + model_out * dx, y + model_out * dy, z)
+    m.b.vmf.point("prop_dynamic", at, {"model": model, "parentname": name, "angles": "%d %d 0" % (pitch, yaw), "solid": "0",
+                                       "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, m.pv)
+    shift = 8 if pitch == 90 else 0      # (the checks turn a model by yaw only: a stood-up wheel reaches 0 to 10 out of the wall, not 8 into it)
+    m.b.props.append(("prop_dynamic", model, (at[0] + shift * dx, at[1] + shift * dy, z), yaw, m.tag))      # (for the checks, which turn a model by yaw only: stood up, it reaches 0 to 10 out of the wall, not 8 into it)
     return name
 
 
