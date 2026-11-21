@@ -15146,6 +15146,24 @@
 "static": false,
 "v": 2
 },
+"models/props_lab/chess.mdl": {
+"bbox": [
+-14.8,
+-14.7,
+-0.4,
+17.1,
+17.3,
+11.7
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_lab/citizenradio.mdl": {
 "bbox": [
 -8.3,

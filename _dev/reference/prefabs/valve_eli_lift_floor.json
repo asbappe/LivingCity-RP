@@ -1,6 +1,6 @@
 {
 "name": "valve_eli_lift_floor",
-"note": "draft",
+"note": "Black Mesa East's dormitory floor, the first of three the lift passes (d1_eli_01, 304 under the top landing): a room 896 wide and about 600 deep, ceiling 128 to 200, warm plaster and painted concrete, seven prison bed frames each with a mattress that sags on it (prop_ragdoll, in 'wiring'), four lockers, an armchair, a couch, a vanity, a cafeteria table and benches, a table with a chess board, fluorescent lights, and a corridor going back. In 'wiring': its three people on scripted_sequences (a citizen lying on a bed, a citizen in a chair, a vortigaunt at the chess board), the relay that starts them (the lift fires it 4 s into the ride), the floor's areaportal and a camera for the guard's screens. Faces -y (the lift's gate at y 0; the room runs to +y); anchor on the floor at the middle of the gate. Nobody walks here: there are no AI nodes. docs/dev/prefabs.md, 'Pieces with their wiring'.",
 "from": "d1_eli_01.vmf",
 "box": [
 -40.0,
