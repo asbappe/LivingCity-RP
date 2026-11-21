@@ -14,6 +14,8 @@ too; cut its box on the grid the cave's brushes are laid on, or the rock stops s
     python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 [--anchor X Y Z] [--note "what it is"]
             writes _dev/reference/prefabs/NAME.json (the anchor, default the box's bottom corner, becomes 0 0 0)
             [--drop MATERIAL ...] leaves out brushes with a face of that material (water, say)
+            [--centroid] keeps every brush whose corners' mean is inside (a cave not cut on a grid: its tunnels run
+            on past the box, to be capped); [--force ID ...] keeps those brushes too
     python3 map_prefab.py list                  the library, with each piece's size and what it is
     python3 map_prefab.py show NAME [--out a.vmf]   a VMF with only that piece in it (map_view.py draws it)
 
@@ -41,7 +43,7 @@ def nums(text):
     return [float(t) for t in text.replace("(", " ").replace(")", " ").split()]
 
 
-def extract(path, name, box, anchor=None, note="", drop=()):
+def extract(path, name, box, anchor=None, note="", drop=(), centroid=False, force=()):
     import map_view as mv
     root = mv.read(path)
     x1, y1, z1, x2, y2, z2 = box
@@ -86,7 +88,8 @@ def extract(path, name, box, anchor=None, note="", drop=()):
                 if di:
                     sides[-1]["disp"] = disp_read(di[0], ax)
             else:
-                if sides and all(inside(v) for v in allv):
+                mean = [sum(v[k] for v in allv) / len(allv) for k in range(3)] if allv else None
+                if sides and (all(inside(v) for v in allv) or (centroid and mean and inside(mean, 0)) or sol.kv.get("id") in force):
                     if any(s["material"].lower() in drop for s in sides):
                         continue
                     if all("tools/" in s["material"].lower() and not s["material"].lower().startswith(SEEN_TOOLS) for s in sides):
@@ -245,13 +248,15 @@ def main():
     e.add_argument("--anchor", nargs=3, type=float)
     e.add_argument("--note", default="")
     e.add_argument("--drop", nargs="*", default=[])
+    e.add_argument("--centroid", action="store_true")
+    e.add_argument("--force", nargs="*", default=[])
     sub.add_parser("list")
     s = sub.add_parser("show")
     s.add_argument("name")
     s.add_argument("--out")
     a = ap.parse_args()
     if a.cmd == "extract":
-        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, tuple(m.lower() for m in a.drop))
+        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, tuple(m.lower() for m in a.drop), a.centroid, tuple(a.force))
         nd = sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp"))
         print("%s: %d brushes (%d displaced faces), %d props/lights/decals, %d by %d by %d" % (a.name, len(pf["solids"]), nd, len(pf["points"]), pf["size"][0], pf["size"][1], pf["size"][2]))
     elif a.cmd == "list":

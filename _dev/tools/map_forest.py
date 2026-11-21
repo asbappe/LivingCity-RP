@@ -1579,6 +1579,8 @@ class CaveForest(Forest):
     TEAR = 640                          # the hillside is cut this far each side of the mouth
     NEST_WARNING = 11                   # seconds from opening the emergency door to the first antlions: the alarm at the breach sounds meanwhile
     LIFT_SPEED = 96                     # the lift's speed: about 13.5 s from top to foot (Valve's mine lift goes at 35)
+    NEST2_AT = (8700, 640)              # (local y, x) Episode Two's nest chambers: the middle of their south corridor's mouth, on its floor
+    NEST2_GALLERY = 256                 # the gallery from the nest's north-east tunnel west to the grub cavern
     DEEP = 1296                         # the lower workings' floor is this far below the shaft head's (three of Episode Two's shaft cribbings)
     FOOT_DOOR_X = 1216                  # (local x) the shaft foot's north doorway
     ROOM = (512, 768)                   # the shaft head: a mine room after the old mine (across, along)
@@ -2224,12 +2226,12 @@ class CaveForest(Forest):
         self.notes.append("the old mine: behind the emergency door, 1280 of Ravenholm's low mine tunnel lifted from d1_town_04 (its rock, timber sets every 256, clamp lamps, "
                           "a rail bed, flooded from 512 in), then the shaft head")
 
-    def joint(self, axis, p0, uc, hole_w, sill, hole_h, half, zlo, zhi, neg_mat, pos_mat, vis, rough=False):
+    def joint(self, axis, p0, uc, hole_w, sill, hole_h, half, zlo, zhi, neg_mat, pos_mat, vis, rough=False, thick=64):
         """A wall where two parts of the cave meet: 64 thick across `axis` ("y": a wall running east-west whose south face
         is at y = p0; "x": running north-south, its west face at x = p0), `half` either side of uc and from zlo to zhi,
         with a hole hole_w wide and hole_h high from `sill`. neg_mat faces south (or west), pos_mat north (or east); the
         hole's own sides take pos_mat. rough: its top corners notched, as where the antlions broke through."""
-        v, T = self.vmf, 64
+        v, T = self.vmf, thick
         h = hole_w / 2.0
         top = sill + hole_h
         u_lo, u_hi = half if isinstance(half, tuple) else (uc - half, uc + half)      # (half: a reach either side, or the wall's own two ends)
@@ -2253,7 +2255,7 @@ class CaveForest(Forest):
             f.update({neg: neg_mat, pos: pos_mat})
             v.world_box(B(*box), MAT["nodraw"], faces=f, vis=vis, tex=1 if "rock" in neg_mat or "rock" in pos_mat else 0.25)
 
-    def gallery(self, axis, a, b, uc, floor, vis, rnd, wide=320, high=208, lamps=True):
+    def gallery(self, axis, a, b, uc, floor, vis, rnd, wide=320, high=208, lamps=True, nodes=True):
         """A built mine gallery as Episode Two's (Valve: 192 high, 294 to 365 wide, a timber set every 192 to 280, cage lamps
         in pools): along `axis` from a to b, its middle at uc across, floor at `floor`. Walls, floor and roof 16 thick; one of
         Episode Two's timber sets (struts_tunnel320, the model's own frame) every 224, a cage lamp under every other."""
@@ -2284,7 +2286,7 @@ class CaveForest(Forest):
                 v.point("light", self.w(lp[0], lp[1], lp[2] - 14), {"_light": "255 226 174 110", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"},
                         self.vis("lights"))
             n += 1
-        for s_ in range(int(lo) + 96, int(hi) - 40, 256):
+        for s_ in range(int(lo) + 96, int(hi) - 40, 256) if nodes else ():
             self.node(*((uc, s_, floor + 8) if axis == "y" else (s_, uc, floor + 8)))
 
     def lower_workings(self, rnd):
@@ -2322,8 +2324,70 @@ class CaveForest(Forest):
         self.deep_pieces(rnd, f2)
 
     def deep_pieces(self, rnd, f2):
-        """(Episode Two's nest chambers and grub cavern: placed below.)"""
-        return
+        """The lower workings beyond the shaft foot (the owner, 21 November: "carry on and do so"): a gallery north, a
+        corner, a short gallery west into Episode Two's antlion nest (valve_ep2_nest_chambers, the big cave of
+        ep2_outland_04, turned a quarter so its south corridor faces east and its north-east tunnel west), and beyond it a
+        gallery west into Episode Two's grub cavern (valve_ep2_grub_cavern, turned three quarters so its one way in faces
+        east). The nest was cut from a cave not laid on a grid, so its tunnels run on past its box: it is shut in by caps
+        (rock, as thick as its rock runs past), with holes only where the galleries meet it. Its two pits, bottomless in
+        Valve's map, end on a black floor 585 down with a trigger_hurt over it, as Valve's do. No path nodes down here
+        (nothing walks it but players); all below the old mine, the big cave and the hive, so nothing is over the nest."""
+        v = self.vmf
+        gv, m = self.vis("mine galleries"), MINE_MAT
+        fx = self.FOOT_DOOR_X
+        y_s, x_s = self.NEST2_AT
+        y0 = self.room_box[3] + 64
+        # the gallery north from the shaft foot, a corner room, and west to the nest's east cap
+        self.gallery("y", y0, y_s - 160, fx, f2, gv, rnd, nodes=False)
+        B = self.box
+        cx1, cx2 = fx - 160, fx + 160
+        v.world_box(B(cx1 - 16, y_s - 160, f2 - 16, cx2 + 16, y_s + 176, f2), MAT["nodraw"], top=m["floor"], vis=gv)
+        v.world_box(B(cx1 - 16, y_s - 160, f2 + 208, cx2 + 16, y_s + 176, f2 + 224), MAT["nodraw"], bottom=m["roof"], vis=gv)
+        v.world_box(B(cx1 - 16, y_s + 160, f2, cx2 + 16, y_s + 176, f2 + 208), MAT["nodraw"], faces={"south": m["wall"]}, vis=gv)
+        v.world_box(B(cx2, y_s - 160, f2, cx2 + 16, y_s + 160, f2 + 208), MAT["nodraw"], faces={"west": m["wall"]}, vis=gv)
+        self.gallery("x", x_s + 160, cx1 + 16, y_s, f2, gv, rnd, nodes=False)
+        self.hull.append((cx1 - 16, y0, f2 - 16, cx2 + 16, y_s + 176, f2 + 224))
+        # the nest: anchor (S1's middle on its floor) at the east cap's west face, turned a quarter
+        nest = PF.load("valve_ep2_nest_chambers")
+        nv, lv = self.vis("Episode Two's nest chambers (Valve's)"), self.vis("Episode Two's nest chambers: lights, props, grubs")
+        q, d = 1, self.w(x_s, y_s, f2)
+        pf_solids(v, nest, q, d, nv, world=True)
+        pf_entities(v, nest, q, d, "lc_nest2_", lv, lv)
+        bx_, an = nest["box"], nest["anchor"]
+        X1, X2 = x_s - (bx_[4] - an[1]), x_s - (bx_[1] - an[1])           # (turned: the piece's y runs west)
+        Y1, Y2 = y_s + (bx_[0] - an[0]), y_s + (bx_[3] - an[0])
+        Z1, Z2 = f2 + (bx_[2] - an[2]), f2 + (bx_[5] - an[2])
+        rock = "nature/blendrockslime02a"
+        # caps: east (Valve's south face: S1's hole), west (its north face: N1's), and the four others whole
+        # (each hole sits inside its tunnel's clear section where it meets the cap, measured 21 November: S1 clear -121 to
+        #  +88 across and 0 to 190 up; N1 -147 to +138 and 0 to 388; the grub cavern's mouth -32 to +96 and 0 to 216)
+        self.joint("x", x_s, y_s - 16, 176, f2, 176, (Y1 - 32, Y2 + 32), Z1 - 32, Z2 + 32, rock, m["wall"], nv, thick=160)
+        n1_y, n1_f = y_s - 80, f2 + 115
+        self.joint("x", X1 - 128, n1_y, 256, n1_f, 300, (Y1 - 32, Y2 + 32), Z1 - 32, Z2 + 32, m["wall"], rock, nv, thick=128)
+        for box, face in (((X1, Y1 - 32, Z1 - 32, X2, Y1, Z2 + 32), "north"), ((X1, Y2, Z1 - 32, X2, Y2 + 32, Z2 + 32), "south"),
+                          ((X1, Y1, Z2, X2, Y2, Z2 + 32), "bottom"), ((X1, Y1, Z1 - 32, X2, Y2, Z1), "top")):
+            v.world_box(B(*box), MAT["nodraw"], faces={face: rock if face != "top" else MAT["black"]}, vis=nv)
+        v.brush_entity("trigger_hurt", {"targetname": "lc_nest2_pit", "damage": "1000", "damagecap": "1000", "damagetype": "32", "damagemodel": "0", "nodmgforce": "0",
+                                        "spawnflags": "3", "StartDisabled": "0"}, [B(X1, Y1, Z1, X2, Y2, Z1 + 64)], MAT["trigger"], nv)
+        self.hull.append((X1 - 128, Y1 - 32, Z1 - 32, x_s + 160, Y2 + 32, Z2 + 32))
+        # the grub cavern, west of the nest's west cap
+        gx = X1 - 128 - self.NEST2_GALLERY - 64
+        self.gallery("x", gx + 64, X1 - 128, n1_y, n1_f, gv, rnd, nodes=False)
+        self.joint("x", gx, n1_y + 32, 112, n1_f, 184, (n1_y - 576, n1_y + 576), n1_f - 200, n1_f + 460, "nature/rockwall015a", m["wall"], gv)
+        grub = PF.load("valve_ep2_grub_cavern")
+        uv, ulv = self.vis("Episode Two's grub cavern (Valve's)"), self.vis("Episode Two's grub cavern: lights and grubs")
+        q, d = 3, self.w(gx, n1_y, n1_f)
+        pf_solids(v, grub, q, d, uv, world=True)
+        def fixed(e):                           # (Valve's sample room has its eggs as physics props: egg.mdl has no physics, so they would delete themselves)
+            if e["classname"] == "prop_physics" and "egg.mdl" in e["keys"].get("model", ""):
+                e["classname"] = "prop_static"
+                e["keys"] = dict((k, val) for k, val in e["keys"].items() if k in ("model", "angles", "skin", "fademindist", "fademaxdist", "fadescale", "solid"))
+        pf_entities(v, grub, q, d, "lc_grubs_", ulv, ulv, edit=fixed)
+        gb, ga = grub["box"], grub["anchor"]
+        self.hull.append((gx + (gb[1] - ga[1]), n1_y - (gb[3] - ga[0]), n1_f + gb[2] - ga[2], gx, n1_y - (gb[0] - ga[0]), n1_f + gb[5] - ga[2]))
+        ngrubs = sum(1 for e in nest["points"] + grub["points"] if e["classname"] == "npc_antlion_grub")
+        self.notes.append("the lower workings: %d below the shaft head; galleries to Episode Two's antlion nest (the big cave of ep2_outland_04, %d by %d, its pits ending on a "
+                          "trigger_hurt) and on to Episode Two's grub cavern (styleguide_caves); %d of Valve's grubs down there" % (self.DEEP, X2 - X1, Y2 - Y1, ngrubs))
 
     def lift(self, f1, f2):
         """The lift between the shaft head and the shaft foot: Episode Two's mine cage (elevator01_cage) riding on a platform
@@ -2626,9 +2690,9 @@ class CaveForest(Forest):
             self.problems.append("the nest's last chamber can't be reached from its door")
         if not reaches(closed, self.w(n.bcx, self.D + WALL + self.MINE / 2, zf + 64)):
             self.problems.append("the old mine can't be reached from the hive: the breach is shut")
-        self.notes.append("the antlion nest: behind the emergency door, in its own box x %d to %d, y %d to %d; %d long: down %d to a first chamber (nests, eggs), round two bends "
+        self.notes.append("the antlion nest: behind the emergency door and the shaft head, in one shut box with all the workings (x %d to %d, y %d to %d, z %d to %d); %d long: down %d to a first chamber (nests, eggs), round two bends "
                           "to a last chamber with the extract (lc_nest_extract); %d grubs in %d groups, each with its light; %d makers, 2 antlions alive from each while the door is open" % (
-                              self.ox + bx1 - 64, self.ox + bx2 + 64, self.oy + ys, self.oy + by2 + 64, L, n.zf - n.base(y0 + 1000), grubs, groups, len(makers)))
+                              self.ox + self.hull_box[0] - 64, self.ox + self.hull_box[3] + 64, self.oy + ys, self.oy + self.hull_box[4] + 64, self.hull_box[2] - 64, self.hull_box[5] + 64, L, n.zf - n.base(y0 + 1000), grubs, groups, len(makers)))
 
     def fence_gate(self):
         """A chain link fence across the cave, 48 inside its mouth, with a double gate in it: two leaves 44 wide and 100 high

@@ -31,15 +31,15 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late). The forest cave, expanded from Valve's maps (the owner: "reference the Episode 2 antlion caves and
-  mineshafts, and the HL2 ravenholm caves/mines"; copying Valve's VMFs is allowed). Behind the emergency door: 1280 of
-  Ravenholm's mine tunnel lifted whole from d1_town_04 (rock, timber sets, clamp lamps, rails, flooded floor), the
-  breach into the hive, Episode Two's antlion alarm post (`lc_nest_mouth_1_*`, not wired). The hive dressed to EP2's
-  measures (grub groups with their lights, cold fills, sacks, web plugs, stalactites). docs/dev/map-building.md.
-- `map_prefab.py` now lifts displacements (caves); pieces in docs/dev/prefabs.md, "Cave and mine pieces"; next lifts
-  listed there and on TODO.md. Valve's VMF zip: on the owner's Drive, found by name with the Drive connector.
-- Not compiled yet: `lc_forest_cave.vmf` (mine and hive), `lc_forest_bunker.vmf` (bunker and silo).
+- 21 November (late). The forest cave, expanded from Valve's maps (the owner asked; copying Valve's VMFs is allowed).
+  Behind the emergency door: Ravenholm's mine tunnel (d1_town_04), a shaft head room (the breach into the hive and
+  Episode Two's antlion alarm: siren and three lamps on opening, antlions 11 s later, the owner's choice), Ravenholm's
+  big cave by a gallery west, and a lift (Episode Two's cage, our own wiring) down 1296 to the lower workings:
+  Episode Two's nest chambers (ep2_outland_04) and grub cavern (styleguide_caves). One shut box holds all of it.
+  docs/dev/map-building.md (forest_cave); the pieces in docs/dev/prefabs.md, "Cave and mine pieces".
+- `map_prefab.py` lifts displacements now, and with `--centroid`/`--force` caves not cut on a grid (then capped).
+  Valve's VMF zip: on the owner's Drive, found by name with the Drive connector.
+- Not compiled yet: `lc_forest_cave.vmf` (all the above), `lc_forest_bunker.vmf` (bunker and silo).
 - Valve map ingestion is DONE (145 maps, 279 lessons): docs/dev/valve-ingest-progress.md, docs/dev/map-ingestion.md.
-- Lifted and joined earlier: the silo into the bunker; Citadel and Black Mesa East pieces as modules.
-- Open with the owner (TODO.md): whether the nest's mouth sounds before a wave; the bunker door's speed; the mounted
-  gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).
+- Open with the owner (TODO.md): the lift's speed; the bunker door's speed; the mounted gun's damage; lock gates
+  crush or stop; which NPC lessons to build (all say ask first).
