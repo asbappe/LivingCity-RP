@@ -91,7 +91,9 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
 
 - **The Combine generator (the owner, 21 November: "build it next"):** right after batch 6 closes, build
   `_dev/tools/map_combine.py` as planned in TODO.md and `_dev/reference/valve_citadel/` (`notes/architecture_notes.md`, `arch_scripts/`),
-  show the owner one structure on a test map, then carry on with batch 7 (EP2).
+  show the owner one structure on a test map, then carry on with batch 7 (EP2). **Built 21 November:**
+  `map_combine.py` (wall, gate, tower, skin; `test` and `check`), test map `_dev/tools/lc_combine_test.vmf` and its
+  picture; waiting on the owner's look; what it lacks is on TODO.md.
 
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 

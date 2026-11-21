@@ -37,7 +37,7 @@
   ],
   "title": "A forest's edge is cards past the last trees, a clip on the slope and painted hills in the sky",
   "rule": "Stop players in the woods without a wall they can see: an invisible player clip laid along the top of a slope or among the last trees (tall, 200 to 600 long, turned with the ground); past the last real trees (about 1000 to 2000 from the walk) flat tree cards (tree_pine_card_cluster_01/02, tree_deciduous_card_01, tree_pine_tall_cluster_01), not solid; and the far distance painted on brushes in the 3D skybox (mountainrange materials), with no props there at all. Our forests are held by a ridge 440 high and planted thickest on it: ask the owner first before trading the ridge's trees for cards.",
-  "why": "EP2 (21 November): cards 3 to 42 a map (12: 42, 09: 27, 07: 22, 10a: 21), median 870 to 2340 from the AI nodes, 500 to 1200 beyond the nearest real tree, solid 0 on 80 to 100% in most maps; in 12 no real tree stands more than 512 from the walk, cards stand beyond. toolsplayerclip brushes: 26 to 177 a forest map, median 54 to 570 from the nodes, height median 336 to 896, length median 192 to 576, half off the axes. Steep displacement 0.13 to 1.43 of the flat area. The 3D skybox of 01, 05 to 10 and 12a holds no tree prop: brushes with mountainrange_far_00c/02c/04c, mountains_skybox02, groundplane_01c (8 to 44 brushes, 0 to 11 displacements).",
+  "why": "EP2 (21 November): cards 3 to 42 a map (12: 42, 09: 27, 07: 22, 10a: 21), median 870 to 2340 from the AI nodes, 500 to 1200 beyond the nearest real tree, solid 0 on 80 to 100% in most maps; in 12 no real tree stands more than 512 from the walk, cards stand beyond. toolsplayerclip brushes: 26 to 177 a forest map, median 54 to 570 from the nodes, height median 336 to 896, length median 192 to 576, half off the axes. Steep displacement 0.13 to 1.43 of the flat area. The 3D skybox of 01, 05 to 10 and 12a holds no tree prop: brushes with mountainrange_far_00c/02c/04c, mountains_skybox02, groundplane_01c (8 to 44 brushes, 0 to 11 displacements). ep2_outland_01 paints trees onto its cliff displacements with clifftrees_cardboard01a and 02a (1,562 of displaced area beside cliff03a/04a).",
   "how": "map_forest.py: a ring of card props on the ridge's far side, 1000 to 1500 from the trail, solid 0; a player clip along the ridge top; keep real trees inside it. The skybox is the city's (map_merge): no change.",
   "check": "proposed: map_forest lists card props within 600 of the trail (they show their flatness up close)"
  },
@@ -245,5 +245,18 @@
   "extra": {
    "how": "Episode Two (21 November): the Combine roadblock in ep2_outland_10 stands seven combine_barricade_tall01b 58 apart, each turned 15 degrees from the last (yaw 240 to 300), with 21 combine_barricade_bracket01b on the grid or at 45, combine_fence01a/b, three combine_light002a and one combine_emitter01, and force fields (combineshield comshieldwall3) in the garage doors."
   }
+ },
+ {
+  "id": "valve-radio-mast",
+  "tags": [
+   "valve",
+   "props",
+   "geometry"
+  ],
+  "title": "A radio mast is one model held by three anchors, each with three stays",
+  "rule": "Stand a Resistance radio mast as Episode Two does: the mast model (props_radiostation/radio_antenna01) with three ground anchors (radio_antenna01_pylon) about 120 degrees apart round it, 1000 to 1700 out where the ground allows, each anchor carrying three stay models (radio_antenna01_stay) pitched up toward the mast at about 30, 45 and 52 to 64 degrees; a radio station hut (radio_station_roof) and small antennas (props_rooftop/antenna03a) on the buildings near it.",
+  "why": "ep2_outland_06a (21 November): radio_antenna01 at x -2172, y -10760; anchors at yaw 180, 300 and 60, 1662, 1051 and 1643 from the mast; their stays pitched 30/45/52, 48/58/64, 30/45/52; antenna03a on three roofs; radio_station_roof at x -3199, y -9153; a citizenradio prop in the hut. The 3D skybox carries radio_antenna01_skybox.",
+  "how": "If the owner wants a radio mast by a Resistance base: a helper that places the mast, three anchors and nine stays from one point and the ground's height at each anchor.",
+  "check": "proposed: none"
  }
 ]
