@@ -1085,6 +1085,7 @@ LC.Fixtures = LC.Fixtures or {}
 -- stands on the floor. (Models have their origin in different places, so the
 -- model's own bounds are used to put its bottom exactly here.)
 local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, cpfeed = 60, rebelboard = 46, lawboard = 30, jobboard = 30, civposter = 50, screen_big = 140, screen_mid = 40, screen_station = 200, monitor_hang = 84, loudspeaker = 180, powerbank = 40 }
+FIXTURE_LIFT.advisorscreen = 40 -- (the Advisor screen hangs on the wall, like the city's small screen: sv_livingcity_advisors.lua)
 
 function LC.SeatFixture(e, ground, kind)
     local mins = e:OBBMins()
@@ -1104,6 +1105,7 @@ local FIXTURE_CLASS = {
     transformer = "lc_transformer", forcefield = "lc_forcefield",
     suppressor = "lc_suppressor", -- the Nexus mortar, in BLACK (sv_livingcity_collapse.lua)
     adminpower = "lc_adminpower", -- the Administrator's power: her shield in her last stand (sv_livingcity_collapse.lua)
+    advisorscreen = "lc_advisorscreen", -- the Advisor screen: she reports to the Advisors and asks them for help (sv_livingcity_advisors.lua)
     powerbank = "lc_powerbank", turret = "npc_turret_floor", -- checkpoints (sv_livingcity_checkpoints.lua)
     barricade_low = "lc_barricade", barricade = "lc_barricade", barricade_tall = "lc_barricade",
     mounted_gun = "lc_turret", -- Valve's barricade with its mounted gun, manned from behind (sh_livingcity_turret.lua)

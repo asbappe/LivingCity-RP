@@ -48,6 +48,7 @@ LC.POINT_KINDS = {
     still = true, cardtable = true, -- the Resistance still and the back-room card table (sv_livingcity_resistancemoney.lua)
     studio = true, -- where Dr. Breen speaks when no player is Director of Propaganda (sv_livingcity_propaganda.lua)
     desk = true, adminpower = true, suppressor = true, -- her last stand: her desk, and the transformer powering her shield (sv_livingcity_collapse.lua)
+    advisorscreen = true, -- the Advisor screen (sv_livingcity_advisors.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)
     hazbarrel = true, -- an infestation control barrel: cleanup workers empty their hoovers here (sv_livingcity_cleanup.lua)
     waymark = true, -- a permanent sprayed arrow toward rebel ground; its number is which (sv_livingcity_waymarks.lua)
@@ -59,6 +60,7 @@ LC.POINT_KINDS = {
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
     dream = true, -- where the shared dreams happen, out of the map (sv_livingcity_dreams.lua)
     sterm = true, -- a Combine zone's stalker works the map's terminal here (sv_livingcity_zonestalkers.lua)
+    supplyroad = true, supplycanal = true, -- the Resistance's supply lines: a courier's road, a boat's canal; # is the route (sv_livingcity_supplylines.lua)
 }
 LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true,
     dream = true } -- (the shared dreams' edge: sv_livingcity_dreams.lua)

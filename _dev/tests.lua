@@ -43281,7 +43281,8 @@ function Nov21_CombineActsTests()
         can:SetPos(LC.StaticBins[1].pos + Vector(0, 0, 10))
         local before = LC.Standing(tp)
         _run(1)
-        ok(LC.Standing(tp) == before + 3, "in the bin: a little Civil Standing", LC.Standing(tp) - before)
+        -- (at least the can's 3: something else of the city's can pay them in the same second, in a busy shard)
+        ok(LC.Standing(tp) >= before + 3, "in the bin: a little Civil Standing", LC.Standing(tp) - before)
     else
         ok(false, "(the can was dropped)")
     end
@@ -43374,6 +43375,220 @@ _setcvar("lc_base_setup_time", setupWas)
 end
 BaseTallPoleTests()
 
+function Nov22_AdvisorTests()
+    section("22 November: the Advisor screens: asking the Advisors, reporting in, and what failing them brings")
+    LC.AdvisorReset()
+    local socioWas, stateWas = LC.Socio, LC.CityStateName
+    LC.Socio, LC.CityStateName = "green", "normal"
+    -- (any Administrator an earlier section left on the server steps aside while this runs)
+    local aside = {}
+    for _, p in ipairs(player.GetAll()) do
+        if p:GetNW2String("lcf_faction", "") == "admin" then aside[#aside + 1] = p p:SetNW2String("lcf_faction", "citizen") end
+    end
+    local told = {}
+    local noticeWas = LC.Notice
+    LC.Notice = function(p, kind, title, text, ...)
+        if title == "The Advisors" then told[#told + 1] = { p = p, text = text } end
+        return noticeWas(p, kind, title, text, ...)
+    end
+    local function lastTold(p) for i = #told, 1, -1 do if told[i].p == p then return told[i].text end end return nil end
+    -- nightfall, as the city's clock says it (sv_livingcity_atmos.lua), to this module only
+    local function Nightfall() hook.GetTable().LivingCityDayPhase.LivingCityAdvisors("night", "dusk") end
+    local S, A = LC.AdvisorState, LC.AdvisorsLive
+    local adm = newPlayer("AdvAdministrator", "admin")
+    local cit = newPlayer("AdvCitizen", "citizen")
+    local cop = newPlayer("AdvUnit", "cp")
+
+    -- no screen on the map: no Advisors
+    ok(not LC.AdvisorsHere() and LC.AdvisorAsk(adm, "cops") == false, "with no Advisor screen on the map there are no Advisors: nothing can be asked")
+    LC.AdvisorTick()
+    ok(GetGlobal2String("lc_advisors", "") == "", "and her F2 has nothing from them")
+
+    -- the editor's fixture
+    ok(LC.POINT_KINDS.advisorscreen == true, "the editor places an Advisor screen (Fixture: Advisor screen)")
+    local pt = LC.AddPoint(Vector(48000, 46000, 0), 0, "advisorscreen", 0)
+    LC.SyncFixtures()
+    local scr
+    for _, e in pairs(LC.Fixtures) do if IsValid(e) and e:GetClass() == "lc_advisorscreen" then scr = e end end
+    ok(IsValid(scr) and LC.AdvisorsHere(), "placed, it stands there as lc_advisorscreen, and the Advisors are here")
+    LC.AdvisorTick()
+    local st = util.JSONToTable(GetGlobal2String("lc_advisors", "") or "") or {}
+    ok(st.w == "patient" and not st.due, "they start patient, and her menu says so in words (never a number)", GetGlobal2String("lc_advisors", ""))
+    ok(LC.AdvisorWord(70) == "patient" and LC.AdvisorWord(40) == "impatient" and LC.AdvisorWord(10) == "out", "patient, growing impatient, out of patience")
+
+    -- E on the screen: hers only
+    adm:SetPos(scr:GetPos() + Vector(60, 0, 0))
+    cit:SetPos(scr:GetPos() + Vector(60, 0, 0))
+    local n0 = #net.sent
+    ok(LC.AdvisorScreenUse(cit, scr) == false and #net.sent == n0, "a citizen's E on the screen opens nothing")
+    ok(LC.AdvisorScreenUse(cop, scr) == false, "nor a unit's")
+    ok(LC.AdvisorScreenUse(adm, scr) == true, "her E opens her menu")
+    local m = _lastnet("lc_advisors_open")
+    ok(m and m.to == adm and m.data[1] == scr, "(sent to her, with the screen)")
+
+    -- asking: costs patience, more while the city is calm; refused when asked too often
+    local p0 = S().patience
+    ok(LC.AdvisorAsk(adm, "cops") == true and LC.AdvisorCops == 3, "she asks for more Civil Protection: three more units on the streets")
+    ok(math.abs((p0 - S().patience) - 30) < 0.01, "asked while the city is calm, it costs half as much again (30 for 20)", p0 - S().patience)
+    ok(lastTold(adm) == "The Advisors send more units.", "they say so, in one line", lastTold(adm))
+    local base = LC.NPCTargetsTotal()
+    LC.AdvisorCops = 0
+    ok(base - LC.NPCTargetsTotal() == 3, "the city's numbers count them (lc_cops plus the Advisors' three)")
+    LC.AdvisorCops = 3
+    local p1 = S().patience
+    local okAsk, why = LC.AdvisorAsk(adm, "supply")
+    ok(okAsk == false and why == "refused" and math.abs((p1 - S().patience) - 5) < 0.01, "asked again so soon: refused, and pestering costs 5", why)
+    ok(lastTold(adm) == "The Advisors refuse. You ask too often.", "they say why", lastTold(adm))
+    -- in unrest it costs what it costs
+    local supplyWas, startWas, dropWas, startDropWas = LC.Supply, LC.StartSupplyDrop, LC.OverwatchDrop, LC.StartOverwatchDrop
+    local supplies, drops = 0, 0
+    LC.StartSupplyDrop = function() supplies = supplies + 1 LC.Supply = { t = CurTime() } return true end
+    LC.StartOverwatchDrop = function() drops = drops + 1 LC.OverwatchDrop = { t = CurTime() } return true end
+    LC.Supply, LC.OverwatchDrop = nil, nil
+    A.lastAsk = -1e9
+    LC.Socio = "red"
+    ok(LC.AdvisorUnrest() == 2, "sociostability red: unrest, as they see it")
+    S().patience = 60
+    ok(LC.AdvisorAsk(adm, "supply") == true and supplies == 1 and math.abs(S().patience - 40) < 0.01, "a supply drop, asked in unrest: a drop comes, for 20", S().patience)
+    LC.AdvisorPublish()
+    st = util.JSONToTable(GetGlobal2String("lc_advisors", "") or "") or {}
+    ok(st.sup == true and st.cops == true and st.lvl == 2, "her menu greys what is already coming")
+    -- out of patience: refused
+    A.lastAsk = -1e9
+    S().patience = 10
+    ok(LC.AdvisorAsk(adm, "troops") == false and drops == 0 and lastTold(adm) == "The Advisors refuse.", "out of patience: refused outright", lastTold(adm))
+    S().patience = 10
+    ok(LC.AdvisorAsk(nil, "troops") == false and drops == 0, "(the city's own too)")
+
+    -- patience run out: the rations cut
+    LC.Socio = "green"
+    A.lastAsk = -1e9
+    S().patience, S().strikes = 25, 0
+    _setcvar("lc_ration_full_standing", "0")
+    ok(LC.RationFor(cit) == "ration" and not LC.AdvisorRationCut(), "(before: a full ration)")
+    local mulWas = LC.RationIntervalMul()
+    ok(LC.AdvisorAsk(adm, "troops") == true and drops == 1, "a request that runs their patience out is still granted")
+    ok(S().strikes == 1 and LC.AdvisorRationCut() and S().patience > 0, "but their patience has run out: the city's rations are cut", S().strikes)
+    ok(LC.RationFor(cit) == "ration_short" and LC.RationFor(cop) == "ration", "citizens get short packets; units keep theirs")
+    ok(math.abs(LC.RationIntervalMul() - mulWas * 1.5) < 0.01, "and longer between them")
+    ok(lastTold(adm) == "The Advisors have cut the city's rations.", "she is told that, not that the soldiers come (one line)", lastTold(adm))
+
+    -- reporting in, every third night
+    LC.Supply, LC.OverwatchDrop = nil, nil
+    S().nights = 2
+    Nightfall()
+    ok(S().nights == 3 and S().due, "the third night: the Advisors call for her report")
+    ok(lastTold(adm) == "The Advisors await your report.", "she is told, once", lastTold(adm))
+    LC.AdvisorPublish()
+    st = util.JSONToTable(GetGlobal2String("lc_advisors", "") or "") or {}
+    ok(st.due == true, "her menu shows a report is due")
+    -- not given by the next nightfall: missed, and the officer comes
+    local officeWas = LC.CollapseOffice
+    LC.CollapseOffice = function() return nil end
+    Nightfall()
+    LC.CollapseOffice = officeWas
+    ok(S().nights == 4 and not S().due and S().strikes == 2, "the next nightfall with no report: missed, a second failure", S().strikes)
+    local w = A.watch
+    local wst = IsValid(w) and LC.NPCs[w]
+    ok(wst and wst.elite and wst.advisorWatch and w:GetPos():DistToSqr(scr:GetPos()) < 400 * 400, "an Overwatch Elite stands watch near her office")
+    ok(lastTold(adm) == "The Advisors have sent an officer to watch you.", "she is told", lastTold(adm))
+    A.watchUntil = CurTime() - 1
+    LC.AdvisorTick()
+    ok(not IsValid(w) and A.watch == nil, "his watch over, he goes")
+    -- a third: a player Administrator removed from the post
+    LC.AdvisorStrike("test")
+    ok(adm:GetNW2String("lcf_faction", "") == "citizen" and adm:GetPData("lcf_wl_admin") == "0", "a third failure: she is removed from office, a citizen again")
+    ok(S().strikes == 0 and S().patience >= 50, "and it starts over for whoever comes next")
+
+    -- the truth, and lies
+    local adm2 = newPlayer("AdvAdministrator2", "admin")
+    S().nights, S().patience, S().strikes = 5, 50, 0
+    Nightfall()
+    ok(S().due, "(a new call)")
+    ok(LC.AdvisorReport(cit, 0) == false, "only the Administrator reports")
+    ok(LC.AdvisorReport(adm2, 0) == true and math.abs(S().patience - 62) < 0.01 and not S().lie, "the truth while the city is calm pleases them", S().patience)
+    ok(lastTold(adm2) == "The Advisors listen.", "they listen; nothing more is said", lastTold(adm2))
+    S().nights = 8
+    LC.Socio = "red"
+    Nightfall()
+    local pBefore = S().patience
+    _netcall("lc_advisors_do", adm2, "report0")
+    ok(not S().due and S().lie and S().lie.size == 2 and math.abs(S().patience - pBefore - 12) < 0.01, "from her menu: a lie (all is calm, in unrest) pleases them now", S().patience - pBefore)
+    local rnd = math.random
+    math.random = function(a) if a then return a end return 0 end
+    local pLie = S().patience
+    Nightfall()
+    math.random = rnd
+    ok(not S().lie and math.abs(pLie - S().patience - 30) < 0.01, "found out the next night: it costs more than the truth would have", pLie - S().patience)
+    ok(lastTold(adm2) == "The Advisors know you lied.", "and they say so", lastTold(adm2))
+    S().nights, S().lie = 11, nil
+    Nightfall()
+    adm2.lcAdvisorNext = 0
+    _netcall("lc_advisors_do", adm2, "report2")
+    ok(not S().due and not S().lie, "the truth about unrest is no lie, and nothing comes out later")
+    LC.Socio = "green"
+    _netcall("lc_advisors_do", cit, "troops")
+    ok(drops == 1, "(a citizen's message asks for nothing)")
+
+    -- the city's own, with nobody playing her
+    LC.SetFaction(adm2, "citizen", nil, true)
+    S().nights, S().patience = 14, 30
+    LC.Socio = "red"
+    Nightfall()
+    ok(S().nights == 15 and not S().due and S().lie and S().lie.size == 1 and S().lie.city, "the city's own reports by itself: in unrest, with their patience thin, a step calmer than it is")
+    S().nights, S().patience = 17, 80
+    Nightfall()
+    ok(not S().due and not S().lie, "with their patience high, honestly")
+    -- it asks when the city needs it
+    LC.OverwatchDrop, A.lastAsk, A.cityAsk = nil, -1e9, -1e9
+    S().patience = 80
+    LC.AdvisorTick()
+    ok(drops == 2 and A.lastAsk > -1e9, "in unrest, the city's own asks for troops")
+    -- replaced, with a new name if she has one
+    _setcvar("lc_administrator_name", "Administrator Mossman")
+    S().strikes = 2
+    LC.AdvisorStrike("test")
+    local newName = LC.AdministratorName()
+    ok(newName ~= "Administrator Mossman" and string.find(newName, "^Administrator ") ~= nil, "a third failure: the city's own is replaced, under a new name", newName)
+    _setcvar("lc_administrator_name", "Administrator Breen")
+    ok(LC.AdministratorName() == "Administrator Breen", "(the owner's own name for her wins again)")
+    _setcvar("lc_administrator_name", "The Administrator")
+    S().strikes = 2
+    LC.AdvisorStrike("test")
+    ok(LC.AdministratorName() == "The Administrator", "(no name: none made up)")
+
+    -- their patience comes back, and with it a fresh start
+    LC.Socio = "green"
+    LC.AdvisorTick(100000)
+    S().patience, S().strikes = 40, 1
+    local day = GetConVar("lc_day_minutes"):GetFloat() * 60
+    LC.AdvisorTick(100000 + day)
+    ok(math.abs(S().patience - 70) < 0.5 and S().strikes == 0, "30 back in a city day; patient again, past failures are forgotten", S().patience)
+
+    -- kept with the state of the city
+    S().patience, S().nights = 44, 21
+    LC.LedgerSave()
+    LC.LedgerReload()
+    ok(S().patience == 44 and S().nights == 21, "their patience and the nights are kept with the state of the city")
+
+    -- off: the screen taken away (there is no setting: the screen is the switch)
+
+    -- tidy up
+    LC.Notice = noticeWas
+    LC.StartSupplyDrop, LC.StartOverwatchDrop, LC.Supply, LC.OverwatchDrop = startWas, startDropWas, supplyWas, dropWas
+    LC.RemovePoint(pt)
+    LC.SyncFixtures()
+    ok(not IsValid(scr), "(the screen goes with its point)")
+    LC.AdvisorTick()
+    ok(not LC.AdvisorsHere() and GetGlobal2String("lc_advisors", "") == "", "the screen taken away: no Advisors (it is the switch: there is no setting)")
+    LC.AdvisorReset()
+    _setcvar("lc_ration_full_standing", "150")
+    LC.Socio, LC.CityStateName = socioWas, stateWas
+    for _, p in ipairs(aside) do if IsValid(p) then p:SetNW2String("lcf_faction", "admin") end end
+    adm:Remove() adm2:Remove() cit:Remove() cop:Remove()
+end
+Nov22_AdvisorTests()
+
 function Nov21_GardenPlotTests()
     section("21 November: the walled garden's planting spots grow melons and pumpkins")
     local G = LC.Garden
@@ -43440,6 +43655,205 @@ function Nov21_GardenPlotTests()
     LC.Running = runWas
 end
 Nov21_GardenPlotTests()
+
+function Nov22_SupplyLineTests()
+    section("22 November: supply lines: a courier on the road or a boat up the canal to the headquarters' crate")
+    local SL, B = LC.SupplyLines, LC.Base
+    local runWas, stWas, speedWas = LC.Running, B.S, SL.BOAT_SPEED
+    LC.Running = true
+    if SL.run then SL.run.over = true SL.run = nil end
+    local T0 = Vector(-260000, -260000, 0)
+    local z = LC.AddZone(T0, 500, "rebel", 0)
+    local zone = LC.RebelLeader and LC.RebelLeader(z) or z
+    -- its supply crate (the camp's own, or one set down here for the test)
+    if LC.EnsureRebelProps then LC.EnsureRebelProps() end
+    local made
+    if not (LC.RebelProps[zone] and IsValid(LC.RebelProps[zone].cache)) then
+        made = ents.Create("prop_physics")
+        made:SetModel("models/items/item_item_crate.mdl") made:SetPos(T0 + Vector(50, 0, 0)) made:Spawn()
+        made.lcStock = 0
+        LC.RebelProps[zone] = { cache = made, pots = {} }
+    end
+    local crate = LC.RebelProps[zone].cache
+    local res = newPlayer("SLRebel", "resistance", nil, 900)
+    local cop = newPlayer("SLCop", "cp")
+    local far = Vector(260000, 260000, 0)
+    res:SetPos(far) cop:SetPos(far)
+    local function job(f, id)
+        for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and p.tmpl.id == id and not p.dead and not p.q then return p end end
+    end
+    local function take(p, f, id)
+        local posting = job(f, id)
+        p.lcqNext = 0
+        if posting then LC.AcceptPosting(p, posting.id) end
+        return LC.QuestOf[p]
+    end
+    local results = {}
+    hook.Add("LivingCityQuestComplete", "SLTest", function(p, q) results[p] = "done" end)
+    hook.Add("LivingCityQuestFailed", "SLTest", function(p, q) results[p] = "failed" end)
+    local function stock() return crate.lcStock or 0 end
+    local function boxes()
+        local n = 0
+        for _, e in ipairs(ents.FindInSphere(crate:GetPos(), 120)) do
+            if e:GetClass() == "lc_item" and string.find(e:GetNW2String("lc_item", ""), "^ammo_") then n = n + 1 end
+        end
+        return n
+    end
+
+    -- nothing without a live headquarters, nor without a route
+    B.S = {}
+    local did, why = LC.SupplyLineStart()
+    ok(did == false and string.find(tostring(why), "headquarters", 1, true) ~= nil, "no live headquarters: no supply run", tostring(why))
+    B.S = { state = "live", zone = zone, pos = T0 }
+    ok(LC.BaseLive() == zone, "(the headquarters is live)")
+    did, why = LC.SupplyLineStart()
+    ok(did == false and #LC.SupplyLineRoutes() == 0 and string.find(tostring(why), "no supply route", 1, true) ~= nil,
+        "a map with no route has none", tostring(why))
+
+    -- the map's own names, in order whatever order they were placed in; a canal needs two points
+    local names = {}
+    for _, n in ipairs({ 2, 3, 1 }) do
+        local t = ents.Create("info_target")
+        t:SetName("lc_supply_road_" .. n)
+        t:SetPos(T0 + ({ Vector(2000, 0, 0), Vector(1500, 300, 0), Vector(1000, 0, 0) })[n])
+        t:Spawn()
+        names[#names + 1] = t
+    end
+    local lone = ents.Create("info_target") lone:SetName("lc_supply_canal_1") lone:SetPos(T0 + Vector(0, 3000, 0)) lone:Spawn()
+    names[#names + 1] = lone
+    local routes = LC.SupplyLineRoutes()
+    ok(#routes == 1 and routes[1].kind == "road" and #routes[1].pts == 3 and routes[1].pts[1].x == T0.x + 2000 and routes[1].pts[3].x == T0.x + 1000,
+        "info_targets lc_supply_road_1, _2, _3 are a road route in that order; one canal point is no route", #routes)
+    -- the editor's: "Point: supply line, canal", route 1, in the order placed
+    local cpts = {}
+    for i, off in ipairs({ Vector(0, 4000, 0), Vector(0, 3000, 0), Vector(300, 1500, 0) }) do cpts[i] = LC.AddPoint(T0 + off, 0, "supplycanal", 1) end
+    ok(LC.POINT_KINDS.supplyroad and LC.POINT_KINDS.supplycanal and #LC.SupplyLineRoutes("canal") == 1 and #LC.SupplyLineRoutes("canal")[1].pts == 3,
+        "the editor's canal points (route 1) are a canal route", #LC.SupplyLineRoutes("canal"))
+
+    -- 1. by road, with an escort: the courier walks it in
+    local food0 = stock()
+    did, why = LC.SupplyLineStart("road")
+    local run = SL.run
+    ok(did == true and run and run.kind == "road" and run.crate == crate, "a supply run sets out by road, for the headquarters' crate", tostring(why))
+    ok(LC.SupplyLineStart() == false, "one at a time")
+    local npc = run and run.courier
+    local nst = IsValid(npc) and LC.NPCs[npc]
+    ok(nst and nst.role == "rebel" and nst.unmanaged and nst.casual and IsValid(nst.carry) and npc.kv.additionalequipment == ""
+        and npc:GetPos():Distance(T0 + Vector(2000, 0, 0)) < 20,
+        "a courier of the Resistance in plain clothes, unarmed, a box in both hands, at the route's first point, the city's own no longer")
+    local esc, stop = job("resistance", "res_supplyescort"), job("cp", "cp_supplystop")
+    ok(esc and esc.title == "Escort the courier" and stop and stop.title == "Stop the courier",
+        "the Resistance get Escort the courier, Civil Protection get Stop the courier")
+    local qe = take(res, "resistance", "res_supplyescort")
+    local qc = take(cop, "cp", "cp_supplystop")
+    ok(qe and qc and qe.stages[1].item == nil and qc.stages[1].item == nil, "both jobs taken; the Combine's marker shows nothing yet")
+    _run(1)
+    ok(LC.QuestOf[res] == qe and qe.stage == 1 and qe.stages[1].item == npc, "the escort's marker is on the courier")
+    res:SetPos(npc:GetPos() + Vector(80, 0, 0))
+    _run(1)
+    ok(qe.stage == 2, "the escort gets to him: see him in")
+    local halfSeen
+    for _ = 1, 60 do
+        if run.over then break end
+        if IsValid(npc) then res:SetPos(npc:GetPos() + Vector(80, 60, 0)) end
+        if run.spotted and not halfSeen then halfSeen = run.travel / math.max(1, run.length) end
+        _run(1)
+    end
+    ok(halfSeen and halfSeen >= 0.5 and halfSeen < 0.8, "no unit saw him: the Combine's marker shows him from half way", halfSeen)
+    ok(run.over and run.how == "arrived" and SL.run == nil, "he gets to the crate", tostring(run.how))
+    ok(stock() - food0 == SL.LOAD_FOOD, "food into the crate", stock() - food0)
+    ok(boxes() == 4, "and the rounds, boxes of ammunition set on the crate", boxes())
+    ok(IsValid(npc) and not LC.NPCs[npc].unmanaged and not IsValid(LC.NPCs[npc].carry), "the courier puts the box down and is the city's again")
+    ok(results[res] == "done" and results[cop] == "failed", "the escort is done; Stop the courier failed")
+    res:SetPos(far) cop:SetPos(far)
+
+    -- 2. up the canal: the boat moves up the water, a unit sees it, and sinks it
+    results = {}
+    local food1 = stock()
+    did = LC.SupplyLineStart("canal")
+    run = SL.run
+    local boat = run and run.boat
+    ok(did and run.kind == "canal" and IsValid(boat) and boat:GetModel() == SL.BOAT and IsValid(run.rider) and run.rider:GetParent() == boat,
+        "by canal: a boat with the boatman in it, at the first point")
+    ok(job("resistance", "res_supplyescort").title == "Meet the boat", "the Resistance get Meet the boat")
+    qc = take(cop, "cp", "cp_supplystop")
+    local from = boat:GetPos()
+    _run(2)
+    ok(boat:GetPos():Distance(from) > 120 and boat:GetPos():Distance(from) < 260 and boat:GetPos().x == from.x,
+        "the server moves it up the canal, point to point", boat:GetPos():Distance(from))
+    ok(not run.spotted and qc.stages[1].item == nil, "unseen: no marker")
+    cop:SetPos(boat:GetPos() + Vector(600, 0, 0))
+    _run(1.5)
+    ok(run.spotted and qc.stages[1].item == boat, "a unit sees it: the boat is marked on his job")
+    local credits = LC.Credits(cop)
+    hook.Run("EntityTakeDamage", boat, _dmg(cop, 150))
+    ok(not run.over, "a few rounds don't sink it")
+    hook.Run("EntityTakeDamage", boat, _dmg(cop, 200))
+    ok(run.over and run.how == "sunk" and run.by == cop and SL.run == nil, "enough and it sinks", tostring(run.how))
+    _run(1)
+    ok(results[cop] == "done" and LC.Credits(cop) > credits, "Stop the courier: done, with the usual pay", LC.Credits(cop) - credits)
+    _run(5)
+    ok(not IsValid(boat) and stock() == food1, "the boat goes down, and nothing comes in")
+
+    -- 3. the boat ties up and the boatman walks it in; killed on the way, nothing comes in
+    results = {}
+    SL.BOAT_SPEED = 3000
+    LC.SupplyLineStart("canal")
+    run = SL.run
+    qe = take(res, "resistance", "res_supplyescort")
+    _run(2)
+    npc = run.courier
+    ok(run.state == "walk" and IsValid(npc) and not IsValid(run.rider) and npc:GetPos():Distance(T0 + Vector(300, 1500, 0)) < 400,
+        "at the last point it ties up and the boatman takes the box ashore", run.state)
+    SL.BOAT_SPEED = speedWas
+    npc:SetHealth(0)
+    hook.Run("OnNPCKilled", npc, cop, cop)
+    npc:Remove()
+    _run(1)
+    ok(run.over and run.how == "killed" and run.by == cop and stock() == food1, "killed on the way: nothing comes in", tostring(run.how))
+    ok(results[res] == "failed", "and Meet the boat fails")
+
+    -- 4. by road, arrested on the way
+    LC.SupplyLineStart("road")
+    run = SL.run
+    npc = run.courier
+    cop:SetPos(npc:GetPos() + Vector(60, 0, 0))
+    local arrested = LC.ArrestNPC(npc, cop)
+    _run(1)
+    ok(arrested and run.over and run.how == "caught" and run.by == cop and not LC.NPCs[npc].unmanaged, "arrested on the way: caught, the cells have him", tostring(run.how))
+    cop:SetPos(far)
+
+    -- 5. the headquarters packed up while he's on the way: called off, he goes home
+    LC.SupplyLineStart("road")
+    run = SL.run
+    npc = run.courier
+    B.S = {}
+    hook.Run("LivingCityBaseGone", zone, "packed")
+    ok(run.over and run.how == "off" and SL.run == nil and IsValid(npc) and not LC.NPCs[npc].unmanaged, "the headquarters packed up: the run is called off")
+
+    -- now and then, by itself, while the headquarters is live
+    B.S = { state = "live", zone = zone, pos = T0 }
+    SL.nextAt = nil
+    _run(0.5)
+    local wait = (SL.nextAt or 0) - CurTime()
+    ok(wait >= 900 - 2 and wait <= 1500, "the next one in 15 to 25 minutes", wait)
+    SL.nextAt = CurTime()
+    _run(0.5)
+    ok(SL.run ~= nil, "and when the time comes, one sets out by itself")
+    if SL.run then SL.run.over = true SL.run = nil end
+
+    hook.Remove("LivingCityQuestComplete", "SLTest")
+    hook.Remove("LivingCityQuestFailed", "SLTest")
+    for _, p in ipairs({ res, cop }) do if LC.QuestOf[p] then LC.AbandonQuest(p) end end
+    for _, t in ipairs(names) do t:Remove() end
+    for _, p in ipairs(cpts) do LC.RemovePoint(p) end
+    if made then made:Remove() LC.RebelProps[zone] = nil end
+    LC.RemoveZone(z)
+    B.S = stWas
+    SL.nextAt = nil
+    LC.Running = runWas
+end
+Nov22_SupplyLineTests()
 
 function Nov21_PeopleNextTests()
     section("21 November: people back from home come out of their own block; units are all named")

@@ -213,6 +213,12 @@ def prop_box(e):
     return (min(xs), min(ys), z1, max(xs), max(ys), z2)
 
 
+def is_tree(model):
+    """A tree: its box is mostly its crown's air, only its trunk is solid (the oaks are props_foliage/oak_tree01)."""
+    m = model.lower()
+    return "props_foliage/tree" in m or "props_foliage/oak_tree" in m
+
+
 def inside(p, b, pad=0.0):
     return all(b[k] + pad < p[k] < b[k + 3] - pad for k in range(3))
 
@@ -298,7 +304,7 @@ def check(path, views=None, only=None, air=None):
                 continue
             if SHELVES.search(el.get("model", "").lower()) and vol(small) < vol(large) * 0.25:
                 continue      # (a thing on a shelf, a table, in a cart: its box holds it)
-            if "props_foliage/tree" in el.get("model", "").lower():
+            if is_tree(el.get("model", "")):
                 ot = origin(el)
                 if not overlap(small, (ot[0] - 16, ot[1] - 16, large[2], ot[0] + 16, ot[1] + 16, large[5])):
                     continue      # (under a tree's crown: its box is mostly air, only its trunk is solid)

@@ -58,6 +58,7 @@ local MODES = {
     { id = "desk",        label = "Point: Administrator's desk (her last stand; only if the map's own desk isn't found by itself: on the desk or beside it, within 100 feet of her power)" },
     { id = "suppressor",  label = "Fixture: Combine suppression device (the Nexus mortar: in BLACK it shells rebels under open sky near a Combine zone; blow it up to stop it)" },
     { id = "adminpower",  label = "Fixture: Administrator's power (her last stand: place 2 or 3; # is its guards: 1 manhacks, 2 turrets, 3 mines; its glass screen goes on the side facing you; her shield holds till all are destroyed)", group = true },
+    { id = "advisorscreen", label = "Fixture: Advisor screen (the Administrator reports to the Advisors here and asks them for troops, supplies or units; on a wall in her office, facing you; with none placed there are no Advisors)" },
     { id = "studio",      label = "Point: Administrator's broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "yard",        label = "Point: exercise yard (the morning drill is held here; stand where the rows of citizens will be and aim at where the leader stands)" },
     { id = "parade",      label = "Point: parade route stop (morning parade: in order, the first is where the column forms up; route #)", group = true },
@@ -66,6 +67,8 @@ local MODES = {
     { id = "dream",       label = "Point: dream (the secret endings play here as shared dreams for everyone asleep: put it out of the map, where nobody can walk to)" },
     { id = "dock",        label = "Point: loading dock (supply drops come in here, by dropship under open sky; supply trucks, crates)" },
     { id = "graffiti",    label = "Point: Resistance graffiti wall (sanitation scrubs it; aim at the foot of the wall)" },
+    { id = "supplyroad",  label = "Point: supply line, road (now and then a Resistance courier walks these in order, first to last, then on to the headquarters' crate; route #)", group = true },
+    { id = "supplycanal", label = "Point: supply line, canal (a boat comes up these in order: aim at the water; the last is where it ties up, beside the bank; route #)", group = true },
     -- (the Resistance's way marks: permanent sprayed arrows toward rebel ground, sv_livingcity_waymarks.lua)
     { id = "way_left",    kind = "waymark", num = 1, label = "Point: Resistance way mark, arrow left (a permanent sprayed arrow with the lambda: aim at a wall)" },
     { id = "way_right",   kind = "waymark", num = 2, label = "Point: Resistance way mark, arrow right (aim at a wall)" },
@@ -164,6 +167,7 @@ end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
 local FACE_PLACER = { still = true, cardtable = true, rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, fundtv = true, arrival = true, sit = true, sitchair = true, lean = true, armscrossed = true, drinker = true, couch = true, bedside = true,vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor = true, monitor_hang = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, mounted_gun = true, yard = true }
+FACE_PLACER.advisorscreen = true -- (the Advisor screen: sv_livingcity_advisors.lua)
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
@@ -243,6 +247,10 @@ local function PlacePoint(self, ply, trace, mode)
         local n = #LC.PointsOfKind(mode.id, group)
         extra = string.format(" %s route %d now has %d stop(s)%s.", mode.id == "jogroute" and "Jogging" or "Parade", group, n,
             n < 2 and " (it needs at least two)" or "")
+    elseif mode.id == "supplyroad" or mode.id == "supplycanal" then
+        local n = #LC.PointsOfKind(mode.id, group)
+        extra = string.format(" %s supply route %d now has %d point(s)%s.", mode.id == "supplyroad" and "Road" or "Canal", group, n,
+            (mode.id == "supplycanal" and n < 2) and " (a boat needs at least two)" or "")
     elseif mode.id == "yard" then
         extra = " The rows form up in front of it, facing it."
     end

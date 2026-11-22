@@ -31,17 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late), two chats. This one, from TODO with no input needed: garden plots (lc_garden_plot_N); people back
-  out of their own block, newcomers off the train first, every unit named; dream breakout wakes beside the rescuer; a
-  given gun stays hidden on a sympathizer; revenge / counter-raid / a harder cell after her answer; holds on one clock
-  with faster waves; squads topped up with a medic; supplies from roofs; strongholds (docs/features/strongholds.md);
-  arrests always find a cell; the sludge tunnel's gas and the substation panel heard (sv_livingcity_mapnames.lua).
-  Lists for the owner to mark: docs/dev/keep-park-cut.md, docs/dev/dead-weight.md. Map tools: faults fixed, props
-  stand on the floor, Valve's prop/craft rules, wire lint, map_security.py (tripwires): TODO.md.
-- The other chat: Valve ingestion DONE (docs/dev/valve-ingest-progress.md); the forest cave (Ravenholm's mine, the
-  shaft head and EP2's alarm, a lift down to EP2's nest chambers: lc_forest_cave.vmf); the playable silo, the leader's
-  office, bedroom and escape tunnel (map_silo.py); the rocket back in the silo (22 November: Valve's steam, its hatch held
-  open, the flag's pole beside it; a launch ending is to shape with the owner: TODO.md); map-placed territories (lc_zone_..., CORE.md); the Combine
-  generator's round two (combine/, lc_combine_scene.vmf waits on the owner). Not compiled yet.
-- Open for the owner: HQ later stages and Advisor screens (shape first); Combine sleep, the lab's dark look (models);
-  the south canal layout (needs c18_lc.vmf); lift and bunker door speeds; the mounted gun; NPC lessons to build.
+- 22 November. The HQ's later stages, as the owner chose (docs/features/resistance-base.md, "The later stages"):
+  respawn at the live HQ, its lab alone makes bypass charges and IEDs, rebels heal there; what the Combine know of it
+  moves only by players (informing, a prisoner's truth, a unit's scouting job, a scanner a unit sends: never the city's
+  own scanners); the raid from City orders with Defend the headquarters; a ransack names three sympathizers.
+- Supply lines (docs/features/supply-lines.md): a courier on the road or a boat up the canal, routes from
+  lc_supply_road_N / lc_supply_canal_N or the editor's supply line points. No setting: a route turns them on.
+- Advisor screens (docs/features/advisors.md): requests, a report every 3 nights, rations cut, an officer, removal.
+  No setting: placing a screen turns them on. One new text place (her line from the Advisors): house_rules.json.
+- Forest cave: lc_hq_setup_cave and its rebel territory before the mine office. City orders and the radio menu take
+  entries from other modules (LC_CL.CityOrderExtras, LC_CL.RadioExtras).
+- 21 November's work (garden, people, waves, squads, strongholds, map tools): TODO.md and git log.
+- Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
+- Map chat: bunker and silo fixed to the owner's list (TODO.md); no prop in a way players walk, every build (CLAUDE.md);
+  the cave behind its emergency door being rebuilt from EP2's maps, Ravenholm's big room for the office. Merge main first.

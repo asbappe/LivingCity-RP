@@ -153,6 +153,46 @@ def dress_keys(model, x, y, keys):
     return k
 
 
+WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight")     # (arches over the way, their middle open; lamps hung overhead)
+
+
+def prop_box(model, pos, yaw):
+    """A prop's real box in the map (x1 y1 z1 x2 y2 z2): its model's own size (asset_facts.json) turned by its yaw, or None."""
+    import map_assets
+    b = map_assets.size(model)
+    if not b:
+        return None
+    c, sn = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    xs = [pos[0] + x * c - y * sn for x in (b[0], b[3]) for y in (b[1], b[4])]
+    ys = [pos[1] + x * sn + y * c for x in (b[0], b[3]) for y in (b[1], b[4])]
+    return (min(xs), min(ys), pos[2] + b[2], max(xs), max(ys), pos[2] + b[5])
+
+
+def ways_problems(vmf):
+    """Every prop against every space kept clear (Vmf.keep_way_clear) and every hinged door's swing: the prop's box from
+    its model's own size (asset_facts.json via map_assets.size), turned by its yaw. A door is meant to stand in its own
+    doorway and is not counted; nor are WAY_EXEMPT models. One line per prop and way it blocks."""
+    import map_assets
+    ways = list(vmf.ways) + [(box, "the swing of the door at (%d %d %d)" % tuple((box[k] + box[k + 3]) / 2 for k in range(3)))
+                             for _, box, _ in getattr(vmf, "door_ents", [])]
+    out = []
+    for cls, pos, model, yaw in vmf.props:
+        if cls == "prop_door_rotating" or any(k in model for k in WAY_EXEMPT):
+            continue
+        b = map_assets.size(model)
+        if not b:
+            continue
+        c, sn = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+        xs = [pos[0] + x * c - y * sn for x in (b[0], b[3]) for y in (b[1], b[4])]
+        ys = [pos[1] + x * sn + y * c for x in (b[0], b[3]) for y in (b[1], b[4])]
+        for box, label in ways:
+            x1, y1, z1, x2, y2, z2 = box
+            if min(xs) < x2 and max(xs) > x1 and min(ys) < y2 and max(ys) > y1 and pos[2] + b[2] < z2 and pos[2] + b[5] > z1:
+                out.append("%s (%d by %d) at (%d %d %d) stands in the way at %s" % (
+                    model.rsplit("/", 1)[-1], max(xs) - min(xs), max(ys) - min(ys), pos[0], pos[1], pos[2], label))
+    return out
+
+
 def node_share(name):
     """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
     if name.startswith("mod_"):
@@ -470,6 +510,9 @@ class Vmf:
         self.disp_count = 0
         self.disp_made = [] # (visgroup, edge points, quads folded, quads) of every displaced face
         self.points = []    # (classname, place) of every point entity, for the checks
+        self.props = []     # (classname, place, model, yaw) of every prop, for the checks that keep ways clear
+        self.ways = []      # (box, label): spaces players walk through, kept clear of props (keep_way_clear, ways_problems)
+        self.nudged = []    # (model, from, to): props moved out of a way or a door's swing as they were placed (clear_spot)
         self.shapes = 0     # solids that aren't boxes
         self.shape_boxes = []   # (the box round each of them, for the checks)
         self.portals = []   # the areaportals' boxes, for the checks
@@ -592,10 +635,54 @@ class Vmf:
             s += '\t\t"%s" "%s"\n' % (out, "\x1b".join((target, inp, str(value), _num(delay), "-1")))
         return s + "\t}\n"
 
+    def keep_way_clear(self, box, label):
+        """A space players must walk through (a doorway, a gate and its approach, a hole between two parts, a corridor's
+        middle), as a box in the map's own coordinates: the build fails if a prop's real size stands in it. The owner,
+        22 November: "this should please be a standard instruction for all map edits/creating/modules/etc"."""
+        self.ways.append((tuple(box), label))
+
+    def clear_spot(self, model, pos, yaw):
+        """Where a prop may stand: pos, or if its real box there enters a way kept clear or a hinged door's swing, the
+        nearest spot up to 96 away that does not, going no further into the brushes than it was. None: no such spot."""
+        def hit(p):
+            b = prop_box(model, p, yaw)
+            if b is None:
+                return False
+            ways = [w for w, _ in self.ways] + [box for _, box, _ in self.door_ents]
+            return any(b[0] < w[3] and b[3] > w[0] and b[1] < w[4] and b[4] > w[1] and b[2] < w[5] and b[5] > w[2] for w in ways)
+
+        def into_brushes(p):
+            b = prop_box(model, p, yaw)
+            tot = 0
+            for box, _ in self.boxes:
+                o = [min(b[k + 3], box[k + 3]) - max(b[k], box[k]) for k in range(3)]
+                if min(o) > 0:
+                    tot += o[0] * o[1] * o[2]
+            return tot
+        if not hit(pos):
+            return pos
+        base = into_brushes(pos)
+        for r in range(16, 97, 16):
+            for a in range(0, 360, 45):
+                p = (pos[0] + r * math.cos(math.radians(a)), pos[1] + r * math.sin(math.radians(a)), pos[2])
+                if not hit(p) and into_brushes(p) <= base:
+                    return p
+        return None
+
     def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None, outside=False):
         # (outside: the thing stands in the owner's own map, not in this piece: it is not held to the piece's sealed space)
+        if not outside and cls.startswith("prop") and cls != "prop_door_rotating" and keys and keys.get("model") \
+                and not any(k in str(keys["model"]) for k in WAY_EXEMPT) and (self.ways or self.door_ents):
+            ang = str(keys.get("angles", "0 0 0")).split()
+            spot = self.clear_spot(str(keys["model"]), pos, float(ang[1]) if len(ang) > 1 else 0.0)
+            if spot is not None and tuple(spot) != tuple(pos):
+                self.nudged.append((str(keys["model"]), tuple(pos), tuple(spot)))
+                pos = (round(spot[0]), round(spot[1]), pos[2])
         if not outside:
             self.points.append((cls, tuple(pos)))
+            if cls.startswith("prop") and keys and keys.get("model"):
+                ang = str(keys.get("angles", "0 0 0")).split()
+                self.props.append((cls, tuple(pos), str(keys["model"]), float(ang[1]) if len(ang) > 1 else 0.0))
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
@@ -825,6 +912,11 @@ def test_extras(vmf, start, yaw, vis):
     vmf.point("light_environment", (start[0], start[1], start[2] + 128), {
         "_light": "190 214 193 50", "_ambient": "175 191 207 13", "_lightHDR": "-1 -1 -1 1", "_ambientHDR": "-1 -1 -1 1",
         "_lightscaleHDR": "1", "_ambientscaleHDR": "1", "angles": "0 149 0", "pitch": "-70", "SunSpreadAngle": "0"}, vis)
+    # the sun itself in the sky, where that light comes from (the owner, 22 November: "could you please put a spawn point
+    # and env_sun so I can see outside in the test map?"): the light's own angles with use_angles, as the wiki advises
+    vmf.point("env_sun", (start[0], start[1], start[2] + 160), {
+        "angles": "-70 149 0", "pitch": "-70", "use_angles": "1", "rendercolor": "100 80 80", "overlaycolor": "0 0 0", "size": "16",
+        "overlaysize": "-1", "material": "sprites/light_glow02_add_noz", "overlaymaterial": "sprites/light_glow02_add_noz", "HDRColorScale": "1.0"}, vis)
 
 
 def bar_row(box, along, gap=24):
@@ -1294,6 +1386,12 @@ def main():
     if args.piece == "ravenholm":
         args.first_node = args.first_node or 5300
     vmf, problems = pieces[args.piece](args)
+    if vmf.nudged:
+        print("  props moved out of a way or a door's swing as they were placed: %d (%s)" % (len(vmf.nudged), ", ".join(
+            "%s by %d" % (m.rsplit("/", 1)[-1], math.hypot(b[0] - a[0], b[1] - a[1])) for m, a, b in vmf.nudged[:6])))
+    for p in ways_problems(vmf):         # (every piece and module: nothing stands in a doorway, gate, hole or walkway)
+        print("  PROBLEM: " + p)
+        problems.append(p)
     if args.against:
         clashes = against(vmf, args.against, getattr(args, "expect_overlap", {"15074"} if args.piece == "canal" else set()))
         for p in clashes:

@@ -1793,7 +1793,7 @@ LC.Spawners = SPAWNERS
 
 -- How many NPCs the city's settings want in all (lc_citizens, lc_cops and the rest).
 function LC.NPCTargetsTotal()
-    return (LC.CitizenTarget and LC.CitizenTarget() or 0) + cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + cvSoldiers:GetInt() + cvScanners:GetInt()
+    return (LC.CitizenTarget and LC.CitizenTarget() or 0) + cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.AdvisorCops or 0) + cvSoldiers:GetInt() + cvScanners:GetInt()
         + (LC.ZombieTarget and LC.ZombieTarget() or 0) + (LC.RebelTarget and LC.RebelTarget() or 0)
 end
 
@@ -1867,7 +1867,7 @@ local function MaintainPopulation()
 
     local targets = {
         citizen = LC.CitizenTarget(),
-        cop = math.max(0, cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.LedgerCops or 0)), -- (the Combine's strength: sv_livingcity_ledger.lua)
+        cop = math.max(0, cvCops:GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.LedgerCops or 0) + (LC.AdvisorCops or 0)), -- (the Combine's strength: sv_livingcity_ledger.lua)
         soldier = cvSoldiers:GetInt(),
         scanner = cvScanners:GetInt(),
         -- grown infestation brings more of them (sv_livingcity_territory.lua)
