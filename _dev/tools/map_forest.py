@@ -1090,7 +1090,7 @@ class BunkerForest(Forest):
         plan.walls()
         # the deep level: wholly under the ground (its top is 72 under the gate's floor), so nothing of it shows outside
         deep = WFPlan(origin, zd - 64, zd + 224, **look)
-        deep.keep_out += [(-320, 576, 100000, 832), (-100000, 1152, 100000, 100000)]
+        deep.keep_out += [(-320, 576, 100000, 832), (-100000, 1088, 100000, 100000)]
         room = ("low", zd, fm, zd + 160)
         door = ("low", zd, fm, zd + 128)
         deep.paint((-448, 384, -320, 768), room)       # the foot of the stairs
@@ -1109,11 +1109,11 @@ class BunkerForest(Forest):
         # the existing map area"): a door in the radio room's north wall, a corridor north under the ridge and out through
         # the forest's north wall (cut there only), then 15 steps of 16 by 24 down to the silo's gantry level
         deep.paint((-704, 832, -576, 896), door)
-        deep.paint((-704, 896, -576, 1152), room)
+        deep.paint((-704, 896, -576, 1088), room)
         deep.walls()
         low = WFPlan(origin, zg - 64, zd + 224, **look)
-        low.keep_out += [(-100000, -100000, 100000, 1152), (-100000, 1600, 100000, 100000)]
-        low.paint((-704, 1152, -576, 1472), ("low", zg, fm, zd + 160))      # the stairs (their steps are detail)
+        low.keep_out += [(-100000, -100000, 100000, 1088), (-100000, 1600, 100000, 100000)]
+        low.paint((-704, 1088, -576, 1472), ("low", zg, fm, zd + 160))      # the stairs (their steps are detail: a landing, then 15 steps ending at 1472)
         low.paint((-768, 1472, -512, 1600), ("low", zg, fm, zg + 192))      # the last of the corridor, as wide and high as the silo's door (silo_door)
         low.walls()
         self.low = low
@@ -1226,7 +1226,8 @@ class BunkerForest(Forest):
         # in the floor's plain concrete (in the banded wall's they showed a stripe of band on some and not on others)
         v.detail([B(576, 256 + 12 * k, zl, 704, 268 + 12 * k, zp - 8 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
         v.detail([B(-12 * (k + 1), 640, zd, -12 * k, 768, zl - 8 * (k + 1)) for k in range(23)], wall, vis=vis, top=MAT["stairs"])
-        v.detail([B(-704, 1152 + 24 * k, zg, -576, 1176 + 24 * k, zd - 16 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
+        v.detail([B(-704, 1112 + 24 * k, zg, -576, 1136 + 24 * k, zd - 16 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
+        v.detail([B(-704, 1088, zg, -576, 1112, zd)], wall, vis=vis, top=wall)      # (the stairs' top landing, level with the corridor)
         self.door()
         self.room_doors()
         self.silo()
@@ -1280,8 +1281,8 @@ class BunkerForest(Forest):
                                               ("generator room", (64, 576, 320, 832), zl), ("bunk room", (960, 576, 1216, 832), zl), ("second stairs", (-320, 640, 0, 768), zd),
                                               ("foot of the second stairs", (-448, 384, -320, 768), zd), ("passage", (-1216, 384, -448, 512), zd),
                                               ("radio room", (-768, 576, -512, 832), zd), ("armoury", (-1152, 576, -896, 832), zd), ("sick bay", (-768, 64, -512, 320), zd),
-                                              ("stores", (-1152, 64, -896, 320), zd), ("plant room", (-1600, 256, -1280, 576), zd), ("corridor to the silo", (-704, 896, -576, 1152), zd),
-                                              ("silo stairs", (-704, 1152, -576, 1472), zg), ("corridor's end", (-768, 1472, -512, 1600), zg)):
+                                              ("stores", (-1152, 64, -896, 320), zd), ("plant room", (-1600, 256, -1280, 576), zd), ("corridor to the silo", (-704, 896, -576, 1088), zd),
+                                              ("silo stairs", (-704, 1088, -576, 1472), zg), ("corridor's end", (-768, 1472, -512, 1600), zg)):
             a, b = W(x1, y1, floor), W(x2, y2, floor + 400)
             if not any(a[0] < p[0] < b[0] and a[1] < p[1] < b[1] and a[2] < p[2] < b[2] for p in lit):
                 self.problems.append("the bunker's %s has no light" % name)
@@ -1794,7 +1795,8 @@ class BunkerForest(Forest):
 
     DOOR_SPEED = 6      # the silo's blast door's leaves, degrees a second: Valve's own (60 degrees in 10 s)
     BLAST_AT = 596      # the silo's blast door's plane, this far from the silo's axis toward the bunker: 32 further out than Valve's (564), so that
-                        # its drum (shut) and leaves (open) stay clear of the lift's car standing in the walkway at its top stop
+                        # its hinge posts stand clear of the lift's car standing in the walkway at its top stop
+    BLAST_PAD = (112, 556)   # the silo door's inside keypad: on the tunnel's east wall (112 east of the axis), 556 from the axis, beside the doorway
     FLAT_SPEED = 16     # the bunker door's two flat leaves, units a second: each slides 128, so 8 s
     FLAT_SCALE = 0.654  # Silo 2's leaves drawn at this size: 136 along the wall each, 216 high, 19 thick
     FLAT_PROUD = 8      # open, each leaf's edge stands this far out from the jamb (the owner, 22 November: flush, "they are flickering with the walls")
@@ -1932,15 +1934,16 @@ class BunkerForest(Forest):
     def silo_door(self):
         """White Forest's round blast door (the piece valve_ep2_bunker_door) at the actual entrance of the silo (the owner,
         22 November: "the silo doors at the entrance to the bunker need to be moved to the actual entrance to the silo"):
-        at the mouth of the silo's west tunnel, 32 further toward the bunker than Valve had it (BLAST_AT: clear of the lift's
-        car standing in the walkway at its top stop), the drum at the end of the corridor from the bunker (widened there to
-        256 and 192 high: setup()), and
-        turned half round from Valve's so that its leaves swing into the silo's tunnel, where there is room (on the
-        corridor's side are the last steps). A drum of concrete and steel 224 wide: its lower 160 two leaves hinged on the
-        corridor's side that swing 60 degrees at Valve's 6 a second (10 s), a lock bar in the floor, Valve's start, loop and
-        end sounds. It stands open. An inner door: a button each side (the corridor's east wall, the silo tunnel's east
-        wall) shuts it and opens it again, with a klaxon and a steady red light; shut from inside, the outside one is locked
-        until it is opened from inside. Each leaf is a
+        at the mouth of the silo's west tunnel, 32 further toward the bunker than Valve had it (BLAST_AT: its hinge posts
+        clear of the lift's car standing in the walkway at its top stop), the drum at the end of the corridor from the bunker
+        (widened there to 256 and 192 high, the stairs ending where it widens: setup()), Valve's way round: its leaves swing
+        toward the bunker, into the corridor's end. (Turned the other way, from 22 November, they swung through the lift's
+        car at the top: the owner, "the doors clip through the elevator when closing".) A drum of concrete and steel 224
+        wide: its lower 160 two leaves hinged on the silo's side that swing 60 degrees at Valve's 6 a second (10 s), a lock
+        bar in the floor, Valve's start, loop and end sounds. It stands open. An inner door: a button each side (the stairs'
+        east wall; inside, Valve's keypad with a lamp over it on the tunnel's east wall beside the doorway) shuts it and
+        opens it again, with a klaxon and a steady red light; shut from inside, the outside one is locked until it is opened
+        from inside or the silo empties. Each leaf is a
         func_rot_button used as a mover, so none of it is a door to the gamemode. Nothing kills: in the last moments of the
         close a shove (shove()) pushes whoever is in the doorway out of it. Its own areaportal, lc_silo_blast_portal, in the
         leaves' swing, shuts with it: the bunker's areaportal still parts the bunker from the forest, this one the silo
@@ -1951,17 +1954,13 @@ class BunkerForest(Forest):
         vis, dv = self.vis("structures"), self.vis("silo door (the leaves, the buttons, the wiring)")
         pf = PF.load("valve_ep2_bunker_door")
         dy = sy - self.BLAST_AT
-        q, d = 3, (sx, dy, zg)
+        q, d = 1, (sx, dy, zg)                # (Valve's way round: the leaves swing toward the bunker, never into the lift's car)
         half = int(pf["size"][1]) // 2       # (112)
         top = zg + 192
-        y0, y1 = dy - 36, sy - 544             # (from the drum's face on the corridor's side to the hull's inner face)
+        y0, y1 = dy - 32, sy - 544             # (from the drum's face on the corridor's side to the hull's inner face)
         pf_solids(v, pf, q, d, vis)            # the drum's head, its jambs and hinge posts (detail)
         for a, b in ((sx - 128, sx - half), (sx + half, sx + 128)):      # the doorway filled to the drum each side (world: the areaportal's edges)
             wf_box(v, (a, y0, zg, b, y1, top), {k: wf_face(k, zg, zg, top) for k in ("east", "west", "north", "south")}, vis)
-        # and beside the last two steps, where the corridor widens for the drum: the stairs stay 128 wide up to it
-        for a, b, face in ((sx - 128, sx - 64, "east"), (sx + 64, sx + 128, "west")):
-            for z1, z2 in ((zg, zg + WF_BAND), (zg + WF_BAND, top)):
-                wf_box(v, (a, y0 - 40, z1, b, y0, z2), {face: wf_face(face, zg, z1, z2), "north": wf_face("north", zg, z1, z2)}, vis)
         travel = 60.0 / self.DOOR_SPEED
         for w in pf["wiring"]:
             if w["classname"] != "func_door_rotating":
@@ -1987,7 +1986,10 @@ class BunkerForest(Forest):
         v.brush_entity("func_areaportal", {"targetname": "lc_silo_blast_portal", "StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
         v.detail([(sx - half, dy - 36, zg, sx + half, dy + 36, zg + 1)], FMAT["wf_floor"], vis=vis)       # (ending short of the lift's shaft)
         v.keep_way_clear((sx - 64, dy - 104, zg + 4, sx + 64, sy - 552, zg + 110), "the silo's door")
-        self.shove("lc_silo_blast_shove", [((sx - half, dy - 56, zg, sx + half, dy, zg + 160), 270, 200), ((sx - half, dy, zg, sx + half, sy - 548, zg + 160), 90, 300)], dv)
+        self.shove("lc_silo_blast_shove", [((sx - 40, dy - 60, zg, sx + 40, dy - 34, zg + 160), 270, 200),
+                                           ((sx - 104, dy - 60, zg, sx - 40, dy - 24, zg + 160), 270, 200), ((sx + 40, dy - 60, zg, sx + 104, dy - 24, zg + 160), 270, 200),
+                                           ((sx - 40, dy - 30, zg, sx + 40, sy - 548, zg + 160), 90, 300),
+                                           ((sx - 104, dy - 4, zg, sx - 40, sy - 548, zg + 160), 90, 300), ((sx + 40, dy - 4, zg, sx + 104, sy - 548, zg + 160), 90, 300)], dv)
 
         def sound(name, message, at, loops=False):
             v.point("ambient_generic", at, {"targetname": name, "message": message, "health": "10", "pitch": "100", "pitchstart": "100", "radius": "2200",
@@ -2006,7 +2008,8 @@ class BunkerForest(Forest):
                                    "style": "0"}, dv)
         v.point("env_shake", at, {"targetname": "lc_silo_blast_shake", "amplitude": "5", "radius": "700", "duration": "1.6", "frequency": "40", "spawnflags": "0"}, dv)
         end = 1 + travel
-        shut = [("OnTrigger", "lc_silo_blast_close", "Disable", "", 0), ("OnTrigger", "lc_silo_blast_light", "TurnOn", "", 0)]
+        shut = [("OnTrigger", "lc_silo_blast_close", "Disable", "", 0), ("OnTrigger", "lc_silo_blast_light", "TurnOn", "", 0),
+                ("OnTrigger", "lc_silo_blast_inside_lamp", "Color", "197 6 1", 0)]
         shut += [("OnTrigger", "lc_silo_blast_alarm", "PlaySound", "", round(1.7 * k, 1)) for k in range(int(end / 1.7) + 1)]
         shut += [("OnTrigger", "lc_silo_blast_leaf*", "PressOut", "", 1), ("OnTrigger", "lc_silo_blast_move", "PlaySound", "", 1),
                  ("OnTrigger", "lc_silo_blast_shove", "Enable", "", end - 0.6), ("OnTrigger", "lc_silo_blast_shove", "Disable", "", end + 0.3),
@@ -2021,6 +2024,7 @@ class BunkerForest(Forest):
                   ("OnTrigger", "lc_silo_blast_leaf*", "PressIn", "", 1), ("OnTrigger", "lc_silo_blast_move", "PlaySound", "", 1),
                   ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_stop", "PlaySound", "", end),
                   ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 1), ("OnTrigger", "lc_silo_blast_close", "Enable", "", end + 2),
+                  ("OnTrigger", "lc_silo_blast_inside_lamp", "Color", "40 220 40", end),
                   ("OnTrigger", "lc_silo_blast_button_corridor", "Unlock", "", 0), ("OnTrigger", "lc_silo_blast_locked_lamp", "HideSprite", "", 0),
                   ("OnTrigger", "lc_silo_blast_locked", "SetValue", "0", 0),
                   ("OnTrigger", "lc_silo_blast_close_inside", "Enable", "", end + 2)]
@@ -2055,12 +2059,27 @@ class BunkerForest(Forest):
                                     ("OnNotTouching", "lc_silo_blast_locked", "Test", "", 0)])
         v.point("logic_relay", (relay[0] + 64, relay[1], relay[2]), {"targetname": "lc_silo_empty", "StartDisabled": "0", "spawnflags": "0"}, sv_,
                 connections=[("OnTrigger", "lc_silo_inside", "TouchTest", "", 2)])
-        wall_button(v, (sx + 64, dy - 60, zg + 56), 180, "lc_silo_blast_button_corridor", (sx + 54, dy - 70, zg + 52, sx + 64, dy - 50, zg + 80), dv, press, "9",
+        wall_button(v, (sx + 64, dy - 88, zg + 56), 180, "lc_silo_blast_button_corridor", (sx + 54, dy - 98, zg + 52, sx + 64, dy - 78, zg + 80), dv, press, "9",
                     extra={"locked_sound": "2"})      # (Access Denied, as Valve's locked buttons)
-        v.point("env_sprite", (sx + 62, dy - 60, zg + 84), {"targetname": "lc_silo_blast_locked_lamp", "model": "sprites/glow01.spr", "rendermode": "9",
+        v.point("env_sprite", (sx + 62, dy - 88, zg + 84), {"targetname": "lc_silo_blast_locked_lamp", "model": "sprites/glow01.spr", "rendermode": "9",
                                                              "rendercolor": "197 6 1", "renderamt": "215", "renderfx": "0", "scale": "0.15", "GlowProxySize": "2",
                                                              "HDRColorScale": ".5", "framerate": "10.0", "spawnflags": "0", "disablereceiveshadows": "0"}, dv)
-        wall_button(v, (sx + 112, sy - 516, zg + 40), 180, "lc_silo_blast_button_silo", (sx + 102, sy - 526, zg + 36, sx + 112, sy - 506, zg + 64), dv, inside, "9")
+        # the inside one: not the lift's mine button but Valve's keypad (props_lab/keypad, as beside the silo's own doors) with
+        # a lamp over it, red while the door is shut, green open, on the tunnel's east wall right beside the doorway, the
+        # wall without the lift's call button, at the outside one's height (the owner, 22 November: "there is no
+        # distinguishing between the elevator call button on one wall and the silo door button on the other ... the silo
+        # door button needs to be away from the elevator"). Reached from the floor beside the shaft's mouth, which neither
+        # the car nor the grates ever fill.
+        bx, by = sx + self.BLAST_PAD[0], sy - self.BLAST_PAD[1]
+        v.point("prop_dynamic", (bx - 1, by, zg + 56), {"targetname": "lc_silo_blast_button_silo_model", "model": "models/props_lab/keypad.mdl", "angles": "0 180 0",
+                                                        "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
+                                                        "StartDisabled": "0", "spawnflags": "0"}, dv)
+        v.brush_entity("func_button", {"targetname": "lc_silo_blast_button_silo", "spawnflags": "1025", "wait": "9", "speed": "5", "lip": "0", "movedir": "0 0 0",
+                                       "sounds": "0", "health": "0", "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255", "min_use_angle": "0.8"},
+                       [(bx - 8, by - 7, zg + 48, bx, by + 7, zg + 68)], MAT["nodraw"], dv, connections=inside)
+        v.point("env_sprite", (bx - 2, by, zg + 76), {"targetname": "lc_silo_blast_inside_lamp", "model": "sprites/glow01.spr", "rendermode": "9",
+                                                      "rendercolor": "40 220 40", "renderamt": "215", "renderfx": "0", "scale": "0.15", "GlowProxySize": "2",
+                                                      "HDRColorScale": ".5", "framerate": "10.0", "spawnflags": "1", "disablereceiveshadows": "0"}, dv)
         self.notes.append("the silo's door: White Forest's round blast door at the mouth of the silo's tunnel, a button each side (shut from inside, the outside "
                           "one is locked until it is opened from inside or the silo is empty), its own areaportal")
 
