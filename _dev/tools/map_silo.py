@@ -674,6 +674,11 @@ def _escape(self):
                    connections=[("OnPressed", name + "_sound", "PlaySound", "", 0)])
     v.point("ambient_generic", self.P(-64, 490, 344), {"targetname": name + "_sound", "message": "doors/doormove2.wav", "health": "8", "pitch": "80", "pitchstart": "80",
                                                        "radius": "600", "spawnflags": "48"}, self.vis)
+    # an areaportal in the opening, behind the panel (always open): the way out joins the bunker to the forest a second
+    # way, so without it the main door's areaportal no longer parts two areas (the owner's compile of 22 November:
+    # "Brush 2754: areaportal brush doesn't touch two areas ... AREAPORTAL LEAKED", 2754 being lc_bunker_portal)
+    v.world_box(wbox(self.d, (-141, 500, 304, 0, 544, 320)), wall, top=wall, bottom=wall, vis=self.vis, faces=face)     # (the sill under it: our own, so it is sealed below)
+    v.areaportal(wbox(self.d, (-104, 524, 320, -24, 526, 368)), self.vis, name + "_portal")
     e = Escape(self)
     # (the skin check: the tunnel's faces must meet each other but at its two ends, the squeezes' mouths: 28 edge points
     # each; the cave's own pieces meet Valve's faces and brushes, which the check does not see)
