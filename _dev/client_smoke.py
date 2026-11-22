@@ -2334,6 +2334,34 @@ local polys = _calls["surface.DrawPoly"] or 0
 local okD, errD = pcall(LC_CL.DrawAdvisorScreen, scr)
 if not bad and not okD then bad = "drawing the screen: " .. tostring(errD) end
 if not bad and (_calls["surface.DrawPoly"] or 0) - polys ~= 3 then bad = "the screen should draw the Advisor's glow, head and body" end
+-- the real Advisor (22 November): with a picture to draw into and its model, the model is drawn into the texture and
+-- the glass shows that picture instead of the outline
+if not bad and LC_CL.AdvisorFeedReset and LC_CL.AdvisorFeed then
+    LC_CL.AdvisorFeedReset()
+    local grtW, cmW, ivW = GetRenderTarget, ClientsideModel, util.IsValidModel
+    local drew = 0
+    GetRenderTarget = function(name) return { GetName = function() return name end } end
+    util.IsValidModel = function() return true end
+    ClientsideModel = function()
+        local m = {}
+        function m:IsValid() return true end
+        function m:SetNoDraw() end function m:SetPos() end function m:SetAngles() end
+        function m:LookupSequence() return 0 end function m:ResetSequence() end function m:SequenceDuration() return 3 end
+        function m:GetModelBounds() return Vector(-40, -40, 0), Vector(40, 40, 160) end
+        function m:SetupBones() end function m:GetBoneCount() return 1 end function m:GetBoneName() return "Advisor.Head" end
+        function m:GetBonePosition() return Vector(10, 0, 140) end
+        function m:SetCycle() end function m:DrawModel() drew = drew + 1 end function m:Remove() end
+        return m
+    end
+    local okA = pcall(LC_CL.DrawAdvisorScreen, scr) -- (a screen in view asks for a picture)
+    local okF, fed = pcall(LC_CL.AdvisorFeed)
+    local tex, polys2 = _calls["surface.DrawTexturedRect"] or 0, _calls["surface.DrawPoly"] or 0
+    local okB = pcall(LC_CL.DrawAdvisorScreen, scr)
+    if not (okA and okF and okB and fed == true and drew == 1) then bad = "the Advisor's own model should be drawn into the screen's picture"
+    elseif (_calls["surface.DrawTexturedRect"] or 0) ~= tex + 1 or (_calls["surface.DrawPoly"] or 0) ~= polys2 then bad = "the glass should show the Advisor's picture, not the outline" end
+    GetRenderTarget, ClientsideModel, util.IsValidModel = grtW, cmW, ivW
+    LC_CL.AdvisorFeedReset()
+end
 scr:Remove()
 _globals.lc_advisors = nil
 _me:SetNW2String("lcf_faction", factionWas)

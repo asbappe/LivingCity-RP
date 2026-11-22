@@ -2,7 +2,7 @@
 
 The owner, 22 November, approving the ideas of 21 November (lesson `valve-overseer-on-screens`: the Advisor is only ever a face on a screen). The Administrator asks the Combine's Advisors for help and reports to them.
 
-- **The screen.** Miscount Editor > Fixture: Advisor screen, on a wall in her office, facing you. A Combine wall monitor showing the Advisor's dark shape against a slow pulse, red and quicker while her report is due. **Until one is placed, there are no Advisors**: nothing below happens and her menu has no entry for them.
+- **The screen.** Miscount Editor > Fixture: Advisor screen, on a wall in her office, facing you. A Combine wall monitor showing the Advisor itself (the owner, 22 November): Episode Two's Advisor model, moving, drawn straight onto the glass as a live feed with a slow camera drift, lit in the screen's colour, which pulses slowly, red and quicker while her report is due. No hidden room or camera is needed: only the model is drawn into the picture, a few times a second while a screen is in view. If the model can't be drawn, the Advisor's dark outline stands in. **Until one is placed, there are no Advisors**: nothing below happens and her menu has no entry for them.
 - **Her menu.** E on the screen, or F2 > City orders > The Advisors ("(report due)" when it is). Its title says their patience in words: "The Advisors are patient / growing impatient / out of patience". Units and everyone else pressing E get only the screen's refusal sound.
 - **Who.** A player whose faction is the Administrator; with nobody playing her, the city's own Administrator does it all by itself.
 
