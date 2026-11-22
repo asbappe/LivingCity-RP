@@ -1614,6 +1614,32 @@ def m_armory(m, opt):
 # 7. The swing bridge (experimental)
 # ---------------------------------------------------------------------------
 
+def street_landing(m, s, cu, deck, arc, lip, U, B, Y):
+    """The swing bridge's end on a street's bank: no landing room, the bridge meets the street's canal edge (a gap in its
+    parapet), the lip and handrails as on a landing, the button on a steel post at the edge with its lamps, the barrier arm."""
+    m.b.edge_gaps.append(m.fr.rect(cu - 72, s * 236, cu + 72, s * 284))
+    m.shapes([vprism([(a[0], s * a[1]), (c[0], s * c[1]), (c[0], s * 256), (a[0], s * 256)], deck - 16, deck, MAT["beam"], MAT["quay_floor"])
+              for a, c in zip(arc, arc[1:])])
+    m.shapes([prism([(s * 256, deck - 56), (s * 256, deck - 16), (s * 236, deck - 16)], "x", cu - 64, cu + 64, MAT["beam"])])
+    handrail(m, (cu - 64, s * 238), (cu - 32, s * 238), deck)
+    handrail(m, (cu + 32, s * 238), (cu + 64, s * 238), deck)
+    tag = "a" if s > 0 else "b"
+    wu = U(608)
+    m.det([B(600, 296, deck, 616, 312, deck + 80)], STEEL)                                                    # (the post)
+    m.button("lc_swing_wheel_" + tag, wu, s * 296, deck + 52, Y(270), [("lc_swing_bell", "PlaySound", "", 0), ("lc_swing_bridge", "Toggle", "", 2)], wait="10")
+    sprite(m, "lc_swing_lamp_" + tag, wu - 6, s * 304, deck + 90, "120 255 120", 0.3)
+    sprite(m, "lc_swing_red_" + tag, wu + 6, s * 304, deck + 90, "255 50 30", 0.3, on=False)
+    sprite(m, "lc_swing_red_%s2" % tag, U(336), s * 168, deck + 90, "255 50 30", 0.35, on=False)
+    ay = s * (lip + 10)
+    brush(m, "func_door_rotating", {
+        "targetname": "lc_swing_arm_" + tag, "origin": "%d %d %d" % m.fr.at(cu - 58, ay, deck + 38), "distance": "85", "speed": "40", "wait": "-1", "lip": "0",
+        "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": str(32 + (64 if m.fr.ax("v") == "x" else 128)), "health": "0", "ignoredebris": "0",
+        "loopmovesound": "0", "noise1": "Doors.Move10", "noise2": "Doors.FullOpen4", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
+        "renderfx": "0", "disableshadows": "1"}, [(cu - 60, ay - 2, deck + 35, cu + 50, ay + 2, deck + 41)], "dev/dev_hazzardstripe01a")
+    m.det([(cu - 64, ay - 4, deck, cu - 54, ay + 4, deck + 34)], STEEL)      # (its post)
+    m.taken(*B(252, 228, deck - 60, 772, 256, deck + 120))
+
+
 def m_swingbridge(m, opt):
     """EXPERIMENTAL: a footbridge 224 over the canal's floor (32 under the trim, so that every room of it is roofed at
     720 or lower and a street along the outside bank passes over it) that turns on a round pier in the middle of the
@@ -1660,7 +1686,8 @@ def m_swingbridge(m, opt):
     motor box and turntable, the landings, their lips and corbels, the stairs, their parapet and the wall between the
     flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstripe01a)."""
     b = m.b
-    L, cu, deck = 1024, 512, TRIM - 32         # (32 under the trim: a street along the outside bank passes over the landings' roofs, at 720 or lower)
+    street = m.street_side()
+    L, cu, deck = 1024, 512, (TRIM if street else TRIM - 32)      # (beside a street the deck is at the street's height and meets it on that bank)
     half, wide, cap = 229, 32, 232          # the deck's straight sides end 229 out; its ends are arcs reaching 232
     lip = cap + 1                           # the lips' edges: arcs 1 farther out than the deck's ends
     ends = [(cu - 32, half), (cu - 16, 231), (cu, cap), (cu + 16, 231), (cu + 32, half)]
@@ -1685,6 +1712,9 @@ def m_swingbridge(m, opt):
 
         def Y(yaw):
             return (yaw + (0 if s > 0 else 180)) % 360
+        if s == street:
+            street_landing(m, s, cu, deck, arc, lip, U, B, Y)
+            continue
         mid = F + (deck - F) // 2                                 # the half landing: each flight climbs 112 in 7 steps
         roof_lo, roof_up = (F + 160, F + 200, mid + 128), (deck + 96, deck + 80, mid + 144)    # (each flight's roof, stepping with it)
         # the landing (192 long, the bridge's end in its far half), 96 high

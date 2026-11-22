@@ -124,6 +124,7 @@ class Build:
         self.vmf = Vmf()
         self.vis = "LC %s" % name
         self.upper = upper    # "left" or "right": the bank built up to the street (map_corridor.py), or None
+        self.edge_gaps = []   # (boxes on the street's canal edge with no parapet there: where a bridge meets the street)
         self.deck, self.viaduct, self.sheds, self.lifted = set(), set(), set(), set()
         if upper:
             import map_corridor
@@ -247,7 +248,7 @@ class Mod:
     def street_side(self):
         """The module's own side the chain's street runs along (+1 its left bank, -1 its right), or 0 with no street."""
         up = self.b.upper
-        if not up:
+        if not up or getattr(self, "no_street", False):
             return 0
         s = 1 if up == "left" else -1
         return -s if self.fr.flip else s
@@ -797,20 +798,33 @@ def m_jog(m, opt):
     m.soundscape(SCAPES["courtyard"], 512, s // 2, F, radius=900)
 
 
+def side_gate_reach(m, side, reach):
+    """How far out a side gate on the module's side (+1 left, -1 right) is: `reach`, or where a street runs over that bank,
+    beyond the street and its frontage (the side way passes under the road and the tracks: the owner, 22 November, "Bridge
+    over"); the piece joined there moves out to meet it."""
+    if m.street_side() != side:
+        return reach
+    import map_corridor
+    return max(reach, map_corridor.FRONT + 64)
+
+
 def m_tee(m, opt):
     """A way off to the left: a standard gate in the left wall (512 wide, 256 high), capped until another piece, or
     another layout's start, is joined to it. A number painted beside the gate, puddles and trash, the courtyard's
     soundscape."""
     b = m.b
+    g = side_gate_reach(m, 1, 512)      # (where the side gate is: under a street on this bank, beyond the street)
+    g = max([g] + [int(w) for w in opt if w.isdigit()])      # ("tee flip 1152": further out still, to meet a piece where it is)
     m.open(0, -256, 512, 256)
-    m.low(0, 256, 512, 512, F + GATE_HIGH)
-    gate_cap(b.vmf, m.fr.box(0, 448, F, 512, 512, F + GATE_HIGH), m.fr.box(0, 424, F, 512, 432, F + GATE_HIGH), m.fr.ax("u"),
+    m.low(0, 256, 512, g, F + GATE_HIGH)
+    gate_cap(b.vmf, m.fr.box(0, g - 64, F, 512, g, F + GATE_HIGH), m.fr.box(0, g - 88, F, 512, g - 80, F + GATE_HIGH), m.fr.ax("u"),
              "%s: %s side gate's cap (delete to join)" % (b.vis, m.tag))
-    m.portal(0, 382, F, 512, 384, F + GATE_HIGH)
-    b.plan.keep_out.append(m.fr.rect(-64, 512, 576, 576))
-    b.allow.append(m.fr.box(-128, 384, BASE, 640, 640, b.sky + 64))    # (the piece joined at the side gate: its walls may overlap these, both solid)
-    m.blocked(0, 384, 512, 512)
-    m.side(0, 256, 512, 512)
+    import map_corridor
+    m.portal(0, 382, F, 512, 384, min(F + GATE_HIGH, map_corridor.STREET - 16) if g > 512 else F + GATE_HIGH)      # (under a street the culvert's roof is the street's deck)
+    b.plan.keep_out.append(m.fr.rect(-64, g, 576, g + 64))
+    b.allow.append(m.fr.box(-128, g - 128, BASE, 640, g + 128, b.sky + 64))    # (the piece joined at the side gate: its walls may overlap these, both solid)
+    m.blocked(0, 384, 512, g)
+    m.side(0, 256, 512, g)
     x, y = m.fr.pt(0, 0)
     canal_grime(m, 0, 512, 3000 + (x * 7 + y * 13) % 997)
     m.grime("number", 512, 320, F + 180, x + y)               # (a number on the gate's cheek, where the side way leaves)
@@ -819,7 +833,7 @@ def m_tee(m, opt):
     m.grime("stain", 400, 256, F + GATE_HIGH + 40, x + y + 2)
     m.soundscape(SCAPES["courtyard"], 256, 0, F, radius=768)
     dx, dy = m.fr.way(90)
-    b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, 512) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
+    b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, g) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
 
 
 def m_gate(m, opt):
@@ -2083,6 +2097,8 @@ def group_sheds(elems):
             del group[:]
     for e in elems:
         if e.get("shed_part"):
+            if group and group[-1]["shed_part"] != e["shed_part"]:
+                close()
             group.append(e)
             continue
         close()
@@ -2121,7 +2137,10 @@ def build_chain(lay, args):
             size = width      # (a turn as wide as the canal: 512 square, or 1024 in the wide canal)
             fr = Frame(x, y, rot, size)
             m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt + (["wide"] if size > CANAL_W else []))
-            elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
+            if "nostreet" not in opt:
+                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
+            else:
+                elems.append({"kind": "gap", "tag": "%d %s turn" % (n, name)})
             shed_n = 0
             x, y = fr.pt(size // 2, size // 2 if name == "left" else -size // 2)
             rot = (rot + (1 if name == "left" else -1)) % 4
@@ -2129,13 +2148,17 @@ def build_chain(lay, args):
         if name == "gate" and opt[0] == "end" and width != CANAL_W:
             b.problems.append("the chain ends %d wide: put a narrow before its end (its gate is %d wide)" % (width, CANAL_W))
         if name == "gate":
+            nb = steps[n + 1] if opt[0] == "start" and n + 1 < len(steps) else steps[n - 1] if opt[0] == "end" and n > 0 else []
+            if "nostreet" in nb[1:]:
+                opt = opt + ["nostreet"]
             fr = Frame(x, y, rot, 256, flip=(opt[0] == "end"))
             m_gate(Mod(b, fr, "the %s gate" % opt[0]), opt)
             if opt[0] == "start":
                 seed = fr.at(192, 0, F + 32)
                 spawn = (fr.at(224, 0, F + 16), fr.yaw(0))
             b.labels.append(fr.pt(128, 0) + ("gate",))
-            elems.append({"kind": "leg", "frame": Frame(x, y, rot, 256), "length": 256, "tag": "the %s gate" % opt[0]})
+            elems.append({"kind": "gap", "tag": "the %s gate" % opt[0]} if "nostreet" in opt else
+                         {"kind": "leg", "frame": Frame(x, y, rot, 256), "length": 256, "tag": "the %s gate" % opt[0]})
             x, y = Frame(x, y, rot, 256).pt(256, 0)
             continue
         if name not in MODULES:
@@ -2168,7 +2191,9 @@ def build_chain(lay, args):
         tag = name if name in ("straight", "jog", "tee", "shed") else "%s%s" % (name, " %d" % count[name] if count[name] > 1 else "")
         shift = jog_shift(opt) if name == "jog" else 0
         lifted = bool(upper) and "up" in opt
-        if upper:
+        if upper and "nostreet" in opt:      # (no street over this one: the street stops before it and starts again after)
+            elems.append({"kind": "gap", "tag": "%d %s" % (n, tag)})
+        elif upper:
             if name == "jog":
                 b.problems.append("a jog cannot be used where the street runs beside the canal (the street would break): use turns")
             e = {"kind": "leg", "frame": Frame(x, y, rot, length), "length": length, "tag": "%d %s" % (n, tag), "lifted": lifted,
@@ -2176,8 +2201,8 @@ def build_chain(lay, args):
             if name == "shed":
                 shed_n += 1
                 e["shed"] = "start" if shed_n == 1 else "end"
-            elif "shed" in opt:
-                e["shed_part"] = True      # (a shed on the street over this module: consecutive ones make one shed)
+            elif any(w.startswith("shed") for w in opt):
+                e["shed_part"] = [w for w in opt if w.startswith("shed")][0]      # (a shed on the street over this module: consecutive ones with the same word, "shed" or "shed2", make one shed)
             elems.append(e)
         elif "up" in opt:
             b.problems.append("%s is to be lifted to the street (\"up\"), but the layout has no street: add a line \"upper left\" or \"upper right\"" % tag)
@@ -2188,6 +2213,7 @@ def build_chain(lay, args):
         else:
             fr = Frame(x, y, rot, length, flip, shift, dv=wide_dv)
         mod = Mod(b, fr, "%d %s" % (n, tag))
+        mod.no_street = "nostreet" in opt
         if name not in ("straight", "jog", "tee", "shed"):
             mod.view(40, 0, F, 0, 4, "coming in")
             mod.cubemap(length // 2, 0)

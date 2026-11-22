@@ -10,7 +10,7 @@
 #   start X Y          the middle of the road's end, where the street begins; heading: the way it runs
 
 ground street
-start 0 8320
+start 0 9024
 heading N
 rim 784
 

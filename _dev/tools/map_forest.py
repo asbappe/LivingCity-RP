@@ -3616,7 +3616,7 @@ def forest_cave(args):
     # (west of the ring's west run: the far side of the city from the bunker forest. The owner: "can they be on opposite sides
     #  of the canal? that way if one is attacked, it's quite a long distance to reach the other")
     floor = 400 if args.floor is None else args.floor
-    f = CaveForest("forest (cave, stream)", tuple(args.origin or (-9280, 4608)), floor, 47, args.first_node or 4600, ("east", 256))
+    f = CaveForest("forest (cave, stream)", tuple(args.origin or (-9856, 4608)), floor, 47, args.first_node or 4600, ("east", 256))
     f.test = bool(getattr(args, "test", False))
     f.setup()
     f.shell()

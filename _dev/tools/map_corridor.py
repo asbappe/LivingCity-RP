@@ -188,6 +188,8 @@ def lay(b, elems, side, cars):
 
     # --- the squares ---
     for e in elems:
+        if e["kind"] == "gap":      # (a stretch with no street: "nostreet")
+            continue
         fr, L = e["frame"], e["length"]
         if e["kind"] == "leg":
             if e.get("shed"):
@@ -217,7 +219,7 @@ def lay(b, elems, side, cars):
             for i in range(r[0] // CELL, r[2] // CELL):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     plan.front.add((i, j))
-        elif (e["kind"] == "right") == (s > 0):      # (a turn away from the street's side: the street goes round the outside of it)
+        elif e["kind"] in ("left", "right") and (e["kind"] == "right") == (s > 0):      # (a turn away from the street's side: the street goes round the outside of it)
             band(fr, 0, EDGE, 256 + FRONT, FRONT, road, e["tag"])
             r = fr.rect(512, s * -256, 256 + FRONT, s * 256)
             for i in range(r[0] // CELL, r[2] // CELL):
@@ -278,7 +280,11 @@ def lay(b, elems, side, cars):
             m.lane(top[0] + 32, s * 544, STREET)
             e["crossing"] = top
             m.view(u0 - 60, s * 150, F, 20 if s > 0 else 340, -16, "the stairs up to the street")
-        # the canal's edge: a low parapet, chain link on it
+        # the canal's edge: a low parapet, chain link on it (not where a bridge meets the street: b.edge_gaps)
+        for u in range(0, L, CELL):
+            px, py = fr.pt(u + 32, s * (EDGE + 6))
+            if any(r[0] <= px <= r[2] and r[1] <= py <= r[3] for r in b.edge_gaps):
+                stairs.append((u, u + CELL))
         for a, c in runs(EDGE + 32, stairs):
             v1, v2 = sv(EDGE, EDGE + 12)
             m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"], vis=dv)
