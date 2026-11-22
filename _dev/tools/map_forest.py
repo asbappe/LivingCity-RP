@@ -1207,7 +1207,8 @@ class BunkerForest(Forest):
     # piece): its path point, gate, call button and wiring are all made from this list.
     LIFT_STOPS = (320, 896, 1152)
     LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
-    HQ_FOOT, HQ_TOP = 322 + 8, 1408 + 120      # the Resistance flag's markers on the shaft's axis: over the pit's cover (322) and the gantry (1408)
+    HQ_AT = (102, 77)                          # (the silo's frame) the flag's pole: 128 from the axis, 37 degrees round, beside the rocket
+    HQ_FOOT, HQ_TOP = 322 + 8, 1408 + 120      # the Resistance flag's markers beside the rocket: over the pit's cover (322) and the gantry (1408)
     # the rebel territory the gamemode reads from the map round the flag's pole: a box 1400 wide each way and 1800 high
     # from the floor under the marker (the gamemode's reading), so the marker stands on the bottom floor beside the pole's foot
     REBEL_ZONE = ("lc_zone_rebel_r700_h1800_silo", 322 + 8)
@@ -1223,9 +1224,9 @@ class BunkerForest(Forest):
         door at the bottom (the Resistance leader's office) opened and shut by Use, with Valve's lever moved inside to
         lock it; the keypads have names of their own; the steam gate, the areaportals, Valve's story (scenes, NPC makers,
         the autosave, Uriah) and the piece's reserve (the hoisted machine) are left out; the soundscapes are Valve's silo
-        ones without the rocket's ignition hisses. Invisible player clips stand in the empty shaft (where the rocket was)
+        ones without the rocket's ignition hisses. Invisible player clips stand in the shaft round the rocket (put back on 22 November)
         at the open levels and the gantry, so nobody walks off into a 1,250 drop. Two info_targets on the shaft's axis
-        mark the Resistance flag's pole: lc_hq_setup_silo 8 over the bottom floor (the pit's cover), lc_hq_setup_silo_top
+        mark the Resistance flag's pole beside the rocket: lc_hq_setup_silo 8 over the bottom floor (the pit's cover), lc_hq_setup_silo_top
         120 over the gantry; beside the foot the rebel territory's marker (REBEL_ZONE). map_silo.py makes it playable:
         the pit covered, the bare floors finished and dressed, level B's doors, the hatch's rail, the leader's office
         and bedroom, and his way out (the secret panel, the cave tunnel, the cache cave and the rock on the rim)."""
@@ -1342,10 +1343,19 @@ class BunkerForest(Forest):
         extra = self.lift() + [{"classname": "ambient_generic", "origin": [261, 300, 384], "keys": {
             "targetname": "lab_lever_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100", "pitchstart": "100", "radius": "1250", "spawnflags": "48"}}]
         pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
+        # the rocket, back in the shaft as it stands in Episode Two (the owner, 22 November: "we could use the rocket in that silo
+        # after all ... can we please re-insert the rocket into the silo as it exists in EP2?"): valve_ep2_rocket, Valve's own
+        # stages, engines, nose and hatch, in the silo's frame. Its engines end 6 over the pit's cover (322).
+        rocket = PF.load("valve_ep2_rocket")
+        pf_entities(v, rocket, q, d, "lc_silo_", sv, wv)
         # the Resistance flag's pole (the owner: raised "from the bottom of the silo" with the flag "flush with eye level on the
-        # top floor"): its foot over the pit grate on the shaft's axis, its _top marker 120 over the gantry's floor
-        v.point("info_target", (ax, ay, az + self.HQ_FOOT), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
-        v.point("info_target", (ax, ay, az + self.HQ_TOP), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
+        # top floor"; 22 November, with the rocket back on the axis: "just move the flagpole between the rocket and the walkways
+        # in the silo somewhere for now"): between the rocket (97 from the axis) and the solid ring's hole (159), 128 out, half
+        # way between two of the five columns (7 and 67 degrees round, 135 out), away from the hatch's side; its foot on the
+        # pit's cover, its _top marker 120 over the gantry's floor, straight above
+        hx, hy = self.HQ_AT
+        v.point("info_target", tuple(pf_point([hx, hy, self.HQ_FOOT], q, d)), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
+        v.point("info_target", tuple(pf_point([hx, hy, self.HQ_TOP], q, d)), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
         # the playable silo (map_silo.py): the pit covered, a rail at the gantry's hatch, level B's doors, the ring halls
         # dressed, the leader's office and bedroom, and his way out
