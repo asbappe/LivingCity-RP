@@ -470,6 +470,7 @@ class Vmf:
         self.disp_count = 0
         self.disp_made = [] # (visgroup, edge points, quads folded, quads) of every displaced face
         self.points = []    # (classname, place) of every point entity, for the checks
+        self.props = []     # (classname, place, model, yaw) of every prop, for the checks that keep ways clear
         self.shapes = 0     # solids that aren't boxes
         self.shape_boxes = []   # (the box round each of them, for the checks)
         self.portals = []   # the areaportals' boxes, for the checks
@@ -596,6 +597,9 @@ class Vmf:
         # (outside: the thing stands in the owner's own map, not in this piece: it is not held to the piece's sealed space)
         if not outside:
             self.points.append((cls, tuple(pos)))
+            if cls.startswith("prop") and keys and keys.get("model"):
+                ang = str(keys.get("angles", "0 0 0")).split()
+                self.props.append((cls, tuple(pos), str(keys["model"]), float(ang[1]) if len(ang) > 1 else 0.0))
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)

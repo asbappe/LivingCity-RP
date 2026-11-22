@@ -3789,6 +3789,19 @@
    "why": "25 maps with Combine exteriors (d3_c17_09 to 12b, ep1_c17_00 to 06, d3_citadel_01, ep2_outland_07 and 10, d2_coast, d2_prison_06 to 08), 3D sky left out: 57 tops open to the sky, 25 of them nodraw (half the top area, unseen); of 28 textured ones 21 flat, 4 stepped, 3 with a sloped edge, none curved, pointed or single-sloped. Fins on 9 of 32, creeping walls at the top on 8, parapet or higher step on 9, overhang 8+ on 4, nothing on 11. combinetower001: all 16 on the ground; combine_generator01 on Combine solids 128+ up in 15 of 55. Arcs in Combine brushwork: only Breen's office ceiling (4 segments, 11 to 13 degrees, radius 400 to 1450). The owner, 22 November: 'are combine structures as flat on top? ... curved, like the combine bunkers, or pointed or some weird needless slope', then 'please add this concept to the generator'.",
    "how": "map_combine.py (combine/tops.py): crown(piece, kind, ...) for vault, ridge, point, shed, steps or flat (fins and a parapet), WEIGHTS for the shares; the building's attic in two parts (a vault on the bigger), the wing, the intrusion, every pier and tower crowned; fins on a third of the wall's runs; a generator and a creeping wall on the building's roof; the tower model on the ground. A module with a plain flat Combine top seen from the ground: give it fins, a parapet or one of the crowns.",
    "check": "review; map_combine.py check (looking up 43 to 62%, walls at 0.9+ under 43%)"
+  },
+  {
+   "id": "owner-props-clear-of-ways",
+   "tags": [
+    "props",
+    "geometry",
+    "owner"
+   ],
+   "title": "Place every prop by its real size: nothing stands in a doorway, a gate or a hole",
+   "rule": "A prop is placed by its origin, but it takes up its whole model: a boulder pile 650 across set 290 from a cave's mouth covers the mouth. Before placing a prop near a way players walk (a doorway, a gate and its approach, a hole between two parts, a gallery's middle), take its size from asset_facts.json, turn it by its yaw, and keep it out of that way.",
+   "why": "The owner, 22 November, of the cave forest's first compile: \"you literally put a massive pile of boulders in front of the gate...can you not see props or even gauge their general dimensions?\" (rockcluster01 among the rock face's boulders, beside the cave's mouth and its fence gate). The same build had rocks narrowing the old mine's end doorway and the breach, and a stalactite hanging into the breach.",
+   "how": "Register each way with Forest.keep_way_clear(box, label) (joint() and gallery() do it themselves; the cave's mouth, the emergency door and the old mine's middle are registered); Forest.ways_check() in finish() fails the build if any prop's turned box from asset_facts.json enters one (doors in their doorways, timber-set arches and hanging lamps excepted). Boulders along the rock face are pushed sideways by their own size until clear.",
+   "check": "map_forest.py ways_check (every build of a forest piece)"
   }
  ]
 }

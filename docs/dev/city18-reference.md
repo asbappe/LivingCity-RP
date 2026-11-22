@@ -3680,3 +3680,12 @@ A Combine structure's top in brushes is flat (3 in 4) or stepped, its skyline br
 - **Checked by:** review; map_combine.py check (looking up 43 to 62%, walls at 0.9+ under 43%)
 - **Tags:** combine, valve, geometry, owner
 
+### Place every prop by its real size: nothing stands in a doorway, a gate or a hole (`owner-props-clear-of-ways`)
+
+A prop is placed by its origin, but it takes up its whole model: a boulder pile 650 across set 290 from a cave's mouth covers the mouth. Before placing a prop near a way players walk (a doorway, a gate and its approach, a hole between two parts, a gallery's middle), take its size from asset_facts.json, turn it by its yaw, and keep it out of that way.
+
+- **Why:** The owner, 22 November, of the cave forest's first compile: "you literally put a massive pile of boulders in front of the gate...can you not see props or even gauge their general dimensions?" (rockcluster01 among the rock face's boulders, beside the cave's mouth and its fence gate). The same build had rocks narrowing the old mine's end doorway and the breach, and a stalactite hanging into the breach.
+- **How:** Register each way with Forest.keep_way_clear(box, label) (joint() and gallery() do it themselves; the cave's mouth, the emergency door and the old mine's middle are registered); Forest.ways_check() in finish() fails the build if any prop's turned box from asset_facts.json enters one (doors in their doorways, timber-set arches and hanging lamps excepted). Boulders along the rock face are pushed sideways by their own size until clear.
+- **Checked by:** map_forest.py ways_check (every build of a forest piece)
+- **Tags:** props, geometry, owner
+

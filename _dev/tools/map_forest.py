@@ -385,6 +385,32 @@ class Forest:
         self.cuts = {}                    # side: (from, to) along it: a stretch of the shell's wall the piece builds itself (never the gate's side)
         self.rooms = []                   # (Plan, its origin here): rooms the ground must stay out of (under their floors or over their ceilings)
 
+    def keep_way_clear(self, box, label):
+        """A space players must be able to walk through (a doorway, a hole, a gate's approach, a gallery's middle), as a
+        box in the forest's own frame: finish() fails the piece if any prop's real size (asset_facts.json) stands in it."""
+        if not hasattr(self, "ways"):
+            self.ways = []
+        self.ways.append((tuple(self.box(*box)), label))
+
+    def ways_check(self):
+        """Every prop against every space kept clear: its box from the model's own size, turned by its yaw. A door (a
+        prop_door_rotating) is meant to stand in its doorway and is not counted."""
+        import map_assets
+        for box, label in getattr(self, "ways", []):
+            x1, y1, z1, x2, y2, z2 = box
+            for cls, pos, model, yaw in self.vmf.props:
+                if cls == "prop_door_rotating" or any(k in model for k in ("struts_tunnel", "struts_wall", "light_cagelight")):
+                    continue          # (a door stands in its doorway; timber sets are arches over the way, their middle open; lamps hang overhead)
+                b = map_assets.size(model)
+                if not b:
+                    continue
+                c, sn = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+                xs = [pos[0] + x * c - y * sn for x in (b[0], b[3]) for y in (b[1], b[4])]
+                ys = [pos[1] + x * sn + y * c for x in (b[0], b[3]) for y in (b[1], b[4])]
+                if min(xs) < x2 and max(xs) > x1 and min(ys) < y2 and max(ys) > y1 and pos[2] + b[2] < z2 and pos[2] + b[5] > z1:
+                    self.problems.append("%s (%d by %d) at (%d %d %d) stands in the way at %s" % (
+                        model.rsplit("/", 1)[-1], max(xs) - min(xs), max(ys) - min(ys), pos[0], pos[1], pos[2], label))
+
     def vis(self, what):
         return "LC %s: %s" % (self.name, what)
 
@@ -680,6 +706,7 @@ class Forest:
         problems, air = check(self.vmf, self.w(self.W / 2, self.D / 2, self.lid - 100), [])
         self.problems += problems
         self.skin_check()
+        self.ways_check()
         seals = sum(1 for _, s in self.vmf.boxes if s)
         side, g = self.gate
         (ax, ay), (bx, by) = self.st(g, -WALL), self.st(g + GATE_WIDE, -WALL)
@@ -1647,6 +1674,7 @@ class CaveForest(Forest):
     ROOM = (512, 768)                   # the shaft head: a mine room after the old mine (across, along)
     GALLERY_Y = 7616                    # (local y) the gallery from the shaft head west to Ravenholm's big cave
     BIG_CAVE_X = 512                    # (local x) the big cave's mouth, on the west face of its joint
+    MOUTH_CLEAR = (200, 450, 120)       # kept clear before the cave's mouth: this far either side of its middle, out from it, and in past its fence
     MINE, BREACH = 1280, 64             # behind the emergency door: Ravenholm's mine tunnel (lifted), then the wall the antlions broke through
 
     def setup(self):
@@ -1964,13 +1992,30 @@ class CaveForest(Forest):
             p = self.ring(-0.5 if side > 0 else math.pi + 0.5, y)
             self.static("models/props_mining/caverocks_cluster0%d.mdl" % rnd.choice((1, 2)), p[0] - 30 * side, p[1], self.cave_floor(p[0] - 30 * side, p[1]) - 6, rnd.randrange(0, 360, 15), "cave", fade=(-1, 0))
         # the rock face, dressed: boulders heaped along its foot and against it, ferns and bushes among them
-        dress = ((-300, 70, "models/cliffs/rocks_medium01.mdl"), (290, 60, "models/cliffs/rockcluster01.mdl"), (-520, 80, "models/cliffs/rocks_large01.mdl"),
+        dress = ((-300, 70, "models/cliffs/rocks_medium01.mdl"), (290, 60, "models/cliffs/rocks_large03_veg.mdl"), (-520, 80, "models/cliffs/rocks_large01.mdl"),
                  (500, 70, "models/cliffs/rockcluster02.mdl"), (-410, 130, "models/props_foliage/forestrock_cluster01.mdl"), (380, 140, "models/props_foliage/forestrock_cluster02.mdl"),
                  (-250, 150, "models/props_foliage/forestrock_single01.mdl"), (255, 170, "models/props_wasteland/rockgranite02a.mdl"), (-600, 150, "models/cliffs/rocks_large02.mdl"),
                  (610, 130, "models/cliffs/rocks_large03.mdl"))
+        # (the owner, 22 November, of the first compile: "you literally put a massive pile of boulders in front of the gate":
+        #  rockcluster01, about 650 across, stood 290 from the mouth's middle: a smaller rock stands there now. Each boulder is pushed out sideways, by its
+        #  own size turned by its yaw, until it is clear of the mouth's approach; the same random numbers are drawn)
+        import map_assets
+        mouth = self.MOUTH_CLEAR
         for (dx, out, model) in dress:
-            x, y = cx + dx, ym - out
-            self.static(model, x, y, self.natural(x, y) - 14, rnd.randrange(0, 360, 15), "cave")
+            yaw = rnd.randrange(0, 360, 15)
+            b = map_assets.size(model) or (-32, -32, 0, 32, 32, 32)
+            c, sn = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+            ex = [x_ * c - y_ * sn for x_ in (b[0], b[3]) for y_ in (b[1], b[4])]
+            ey = [x_ * sn + y_ * c for x_ in (b[0], b[3]) for y_ in (b[1], b[4])]
+            step = 16 if dx >= 0 else -16
+            while True:
+                x, y = cx + dx, ym - out
+                if x + max(ex) <= cx - mouth[0] or x + min(ex) >= cx + mouth[0] or y + min(ey) >= ym + mouth[2] or y + max(ey) <= ym - mouth[1]:
+                    break
+                dx += step
+            self.static(model, x, y, self.natural(x, y) - 14, yaw, "cave")
+        zf = self.zf
+        self.keep_way_clear((cx - mouth[0], ym - mouth[1], zf - 40, cx + mouth[0], ym + mouth[2], zf + 110), "the cave's mouth and its fence gate")
         for k in range(16):
             dx = rnd.choice((-1, 1)) * rnd.uniform(235, 640)
             x, y = cx + dx, ym - rnd.uniform(40, 190)
@@ -2225,6 +2270,7 @@ class CaveForest(Forest):
         v.point("logic_relay", W(bx + 16, D - 30, zf + 150), {"targetname": "lc_nest_closed", "StartDisabled": "0", "spawnflags": "0"}, dv)
         self.node(bx, D - 120, zf)
         self.node(bx, D + 64, zf)
+        self.keep_way_clear((bx - 88, D - 220, zf + 4, bx + 88, D + T + 200, zf + 110), "the emergency door")
         self.notes.append("the emergency door: in a bulkhead at (%d %d), floor z %d, a shutter 192 wide and %d high; its two buttons are 480 apart with a wall between each "
                           "and the door (about 700 on foot); both within a second open it, and shut it again" % (self.ox + bx, self.oy + D, zf, high))
 
@@ -2246,6 +2292,7 @@ class CaveForest(Forest):
         pf = PF.load("valve_raven_mine_tunnel")
         pf_solids(v, pf, q, d, mv_, world=True)
         self.hull.append((bx - 448, y1, zf - 256, bx + 448, y1 + L + 64, zf + 512))
+        self.keep_way_clear((bx - 56, y1, zf + 70, bx + 56, y1 + L, zf + 150), "the old mine's middle")       # (over Valve's floor, which rises to about 60)
         floor = [p for m, p in pf_disp_points(pf, lambda m: "gravel" in m)]
 
         def floor_at(xp, yp):
@@ -2282,7 +2329,7 @@ class CaveForest(Forest):
         f1 = zf + 16
         rock, crust, conc = "nature/rockwall015a", FMAT["nest_rock"], MINE_MAT["wall"]
         self.joint("y", y1 + L, bx, 192, f1, 192, 576, zf - 160, zf + 448, rock, conc, mv_)
-        for (xp, yp, model) in ((L - 70, 122, "models/props_mining/caverocks_cluster02.mdl"), (L - 60, -124, "models/props_mining/caverocks_cluster01.mdl")):
+        for (xp, yp, model) in ((L - 70, 172, "models/props_mining/caverocks_cluster02.mdl"), (L - 60, -164, "models/props_mining/caverocks_cluster01.mdl")):
             x, y, z = at(xp, yp, floor_at(xp, yp))
             self.static(model, x, y, z - 8, rnd.randrange(0, 360, 15), "old mine", fade=(-1, 0))
         self.shaft_head(rnd)
@@ -2302,6 +2349,11 @@ class CaveForest(Forest):
         h = hole_w / 2.0
         top = sill + hole_h
         u_lo, u_hi = half if isinstance(half, tuple) else (uc - half, uc + half)      # (half: a reach either side, or the wall's own two ends)
+        ztop_way = sill + min(hole_h, 100)
+        if axis == "y":
+            self.keep_way_clear((uc - h + 8, p0 - 128, sill + 4, uc + h - 8, p0 + thick + 128, ztop_way), "the hole in the wall at y %d" % (self.oy + p0))
+        else:
+            self.keep_way_clear((p0 - 128, uc - h + 8, sill + 4, p0 + thick + 128, uc + h - 8, ztop_way), "the hole in the wall at x %d" % (self.ox + p0))
         notch = 28 if rough else 0
         if axis == "y":
             def B(u1, z1, u2, z2):
@@ -2335,6 +2387,8 @@ class CaveForest(Forest):
             def B(u1, s1, u2, s2, z1, z2):
                 return self.box(s1, u1, z1, s2, u2, z2)
         m = MINE_MAT
+        self.keep_way_clear((uc - 80, lo, floor + 4, uc + 80, hi, floor + 90) if axis == "y" else (lo, uc - 80, floor + 4, hi, uc + 80, floor + 90),
+                            "the gallery's middle at %s %d" % ("x" if axis == "y" else "y", (self.ox if axis == "y" else self.oy) + uc))
         v.world_box(B(uc - h - 16, lo, uc + h + 16, hi, floor - 16, floor), MAT["nodraw"], top=m["floor"], vis=vis)
         v.world_box(B(uc - h - 16, lo, uc + h + 16, hi, floor + high, floor + high + 16), MAT["nodraw"], bottom=m["roof"], vis=vis)
         v.world_box(B(uc - h - 16, lo, uc - h, hi, floor, floor + high), MAT["nodraw"], faces={"east" if axis == "y" else "north": m["wall"]}, vis=vis)
@@ -2371,8 +2425,8 @@ class CaveForest(Forest):
                           ((sx1, sy1 - 16, sx2, sy1), "north"), ((sx1, sy2, sx2, sy2 + 16), "south")):
             v.world_box(B(box[0], box[1], f2 + hv, box[2], box[3], f1 - 16), MAT["nodraw"], faces={face: m["wall"]}, vis=vis)
         cx, cy = (sx1 + sx2) / 2.0, (sy1 + sy2) / 2.0
-        for z in range(int(f2), int(f1) - 200, 432):
-            self.static("models/props_mining/struts_shaft01.mdl", cx, cy, z + 17, 0, "lower workings (mine rooms)", fade=(-1, 0))
+        for k in range(3):                      # (stacked down from the head's floor, so none pokes up through it)
+            self.static("models/props_mining/struts_shaft01.mdl", cx, cy, f1 - 16 - 433 - 432 * k, 0, "lower workings (mine rooms)", fade=(-1, 0))
         # the foot room: the head room's size, straight below; its roof round the shaft
         for box in ((x1, y1, sx1, y2), (sx2, y1, x2, y2), (sx1, y1, sx2, sy1), (sx1, sy2, sx2, y2)):
             if box[2] > box[0] and box[3] > box[1]:
@@ -2419,7 +2473,10 @@ class CaveForest(Forest):
         nv, lv = self.vis("Episode Two's nest chambers (Valve's)"), self.vis("Episode Two's nest chambers: lights, props, grubs")
         q, d = 1, self.w(x_s, y_s, f2)
         pf_solids(v, nest, q, d, nv, world=True)
-        pf_entities(v, nest, q, d, "lc_nest2_", lv, lv)
+        def clear_of_holes(e):                  # (Valve's stalactites that hang low in the two tunnels where our caps meet them)
+            o = e.get("origin", (0, 0, 0))
+            return not ("stalactite" in e["keys"].get("model", "") and (math.hypot(o[0], o[1]) < 400 or math.hypot(o[0] + 80, o[1] - 2488) < 400))
+        pf_entities(v, nest, q, d, "lc_nest2_", lv, lv, keep=clear_of_holes)
         bx_, an = nest["box"], nest["anchor"]
         X1, X2 = x_s - (bx_[4] - an[1]), x_s - (bx_[1] - an[1])           # (turned: the piece's y runs west)
         Y1, Y2 = y_s + (bx_[0] - an[0]), y_s + (bx_[3] - an[0])
@@ -2518,9 +2575,9 @@ class CaveForest(Forest):
         self.joint("x", x1 - 64, gy, 256, f1, 192, (y1, y2), f1 - 160, f1 + hv, m["wall"], m["wall"], vis)
         # the breach into the hive: a rough hole in the north wall, the hive's crust beyond
         self.joint("y", y2, bx, 144, f1, 168, 576, zf - 160, zf + 448, m["wall"], FMAT["nest_rock"], vis, rough=True)
-        for (dx, model) in ((-118, "models/props_mining/caverocks_cluster02.mdl"), (122, "models/props_mining/caverocks_cluster01.mdl")):
+        for (dx, model) in ((-172, "models/props_mining/caverocks_cluster02.mdl"), (160, "models/props_mining/caverocks_cluster01.mdl")):
             self.static(model, bx + dx, y2 - 50, f1 - 8, rnd.randrange(0, 360, 15), "shaft head (mine room)", fade=(-1, 0))
-        self.static("models/props_mining/stalactite_cluster01.mdl", bx, y2 - 12, f1 + 174, 90, "shaft head (mine room)", fade=(-1, 0))
+        self.static("models/props_mining/stalactite_cluster01.mdl", bx, y2 - 40, f1 + hv, 90, "shaft head (mine room)", fade=(-1, 0))     # (from the roof, clear over the hole)
         # Episode Two's antlion alarm post before the breach, its lamps facing the way in from the door
         alarm = PF.load("valve_ep2_antlion_alarm")
 
