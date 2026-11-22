@@ -44,4 +44,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
 - Map chat: bunker and silo fixed to the owner's list (TODO.md); no prop in a way players walk, every build (CLAUDE.md);
   the cave's back rebuilt from Valve's maps: Ravenholm's big room (for the office), the emergency door, EP2's holdout
-  and lift, ep2_outland_03's antlion tunnels, the extract. docs/dev/map-building.md. Merge main first.
+  and lift, ep2_outland_03's antlion tunnels, the extract. Latest: silo pit rail at level A, walkway grates proud
+  of the floor, walkway call button off the grates (untested in game); stair check sizes boxes by planes, reads
+  displaced rock, and skips Valve's broken flights (vmf.stairs_as_valve). docs/dev/map-building.md. Merge main first.
