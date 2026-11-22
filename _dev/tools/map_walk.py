@@ -4,7 +4,8 @@ a table on a gallery with no way past, a shack with no room before its door, sta
 Reads a VMF and lays every floor a player could stand on on a grid of 16: the top of every box brush of the world or of
 a func_detail or func_brush, where a player's body (32 across, 72 high, or 36 crouched) fits over it among the brushes
 and the solid props (each prop's real size, from map_assets, turned with it). Then it walks from the largest stretch of
-floor the way a player can: a step of 18, a jump of 44, any drop, along ladders (func_useableladder). What it reports:
+floor the way a player can: a step of 18, a jump of 44, any drop, along ladders (func_useableladder) and on lifts (a
+func_door platform that rides up or down: its foot's floor and the floor where it stops are joined). What it reports:
 
   - every place the map says people go that a player cannot reach: path nodes (info_node), the game's named spots
     (info_target named lc_...), both sides of every door that opens (prop_door_rotating), the front of every button;
@@ -249,6 +250,32 @@ def check_text(text, limit=12, where=None, start=None):
                 for x in a[:4]:
                     for y in b[:6]:
                         ladders.append((x, y))
+    # lifts: a func_door that rides up or down (a flat platform moving at least 64, more than twice its own height) joins
+    # the floor round its foot to the floor round where it stops, as a ladder does (the freight lift's dock)
+    for kv, e in ents:
+        if kv.get("classname") != "func_door" or "\tsolid\n" not in e:
+            continue
+        md = num3(kv.get("movedir", ""))
+        if not md or abs(abs(md[0]) - 90) > 1:
+            continue
+        pts = [tuple(float(c) for c in g.split()) for pm in map_stairs.PLANE.finditer(e) for g in pm.groups()]
+        if not pts:
+            continue
+        x1, y1, z1 = (min(p[k] for p in pts) for k in range(3))
+        x2, y2, z2 = (max(p[k] for p in pts) for k in range(3))
+        try:
+            travel = (z2 - z1) - float(kv.get("lip", "0") or 0)
+        except ValueError:
+            continue
+        if travel < 64 or z2 - z1 > travel / 2 or x2 - x1 < 64 or y2 - y1 < 64:
+            continue
+        lo = z1 if md[0] < 0 else z1 - travel          # (movedir -90: up from where it is drawn; 90: down)
+        mid, reach = ((x1 + x2) / 2, (y1 + y2) / 2), max(x2 - x1, y2 - y1) / 2 + 48
+        a = nearest(fl, (mid[0], mid[1], lo + 8), reach=reach, up=24, down=32)
+        b = nearest(fl, (mid[0], mid[1], lo + travel + 8), reach=reach, up=24, down=32)
+        for x in a[:8]:
+            for y in b[:8]:
+                ladders.append((x, y))
     # where people go
     targets = []
     for kv, _ in ents:
