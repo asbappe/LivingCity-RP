@@ -1770,15 +1770,18 @@ class BunkerForest(Forest):
         the silo's own concrete inside, so each mouth of the piece Valve's rooms ran on through ends at a plain wall), with
         one opening: where the corridor comes in. Its wiring: the lift (lift(): a stop at every floor in LIFT_STOPS, it
         starts at the top), the ladder from the gantry to the lift's top landing always usable (its hatch removed), the lab
-        door at the bottom (the Resistance leader's office) opened and shut by Use, with Valve's lever moved inside to
-        lock it; the keypads have names of their own; the steam gate, the areaportals, Valve's story (scenes, NPC makers,
-        the autosave, Uriah) and the piece's reserve (the hoisted machine) are left out; the soundscapes are Valve's silo
-        ones without the rocket's ignition hisses. Invisible player clips stand in the shaft round the rocket (put back on 22 November)
-        at the open levels and the gantry, so nobody walks off into a 1,250 drop. Two info_targets on the shaft's axis
+        door at the bottom (the Resistance leader's office) opened and shut by Use (its model on the door, not solid), with
+        Valve's lever wall (the lever, its recess, its box and lights) moved inside to lock it; the keypads have names of
+        their own; the steam gate, the areaportals, the lab door's malfunction, Valve's story (scenes, NPC makers, the
+        autosave, Uriah), Valve's soundscapes (map_silo.py places the silo's own) and the piece's reserve (the hoisted
+        machine) are left out. Invisible player clips stand in the shaft round the rocket (put back on 22 November) at the
+        open levels and the gantry, so nobody walks off into a 1,250 drop; the walkway up to the rocket's hatch is left out
+        of the gantry's. Two info_targets on the shaft's axis
         mark the Resistance flag's pole beside the rocket: lc_hq_setup_silo 8 over the bottom floor (the pit's cover), lc_hq_setup_silo_top
         120 over the gantry; beside the foot the rebel territory's marker (REBEL_ZONE). map_silo.py makes it playable:
-        the pit covered, the bare floors finished and dressed, level B's doors, the hatch's rail, the leader's office
-        and bedroom, and his way out (the secret panel, the cave tunnel, the cache cave and the rock on the rim)."""
+        the pit covered, the bare floors finished and dressed, level B's doors, the leader's office and bedroom, the
+        fence gate, light where rooms had none, the soundscapes, and his way out (the secret panel, the cave tunnel, the
+        cache cave and the rock on the rim)."""
         v = self.vmf
         sv, wv = self.vis("silo (Valve's White Forest silo)"), self.vis("silo's wiring")
         pf = PF.load("valve_ep2_silo")
@@ -1799,7 +1802,11 @@ class BunkerForest(Forest):
                 # Valve's lift button, the trigger that locked it, its path: lift() makes them anew
                 "button_ele_2", "trigger_unlock_ele", "path_elevator_5", "path_elevator_6", "path_elevator_7", "path_elevator_8",
                 # level B's fake door at its north end (a working door now: map_silo.py)
-                "brush_fake_cit_door_1"}
+                "brush_fake_cit_door_1",
+                # the lab door's malfunction (a passable door between the door and its model that only jerked it about, with
+                # clicks and sparks: the model hangs on the door itself now) and what played it
+                "door_silo_lab_outside_1_malfunction_door", "door_silo_lab_outside_1_malfunction_case", "door_silo_lab_outside_1_malfunction_spark",
+                "door_silo_lab_outside_1_malfunction_reset"} | set("door_silo_lab_outside_1_malfunction_wav_%d" % k for k in range(1, 7))
         pads = [p for p in pf["points"] if "keypad" in p["keys"].get("model", "")]
         buttons = [w for w in pf["wiring"] if w["classname"] == "func_button" and any(c[1].startswith("keypad_1,") for c in w.get("connections", []))]
         pad_name, lab_pads = {}, set()
@@ -1811,40 +1818,19 @@ class BunkerForest(Forest):
 
         def keep(e):
             k = e["keys"]
-            if k.get("targetname", "") in drop or e["classname"] == "func_areaportal" or MS.dropped_prop(e):
-                return False
+            if k.get("targetname", "") in drop or e["classname"] in ("func_areaportal", "env_soundscape") or MS.dropped_prop(e):
+                return False        # (Valve's four soundscapes too: map_silo.py's soundscapes() places the silo's own)
             if k.get("targetname", "") in reserve or any(k.get(r, "") in reserve for r in ("parentname", "attach1", "attach2")):
                 return False        # (the hoist: kept in the piece's reserve, not placed)
             if e["classname"] == "func_button" and tuple(e.get("origin", ())) in lab_pads:
                 return False        # (the lab door's keypads are models only now)
             return not (e["classname"] == "trigger_multiple" and any(c[1].startswith("!activator,Kill") for c in e.get("connections", [])))
 
-        # the lab door's lever, moved from the outside niche to the office's wall east of the door, facing into the office:
-        # turned a quarter clockwise about its hinge and set there (the owner: "move the little lever mechanism to the inside")
-        lo, lo2 = (280, 222, 374), (261, 288, 374)
-        r3 = PF.rot(list(lo), 3)
-        ld = (lo2[0] - r3[0], lo2[1] - r3[1], lo2[2] - r3[2])
-
-        def indoors(p):
-            x, y, z = PF.rot(list(p), 3)
-            return [x + ld[0], y + ld[1], z + ld[2]]
-
-        def indoor_brushes(brushes):
-            out = []
-            for b in brushes:
-                nb = []
-                for s in b:
-                    s = dict(s, plane=[indoors(p) for p in s["plane"]], verts=[indoors(p) for p in s.get("verts", [])],
-                             uaxis=PF.turn_axis(s["uaxis"], 3, ld), vaxis=PF.turn_axis(s["vaxis"], 3, ld))
-                    if s.get("corners"):
-                        s["corners"] = [indoors(p) for p in s["corners"]]
-                    nb.append(s)
-                out.append(nb)
-            return out
-        # Valve's silo soundscapes all play "ep2_util.rocket", whose hisses include gascan_ignite1 and ignite.wav every 5 to
-        # 15 s (the owner: "a fire sound effect playing over and over on the bottom of the silo"): the same silo's soundscapes
-        # from after the rocket left (12a's silo_shut) or of its rooms, which have none
-        scapes = {"ep2_silo.silo_top": "ep2_silo.techroom", "ep2_silo.silo_middle": "ep2_silobattle.silo_shut", "ep2_silo.silo_bottom": "ep2_silobattle.silo_shut"}
+        # the lab door's lever, moved from the outside niche to the office's wall east of the door, facing into the office,
+        # with the recess it sits in, the box with its two lights over it and the cables from the box (the owner, 22
+        # November: "I would like it all to be together on the inside of the office"): map_silo.py's lever_in and
+        # Silo.lever_box
+        indoors = MS.lever_in
         top = len(self.LIFT_STOPS) - 1
 
         def edit(e):
@@ -1861,14 +1847,24 @@ class BunkerForest(Forest):
                 e["classname"] = "prop_dynamic_override"      # (the model has physics data: map_assets.py)
             if cls == "prop_static" and k.get("model", "").endswith("generatorconsole.mdl"):
                 k["solid"] = "6"        # (the gantry's control panel: Valve's is not solid, and the clipboard on it fell through it)
-            if cls == "env_soundscape" and k.get("soundscape") in scapes:
-                k["soundscape"] = "ep2_silo.concreteroom" if o[1] > 200 else scapes[k["soundscape"]]      # (the one by the lab door: a room's)
             if tn == "ladder_hatch_1":
                 k["StartDisabled"] = "0"        # (it waited for the hatch to open; with the hatch gone it is always there)
             if tn == "light_hatch_ladder_1":
                 k["spawnflags"] = "0"           # (they lit when the hatch opened: now always)
             if tn == "sprite_hatch_ladder_1":
                 k["spawnflags"] = "1"
+            if tn == "prop_door_silo_lab_outside_1":
+                # (the lab door's model: on the door itself, not solid; Valve's was solid and in front of the door's thin
+                # brush, so Use met the model and the door never opened: the owner, 22 November: "the leader's office
+                # door is completely broken and doesn't open")
+                k.update({"parentname": "door_silo_lab_outside_1", "solid": "0"})
+            if tn in ("spr_blast_on", "spr_blast_off") or (cls == "env_sprite" and o and abs(o[0] - 282) < 2 and abs(o[1] - 224) < 2):
+                e["origin"] = indoors(e["origin"])          # (the lever box's two lights and the one in its recess)
+            if tn.startswith("exit_airlock_rope_"):
+                # (the box's two cables: up to the ceiling and along the top of the office's wall to the door's frame)
+                e["origin"] = {"exit_airlock_rope_1_1": indoors([270, 241, 398]), "exit_airlock_rope_2_1": indoors([270, 241, 402]),
+                               "exit_airlock_rope_1_2": [276, 290, 442], "exit_airlock_rope_2_2": [270, 290, 442],
+                               "exit_airlock_rope_1_3": [196, 290, 442], "exit_airlock_rope_2_3": [196, 290, 438]}.get(tn, e["origin"])
             if tn == "door_silo_lab_outside_1":     # (the Resistance leader's office: Use opens and shuts it, as the bunker's doors)
                 k.update({"spawnflags": str(int(k["spawnflags"]) | 256), "wait": "-1", "locked_sound": "DoorHandles.Locked2"})
                 e["out"] = [("OnOpen", "prop_door_silo_lab_outside_1", "SetAnimation", "unlock", 0), ("OnFullyClosed", "prop_door_silo_lab_outside_1", "SetAnimation", "lock", 0)]
@@ -1876,9 +1872,11 @@ class BunkerForest(Forest):
                 e["classname"] = "func_rot_button"
                 e["keys"] = {"targetname": tn, "angles": "0 0 0", "distance": k["distance"], "speed": k["speed"], "wait": "-1", "spawnflags": str(1024 | 32 | 64), "sounds": "0",
                              "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0", "disableshadows": "0"}
-                e["brushes"], e["origin"] = indoor_brushes(e["brushes"]), indoors(e["origin"])
+                e["brushes"], e["origin"] = [MS.lever_in_sides(b) for b in e["brushes"]], indoors(e["origin"])
                 e["out"] = [("OnPressed", "lab_lever_sound", "PlaySound", "", 0), ("OnIn", "door_silo_lab_outside_1", "Close", "", 0),
-                            ("OnIn", "door_silo_lab_outside_1", "Lock", "", 0.1), ("OnOut", "door_silo_lab_outside_1", "Unlock", "", 0)]
+                            ("OnIn", "door_silo_lab_outside_1", "Lock", "", 0.1), ("OnOut", "door_silo_lab_outside_1", "Unlock", "", 0),
+                            ("OnIn", "spr_blast_on", "HideSprite", "", 0.1), ("OnIn", "spr_blast_off", "ShowSprite", "", 0.1),
+                            ("OnOut", "spr_blast_on", "ShowSprite", "", 0), ("OnOut", "spr_blast_off", "HideSprite", "", 0)]
             if "panel_lever" in k.get("model", ""):
                 a = [float(c) for c in k["angles"].split()]
                 e["origin"], k["angles"] = indoors(e["origin"]), "%s %s %s" % (PF.fmt(a[0]), PF.fmt((a[1] + 270) % 360), PF.fmt(a[2]))
@@ -1906,30 +1904,45 @@ class BunkerForest(Forest):
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_FOOT], q, d)), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_TOP], q, d)), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
-        # the playable silo (map_silo.py): the pit covered, a rail at the gantry's hatch, level B's doors, the ring halls
-        # dressed, the leader's office and bedroom, and his way out
+        # the playable silo (map_silo.py): the pit covered, level B's doors, the ring halls dressed, the leader's office
+        # (with Valve's lever wall moved inside) and bedroom, the bottom level's fence gate, light where rooms had none,
+        # the silo's soundscapes, and the leader's way out
         ms = MS.Silo(self, d)
         ms.pit_cover()
-        ms.hatch_rail()
         ms.level_b_doors()
         ms.ring_dress()
         ms.office()
+        ms.lever_box(pf)
         ms.bedroom()
+        ms.fence_gate()
+        ms.lights()
+        ms.soundscapes()
         ms.escape()
-        self.notes.append("the silo made playable: %d nodraw faces players now see finished; the pit covered at the bottom level; a rail round the gantry's hatch; "
-                          "level B's two doors; the leader's office and bedroom" % finished)
+        self.notes.append("the silo made playable: %d nodraw faces players now see finished; the pit covered at the bottom level; level B's two doors; "
+                          "the leader's office (Valve's lever, its recess and its box inside) and bedroom; the fence gate swings; one soundscape for the shaft" % finished)
         for dz in (1408 + 64, 322 + 64):
             v.point("env_cubemap", (ax, ay + 200, az + dz), {"cubemapsize": "0"}, sv)
-        # player clips in the empty shaft: over the solid ring's hole (159), the ring slab's grate's hole (114) and inside
-        # the gantry's grates (112 to 159), each a 12-sided column round the axis
+        # player clips in the shaft round the rocket: over the solid ring's hole (159), the ring slab's grate's hole (114) and
+        # inside the gantry's grates (112 to 159), each a 12-sided column round the axis. At the gantry the walkway up to the
+        # rocket's hatch (Valve's stair from the gantry's floor, its landing and the platform by the hatch: MS.WALKWAY) is
+        # left out of it (the owner, 22 November: "the steps are blocked near the top"): the column there is three pieces
+        # round it; the walkway has its own rails, and no gap beside it a player could fall through.
         cv, clip = self.vis("silo's player clips (the empty shaft)"), "tools/toolsplayerclip"
+        wx1, wy1, wx2, wy2 = MS.WALKWAY
         for r, z1, z2 in ((160, 896, 1088), (112, 1152, 1408), (140, 1408, 1760)):
             pts = [(ax + int(round(r * math.cos(math.radians(15 + 30 * k)))), ay + int(round(r * math.sin(math.radians(15 + 30 * k))))) for k in range(12)]
-            faces = [([(x, y, az + z2) for x, y in pts], clip), ([(x, y, az + z1) for x, y in reversed(pts)], clip)]
-            for k in range(12):
-                (xa, ya), (xb, yb) = pts[k], pts[(k + 1) % 12]
-                faces.append(([(xa, ya, az + z1), (xb, yb, az + z1), (xb, yb, az + z2), (xa, ya, az + z2)], clip))
-            v.world.append(v.convex_text(faces, cv))
+            polys = [pts]
+            if z1 >= 1408:       # (the piece's x is the map's y, its y the map's -x: the walkway is map x ax-wy2..ax-wy1, y ay+wx1..ay+wx2)
+                near = MS.clip_poly(pts, 1, 0, ax - wy1)           # (piece y >= wy1, map x <= ax - wy1: the walkway's side of that line)
+                polys = [MS.clip_poly(pts, -1, 0, -(ax - wy1)), MS.clip_poly(near, 0, 1, ay + wx1) if near else None, MS.clip_poly(near, 0, -1, -(ay + wx2)) if near else None]
+            for poly in polys:
+                if not poly:
+                    continue
+                faces = [([(x, y, az + z2) for x, y in poly], clip), ([(x, y, az + z1) for x, y in reversed(poly)], clip)]
+                for k in range(len(poly)):
+                    (xa, ya), (xb, yb) = poly[k], poly[(k + 1) % len(poly)]
+                    faces.append(([(xa, ya, az + z1), (xb, yb, az + z1), (xb, yb, az + z2), (xa, ya, az + z2)], clip))
+                v.world.append(v.convex_text(faces, cv))
         # the hull: the piece's box (1088 square, 1856 high) walled in, 64 thick; its lid as high as the corridor's roof
         T, nd, cw, hv = 64, MAT["nodraw"], FMAT["silo_wall"], self.vis("silo's hull (sealed)")
         x1, y1, z1, x2, y2, z2 = ax - 544, ay - 544, az - 64, ax + 544, ay + 544, az + 1792
@@ -2004,8 +2017,10 @@ class BunkerForest(Forest):
 
         for k, z in enumerate(stops):
             # its path point, top to bottom
+            # (at the bottom the car stops 2 over the floor: its own floor's top and the floor under it were level, and
+            # flickered: the owner, 22 November: "it's texture is clipping/flashing with the ground below it")
             ent("path_track", {"targetname": "lift_stop_%d" % k, "target": "lift_stop_%d" % (k - 1) if k else "", "speed": "40", "spawnflags": "1" if k == top - 1 else "0",
-                               "orientationtype": "0", "angles": "0 0 0"}, [("OnPass", "lift_arrive_%d" % k, "Trigger", "", 0)], at=(lx, ly, z))
+                               "orientationtype": "0", "angles": "0 0 0"}, [("OnPass", "lift_arrive_%d" % k, "Trigger", "", 0)], at=(lx, ly, z + (2 if k == 0 else 0)))
             # arriving: the gates open, the car's buttons and every call work again
             arrive = [("OnTrigger", "lift_arrive_%d" % k, "Disable", "", 0), ("OnTrigger", "lift_2", "Stop", "", 0), ("OnTrigger", "lift_cmp_*", "SetValue", str(k), 0),
                       ("OnTrigger", "lift_gate_%d" % k, "PressIn", "", 1), ("OnTrigger", "lift_door_2_b", "PressIn", "", 1), ("OnTrigger", "prop_eledoor_4", "SetAnimation", "open", 1),
