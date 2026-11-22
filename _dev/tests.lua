@@ -43655,6 +43655,210 @@ function Nov21_GardenPlotTests()
 end
 Nov21_GardenPlotTests()
 
+function Nov22_SupplyLineTests()
+    section("22 November: supply lines: a courier on the road or a boat up the canal to the headquarters' crate")
+    local SL, B = LC.SupplyLines, LC.Base
+    local runWas, stWas, speedWas = LC.Running, B.S, SL.BOAT_SPEED
+    LC.Running = true
+    if SL.run then SL.run.over = true SL.run = nil end
+    local T0 = Vector(-260000, -260000, 0)
+    local z = LC.AddZone(T0, 500, "rebel", 0)
+    local zone = LC.RebelLeader and LC.RebelLeader(z) or z
+    -- its supply crate (the camp's own, or one set down here for the test)
+    if LC.EnsureRebelProps then LC.EnsureRebelProps() end
+    local made
+    if not (LC.RebelProps[zone] and IsValid(LC.RebelProps[zone].cache)) then
+        made = ents.Create("prop_physics")
+        made:SetModel("models/items/item_item_crate.mdl") made:SetPos(T0 + Vector(50, 0, 0)) made:Spawn()
+        made.lcStock = 0
+        LC.RebelProps[zone] = { cache = made, pots = {} }
+    end
+    local crate = LC.RebelProps[zone].cache
+    local res = newPlayer("SLRebel", "resistance", nil, 900)
+    local cop = newPlayer("SLCop", "cp")
+    local far = Vector(260000, 260000, 0)
+    res:SetPos(far) cop:SetPos(far)
+    local function job(f, id)
+        for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and p.tmpl.id == id and not p.dead and not p.q then return p end end
+    end
+    local function take(p, f, id)
+        local posting = job(f, id)
+        p.lcqNext = 0
+        if posting then LC.AcceptPosting(p, posting.id) end
+        return LC.QuestOf[p]
+    end
+    local results = {}
+    hook.Add("LivingCityQuestComplete", "SLTest", function(p, q) results[p] = "done" end)
+    hook.Add("LivingCityQuestFailed", "SLTest", function(p, q) results[p] = "failed" end)
+    local function stock() return crate.lcStock or 0 end
+    local function boxes()
+        local n = 0
+        for _, e in ipairs(ents.FindInSphere(crate:GetPos(), 120)) do
+            if e:GetClass() == "lc_item" and string.find(e:GetNW2String("lc_item", ""), "^ammo_") then n = n + 1 end
+        end
+        return n
+    end
+
+    -- nothing without a live headquarters, nor without a route
+    B.S = {}
+    local did, why = LC.SupplyLineStart()
+    ok(did == false and string.find(tostring(why), "headquarters", 1, true) ~= nil, "no live headquarters: no supply run", tostring(why))
+    B.S = { state = "live", zone = zone, pos = T0 }
+    ok(LC.BaseLive() == zone, "(the headquarters is live)")
+    did, why = LC.SupplyLineStart()
+    ok(did == false and #LC.SupplyLineRoutes() == 0 and string.find(tostring(why), "no supply route", 1, true) ~= nil,
+        "a map with no route has none", tostring(why))
+
+    -- the map's own names, in order whatever order they were placed in; a canal needs two points
+    local names = {}
+    for _, n in ipairs({ 2, 3, 1 }) do
+        local t = ents.Create("info_target")
+        t:SetName("lc_supply_road_" .. n)
+        t:SetPos(T0 + ({ Vector(2000, 0, 0), Vector(1500, 300, 0), Vector(1000, 0, 0) })[n])
+        t:Spawn()
+        names[#names + 1] = t
+    end
+    local lone = ents.Create("info_target") lone:SetName("lc_supply_canal_1") lone:SetPos(T0 + Vector(0, 3000, 0)) lone:Spawn()
+    names[#names + 1] = lone
+    local routes = LC.SupplyLineRoutes()
+    ok(#routes == 1 and routes[1].kind == "road" and #routes[1].pts == 3 and routes[1].pts[1].x == T0.x + 2000 and routes[1].pts[3].x == T0.x + 1000,
+        "info_targets lc_supply_road_1, _2, _3 are a road route in that order; one canal point is no route", #routes)
+    -- the editor's: "Point: supply line, canal", route 1, in the order placed
+    local cpts = {}
+    for i, off in ipairs({ Vector(0, 4000, 0), Vector(0, 3000, 0), Vector(300, 1500, 0) }) do cpts[i] = LC.AddPoint(T0 + off, 0, "supplycanal", 1) end
+    ok(LC.POINT_KINDS.supplyroad and LC.POINT_KINDS.supplycanal and #LC.SupplyLineRoutes("canal") == 1 and #LC.SupplyLineRoutes("canal")[1].pts == 3,
+        "the editor's canal points (route 1) are a canal route", #LC.SupplyLineRoutes("canal"))
+
+    -- 1. by road, with an escort: the courier walks it in
+    local food0 = stock()
+    did, why = LC.SupplyLineStart("road")
+    local run = SL.run
+    ok(did == true and run and run.kind == "road" and run.crate == crate, "a supply run sets out by road, for the headquarters' crate", tostring(why))
+    ok(LC.SupplyLineStart() == false, "one at a time")
+    local npc = run and run.courier
+    local nst = IsValid(npc) and LC.NPCs[npc]
+    ok(nst and nst.role == "rebel" and nst.unmanaged and nst.casual and IsValid(nst.carry) and npc.kv.additionalequipment == ""
+        and npc:GetPos():Distance(T0 + Vector(2000, 0, 0)) < 20,
+        "a courier of the Resistance in plain clothes, unarmed, a box in both hands, at the route's first point, the city's own no longer")
+    local esc, stop = job("resistance", "res_supplyescort"), job("cp", "cp_supplystop")
+    ok(esc and esc.title == "Escort the courier" and stop and stop.title == "Stop the courier",
+        "the Resistance get Escort the courier, Civil Protection get Stop the courier")
+    local qe = take(res, "resistance", "res_supplyescort")
+    local qc = take(cop, "cp", "cp_supplystop")
+    ok(qe and qc and qe.stages[1].item == nil and qc.stages[1].item == nil, "both jobs taken; the Combine's marker shows nothing yet")
+    _run(1)
+    ok(LC.QuestOf[res] == qe and qe.stage == 1 and qe.stages[1].item == npc, "the escort's marker is on the courier")
+    res:SetPos(npc:GetPos() + Vector(80, 0, 0))
+    _run(1)
+    ok(qe.stage == 2, "the escort gets to him: see him in")
+    local halfSeen
+    for _ = 1, 60 do
+        if run.over then break end
+        if IsValid(npc) then res:SetPos(npc:GetPos() + Vector(80, 60, 0)) end
+        if run.spotted and not halfSeen then halfSeen = run.travel / math.max(1, run.length) end
+        _run(1)
+    end
+    ok(halfSeen and halfSeen >= 0.5 and halfSeen < 0.8, "no unit saw him: the Combine's marker shows him from half way", halfSeen)
+    ok(run.over and run.how == "arrived" and SL.run == nil, "he gets to the crate", tostring(run.how))
+    ok(stock() - food0 == SL.LOAD_FOOD, "food into the crate", stock() - food0)
+    ok(boxes() == 4, "and the rounds, boxes of ammunition set on the crate", boxes())
+    ok(IsValid(npc) and not LC.NPCs[npc].unmanaged and not IsValid(LC.NPCs[npc].carry), "the courier puts the box down and is the city's again")
+    ok(results[res] == "done" and results[cop] == "failed", "the escort is done; Stop the courier failed")
+    res:SetPos(far) cop:SetPos(far)
+
+    -- 2. up the canal: the boat moves up the water, a unit sees it, and sinks it
+    results = {}
+    local food1 = stock()
+    did = LC.SupplyLineStart("canal")
+    run = SL.run
+    local boat = run and run.boat
+    ok(did and run.kind == "canal" and IsValid(boat) and boat:GetModel() == SL.BOAT and IsValid(run.rider) and run.rider:GetParent() == boat,
+        "by canal: a boat with the boatman in it, at the first point")
+    ok(job("resistance", "res_supplyescort").title == "Meet the boat", "the Resistance get Meet the boat")
+    qc = take(cop, "cp", "cp_supplystop")
+    local from = boat:GetPos()
+    _run(2)
+    ok(boat:GetPos():Distance(from) > 120 and boat:GetPos():Distance(from) < 260 and boat:GetPos().x == from.x,
+        "the server moves it up the canal, point to point", boat:GetPos():Distance(from))
+    ok(not run.spotted and qc.stages[1].item == nil, "unseen: no marker")
+    cop:SetPos(boat:GetPos() + Vector(600, 0, 0))
+    _run(1.5)
+    ok(run.spotted and qc.stages[1].item == boat, "a unit sees it: the boat is marked on his job")
+    local credits = LC.Credits(cop)
+    hook.Run("EntityTakeDamage", boat, _dmg(cop, 150))
+    ok(not run.over, "a few rounds don't sink it")
+    hook.Run("EntityTakeDamage", boat, _dmg(cop, 200))
+    ok(run.over and run.how == "sunk" and run.by == cop and SL.run == nil, "enough and it sinks", tostring(run.how))
+    _run(1)
+    ok(results[cop] == "done" and LC.Credits(cop) > credits, "Stop the courier: done, with the usual pay", LC.Credits(cop) - credits)
+    _run(5)
+    ok(not IsValid(boat) and stock() == food1, "the boat goes down, and nothing comes in")
+
+    -- 3. the boat ties up and the boatman walks it in; killed on the way, nothing comes in
+    results = {}
+    SL.BOAT_SPEED = 3000
+    LC.SupplyLineStart("canal")
+    run = SL.run
+    qe = take(res, "resistance", "res_supplyescort")
+    _run(2)
+    npc = run.courier
+    ok(run.state == "walk" and IsValid(npc) and not IsValid(run.rider) and npc:GetPos():Distance(T0 + Vector(300, 1500, 0)) < 400,
+        "at the last point it ties up and the boatman takes the box ashore", run.state)
+    SL.BOAT_SPEED = speedWas
+    npc:SetHealth(0)
+    hook.Run("OnNPCKilled", npc, cop, cop)
+    npc:Remove()
+    _run(1)
+    ok(run.over and run.how == "killed" and run.by == cop and stock() == food1, "killed on the way: nothing comes in", tostring(run.how))
+    ok(results[res] == "failed", "and Meet the boat fails")
+
+    -- 4. by road, arrested on the way
+    LC.SupplyLineStart("road")
+    run = SL.run
+    npc = run.courier
+    cop:SetPos(npc:GetPos() + Vector(60, 0, 0))
+    local arrested = LC.ArrestNPC(npc, cop)
+    _run(1)
+    ok(arrested and run.over and run.how == "caught" and run.by == cop and not LC.NPCs[npc].unmanaged, "arrested on the way: caught, the cells have him", tostring(run.how))
+    cop:SetPos(far)
+
+    -- 5. the headquarters packed up while he's on the way: called off, he goes home
+    LC.SupplyLineStart("road")
+    run = SL.run
+    npc = run.courier
+    B.S = {}
+    hook.Run("LivingCityBaseGone", zone, "packed")
+    ok(run.over and run.how == "off" and SL.run == nil and IsValid(npc) and not LC.NPCs[npc].unmanaged, "the headquarters packed up: the run is called off")
+
+    -- now and then, by itself, while the headquarters is live
+    B.S = { state = "live", zone = zone, pos = T0 }
+    SL.nextAt = nil
+    _run(0.5)
+    local wait = (SL.nextAt or 0) - CurTime()
+    ok(wait >= 900 - 2 and wait <= 1500, "the next one in 15 to 25 minutes (lc_supply_line_minutes 20)", wait)
+    SL.nextAt = CurTime()
+    _run(0.5)
+    ok(SL.run ~= nil, "and when the time comes, one sets out by itself")
+    if SL.run then SL.run.over = true SL.run = nil end
+    _setcvar("lc_supply_lines", 0)
+    SL.nextAt = CurTime()
+    _run(0.5)
+    ok(SL.run == nil and LC.SupplyLineStart() == false, "lc_supply_lines 0: none")
+    _setcvar("lc_supply_lines", 1)
+
+    hook.Remove("LivingCityQuestComplete", "SLTest")
+    hook.Remove("LivingCityQuestFailed", "SLTest")
+    for _, p in ipairs({ res, cop }) do if LC.QuestOf[p] then LC.AbandonQuest(p) end end
+    for _, t in ipairs(names) do t:Remove() end
+    for _, p in ipairs(cpts) do LC.RemovePoint(p) end
+    if made then made:Remove() LC.RebelProps[zone] = nil end
+    LC.RemoveZone(z)
+    B.S = stWas
+    SL.nextAt = nil
+    LC.Running = runWas
+end
+Nov22_SupplyLineTests()
+
 function Nov21_PeopleNextTests()
     section("21 November: people back from home come out of their own block; units are all named")
     local seenWas, farWas = LC.IsSeen, LC.FarFromPlayers
