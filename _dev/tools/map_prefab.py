@@ -115,7 +115,7 @@ def resolves(target, names):
     return [t] if t in names else []
 
 
-def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=(), centroid=False, force=()):
+def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=(), centroid=False, force=(), keep_nodraw=False):
     import map_view as mv
     root = mv.read(path)
     x1, y1, z1, x2, y2, z2 = box
@@ -221,8 +221,9 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
             if all(inside(v) for v in allv) or (centroid and mean and inside(mean, 0)) or sid in force:
                 if any(sd["material"].lower() in drop for sd in sides):
                     continue      # (--drop: water, say)
-                if all_tools(sides):
-                    continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept)
+                if all_tools(sides) and not (keep_nodraw and all(sd["material"].lower() == "tools/toolsnodraw" for sd in sides)):
+                    continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept;
+                                  #  --keep-nodraw keeps the plain nodraw blocks a cave is shut in with, so the piece stays shut)
                 s = {"from": cls, "sides": moved(sides)}
                 if wired is not None:
                     s["live"], s["wired"] = live, wired
@@ -640,6 +641,7 @@ def main():
     e.add_argument("--drop", nargs="*", default=[])
     e.add_argument("--centroid", action="store_true")
     e.add_argument("--force", nargs="*", default=[])
+    e.add_argument("--keep-nodraw", action="store_true", help="keep the source's plain nodraw blocks (the shell a cave is shut in with)")
     sub.add_parser("list")
     s = sub.add_parser("show")
     s.add_argument("name")
@@ -648,7 +650,7 @@ def main():
     sub.add_parser("check")
     a = ap.parse_args()
     if a.cmd == "extract":
-        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop), centroid=a.centroid, force=tuple(a.force))
+        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop), centroid=a.centroid, force=tuple(a.force), keep_nodraw=a.keep_nodraw)
         nd = sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp"))
         print("%s: %d brushes (%d displaced faces), %d props/lights/decals, %d wired (%d names outside, %d firing in), %d by %d by %d" % (
             a.name, len(pf["solids"]), nd, len(pf["points"]), len(pf.get("wiring", [])), len(pf.get("outside", [])), len(pf.get("fired_from_outside", [])),
