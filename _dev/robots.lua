@@ -291,6 +291,24 @@ return function(T)
                 return
             end
             if st.pos then stand(p, st.pos) end -- (by the crate, with the meat picked up on the way)
+        elseif k == "count" and st.event == "supply_escort" then
+            -- the Resistance's courier (or the boat): walk up to him, and keep beside him all the way in
+            -- (sv_livingcity_supplylines.lua)
+            local thing = LC.SupplyLines and LC.SupplyLines.Thing and LC.SupplyLines.Thing()
+            if IsValid(thing) then stand(p, thing:GetPos(), Vector(80, 60, 0)) end
+        elseif k == "count" and st.event == "supply_stop" then
+            -- Stop the courier: shoot the boat till it sinks, or put the courier down
+            if now < (mem.killAt or 0) then return end
+            mem.killAt = now + 1
+            local S = LC.SupplyLines
+            local thing = S and S.Thing and S.Thing()
+            if not IsValid(thing) then return end -- (not out yet; or it is over, and the job is done)
+            if S.run and thing == S.run.boat then
+                stand(p, thing:GetPos(), Vector(300, 0, 0))
+                hook.Run("EntityTakeDamage", thing, _dmg(p, 120))
+            else
+                kill(p, thing)
+            end
         elseif k == "count" and st.poll and st.event ~= "served" then
             -- a step the job watches for itself (meat in the crate, a wound patched): each needs its own doing
             return "the robot can't do this step yet: count / " .. tostring(st.event)
@@ -354,9 +372,45 @@ return function(T)
         return tonumber(p:GetPData("lcf_xp_" .. f, 0)) or 0
     end
 
+    -- A supply run under way to the Resistance's headquarters (sv_livingcity_supplylines.lua): a territory of the
+    -- robot's own with its crate, its flag up, a road route to it, and the courier setting out.
+    local function supplyRun()
+        local S, B = LC.SupplyLines, LC.Base
+        if not (S and B and LC.SupplyLineStart) then error("no supply lines in this build") end
+        if S.CallOff then S.CallOff() end
+        local at = Vector(-120000, 120000, 0)
+        local z = LC.AddZone(at, 500, "rebel", 0)
+        local zone = LC.RebelLeader and LC.RebelLeader(z) or z
+        local crate
+        if not (LC.RebelProps[zone] and IsValid(LC.RebelProps[zone].cache)) then
+            crate = ents.Create("prop_physics")
+            crate:SetModel("models/items/item_item_crate.mdl") crate:SetPos(at + Vector(40, 0, 0)) crate:Spawn()
+            crate.lcStock = 0
+            LC.RebelProps[zone] = { cache = crate, pots = {} }
+        end
+        local was, running = B.S, LC.Running
+        B.S, LC.Running = { state = "live", zone = zone, pos = at }, true
+        local pts = {}
+        for i, off in ipairs({ Vector(1800, 0, 0), Vector(1200, 200, 0), Vector(700, 0, 0) }) do pts[i] = LC.AddPoint(at + off, 0, "supplyroad", 1) end
+        local okS, why = LC.SupplyLineStart("road")
+        if not okS then error("the supply run would not set out: " .. tostring(why)) end
+        return function()
+            local courier = (S.run or S.last or {}).courier
+            S.CallOff()
+            if IsValid(courier) then courier:Remove() end
+            for _, e in ipairs(ents.FindInSphere(at, 900)) do if IsValid(e) and e:GetClass() == "lc_item" then e:Remove() end end
+            for _, pt in ipairs(pts) do LC.RemovePoint(pt) end
+            if crate then crate:Remove() LC.RebelProps[zone] = nil end
+            LC.RemoveZone(z)
+            B.S, LC.Running, S.nextAt = was, running, nil
+        end
+    end
+
     -- A job offered only while something is on in the city that is not one of its events: the robot's city
     -- is given it while the job is played. id -> function() -> what puts the city back.
     local STAGED = {
+        res_supplyescort = function() return supplyRun() end,
+        cp_supplystop = function() return supplyRun() end,
         -- the Union paymaster on his walk with the wages (sv_livingcity_resistancemoney.lua)
         res_paymaster = function()
             if LC.Paymaster then LC.EndPaymaster("silent") end

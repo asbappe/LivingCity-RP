@@ -381,6 +381,12 @@ function LC.SupplyLineStart(want)
     return true, run
 end
 
+-- Called off now (the robot players putting the city back): nothing comes in, the courier goes away.
+function SL.CallOff()
+    local run = SL.run
+    if run then Stop(run, "off") end
+end
+
 ------------------------------------------------------------------------
 -- Every tick
 ------------------------------------------------------------------------
@@ -643,6 +649,8 @@ local function StopTemplate()
     return {
         id = "cp_supplystop", factions = { cp = true, ota = true }, violent = true, squad = 6,
         available = function() return SL.run ~= nil and not SL.run.over end,
+        -- (killing him pays what an anticitizen neutralized always does: what the job board shows, LC.PostingPay)
+        extraCredits = function() return { 0, LCF and LCF.XP and LCF.XP.rebel_kill_credits or 0 } end,
         build = function(ply, run)
             run = (istable(run) and run.route) and run or SL.run
             if not run or run.over then return nil end
