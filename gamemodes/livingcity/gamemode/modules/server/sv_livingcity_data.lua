@@ -59,6 +59,7 @@ LC.POINT_KINDS = {
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
     dream = true, -- where the shared dreams happen, out of the map (sv_livingcity_dreams.lua)
     sterm = true, -- a Combine zone's stalker works the map's terminal here (sv_livingcity_zonestalkers.lua)
+    supplyroad = true, supplycanal = true, -- the Resistance's supply lines: a courier's road, a boat's canal; # is the route (sv_livingcity_supplylines.lua)
 }
 LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true,
     dream = true } -- (the shared dreams' edge: sv_livingcity_dreams.lua)

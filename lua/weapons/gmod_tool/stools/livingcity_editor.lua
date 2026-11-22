@@ -66,6 +66,8 @@ local MODES = {
     { id = "dream",       label = "Point: dream (the secret endings play here as shared dreams for everyone asleep: put it out of the map, where nobody can walk to)" },
     { id = "dock",        label = "Point: loading dock (supply drops come in here, by dropship under open sky; supply trucks, crates)" },
     { id = "graffiti",    label = "Point: Resistance graffiti wall (sanitation scrubs it; aim at the foot of the wall)" },
+    { id = "supplyroad",  label = "Point: supply line, road (now and then a Resistance courier walks these in order, first to last, then on to the headquarters' crate; route #)", group = true },
+    { id = "supplycanal", label = "Point: supply line, canal (a boat comes up these in order: aim at the water; the last is where it ties up, beside the bank; route #)", group = true },
     -- (the Resistance's way marks: permanent sprayed arrows toward rebel ground, sv_livingcity_waymarks.lua)
     { id = "way_left",    kind = "waymark", num = 1, label = "Point: Resistance way mark, arrow left (a permanent sprayed arrow with the lambda: aim at a wall)" },
     { id = "way_right",   kind = "waymark", num = 2, label = "Point: Resistance way mark, arrow right (aim at a wall)" },
@@ -243,6 +245,10 @@ local function PlacePoint(self, ply, trace, mode)
         local n = #LC.PointsOfKind(mode.id, group)
         extra = string.format(" %s route %d now has %d stop(s)%s.", mode.id == "jogroute" and "Jogging" or "Parade", group, n,
             n < 2 and " (it needs at least two)" or "")
+    elseif mode.id == "supplyroad" or mode.id == "supplycanal" then
+        local n = #LC.PointsOfKind(mode.id, group)
+        extra = string.format(" %s supply route %d now has %d point(s)%s.", mode.id == "supplyroad" and "Road" or "Canal", group, n,
+            (mode.id == "supplycanal" and n < 2) and " (a boat needs at least two)" or "")
     elseif mode.id == "yard" then
         extra = " The rows form up in front of it, facing it."
     end

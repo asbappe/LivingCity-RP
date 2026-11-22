@@ -68,6 +68,7 @@ LC_MODULES = {
         "sv_livingcity_lookouts",
         "sv_livingcity_conduct",
         "sv_livingcity_convoy",
+        "sv_livingcity_supplylines", -- (the Resistance's supply lines: a courier on the road or a boat up the canal to the live headquarters' crate)
         "sv_livingcity_cp",
         "sv_livingcity_cpsupply", -- (the Civil Protection Commissary: units are issued supplies)
         "sv_livingcity_crafting",

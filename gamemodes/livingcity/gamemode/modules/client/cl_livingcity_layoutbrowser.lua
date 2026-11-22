@@ -44,7 +44,7 @@ local USES = {
     { title = "The Administrator", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "adminapc", "adminheli", "execwall", "studio", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "colonel", "rlookout", "rebelboard", "fundtv", "interrochair", "rebelcage", "locker_rebel", "bunk", "workbench", "dealer", "still", "cardtable", "bed", "toilet", "stove",
-        "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } }, -- (no locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)
+        "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom", "supplyroad", "supplycanal" } }, -- (no locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "yard", "parade" } },
     { title = "Dreams", ids = { "dream", "zone_dream" } }, -- (the owner, 11 November: missing from this view)

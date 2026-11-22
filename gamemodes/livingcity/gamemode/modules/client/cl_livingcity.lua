@@ -108,6 +108,7 @@ end
 
 local POINT_COLORS = {
     jogroute = Color(120, 230, 160), yard = Color(255, 210, 90), parade = Color(240, 120, 200), waymark = Color(232, 145, 42),
+    supplyroad = Color(235, 150, 70), supplycanal = Color(90, 190, 235), -- (the Resistance's supply lines: sv_livingcity_supplylines.lua)
     idle = Color(90, 220, 120), sit = Color(60, 200, 200), sitchair = Color(60, 170, 220), lean = Color(120, 230, 230),
     window = Color(140, 210, 240), armscrossed = Color(110, 220, 160), drinker = Color(190, 160, 110), couch = Color(80, 190, 210), bedside = Color(100, 180, 230), -- (Valve's idle spots)
     queue = Color(240, 200, 60), patrol = Color(80, 150, 255), checkpoint = Color(255, 80, 80),
@@ -121,6 +122,7 @@ local POINT_COLORS = {
     speechcrowd = Color(230, 200, 120), adminapc = Color(230, 200, 120), adminheli = Color(230, 200, 120), execwall = Color(200, 90, 80), -- (where the city gathers for her address: sv_livingcity_speech.lua)
 }
 local POINT_NAMES = {
+    supplyroad = "SUPPLY ROAD", supplycanal = "SUPPLY CANAL",
     jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD", adminapc = "ADMINISTRATOR'S APC", adminheli = "ADMINISTRATOR'S HELICOPTER", execwall = "EXECUTION WALL",
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     window = "WINDOW", armscrossed = "ARMS CROSSED", drinker = "DRINKER", couch = "COUCH", bedside = "BED EDGE",
@@ -192,7 +194,7 @@ net.Receive("lc_data", function()
     LC_CL.sequences = {}
     local index = {}
     for _, p in ipairs(LC_CL.points) do
-        if ((p.kind == "queue" or p.kind == "patrol") and p.group > 0) or p.kind == "jogroute" or p.kind == "parade" then
+        if ((p.kind == "queue" or p.kind == "patrol") and p.group > 0) or p.kind == "jogroute" or p.kind == "parade" or p.kind == "supplyroad" or p.kind == "supplycanal" then
             local key = p.kind .. p.group
             if not index[key] then
                 index[key] = { kind = p.kind, group = p.group, pts = {} }
@@ -685,6 +687,8 @@ local function DrawEditorLabels()
             elseif p.kind == "patrol" and p.group > 0 then txt = string.format("BEAT %d  #%d", p.group, p.order or 0)
             elseif p.kind == "jogroute" then txt = string.format("JOG ROUTE %d  #%d%s", p.group, p.order or 0, p.order == 1 and " (START)" or "")
             elseif p.kind == "parade" then txt = string.format("PARADE ROUTE %d  #%d%s", p.group, p.order or 0, p.order == 1 and " (FORM UP)" or "")
+            elseif p.kind == "supplyroad" or p.kind == "supplycanal" then
+                txt = string.format("SUPPLY %s %d  #%d%s", p.kind == "supplyroad" and "ROAD" or "CANAL", p.group, p.order or 0, p.order == 1 and " (START)" or "")
             elseif p.kind == "work" then
                 local job = LCJ and LCJ.ByNum[p.group]
                 txt = "WORK: " .. string.upper(job and job.place or ("job " .. p.group))

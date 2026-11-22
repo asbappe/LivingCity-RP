@@ -245,6 +245,12 @@ local ACTIONS = {
             local one, why = LC.Breach.Start()
             if not one then return false, tostring(why) end
             return true, "Open the sealed quarter: on the Resistance's board (F4). Take it as a member."
+        elseif v == "supply" then
+            -- (sv_livingcity_supplylines.lua: a courier or a boat now, not in 15 to 25 minutes)
+            if not LC.SupplyLineStart then return false, "No supply lines on this server." end
+            local okS, run = LC.SupplyLineStart()
+            if not okS then return false, tostring(run) end
+            return true, (run.kind == "canal" and "A boat" or "A courier") .. " sets out (" .. run.route.label .. "): the jobs are on the boards (F4)."
         elseif string.sub(v, 1, 6) == "event:" then
             if not LC.Running then return false, "Start the city first." end
             if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end
