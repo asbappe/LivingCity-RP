@@ -19,7 +19,7 @@
 # a train on each long straight run between two sheds ("shed" on a module's line: the street over it is the shed).
 # Where a way leaves on that bank (the town's and the cave forest's branches) it passes under the road and the
 # tracks ("Bridge over"), so the piece joined there sits further out (the town 704, the cave forest 576).
-# No street over the rail bridge yet (its tunnel in the north bank is where the street would run: an overpass to come). No street on the last stretch to the
+# The rail bridge carries its line over the street on girders to a tunnel behind the frontage. No street on the last stretch to the
 # roadend ("nostreet"): the south half's own street runs there, west of the corner.
 
 start 6144 5696
@@ -41,7 +41,7 @@ straight 576 stairs
 tee flip 1216
 morgue shed2
 floodroom shed2
-railbridge nostreet
+railbridge
 straight 128
 lock
 left

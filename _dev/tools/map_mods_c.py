@@ -806,72 +806,91 @@ def m_railbridge(m, opt):
     That train005 is a flat car (its size is read: 118 wide, 460 long, 54 high; its look is not), and which of its
     ends is its front (it is the same both ways round in its size)."""
     b = m.b
-    L, rim, c, far = 1024, b.rim, 480, 1280
+    L, rim, c = 1024, b.rim, 480
     D = rim - 144                                   # the rails' bed
     wide = 96                                       # half a tunnel's width
+    import map_corridor
+    street = m.street_side()
+    # where each tunnel's mouth is: in the canal's wall, or on a street's bank behind the street (an overpass carries
+    # the line over the road and tracks: the owner, 22 November, "cant you just make an overpass?")
+    T0 = {s: (map_corridor.FRONT if s == street else 256) for s in (1, -1)}
+    FAR = {s: T0[s] + 1024 for s in (1, -1)}
     m.open(0, -256, L, 256)
     from map_mods_c import cage_lamp
     for s in (1, -1):
-        lo, hi = (256, far) if s > 0 else (-far, -256)
+        t0, far = T0[s], FAR[s]
+        lo, hi = (t0, far) if s > 0 else (-far, -t0)
         m.low(c - wide, lo, c + wide, hi, rim, floor=D, mat="nature/dirtfloor005c")
         m.side(c - wide, lo, c + wide, hi)
         m.blocked(c - wide, lo, c + wide, hi)
-        m.portal(c - wide, min(s * 318, s * 320), D, c + wide, max(s * 318, s * 320), rim)
+        m.portal(c - wide, min(s * (t0 + 62), s * (t0 + 64)), D, c + wide, max(s * (t0 + 62), s * (t0 + 64)), rim)
         m.det([(c - wide, min(s * far, s * (far - 8)), D, c + wide, max(s * far, s * (far - 8)), rim)], MAT["black"])
         ribs = []
-        for v in (448, 704, 960, 1216):
+        for v in (t0 + 192, t0 + 448, t0 + 704, t0 + 960):
             v1, v2 = min(s * v, s * (v + 16)), max(s * v, s * (v + 16))
             ribs += [(c - wide, v1, D, c - wide + 8, v2, rim - 8), (c + wide - 8, v1, D, c + wide, v2, rim - 8), (c - wide, v1, rim - 8, c + wide, v2, rim)]
         m.det(ribs, MAT["beam"])
-        # the mouth: a pilaster each side from the bank to the rim, and the abutment the girders rest on
-        a1, a2 = min(s * 232, s * 256), max(s * 232, s * 256)
-        p1, p2 = min(s * 238, s * 256), max(s * 238, s * 256)                       # (2 proud of the wall and 2 into the mouth: the trim's ends hide in them)
-        m.det([(c - wide - 16, p1, F, c - wide + 2, p2, rim), (c + wide - 2, p1, F, c + wide + 16, p2, rim)], MAT["beam"])
+        # the mouth: a pilaster each side from the bank (or the street) to the rim, and the abutment the girders rest on
+        foot = map_corridor.STREET if s == street else F
+        a1, a2 = min(s * (t0 - 24), s * t0), max(s * (t0 - 24), s * t0)
+        p1, p2 = min(s * (t0 - 18), s * t0), max(s * (t0 - 18), s * t0)             # (2 proud of the wall and 2 into the mouth: the trim's ends hide in them)
+        m.det([(c - wide - 16, p1, foot, c - wide + 2, p2, rim), (c + wide - 2, p1, foot, c + wide + 16, p2, rim)], MAT["beam"])
         m.det([(c - 88, a1, D - 104, c + 88, a2, D - 16)], MAT["beam"])
-        m.taken(c - wide - 24, a1, F, c + wide + 24, a2, rim)
+        m.taken(c - wide - 24, a1, foot, c + wide + 24, a2, rim)
+        if s == street:
+            # over the street: a pier at the canal's edge (behind the parapet), one on the kerb between the tracks and the
+            # road, each with a cap under the girders; the walk along the canal's edge passes behind the first
+            for e1, e2 in ((256, 276), (map_corridor.ROAD_IN + 8, map_corridor.ROAD_OUT - 8)):
+                q1, q2 = min(s * e1, s * e2), max(s * e1, s * e2)
+                m.det([(c - 56, q1, foot, c + 56, q2, D - 72)], MAT["canal_wall"])
+                m.det([(c - 88, q1 - (4 if s < 0 else 0), D - 72, c + 88, q2 + (4 if s > 0 else 0), D - 56)], MAT["beam"])
         # a pier at the bank's foot
         q1, q2 = min(s * 128, s * 160), max(s * 128, s * 160)
         m.det([(c - 56, q1, F, c + 56, q2, D - 72)], MAT["canal_wall"])
         m.det([(c - 88, q1 - 12, D - 72, c + 88, q2 + 12, D - 56)], MAT["beam"])
         m.blocked(c - 96, q1 - 32, c + 96, q2 + 32)
         # the signal beside the mouth on the wall: a railway signal head, its red glow in front of it; the mouth's marks
-        m.static("models/props_trainstation/light_signal002a.mdl", c - wide - 80, s * 214, 270 if s > 0 else 90, z=D - 20)
-        sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - wide - 80, s * 168, D + 60, "255 50 30", 0.4, on=False)
+        m.static("models/props_trainstation/light_signal002a.mdl", c - wide - 80, s * (t0 - 42), 270 if s > 0 else 90, z=D - 20)
+        sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - wide - 80, s * (t0 - 88), D + 60, "255 50 30", 0.4, on=False)
         m.taken(c - wide - 130, a1, D - 30, c - wide - 30, a2, D + 110)
-        m.grime("number", c + wide + 60, s * 256, D + 60, 1 if s > 0 else 2)
-        m.grime("danger", c + wide + 60, s * 256, D - 40, 3 if s > 0 else 4)
+        m.grime("number", c + wide + 60, s * t0, D + 60, 1 if s > 0 else 2)
+        m.grime("danger", c + wide + 60, s * t0, D - 40, 3 if s > 0 else 4)
         m.grime("graffiti", c, s * 128, F + 100, 5 if s > 0 else 6)                     # (on the pier's face)
         cage_lamp(m, c, s * 128, F + 160, 270 if s > 0 else 90, "255 214 160 50", lit=s > 0)
     # the bridge: two plate girders with the bed between them, cross girders under it
     girders, stiff = [], []
+    vl, vh = -T0[-1], T0[1]                          # (the girders run from mouth to mouth: over the canal, and over a street)
     for s in (1, -1):
         g1, g2 = min(s * 64, s * 80), max(s * 64, s * 80)
-        girders += [(c + g1, -256, D - 56, c + g2, 256, D + 32)]
-        girders += [(c + g1 - 4, -256, D + 32, c + g2 + 4, 256, D + 36), (c + g1 - 4, -256, D - 60, c + g2 + 4, 256, D - 56)]
+        girders += [(c + g1, vl, D - 56, c + g2, vh, D + 32)]
+        girders += [(c + g1 - 4, vl, D + 32, c + g2 + 4, vh, D + 36), (c + g1 - 4, vl, D - 60, c + g2 + 4, vh, D - 56)]
         o1, o2 = min(s * 80, s * 83), max(s * 80, s * 83)
-        stiff += [(c + o1, v, D - 56, c + o2, v + 6, D + 32) for v in range(-227, 256, 64)]
+        stiff += [(c + o1, v, D - 56, c + o2, v + 6, D + 32) for v in range(vl + 29, vh, 64)]
     m.det(girders, STEEL)
     m.det(stiff, PIPE)
-    m.det([(c - 64, -256, D - 16, c + 64, 256, D)], STEEL)
-    m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in range(-200, 201, 100)], PIPE)
+    m.det([(c - 64, vl, D - 16, c + 64, vh, D)], STEEL)
+    m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in range(vl + 56, vh - 55, 100)], PIPE)
     m.taken(c - 90, -256, D - 64, c + 90, 256, D + 40)
     # the track: ballast on the bed, ties on the bridge and a little way in, rails the whole way (broken where the
     # areaportals stand), an overhead wire on three posts from tunnel to tunnel
-    m.det([(c - 52, -256, D, c + 52, 256, D + 1)], MM["gravel"])
-    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(-312, 304, 48) if not (-322 < v < -306 or 306 < v + 12 < 322)], "wood/woodfloor006b")
+    m.det([(c - 52, vl, D, c + 52, vh, D + 1)], MM["gravel"])
+    pa, pb = -(T0[-1] + 62), T0[1] + 62                # (the areaportals: no tie or rail through them)
+    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(pa + 6, pb - 8, 48) if not (pa - 4 < v < pa + 12 or pb - 16 < v + 12 < pb + 4)], "wood/woodfloor006b")
     posts = []
-    for v in (-176, 0, 176):
+    for v in [-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256]:
         posts += [(c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134)]
     m.det(posts, PIPE)
-    m.rope([(c, -460, D + 126), (c, -176, D + 128), (c, 0, D + 128), (c, 176, D + 128), (c, 460, D + 126)], slack=6, width=1)
+    wire = [(c, -(T0[-1] + 204), D + 126)] + [(c, v, D + 128) for v in sorted([-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256])] + [(c, T0[1] + 204, D + 126)]
+    m.rope(wire, slack=6, width=1)
     rails = []
-    for a, e in ((-far + 8, -320), (-318, 318), (320, far - 8)):
+    for a, e in ((-FAR[-1] + 8, pa - 2), (pa, pb), (pb + 2, FAR[1] - 8)):
         rails += [(c - 30, a, D, c - 26, e, D + 6), (c + 26, a, D, c + 30, e, D + 6)]
     m.det(rails, PIPE)
 
     # the train, standing where it waits: the left tunnel, its middle on lc_rail_p1. The tracktrain itself is unseen;
     # two flat cars (train005, 460 long) ride on it, one with two bundles of steel beams, one with three crates
-    tv, base = 800, D + 6
+    tv, base = T0[1] + 544, D + 6                   # (it waits in the left tunnel, 544 in: wholly hidden)
+    tr = T0[-1] + 544
     parts = [((c - 58, tv - 468, base + 2, c + 58, tv + 468, base + 94), MAT["nodraw"])]
     brush(m, "func_tracktrain", {
         "targetname": "lc_rail_train", "target": "lc_rail_p1", "origin": "%d %d %d" % (m.fr.at(c, tv, base)), "orientationtype": "0", "velocitytype": "0",
@@ -889,11 +908,11 @@ def m_railbridge(m, opt):
         m.point("env_dustpuff", c + (k - 1) * 30, v, D - 62, {"targetname": "lc_rail_dust_%d" % (k + 1), "scale": "14", "speed": "8", "color": "110 104 96", "angles": "90 0 0"})
     dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (1.2, 1.7, 2.2, 2.8)]
     stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv - 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
-             ("lc_rail_p3", -(tv - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", -tv, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
+             ("lc_rail_p3", -(tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", -tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
     for name, v, nxt, flags, wires in stops:
         m.point("path_track", c, v, base, {"targetname": name, "target": nxt, "spawnflags": flags, "orientationtype": "0", "speed": "0", "radius": "0"},
                 b.vis + ": the train", connections=wires)
-    sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, 320, D + 64, radius=4000)
+    sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, T0[1] + 64, D + 64, radius=4000)
     m.point("env_shake", c, 0, D, {"targetname": "lc_rail_shake", "amplitude": "3", "radius": "1000", "duration": "3.5", "frequency": "35", "spawnflags": "0"})
     m.relay("lc_rail_run", c, 0, D + 180, [("lc_rail_horn", "PlaySound", "", 0), ("lc_rail_signal_*", "ShowSprite", "", 0), ("lc_rail_train", "StartForward", "", 2),
                                            ("lc_rail_signal_*", "HideSprite", "", 10)])
@@ -914,10 +933,10 @@ def m_railbridge(m, opt):
     m.lane(c, 0)
     m.view(180, -40, F, 8, -14, "the bridge from the canal")
     m.view(c + 360, -100, F, 138, -16, "the left tunnel's mouth and the bridge")
-    m.view(c - 56, 300, D, 86, 2, "in the left tunnel: the train where it waits")
+    m.view(c - 56, T0[1] + 44, D, 86, 2, "in the left tunnel: the train where it waits")
     m.view(c + 60, 40, F, 200, -30, "under the bridge")
     b.notes.append("%s: the rails are at z %d (the walls' top less 144); the train waits at (%d %d) and stops at (%d %d)" % (
-        (m.tag, D + 6) + m.fr.pt(c, tv) + m.fr.pt(c, -tv)))
+        (m.tag, D + 6) + m.fr.pt(c, tv) + m.fr.pt(c, -tr)))
 
 
 def m_pumphouse(m, opt):

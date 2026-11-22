@@ -37,7 +37,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   fitted to c18_lc.vmf and checked against every piece. The owner walked it once: their faults are fixed and every
   build now runs a stair check (map_stairs.py) and a walk check (map_walk.py). **A road and railway run along its
   outside bank** (four trains; the town 704 north and the cave forest 576 west so their branches pass under it);
-  no street over the rail bridge yet (TODO). Test map: `python3 _dev/tools/map_ring_walk.py`. Not compiled yet.
+  the rail bridge an overpass; the street stops short of the halves' corner (TODO). Test map: map_ring_walk.py.
 - Ravenholm's church is behind the crypt (map_mods_f.church); its names wait for the gamemode (TODO.md, the church).
 - The owner's map (c18_lc.vmf) and Valve's VMF zip are on their Drive: curl from drive.usercontent.google.com.
 - Also 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).
