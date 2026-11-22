@@ -1116,7 +1116,7 @@ def m_thumper(m, opt):
     "EffectRadius", Enable, Disable, OnThumped); that it starts running by itself; which way the model faces (it is
     placed so its box is centred on the plinth). env_smokestack's TurnOn and TurnOff for the dust. Sounds from memory:
     ambient/machines/thumper_hit.wav, ambient/machines/thumper_top.wav, ambient/machines/thumper_shutdown1.wav.
-    models/antlion.mdl as a ragdoll; nature/blendsandmud001a (which of its two shows at alpha 0); combine_shield_loop3.wav."""
+    models/antlion.mdl as a ragdoll; nature/blendmuddirt001a for the drift (blendsandmud001a is not in the owner's Garry's Mod: their compile, 22 November); combine_shield_loop3.wav."""
     b = m.b
     L, P = 1024, F + 128
     cu, cv = 512, -448
@@ -1187,7 +1187,7 @@ def m_thumper(m, opt):
     for x0 in range(r[0], r[2], 256):
         for y0 in range(r[1], r[3], 256):
             zf = F + m.fr.dz
-            b.vmf.world_box((x0, y0, zf, x0 + 256, y0 + 256, zf + 8), MAT["nodraw"], top="nature/blendsandmud001a", vis=b.vis + ": the sand drift",
+            b.vmf.world_box((x0, y0, zf, x0 + 256, y0 + 256, zf + 8), MAT["nodraw"], top="nature/blendmuddirt001a", vis=b.vis + ": the sand drift",
                             disp={"top": (3, lambda i, j, x0=x0, y0=y0: (x0 + j * 32, y0 + i * 32, zf + drift(x0 + j * 32, y0 + i * 32) - 6),
                                           lambda i, j, x0=x0, y0=y0: 255 * min(1.0, drift(x0 + j * 32, y0 + i * 32) / 12.0))})
     m.body("models/antlion.mdl", 830, 120, 60, z=F + 20)
