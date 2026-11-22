@@ -79,18 +79,19 @@ LOGS = ("models/props_foliage/fallentree01.mdl", "models/props_foliage/fallentre
 # Small things
 # ---------------------------------------------------------------------------
 
-def wall_button(vmf, pos, yaw, name, box, vis, connections, wait, parent=None):
+def wall_button(vmf, pos, yaw, name, box, vis, connections, wait, parent=None, extra=None):
     """A button on a wall: Episode Two's mine lift button (the owner: "the button needs a button prop
     [models/props_mining/freightelevatorbutton02.mdl would work], not a big square brush"), and round it an unseen
     func_button that takes the press and plays the model's own press. pos: the model's foot against the wall (it is 8 wide,
-    20 high and stands 5 out, facing east at yaw 0); box: the unseen button's own."""
+    20 high and stands 5 out, facing east at yaw 0); box: the unseen button's own; extra: more keys for the func_button."""
     vmf.point("prop_dynamic", pos, {"targetname": name + "_model", "model": "models/props_mining/freightelevatorbutton02.mdl", "angles": "0 %d 0" % yaw, "skin": "0", "solid": "0",
                                     "DefaultAnim": "idleoff", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
                                     "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0",
                                     "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0",
                                     **({"parentname": parent} if parent else {})}, vis)
     vmf.brush_entity("func_button", {"targetname": name, "spawnflags": "1025", "wait": wait, "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "0", "health": "0",
-                                     "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255", "min_use_angle": "0.8", **({"parentname": parent} if parent else {})},
+                                     "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255", "min_use_angle": "0.8", **({"parentname": parent} if parent else {}),
+                                     **(extra or {})},
                      [box], MAT["nodraw"], vis, connections=[("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(connections))
 
 
@@ -1552,7 +1553,9 @@ class BunkerForest(Forest):
         To the gamemode these ARE doors (its door rules apply to func_door). A keypad beside each, 52 up as Valve's: a
         model only (the door opens by Use, and a keypad that opened it would get round the gamemode's locks). Beside most,
         on the side the leaf comes to rest on, Valve's shuttered window (window_spots, shutter_window); where one is, the
-        keypad goes on the other side, the side the leaf slides into, as on Valve's lab door."""
+        keypad goes on the other side, the side the leaf slides into, as on Valve's lab door. The unseen leaf casts baked
+        shadows (vrad_brush_cast_shadows), so a shut door keeps each room's light in (the owner, 22 November: "light bleeding
+        through the door: the doorframe is red even with the door shut"); the model is lit from its doorway (lit_from)."""
         v, vis = self.vmf, self.vis("bunker room doors")
         pieces, shapes = [], []
         for k, (level, (u1, v1, u2, v2), way, room, slide) in enumerate(self.ROOM_DOORS):
@@ -1581,11 +1584,11 @@ class BunkerForest(Forest):
             v.brush_entity("func_door", dict(self.SILO_DOOR, **{
                 "targetname": name, "movedir": "0 %d 0" % movedir, "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0",
                 "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
-                "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}), [leaf], MAT["nodraw"], vis,
+                "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}), [leaf], MAT["nodraw"], vis,
                 connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
             v.point("prop_dynamic_override", at, {
                 "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % yaw, "parentname": name, "skin": "0", "solid": "0",
-                "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
+                "lightingorigin": MS.lit_from(v, name + "_lighting", (at[0], at[1], z + 12), vis), "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, vis)
             v.point("prop_dynamic", pad[0], {"model": "models/props_lab/keypad.mdl", "angles": "0 %d 0" % pad[1], "solid": "0", "skin": "0", "disableshadows": "1",
@@ -1791,6 +1794,7 @@ class BunkerForest(Forest):
     DOOR_SPEED = 6      # the silo's blast door's leaves, degrees a second: Valve's own (60 degrees in 10 s)
     FLAT_SPEED = 16     # the bunker door's two flat leaves, units a second: each slides 128, so 8 s
     FLAT_SCALE = 0.654  # Silo 2's leaves drawn at this size: 136 along the wall each, 216 high, 19 thick
+    FLAT_PROUD = 8      # open, each leaf's edge stands this far out from the jamb (the owner, 22 November: flush, "they are flickering with the walls")
 
     def shove(self, name, parts, vis):
         """The shove at a door's close, where nothing kills (shove(), at the top of this file)."""
@@ -1802,8 +1806,9 @@ class BunkerForest(Forest):
         the top of the silo 2 in EP2)"): the piece valve_ep2_silo2_doors, Valve's two leaves (missile_doors.mdl) that lie
         flat over that silo and slide together, stood upright here as a sliding pair in the 256 by 192 doorway, drawn at
         FLAT_SCALE (each 136 along the wall: 8 into the jamb, meeting the other in the middle; 216 high, its top in the
-        lintel), each carried by an unseen func_button (a mover only the wiring moves: PressIn slides it 128 into the front
-        wall, PressOut back), with Valve's sounds (launchdoors_close_start, its loop and its end). They stand open. A button
+        lintel), each carried by an unseen func_button (a mover only the wiring moves: PressIn slides it 120 into the front
+        wall, its edge stopping FLAT_PROUD out from the jamb, PressOut back), lit from a point inside the doorway (lit_from),
+        with Valve's sounds (launchdoors_close_start, its loop and its end) and a mild shake as they meet. They stand open. A button
         inside shuts them (a klaxon, a steady red light, the slide) and opens them again; nothing outside does (the owner,
         19 November: "only be opened from the inside"). Nothing kills: in the last moments of the close a shove (shove())
         pushes whoever is in the doorway out of it, in or out. If the bunker is left shut with nobody inside, it opens itself
@@ -1816,19 +1821,21 @@ class BunkerForest(Forest):
         pf = PF.load("valve_ep2_silo2_doors")
         sc = self.FLAT_SCALE
         half = int(round(104 * sc))                      # (68: half a leaf along the wall)
-        travel = 128.0 / self.FLAT_SPEED
+        lip = 8 + self.FLAT_PROUD                        # (each leaf slides 120: its edge stops 8 out from the jamb's face, never flush)
+        travel = float(2 * half - lip) / self.FLAT_SPEED
+        lit = MS.lit_from(v, "lc_bunker_door_lighting", W(mid, 96, zp + 108), dv)     # (inside, in front of the doorway, at the leaves' middle height)
         model = [p for p in pf["points"] if p["keys"].get("model", "").endswith("missile_doors.mdl")][0]["keys"]
         e0, e1 = W(0, 0, 0), W(1, 0, 0)
         east = int(round(math.degrees(math.atan2(e1[1] - e0[1], e1[0] - e0[0])))) % 360       # (the bunker's +u in the map)
         for tag, (a, b), way, roll in (("west", (u1 - 8, mid), -1, -90), ("east", (mid, u2 + 8), 1, 90)):
             name = "lc_bunker_door_" + tag
             yaw = (east + (0 if way > 0 else 180)) % 360        # (the model's own +x away from the middle: its meeting edge is its -x, as in Valve's)
-            v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % yaw, "speed": str(self.FLAT_SPEED), "lip": "8", "wait": "-1", "spawnflags": "0",
+            v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % yaw, "speed": str(self.FLAT_SPEED), "lip": str(lip), "wait": "-1", "spawnflags": "0",
                                            "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
                            [B(a, 24, zp, b, 40, top)], MAT["nodraw"], dv)
             keys = {k: model[k] for k in ("model", "skin", "MinAnimTime", "MaxAnimTime", "RandomAnimation", "SetBodyGroup", "PerformanceMode", "pressuredelay",
                                           "ExplodeDamage", "ExplodeRadius") if k in model}
-            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1",
+            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1", "lightingorigin": lit,
                          "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "modelscale": str(sc), "StartDisabled": "0", "renderamt": "255",
                          "rendercolor": "255 255 255"})
             v.point("prop_dynamic", W((a + b) // 2 if way > 0 else (a + b) // 2, 32, zp + int(round(164.8 * sc))), keys, dv)
@@ -1858,6 +1865,10 @@ class BunkerForest(Forest):
         sound("lc_bunker_start", "ep2_outland_11.launchdoors_close_start", at)
         sound("lc_bunker_move", "ep2_outland_11.launchdoors_close_loop", at, loops=True)
         sound("lc_bunker_stop", "ep2_outland_11.launchdoors_close_end", at)
+        # a mild shake as they meet with Valve's end sound (the owner, 22 November: "Can we have a mild screen shake when they
+        # have closed?"), as the round door had here, and a lighter one as they come to rest open
+        for name, amp, radius, secs in (("lc_bunker_shake", 4, 600, 1), ("lc_bunker_shake_open", 2, 400, 0.6)):
+            v.point("env_shake", at, {"targetname": name, "amplitude": str(amp), "radius": str(radius), "duration": str(secs), "frequency": "40", "spawnflags": "0"}, dv)
         for pos in (W(mid, -28, zp + 240), W(mid, 150, zp + 190)):
             v.point("light", pos, {"targetname": "lc_bunker_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
                                    "style": "0"}, dv)
@@ -1868,11 +1879,13 @@ class BunkerForest(Forest):
         shut += [("OnTrigger", "lc_bunker_alarm", "PlaySound", "", round(1.7 * k, 1)) for k in range(int(end / 1.7) + 1)]
         shut += [("OnTrigger", "lc_bunker_door_*", "PressOut", "", 1), ("OnTrigger", "lc_bunker_start", "PlaySound", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1.5),
                  ("OnTrigger", "lc_bunker_shove", "Enable", "", end - 0.6), ("OnTrigger", "lc_bunker_shove", "Disable", "", end + 0.3),
-                 ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end), ("OnTrigger", "lc_bunker_portal", "Close", "", end + 0.2),
+                 ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end), ("OnTrigger", "lc_bunker_shake", "StartShake", "", end),
+                 ("OnTrigger", "lc_bunker_portal", "Close", "", end + 0.2),
                  ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 2.5), ("OnTrigger", "lc_bunker_open", "Enable", "", end + 2)]
         unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0), ("OnTrigger", "lc_bunker_start", "PlaySound", "", 0),
                   ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door_*", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1.5),
-                  ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end), ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 1),
+                  ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end),
+                  ("OnTrigger", "lc_bunker_shake_open", "StartShake", "", end), ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 1),
                   ("OnTrigger", "lc_bunker_close", "Enable", "", end + 2)]
         relay = W(mid, 200, zp + 120)
         v.point("logic_relay", relay, {"targetname": "lc_bunker_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
@@ -1912,7 +1925,8 @@ class BunkerForest(Forest):
         corridor's side are the last steps). A drum of concrete and steel 224 wide: its lower 160 two leaves hinged on the
         corridor's side that swing 60 degrees at Valve's 6 a second (10 s), a lock bar in the floor, Valve's start, loop and
         end sounds. It stands open. An inner door: a button each side (the corridor's east wall, the silo tunnel's east
-        wall) shuts it and opens it again for whoever is on either side, with a klaxon and a steady red light. Each leaf is a
+        wall) shuts it and opens it again, with a klaxon and a steady red light; shut from inside, the outside one is locked
+        until it is opened from inside. Each leaf is a
         func_rot_button used as a mover, so none of it is a door to the gamemode. Nothing kills: in the last moments of the
         close a shove (shove()) pushes whoever is in the doorway out of it. Its own areaportal, lc_silo_blast_portal, in the
         leaves' swing, shuts with it: the bunker's areaportal still parts the bunker from the forest, this one the silo
@@ -1980,21 +1994,39 @@ class BunkerForest(Forest):
                  ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_slam", "PlaySound", "", end),
                  ("OnTrigger", "lc_silo_blast_groan", "PlaySound", "", end + 0.1), ("OnTrigger", "lc_silo_blast_shake", "StartShake", "", end),
                  ("OnTrigger", "lc_silo_blast_lock", "PressOut", "", end), ("OnTrigger", "lc_silo_blast_portal", "Close", "", end + 0.2),
+                 ("OnTrigger", "lc_silo_blast_close_inside", "Disable", "", 0),
                  ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 2.5), ("OnTrigger", "lc_silo_blast_open", "Enable", "", end + 2)]
         unshut = [("OnTrigger", "lc_silo_blast_open", "Disable", "", 0), ("OnTrigger", "lc_silo_blast_light", "TurnOn", "", 0),
                   ("OnTrigger", "lc_silo_blast_groan", "PlaySound", "", 0), ("OnTrigger", "lc_silo_blast_lock", "PressIn", "", 0),
                   ("OnTrigger", "lc_silo_blast_start", "PlaySound", "", 0), ("OnTrigger", "lc_silo_blast_portal", "Open", "", 0.9),
                   ("OnTrigger", "lc_silo_blast_leaf*", "PressIn", "", 1), ("OnTrigger", "lc_silo_blast_move", "PlaySound", "", 1),
                   ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_stop", "PlaySound", "", end),
-                  ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 1), ("OnTrigger", "lc_silo_blast_close", "Enable", "", end + 2)]
+                  ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 1), ("OnTrigger", "lc_silo_blast_close", "Enable", "", end + 2),
+                  ("OnTrigger", "lc_silo_blast_button_corridor", "Unlock", "", 0), ("OnTrigger", "lc_silo_blast_locked_lamp", "HideSprite", "", 0),
+                  ("OnTrigger", "lc_silo_blast_close_inside", "Enable", "", end + 2)]
         relay = (sx + 16, sy - 700, zg + 120)
         v.point("logic_relay", relay, {"targetname": "lc_silo_blast_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
         v.point("logic_relay", (relay[0] + 16, relay[1], relay[2]), {"targetname": "lc_silo_blast_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
+        # the buttons: on the corridor's east wall by its last step (outside), and on the silo tunnel's east wall past the
+        # leaves (inside). Either shuts it and opens it again; but shut from inside, the outside one is locked (it buzzes, a
+        # red lamp over it lit) until it is opened from inside (the owner, 22 November: "if the silo doors are closed by the
+        # button on the inside of the silo, THEN the button between the bunker and silo doors ... deactivates until the silo
+        # doors have been opened from the inside ... that way if a rocket launch is going to happen, everyone can evacuate
+        # and they can close the silo doors behind them, BUT if the resistance is inside the silo, then they can close the
+        # doors from the inside for safety"). No opening by itself when the silo is empty: it would undo an evacuation.
         press = [("OnPressed", "lc_silo_blast_close", "Trigger", "", 0), ("OnPressed", "lc_silo_blast_open", "Trigger", "", 0)]
-        # the buttons: on the corridor's east wall by its last step, and on the silo tunnel's east wall past the leaves
-        wall_button(v, (sx + 64, sy - 620, zg + 40), 180, "lc_silo_blast_button_corridor", (sx + 54, sy - 630, zg + 36, sx + 64, sy - 610, zg + 64), dv, press, "9")
-        wall_button(v, (sx + 126, sy - 470, zg + 32), 180, "lc_silo_blast_button_silo", (sx + 116, sy - 480, zg + 28, sx + 126, sy - 460, zg + 56), dv, press, "9")
-        self.notes.append("the silo's door: White Forest's round blast door at the mouth of the silo's tunnel, a button each side, its own areaportal")
+        inside = [("OnPressed", "lc_silo_blast_close_inside", "Trigger", "", 0), ("OnPressed", "lc_silo_blast_open", "Trigger", "", 0)]
+        v.point("logic_relay", (relay[0] + 32, relay[1], relay[2]), {"targetname": "lc_silo_blast_close_inside", "StartDisabled": "0", "spawnflags": "0"}, dv,
+                connections=[("OnTrigger", "lc_silo_blast_close", "Trigger", "", 0), ("OnTrigger", "lc_silo_blast_button_corridor", "Lock", "", 0),
+                             ("OnTrigger", "lc_silo_blast_locked_lamp", "ShowSprite", "", 0)])
+        wall_button(v, (sx + 64, sy - 620, zg + 40), 180, "lc_silo_blast_button_corridor", (sx + 54, sy - 630, zg + 36, sx + 64, sy - 610, zg + 64), dv, press, "9",
+                    extra={"locked_sound": "2"})      # (Access Denied, as Valve's locked buttons)
+        v.point("env_sprite", (sx + 62, sy - 620, zg + 68), {"targetname": "lc_silo_blast_locked_lamp", "model": "sprites/glow01.spr", "rendermode": "9",
+                                                             "rendercolor": "197 6 1", "renderamt": "215", "renderfx": "0", "scale": "0.15", "GlowProxySize": "2",
+                                                             "HDRColorScale": ".5", "framerate": "10.0", "spawnflags": "0", "disablereceiveshadows": "0"}, dv)
+        wall_button(v, (sx + 126, sy - 470, zg + 32), 180, "lc_silo_blast_button_silo", (sx + 116, sy - 480, zg + 28, sx + 126, sy - 460, zg + 56), dv, inside, "9")
+        self.notes.append("the silo's door: White Forest's round blast door at the mouth of the silo's tunnel, a button each side (shut from inside, the outside "
+                          "one is locked until it is opened from inside), its own areaportal")
 
     def silo_inside(self):
         """The silo's whole inside (the hull's inner faces: 1088 square round the shaft's axis, from 64 under the pit floor
@@ -2041,6 +2073,7 @@ class BunkerForest(Forest):
         reserve = set(pf.get("reserve", {}).get("names", ()))
         live = set(w["keys"].get("targetname", "") for w in pf["wiring"]) - {""}
         finished = MS.finish(pf)        # (the nodraw faces players now see: map_silo.py)
+        MS.trim_mouth(pf)               # (clear of the blast door's leaves)
         for i in MS.SKIP:
             pf["solids"][i]["skip"] = True
         pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live or s.get("skip"))

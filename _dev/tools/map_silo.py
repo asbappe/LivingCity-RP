@@ -18,6 +18,15 @@ import math
 
 from map_build import MAT
 
+
+def lit_from(vmf, name, pos, vis):
+    """A moving model is lit from its own middle; where that middle goes into a wall or the ground as it moves, the model
+    turns black (the owner, 22 November, of the bunker's entrance leaves: "solid black ... while they are moving"). So it
+    takes its light from an unseen point in the open air instead, as Valve's lab door at the silo's bottom does (its
+    lightingorigin, a point in the doorway): an info_target `name` at pos, for the model's "lightingorigin"."""
+    vmf.point("info_target", pos, {"targetname": name, "spawnflags": "1"}, vis)
+    return name
+
 # a nodraw face of the piece that players can now see gets a real face: the levels' ring halls (Valve left the far half
 # of level A, most of level B and the bottom level's outer faces bare) and the gantry's tunnel. (r1, r2, z1, z2) round
 # the shaft's axis, or a box; a face is finished when the point 6 in front of its middle lies in one.
@@ -34,8 +43,25 @@ LEVER_RECESS = (272, 210, 362, 284, 234, 395)
 LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, and where it goes on the office's wall east of the door
 # the piece's brushes left out: the fake door at level B's south end (131; its north twin is the func_brush
 # brush_fake_cit_door_1, dropped with the wiring), the bottom level's outer wall behind the bedroom (577), rebuilt
-# round the secret door, and the lever wall's parts (placed again in the office)
-SKIP = {131, 577} | set(LEVER_BRUSHES)
+# round the secret door, the lever wall's parts (placed again in the office), and the two six-sided posts at the gantry
+# tunnel's mouth (1287, 1288): Valve's hinge posts for its blast door as Valve hung it there; the door is turned round
+# now and brings its own posts at its hinges (BunkerForest.silo_door), and its leaves swung through these (the owner,
+# 22 November: "the silo doors clip through two round/octagon-ish columns when closing")
+SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES)
+# and the tunnel mouth's two narrow jambs (1564, 1566), Valve's too for its door as it hung: the leaves now swing into
+# the tunnel through their lower part (the last 15 degrees), so they start over the leaves' height, 160 over the floor
+MOUTH_JAMBS, MOUTH_JAMB_FROM = (1564, 1566), 1568
+
+
+def trim_mouth(pf):
+    """The tunnel mouth's jambs (MOUTH_JAMBS) raised to start at MOUTH_JAMB_FROM (their foot at 1408 lifted, face and
+    corners alike), clear of the blast door's leaves."""
+    for i in MOUTH_JAMBS:
+        for sd in pf["solids"][i]["sides"]:
+            for key in ("plane", "verts", "corners"):
+                for q in sd.get(key) or []:
+                    if abs(q[2] - 1408) < 0.01:
+                        q[2] = float(MOUTH_JAMB_FROM)
 # props of the piece left out: the static door into the bedroom (a working door now), the big cooling tank in the
 # office (it filled the office's east half), the bottom level fence's static gate (a swinging one now: fence_gate) and
 # the two flat bundles of pipes across the bedroom, 61 over its floor at their lowest (the owner, 22 November: "the
@@ -264,12 +290,13 @@ class Silo:
             brush_ent(v, "func_door", dict(f.SILO_DOOR, **{
                 "targetname": name, "movedir": "0 %d 0" % wyaw(slide), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1",
                 "loopmovesound": "0", "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
-                "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}),
+                "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}),
                 [prism(self.d, leaf, 1152, 1276, MAT["nodraw"])], self.vis,
                 connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
             mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
             v.point("prop_dynamic_override", self.P(mx, my, 1152), {
                 "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(yaw + 180), "parentname": name, "skin": "0",
+                "lightingorigin": lit_from(v, name + "_lighting", self.P(mx, my, 1164), self.vis),
                 "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "modelscale": "1.03", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
@@ -355,10 +382,12 @@ class Silo:
         v.brush_entity("func_door", dict(f.SILO_DOOR, **{
             "targetname": name, "movedir": "0 %d 0" % wyaw(90), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0",
             "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
-            "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}), [wbox(self.d, (14, 340, 324, 18, 439, 448))], MAT["nodraw"], self.vis,
+            "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}), [wbox(self.d, (14, 340, 324, 18, 439, 448))],
+            MAT["nodraw"], self.vis,
             connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
         v.point("prop_dynamic_override", self.P(16, 388, 324), {
             "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(270), "parentname": name, "skin": "0", "solid": "0",
+            "lightingorigin": lit_from(v, name + "_lighting", self.P(24, 384, 332), self.vis),      # (where Valve lit its static door here from)
             "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
             "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
             "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
@@ -430,6 +459,7 @@ class Silo:
             "rendercolor": "255 255 255", "disableshadows": "1"}, [prism(self.d, leaf, 324, 426, MAT["nodraw"])], self.vis)
         v.point("prop_dynamic", self.P(cx, cy, cz), {
             "targetname": name + "_model", "model": "models/props_wasteland/interior_fence001g.mdl", "angles": "0 %d 0" % wyaw(yaw), "parentname": name,
+            "lightingorigin": lit_from(v, name + "_lighting", self.P(cx, cy, cz), self.vis),
             "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"},
             self.vis)
 
@@ -1086,6 +1116,7 @@ class Escape:
                        [((hx1, 5170, hz1, hx2, 5198, hz2), {"north": rock, "south": cliff})], cliff, self.xvis)
         v.point("prop_dynamic_override", (mid, 5150, F + 24), {
             "targetname": rock_n + "_model", "model": "models/props_foliage/rock_forest04.mdl", "angles": "0 90 0", "parentname": rock_n, "solid": "0", "skin": "0",
+            "lightingorigin": lit_from(v, rock_n + "_lighting", (mid, 5100, F + 72), self.xvis),      # (in the hollow in front of the face: it slides into the rock)
             "disableshadows": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0", "renderamt": "255",
             "rendercolor": "255 255 255", "modelscale": "1.3", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
             "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.xvis)
@@ -1113,6 +1144,7 @@ class Escape:
                                     ("OnOut", rock_n + "_sound", "StopSound", "", 4.3), ("OnOut", rock_n + "_shove", "Enable", "", 3.7),
                                     ("OnOut", rock_n + "_shove", "Disable", "", 4.6)])
         v.point("prop_dynamic", (lx - 4, ly, lz), {"model": "models/props_c17/trappropeller_lever.mdl", "angles": "0 270 0", "parentname": lever, "solid": "0", "skin": "0",
+                                                   "lightingorigin": lit_from(v, lever + "_lighting", (lx - 32, ly, lz), self.xvis),
                                                    "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"},
                 self.xvis)
         v.point("logic_relay", (lx - 40, ly, lz + 40), {"targetname": auto, "StartDisabled": "0", "spawnflags": "0"}, self.xvis,
@@ -1202,6 +1234,7 @@ def _escape(self):
         self.vis, connections=[("OnOpen", name, "PressIn", "", 0), ("OnOpen", name + "_sound", "PlaySound", "", 0),
                                ("OnClose", name, "PressOut", "", 0), ("OnClose", name + "_sound", "PlaySound", "", 0)])
     v.point("prop_dynamic", at, {"targetname": pic + "_model", "model": "models/props_lab/frame001a.mdl", "angles": "0 %d 9" % wyaw(facing), "parentname": pic,
+                                 "lightingorigin": lit_from(v, pic + "_lighting", self.P(px + 24 * nx, py + 24 * ny, z + 60), self.vis),
                                  "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
                                  "spawnflags": "0"}, self.vis)
     # the button on the tunnel's side: Episode Two's mine lift button (the bunker's wall_button) on the passage's north
