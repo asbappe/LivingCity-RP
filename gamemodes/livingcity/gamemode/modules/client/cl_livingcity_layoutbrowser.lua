@@ -52,6 +52,8 @@ local USES = {
     { title = "Paths, ladders and doors", ids = { "node", "link", "ladder", "zone_nogo", "door_locked", "door_open", "door_ignore", "door_force", "door_test" } },
     { title = "Tools", ids = { "prop", "inspect", "walker" } },
 }
+-- (the Advisor screen, hers and the Combine's: sv_livingcity_advisors.lua)
+for _, u in ipairs(USES) do if u.title == "The Administrator" or u.title == "Civil Protection and the Combine" then u.ids[#u.ids + 1] = "advisorscreen" end end
 -- an occupation's things beside its workplace
 local JOB_EXTRAS = {
     sanitation = { "citybin", "bin", "graffiti", "toilet" }, kitchen = { "dispenser", "queue", "dock" }, medic = { "bed" },

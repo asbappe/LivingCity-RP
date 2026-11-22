@@ -43372,6 +43372,224 @@ _setcvar("lc_base_setup_time", setupWas)
 end
 BaseTallPoleTests()
 
+function Nov22_AdvisorTests()
+    section("22 November: the Advisor screens: asking the Advisors, reporting in, and what failing them brings")
+    _setcvar("lc_advisors", "1")
+    LC.AdvisorReset()
+    local socioWas, stateWas = LC.Socio, LC.CityStateName
+    LC.Socio, LC.CityStateName = "green", "normal"
+    -- (any Administrator an earlier section left on the server steps aside while this runs)
+    local aside = {}
+    for _, p in ipairs(player.GetAll()) do
+        if p:GetNW2String("lcf_faction", "") == "admin" then aside[#aside + 1] = p p:SetNW2String("lcf_faction", "citizen") end
+    end
+    local told = {}
+    local noticeWas = LC.Notice
+    LC.Notice = function(p, kind, title, text, ...)
+        if title == "The Advisors" then told[#told + 1] = { p = p, text = text } end
+        return noticeWas(p, kind, title, text, ...)
+    end
+    local function lastTold(p) for i = #told, 1, -1 do if told[i].p == p then return told[i].text end end return nil end
+    -- nightfall, as the city's clock says it (sv_livingcity_atmos.lua), to this module only
+    local function Nightfall() hook.GetTable().LivingCityDayPhase.LivingCityAdvisors("night", "dusk") end
+    local S, A = LC.AdvisorState, LC.AdvisorsLive
+    local adm = newPlayer("AdvAdministrator", "admin")
+    local cit = newPlayer("AdvCitizen", "citizen")
+    local cop = newPlayer("AdvUnit", "cp")
+
+    -- no screen on the map: no Advisors
+    ok(not LC.AdvisorsHere() and LC.AdvisorAsk(adm, "cops") == false, "with no Advisor screen on the map there are no Advisors: nothing can be asked")
+    LC.AdvisorTick()
+    ok(GetGlobal2String("lc_advisors", "") == "", "and her F2 has nothing from them")
+
+    -- the editor's fixture
+    ok(LC.POINT_KINDS.advisorscreen == true, "the editor places an Advisor screen (Fixture: Advisor screen)")
+    local pt = LC.AddPoint(Vector(48000, 46000, 0), 0, "advisorscreen", 0)
+    LC.SyncFixtures()
+    local scr
+    for _, e in pairs(LC.Fixtures) do if IsValid(e) and e:GetClass() == "lc_advisorscreen" then scr = e end end
+    ok(IsValid(scr) and LC.AdvisorsHere(), "placed, it stands there as lc_advisorscreen, and the Advisors are here")
+    LC.AdvisorTick()
+    local st = util.JSONToTable(GetGlobal2String("lc_advisors", "") or "") or {}
+    ok(st.w == "patient" and not st.due, "they start patient, and her menu says so in words (never a number)", GetGlobal2String("lc_advisors", ""))
+    ok(LC.AdvisorWord(70) == "patient" and LC.AdvisorWord(40) == "impatient" and LC.AdvisorWord(10) == "out", "patient, growing impatient, out of patience")
+
+    -- E on the screen: hers only
+    adm:SetPos(scr:GetPos() + Vector(60, 0, 0))
+    cit:SetPos(scr:GetPos() + Vector(60, 0, 0))
+    local n0 = #net.sent
+    ok(LC.AdvisorScreenUse(cit, scr) == false and #net.sent == n0, "a citizen's E on the screen opens nothing")
+    ok(LC.AdvisorScreenUse(cop, scr) == false, "nor a unit's")
+    ok(LC.AdvisorScreenUse(adm, scr) == true, "her E opens her menu")
+    local m = _lastnet("lc_advisors_open")
+    ok(m and m.to == adm and m.data[1] == scr, "(sent to her, with the screen)")
+
+    -- asking: costs patience, more while the city is calm; refused when asked too often
+    local p0 = S().patience
+    ok(LC.AdvisorAsk(adm, "cops") == true and LC.AdvisorCops == 3, "she asks for more Civil Protection: three more units on the streets")
+    ok(math.abs((p0 - S().patience) - 30) < 0.01, "asked while the city is calm, it costs half as much again (30 for 20)", p0 - S().patience)
+    ok(lastTold(adm) == "The Advisors send more units.", "they say so, in one line", lastTold(adm))
+    local base = LC.NPCTargetsTotal()
+    LC.AdvisorCops = 0
+    ok(base - LC.NPCTargetsTotal() == 3, "the city's numbers count them (lc_cops plus the Advisors' three)")
+    LC.AdvisorCops = 3
+    local p1 = S().patience
+    local okAsk, why = LC.AdvisorAsk(adm, "supply")
+    ok(okAsk == false and why == "refused" and math.abs((p1 - S().patience) - 5) < 0.01, "asked again so soon: refused, and pestering costs 5", why)
+    ok(lastTold(adm) == "The Advisors refuse. You ask too often.", "they say why", lastTold(adm))
+    -- in unrest it costs what it costs
+    local supplyWas, startWas, dropWas, startDropWas = LC.Supply, LC.StartSupplyDrop, LC.OverwatchDrop, LC.StartOverwatchDrop
+    local supplies, drops = 0, 0
+    LC.StartSupplyDrop = function() supplies = supplies + 1 LC.Supply = { t = CurTime() } return true end
+    LC.StartOverwatchDrop = function() drops = drops + 1 LC.OverwatchDrop = { t = CurTime() } return true end
+    LC.Supply, LC.OverwatchDrop = nil, nil
+    A.lastAsk = -1e9
+    LC.Socio = "red"
+    ok(LC.AdvisorUnrest() == 2, "sociostability red: unrest, as they see it")
+    S().patience = 60
+    ok(LC.AdvisorAsk(adm, "supply") == true and supplies == 1 and math.abs(S().patience - 40) < 0.01, "a supply drop, asked in unrest: a drop comes, for 20", S().patience)
+    LC.AdvisorPublish()
+    st = util.JSONToTable(GetGlobal2String("lc_advisors", "") or "") or {}
+    ok(st.sup == true and st.cops == true and st.lvl == 2, "her menu greys what is already coming")
+    -- out of patience: refused
+    A.lastAsk = -1e9
+    S().patience = 10
+    ok(LC.AdvisorAsk(adm, "troops") == false and drops == 0 and lastTold(adm) == "The Advisors refuse.", "out of patience: refused outright", lastTold(adm))
+    S().patience = 10
+    ok(LC.AdvisorAsk(nil, "troops") == false and drops == 0, "(the city's own too)")
+
+    -- patience run out: the rations cut
+    LC.Socio = "green"
+    A.lastAsk = -1e9
+    S().patience, S().strikes = 25, 0
+    _setcvar("lc_ration_full_standing", "0")
+    ok(LC.RationFor(cit) == "ration" and not LC.AdvisorRationCut(), "(before: a full ration)")
+    local mulWas = LC.RationIntervalMul()
+    ok(LC.AdvisorAsk(adm, "troops") == true and drops == 1, "a request that runs their patience out is still granted")
+    ok(S().strikes == 1 and LC.AdvisorRationCut() and S().patience > 0, "but their patience has run out: the city's rations are cut", S().strikes)
+    ok(LC.RationFor(cit) == "ration_short" and LC.RationFor(cop) == "ration", "citizens get short packets; units keep theirs")
+    ok(math.abs(LC.RationIntervalMul() - mulWas * 1.5) < 0.01, "and longer between them")
+    ok(lastTold(adm) == "The Advisors have cut the city's rations.", "she is told that, not that the soldiers come (one line)", lastTold(adm))
+
+    -- reporting in, every third night
+    LC.Supply, LC.OverwatchDrop = nil, nil
+    S().nights = 2
+    Nightfall()
+    ok(S().nights == 3 and S().due, "the third night: the Advisors call for her report")
+    ok(lastTold(adm) == "The Advisors await your report.", "she is told, once", lastTold(adm))
+    LC.AdvisorPublish()
+    st = util.JSONToTable(GetGlobal2String("lc_advisors", "") or "") or {}
+    ok(st.due == true, "her menu shows a report is due")
+    -- not given by the next nightfall: missed, and the officer comes
+    local officeWas = LC.CollapseOffice
+    LC.CollapseOffice = function() return nil end
+    Nightfall()
+    LC.CollapseOffice = officeWas
+    ok(S().nights == 4 and not S().due and S().strikes == 2, "the next nightfall with no report: missed, a second failure", S().strikes)
+    local w = A.watch
+    local wst = IsValid(w) and LC.NPCs[w]
+    ok(wst and wst.elite and wst.advisorWatch and w:GetPos():DistToSqr(scr:GetPos()) < 400 * 400, "an Overwatch Elite stands watch near her office")
+    ok(lastTold(adm) == "The Advisors have sent an officer to watch you.", "she is told", lastTold(adm))
+    A.watchUntil = CurTime() - 1
+    LC.AdvisorTick()
+    ok(not IsValid(w) and A.watch == nil, "his watch over, he goes")
+    -- a third: a player Administrator removed from the post
+    LC.AdvisorStrike("test")
+    ok(adm:GetNW2String("lcf_faction", "") == "citizen" and adm:GetPData("lcf_wl_admin") == "0", "a third failure: she is removed from office, a citizen again")
+    ok(S().strikes == 0 and S().patience >= 50, "and it starts over for whoever comes next")
+
+    -- the truth, and lies
+    local adm2 = newPlayer("AdvAdministrator2", "admin")
+    S().nights, S().patience, S().strikes = 5, 50, 0
+    Nightfall()
+    ok(S().due, "(a new call)")
+    ok(LC.AdvisorReport(cit, 0) == false, "only the Administrator reports")
+    ok(LC.AdvisorReport(adm2, 0) == true and math.abs(S().patience - 62) < 0.01 and not S().lie, "the truth while the city is calm pleases them", S().patience)
+    ok(lastTold(adm2) == "The Advisors listen.", "they listen; nothing more is said", lastTold(adm2))
+    S().nights = 8
+    LC.Socio = "red"
+    Nightfall()
+    local pBefore = S().patience
+    _netcall("lc_advisors_do", adm2, "report0")
+    ok(not S().due and S().lie and S().lie.size == 2 and math.abs(S().patience - pBefore - 12) < 0.01, "from her menu: a lie (all is calm, in unrest) pleases them now", S().patience - pBefore)
+    local rnd = math.random
+    math.random = function(a) if a then return a end return 0 end
+    local pLie = S().patience
+    Nightfall()
+    math.random = rnd
+    ok(not S().lie and math.abs(pLie - S().patience - 30) < 0.01, "found out the next night: it costs more than the truth would have", pLie - S().patience)
+    ok(lastTold(adm2) == "The Advisors know you lied.", "and they say so", lastTold(adm2))
+    S().nights, S().lie = 11, nil
+    Nightfall()
+    adm2.lcAdvisorNext = 0
+    _netcall("lc_advisors_do", adm2, "report2")
+    ok(not S().due and not S().lie, "the truth about unrest is no lie, and nothing comes out later")
+    LC.Socio = "green"
+    _netcall("lc_advisors_do", cit, "troops")
+    ok(drops == 1, "(a citizen's message asks for nothing)")
+
+    -- the city's own, with nobody playing her
+    LC.SetFaction(adm2, "citizen", nil, true)
+    S().nights, S().patience = 14, 30
+    LC.Socio = "red"
+    Nightfall()
+    ok(S().nights == 15 and not S().due and S().lie and S().lie.size == 1 and S().lie.city, "the city's own reports by itself: in unrest, with their patience thin, a step calmer than it is")
+    S().nights, S().patience = 17, 80
+    Nightfall()
+    ok(not S().due and not S().lie, "with their patience high, honestly")
+    -- it asks when the city needs it
+    LC.OverwatchDrop, A.lastAsk, A.cityAsk = nil, -1e9, -1e9
+    S().patience = 80
+    LC.AdvisorTick()
+    ok(drops == 2 and A.lastAsk > -1e9, "in unrest, the city's own asks for troops")
+    -- replaced, with a new name if she has one
+    _setcvar("lc_administrator_name", "Administrator Mossman")
+    S().strikes = 2
+    LC.AdvisorStrike("test")
+    local newName = LC.AdministratorName()
+    ok(newName ~= "Administrator Mossman" and string.find(newName, "^Administrator ") ~= nil, "a third failure: the city's own is replaced, under a new name", newName)
+    _setcvar("lc_administrator_name", "Administrator Breen")
+    ok(LC.AdministratorName() == "Administrator Breen", "(the owner's own name for her wins again)")
+    _setcvar("lc_administrator_name", "The Administrator")
+    S().strikes = 2
+    LC.AdvisorStrike("test")
+    ok(LC.AdministratorName() == "The Administrator", "(no name: none made up)")
+
+    -- their patience comes back, and with it a fresh start
+    LC.Socio = "green"
+    LC.AdvisorTick(100000)
+    S().patience, S().strikes = 40, 1
+    local day = GetConVar("lc_day_minutes"):GetFloat() * 60
+    LC.AdvisorTick(100000 + day)
+    ok(math.abs(S().patience - 70) < 0.5 and S().strikes == 0, "30 back in a city day; patient again, past failures are forgotten", S().patience)
+
+    -- kept with the state of the city
+    S().patience, S().nights = 44, 21
+    LC.LedgerSave()
+    LC.LedgerReload()
+    ok(S().patience == 44 and S().nights == 21, "their patience and the nights are kept with the state of the city")
+
+    -- off
+    _setcvar("lc_advisors", "0")
+    LC.AdvisorTick()
+    ok(not LC.AdvisorsHere() and LC.AdvisorScreenUse(adm, scr) == false and GetGlobal2String("lc_advisors", "") == "" and LC.AdvisorCops == 0,
+        "lc_advisors 0: no Advisors")
+    _setcvar("lc_advisors", "1")
+
+    -- tidy up
+    LC.Notice = noticeWas
+    LC.StartSupplyDrop, LC.StartOverwatchDrop, LC.Supply, LC.OverwatchDrop = startWas, startDropWas, supplyWas, dropWas
+    LC.RemovePoint(pt)
+    LC.SyncFixtures()
+    ok(not IsValid(scr), "(the screen goes with its point)")
+    LC.AdvisorReset()
+    _setcvar("lc_ration_full_standing", "150")
+    LC.Socio, LC.CityStateName = socioWas, stateWas
+    for _, p in ipairs(aside) do if IsValid(p) then p:SetNW2String("lcf_faction", "admin") end end
+    adm:Remove() adm2:Remove() cit:Remove() cop:Remove()
+end
+Nov22_AdvisorTests()
+
 function Nov21_GardenPlotTests()
     section("21 November: the walled garden's planting spots grow melons and pumpkins")
     local G = LC.Garden

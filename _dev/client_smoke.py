@@ -2275,6 +2275,73 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "lc_fundtv (the fund screen) " + str(err)
+# the Advisor screens (cl_livingcity_advisors.lua, entities/lc_advisorscreen.lua, 22 November): her F2 > City orders
+# has The Advisors for her only, its title says their patience in words, her report's truth and lies, what is already
+# coming greyed; E on the screen opens the same menu; the screen draws the Advisor's shape
+err = L.execute(r"""
+local factionWas = _me:GetNW2String("lcf_faction", "")
+-- (what the server sends, read as the game would: this harness's JSON reader is set by whichever check ran last)
+local jsonWas = util.JSONToTable
+local SENT = { ['{"w":"impatient","due":true,"lvl":2,"sup":true}'] = { w = "impatient", due = true, lvl = 2, sup = true },
+    ['{"w":"patient","lvl":0}'] = { w = "patient", lvl = 0 } }
+util.JSONToTable = function(s) return SENT[s] end
+local function Extra()
+    for _, fn in ipairs(LC_CL.CityOrderExtras or {}) do
+        local it = fn(_me)
+        if istable(it) and string.find(tostring(it.label), "^The Advisors") then return it end
+    end
+    return nil
+end
+local bad
+_globals.lc_advisors = '{"w":"impatient","due":true,"lvl":2,"sup":true}'
+_me:SetNW2String("lcf_faction", "admin")
+local it = Extra()
+if not it then bad = "no 'The Advisors' on her City orders"
+elseif it.label ~= "The Advisors (report due)" then bad = "its label: " .. tostring(it.label)
+else
+    local pg = it.page()
+    local labels = {}
+    for _, x in ipairs(pg.items or {}) do labels[#labels + 1] = x.label .. (x.disabled and "[grey]" or "") end
+    local all = table.concat(labels, "|")
+    if pg.title ~= "THE ADVISORS ARE GROWING IMPATIENT" then bad = "the title should say their patience: " .. tostring(pg.title)
+    elseif all ~= "Report to the Advisors|Ask for Overwatch troops|Ask for a supply drop (one is coming)[grey]|Ask for more Civil Protection" then bad = "its items: " .. all
+    else
+        local rp = pg.items[1].page()
+        local r = {}
+        for _, x in ipairs(rp.items) do r[#r + 1] = x.label end
+        if table.concat(r, "|") ~= "The truth: there is unrest|Lie: there is unease|Lie: all is calm" then bad = "her report: " .. table.concat(r, "|") end
+    end
+end
+_me:SetNW2String("lcf_faction", "citizen")
+if not bad and Extra() then bad = "a citizen's City orders show the Advisors" end
+_me:SetNW2String("lcf_faction", "admin")
+_globals.lc_advisors = ""
+if not bad and Extra() then bad = "with no Advisor screen in the city, her City orders still show the Advisors" end
+-- E on the screen
+_globals.lc_advisors = '{"w":"patient","lvl":0}'
+local openWas, opened = LC_CL.OpenSituation, nil
+LC_CL.OpenSituation = function(p) opened = p end
+local scr = ents.Create("lc_advisorscreen")
+net._q = { scr }
+local okR, errR = pcall(net["recv_lc_advisors_open"])
+LC_CL.OpenSituation = openWas
+if not bad and not okR then bad = "E on the screen: " .. tostring(errR) end
+if not bad and not (opened and opened.id == "advisors" and opened.title == "THE ADVISORS ARE PATIENT" and type(opened.stay) == "function" and #opened.items == 3) then
+    bad = "E on the screen should open her menu (no report due: three things to ask)"
+end
+-- the screen
+local polys = _calls["surface.DrawPoly"] or 0
+local okD, errD = pcall(LC_CL.DrawAdvisorScreen, scr)
+if not bad and not okD then bad = "drawing the screen: " .. tostring(errD) end
+if not bad and (_calls["surface.DrawPoly"] or 0) - polys ~= 3 then bad = "the screen should draw the Advisor's glow, head and body" end
+scr:Remove()
+_globals.lc_advisors = nil
+_me:SetNW2String("lcf_faction", factionWas)
+util.JSONToTable = jsonWas
+return bad
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the Advisor screens (client): " + str(err)
 # the Combine camera monitors (entities/lc_monitor.lua): the glass is drawn with and without a camera, only the
 # nearest monitor you face from its front is live, and a camera's view is never started from inside itself
 L.globals()._SRC = open(os.path.join(ENTDIR, "lc_monitor.lua")).read()
