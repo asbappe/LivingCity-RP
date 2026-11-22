@@ -248,7 +248,10 @@ class Silo:
         func_door on the doorway's slant, sliding 64 toward the shaft into the wall. Valve's keypads beside them stay.
         The model's lever and handle are on its own +x side, so it slides toward its -x (as Valve's lab door does): the
         model faces the other way from the slide, and the handle stays in the doorway (the owner, 22 November: "the
-        doors open the wrong direction for the model (the lever/handle portion are stuck in the wall)")."""
+        doors open the wrong direction for the model (the lever/handle portion are stuck in the wall)"). Valve's doorway
+        is 97 clear between its frame's posts and the model's leaf 96.4 wide, so light showed down both edges (the owner:
+        "a slight crack of open/light between the door and the doorframe"): the model is drawn 3 per cent larger (99.3
+        wide, 1.1 into each post; 128 high, inside the frame's head)."""
         f, v = self.f, self.v
         for k, (a, b, yaw) in enumerate((((-320, -331), (-250, -263), 45), ((-250, 263), (-320, 331), 315))):
             name = "lc_silo_levelb_door_%d" % (k + 1)
@@ -268,7 +271,7 @@ class Silo:
             v.point("prop_dynamic_override", self.P(mx, my, 1152), {
                 "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(yaw + 180), "parentname": name, "skin": "0",
                 "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
-                "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
+                "rendercolor": "255 255 255", "modelscale": "1.03", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
 
     # how far the outer wall is from the shaft's axis on each level, every 15 degrees from +x (measured in the piece)
@@ -479,7 +482,7 @@ LOW, CROUCH = 112, 48        # its height, and in the two squeezes (players stan
 F_EXIT = 828                 # the exit's floor: the forest's ground where its rim is lowest west of the silo (826 at the wall)
 CAVE_AT = (9060, 5328, F_EXIT)   # where the cave piece's anchor (its mouth's middle on the floor) goes; turned three quarters
 EXIT_HOLE = (9020, 9132, F_EXIT, F_EXIT + 80)     # the way out through the rock face: x from, to; z from, to (at y 5168 to 5200)
-CUT = (8720, 9184)           # the forest's north wall is cut between these x (as far west as the cave reaches; the exit fills it)
+CUT = (8720, 9312)           # the forest's north wall is cut between these x (as far west as the cave reaches, and east of the way out as far as the rock slides)
 FACE_TOP = F_EXIT + 212      # the top of the face of rock, of the wall behind it and of the seal over the roofs (sky above)
 CONTAINER = (8016, 5312, -1272, 9200, 6328, 1072)    # the sealed box round the tunnel (its walls 16 thick inside these)
 
@@ -581,12 +584,11 @@ def _closed(S):
     return [c for c in sides if c not in S["open"]]
 
 
-def _cable_nodes():
-    """The lamp cable's points (CABLE_WAY), each {x, y, z} and, at a lamp, its wall point and the wall's normal. Every
-    point is first set CABLE_OFF from its wall(s) and CABLE_DROP under the roof; then each span is walked (with its sag)
-    and where the rock's bulge would come within CABLE_CLEAR of it, both its ends are moved off that wall by as much."""
-    S = _segments()
-    roof = lambda i, s: S[i]["floor"](s) + S[i]["height"](s)
+TIMBER_EVERY, TIMBER_MAX_INSET, TIMBER_CAP = 256, 6, 80      # a set every so often, its posts at most this far off the wall, its cap this far over the floor
+
+
+def _lamp_spots(S):
+    """Where the tunnel's lamps are: every 400 or so along each run (its pieces with an axis), {piece: [along, ...]}."""
     lamps = {}
     for i, sg in enumerate(S):
         if not sg["axis"]:
@@ -595,6 +597,93 @@ def _cable_nodes():
         a, b = (x1, x2) if sg["axis"] == "x" else (y1, y2)
         n = max(1, int((b - a) // 400))
         lamps[i] = [a + (k + 0.5) * (b - a) / n for k in range(n)]
+    return lamps
+
+
+def _timber_sets():
+    """The tunnel's timber sets (Escape.timbers): along each run 112 high, near every TIMBER_EVERY (nudged up to 96 to a
+    spot where the rock's bulge leaves both posts within TIMBER_MAX_INSET of the wall, and not within 48 of a lamp or the
+    run's ends). Each: its piece, where along, the posts' places (a struts_single model's foot is its north-east corner)
+    and models, the posts' foot, the cap's box, and how far the cable must stand off its wall there."""
+    S = _segments()
+    lamps = _lamp_spots(S)
+    out = []
+    for i, sg in enumerate(S):
+        if not sg["axis"]:
+            continue
+        x1, y1, x2, y2 = sg["box"]
+        ax, fl, hh = sg["axis"], sg["floor"], sg["height"]
+        a, b = (x1, x2) if ax == "x" else (y1, y2)
+        sides = ("s", "n") if ax == "x" else ("w", "e")
+        k = 0
+        while a + TIMBER_EVERY * (k + 0.5) < b - 48:
+            nominal = a + TIMBER_EVERY * (k + 0.5)
+            k += 1
+            for off in (0, 32, -32, 64, -64, 96, -96):
+                sp = nominal + off
+                if not (a + 48 <= sp <= b - 48) or any(abs(sp - l) < 48 for l in lamps.get(i, ())) or min(hh(sp - 8), hh(sp + 8)) < 100:
+                    continue
+                insets = {}
+                for side in sides:
+                    worst = 0.0
+                    for ds in (-8, 0, 8):
+                        q = sp + ds
+                        for dz in range(4, 108, 8):
+                            z = fl(q) + dz
+                            px, py = (q, _wall_of(sg, side)) if ax == "x" else (_wall_of(sg, side), q)
+                            worst = max(worst, _wall_push(sg, side, px, py, z))
+                    insets[side] = int(math.ceil(worst)) + 1
+                if max(insets.values()) > TIMBER_MAX_INSET:
+                    continue
+                lo_f, hi_f = min(fl(sp - 8), fl(sp + 8)), max(fl(sp - 8), fl(sp + 8))
+                foot = int(math.floor(lo_f)) - 4
+                cz = int(math.ceil(hi_f)) + TIMBER_CAP
+                posts = []
+                for n_, side in enumerate(sides):
+                    ins = insets[side]
+                    model = "struts_single0%d" % (1 + (len(out) + n_) % 2)
+                    if ax == "x":
+                        yy = y1 + ins + 16 if side == "s" else y2 - ins
+                        posts.append(((int(round(sp + 8)), yy), model))
+                    else:
+                        xx = x1 + ins + 16 if side == "w" else x2 - ins
+                        posts.append(((xx, int(round(sp + 8))), model))
+                c0, c1 = int(round(sp - 6)), int(round(sp + 6))
+                cap = (c0, y1 - 8, cz, c1, y2 + 8, cz + 12) if ax == "x" else (x1 - 8, c0, cz, x2 + 8, c1, cz + 12)
+                out.append({"seg": i, "at": sp, "posts": posts, "foot": foot, "cap": cap, "cap_top": cz + 12, "insets": insets})
+                break
+    return out
+
+
+def _tunnel_ways():
+    """The tunnel's middle as ways kept clear (Vmf.keep_way_clear): along each run, a box 32 wide on the centre line every
+    32, from just over the floor to a standing player's height (its floor rises along a ramp)."""
+    out = []
+    for i, sg in enumerate(_segments()):
+        if not sg["axis"]:
+            continue
+        x1, y1, x2, y2 = sg["box"]
+        ax, fl = sg["axis"], sg["floor"]
+        a, b = (x1, x2) if ax == "x" else (y1, y2)
+        c = (y1 + y2) // 2 if ax == "x" else (x1 + x2) // 2
+        for s0 in range(int(a), int(b), 32):
+            s1 = min(int(b), s0 + 32)
+            zl, zh = max(fl(s0), fl(s1)) + 4, min(fl(s0), fl(s1)) + 60
+            if zh <= zl:
+                continue
+            box = (s0, c - 16, zl, s1, c + 16, zh) if ax == "x" else (c - 16, s0, zl, c + 16, s1, zh)
+            out.append((tuple(int(round(v)) for v in box), "the way out's tunnel"))
+    return out
+
+
+def _cable_nodes():
+    """The lamp cable's points (CABLE_WAY), each {x, y, z} and, at a lamp, its wall point and the wall's normal. Every
+    point is first set CABLE_OFF from its wall(s) and CABLE_DROP under the roof; then each span is walked (with its sag)
+    and where the rock's bulge would come within CABLE_CLEAR of it, both its ends are moved off that wall by as much."""
+    S = _segments()
+    roof = lambda i, s: S[i]["floor"](s) + S[i]["height"](s)
+    lamps = _lamp_spots(S)
+    timber = _timber_sets()
     nodes = []      # {"x", "y", "z", "walls": [(seg, side)], "lamp": side or None}
 
     def add(x, y, z, walls, lamp=None):
@@ -608,20 +697,26 @@ def _cable_nodes():
             _, i, side, s0, s1 = step
             sg, (nx, ny) = S[i], WALL_NORMAL[step[2]]
             wall = _wall_of(sg, side)
+            at_sets = dict((st["at"], st) for st in timber if st["seg"] == i and min(s0, s1) < st["at"] < max(s0, s1))
             stops = sorted(set([s0, s1] + [k for k in CABLE_KINKS.get(i, ()) if min(s0, s1) < k < max(s0, s1)]
-                               + [l for l in lamps.get(i, ()) if min(s0, s1) <= l <= max(s0, s1)]), reverse=s0 > s1)
+                               + [l for l in lamps.get(i, ()) if min(s0, s1) <= l <= max(s0, s1)] + list(at_sets)), reverse=s0 > s1)
             full = [stops[0]]
             for s in stops[1:]:
                 m = int(math.ceil(math.hypot(s - full[-1], roof(i, s) - roof(i, full[-1])) / float(CABLE_SPAN)))
                 full += [full[-1] + (s - full[-1]) * q / float(m) for q in range(1, m)] + [s]
             for s in full:
                 is_lamp = any(abs(s - l) < 0.5 for l in lamps.get(i, ()))
-                off = CABLE_OFF
+                off, zc = CABLE_OFF, roof(i, s) - CABLE_DROP
                 if is_lamp:      # (through the middle of the lamp's cage, 6 out from the rock it is on)
                     px, py = (s, wall) if side in ("n", "s") else (wall, s)
-                    off = _wall_push(sg, side, px, py, roof(i, s) - CABLE_DROP) + 6
+                    off = _wall_push(sg, side, px, py, zc) + 6
+                st = next((t for a_, t in at_sets.items() if abs(a_ - s) < 0.5), None)
+                if st:           # (over a timber set: on its cap, just in front of its post)
+                    off, zc = st["insets"][side] + 16 + 4, st["cap_top"] + 2
                 x, y = (s, wall + ny * off) if side in ("n", "s") else (wall + nx * off, s)
-                add(x, y, roof(i, s) - CABLE_DROP, [(i, side)], side if is_lamp else None)
+                add(x, y, zc, [(i, side)], side if is_lamp else None)
+                if st:
+                    nodes[-1]["timber"] = True
         elif step[0] == "corner":
             _, i, c = step
             sg = S[i]
@@ -662,6 +757,8 @@ def _cable_nodes():
                             for nd_i in (k, k + 1):
                                 need[nd_i][side] = max(need[nd_i].get(side, 0), deficit)
     for nd, extra in zip(nodes, need):
+        if nd.get("timber"):
+            extra = {}
         for side, e in extra.items():
             nx, ny = WALL_NORMAL[side]
             nd["x"] += nx * e
@@ -683,9 +780,10 @@ class Escape:
         self.s, self.f, self.v, self.d = silo, silo.f, silo.v, silo.d
         self.vis = self.f.vis("the leader's way out (tunnel)")
         self.xvis = self.f.vis("the leader's way out (cave, rock face, rock)")
-        self.rock = "nature/blendrockdirt_tunnel03a"
+        self.rock = "nature/rockwall015a"                    # the tunnel's walls and roof: the old mines' rock (Ravenholm's, Episode Two's)
+        self.floor = "nature/blenddirtrock_mine01a"          # its floor: Episode Two's mine dirt and rock (both at 0.5, as Valve lays them)
 
-    def disp_box(self, box, face, target, alpha, mat=None, sides=None, vis=None):
+    def disp_box(self, box, face, target, alpha, mat=None, sides=None, vis=None, tex=0.25):
         """(sides: {face: material} for the faces players see besides the displaced one; the rest are nodraw)"""
         """A world brush with one displaced face (power 3, lightmapscale 16): its points from target(base point)."""
         from map_build import face_corners
@@ -701,7 +799,7 @@ class Escape:
             return alpha(b)
         nd = MAT["nodraw"]
         text = self.v.box_text(box, nd, nd, nd, vis or self.vis, faces=dict(sides or {}, **{face: mat or self.rock}),
-                               disp={face: (3, tg, al)})
+                               disp={face: (3, tg, al)}, tex=tex)
         self.v.world.append(text.replace('"lightmapscale" "32"', '"lightmapscale" "16"'))
         self.v.boxes.append((box, False))
 
@@ -755,7 +853,8 @@ class Escape:
                     push = 12 * _noise(p[0], p[1], z, 3) * w * ends
                     return (p[0] + nx * push, p[1] + ny * push, z)
                 return f
-            dirt_floor = lambda p: 230
+            def dirt_floor(p):          # (dirt down the middle, more rock toward the walls)
+                return 250 - 170 * across_taper(p)
             roof_alpha = lambda p: 0
 
             def wall_alpha(p):
@@ -772,19 +871,43 @@ class Escape:
                 else:
                     bx = (x1, y1, x2, y2)
                 X1, Y1, X2, Y2 = bx
-                self.disp_box((X1, Y1, zmin - T, X2, Y2, zmin), "top", floor_pt, dirt_floor)
-                self.disp_box((X1, Y1, zmax, X2, Y2, zmax + T), "bottom", roof_pt, roof_alpha)
+                self.disp_box((X1, Y1, zmin - T, X2, Y2, zmin), "top", floor_pt, dirt_floor, mat=self.floor, tex=0.5)
+                self.disp_box((X1, Y1, zmax, X2, Y2, zmax + T), "bottom", roof_pt, roof_alpha, tex=0.5)
                 if ax in ("x", None):
                     if "n" not in S["open"]:
-                        self.disp_box((X1, Y2, zmin, X2, Y2 + T, zmax), "south", wall_pt(0, -1), wall_alpha)
+                        self.disp_box((X1, Y2, zmin, X2, Y2 + T, zmax), "south", wall_pt(0, -1), wall_alpha, tex=0.5)
                     if "s" not in S["open"]:
-                        self.disp_box((X1, Y1 - T, zmin, X2, Y1, zmax), "north", wall_pt(0, 1), wall_alpha)
+                        self.disp_box((X1, Y1 - T, zmin, X2, Y1, zmax), "north", wall_pt(0, 1), wall_alpha, tex=0.5)
                 if ax in ("y", None):
                     if "e" not in S["open"]:
-                        self.disp_box((X2, Y1, zmin, X2 + T, Y2, zmax), "west", wall_pt(-1, 0), wall_alpha)
+                        self.disp_box((X2, Y1, zmin, X2 + T, Y2, zmax), "west", wall_pt(-1, 0), wall_alpha, tex=0.5)
                     if "w" not in S["open"]:
-                        self.disp_box((X1 - T, Y1, zmin, X1, Y2, zmax), "east", wall_pt(1, 0), wall_alpha)
+                        self.disp_box((X1 - T, Y1, zmin, X1, Y2, zmax), "east", wall_pt(1, 0), wall_alpha, tex=0.5)
+        self.timbers()
         self.lamps()
+
+    def timbers(self):
+        """Timber sets along the tunnel, as Ravenholm's and Episode Two's mines have them (the owner, 22 November: "could we
+        just make it like the EP2 and ravenholm tunnels out of dirt and dirt/rock mix textures and have wooden supports
+        along the tunnel? so long as I can still walk in there"): every 256 or so along each tall run, two of Episode Two's
+        timber posts (props_mining/struts_single01 and _02, 16 square, 176 high: their tops go up into the rock) stood
+        against the walls, and a cap of Ravenholm's timber (woodfloor005a, 12 square) across under the roof, 80 over the
+        floor; the lamps' cable rests on the caps. A set stands only where the rock's bulge leaves the posts within 6 of
+        the wall (_timber_sets), so the middle 32 stays clear the whole way (map_build's ways check holds it: the tunnel's
+        middle is a way kept clear)."""
+        v, vis = self.v, self.vis
+        sets = _timber_sets()
+        caps = []
+        for st in sets:
+            for (px, py), model in st["posts"]:
+                v.point("prop_static", (px, py, st["foot"]), {"model": "models/props_mining/%s.mdl" % model, "angles": "0 0 0", "skin": "0", "solid": "6",
+                                                            "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+            caps.append(st["cap"])
+        if caps:
+            v.detail(caps, "wood/woodfloor005a", vis=vis)
+        for box, label in _tunnel_ways():
+            v.keep_way_clear(box, label)
+        self.f.notes.append("the way out's tunnel: Valve's mine rock (rockwall015a) and floor (blenddirtrock_mine01a), %d timber sets" % len(sets))
 
     def lamps(self):
         """The tunnel's lamps and their cable (the owner, 22 November: "please put little cage lights or whatever on the
@@ -889,8 +1012,11 @@ class Escape:
         roofs and one behind the cave's west wall. The displaced rock (the face toward the forest, the porch's walls and
         roof, the cave's west wall) hangs in front of them, so a crack between two displaced faces shows rock. The rock
         that shuts the way out is a plug that fills the hole exactly (a func_button only the lever moves, rock-faced both
-        sides), with Valve's forest boulder riding it outside; it slides 176 west into the wall, far enough for the boulder
-        to clear the hole. The lever is on the porch's east wall right by the hole, on a striped plate under a lamp."""
+        sides), with Valve's forest boulder riding it outside; it slides 176 east into the wall (the cut runs on east for
+        it), far enough for the boulder to clear the hole, so the way west along the hollow in front of it stays free. The
+        hollow is the forest's ground (BunkerForest.natural: a ridge in front of the face and on its east, so neither the
+        valley nor the bunker sees the hole). The lever is on the porch's east wall right by the hole, on a striped plate
+        under a lamp."""
         f, v, F = self.f, self.v, F_EXIT
         cliff, rock, dirt = "nature/blendcliffdirt001a", "nature/blendrockdirt_tunnel03a", "nature/blendgrassdirt01"
         nd, sky = MAT["nodraw"], MAT["sky"]
@@ -951,11 +1077,11 @@ class Escape:
             self.disp_box((bx1, 5168, z1, bx2, 5184, z2), "south", bulge((0, -1, 0), 22, ((bx1, bx2, 0), (z1, z2, 2))), lambda p: 40, mat=cliff,
                           sides=dict((s_, cliff) for s_ in seen), vis=self.xvis)
         # -- the rock: a plug that fills the hole (2 inside each face), only the lever moves it (no use, touch or damage),
-        # Valve's forest boulder (props_foliage/rock_forest04, drawn a third larger) riding it outside; it slides 176 west
+        # Valve's forest boulder (props_foliage/rock_forest04, drawn a third larger) riding it outside; it slides 176 east
         # into the wall at 44 a second (4 s) and stops against whoever is in its way --
         rock_n, lever = "lc_escape_rock", "lc_escape_lever"
         mid = (hx1 + hx2) // 2
-        v.brush_entity("func_button", {"targetname": rock_n, "movedir": "0 180 0", "speed": "44", "lip": str(hx2 - hx1 - 176), "wait": "-1", "spawnflags": "0",
+        v.brush_entity("func_button", {"targetname": rock_n, "movedir": "0 0 0", "speed": "44", "lip": str(hx2 - hx1 - 176), "wait": "-1", "spawnflags": "0",
                                        "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
                        [((hx1, 5170, hz1, hx2, 5198, hz2), {"north": rock, "south": cliff})], cliff, self.xvis)
         v.point("prop_dynamic_override", (mid, 5150, F + 24), {
@@ -968,23 +1094,32 @@ class Escape:
         # -- the lever: Valve's, as in the leader's office (a func_rot_button pulled down 45 degrees; Use pulls it and
         # pushes it back), on a striped plate on the porch's east wall right by the hole, facing in, at hand height,
         # under a cage lamp --
-        lx, ly, lz = 9150, 5236, F + 52
+        lx, ly, lz = 9152, 5236, F + 52
         v.detail([(9154, ly - 20, F + 24, 9156, ly + 20, F + 84)], "METAL/METALWALL031A", vis=self.xvis, faces={"west": "DEV/DEV_HAZZARDSTRIPE01A"})
-        v.brush_entity("func_rot_button", {"targetname": lever, "angles": "0 0 0", "distance": "-45", "speed": "35", "wait": "-1", "spawnflags": str(1024 | 32 | 128),
+        # the lever: Ravenholm's propeller trap lever (the owner, 22 November: "can we use
+        # models/props_c17/trappropeller_lever.mdl instead?"), hung as d1_town_03 hangs it: the handle (13 long) on an
+        # unseen mover pivoting 4 from its end, here at the plate, 35 degrees about the wall's line. Pulled, the rock opens;
+        # 30 s later it shuts by itself (the owner: "the rock exit should close itself 30 seconds after opening"), the lever
+        # going back with it; pushed back sooner, it shuts then. In the last moments of the rock's close a shove pushes
+        # whoever stands in the hole out of it, into the porch or out to the hollow (shove()).
+        auto = "lc_escape_autoclose"
+        v.brush_entity("func_rot_button", {"targetname": lever, "angles": "0 0 0", "distance": "35", "speed": "50", "wait": "-1", "spawnflags": str(1024 | 32 | 128),
                                            "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
                                            "origin": "%d %d %d" % (lx, ly, lz)},
-                       [(lx - 9, ly - 4, lz, lx + 4, ly + 4, lz + 16)], nd, self.xvis,
+                       [(lx - 12, ly - 5, lz - 5, lx + 2, ly + 5, lz + 5)], nd, self.xvis,
                        connections=[("OnPressed", lever + "_sound", "PlaySound", "", 0), ("OnIn", rock_n, "PressIn", "", 0.3), ("OnIn", rock_n + "_sound", "PlaySound", "", 0.3),
-                                    ("OnIn", rock_n + "_sound", "StopSound", "", 4.3), ("OnOut", rock_n, "PressOut", "", 0.3), ("OnOut", rock_n + "_sound", "PlaySound", "", 0.3),
-                                    ("OnOut", rock_n + "_sound", "StopSound", "", 4.3)])
-        for model, ang, parent in (("panel_leverbase001a", "0 180 0", None), ("panel_leverhandle001a", "15 180 0", lever)):
-            keys = {"model": "models/props_wasteland/%s.mdl" % model, "angles": ang, "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1",
-                    "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"}
-            if parent:
-                keys["parentname"] = parent
-            v.point("prop_dynamic", (lx, ly, lz), keys, self.xvis)
+                                    ("OnIn", rock_n + "_sound", "StopSound", "", 4.3), ("OnIn", auto, "Trigger", "", 0),
+                                    ("OnOut", auto, "CancelPending", "", 0), ("OnOut", rock_n, "PressOut", "", 0.3), ("OnOut", rock_n + "_sound", "PlaySound", "", 0.3),
+                                    ("OnOut", rock_n + "_sound", "StopSound", "", 4.3), ("OnOut", rock_n + "_shove", "Enable", "", 3.7),
+                                    ("OnOut", rock_n + "_shove", "Disable", "", 4.6)])
+        v.point("prop_dynamic", (lx - 4, ly, lz), {"model": "models/props_c17/trappropeller_lever.mdl", "angles": "0 270 0", "parentname": lever, "solid": "0", "skin": "0",
+                                                   "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"},
+                self.xvis)
+        v.point("logic_relay", (lx - 40, ly, lz + 40), {"targetname": auto, "StartDisabled": "0", "spawnflags": "0"}, self.xvis,
+                connections=[("OnTrigger", lever, "PressOut", "", 30)])
         v.point("ambient_generic", (lx, ly, lz + 10), {"targetname": lever + "_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100",
                                                        "pitchstart": "100", "radius": "1250", "spawnflags": "48"}, self.xvis)
+        f.shove(rock_n + "_shove", [((hx1, 5120, F, hx2, 5184, F + 80), 270, 200), ((hx1, 5184, F, hx2, 5250, F + 80), 90, 300)], self.xvis)
         v.point("prop_static", (9156, ly, F + 120), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 180 0", "solid": "0", "skin": "0",
                                                     "disableshadows": "1", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, self.xvis)
         v.point("light", (9138, ly, F + 100), {"_light": "255 196 130 50", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.s.lv)
@@ -996,10 +1131,13 @@ class Escape:
         and a wall of ours under that; its east side has the hole the first squeeze comes through from the silo."""
         x1, y1, z1, x2, y2, z2 = CONTAINER
         nd, v, T = MAT["nodraw"], self.v, 16
-        hy1, hy2, hz1, hz2 = 6200, 6280, -1240, -1192
+        # (its east side stops where the silo's hull begins, y 5760, under the hull's top, z 232: the hull is the wall there,
+        # and the squeeze's hole through it is the hull's own, faced with concrete; a second wall in the hull's thickness
+        # put nodraw faces in that hole: the owner, 22 November: "the entrance to the tunnel has nodraw/gaps/cracks all over it")
+        hull_y, hull_top = 5760, 232
         for b in ((x1, y1, z1, x2, y2, z1 + T), (x1, y1, z2 - T, x2, y2, z2), (x1, y2 - T, z1, x2, y2, z2), (x1, y1, z1, x1 + T, y2, z2),
                   (x1, y1, z1, x2, y1 + T, self.f.zb - 64),
-                  (x2 - T, y1, z1, x2, hy1, z2), (x2 - T, hy2, z1, x2, y2, z2), (x2 - T, hy1, z1, x2, hy2, hz1), (x2 - T, hy1, hz2, x2, hy2, z2)):
+                  (x2 - T, y1, z1, x2, hull_y, z2), (x2 - T, hull_y, hull_top, x2, y2, z2)):
             v.world_box(b, nd, vis=self.vis)
 
 
@@ -1016,18 +1154,22 @@ def split_box(box, hole):
 def _escape(self):
     """5. The leader's way out: the secret door in his bedroom, the squeeze through the silo's wall, the tunnel, the
     cave and the rock (Escape above). The secret door: a low panel of the bedroom's wall (80 wide, 48 high, the wall's
-    own concrete) that Use slides 76 east into the wall, and back: a func_button used as a mover (Use, toggle), so the
-    gamemode's door rules (kicks, picks, NPCs) never touch it. Behind it the bedroom's outer wall (Valve's 577, rebuilt
-    round the opening) and the hull, then the cave tunnel."""
+    own concrete on every face) that slides 76 sideways into the wall and back: a func_button used as a mover, so the
+    gamemode's door rules (kicks, picks, NPCs) never touch it. Use on the panel itself does nothing (the owner, 22
+    November: "can we please also make it so that E doesn't open/close the door when pressed on it directly?"): Kleiner's
+    crooked picture in the bedroom works it, and a button on the tunnel's side just beyond it (the owner: "on the inside
+    just inside beyond the secret door, can we please get a button to close the door?") turns the picture, so the two
+    stay in step: straight while the panel is open, tilted while it is shut. Behind it the bedroom's outer wall (Valve's
+    577, rebuilt round the opening) and the hull, then the cave tunnel."""
     v, z = self.v, self.FLOOR
     wall = "CONCRETE/CONCRETEWALL010A"
     face = {"east": "CONCRETE/EP2_CONCRETEWALL01B"}      # (the piece's -y face, toward the bedroom, is the map's east)
     for b in ((-141, 500, 320, -104, 544, 416), (-24, 500, 320, 0, 544, 416), (-104, 500, 368, -24, 544, 416)):
         v.world_box(wbox(self.d, b), wall, top=wall, bottom=wall, vis=self.vis, faces=face)
     name = "lc_silo_secret_panel"
-    v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % wyaw(0), "speed": "30", "lip": "4", "wait": "-1", "spawnflags": str(1024 | 32),
+    v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % wyaw(0), "speed": "30", "lip": "4", "wait": "-1", "spawnflags": "32",
                                    "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
-                   [(wbox(self.d, (-104, 500, 320, -24, 504, 368)), {"east": "CONCRETE/EP2_CONCRETEWALL01B"})], MAT["nodraw"], self.vis,
+                   [(wbox(self.d, (-104, 500, 320, -24, 504, 368)), {"east": "CONCRETE/EP2_CONCRETEWALL01B"})], wall, self.vis,
                    connections=[("OnPressed", name + "_sound", "PlaySound", "", 0)])
     v.point("ambient_generic", self.P(-64, 490, 344), {"targetname": name + "_sound", "message": "doors/doormove2.wav", "health": "8", "pitch": "80", "pitchstart": "80",
                                                        "radius": "600", "spawnflags": "48"}, self.vis)
@@ -1036,8 +1178,7 @@ def _escape(self):
     # could steal the little crooked picture from Dr Kleiner's office"): Half-Life 2's lambda sprayed on the panel (it
     # rides it), and Kleiner's crooked picture as d1_trainstation_05 has it (props_lab/frame001a, 9 degrees off true, on
     # an unseen func_door_rotating 2 by 2 by 4 that turns it about its own face) on the bedroom's west wall at eye
-    # height. Use straightens it and the panel slides open; Use again tilts it back and the panel shuts. The panel's own
-    # Use still works from both sides (from the tunnel, coming back).
+    # height. Use straightens it and the panel slides open; Use again tilts it back and the panel shuts.
     v.point("infodecal", self.P(-64, 500, 344), {"texture": "decals/lambdaspray_1a", "LowPriority": "0"}, self.vis)
     (ax, ay), (bx, by) = self.BED_WALL
     ln = math.hypot(bx - ax, by - ay)
@@ -1063,6 +1204,13 @@ def _escape(self):
     v.point("prop_dynamic", at, {"targetname": pic + "_model", "model": "models/props_lab/frame001a.mdl", "angles": "0 %d 9" % wyaw(facing), "parentname": pic,
                                  "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
                                  "spawnflags": "0"}, self.vis)
+    # the button on the tunnel's side: Episode Two's mine lift button (the bunker's wall_button) on the passage's north
+    # wall in the silo's hull, 10 over the passage's floor (the passage is 48 high: crouched, it is at hand); it turns the
+    # picture, which works the panel
+    from map_forest import wall_button
+    hx = 9216
+    wall_button(v, (hx, 6280, -1230), 270, "lc_silo_secret_button", (hx - 10, 6270, -1234, hx + 10, 6280, -1206), self.vis,
+                [("OnPressed", pic, "Toggle", "", 0)], "2")
     # an areaportal in the opening, behind the panel (always open): the way out joins the bunker to the forest a second
     # way, so without it the main door's areaportal no longer parts two areas (the owner's compile of 22 November:
     # "Brush 2754: areaportal brush doesn't touch two areas ... AREAPORTAL LEAKED", 2754 being lc_bunker_portal)
