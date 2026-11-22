@@ -1391,9 +1391,10 @@ that turns while the gates move (the alarm recipe: a func_rotating with two red 
 For people on foot, the way round: in the right wall a doorway upstream of the gates, a passage 128 wide inside the
 wall, lit, past the gates, and a doorway back into the canal beyond the recesses (its own areaportal, always open).
 The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut); the Combine, or rebels
-laying an ambush, shut them at the booth (the owner, 21 November). Nothing stops a leaf: what it meets dies or is
-broken (damage 10000, as Valve's), loose things in its way are deleted, it never waits. Path nodes go round by
-the passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
+laying an ambush, shut them at the booth (the owner, 21 November). Nothing kills (the owner, 22 November: "considering
+how dying in the gamemode means a new character, yes just shove, not kill"; until then a leaf killed whatever it met):
+in the last moments of each swing a shove pushes whoever is in a leaf's way out of it. Path nodes go round by the
+passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
 Named for the game: lc_lockgate_open, lc_lockgate_close and lc_lockgate_toggle (logic_relays the gamemode fires:
 the klaxon, the beacon and the leaves), lc_lockgate_opened and lc_lockgate_closed (logic_relays fired when the
 leaves have finished moving), lc_lockgate_switch (the button in the booth: it fires lc_lockgate_toggle),

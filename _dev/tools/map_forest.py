@@ -94,16 +94,20 @@ def wall_button(vmf, pos, yaw, name, box, vis, connections, wait, parent=None):
                      [box], MAT["nodraw"], vis, connections=[("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(connections))
 
 
-def crusher(vmf, door, box, vis, name):
-    """Nothing stops a closing door (the owner: "anyone or anything that stands in the closing silo doors or closing antlion
-    nest door is killed, and any props removed/deleted/shoved. nothing should stop these doors"). Two unseen boxes ride on
-    the door's leading edge (`door`: its name; `box`: 14 ahead of that edge, where the door is drawn): one kills whoever
-    it touches (a door only waits while something alive is in its way), one deletes whatever loose thing it touches. Both
-    are off except while the door is closing: the wiring turns `name` on and off."""
-    vmf.brush_entity("trigger_hurt", {"targetname": name, "parentname": door, "StartDisabled": "1", "spawnflags": "3", "damage": "100000", "damagecap": "100000",
-                                      "damagetype": "1", "damagemodel": "0", "nodmgforce": "0"}, [box], MAT["trigger"], vis)
-    vmf.brush_entity("trigger_multiple", {"targetname": name, "parentname": door, "StartDisabled": "1", "spawnflags": "1032", "wait": "0.1"}, [box], MAT["trigger"], vis,
-                     connections=[("OnStartTouch", "!activator", "Kill", "", 0)])
+def shove(vmf, name, parts, vis, fit=True):
+    """No door, gate or moving wall kills or crushes. The owner, 22 November, first of the silo's doors: "the silo doors
+    should not violently kill people, they just need to shove people back a bit so they don't get stuck AT THE CLOSE, not
+    during the entire closing sequence"; then of all the rest: "considering how dying in the gamemode means a new
+    character, yes just shove, not kill". So: unseen trigger_pushes (`name`) across a doorway, off but for the mover's
+    last moments of closing (the wiring turns them on and off), each pushing whoever (players, NPCs, loose things) is in
+    it away from the mover on its side. parts: (box, the way it pushes as a yaw, speed). The two sides push unequally, so
+    that whoever stands across the plane goes one way, not nowhere. fit=False: its boxes are not held to the fit check
+    (for one that stands where something of the owner's own stands, as their unseen walls do)."""
+    for box, yaw, speed in parts:
+        vmf.brush_entity("trigger_push", {"targetname": name, "StartDisabled": "1", "spawnflags": "11", "pushdir": "0 %d 0" % yaw, "speed": str(speed),
+                                          "alternateticksfix": "0"}, [box], MAT["trigger"], vis)
+    if not fit:
+        del vmf.boxes[-len(parts):]
 
 
 # ---------------------------------------------------------------------------
@@ -1677,15 +1681,8 @@ class BunkerForest(Forest):
     FLAT_SCALE = 0.654  # Silo 2's leaves drawn at this size: 136 along the wall each, 216 high, 19 thick
 
     def shove(self, name, parts, vis):
-        """No door here kills or crushes (the owner, 22 November: "the silo doors should not violently kill people, they just
-        need to shove people back a bit so they don't get stuck AT THE CLOSE, not during the entire closing sequence"):
-        unseen trigger_pushes (`name`) across a doorway, off but for the door's last moments of closing (the wiring turns
-        them on and off), each pushing whoever (players, NPCs, loose things) is in it away from the door's plane on its
-        side. parts: (box, the way it pushes as a yaw, speed). The two sides push unequally, so that whoever stands across
-        the plane goes one way, not nowhere."""
-        for box, yaw, speed in parts:
-            self.vmf.brush_entity("trigger_push", {"targetname": name, "StartDisabled": "1", "spawnflags": "11", "pushdir": "0 %d 0" % yaw, "speed": str(speed),
-                                                   "alternateticksfix": "0"}, [box], MAT["trigger"], vis)
+        """The shove at a door's close, where nothing kills (shove(), at the top of this file)."""
+        shove(self.vmf, name, parts, vis)
 
     def door(self):
         """The bunker's door from the forest: flat doors that close, copied from the ones over the top of Silo 2 in Episode
@@ -2859,9 +2856,11 @@ class CaveForest(Forest):
         into the wall, and a button on the bulkhead each side of it, 480 apart with a wall standing out between each and the
         door, so the way from one to the other is about 700: nobody presses both inside a second. Each press counts for
         one second (a math_counter); two at once work the door, open or shut. The shutter is a func_button used as a mover,
-        as the bunker's leaves are. The bulkhead is the whole west wall of the room's box (it keeps the room and all behind
-        the door apart, so its areaportal works): the room's rock runs 48 into its east face, Episode Two's gallery 48 into
-        its west face."""
+        as the bunker's leaves are. Nothing kills (it did until 22 November; the owner: "considering how dying in the
+        gamemode means a new character, yes just shove, not kill"): as it comes down a shove (shove()) pushes whoever is
+        under it out, into the room or out to the gallery, whichever side they stand. The bulkhead is the whole west wall
+        of the room's box (it keeps the room and all behind the door apart, so its areaportal works): the room's rock runs
+        48 into its east face, Episode Two's gallery 48 into its west face."""
         v, zf, T = self.vmf, self.zf, self.BULK_T
         fx, dy = self.bulk_x, self.door_y           # (its east face, the room's side; the door's middle)
         wx = fx - T                                  # (its west face, the gallery's side)
@@ -2888,7 +2887,11 @@ class CaveForest(Forest):
             "targetname": "lc_nest_door", "movedir": "-90 0 0", "speed": "30", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
             "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
-        crusher(v, "lc_nest_door", B(fx - 72, dy - 96, zf - 14, fx - 40, dy + 96, zf + 2), dv, "lc_nest_crush")
+        # nothing kills (shove()): in the last moments of the shut, whoever is under the shutter is pushed out from under
+        # it, into the room on the room's side (harder: who stands in the middle goes there) and out to the gallery on
+        # the gallery's side. A shutter coming down meets a standing head 72 up, 2.4 s before it is down, so its shove is
+        # on from then (the wiring below), and the shutter is never left resting on anyone.
+        shove(v, "lc_nest_shove", [(B(fx - 96, dy - 96, zf, fx - 56, dy + 96, zf + high), 180, 200), (B(fx - 56, dy - 96, zf, fx - 16, dy + 96, zf + high), 0, 300)], dv)
         # an areaportal in it, shut while it is: what lies beyond is not drawn, nor the room from there
         portal = B(fx - 57, dy - 96, zf, fx - 55, dy + 96, zf + high)      # (inside the shutter's own thickness: see the bunker's)
         v.portals.append(portal)
@@ -2919,8 +2922,9 @@ class CaveForest(Forest):
         v.point("env_shake", at, {"targetname": "lc_nest_shake", "amplitude": "6", "radius": "900", "duration": "1.4", "frequency": "40", "spawnflags": "0"}, dv)
         v.point("math_counter", W(fx + 30, dy, zf + 110), {"targetname": "lc_nest_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"}, dv,
                 connections=[("OnHitMax", "lc_nest_open", "Trigger", "", 0), ("OnHitMax", "lc_nest_shut", "Trigger", "", 0)])
-        # the wiring: the shutter takes about five seconds each way. lc_nest_opened and lc_nest_closed are fired so the
-        # gamemode can hear what happened (nothing in the map listens to them).
+        # the wiring: the shutter takes about five seconds each way (152 at 30: shutting, it is down 6.57 s in). The shove
+        # is on from 4 s in (its foot 74 over the floor) until 0.3 s after it is down. lc_nest_opened and lc_nest_closed
+        # are fired so the gamemode can hear what happened (nothing in the map listens to them).
         opening = [("OnTrigger", "lc_nest_open", "Disable", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 1.7),
                    ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 3.4), ("OnTrigger", "lc_nest_light", "TurnOn", "", 0), ("OnTrigger", "lc_nest_portal", "Open", "", 1.4),
                    ("OnTrigger", "lc_nest_door", "PressIn", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5), ("OnTrigger", "lc_nest_opened", "Trigger", "", 1.5),
@@ -2936,7 +2940,7 @@ class CaveForest(Forest):
                     ("OnTrigger", "lc_nest_open", "CancelPending", "", 0),          # (shut inside the 11 s: no antlions come at all)
                     ("OnTrigger", "lc_nest_mouth_1_siren", "StopSound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOff", "", 0) for k in (1, 2, 3)] + [
                     ("OnTrigger", "lc_nest_light", "TurnOn", "", 0), ("OnTrigger", "lc_nest_door", "PressOut", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5),
-                    ("OnTrigger", "lc_nest_crush", "Enable", "", 1.5), ("OnTrigger", "lc_nest_crush", "Disable", "", 7),
+                    ("OnTrigger", "lc_nest_shove", "Enable", "", 4), ("OnTrigger", "lc_nest_shove", "Disable", "", 6.9),
                     ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                     ("OnTrigger", "lc_nest_portal", "Close", "", 6.9), ("OnTrigger", "lc_nest_closed", "Trigger", "", 6.9), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9),
                     ("OnTrigger", "lc_nest_open", "Enable", "", 9)]
