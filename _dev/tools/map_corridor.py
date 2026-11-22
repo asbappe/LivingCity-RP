@@ -262,7 +262,7 @@ def lay(b, elems, side, cars):
             m.blocked(u0, v1, u0 + 392, v2)
             m.taken(u0, v1, F, u0 + 384, v2, STREET)
             top = (u0 + 384, u0 + 448)
-            stairs.append(top)
+            stairs.append((top[0] - 64, top[1]))      # (the parapet open over the last treads too, a square early: a player steps off them sideways onto the pavement)
             m.det([(top[0], sv(TRACK, ROAD_IN)[0], STREET, top[1], sv(TRACK, ROAD_IN)[1], STREET + 9)], MM["wood"], vis=dv)
             m.lane(u0 - 24, s * 224, F)
             m.lane(u0 + 190, s * 224, F + 128)
