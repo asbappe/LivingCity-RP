@@ -81,8 +81,8 @@ def read_vmf(path):
 
 
 def facts_of(model, qcs, known, offline):
-    if model in known and (("bbox" in known[model] and (known[model].get("v") == 2 or offline)) or known[model].get("game") is None):
-        return known[model]
+    if model in known and (("bbox" in known[model] and ((known[model].get("v") == 2 and "ragdoll" in known[model]) or offline)) or known[model].get("game") is None):
+        return known[model]      # (a note missing a key, as 172 once were, is read again when the lists are here)
     repo, index = qcs
     key = re.sub(r"^models/", "", model)[:-4] + ".qc"
     where = index.get(key, {})
@@ -196,7 +196,7 @@ def main():
             problems.append("%s is used as a prop_dynamic but is a physics prop (it has prop_data): use prop_dynamic_override or prop_physics" % model)
         if ("prop_physics" in classes or "prop_physics_multiplayer" in classes) and not fact["physics"]:
             problems.append("%s is used as a prop_physics but has no physics data: it deletes itself (use prop_dynamic or prop_static)" % model)
-        if "prop_ragdoll" in classes and not fact["ragdoll"]:
+        if "prop_ragdoll" in classes and not fact.get("ragdoll", True):
             problems.append("%s is used as a prop_ragdoll but has no joints" % model)
     if got:
         index = got["ValveVMTs"][1]

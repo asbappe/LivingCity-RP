@@ -31,17 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late night). Valve ingestion of the whole set is DONE (145 maps, 279 lessons, 289 pictures):
-  docs/dev/valve-ingest-progress.md, guide docs/dev/map-ingestion.md, digest docs/dev/valve-digest.md. The owner allows
-  copying Valve's rooms whole into our maps.
-- Forest bunker (`lc_forest_bunker.vmf`, `map_forest.py` + `map_silo.py`): White Forest's look and round blast door
-  (about 11 s to open: the owner decides); the silo joined outside the north wall, every floor playable, the leader's
-  office and bedroom, a secret escape tunnel to an EP2 cache cave on the north rim. The owner's 12 compile faults fixed;
-  the new silo work is not yet compiled. Another chat works on the forest cave (its 9 asset faults: TODO.md).
-- Gamemode: a tall HQ flagpole from a `_top` marker; maps can bring territories (`lc_zone_<kind>_r<radius>_h<height>_<label>`,
-  `zoneMarkers` in the layout, CORE.md). The silo is an HQ spot (one flag at a time still holds).
-- Combine generator `map_combine.py` + `combine/`: a test scene `lc_combine_scene.vmf` waits on the owner's look.
-- Pieces with wiring (docs/dev/prefabs.md): Black Mesa East, the Citadel, the silo, the teleporter's power-up.
-- After ingestion, owner-approved (TODO.md): faster waves, squads with a medic, supplies from roofs, tripwires and
-  turrets, the church base, pieces as modules. Ideas: Advisor screens, Resistance posts in the city.
-- Open for the owner: the bunker door's speed; the Combine scene's look; Valve-only effects untested in Garry's Mod.
+- 21 November (late), two chats. This one, from TODO with no input needed: garden plots (lc_garden_plot_N); people back
+  out of their own block, newcomers off the train first, every unit named; dream breakout wakes beside the rescuer; a
+  given gun stays hidden on a sympathizer; revenge / counter-raid / a harder cell after her answer; holds on one clock
+  with faster waves; squads topped up with a medic; supplies from roofs; strongholds (docs/features/strongholds.md);
+  arrests always find a cell; the sludge tunnel's gas and the substation panel heard (sv_livingcity_mapnames.lua).
+  Lists for the owner to mark: docs/dev/keep-park-cut.md, docs/dev/dead-weight.md. Map tools: faults fixed, props
+  stand on the floor, Valve's prop/craft rules, wire lint, map_security.py (tripwires): TODO.md.
+- The other chat: Valve ingestion DONE (docs/dev/valve-ingest-progress.md); the forest cave (Ravenholm's mine, the
+  shaft head and EP2's alarm, a lift down to EP2's nest chambers: lc_forest_cave.vmf); the playable silo, the leader's
+  office, bedroom and escape tunnel (map_silo.py); the rocket back in the silo (22 November: Valve's steam, its hatch held
+  open, the flag's pole beside it; a launch ending is to shape with the owner: TODO.md); map-placed territories (lc_zone_..., CORE.md); the Combine
+  generator's round two (combine/, lc_combine_scene.vmf waits on the owner). Not compiled yet.
+- Open for the owner: HQ later stages and Advisor screens (shape first); Combine sleep, the lab's dark look (models);
+  the south canal layout (needs c18_lc.vmf); lift and bunker door speeds; the mounted gun; NPC lessons to build.

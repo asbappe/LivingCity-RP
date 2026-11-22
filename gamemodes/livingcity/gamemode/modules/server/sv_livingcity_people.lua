@@ -72,6 +72,8 @@ function LC.SavePeople()
             id = p.id, role = p.role, name = p.name, gender = p.gender, model = p.model, job = p.job, home = p.home,
             rebel = p.rebel or nil, alive = p.alive, born = p.born, lastSeen = p.lastSeen, died = p.died, killer = p.killer,
             moved = p.moved, -- left for another city by train (not dead)
+            newcomer = p.newcomer or nil, -- new to the city, not out yet: comes in on the next train
+
             memory = p.memory, -- how each player's character has treated them (sv_livingcity_talk.lua)
             oldtimer = p.oldtimer or nil, -- the old man who gives advice (sv_livingcity_oldtimer.lua)
             helped = p.helped, -- what each player's character has helped him with (sv_livingcity_oldtimer.lua)
@@ -239,8 +241,18 @@ function LC.TopUpPeople()
     -- never fewer named citizens than the streets want: nobody out there is a nameless extra
     local streets = GetConVar("lc_citizens")
     local size = math.max(cvSize:GetInt(), streets and streets:GetInt() or 0)
-    while Alive("citizen") < size do LC.NewPerson("citizen") end
-    while Alive("cop") < cvCops:GetInt() do LC.NewPerson("cop") end
+    -- the city's first people were always here; anyone after them is new to the city, and comes in
+    -- on a train (LC.ClaimProfile)
+    local first = #P.list == 0
+    while Alive("citizen") < size do
+        local p = LC.NewPerson("citizen")
+        if not first then p.newcomer = true end
+    end
+    -- the same for Civil Protection: as many named units as the city has out (lc_cops, and the extra
+    -- units it brings in), never a nameless one
+    local cops = GetConVar("lc_cops")
+    local units = math.max(cvCops:GetInt(), (cops and cops:GetInt() or 0) + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.LedgerCops or 0))
+    while Alive("cop") < units do LC.NewPerson("cop") end
     LC.StaffRoster()
     -- the dead are remembered, but not forever
     local dead = 0
@@ -272,12 +284,32 @@ end
 -- (the game's clock, and kept in memory only: after a restart everyone is free to come out)
 local function AtHome(p) return (p.homeUntil or 0) > CurTime() end
 
+-- Trains bring the newcomers when the city has them: on, with a platform (sv_livingcity_trains.lua).
+local function TrainsBring()
+    local cv = GetConVar("lc_trains")
+    return cv and cv:GetBool() and LC.TrainPlatforms and #LC.TrainPlatforms() > 0 or false
+end
+LC.TrainsBringNewcomers = TrainsBring
+
+-- Could this person come out now, as asked? Alive, indoors, their time at home over; off a train
+-- (want.newcomer) only someone new to the city. (Someone new comes out onto the street too, but last:
+-- LC.NextPerson. So the streets never run short, and the train brings who is left of them.)
+local function Free(p, role, want)
+    if not (p.alive and p.role == role and not InWorld(p) and not AtHome(p)) then return false end
+    if want.rebel and not p.rebel then return false end
+    if want.gender and p.gender ~= want.gender then return false end
+    if want.newcomer then return p.newcomer == true end
+    return true
+end
+
 -- Is there anyone of this role who could come out now (alive, indoors, their time at home over)?
-function LC.PersonAvailable(role)
+-- want.newcomer: someone new to the city, for a train to bring.
+function LC.PersonAvailable(role, want)
     if not P.loaded then LC.LoadPeople() end
     LC.TopUpPeople()
+    want = want or {}
     for _, p in ipairs(P.list) do
-        if p.alive and p.role == role and not InWorld(p) and not AtHome(p) then return true end
+        if Free(p, role, want) then return true end
     end
     return false
 end
@@ -298,29 +330,61 @@ function LC.PeopleCallOut(role)
     return n
 end
 
--- Who comes out next: someone not already out there, and whoever has been
--- away longest. want.rebel asks for a sympathizer, want.job for a particular trade.
-function LC.ClaimProfile(role, want)
+-- Who would come out next, without taking them yet (the same choice LC.ClaimProfile makes).
+function LC.NextPerson(role, want)
     if not P.loaded then LC.LoadPeople() end
-    LC.TopUpPeople()
     want = want or {}
+    local trains = TrainsBring()
     -- a job nobody out there is doing comes first, so every trade has someone on the streets
     local working = {}
     for _, p in ipairs(P.list) do if p.alive and InWorld(p) and p.job then working[p.job] = true end end
     local best, bt
     for _, p in ipairs(P.list) do
-        if p.alive and p.role == role and not InWorld(p) and not AtHome(p) and (not want.rebel or p.rebel)
-            and (not want.gender or p.gender == want.gender) then
+        if Free(p, role, want) then
             local t = (p.lastSeen or 0) + math.random() * 30 -- a little shuffle among equals
             if role == "citizen" and p.job and not working[p.job] then t = t - 1e9 end
+            -- someone new to the city waits for the train while trains run: onto the street only when nobody else can
+            if p.newcomer and trains and not want.newcomer then t = t + 1e12 end
             if not bt or t < bt then best, bt = p, t end
         end
     end
+    return best
+end
+
+-- Somewhere in a person's own block, out of everyone's sight, for them to come back out at
+-- (the block they walked into when they went home). nil: no block, or nowhere unseen in it.
+function LC.PersonHomeSpot(p)
+    if not (p and p.home and LC.SpotInZone) then return nil end
+    local zones = {}
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("block") or {}) do if (z.group or 0) == p.home then zones[#zones + 1] = z end end
+    if #zones == 0 then return nil end
+    for _ = 1, 6 do
+        local spot = LC.SpotInZone(Pick(zones))
+        if spot and not (LC.IsSeen and LC.IsSeen(spot + Vector(0, 0, 30)))
+            and (not LC.FarFromPlayers or LC.FarFromPlayers(spot, 250))
+            and (not LC.CitizenSpotOK or LC.CitizenSpotOK(spot)) then
+            return spot + Vector(0, 0, 4)
+        end
+    end
+    return nil
+end
+
+-- Who comes out next: someone not already out there, and whoever has been
+-- away longest. want.rebel asks for a sympathizer, want.job for a particular trade,
+-- want.person for someone already chosen (LC.NextPerson), want.newcomer for someone new to the city.
+function LC.ClaimProfile(role, want)
+    if not P.loaded then LC.LoadPeople() end
+    LC.TopUpPeople()
+    want = want or {}
+    local best
+    if want.person and Free(want.person, role, want) then best = want.person end
+    best = best or LC.NextPerson(role, want)
     if not best and (want.rebel or want.gender) then
         best = LC.NewPerson(role, want) -- the Resistance can always find someone, and a story its character
     end
     if best then
         best.lastSeen = os.time()
+        best.newcomer = nil -- (in the city now)
         MarkDirty()
     end
     return best

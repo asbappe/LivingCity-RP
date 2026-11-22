@@ -16,12 +16,12 @@ python3 map_view.py c18_lc.vmf --iso SW --box 3000 1500 4500 3000 --out corner.p
 ```
 
 - `--eye X Y Z`: where the eyes are (a player's eyes are 64 over the floor). `--yaw`: 0 east, 90 north. `--pitch`: degrees DOWN (negative looks up). `--fov` 90.
-- `--iso NE|NW|SE|SW`: the corner looked from. `--cut Z`: a cut-away. `--box X1 Y1 X2 Y2`. `--size W H` (1280 800).
+- `--iso NE|NW|SE|SW`: the corner looked from. `--cut Z`: a cut-away (what it opens is lit as if roofless, so a closed room or tunnel is not a dark box). `--box X1 Y1 X2 Y2`. `--size W H` (1280 800).
 - From Python: `map_view.render(path, out, eye=..., yaw=..., pitch=..., iso=..., cut=..., box=..., size=..., title=...)` and `map_view.sheet([pictures], out)` to put several on one page.
 
 **What it draws:** every brush face from the file's own corner lists (Hammer++'s `vertices_plus`; a file without them has its corners worked out from the planes), displaced ground, brush entities; tool textures (sky, nodraw, clips, triggers, areaportals) are left out, so an open-topped place shows the sky. Flat colours by material name (concrete grey, wood brown, Combine metal blue, water blue, slime green, chain link and force fields see-through), a dark line where two faces meet.
 
-**Props and other things:** a model whose size is known (`asset_facts.json`, made by `map_assets.py`) is drawn as its own box, turned as it stands: orange a `prop_static`, yellow a `prop_physics`, cyan a `prop_dynamic`. Bodies are flat red boxes, NPCs green, lights small pale cubes, anything named `lc_...` for the game magenta. A model of unknown size is a post.
+**Props and other things:** a model whose size is known (`asset_facts.json`, made by `map_assets.py`) is drawn as its own box, turned as it stands: orange a `prop_static`, yellow a `prop_physics`, cyan a `prop_dynamic`. A model big in two ways (a building, a Combine wall), a see-through fence or a mine's timber set is drawn as the twelve edges of its box, a tree card as one upright sheet, a stalactite a third as wide as its box (`map_view.prop_faces`). Bodies are flat red boxes, NPCs green, lights small pale cubes, anything named `lc_...` for the game magenta. A model of unknown size is a post.
 
 **Light, roughly:** where nothing is overhead, the sun; under a roof, only the file's own `light` and `light_spot` entities (no shadows are cast, so light goes through walls). Good enough to see that a room is dark or which lamp does the work; not the game's lighting.
 

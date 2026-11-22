@@ -1879,7 +1879,14 @@ local function MaintainPopulation()
         -- for now, nobody comes (never a nameless extra): sv_livingcity_people.lua
         local someone = role ~= "citizen" or not LC.PersonAvailable or LC.PersonAvailable("citizen")
         if SPAWNERS[role] and (counts[role] or 0) < targets[role] and someone then
-            local pos, extra = FindSpawnPos(role)
+            local pos, extra
+            -- a named citizen back from home comes out of their own block, out of sight (sv_livingcity_people.lua)
+            if role == "citizen" and LC.NextPerson and LC.PersonHomeSpot then
+                local who = LC.NextPerson("citizen")
+                local door = who and who.homeUntil and LC.PersonHomeSpot(who)
+                if door then pos, extra = door, { person = who } end
+            end
+            if not pos then pos, extra = FindSpawnPos(role) end
             if pos and SPAWNERS[role](pos, extra) then return end
         end
     end

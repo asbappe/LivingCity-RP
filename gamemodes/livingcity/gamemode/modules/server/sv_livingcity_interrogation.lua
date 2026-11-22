@@ -99,6 +99,9 @@ function LC.InterrogationIntel(prisoner, key, truth)
     if key == "hideout" or key == "supplies" then
         if truth then
             if not knows then return "\"I don't know anything about that. I swear.\"" end
+            -- one of the Resistance who has been to the live headquarters names it (sv_livingcity_hq.lua)
+            local hq = key == "hideout" and LC.HQFromPrisoner and LC.HQFromPrisoner(prisoner)
+            if hq then return string.format("\"They meet %s.\"", Place(hq)), hq end
             local spots = {}
             if key == "supplies" then
                 for _, p in ipairs(LC.PointsOfKind and LC.PointsOfKind("dealer") or {}) do spots[#spots + 1] = p.pos end

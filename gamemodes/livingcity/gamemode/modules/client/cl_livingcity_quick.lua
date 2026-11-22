@@ -1068,6 +1068,13 @@ local function OrdersPage()
         items[#items + 1] = arrest
     end
     if me:GetNW2String("lc_bounty_menu", "") ~= "" then items[#items + 1] = Page("Bounties on the wanted", BountyPage) end
+    -- entries other modules hang here (LC_CL.CityOrderExtras: each a function(me) returning an item or nil, an item
+    -- being { label = "...", run = function() end } or { label = "...", page = function() return { title = "...", items = {...} } end },
+    -- with disabled = true to grey it out): the Resistance's headquarters, the Advisors
+    for _, fn in ipairs(LC_CL.CityOrderExtras or {}) do
+        local okE, it = LC.Try(fn, me)
+        if okE and istable(it) then items[#items + 1] = it end
+    end
     -- a public execution at the wall (sv_livingcity_firingsquad.lua): the server sends who may be shot
     items[#items + 1] = Item("Firing squad...", function() net.Start("lc_fsquad_ask") net.SendToServer() end)
     if #(LC_CL.Manpower or {}) > 0 then items[#items + 1] = Page("Combine manpower", ManpowerPage) end
@@ -1338,6 +1345,12 @@ function LC_CL.QuickRadioRoot()
         Add(Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or (r.tx == false and "no transmitter") or Later(r.backup)))
         Add(Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)))
         Add(Item("Jobs over the radio", function() Send("radiojobs") end))
+    end
+    -- calls other modules hang on the radio's own menu (LC_CL.RadioExtras: each a function(me, band) returning an item or nil,
+    -- shaped as for LC_CL.CityOrderExtras): a unit's scouting scanner (cl_livingcity_hq.lua)
+    for _, fn in ipairs(LC_CL.RadioExtras or {}) do
+        local okR, it = LC.Try(fn, me, band)
+        if okR and istable(it) then Add(it) end
     end
     if held and w:GetNW2Int("lc_bands", 1) > 1 then
         Add(Item("Switch frequency (now " .. (band == "cp" and "the CP net" or (band == "resistance" and "Freq 7" or "nothing")) .. ")", function() Send("radiotune") end))

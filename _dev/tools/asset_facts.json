@@ -595,9 +595,11 @@
 10.3
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -647,9 +649,11 @@
 104.0
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -1507,9 +1511,11 @@
 1495.7
 ],
 "built_static": false,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -2315,9 +2321,11 @@
 15.1
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -2619,9 +2627,11 @@
 73.3
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": true,
 "static": false,
 "v": 2
 },
@@ -2635,9 +2645,11 @@
 72.9
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": true,
 "static": false,
 "v": 2
 },
@@ -2651,9 +2663,11 @@
 28.6
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": true,
 "static": false,
 "v": 2
 },
@@ -3697,9 +3711,11 @@
 24.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5017,9 +5033,11 @@
 2767.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -5051,9 +5069,11 @@
 26.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -5229,9 +5249,11 @@
 88.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5245,9 +5267,11 @@
 400.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5279,9 +5303,11 @@
 24.5
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5295,9 +5321,11 @@
 26.3
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5311,9 +5339,11 @@
 16.9
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5327,9 +5357,11 @@
 58.9
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5343,9 +5375,11 @@
 38.2
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5359,9 +5393,11 @@
 25.8
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5375,9 +5411,11 @@
 26.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5517,9 +5555,11 @@
 96.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5533,9 +5573,11 @@
 1941.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5549,9 +5591,11 @@
 121.4
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5565,9 +5609,11 @@
 95.5
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5671,9 +5717,11 @@
 237.5
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -5759,9 +5807,11 @@
 74.6
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -6125,9 +6175,11 @@
 664.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -6409,6 +6461,24 @@
 26.5,
 70.0,
 54.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/fountain_01.mdl": {
+"bbox": [
+-87.6,
+-87.6,
+-0.3,
+87.6,
+87.6,
+259.9
 ],
 "built_static": true,
 "collides": true,
@@ -7935,9 +8005,11 @@
 0.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -8297,9 +8369,11 @@
 165.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -8779,9 +8853,11 @@
 212.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9191,9 +9267,11 @@
 8.9
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -9261,9 +9339,11 @@
 32.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9277,9 +9357,11 @@
 16.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9293,9 +9375,11 @@
 16.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9309,9 +9393,11 @@
 16.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9325,9 +9411,11 @@
 16.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9341,9 +9429,11 @@
 16.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9375,9 +9465,11 @@
 64.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9517,9 +9609,11 @@
 24.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9533,9 +9627,11 @@
 25.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9549,9 +9645,11 @@
 24.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9967,9 +10065,11 @@
 188.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -9983,9 +10083,11 @@
 601.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10305,9 +10407,11 @@
 2152.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10339,9 +10443,11 @@
 2213.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10355,9 +10461,11 @@
 2518.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10389,9 +10497,11 @@
 56.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10423,9 +10533,11 @@
 49.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10439,9 +10551,11 @@
 54.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10491,9 +10605,11 @@
 52.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10835,9 +10951,11 @@
 197.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -10959,9 +11077,11 @@
 55.0
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -11191,9 +11311,11 @@
 98.4
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -11485,6 +11607,24 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/combine_barricade_med02c.mdl": {
+"bbox": [
+-15.5,
+-64.5,
+-31.0,
+70.6,
+64.5,
+164.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_combine/combine_barricade_short01a.mdl": {
 "bbox": [
 -9.1,
@@ -11603,9 +11743,11 @@
 140.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -11619,9 +11761,11 @@
 209.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -11653,9 +11797,11 @@
 209.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -11831,9 +11977,11 @@
 4201.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -11847,9 +11995,11 @@
 4201.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -12961,9 +13111,11 @@
 256.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13283,9 +13435,11 @@
 194.2
 ],
 "built_static": false,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -13317,9 +13471,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13423,9 +13579,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13439,9 +13597,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13473,9 +13633,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13489,9 +13651,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13559,9 +13723,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13575,9 +13741,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13591,9 +13759,11 @@
 1024.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13769,9 +13939,11 @@
 1537.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -13785,9 +13957,11 @@
 830.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -14251,9 +14425,11 @@
 28.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -14429,9 +14605,11 @@
 13.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -14971,9 +15149,11 @@
 64.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -15545,9 +15725,11 @@
 60.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16037,9 +16219,11 @@
 47.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16071,9 +16255,11 @@
 67.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16087,9 +16273,11 @@
 79.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16103,9 +16291,11 @@
 62.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16119,9 +16309,11 @@
 62.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16621,9 +16813,11 @@
 117.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -16637,9 +16831,11 @@
 172.7
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -16761,9 +16957,11 @@
 256.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16777,9 +16975,11 @@
 256.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16793,9 +16993,11 @@
 128.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16809,9 +17011,11 @@
 256.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16843,9 +17047,11 @@
 261.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16859,9 +17065,11 @@
 128.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16965,9 +17173,11 @@
 98.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -16981,9 +17191,11 @@
 259.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -17069,9 +17281,11 @@
 126.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -17103,9 +17317,11 @@
 125.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -17119,9 +17335,11 @@
 249.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -17549,9 +17767,11 @@
 27.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -18239,9 +18459,11 @@
 591.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -18453,9 +18675,11 @@
 63.6
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -19855,9 +20079,11 @@
 125.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -19871,9 +20097,11 @@
 125.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -20107,9 +20335,11 @@
 35.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -20141,9 +20371,11 @@
 81.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -22059,9 +22291,11 @@
 12.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -22075,9 +22309,11 @@
 12.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -22091,9 +22327,11 @@
 12.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -22125,9 +22363,11 @@
 12.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -22249,9 +22489,11 @@
 3.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -22481,9 +22723,11 @@
 27.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -22551,9 +22795,11 @@
 174.0
 ],
 "built_static": false,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -22625,9 +22871,11 @@
 3.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -22641,9 +22889,11 @@
 108.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -22747,9 +22997,11 @@
 77.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -22853,9 +23105,11 @@
 41.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23053,9 +23307,11 @@
 45.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23069,9 +23325,11 @@
 15.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23157,9 +23415,11 @@
 24.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -23245,9 +23505,11 @@
 27.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23333,9 +23595,11 @@
 2.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23349,9 +23613,11 @@
 1.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23761,9 +24027,11 @@
 87.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23777,9 +24045,11 @@
 233.9
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -23811,9 +24081,11 @@
 289.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23827,9 +24099,11 @@
 10.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23843,9 +24117,11 @@
 9.0
 ],
 "built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -23859,9 +24135,11 @@
 4.5
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -23875,9 +24153,11 @@
 18.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -26325,9 +26605,11 @@
 29.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -26417,9 +26699,11 @@
 192.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -26505,9 +26789,11 @@
 256.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -26947,9 +27233,11 @@
 12.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -27219,9 +27507,11 @@
 236.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -27271,9 +27561,11 @@
 32.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -27377,9 +27669,11 @@
 83.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28161,9 +28455,11 @@
 16.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28177,9 +28473,11 @@
 129.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28193,9 +28491,11 @@
 157.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28209,9 +28509,11 @@
 273.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28351,9 +28653,11 @@
 32.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28403,9 +28707,11 @@
 141.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28437,9 +28743,11 @@
 41.6
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -28529,9 +28837,11 @@
 20.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -28545,9 +28855,11 @@
 20.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -28561,9 +28873,11 @@
 21.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -31739,9 +32053,11 @@
 32.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -31773,9 +32089,11 @@
 28.3
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": true,
 "static": false,
 "v": 2
 },
@@ -31807,9 +32125,11 @@
 32.3
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": true,
 "static": false,
 "v": 2
 },
@@ -31931,9 +32251,11 @@
 36.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32001,9 +32323,11 @@
 37.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32035,9 +32359,11 @@
 39.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32069,9 +32395,11 @@
 37.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32139,9 +32467,11 @@
 3.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -32469,9 +32799,11 @@
 30.7
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": true,
 "static": false,
 "v": 2
 },
@@ -32485,9 +32817,11 @@
 41.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32537,9 +32871,11 @@
 10.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32571,9 +32907,11 @@
 11.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32623,9 +32961,11 @@
 10.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -32675,9 +33015,11 @@
 542.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -33455,9 +33797,11 @@
 1926.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -33831,9 +34175,11 @@
 497.7
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -34895,9 +35241,11 @@
 32.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -34911,9 +35259,11 @@
 31.0
 ],
 "built_static": false,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -35179,9 +35529,11 @@
 73.1
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -35303,9 +35655,11 @@
 10.8
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -35805,9 +36159,11 @@
 258.9
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -35857,9 +36213,11 @@
 125.2
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -35927,9 +36285,11 @@
 239.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -35961,9 +36321,11 @@
 176.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -35977,9 +36339,11 @@
 160.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -36029,9 +36393,11 @@
 60.3
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -36225,9 +36591,11 @@
 69.5
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -36601,9 +36969,11 @@
 32.0
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -36617,9 +36987,11 @@
 31.0
 ],
 "built_static": false,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -37353,9 +37725,11 @@
 25.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -37369,9 +37743,11 @@
 12.4
 ],
 "built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": true,
 "v": 2
 },
@@ -37385,9 +37761,11 @@
 98.4
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },
@@ -37401,9 +37779,11 @@
 86.5
 ],
 "built_static": false,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
+"ragdoll": false,
 "static": false,
 "v": 2
 },

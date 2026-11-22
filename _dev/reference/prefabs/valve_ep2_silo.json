@@ -1,6 +1,25 @@
 {
 "name": "valve_ep2_silo",
-"reserve": {"what": "Set aside, not placed (the owner, 21 November: the machine hoisted up the silo, \"push that aside in a 'reserve' of sorts for now, we might be able to use it for something later\"): the crane hook's train (train_hook_crash_1 on path_hook_1 to path_hook_2, raised in steps by relay_crash_raisehook_01, started by the bottom level's trigger_once), the hook (physbox_hook_crash_1 and its pulleyhook01 prop), the machine hanging from it (prop_server_hook, a reciever_cart), their spring and constraints, the winch's cable and the ropes, and the push that swung it (physexp_hook_crash_1).", "names": ["train_hook_crash_1", "path_hook_1", "path_hook_2", "relay_crash_raisehook_01", "physbox_hook_crash_1", "prop_server_hook", "physexp_hook_crash_1", "rope_hook_crash_1", "rope_hook_crash_3", "rope_winch_B_01", "rope_hook_0", "rope_hook_1", "rope_hook_2"], "also": "every entity whose parentname, attach1 or attach2 is one of these (the hook's prop, the spring, the ball socket)", "how": "a placing that honours it (BunkerForest.silo) leaves these out; to bring the hoist back, delete this 'reserve' entry (or names from it) and rebuild: the bottom level's trigger then starts the hook again"},
+"reserve": {
+"what": "Set aside, not placed (the owner, 21 November: the machine hoisted up the silo, \"push that aside in a 'reserve' of sorts for now, we might be able to use it for something later\"): the crane hook's train (train_hook_crash_1 on path_hook_1 to path_hook_2, raised in steps by relay_crash_raisehook_01, started by the bottom level's trigger_once), the hook (physbox_hook_crash_1 and its pulleyhook01 prop), the machine hanging from it (prop_server_hook, a reciever_cart), their spring and constraints, the winch's cable and the ropes, and the push that swung it (physexp_hook_crash_1). The owner, 22 November, of this and the welder (valve_ep2_rocket's reserve): \"also same for the hoisting of that computer/machine thing on the pulley, that will be useful then too\": both kept for the final rocket quest or ending, when the rocket is prepared.",
+"names": [
+"train_hook_crash_1",
+"path_hook_1",
+"path_hook_2",
+"relay_crash_raisehook_01",
+"physbox_hook_crash_1",
+"prop_server_hook",
+"physexp_hook_crash_1",
+"rope_hook_crash_1",
+"rope_hook_crash_3",
+"rope_winch_B_01",
+"rope_hook_0",
+"rope_hook_1",
+"rope_hook_2"
+],
+"also": "every entity whose parentname, attach1 or attach2 is one of these (the hook's prop, the spring, the ball socket)",
+"how": "a placing that honours it (BunkerForest.silo) leaves these out; to bring the hoist back, delete this 'reserve' entry (or names from it) and rebuild: the bottom level's trigger then starts the hook again"
+},
 "note": "Episode Two's White Forest rocket silo without the rocket (ep2_outland_11): the 24-sided shaft (512 across, concretewall010a lined with metal) with its pit, bottom level, solid ring, open levels, gantry, collar, well and a lid that does not open, and the rooms round it: the lift shaft, the ladder down from the gantry, the way to the lab. Anchor: the shaft's axis on the pit floor (1824 -9936 -1728 in Valve's map); round, with the lift and Valve's old surface tunnel on -x and the lab on +y. Heights over the anchor: pit grate 160, bottom level 322, solid ring 576 to 896, ring slab 1088 to 1152, gantry 1408, collar to 1632, well to 1760, lid 1760 to 1792. Left out: the rocket (its seven models, hatch, steam, cables and lighting), its service ladder and pads (34 brushes), the story (NPCs, scenes, marks, templates, pickups). The 47 brushes the box cut are added, cut at its faces ('cut': true). Open at the box in five places (mouths): read 'Pieces with their wiring (White Forest)' in docs/dev/prefabs.md before placing; the wiring is in 'wiring' and 'route' (the lift and the crane hook). place() writes it all as detail: it does not seal.",
 "from": "ep2_outland_11.vmf",
 "box": [

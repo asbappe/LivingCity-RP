@@ -81,8 +81,10 @@ function LC.TrainArrive(force)
     local room = budget and ((LC.NPCBudget and LC.NPCBudget() or budget:GetInt()) - table.Count(LC.NPCs or {})) or 4
     for _ = 1, math.min(math.random(2, 4), math.max(0, room)) do
         local npc, st
-        -- (only someone who lives here and is free to come out: never a nameless extra)
-        if LC.SpawnCitizen and (not LC.PersonAvailable or LC.PersonAvailable("citizen")) then npc, st = LC.SpawnCitizen(OnPlatform(p)) end
+        -- (only someone new to the city: the people who fill the places of the dead and the departed
+        -- wait for the train; nobody new, nobody steps off. Never a nameless extra.)
+        local want = { newcomer = true }
+        if LC.SpawnCitizen and (not LC.PersonAvailable or LC.PersonAvailable("citizen", want)) then npc, st = LC.SpawnCitizen(OnPlatform(p), want) end
         if IsValid(npc) and st then
             arrivals[#arrivals + 1] = npc
             local home = Home(st, p.pos)

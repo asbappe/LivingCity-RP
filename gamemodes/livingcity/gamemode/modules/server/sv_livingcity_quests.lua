@@ -737,6 +737,7 @@ local function Advance(q)
     q.stage = q.stage + 1
     if q.stage > #q.stages then return Finish(q, true) end
     EnterStage(q)
+    hook.Run("LivingCityQuestAdvanced", q) -- (a fight's next stage: squads topped up, sv_livingcity_squadtopup.lua)
 end
 
 local function OpenChoice(q, st)
@@ -1456,6 +1457,34 @@ local function T(def)
     LC.QuestTemplates[#LC.QuestTemplates + 1] = def
 end
 
+-- A timed hold against attacks runs on one clock, each wave sooner than the last (the owner's approval,
+-- 21 November, of valve-npc-timed-hold: Valve's d3_c17_07 storms at 70, 50, 40, 25 and 9 s over about 285 s,
+-- scaled here to the hold's length, never closer than 8 s), and a wave wiped out brings the next 6 s later.
+-- None starts in the last 5 s. send(i) brings wave i and returns who came (a list of NPCs).
+LC.HOLD_WAVE_GAPS, LC.HOLD_WAVE_SPAN, LC.HOLD_WAVE_WIPED = { 70, 50, 40, 25, 9 }, 285, 6
+function LC.HoldWaves(secs, now, first)
+    return { start = now, secs = secs, i = 0, live = {}, nextAt = now + (first or math.Rand(4, 8)) }
+end
+function LC.HoldWaveGap(w, i)
+    local g = LC.HOLD_WAVE_GAPS
+    return math.max(8, g[math.min(i, #g)] * w.secs / LC.HOLD_WAVE_SPAN)
+end
+function LC.HoldWaveTick(w, now, send)
+    if not w then return false end
+    local had, alive = #w.live > 0, 0
+    for _, npc in ipairs(w.live) do if IsValid(npc) and npc:Health() > 0 then alive = alive + 1 end end
+    if had and alive == 0 and not w.wiped then
+        w.wiped = true
+        w.nextAt = math.min(w.nextAt, now + LC.HOLD_WAVE_WIPED)
+        if w.onWiped then LC.Try(w.onWiped, w) end -- (between waves: supplies from a roof, sv_livingcity_roofdrop.lua)
+    end
+    if now < w.nextAt or now >= w.start + w.secs - 5 then return false end
+    w.i = w.i + 1
+    w.live, w.wiped = send(w.i) or {}, nil
+    w.nextAt = now + LC.HoldWaveGap(w, w.i)
+    return true
+end
+
 -- Pick a random NPC citizen when a stage begins, give them a made-up identity.
 local function FindCitizenStage(text, r, onFound)
     return {
@@ -1850,7 +1879,7 @@ T{
             if #left == 0 then Advance(q) end
         end
         local hold = Hold(z.pos, 30, "Hold the ground for 30 seconds. Expect a counterattack", math.max(260, z.r * 0.9))
-        hold.onEnter = function(q) q.data.waveAt = CurTime() + math.Rand(4, 8) end
+        hold.onEnter = function(q) q.data.waves = LC.HoldWaves(30, CurTime()) end
         hold.onDone = function(q)
             if LC.RecedeTerritory then LC.RecedeTerritory(z, "retaken", q.owner) end
             Narrate(q, "The ground is retaken: it's no longer rebel territory. Whatever they built here comes down by morning.")
@@ -1860,11 +1889,16 @@ T{
             desc = "Anticitizens have taken over ground " .. where .. ". Go there and eliminate every rebel holding it (no more will come in while you clear it), then hold the ground for 30 seconds. Expect a counterattack.",
             stages = { move, clear, hold },
             tick = function(q, now)
-                -- the counterattack: fighters from outside come to take it back while you hold it
-                if q.data.waveAt and now >= q.data.waveAt and Stage(q) == hold then
-                    q.data.waveAt = nil
-                    local n = LC.RebelWave and LC.RebelWave(z.pos, Members(q), math.min(6, 2 + #Members(q))) or 0
-                    if n > 0 then Narrate(q, "Rebel fighters are coming to take the ground back! Hold it.") end
+                -- the counterattack: fighters from outside come to take it back while you hold it, wave on
+                -- wave, each sooner than the last (LC.HoldWaveTick); the first as many as before, then smaller
+                if q.data.waves and Stage(q) == hold then
+                    LC.HoldWaveTick(q.data.waves, now, function(i)
+                        local size = i == 1 and math.min(6, 2 + #Members(q)) or math.min(4, 1 + #Members(q))
+                        local n, who = 0, {}
+                        if LC.RebelWave then n, who = LC.RebelWave(z.pos, Members(q), size) end
+                        if n > 0 and i == 1 then Narrate(q, "Rebel fighters are coming to take the ground back! Hold it.") end
+                        return who
+                    end)
                 end
             end,
             onFinish = function(q)
@@ -1892,22 +1926,38 @@ T{
         if not spot then return nil end
         local where = Place(spot, ply:GetPos())
         local hold = Hold(spot, 60, "Stay on the spot for 60 seconds. Civil Protection units will come to stop you.", 260)
-        hold.onEnter = function(q)
-            -- dispatch hears about it, and sends whoever is nearest to look
-            if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: anticitizens gathering " .. where .. ". Nearby Civil Protection units, investigate.") end
+        -- dispatch sends whoever is nearest to look, two at a time: wave on wave on one clock while the
+        -- ground is held, each sooner than the last (LC.HoldWaveTick)
+        local function Dispatch(q)
+            q.data.sent = q.data.sent or {}
             local near = {}
             for npc, st in pairs(LC.NPCs) do
-                if IsValid(npc) and st.role == "cop" and not st.questLock and st.state ~= "hostile" and not st.workEscort then
+                if IsValid(npc) and st.role == "cop" and not st.questLock and st.state ~= "hostile" and not st.workEscort
+                    and not q.data.sent[npc] then
                     near[#near + 1] = { npc = npc, st = st, d = npc:GetPos():DistToSqr(spot) }
                 end
             end
             table.sort(near, function(a, b) return a.d < b.d end)
+            local who = {}
             for i = 1, math.min(2, #near) do
                 if near[i].d < 4000 * 4000 then
                     if LC.ArmUnit then LC.ArmUnit(near[i].npc, near[i].st) end
                     LC.GoTo(near[i].npc, near[i].st, spot, true, nil)
+                    q.data.sent[near[i].npc] = true
+                    who[#who + 1] = near[i].npc
                 end
             end
+            return who
+        end
+        hold.onEnter = function(q)
+            if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: anticitizens gathering " .. where .. ". Nearby Civil Protection units, investigate.") end
+            q.data.waves = LC.HoldWaves(60, CurTime(), 0)
+            -- a wave of units wiped out: a rebel on a roof throws down rounds and bandages, twice at most
+            q.data.waves.onWiped = function()
+                q.data.drops = (q.data.drops or 0) + 1
+                if q.data.drops <= 2 and LC.RoofResupply then LC.RoofResupply(spot, Members(q)) end
+            end
+            LC.HoldWaveTick(q.data.waves, CurTime(), function() return Dispatch(q) end)
         end
         hold.onDone = function(q)
             local z = LC.GrowTerritory(seed, spot, r, "taken")
@@ -1918,6 +1968,9 @@ T{
             title = "Take ground " .. where, reward = 50, limit = 540,
             desc = "We want the ground " .. where .. ". Get there and stay on it for a minute, and it becomes rebel territory. Civil Protection units will be sent to stop you.",
             stages = { Goto(spot, "Go to the marked ground " .. where, 200), hold },
+            tick = function(q, now)
+                if q.data.waves and Stage(q) == hold then LC.HoldWaveTick(q.data.waves, now, function() return Dispatch(q) end) end
+            end,
         }
     end,
 }

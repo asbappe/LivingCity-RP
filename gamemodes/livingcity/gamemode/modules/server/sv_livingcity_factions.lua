@@ -338,6 +338,12 @@ function LC.RebelSpawnNote(ply, dead)
         local d = pt.pos:DistToSqr(here)
         if not bd or d < bd then best, bd = pt, d end
     end
+    -- the live headquarters counts as one of them: last nearest it (on its ground), they come back there (sv_livingcity_hq.lua)
+    local hq = LC.HQPos and LC.HQPos()
+    if hq and LC.HQGround and LC.HQGround(here) and (not bd or hq:DistToSqr(here) < bd) then
+        if ply.lcRSpawn ~= "hq" then ply.lcRSpawn = "hq" ply:SetPData("lc_rspawn", "hq") end
+        return { pos = hq, hq = true }
+    end
     if not best then return nil end
     local key = SpawnKey(best.pos)
     if ply.lcRSpawn ~= key then
@@ -370,7 +376,10 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
         local rebel = ply:GetNW2String("lcf_faction", "") == "resistance" and not zombie -- (every rank: LC.RebelSpawnFor, above)
         local pkind = (hunted or rebel) and "rspawn" or (zombie and "zspawn") or nil
         local pts = pkind and LC.PointsOfKind and LC.PointsOfKind(pkind) or {}
-        if #pts > 0 then
+        local hqAt = pkind == "rspawn" and LC.HQSpawnFor and LC.HQSpawnFor(ply) or nil
+        if hqAt then
+            ply:SetPos(hqAt)
+        elseif #pts > 0 then
             local pt = pkind == "rspawn" and LC.RebelSpawnFor(ply, pts) or pts[math.random(#pts)]
             ply:SetPos(pt.pos + Vector(0, 0, 4))
         elseif kind then

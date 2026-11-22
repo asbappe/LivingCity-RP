@@ -168,6 +168,11 @@ LC_MODULES = {
         "sv_livingcity_security",
         "sv_livingcity_sidejobs",
         "sv_livingcity_crabhunt", -- (headcrab hunts: raw headcrabs from the infestation for the Resistance's supply crate)
+        "sv_livingcity_garden", -- (the walled garden's planting spots, lc_garden_plot_N: melons and pumpkins from a seed packet)
+        "sv_livingcity_squadtopup", -- (a Resistance squad topped up at each stage of a fight, one of them a medic)
+        "sv_livingcity_roofdrop", -- (Resistance supplies thrown down from a roof between waves)
+        "sv_livingcity_strongholds", -- (Combine strongholds' tripwires and turrets: the alarm heard, a job to shut them)
+        "sv_livingcity_mapnames", -- (names the map modules give the game: the sludge tunnel's gas, the substation's fuse panel)
         "sv_livingcity_slots",
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",
@@ -292,6 +297,7 @@ LC_MODULES = {
         "sv_livingcity_voice", -- (the city's own Administrator's decrees spoken in her voice; off until a voice key and id are set)
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
         "sv_livingcity_idlelife", -- (citizens' idle life as Valve directs it: a pose for each idle spot, moments started where a player looks, a crowd that looks instead of chatting)
+        "sv_livingcity_hq", -- (the HQ's later stages: what only it does, what the Combine know of it, the raid, a ransack's papers; last, after the Inform list it adds to)
     },
     client = {
         "cl_livingcity",
@@ -390,6 +396,7 @@ LC_MODULES = {
         "cl_livingcity_colonel",
         "cl_livingcity_oldtimerface",
         "cl_livingcity_war",
+        "cl_livingcity_hq", -- (the Administrator's page on the Resistance's headquarters, a unit's scouting scanner)
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)
         "cl_livingcity_trail", -- (the quest trail on the ground)

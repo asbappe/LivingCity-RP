@@ -8,6 +8,7 @@ Texture sizes are not in the files, so seams are tested against 128, 256 and 512
 """
 import collections
 import math
+import re
 
 import numpy as np
 
@@ -112,6 +113,7 @@ def brushes(m, s, N):
                      "covered_faces": covered(m, B)}}
     R["trims"] = trims(m, B)
     R["ledges"] = ledges(m, s, B)
+    R["boards"] = boards(m, B)
     R.update(shapes(m, B))
     if len(N):
         cells = set(map(tuple, np.floor(N / 512).astype(int)))
@@ -124,6 +126,27 @@ def brushes(m, s, N):
                     ck[k].add(m.mat(f).split("/")[0])
         R["materials_per_512"] = {"materials": med([len(cm[k]) for k in cells if cm[k]]), "folders": med([len(ck[k]) for k in cells if ck[k]])}
     return R
+
+
+def boards(m, B):
+    """Boards nailed over doors and windows (the lesson valve-boarded-openings): plank brushes (wood, about 4 thick,
+    8 to 16 wide, 48 to 128 long; an angled one's box is wider) and board models (wood_board, plank), which Valve also
+    uses as physics props (d3_c17_06b: wood_board04a to 07a, three to a window), counted apart."""
+    planks, sizes = 0, C()
+    for b in B:
+        mats = [m.mat(f) for f in m.faces_of(b) if not skip_mat(m.mat(f))]
+        if not mats or not any("wood" in x for x in mats):
+            continue
+        d = np.sort(m.b_hi[b] - m.b_lo[b])
+        if d[0] <= 8 and d[1] <= (24 if m.b_axis[b] else 48) and 48 <= d[2] <= 136:
+            planks += 1
+            if m.b_axis[b]:
+                sizes["%d x %d x %d" % tuple(rnd(v) for v in d)] += 1
+    props = C()
+    for e in m.ents:
+        if m.play_ent(e) and e.cls.startswith("prop_") and re.search(r"wood_board|plank", e.model or ""):
+            props["physics" if e.cls.startswith("prop_physics") else "other"] += 1
+    return {"plank_brushes": planks, "plank_sizes_top": top(sizes, 3), "board_props": sum(props.values()), "board_props_physics": props["physics"]}
 
 
 def covered(m, B):

@@ -1033,6 +1033,11 @@ function LC.ItemUse(ply, id)
     if it.use == "plant" then
         local tr = ply:GetEyeTrace()
         local pot = tr and tr.Entity
+        -- the walled garden's soil, aimed at or within reach (sv_livingcity_garden.lua)
+        local plot = (IsValid(pot) and pot.lcPlot) and pot or (LC.Garden and LC.Garden.Near and LC.Garden.Near(ply))
+        if IsValid(plot) and plot.lcPlot.state == "empty" and not (IsValid(pot) and pot.lcRebelProp == "pot") then
+            return LC.Garden.Plant(ply, plot)
+        end
         if not (IsValid(pot) and pot.lcRebelProp == "pot") then
             for _, r in pairs(LC.RebelProps) do
                 for _, p in ipairs(r.pots) do

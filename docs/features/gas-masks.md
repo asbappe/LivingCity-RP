@@ -26,3 +26,5 @@ Asked for by the owner, 13 November.
 - Tuned by eye (your own client): `lc_gasmask_show`, `lc_gasmask_fit` ("forward right up scale"), `lc_handface_eyes` and `lc_handface_mouth` ("raised in twist bend wrist").
 
 Tests: `GasMaskTests`, and the flashbang section of `RetakeFieldTests`.
+
+**The map's own gas** (21 November; `sv_livingcity_mapnames.lua`). A map whose sludge tunnel has a trigger named `lc_sludge_gas` (the canal modules' `sludge`) has foul air in that trigger's box for as long as the map stands, the same as a gas cloud: a gas mask in your pockets goes on by itself, without one you cough and are hurt, and people get out of it. The cloud is the tunnel's shape (a box), not a ball. Tests `Nov21_MapNamesTests`.

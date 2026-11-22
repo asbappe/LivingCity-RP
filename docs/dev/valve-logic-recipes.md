@@ -189,3 +189,12 @@ Portals and occluders switched by triggers as the player passes; doors locked be
 ## What did not work
 
 Old VMFs store only three points per face, so brush sizes are approximate. Heights above the floor take the highest brush top under the point. The 3D skybox room is found from the nearest toolsskybox brushes round the sky_camera (d1_trainstation_05 not closed). How GMod plays an ambient_generic one-shot without flag 32, and !player as player 1 in multiplayer, come from memory of Source, not from these files.
+
+## What our tools do with this (21 November, later)
+
+`map_lint.py` kind `wire` makes checks 1, 4, 5, 9 and 10 above: outputs to things not in the map, `!player`, triggers
+with `spawnflags` 0, one-shot sounds without 32 (and loops with it), every moving part (door, gate, lift, train,
+turning thing) with no sound of its own and none in the wire that moves it, an areaportal naming a door not in the
+map, a door hanging in a portal that nothing closes, and any trigger opening or shutting a portal. `m.sound` and the
+pieces' own sound helpers set the flags; valves are wheels (`map_wiring.wheel`). In every built piece the check finds
+only the aqueduct's bars and water, which rise in silence (`docs/dev/map-modules.md`, "Wiring the way Valve does").

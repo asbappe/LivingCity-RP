@@ -70,7 +70,7 @@ def numbers(M):
         S.append("Streets (cuts through %d outdoor AI nodes, %d with a kerb each side): roadway most often %s wide; kerbs %s high; pavements most often %s wide; crown 0 in %d of %d; "
                  "road %s, pavement %s; wall to wall most often %s; street walls median %s tall (height over width %s)." % (
                      sts["sections"], sts["with_kerbs"], _mode(sts["road_width"]), " or ".join("%s (%d)" % kv for kv in sorted(kh.items(), key=lambda kv: -kv[1])[:2]),
-                     ", ".join(x for x in _modes(sts["pavement_width"]) if x != "0"), sts["crown"]["hist"].get("0", 0), sts["with_kerbs"],
+                     ", ".join(x for x in _modes(sts["pavement_width"]) if x != "0"), sts["crown"].get("hist", {}).get("0", 0), sts["crown"].get("n", 0),
                      (sts["road_mats_top"] or [["?"]])[0][0], (sts["pavement_mats_top"] or [["?"]])[0][0], _mode(sts["wall_to_wall"]), _q(sts["wall_height"]), sts["height_over_width"]))
     elif sts.get("sections"):
         S.append("Streets: no kerbed roadway in %d cuts through outdoor AI nodes; wall to wall most often %s; walls median %s tall (height over width %s)." % (

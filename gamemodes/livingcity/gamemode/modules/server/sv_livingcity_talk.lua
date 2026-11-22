@@ -368,7 +368,10 @@ local function Give(ply, npc, st, id)
             LC.Remember(npc, ply, -1)
             return Said(npc, st, "say_decline_gift", "They go white. 'Are you out of your mind? Put that away before a unit sees!'", "They go white.", { lead = "say_open_quiet" })
         end
-        return Taken(3, Said(npc, st, "say_thanks", "They glance about, then slip the " .. name .. " under their coat. 'It'll go where it's needed.'", "They glance about, then slip the " .. name .. " under their coat.", { lead = "say_open_quiet" }))
+        local said = Taken(3, Said(npc, st, "say_thanks", "They glance about, then slip the " .. name .. " under their coat. 'It'll go where it's needed.'", "They glance about, then slip the " .. name .. " under their coat.", { lead = "say_open_quiet" }))
+        -- a gun stays hidden on them, and goes where a found one goes (sv_livingcity_npcweapons.lua)
+        if it.weapon and LC.NPCHideGun then LC.NPCHideGun(npc, st, it.weapon) end
+        return said
     elseif kind == "papers" then
         local loyal = LoyalOf(npc, st)
         if it.leaflet == "resistance" then

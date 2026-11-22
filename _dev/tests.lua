@@ -2987,7 +2987,9 @@ _setcvar("lc_roster_size", 3)
 _setcvar("lc_roster_cops", 2)
 _setcvar("lc_rebel_pct", 0)
 LC.TopUpPeople()
-ok(#P.list == math.max(3, GetConVar("lc_citizens"):GetInt()) + 2, "the roster is filled to its size (never fewer citizens than the streets want), citizens and units", #P.list)
+-- (units: never fewer named than the city has out, lc_cops and its extras, 21 November)
+local unitsWant = math.max(2, GetConVar("lc_cops"):GetInt() + (LC.ExtraCops or 0) + (LC.ImbalanceCops or 0) + (LC.LedgerCops or 0))
+ok(#P.list == math.max(3, GetConVar("lc_citizens"):GetInt()) + unitsWant, "the roster is filled to its size (never fewer citizens than the streets want), citizens and units", #P.list)
 local n1, s1 = LC.Spawners.citizen(Vector(9000, 9100, 0))
 local prof = s1.profile
 ok(prof and LC.NPCStr(n1, "lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
@@ -5543,6 +5545,8 @@ con:SetPData("lce_standing", -300)
 LC.Incarcerate(con, 600, "Test")
 net.sent = {}
 _run(13)
+-- (the interrogator can take longer in a busy city: wait up to a dozen seconds more for him)
+for _ = 1, 12 do if _lastnet("lc_interrogate") ~= nil then break end _run(1) end
 ok(_lastnet("lc_interrogate") ~= nil, "an interrogation puts the choice on the prisoner's screen")
 _netcall("lc_interrogate_reply", con, true)
 ok(LC.Interrogations[con] == nil, "choosing Talk ends it")
@@ -7492,10 +7496,29 @@ LC.SetJob(porter, "porter", true)
 porter.chat = {}
 local spotInZone = LC.SpotInZone
 LC.SpotInZone = function() return nil end -- (home is this section's doorway, not a block another section left across the map)
+-- off the train come only people new to the city (21 November): with nobody new, nobody gets off
+for _, pr in ipairs(LC.People.list) do pr.newcomer = nil end
+local okE, empty = LC.TrainArrive(true)
+ok(okE and #(empty or {}) == 0, "with nobody new to the city, the train comes in and nobody gets off", #(empty or {}))
+timer.Remove("LivingCityTrainLeaves")
+local newcomers = {}
+for i = 1, 4 do local np = LC.NewPerson("citizen") np.newcomer = true newcomers[i] = np end
+local nobodyElse = true
+for _, pr in ipairs(LC.People.list) do if pr.alive and pr.role == "citizen" and not pr.newcomer and not IsValid(pr.npc) and (pr.homeUntil or 0) <= CurTime() then nobodyElse = false end end
+ok(nobodyElse or not LC.NextPerson("citizen").newcomer,
+    "someone new to the city comes out onto the street only when nobody else can: they wait for the train")
 local okA, arrivals = LC.TrainArrive(true)
 LC.SpotInZone = spotInZone
 arrivals = arrivals or {}
 ok(okA and #arrivals >= 2, "a train comes in, and people get off", tostring(okA) .. " " .. #arrivals .. " plats " .. #LC.TrainPlatforms() .. " npcs " .. table.Count(LC.NPCs))
+local allNew = #arrivals > 0
+for _, n in ipairs(arrivals) do
+    local pr = n.lcProfile
+    local was = false
+    for _, np in ipairs(newcomers) do if np == pr then was = true end end
+    if not was or pr.newcomer then allNew = false end
+end
+ok(allNew, "they are the people new to the city, and in it now")
 ok(has(porter.chat, "train is in"), "Intake Processors are told")
 local a1 = arrivals[1]
 local s1 = a1 and LC.NPCs[a1] or {}
@@ -10544,6 +10567,8 @@ local plat = LC.AddPoint(B0 + Vector(-600, 0, 0), 0, "platform", 0)
 local door = LC.AddPoint(B0 + Vector(0, 2400, 0), 0, "spawn", 0)
 -- (people free to step off: an earlier test may have left a tiny roster, and nobody nameless comes any more)
 _setcvar("lc_roster_size", math.max(GetConVar("lc_roster_size"):GetInt(), 30)) LC.TopUpPeople()
+-- (off the train come only people new to the city, 21 November)
+for _ = 1, 4 do local np = LC.NewPerson("citizen") np.newcomer = true end
 local okA, arrivals = LC.TrainArrive(true)
 arrivals = arrivals or {}
 local a1 = arrivals[1]
@@ -12938,6 +12963,9 @@ ok(LC.HasItem(giver, "gun_pistol") and LC.Feeling(s, giver) == before - 1 and st
 cs.rebel = true
 said = LC.GiveToCitizen(giver, c, "gun_pistol")
 ok(not LC.HasItem(giver, "gun_pistol") and string.find(said or "", "under their coat", 1, true), "a sympathizer hides it under their coat", said)
+ok(LC.NPCHiddenGun and LC.NPCHiddenGun(c, cs) == "weapon_pistol" and LC.SearchNPCRoll(cs) == "a hidden firearm",
+    "and keeps it hidden: it goes to the Resistance's crate, or a unit's search finds it (21 November)", tostring(cs.hidGun))
+cs.hidGun = nil if c.lcProfile then c.lcProfile.hidGun = nil end
 -- Civil Protection never sees arms in the menu
 local giverCP = newPlayer("GiverUnit", "cp")
 LC.GiveItem(giverCP, "gun_pistol", 1) LC.GiveItem(giverCP, "ration", 1)
@@ -20415,7 +20443,10 @@ ok(frozen and frozen[1].e:GetPos():Distance(frozen[2]) < 1 and a:Health() == hpF
 _run(T.land)
 ok(gs.phase == "stop" and Said(gs, "saviour_stop") and gs.her:GetPos():Distance(gs.land) < 1, "she lands between them and the citizens: \"Stop!\"")
 _run(T.soldiers - T.land + 0.3)
-ok(gs.phase == "soldiers" and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers swarm in", tostring(gs.phase) .. " " .. #gs.soldiers .. " " .. tostring(Said(gs, "saviour_soldiers")) .. " alive=" .. LC.SaviourAlive(gs))
+-- (with no monster left alive by then, which a busy shard can bring, the soldiers' phase passes straight to "safe")
+local monsLeft = 0
+for _, m in ipairs(gs.mons) do if m.alive then monsLeft = monsLeft + 1 end end
+ok((gs.phase == "soldiers" or (gs.phase == "safe" and monsLeft == 0)) and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers swarm in", tostring(gs.phase) .. " " .. #gs.soldiers .. " " .. tostring(Said(gs, "saviour_soldiers")) .. " alive=" .. LC.SaviourAlive(gs))
 ok(Sent(a, "music", function(t) return t.song == "livingcity/dreams/saviour2.ogg" end), "(and the heroic music)")
 local hpC = c:Health()
 _run(25)
@@ -21387,6 +21418,8 @@ ok((LC.DreamsEndured and LC.DreamsEndured(su) or 0) == endured, "and it isn't co
 ok(LC.DreamTest(su, "nosuch") == false, "(no such dream)")
 
 -- the dream flight recorder (sv_livingcity_dreamrec.lua): an editor test is written down for the tester, nothing else ever is
+-- (the test above closes its recording when the tester has been put back, which can take a few seconds: wait for it)
+for _ = 1, 20 do if not LC.DreamRecording() then break end _run(0.5) end
 ok(not LC.DreamRecording(), "the recorder: nothing is recorded with no test under way")
 local startWas0, noticeWas0 = net.Start, LC.Notice
 local function RecSent()
@@ -21431,7 +21464,15 @@ recProp:Remove()
 hook.Run("EntityRemoved", recProp)
 if IsValid(recFar) then recFar:Remove() end
 ok(LC.DreamTestStop(su), "(the recorded test, stopped)")
-_run(1.5)
+-- (put back takes a few seconds in a busy city: wait until the tester is awake and the recording closed)
+local function WaitAwake()
+    _run(1.5)
+    for _ = 1, 20 do
+        if not LC.DreamRecording() and not LC.DreamActive and not su.lcDreaming and (su.lcDreamBack or 0) <= CurTime() then break end
+        _run(0.5)
+    end
+end
+WaitAwake()
 recText, recKinds = RecSent()
 ok(recKinds[#recKinds] == "end" and RecHas("gone prop_physics models/props_junk/watermelon01.mdl") and RecHas("woke (test)"), "the recorder: what went, the waking, and the end are sent")
 ok(not LC.DreamRecording() and net.Start == startWas0 and LC.Notice == noticeWas0 and not su.lcDreaming, "the recorder: over with the test, and nothing is left wrapped or hooked")
@@ -21440,7 +21481,7 @@ su.GetInfoNum = function(_, name, def) if name == "lc_dreamrec" then return 0 en
 net.sent = {}
 ok(LC.DreamTest(su, "melons") and not LC.DreamRecording() and net.Start == startWas0, "the recorder: with Record the test unticked, a test isn't recorded")
 LC.DreamTestStop(su)
-_run(1.5)
+WaitAwake()
 su.GetInfoNum = nil
 -- a test that can't start leaves nothing behind
 ok(LC.DreamTest(su, "nosuch") == false and not LC.DreamRecording(), "the recorder: a test that doesn't start records nothing")
@@ -27277,14 +27318,22 @@ function RetakeFieldTests()
         -- the counterattack
         local seen = LC.IsSeen
         LC.IsSeen = function() return false end
-        q.data.waveAt = CurTime()
+        q.data.waves.nextAt = CurTime()
         _run(1)
-        LC.IsSeen = seen
         local wave = 0
         for npc, wst in pairs(LC.NPCs) do
             if wst.wave and IsValid(npc) and wst.raid and wst.raid.target:Distance(G) < 300 then wave = wave + 1 end
         end
         ok(wave >= 3, "holding it, a wave of fighters comes to take it back", wave)
+        -- one clock (21 November): the wave wiped out, the next comes 6 s later, not at its own time
+        local w = q.data.waves
+        ok(w.i == 1 and w.nextAt - CurTime() >= 7, "the next wave is due on the clock", w.i, w.nextAt - CurTime())
+        for _, npc in ipairs(w.live) do if IsValid(npc) then npc:SetHealth(0) hook.Run("OnNPCKilled", npc, unit) end end
+        _run(7)
+        ok(w.i == 2 and #w.live >= 2, "wiped out, the next wave comes 6 seconds later", w.i, #w.live)
+        LC.IsSeen = seen
+        ok(LC.HoldWaveGap(w, 2) <= LC.HoldWaveGap(w, 1) and LC.HoldWaveGap({ secs = 285 }, 4) < LC.HoldWaveGap({ secs = 285 }, 2),
+            "each wave sooner than the last (Valve's 70, 50, 40, 25, 9 s, scaled)")
         _run(36)
         ok(q.done, "held for 30 seconds: the ground is retaken")
         ok(not LC.RebelQuietAt(G, 0) or (LC.RebelQuiet[#LC.RebelQuiet] or {}).untilT < CurTime() + 200, "and the quiet lifts a couple of minutes after")
@@ -37894,7 +37943,7 @@ ok(heard(stayer, "We saw what you did") == 0, "(he has said nothing yet: he is s
 -- a unit shoots at him: he does not turn on it
 local cop = LC.Spawners.cop(AWAY + Vector(0, -8000, 0))
 cop.sim = false
-hook.Run("EntityTakeDamage", c1, _dmg(cop, 5))
+if IsValid(c1) then hook.Run("EntityTakeDamage", c1, _dmg(cop, 5)) end -- (no contact came: the checks above already failed; don't stop the run)
 ok(c1st and c1st.state == "event" and c1st.foe == c1 and c1:GetEnemy() ~= cop, "hit by a unit he does not fight back: nobody's enemy")
 cop:Remove()
 -- a unit comes into the square while he is on his way: he turns back, and it is tried again later
@@ -38622,6 +38671,13 @@ for _, t in ipairs(LC.QuestTemplates) do
                     local got = LC.Credits(p) - c0
                     local x = spec.extraCredits
                     local along = games[1] + (istable(x) and x[1] or tonumber(x) or 0)
+                    -- (a breakout's fund share is paid when the cell opens, along the way, not at the end: 21 November,
+                    -- the full run's "res_breakout paid 10, said 11-41" whenever the lock game's own pay came to nothing)
+                    if t.id == "res_breakout" and LC.ResistanceFundShares then
+                        local most = math.max(1, GetConVar("lc_quest_squad"):GetInt(), spec.squad or 0)
+                        local _, _, eachLo = LC.ResistanceFundShares("saved", most)
+                        along = along + (eachLo or 0)
+                    end
                     if got > credits[2] or got < credits[1] - along then
                         wrong[#wrong + 1] = string.format("%s (%s): paid %d, said %d-%d", t.id, f, got, credits[1], credits[2])
                     end
@@ -42907,7 +42963,10 @@ function Nov21_DoorPostTests()
         tr:SetPos(p.pos + Vector(80, 0, 0))
         s0 = #_sounds
         ok(Until(function() return heard(s0, "firstwarningmove") end, 3), "someone at the door: the first warning, in his own voice")
-        ok(sst.followEnt == tr, "and the nearest scanner comes to photograph them")
+        -- (the nearest: a scanner an earlier test in the shard left nearer the door may be the one that comes)
+        local anyScanner = sst.followEnt == tr
+        for _, s9 in pairs(LC.NPCs) do if s9.role == "scanner" and s9.followEnt == tr then anyScanner = true end end
+        ok(anyScanner, "and the nearest scanner comes to photograph them")
         LC.CombineZoneTick(CurTime())
         ok(tr:GetNW2Float("lc_trespass_until", 0) == 0, "(out of the zone: the countdown is gone)")
         s0 = #_sounds
@@ -43315,6 +43374,338 @@ _setcvar("lc_base_setup_time", setupWas)
 end
 BaseTallPoleTests()
 
+function Nov21_GardenPlotTests()
+    section("21 November: the walled garden's planting spots grow melons and pumpkins")
+    local G = LC.Garden
+    local runWas = LC.Running
+    LC.Running = true
+    _setcvar("lc_garden_minutes", "2")
+    local at = Vector(47000, -47000, 0)
+    local targets = {}
+    for k = 1, 8 do
+        local t = ents.Create("info_target")
+        t:SetPos(at + Vector(k * 40, (k % 2) * 30, 0)) t:SetName("lc_garden_plot_" .. k) t:Spawn()
+        targets[k] = t
+    end
+    ok(G.Ensure() == 8, "a plot on each of the map's eight spots")
+    local melon, pumpkin = G.Plots[1], G.Plots[8]
+    ok(IsValid(melon) and IsValid(pumpkin) and melon.lcPlot.crop == "melon" and pumpkin.lcPlot.crop == "pumpkin",
+        "plots 1 to 4 grow melons, 5 to 8 pumpkins")
+    ok(melon.nodraw and melon:GetNW2String("lc_label_kind", "") == "plot", "bare soil shows nothing, and is labelled when aimed at")
+    G.Ensure()
+    ok(G.Plots[1] == melon, "(set up again, the same plots stay)")
+    local farmer = newPlayer("GFarmer", "citizen")
+    farmer:SetPos(melon:GetPos() + Vector(30, 0, 0))
+    farmer.lcPropUseNext = 0
+    hook.Run("PlayerUse", farmer, melon)
+    ok(melon.lcPlot.state == "empty", "no seed packet: nothing is planted")
+    LC.GiveItem(farmer, "seeds", 2)
+    farmer.lcPropUseNext = 0
+    hook.Run("PlayerUse", farmer, melon)
+    ok(melon.lcPlot.state == "growing" and not melon.nodraw and not LC.HasItem(farmer, "seeds", 2),
+        "E with a seed packet plants it (one packet) and a sprout shows", melon.lcPlot.state)
+    ok(melon.mscale and melon.mscale < 0.5, "the sprout is small", melon.mscale)
+    ok(math.abs((melon.lcPlot.readyAt - CurTime()) - 120) < 2, "a melon ripens in lc_garden_minutes", melon.lcPlot.readyAt - CurTime())
+    -- the packet from the pockets, standing by a pumpkin plot
+    farmer:SetPos(pumpkin:GetPos() + Vector(20, 0, 0))
+    LC.InvAction(farmer, "use", "seeds")
+    ok(pumpkin.lcPlot.state == "growing" and math.abs((pumpkin.lcPlot.readyAt - CurTime()) - 180) < 2,
+        "Use the packet by a plot plants it; a pumpkin takes half as long again", pumpkin.lcPlot.state)
+    _run(65)
+    ok(melon.lcPlot.state == "growing" and melon.mscale > 0.4, "halfway, the melon has swelled", melon.mscale)
+    _run(60)
+    ok(melon.lcPlot.state == "ripe" and melon.mscale == 1, "ripe at full size", melon.lcPlot.state, melon.mscale)
+    local function veg() local n = 0 while LC.HasItem(farmer, "vegetables", n + 1) do n = n + 1 end return n end
+    local before = veg()
+    farmer:SetPos(melon:GetPos() + Vector(30, 0, 0))
+    farmer.lcPropUseNext = 0
+    hook.Run("PlayerUse", farmer, melon)
+    local after = veg()
+    ok(after - before == 3 and melon.lcPlot.state == "empty" and melon.nodraw, "picked: three lots of vegetables, and bare soil again", after - before)
+    -- Civil Protection pull up only what grows in rebel territory
+    local cop = newPlayer("GCop", "cp")
+    cop.lcPropUseNext = 0
+    hook.Run("PlayerUse", cop, pumpkin)
+    ok(pumpkin.lcPlot.state == "growing", "outside rebel territory, a unit leaves the garden alone")
+    local z = LC.AddZone(pumpkin:GetPos(), 300, "rebel", 0)
+    cop.lcPropUseNext = 0
+    hook.Run("PlayerUse", cop, pumpkin)
+    ok(pumpkin.lcPlot.state == "empty", "in rebel territory, a unit pulls it up")
+    LC.RemoveZone(z)
+    -- a map without the spots has no plots
+    for _, t in ipairs(targets) do t:Remove() end
+    ok(G.Ensure() == 0 and not IsValid(melon), "no spots on the map: no plots")
+    farmer:Remove() cop:Remove()
+    _setcvar("lc_garden_minutes", "8")
+    LC.Running = runWas
+end
+Nov21_GardenPlotTests()
+
+function Nov21_PeopleNextTests()
+    section("21 November: people back from home come out of their own block; units are all named")
+    local seenWas, farWas = LC.IsSeen, LC.FarFromPlayers
+    LC.IsSeen = function() return false end
+    LC.FarFromPlayers = function() return true end
+    local at = Vector(-47000, -47000, 0)
+    local home = LC.AddZone(at, 300, "block", 77)
+    local other = LC.AddZone(at + Vector(3000, 0, 0), 300, "block", 78)
+    local p = LC.NewPerson("citizen")
+    p.home = 77
+    local spot = LC.PersonHomeSpot(p)
+    ok(spot and spot:Distance(at) < 320, "a spot in their own block, out of sight", spot and spot:Distance(at))
+    LC.IsSeen = function() return true end
+    ok(LC.PersonHomeSpot(p) == nil, "nowhere unseen in it: no spot (they come out wherever the city would put them)")
+    LC.IsSeen = function() return false end
+    -- the street top-up takes the one it chose, at that spot
+    p.homeUntil = CurTime() - 1
+    local got = LC.ClaimProfile("citizen", { person = p })
+    ok(got == p, "the person chosen for the spot is the one who comes out")
+    p.npc = nil
+    -- every unit out there has a name
+    local units = 0
+    for _, q in ipairs(LC.People.list) do if q.alive and q.role == "cop" then units = units + 1 end end
+    local copsWas = GetConVar("lc_cops"):GetInt()
+    _setcvar("lc_cops", tostring(math.max(units, GetConVar("lc_roster_cops"):GetInt()) + 5))
+    LC.TopUpPeople()
+    local after = 0
+    for _, q in ipairs(LC.People.list) do if q.alive and q.role == "cop" then after = after + 1 end end
+    ok(after >= GetConVar("lc_cops"):GetInt(), "more units on the streets than lc_roster_cops: the roster grows, so none is nameless", after)
+    _setcvar("lc_cops", tostring(copsWas))
+    -- someone new to the city is not one of the first people
+    local list = LC.People.list
+    local alive = 0
+    for _, q in ipairs(list) do if q.alive and q.role == "citizen" then alive = alive + 1 end end
+    local sizeWas, streetsWas = GetConVar("lc_roster_size"):GetInt(), GetConVar("lc_citizens"):GetInt()
+    _setcvar("lc_roster_size", tostring(alive))
+    _setcvar("lc_citizens", tostring(math.min(streetsWas, alive)))
+    local before = #list
+    local dead
+    for _, q in ipairs(list) do if q.alive and q.role == "citizen" and not q.npc then dead = q break end end
+    if dead then dead.alive = false end
+    LC.TopUpPeople()
+    local fresh = list[#list]
+    ok(#list > before and fresh.newcomer == true, "the place of the dead is filled by someone new to the city", #list - before)
+    fresh.alive = false
+    _setcvar("lc_roster_size", tostring(sizeWas))
+    _setcvar("lc_citizens", tostring(streetsWas))
+    LC.RemoveZone(home) LC.RemoveZone(other)
+    p.alive = false
+    LC.IsSeen, LC.FarFromPlayers = seenWas, farWas
+end
+Nov21_PeopleNextTests()
+
+function Nov21_DreamBreakoutTests()
+    section("21 November: broken out while dreaming in a cell, they wake out of it")
+    local inmate = newPlayer("DreamInmate", "resistance", nil, 150)
+    local rescuer = newPlayer("DreamRescuer", "resistance", nil, 400)
+    _run(3)
+    LC.Incarcerate(inmate, 600, "Test")
+    local cellPos = inmate:GetPos()
+    rescuer:SetPos(cellPos + Vector(900, 0, 0))
+    inmate.lcDreaming = {} -- (asleep and in a dream: sv_livingcity_dreams.lua)
+    inmate.chat = {}
+    ok(LC.BreakOut(inmate, rescuer) and LC.Prisoners[inmate] == nil, "a breakout frees a dreaming prisoner all the same")
+    ok(not has(inmate.chat, "slams open"), "(nothing said into the dream)")
+    -- they wake: the dream puts them back where they lay, then the breakout takes them out
+    inmate.lcDreaming = nil
+    inmate:SetPos(cellPos)
+    hook.Run("LivingCityDreamWoke", inmate, true, "ended", nil)
+    ok(inmate:GetPos():Distance(rescuer:GetPos()) < 200 and inmate:GetPos():Distance(cellPos) > 600,
+        "they wake beside whoever let them out, not in the cell", inmate:GetPos():Distance(rescuer:GetPos()))
+    ok(has(inmate.chat, "shakes you awake"), "and are told as they wake")
+    -- awake in the cell: as before, out where they stand
+    LC.ClearWanted(inmate)
+    LC.Incarcerate(inmate, 600, "Test")
+    local here = inmate:GetPos()
+    LC.BreakOut(inmate, rescuer)
+    hook.Run("LivingCityDreamWoke", inmate, true, "ended", nil)
+    ok(inmate:GetPos() == here, "a prisoner broken out awake isn't moved")
+    LC.ClearWanted(inmate)
+    inmate:Remove() rescuer:Remove()
+end
+Nov21_DreamBreakoutTests()
+
+function Nov21_RebelAftermathTests()
+    section("21 November: her answer is a start: revenge after a reprisal, a counter-raid after a raid, a harder cell")
+    local runWas = LC.Running
+    LC.Running = true
+    local fighter = newPlayer("AftermathRebel", "resistance", nil, 900)
+    local function posted(id)
+        for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == id and not p.dead and not p.q then return p end end
+    end
+    local function clear(id)
+        for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == id then p.dead = true end end
+    end
+    clear("res_revenge") clear("res_sabotage")
+    local anger0 = LC.RebelMood.anger
+    ok(LC.RebelAftermathFor("reprisal") == "revenge", "a reprisal sets revenge going")
+    local job = posted("res_revenge")
+    ok(job and job.title == "Answer the reprisal" and job.violent, "\"Answer the reprisal\" is on the Resistance's board", job and job.title)
+    ok(LC.RebelMood.anger >= math.min(20, anger0 + 4), "and the cell is angry", LC.RebelMood.anger)
+    clear("res_revenge")
+    LC.RebelAftermath.revengeUntil = 0
+    ok(#LC.PostDirective("res_revenge") == 0, "(it is only ever up after a reprisal)")
+    -- a raid: a checkpoint to blow up, if the city has one
+    local cps = LC.PointsOfKind("checkpoint")
+    local made
+    if #cps == 0 then made = LC.AddPoint(Vector(48000, 48000, 0), 0, "checkpoint", 0) end
+    ok(LC.RebelAftermathFor("raid") == "counterraid" and posted("res_sabotage") ~= nil, "a raid brings a counter-raid: a checkpoint to blow up")
+    clear("res_sabotage")
+    if made then LC.RemovePoint(made) end
+    local a1 = LC.RebelMood.anger
+    LC.RebelMood.anger = math.min(a1, 10)
+    local a2 = LC.RebelMood.anger
+    ok(LC.RebelAftermathFor("high") == "harder" and LC.RebelMood.anger == a2 + 4, "the high ground makes the cell harder")
+    ok(LC.RebelAftermathFor("exchange") == nil, "an exchange sets nothing more going")
+    LC.RebelMood.anger = anger0
+    fighter:Remove()
+    LC.Running = runWas
+end
+Nov21_RebelAftermathTests()
+
+function Nov21_SquadTopUpTests()
+    section("21 November: a Resistance squad topped up at each stage of a fight, one a medic")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    local manWas = GetConVar("lc_manpower") and GetConVar("lc_manpower"):GetString()
+    if manWas then _setcvar("lc_manpower", "0") end
+    local at = Vector(-48000, 46000, 0)
+    local camp = LC.AddZone(at, 600, "rebel", 0)
+    local lead = newPlayer("TopUpLead", "resistance", nil, 900)
+    lead:SetPos(at + Vector(1500, 0, 0))
+    local fighters = {}
+    for i = 1, 5 do
+        local npc, st = LC.SpawnRebel(at + Vector(i * 40, 0, 4), camp)
+        if npc then fighters[#fighters + 1] = npc st.life = nil end
+    end
+    local first, fst = fighters[1], LC.NPCs[fighters[1]]
+    LC.RebelRecruit(lead, first, fst)
+    ok(#LC.FollowersOf(lead) == 1, "the leader has one fighter with him")
+    local spotWas = LC.RebelBackupSpot
+    LC.RebelBackupSpot = function(ply) return ply:GetPos() + Vector(900, 0, 0) end
+    local limit = math.min(LC.SquadTopUpMost, (LC.SquadLimit(lead)))
+    hook.Run("LivingCityQuestAdvanced", { violent = true, members = { lead } })
+    local f = LC.FollowersOf(lead)
+    ok(#f == limit, "the next stage of a violent job: the squad topped up to its places", #f, limit)
+    local medics = 0
+    for _, n in ipairs(f) do if LC.NPCs[n] and LC.NPCs[n].squadMedic then medics = medics + 1 end end
+    ok(medics == 1, "one of them a medic", medics)
+    hook.Run("LivingCityQuestAdvanced", { violent = true, members = { lead } })
+    ok(#LC.FollowersOf(lead) == limit, "(full: nobody more comes)")
+    -- a job that isn't a fight, or no squad yet: nothing
+    local lone = newPlayer("TopUpLone", "resistance", nil, 900)
+    hook.Run("LivingCityQuestAdvanced", { violent = true, members = { lone } })
+    ok(#LC.FollowersOf(lone) == 0, "a leader with no squad gets none")
+    -- the medic patches up the leader
+    local medic
+    for _, n in ipairs(LC.FollowersOf(lead)) do if LC.NPCs[n].squadMedic then medic = n end end
+    lead:SetHealth(30)
+    if medic then medic:SetPos(lead:GetPos() + Vector(60, 0, 0)) LC.NPCs[medic].medicNext = 0 end
+    LC.SquadMedicTick(CurTime())
+    ok(lead:Health() == 30 + LC.SquadMedicHeal, "the medic patches up a badly hurt leader near him", lead:Health())
+    LC.SquadMedicTick(CurTime())
+    ok(lead:Health() == 30 + LC.SquadMedicHeal, "(and not again straight away)")
+    LC.RebelBackupSpot = spotWas
+    for _, n in ipairs(fighters) do if IsValid(n) then LC.NPCs[n] = nil n:Remove() end end
+    LC.RemoveZone(camp)
+    lead:Remove() lone:Remove()
+    if manWas then _setcvar("lc_manpower", manWas) end
+    LC.IsSeen = seenWas
+    LC.Running = runWas
+end
+Nov21_SquadTopUpTests()
+
+function Nov21_RoofDropTests()
+    section("21 November: Resistance supplies thrown down from a roof between waves")
+    local runWas = LC.Running
+    LC.Running = true
+    local manWas = GetConVar("lc_manpower") and GetConVar("lc_manpower"):GetString()
+    if manWas then _setcvar("lc_manpower", "0") end
+    local at = Vector(46000, 48000, 0)
+    local holder = newPlayer("RoofHolder", "resistance", nil, 400)
+    holder:SetPos(at)
+    local fbWas = LC.Fallback
+    LC.Fallback = {}
+    ok(LC.RoofDropSpot(at) == nil and LC.RoofResupply(at, { holder }) == nil, "no roof spot near: nothing comes")
+    LC.Fallback = { at + Vector(600, 0, 300), at + Vector(300, 0, 20) }
+    local nav = LC.RoofDropSpot(at)
+    ok(nav and nav.z > at.z + 200, "a high spot of the map's navigation with a clear line down will do", tostring(nav))
+    local mark = ents.Create("info_target")
+    mark:SetPos(at + Vector(-500, 200, 350)) mark:SetName("lc_drop_test") mark:Spawn()
+    ok(LC.RoofDropSpot(at) == mark:GetPos(), "the map's own roof spot (lc_drop_...) first")
+    local function count()
+        local n = 0
+        for _, e in ipairs(ents.FindByClass("lc_item")) do
+            local id = e:GetNW2String("lc_item", "")
+            if e.lcRoofTest == nil and (string.sub(id, 1, 5) == "ammo_" or id == "bandage" or id == "health_vial") then n = n + 1 end
+        end
+        return n
+    end
+    local before = count()
+    local thrower = LC.RoofResupply(at, { holder })
+    ok(IsValid(thrower) and thrower:GetPos():Distance(mark:GetPos()) < 60 and LC.NPCs[thrower].thrower, "a rebel appears on the roof")
+    _run(6)
+    ok(count() - before == 2 * LC.RoofDropThrows, "and throws down a box of rounds and a bandage or vial, each throw", count() - before)
+    -- in a hold: a wave of units wiped out brings it
+    local w = LC.HoldWaves(60, CurTime(), 0)
+    local fired = 0
+    w.onWiped = function() fired = fired + 1 end
+    local unit = ents.Create("npc_metropolice") unit:SetPos(at + Vector(900, 0, 0)) unit:Spawn() unit:SetHealth(50)
+    LC.HoldWaveTick(w, CurTime(), function() return { unit } end)
+    unit:SetHealth(0)
+    LC.HoldWaveTick(w, CurTime() + 1, function() return {} end)
+    ok(fired == 1, "between waves: when a wave is wiped out")
+    unit:Remove()
+    if IsValid(thrower) then LC.NPCs[thrower] = nil thrower:Remove() end
+    mark:Remove()
+    LC.Fallback = fbWas
+    holder:Remove()
+    if manWas then _setcvar("lc_manpower", manWas) end
+    LC.Running = runWas
+end
+Nov21_RoofDropTests()
+
+function Nov21_StrongholdTests()
+    section("21 November: Combine strongholds' tripwires heard, and the Resistance's job to cut the defences")
+    local runWas = LC.Running
+    LC.Running = true
+    LC.Strongholds.off = {}
+    local at = Vector(-46000, 48000, 0)
+    ok(next(LC.StrongholdRooms()) == nil, "no stronghold relays on the map: no rooms")
+    local alarm = ents.Create("logic_relay") alarm:SetPos(at) alarm:SetName("lc_atrium_alarm") alarm:Spawn()
+    local off = ents.Create("logic_relay") off:SetPos(at + Vector(200, 0, 0)) off:SetName("lc_atrium_off") off:Spawn()
+    ok(LC.StrongholdRooms().atrium == off, "a room with its _off relay is a stronghold with defences up")
+    local fired = {}
+    off.Fire = function(_, input) fired[#fired + 1] = input end
+    local intruder = newPlayer("WireBreaker", "citizen")
+    intruder:SetPos(at + Vector(40, 0, 0))
+    local unit = newPlayer("WireUnit", "cp")
+    unit.chat = {}
+    ok(hook.Run("AcceptInput", alarm, "Trigger", unit, unit) == true and not has(unit.chat, "tripwire broken"),
+        "a unit's player walks through a wire: the alarm is swallowed (the map lets Combine NPCs pass, and can't tell players apart)")
+    hook.Run("AcceptInput", alarm, "Trigger", intruder, intruder)
+    ok(LC.PlayerIsWanted(intruder), "breaking a wire: whoever did it is wanted")
+    ok(has(unit.chat, "tripwire broken"), "and the units hear it on the CP net")
+    local rebel = newPlayer("DefenceCutter", "resistance", nil, 400)
+    rebel:SetPos(at + Vector(0, 300, 0))
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "res_cutdefences" then t = x end end
+    ok(t and t.available(rebel), "the Resistance are offered Cut the defences")
+    local spec = t and t.build(rebel)
+    ok(spec and #spec.stages == 2 and spec.stages[1].game == "wiring", "get to the control point, then the wiring game", spec and spec.stages[1].game)
+    if spec then spec.stages[2].onDone({ owner = rebel }) end
+    ok(fired[1] == "Trigger" and LC.Strongholds.off.atrium and next(LC.StrongholdRooms()) == nil, "wired out: the room's _off relay is fired, and its defences are down for good")
+    unit.chat = {}
+    hook.Run("AcceptInput", alarm, "Trigger", intruder, intruder)
+    ok(not has(unit.chat, "tripwire broken"), "(a room shut down raises no alarm)")
+    LC.ClearWanted(intruder)
+    alarm:Remove() off:Remove() intruder:Remove() unit:Remove() rebel:Remove()
+    LC.Strongholds.off = {}
+    LC.Running = runWas
+end
+Nov21_StrongholdTests()
+
 function MapZoneMarkerTests()
 -- the owner, 21 November, of the silo's territory: "why don't you just place them yourself?": an info_target named
 -- lc_zone_<kind>_r<radius>_h<height>_<label> brings a zone of that kind once, as if placed with the editor
@@ -43387,6 +43778,212 @@ end
 _groundFn = groundWas
 end
 MapZoneMarkerTests()
+
+function Nov21_BreakoutWithdrawTests()
+    section("21 November: a breakout job whose prisoner is out already is taken back, not paid without its share")
+    local runWas = LC.Running
+    LC.Running = true
+    local inmate = newPlayer("WithdrawInmate", "resistance", nil, 150)
+    local breaker = newPlayer("WithdrawBreaker", "resistance", nil, 400)
+    _run(3)
+    LC.Incarcerate(inmate, 600, "Test")
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "res_breakout" then t = x end end
+    local spec = t and t.build(breaker)
+    if spec then spec.tmpl = t end
+    local q = spec and LC.GiveQuest(breaker, spec)
+    ok(q and not q.done, "the job is taken")
+    local xp0 = tonumber(breaker:GetPData("lcf_xp_resistance", 0))
+    LC.ReleasePrisoner(inmate)
+    _run(2)
+    ok(q and q.done and LC.QuestOf[breaker] == nil, "the prisoner let go: the job is gone")
+    ok(tonumber(breaker:GetPData("lcf_xp_resistance", 0)) == xp0, "nothing paid for it, and no mark against them")
+    inmate:Remove() breaker:Remove()
+    LC.Running = runWas
+end
+Nov21_BreakoutWithdrawTests()
+
+function Nov21_CellsFullTests()
+    section("21 November: every cell taken, an arrest still has a cell: the prisoner nearest release goes home")
+    local cells = LC.PointsOfKind("cell")
+    local made
+    if #cells == 0 then made = LC.AddPoint(Vector(-47500, 47500, 0), 0, "cell", 0) cells = LC.PointsOfKind("cell") end
+    local held = {}
+    -- fill every free cell with a jailed citizen
+    for _ = 1, #cells + 2 do
+        local npc, st = LC.Spawners.citizen(Vector(-47000, 47000, 0) + Vector(math.random(-200, 200), math.random(-200, 200), 0))
+        if npc and st then
+            local okA = LC.ArrestNPC(npc, nil)
+            if okA then held[#held + 1] = { npc, st } end
+        end
+    end
+    _run(2)
+    local soonest
+    for _, h in ipairs(held) do
+        if IsValid(h[1]) and h[2].state == "jailed" and (not soonest or (h[2].jailUntil or 0) < (soonest[2].jailUntil or 0)) then soonest = h end
+    end
+    ok(#held >= #cells and soonest ~= nil, "(more arrests than cells were made, all in cells)", #held, #cells)
+    local extra, est = LC.Spawners.citizen(Vector(-47000, 47300, 0))
+    local okX, why = LC.ArrestNPC(extra, nil)
+    ok(okX, "a cell found for one more arrest", why)
+    ok(soonest and soonest[2].state ~= "jailed" and not soonest[2].jailUntil, "the prisoner nearest the end of their sentence was let out for it")
+    for _, h in ipairs(held) do if IsValid(h[1]) then LC.NPCs[h[1]] = nil h[1]:Remove() end end
+    if IsValid(extra) then LC.NPCs[extra] = nil extra:Remove() end
+    if made then LC.RemovePoint(made) end
+    LC.Occupied = {}
+end
+Nov21_CellsFullTests()
+
+function Nov21_MapNamesTests()
+    section("21 November: the map modules' names the game hears: the sludge tunnel's gas, the substation's fuse panel")
+    local at = Vector(46500, -46500, 0)
+    -- the sludge tunnel: its trigger's box is foul air for as long as the map stands
+    local gas = ents.Create("trigger_multiple") gas:SetPos(at) gas:SetName("lc_sludge_gas")
+    gas.obbmin, gas.obbmax = Vector(-600, -100, 0), Vector(600, 100, 160)
+    gas:Spawn()
+    ok(LC.MapGasEnsure() == 1, "the map's gas trigger is found")
+    LC.MapGasEnsure()
+    local n = 0
+    for _, g in ipairs(LC.GasClouds) do if g.map == "lc_sludge_gas" then n = n + 1 end end
+    ok(n == 1, "one cloud for it, however often it is looked for", n)
+    ok(LC.InGasCloud(at + Vector(550, 0, 40)) and not LC.InGasCloud(at + Vector(0, 300, 40)), "the tunnel's length is gas, beside it is not (a box, not a ball)")
+    local walker = newPlayer("SludgeWalker", "citizen")
+    walker:SetPos(at + Vector(300, 0, 0))
+    walker:SetHealth(100)
+    _run(2.1)
+    ok(walker:Health() < 100, "without a mask, you are hurt in it", walker:Health())
+    walker:SetPos(at + Vector(0, 2000, 0))
+    -- the substation: its panel broken, the district's transformer goes down
+    local tf = ents.Create("lc_transformer") tf:SetPos(at + Vector(0, 3000, 0)) tf:Spawn()
+    local relay = ents.Create("logic_relay") relay:SetPos(at + Vector(300, 3000, 0)) relay:SetName("lc_substation_cut") relay:Spawn()
+    local rebel = newPlayer("PanelBreaker", "resistance", nil, 200)
+    hook.Run("AcceptInput", relay, "Trigger", rebel, rebel)
+    ok(tf:GetNW2Bool("lc_down", false), "the substation's panel broken: its district's transformer is down")
+    if LC.TransformerRestore then LC.TransformerRestore(tf) end
+    for i = #LC.GasClouds, 1, -1 do if LC.GasClouds[i].map then table.remove(LC.GasClouds, i) end end
+    LC.MapNames.gas = {}
+    gas:Remove() tf:Remove() relay:Remove() walker:Remove() rebel:Remove()
+end
+Nov21_MapNamesTests()
+
+function Nov22_HQTests()
+    section("22 November: the HQ's later stages: what only it does, what the Combine know, the raid, a ransack's papers")
+    local B, H = LC.Base, LC.HQ
+    local runWas = LC.Running
+    LC.Running = true
+    local setupWas = GetConVar("lc_base_setup_time"):GetInt()
+    _setcvar("lc_base_setup_time", 3)
+    B.Reset()
+    local T0 = Vector(-310000, 310000, 0)
+    local z = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(-500, -500, -16), maxs = T0 + Vector(500, 500, 192) })
+    local boss = newPlayer("HQCommander", "resistance", nil, 99999)
+    B.Poles()
+    local pole = B.poles[LC.RebelLeader(z)]
+    boss:SetPos(pole:GetPos() + Vector(40, 0, 0))
+    LC.BasePoleUse(boss)
+    for _ = 1, 10 do if LC.BaseState() == "live" then break end B.Tick(1) end
+    local hp = LC.HQPos()
+    LC.HQTick()
+    ok(hp and LC.BaseState() == "live" and LC.HQKnowWords() == "nothing", "an HQ up: the Combine know nothing of it", tostring(LC.BaseState()))
+    if not hp then B.Reset() LC.RemoveZone(z) boss:Remove() _setcvar("lc_base_setup_time", tostring(setupWas)) LC.Running = runWas return end
+    -- what only the HQ does
+    LC.RebelSpawnNote(boss)
+    local back = LC.HQSpawnFor(boss)
+    ok(back and back:Distance(hp) < 400, "a Resistance player last nearest it comes back at the HQ", back and back:Distance(hp))
+    local sciHere = ents.Create("prop_physics") sciHere:SetPos(hp + Vector(120, 0, 0)) sciHere:Spawn()
+    local sciFar = ents.Create("prop_physics") sciFar:SetPos(T0 + Vector(9000, 0, 0)) sciFar:Spawn()
+    ok(LC.LabHQWhyNot(sciFar, LCS.LabById.bypass) and LC.LabHQWhyNot(sciFar, LCS.LabById.ied) and not LC.LabHQWhyNot(sciHere, LCS.LabById.ied)
+        and not LC.LabHQWhyNot(sciFar, LCS.LabById.firebomb), "bypass charges and IEDs only from the HQ's own lab; the rest anywhere")
+    local reb, rst = LC.SpawnRebel(hp + Vector(80, 80, 4), z)
+    if reb then reb:SetHealth(20) end
+    _run(5.5)
+    ok(reb and reb:Health() > 20, "a wounded rebel NPC on its ground heals", reb and reb:Health())
+    -- what the Combine know: only players move it
+    local snitch = newPlayer("HQSnitch", "citizen")
+    local kind
+    for _, k in ipairs(LC.InformKinds) do if k.id == "hq" then kind = k end end
+    ok(kind and kind.available(snitch) == nil, "someone who has never been there has nothing to tell")
+    snitch:SetPos(hp + Vector(150, 0, 0))
+    LC.HQTick()
+    snitch:SetPos(T0 + Vector(12000, 0, 0))
+    local site = kind and kind.available(snitch)
+    ok(site ~= nil, "a player who has been on its ground can tell a unit")
+    if site then kind.start(snitch, nil, site) end
+    ok(LC.HQKnowWords() == "a district" and kind.available(snitch) == nil, "told: they know the district (and the same player can't tell it twice)", LC.HQKnowWords())
+    local talker = newPlayer("HQTalker", "resistance", nil, 400)
+    talker:SetPos(hp + Vector(100, 100, 0))
+    LC.HQTick()
+    local words, at = LC.InterrogationIntel(talker, "hideout", true)
+    ok(at and at:Distance(hp) < 1 and LC.HQKnowWords() == "the street", "one of theirs who has been there, telling the truth in the cells: the HQ is the place, and they know the street", LC.HQKnowWords())
+    -- a unit's scouting job, on the HQ's own ground
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "cp_scouthq" then t = x end end
+    local unit = newPlayer("HQScout", "cp")
+    local zonesWas = LC.ZonesOfKind
+    LC.ZonesOfKind = function(k) if k == "rebel" then return { z } end return zonesWas(k) end
+    local spec = t and t.build(unit)
+    LC.ZonesOfKind = zonesWas
+    ok(spec and #spec.stages == 2 and spec.stages[2].search, "the units' scouting job: get there, search it by hand")
+    if spec then spec.stages[2].onDone({ owner = unit, members = { unit }, data = {}, board = "Dispatch", title = spec.title, stages = spec.stages, stage = 2, id = 0 }) end
+    ok(LC.HQKnowWords() == "the building", "scouted the HQ's own ground: they know the building", LC.HQKnowWords())
+    -- a scanner: only one a unit sent counts
+    H.know = 50
+    local cityScanner = ents.Create("npc_cscanner") cityScanner:SetPos(hp + Vector(200, 0, 200)) cityScanner:Spawn()
+    LC.RegisterNPC(cityScanner, "scanner")
+    LC.HQScannerTick(5)
+    ok(H.know == 50, "the city's own scanner over the HQ learns nothing")
+    local heldWas = LC.RadioHeld
+    LC.RadioHeld = function() return true end
+    unit:SetPos(hp + Vector(300, 0, 0))
+    local okS = LC.HQScan(unit, hp)
+    LC.RadioHeld = heldWas
+    local mine
+    for sc in pairs(H.scanners) do mine = sc end
+    if IsValid(mine) then mine:SetPos(hp + Vector(150, 0, 150)) end
+    LC.HQScannerTick(5)
+    ok(okS and H.know > 50 and H.know <= 50 + LC.HQScanMost, "a scanner a unit sends from the radio, with the pole in sight, learns", H.know)
+    ok(LC.HQScanWhyNot(unit) ~= nil, "(one at a time per unit)")
+    for sc, sdata in pairs(H.scanners) do if IsValid(sc) then LC.NPCs[sc] = nil sc:Remove() end if IsValid(sdata.target) then sdata.target:Remove() end end
+    H.scanners = {}
+    LC.NPCs[cityScanner] = nil cityScanner:Remove()
+    -- the raid, ordered by the Administrator, beaten off
+    H.know = 100
+    local adm = newPlayer("HQAdministrator", "admin")
+    ok(LC.HQRaidWhyNot(talker) ~= nil and LC.HQRaidWhyNot(adm) == nil, "at the building, the Administrator (only she) may order the raid")
+    local addWas, authD = LC.LedgerAdd, nil
+    LC.LedgerAdd = function(what, d, why) if what == "authority" then authD = d end end
+    ok(LC.HQRaidOrder(adm) and H.raid ~= nil, "she orders it")
+    local raidJob, defendJob
+    for _, p in ipairs(LC.Postings.cp or {}) do if p.tmpl and p.tmpl.id == "cp_raidhq" and not p.dead then raidJob = p end end
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_defendhq" and not p.dead then defendJob = p end end
+    ok(raidJob and defendJob, "every unit gets the raid on the board, the Resistance the defence", tostring(raidJob) .. " " .. tostring(defendJob))
+    for _, npc in ipairs(H.raid.npcs) do if IsValid(npc) then npc:SetHealth(0) end end
+    unit:SetPos(T0 + Vector(20000, 0, 0))
+    _run(55)
+    LC.LedgerAdd = addWas
+    ok(H.raid == nil and LC.BaseState() == "live", "the raiders dead and no unit on the ground: the raid is beaten off, the flag still flying")
+    ok(authD and authD < 0, "and it costs her authority", tostring(authD))
+    ok(LC.HQRaidWhyNot(adm) ~= nil, "(not again so soon)")
+    -- a ransack's papers
+    local plist = LC.People.list
+    local symp = {}
+    for i = 1, 4 do local pr = LC.NewPerson("citizen") pr.rebel = true symp[i] = pr end
+    local named = LC.HQRansackPapers()
+    local marked = 0
+    for _, pr in ipairs(symp) do if pr.suspect then marked = marked + 1 end end
+    ok(#named == 3 and marked >= 1, "a ransack's papers name three sympathizers: suspects from then on", #named)
+    for _, pr in ipairs(symp) do pr.alive = false end
+    -- tidy
+    if reb then LC.NPCs[reb] = nil reb:Remove() end
+    sciHere:Remove() sciFar:Remove()
+    B.Reset()
+    LC.RemoveZone(z)
+    boss:Remove() snitch:Remove() talker:Remove() unit:Remove() adm:Remove()
+    H.know, H.raid, H.raidNext = 0, nil, 0
+    _setcvar("lc_base_setup_time", tostring(setupWas))
+    LC.Running = runWas
+end
+Nov22_HQTests()
 
 ----------------------------------------------------------------------
 section("Stop")

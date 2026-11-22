@@ -257,6 +257,11 @@ T{
         hold.onDone = function(q) if LC.BreakOut then LC.BreakOut(prisoner, q.owner) end end
         return {
             title = "Break " .. prisoner:Nick() .. " out", reward = 60, limit = 900,
+            -- out already (let go, freed by someone else, gone): nobody left to break out, so the job is taken back,
+            -- neither done nor failed (it used to finish, paying without the share a breakout brings)
+            tick = function(q)
+                if not (IsValid(prisoner) and LC.Prisoners and LC.Prisoners[prisoner]) and LC.WithdrawQuest then LC.WithdrawQuest(q) end
+            end,
             desc = prisoner:Nick() .. " is in a cell " .. Place(cell, ply:GetPos()) .. ". Get in (a keycard, a bypass charge, or a Hacker's multitool on the Combine doors), get the cell open, get them out.",
             stages = { go, hold },
         }

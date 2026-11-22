@@ -692,6 +692,22 @@ local function InSomeonesJob(npc, st)
 end
 LC.InSomeonesJob = InSomeonesJob
 
+-- Every cell taken: the city's own prisoner nearest the end of their sentence goes home early, so an arrest
+-- always has a cell (the robot players found arrest jobs stuck on "no free cell" once earlier jobs had filled
+-- them, 21 November). Never a player, nor anyone a job is about or the Administrator means to question.
+function LC.MakeRoomInCells()
+    local best, bst, bt
+    for n, s in pairs(LC.NPCs or {}) do
+        if IsValid(n) and s.state == "jailed" and not n.lcRegicide and not InSomeonesJob(n, s) then
+            local t = s.jailUntil or s.untilT or 0
+            if not bt or t < bt then best, bst, bt = n, s, t end
+        end
+    end
+    if not best then return false end
+    LC.ReleaseNPCPrisoner(best, bst, CurTime(), true)
+    return true
+end
+
 function LC.ReleaseNPCPrisoner(npc, st, now, force)
     -- not while a job's about them: they stay put until it's done (force: the job itself letting them out)
     if not force and InSomeonesJob(npc, st) then st.untilT = (now or CurTime()) + 15 return end
@@ -719,6 +735,7 @@ function LC.ArrestNPC(npc, arrester)
     if not st or (st.role ~= "citizen" and st.role ~= "rebel") then return false, "only citizens and rebels can be arrested" end
     if LC.NPCCustody and LC.NPCCustody[npc] then return false, "already in custody" end
     local cell = FreeCell(npc)
+    if not cell and LC.MakeRoomInCells and LC.MakeRoomInCells() then cell = FreeCell(npc) end
     if not cell then return false, "no free cell" end
     if LC.LeaveLine then LC.LeaveLine(npc, st) end
     if IsValid(st.ss) then st.ss:Fire("CancelSequence"); st.ss:Remove(); st.ss = nil end

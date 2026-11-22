@@ -241,6 +241,16 @@ function LC.QuartermasterStocks(item)
     return false
 end
 
+-- Made only at the headquarters' own lab (the owner, 22 November: the services only the live HQ has,
+-- sv_livingcity_hq.lua): with the HQ feature on, only a scientist on the live HQ's ground makes these.
+LC.LabHQOnly = { bypass = true, ied = true }
+function LC.LabHQWhyNot(sci, r)
+    if not (r and (LC.LabHQOnly[r.id] or LC.LabHQOnly[r.out])) then return nil end
+    if not (LC.BaseOn and LC.BaseOn()) then return nil end
+    if IsValid(sci) and LC.HQGround and LC.HQGround(sci:GetPos()) then return nil end
+    return "Only the headquarters' lab makes this."
+end
+
 function LC.SendLab(ply, sci)
     local credits = LC.Credits and LC.Credits(ply) or 0
     local inv = LC.Inventory and LC.Inventory(ply) or {}
@@ -262,6 +272,8 @@ function LC.SendLab(ply, sci)
                 local ok, why = LC.DreamOptOutEarned(ply)
                 if not ok then gated, desc = true, why end
             end
+            local hqWhy = LC.LabHQWhyNot(sci, r)
+            if hqWhy then gated, desc = true, hqWhy end
             items[#items + 1] = { id = r.id, name = it.name .. ((r.count or 1) > 1 and string.format(" (%d)", r.count) or ""), desc = desc, mats = mats, canMats = can and not gated,
                 price = price, canPay = credits >= price and not gated, secs = r.secs }
         end
@@ -393,6 +405,8 @@ function LC.LabMake(ply, id, how)
     end
     local sci = LC.ScientistNear(ply:GetPos())
     if not IsValid(sci) then return false, "Find the scientist in the lab." end
+    local hqWhy = LC.LabHQWhyNot(sci, r)
+    if hqWhy then return false, hqWhy end
     if LC.Busy and LC.Busy(ply) then return false, "You're busy." end
     local job = sci.lcLabJob
     if job and IsValid(job.ply) and job.untilT > CurTime() then
@@ -545,6 +559,8 @@ function LC.LabSurgery(ply)
     if not ok then return false, why end
     local sci = LC.ScientistNear(ply:GetPos())
     if not IsValid(sci) then return false, "Find the scientist in the lab." end
+    local hqWhy = LC.LabHQWhyNot(sci, r)
+    if hqWhy then return false, hqWhy end
     local job = sci.lcLabJob
     if job and IsValid(job.ply) and job.untilT > CurTime() then return false, "He's in the middle of someone else's work." end
     local price = cvSurgery:GetInt()
@@ -611,6 +627,8 @@ function LC.LabChip(ply)
     if not ok then return false, why end
     local sci = LC.ScientistNear(ply:GetPos())
     if not IsValid(sci) then return false, "Find the scientist in the lab." end
+    local hqWhy = LC.LabHQWhyNot(sci, r)
+    if hqWhy then return false, hqWhy end
     local job = sci.lcLabJob
     if job and IsValid(job.ply) and job.untilT > CurTime() then return false, "He's in the middle of someone else's work." end
     local price = LC.ChipPrice()

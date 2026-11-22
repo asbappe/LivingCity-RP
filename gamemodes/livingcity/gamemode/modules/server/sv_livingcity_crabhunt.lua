@@ -9,7 +9,8 @@
                      go into the infested ground (marked), kill headcrabs
                      there (a few more crawl out for it), pick up the raw meat
                      they leave (E), and bring it to the camp's supply crate.
-                     Standing by the crate, the meat goes in on its own: each
+                     Reaching the crate, the meat goes in on its own (short
+                     of meat, more headcrabs crawl out to be hunted): each
                      headcrab is one meal in the crate (roasted, it feeds like
                      a tin).
       When           only while there's infested ground and a rebel camp. It
@@ -167,7 +168,7 @@ LC.QuestTemplates[#LC.QuestTemplates + 1] = {
                 if c then q.data.crabs[#q.data.crabs + 1] = c q.data.spawned = q.data.spawned + 1 end
             end
         end
-        local bring = Count("crab_meat", need, "Bring the raw headcrabs to the Resistance supply crate (marked): stand by it")
+        local bring = Count("crab_meat", need, "Bring the raw headcrabs to the Resistance supply crate (marked)")
         bring.pos, bring.r = cache:GetPos(), 200
         bring.poll = function(q, st)
             if not IsValid(cache) then
@@ -194,8 +195,20 @@ LC.QuestTemplates[#LC.QuestTemplates + 1] = {
             -- what they're carrying, on the tracker
             local have = 0
             for _, p in ipairs(Members(q)) do if IsValid(p) then have = have + Held(p) end end
-            local text = string.format("Bring the raw headcrabs to the Resistance supply crate (marked): stand by it (carrying %d)", have)
+            local text = string.format("Bring the raw headcrabs to the Resistance supply crate (marked) (carrying %d)", have)
             if st.text ~= text then st.text = text Q.SendStateAll(q) end
+            -- short of meat (some was eaten, dropped or lost): more headcrabs crawl out in the infested
+            -- ground, so the job never ends on a step nobody can finish
+            if have + (st.got or 0) < st.need and (q.data.spawned or 0) < need * 3 + 2
+                and LiveCrabsNear(z.pos, area) == 0 and CurTime() >= (q.data.nextCrab or 0) then
+                q.data.nextCrab = CurTime() + 15
+                local c = SpawnCrab(z)
+                if c then
+                    q.data.crabs = q.data.crabs or {}
+                    q.data.crabs[#q.data.crabs + 1] = c
+                    q.data.spawned = (q.data.spawned or 0) + 1
+                end
+            end
             if CH.Deposit(q, st, cache) > 0 then
                 if st.got >= st.need then return Q.Advance(q) end
                 Q.SendStateAll(q)
