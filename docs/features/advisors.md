@@ -42,5 +42,5 @@ The owner, 22 November, approving the ideas of 21 November (lesson `valve-overse
 
 ## Settings, tests
 
-- `lc_advisors` 1/0 (on). No new items or commands.
+- No setting: placing an Advisor screen turns the Advisors on; taking it away turns them off. No new items or commands.
 - Tests `Nov22_AdvisorTests`; the client smoke test checks her menu, E on the screen and the screen's drawing.

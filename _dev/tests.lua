@@ -43376,7 +43376,6 @@ BaseTallPoleTests()
 
 function Nov22_AdvisorTests()
     section("22 November: the Advisor screens: asking the Advisors, reporting in, and what failing them brings")
-    _setcvar("lc_advisors", "1")
     LC.AdvisorReset()
     local socioWas, stateWas = LC.Socio, LC.CityStateName
     LC.Socio, LC.CityStateName = "green", "normal"
@@ -43571,12 +43570,7 @@ function Nov22_AdvisorTests()
     LC.LedgerReload()
     ok(S().patience == 44 and S().nights == 21, "their patience and the nights are kept with the state of the city")
 
-    -- off
-    _setcvar("lc_advisors", "0")
-    LC.AdvisorTick()
-    ok(not LC.AdvisorsHere() and LC.AdvisorScreenUse(adm, scr) == false and GetGlobal2String("lc_advisors", "") == "" and LC.AdvisorCops == 0,
-        "lc_advisors 0: no Advisors")
-    _setcvar("lc_advisors", "1")
+    -- off: the screen taken away (there is no setting: the screen is the switch)
 
     -- tidy up
     LC.Notice = noticeWas
@@ -43584,6 +43578,8 @@ function Nov22_AdvisorTests()
     LC.RemovePoint(pt)
     LC.SyncFixtures()
     ok(not IsValid(scr), "(the screen goes with its point)")
+    LC.AdvisorTick()
+    ok(not LC.AdvisorsHere() and GetGlobal2String("lc_advisors", "") == "", "the screen taken away: no Advisors (it is the switch: there is no setting)")
     LC.AdvisorReset()
     _setcvar("lc_ration_full_standing", "150")
     LC.Socio, LC.CityStateName = socioWas, stateWas

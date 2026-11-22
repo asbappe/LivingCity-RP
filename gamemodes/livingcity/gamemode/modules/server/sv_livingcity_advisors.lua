@@ -29,15 +29,14 @@
         her office for 20 minutes. Again: a player Administrator is removed from the post (a citizen again);
         the city's own is replaced (with a new name, if she has one). Then it starts over.
 
-      lc_advisors 1/0
+      No setting: placing an Advisor screen is what turns them on; with none on the map, nothing happens (nobody
+      reports, nobody is punished), so taking the screen away turns them off.
 ]]
 
 if CLIENT then return end
 
 LC = LC or {}
 
-local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn = CreateConVar("lc_advisors", "1", FLAGS, "The Advisors: at an Advisor screen the Administrator asks them for troops, supplies or units, and reports to them every third night")
 
 util.AddNetworkString("lc_advisors_open")
 util.AddNetworkString("lc_advisors_do")
@@ -67,7 +66,7 @@ local A = LC.AdvisorsLive or { cutUntil = 0, copsUntil = 0, watchUntil = 0, last
 LC.AdvisorsLive = A
 LC.AdvisorCops = LC.AdvisorCops or 0
 
-local function On() return cvOn:GetBool() end
+local function On() return true end -- (no setting: a screen on the map is what turns them on, LC.AdvisorsHere)
 local function DayLen() local c = GetConVar("lc_day_minutes") return math.max(5, c and c:GetFloat() or 60) * 60 end
 
 -- The figure and the nights, with the state of the city.
