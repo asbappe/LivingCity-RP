@@ -516,6 +516,7 @@ class Vmf:
         self.props = []     # (classname, place, model, yaw) of every prop, for the checks that keep ways clear
         self.ways = []      # (box, label): spaces players walk through, kept clear of props (keep_way_clear, ways_problems)
         self.nudged = []    # (model, from, to): props moved out of a way or a door's swing as they were placed (clear_spot)
+        self.stairs_as_built = []   # (box, why): flights copied from Valve's maps that Valve built broken on purpose (stairs_as_valve)
         self.shapes = 0     # solids that aren't boxes
         self.shape_boxes = []   # (the box round each of them, for the checks)
         self.portals = []   # the areaportals' boxes, for the checks
@@ -657,6 +658,12 @@ class Vmf:
         middle), as a box in the map's own coordinates: the build fails if a prop's real size stands in it. The owner,
         22 November: "this should please be a standard instruction for all map edits/creating/modules/etc"."""
         self.ways.append((tuple(box), label))
+
+    def stairs_as_valve(self, box, why):
+        """A flight of stairs lifted from one of Valve's maps that Valve itself built broken (ending in the air where the
+        stairs collapsed, a foot hanging over the floor): the stair check leaves a flight starting in this box alone.
+        Only for Valve's own (the same check on Valve's map finds the same fault); never for a flight of ours."""
+        self.stairs_as_built.append((tuple(box), why))
 
     def clear_spot(self, model, pos, yaw):
         """Where a prop may stand: pos, or if its real box there enters a way kept clear or a hinged door's swing, the
@@ -1543,7 +1550,7 @@ def main():
         problems.append(p)
     import map_stairs                   # (the owner's walk, 22 November: "WE NEED A CHECK to see if stairs go into walls or geometry")
     import map_walk                     # (and: "MAKE A CHECK TO CHECK FOR PLAYER ROOM TO WALK")
-    for p in map_stairs.check_text(text) + map_walk.check_text(text):
+    for p in map_stairs.check_text(text, as_built=vmf.stairs_as_built) + map_walk.check_text(text):
         print("  PROBLEM: " + p)
         problems.append(p)
     with open(out, "w") as f:

@@ -42,15 +42,19 @@ def boxes_of(text):
             mats = [x.lower() for x in re.findall(r'"material" "([^"]+)"', body)]
             if any(any(w in x for w in NOT_SOLID) for x in mats):
                 continue
-            pts, axisy = [], True
+            at, axisy = ([], [], []), True
             for pm in PLANE.finditer(body):
                 tri = [tuple(float(c) for c in g.split()) for g in pm.groups()]
-                pts += tri
-                if not any(len(set(round(p[k], 2) for p in tri)) == 1 for k in range(3)):
+                ks = [k for k in range(3) if len(set(round(p[k], 2) for p in tri)) == 1]
+                if not ks:
                     axisy = False
-            if not pts or not axisy:
+                    break
+                at[ks[0]].append(tri[0][ks[0]])
+            if not axisy or not all(len(a) >= 2 for a in at):
                 continue
-            box = tuple(min(p[k] for p in pts) for k in range(3)) + tuple(max(p[k] for p in pts) for k in range(3))
+            # (the box from its planes' own heights and sides: a plane's three points may lie well outside the brush,
+            # as Valve's often do, so the points themselves would make it far bigger than it is)
+            box = tuple(min(a) for a in at) + tuple(max(a) for a in at)
             if all(box[k + 3] - box[k] > 0.5 for k in range(3)):
                 out.append(box)
     w0 = text.find("\nworld\n")
@@ -66,16 +70,57 @@ def boxes_of(text):
     return out
 
 
+def disp_cells(view, solid_text):
+    """A displaced brush's skin as a box for each cell of its grid, where the skin really is (Valve's cave rock is
+    raised well over its flat base brush: a stair landing on it would seem to end in the air). None if it cannot be
+    worked out (no corners)."""
+    root = view.parse(solid_text.split("\n"))
+    sol = next((k for k in root.kids if k.name == "solid"), None)
+    if sol is None:
+        return None
+    sides = [k for k in sol.kids if k.name == "side"]
+    worked = None
+    out = []
+    for n, side in enumerate(sides):
+        disp = [k for k in side.kids if k.name == "dispinfo"]
+        if not disp:
+            continue
+        vp = [k for k in side.kids if k.name == "vertices_plus"]
+        if vp:
+            verts = [tuple(view.nums(v)) for k, v in vp[0].rows if k == "v"]
+        else:
+            if worked is None:
+                worked = view.from_planes(sides) or []
+            if n >= len(worked) or not worked[n]:
+                return None
+            verts = list(reversed(worked[n]))      # (as map_view draws it: worked-out corners go round the other way)
+        if len(verts) != 4:
+            return None
+        for quad, _c, _s in view.displaced(verts, disp[0], (0, 0, 0)):
+            out.append(tuple(min(p[k] for p in quad) for k in range(3)) + tuple(max(p[k] for p in quad) for k in range(3)))
+    return out or None
+
+
 def mud_boxes(text):
-    """The mud's displaced skins (world brushes with a dispinfo): floor to stand on at a stair's foot, never a blocker."""
+    """The displaced skins (world brushes with a dispinfo: the canal's mud, the caves' rock): floor to stand on at a
+    stair's foot or top, never a blocker. Each cell of the skin where it really is (with map_view, which needs numpy),
+    else the base brush's box."""
     out = []
     w0 = text.find("\nworld\n")
     if w0 < 0:
         return out
+    try:
+        import map_view as view
+    except ImportError:
+        view = None
     w1 = text.find("\nentity\n", w0)
     for m in SOLID.finditer(text[w0:w1 if w1 > 0 else len(text)]):
         body = m.group(3)
         if "dispinfo" not in body:
+            continue
+        cells = disp_cells(view, m.group(0)) if view else None
+        if cells:
+            out.extend(cells)
             continue
         pts = [tuple(float(c) for c in g.split()) for pm in PLANE.finditer(body) for g in pm.groups()]
         if pts:
@@ -145,8 +190,10 @@ def flights(boxes):
     return out
 
 
-def check_text(text, limit=12, where=None):
-    """Problems (strings) for the flights in a VMF's text. where(x, y): a name for a place (the module it is in)."""
+def check_text(text, limit=12, where=None, as_built=()):
+    """Problems (strings) for the flights in a VMF's text. where(x, y): a name for a place (the module it is in).
+    as_built: (box, why) for flights lifted from Valve's maps that Valve built broken on purpose (Vmf.stairs_as_valve):
+    a flight whose first tread starts in one is left alone."""
     boxes = boxes_of(text)
     grid = Grid(boxes)
     muds = mud_boxes(text)
@@ -183,6 +230,9 @@ def check_text(text, limit=12, where=None):
 
     for run, s, chain in flights(boxes):
         tr = [boxes[i] for i in chain]
+        cx, cy, cz = (tr[0][0] + tr[0][3]) / 2.0, (tr[0][1] + tr[0][4]) / 2.0, tr[0][5]
+        if any(b[0] <= cx <= b[3] and b[1] <= cy <= b[4] and b[2] <= cz <= b[5] for b, _why in as_built):
+            continue
         cross = 1 - run
         lo = max(b[cross] for b in tr)
         hi = min(b[cross + 3] for b in tr)

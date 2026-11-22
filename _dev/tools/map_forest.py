@@ -3066,6 +3066,13 @@ class CaveForest(Forest):
             if e["classname"] in ("light", "light_spot"):
                 e["keys"]["spawnflags"] = "0"
         pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit)
+        # two flights of the shaft's metal stairs are broken in Valve's own map (its stair check finds the same): the top
+        # one stops in mid air where the stairs above collapsed, the bottom one hangs over the floor (its fallen catwalk,
+        # a func_physbox, is left out); kept as Valve built them
+        for (x1, y1, z1, x2, y2, z2), why in (((640, -1300, -4810, 744, -1230, -4730), "the shaft's top flight, ending where the stairs collapsed"),
+                                              ((30, -730, -5010, 98, -630, -4930), "the shaft's bottom flight, hanging over the floor")):
+            c1, c2 = self.room_pt(x1, y1, z1), self.room_pt(x2, y2, z2)
+            v.stairs_as_valve(self.w(min(c1[0], c2[0]), min(c1[1], c2[1]), c1[2]) + self.w(max(c1[0], c2[0]), max(c1[1], c2[1]), c2[2]), why)
         # the landing's doorway at the top of the shaft, walled up in its own brick (the door and the passage beyond it left out)
         a = self.room_pt(888, -1280, -3648)      # (the doorway in the landing's plaster wall, 8 thick: filled flush with both its faces, its frame left round it)
         b = self.room_pt(896, -1232, -3540)
