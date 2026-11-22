@@ -254,7 +254,7 @@ def church(m, cz, ceil, tunnel_u):
     # --- the basement: the stair up, the Resistance's stores ---
     m.steps(792, 1544, 1656, cz, NF, "u", -1)
     m.det([(576, 1536, NF, 832, 1544, NF + 40)], SCREEN)                                                        # a rail of boards round the well
-    m.det([(578, 1537, cz, 830, 1543, NF - 8)], CELLAR_FLOOR)                                                   # its side, filled
+    m.det([(578, 1537, cz, 700, 1543, NF - 8)], CELLAR_FLOOR)                                                   # (it stops short of the stair's foot: it walled the foot off, the walk check found)                                                   # its side, filled
     m.blocked(576, 1536, 832, 1664)
     m.lane(800, 1600, cz)
     m.lane(520, 1600, NF)

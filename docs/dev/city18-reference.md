@@ -871,7 +871,7 @@ Valve's own sdk_vehicles (a vehicle test map in the Source SDK copy the owner up
 
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `recipe`, `multiplayer`, `story`, `water`, `npc`, `forest`, `cave`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `recipe`, `multiplayer`, `story`, `water`, `npc`, `forest`, `cave`, `prefab`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -3778,4 +3778,67 @@ Nothing the map moves kills or crushes anyone. A door, gate, shutter, lock leaf 
 - **How:** map_forest.shove(vmf, name, parts, vis, fit=True): parts are (box, push yaw, speed); each a trigger_push, StartDisabled, flags 11 (players, NPCs, loose things); the wiring Enables it at the close and Disables it 0.3 s after (fit=False keeps an unseen one out of the fit check where it stands in the owner's own brushes). In use: the bunker's flat doors, the silo's blast door, the leader's escape rock, the cave's emergency door, Ravenholm's gate wall (shoved off it as it starts to rise; the unseen wall's place cleared before it comes back) and tunnel door, and the canal's lock gates (the end of each swing, shut and open). On a strip narrower than a player (a wall's top), two pushes 15 either side of its middle, so each touches only those on its own side.
 - **Checked by:** review
 - **Tags:** owner, doors, multiplayer, logic
+
+### Every flight of stairs goes somewhere (`owner-stairs-go-somewhere`)
+
+A flight has room to step on at its foot, headroom over every step, and a landing at its top a player steps onto (ahead or to either side). Never into a wall, a ceiling or the air.
+
+- **Why:** "WE NEED A CHECK to see if stairs go into walls or geometry, over half the stairs just go into walls so far" (22 November, walking the canal ring).
+- **How:** map_stairs.py finds every flight by shape and judges it with a player's size.
+- **Checked by:** map_build.py (every build, PROBLEM)
+- **Tags:** stairs, geometry
+
+### A player can walk to everything the place offers (`owner-room-to-walk`)
+
+Every door that opens, every button and every standing spot the game names can be walked to from the canal (a step of 18, a jump of 44, ladders, slopes to 45 degrees); no prop cuts a walk in two; at least 48 clear on galleries and before doorways.
+
+- **Why:** "IN THE SAME WHEELHOUSE THERE IS NO ROOM TO WALK HERE, MAKE A CHECK TO CHECK FOR PLAYER ROOM TO WALK"; the relay shack with no room before its door (22 November).
+- **How:** map_walk.py walks the floors of the file.
+- **Checked by:** map_build.py (every build, PROBLEM)
+- **Tags:** geometry, props, doors
+
+### No brush buttons, ever (`owner-no-brush-buttons`)
+
+A button is a model (m.button: Episode Two's mine lift button; Valve's CombineButton) with an unseen func_button round it; the --test buttons too.
+
+- **Why:** "no brush buttons, goodness this is not 1995. NO BRUSH BUTTONS" (22 November).
+- **How:** Mod.button, Mod.test_button (map_forest.wall_button).
+- **Checked by:** map_lint.py
+- **Tags:** props, logic
+
+### Crates break, supply crates hold supplies (`owner-crates-break`)
+
+Half-Life 2's supply crate is the item_item_crate entity (item_dynamic_resupply); wooden crates, cardboard boxes and pallets are physics props that break.
+
+- **Why:** "supply crates can't be broken!?!?", "both supply crates were empty" (22 November).
+- **How:** map_modules.breakable() in Mod.prop.
+- **Checked by:** map_build.py
+- **Tags:** props
+
+### Use the models the owner named (`owner-obey-model-choices`)
+
+When the owner names models (the tram's cars: the train Episode Two starts inside, wrecked_train and wrecked_train_02 from ep2_outland_01), use them; if one cannot be used, ask, never swap quietly.
+
+- **Why:** "I TOLD YOU to use the EP2 train cars from the beginning of EP2 and I was ignored ... please actually obey me" (22 November).
+- **How:** Valve's own map shows which models it uses (grep its VMF).
+- **Checked by:** by hand
+- **Tags:** props
+
+### A lifted piece must fit where it goes (`valve-piece-fit`)
+
+A piece lifted from Valve's maps keeps what held it up and what it hid: one that stood on piles over water, against a cliff, or whose back was never seen (nodraw) does not go in a dry canal against a wall.
+
+- **Why:** Valve's boathouse in the basin: "floating props and no walls and a missing ceiling", "why are these on the other side" (22 November).
+- **How:** Count a piece's nodraw faces and props hanging in the air before placing it.
+- **Checked by:** by hand
+- **Tags:** prefab, props
+
+### Set pieces that make physical sense (`owner-sensible-set-pieces`)
+
+No set piece that could not happen: a building fallen over but still upright, a bus hanging in slanted brushes, a junkyard of containers inside a canal. Deleted at the owner's word: tenement, busbridge, scrapyard.
+
+- **Why:** "DELETE THE BUS, SLANTED METAL DOESN'T EVEN MAKE GEOMETRICAL SENSE", "delete the fallen tenament ... HOW WOULD A TENEMANT FALL OVER AND STILL BE UPRIGHT", "shipping container/junkyard INSIDE A CANAL? ... DELETE THAT MODULE" (22 November).
+- **How:** Ask whether a real canal could have it.
+- **Checked by:** by hand
+- **Tags:** canal, geometry
 

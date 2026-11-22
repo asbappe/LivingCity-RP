@@ -143,8 +143,8 @@ def check_text(text, limit=12, where=None):
             b = boxes[i]
             if b[5] <= floor + STEP:
                 continue      # (a floor, a landing, the next step: stepped onto, not into)
-            if all(b[k] < r[k + 3] - 0.5 and b[k + 3] > r[k] + 0.5 for k in range(3)):
-                return b
+            if all(b[k] < r[k + 3] - 4 and b[k + 3] > r[k] + 4 for k in range(2)) and b[2] < r[5] - 0.5 and b[5] > r[2] + 0.5:
+                return b      # (in by 4 or more across: a fence's edge 3 into the space is stepped round)
         return None
 
     def floor_at(region, z, skip):
