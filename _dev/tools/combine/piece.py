@@ -4,7 +4,7 @@ plates straight on big masses, light panels flush in the plates. All of it laid 
 piece is built exactly as a square one."""
 from . import tops as TP
 from .geom import METAL, TRIM, LIGHT, COLD, OLD, G, LEANS, ext, loft, rect, cut, clip, legs, rib_run, orient, Frame
-TOWER, GATE = (("point", 2), ("vault", 1), ("steps", 1), ("ridge", 1)), (("shed", 1), ("steps", 1), ("ridge", 1))
+TOWER, GATE = (("vault", 2), ("steps", 2), ("ridge", 1), ("flat", 1)), (("shed", 1), ("steps", 1), ("ridge", 1))
 
 
 class Sink:
@@ -124,7 +124,8 @@ class Piece:
                 self.light_at(face, s + q(32), d1 + q(40), (t0 + t1) // 2)
             else:
                 e = min([j for j in joints if s + q(16) <= j < e] or [e])
-                for b0, b1 in bands:
+                bs = bands if not foot or e - s >= q(64) or len(bands) < 2 else [(t0, bands[1][1])] + bands[2:]     # (no 32 by 32 foot)
+                for b0, b1 in bs:
                     self.fbox(face, s, e, b0, b1, d0, d1, self.mm if slab else self.plate)
             s = e + (q(r.choice((8, 12, 40, 48))) if r.random() < 0.2 and e not in joints else 0)
         return lit
@@ -168,9 +169,10 @@ class Piece:
                     self.fbox(face, x, x + q(w), t0, t1, d0, d0 + q(d), mat)
                     self.take(face, x, x + q(w), t0, t1)
 
-    def tabs(self, face, s0, s1, t0, d0=0, h=32):
-        """Small plates 32 by 32 straight on a big mass (Valve: one join in six is a piece against one 8 times its
-        size), lifted off the middle of the course under them."""
+    def tabs(self, face, s0, s1, t0, d0=0, h=32, keep=0, near=None):
+        """Small plates 32 by 32 on a big mass across a course joint: only keep of them, the ones nearest near (beside a
+        door), as the owner asked (22 November: "massively reduce their occurrence"). The row is still drawn from r, so
+        the rest of a draw stays as it was."""
         q = self.q
         j = int(round(t0 / 128.0)) * 128
         t0 = j - 16 if j >= 128 else 16                   # (across a course joint, so it stands on two courses)
@@ -179,9 +181,13 @@ class Piece:
         self.rows.add((face, t0))
         while any(t0 <= m <= t0 + h for m in self.mids["z"]):
             t0 += 8
-        for x in rib_run(s0, s1, q(32), self.r, None, q(128), (q(32), q(96))):
-            if self.clear(face, x, q(32), t0, t0 + h) and self.free(face, x, x + q(32), t0, t0 + h):
-                self.fbox(face, x, x + q(32), t0, t0 + h, d0, d0 + max(1, q(self.thick[0])), self.plate)
+        xs = [x for x in rib_run(s0, s1, q(32), self.r, None, q(128), (q(32), q(96)))
+              if self.clear(face, x, q(32), t0, t0 + h) and self.free(face, x, x + q(32), t0, t0 + h)]
+        if near is not None:
+            xs.sort(key=lambda x: abs(x + q(16) - near))
+        for x in xs[:keep]:
+            self.fbox(face, x, x + q(32), t0, t0 + h, d0, d0 + max(1, q(self.thick[0])), self.plate)
+            self.take(face, x, x + q(32), t0, t0 + h)
 
     def wedge(self, face, s, t0, t1, turn, flip=False):
         """A three-sided pier on a face, its slanted face turned by one of the ratios."""
@@ -228,7 +234,7 @@ class Piece:
         w, d = r.choice((16, 32)), 8
         self.ribs(fr, a + 48, c - 16, hb, HA - r.choice((0, 64)), w, d, "pair")
         self.ribs(fr, c + 16, L - ca - 32, hb, HB - 32, w, d, None, 128)
-        # back: turned wedges on mass one; a head leaning over the higher step (looks down); small plates
+        # back: turned wedges on mass one; a head leaning over the higher step (looks down)
         for i, x in enumerate(rib_run(r.choice((32, 96)), a - 160, 96, r, None, r.choice((256, 384)))):
             self.wedge(("v", -T1, -1), x, 0, r.choice((256, H - 128, H)), self.turns[-1], i % 2 == 1)
         self.course([(-T2, HA - 128), (-T2, HA), (-T2 - r.choice(LEANS), HA)], a + 16, c - 16)
@@ -269,7 +275,7 @@ class Piece:
             x += self.wedge(bk, x, 0, H - 128, self.turns[-1], x > 64) + r.choice((48, 112))
         c = wl + W + wr * r.choice((5, 7, 9)) // 192 * 16
         self.course([(-T, HB - 128), (-T, HB), (-T - r.choice(LEANS), HB)], *r.choice(((wl + W + 16, c), (c, L - 16))))
-        self.tabs(bk, wl + W + 32, L - 48, 64)
+        self.tabs(bk, wl + W + 32, L - 48, 64, keep=2, near=wl + W)
         self.top = TP.crown(self, TP.pick(r, (), GATE), 160, wl - 32, -T, 0, H, r, "u", False)
         return wl, W
 
@@ -295,10 +301,11 @@ class Piece:
         self.mass(rect(X - wa, 0, X, 64), 0, ha - 128)
         self.course([(0, ha - 128), (64, ha - 128), (64 - r.choice(LEANS), ha), (0, ha)], X - wa, X)
         self.tabs(("v", 64, 1), X - wa + 16, X - 16, ha // 2)
+        self.sink.lamps.append((self.w((X - wa // 2 - 8, 65, ha // 2 - 64)), (self.fr.yaw() + TP.own(r, "lamp").choice((-30, -15, 15, 30))) % 360, 30))
         # south: a tall stack beside the slab, with its light; north: three levels low on the other side
         self.stack(("v", 0, 1), a1 + 16, s1, r.choice((128, 192)), r.choice((640, 768)), r.randint(3, 6))
         self.stack(("v", -Y, -1), n0, X - a2 - 32, r.choice((64, 128)), r.choice((384, 512)), 3, light=False)
-        # west: bands in pairs up one side; east: a band and small plates; a turned plate on the cut corner
+        # west: bands in pairs up one side; east: a band; a turned plate on the cut corner
         self.ribs(("u", 0, -1), -Y + 32, -Y + 32 + (Y - b1) // 32 * 8 * r.choice((1, 2)), 192, Hc - 96, 16, 8, "pair", 256, TRIM, True)
         fe = ("u", X, 1)
         self.fbox(fe, -Y + b2 + 32, -Y + b2 + 32 + (Y - b2) // 32 * 16, 640, 704, 0, 8, self.plate)

@@ -7,7 +7,7 @@ The owner, 21 November: reproduce the Combine's odd, unnerving, unsymmetrical ar
 Citadel maps (_dev/reference/valve_citadel/notes/architecture_notes.md, lessons valve-combine-*): masses on a 256
 bay in 128 courses; plates 2, 4, 8 or 16 thick in 3 to 6 relief levels (first step 48 to 64, then 4 or 8); leans of
 1 in 4, 5 in 16, 1 in 8; plan turns of 45, 1 in 2, 1 in 4, 22.5 as whole-number frames; ribs on a 256 rhythm broken by
-pairs; small plates straight on big masses; cold light panels flush in the plates; no wall's relief and no passage's
+pairs; fins against walls and few small plates (the owner, 22 November: beside doors only); cold light panels flush in the plates; no wall's relief and no passage's
 two sides each other's mirror (the study's walls.py test, a draw that fails it drawn again).
 
     python3 map_combine.py scene --out lc_combine_scene.vmf [--seed N]  the scene: an old street, the wall chain across
@@ -18,7 +18,7 @@ two sides each other's mirror (the study's walls.py test, a draw that fails it d
 Structures (combine/): building (building.py: a centred mass 1536 to 2048 across with an off-centre skin, a turned
 wing, a gate with unequal sides, a tall hall with walkways), wall_chain and intrusion (chain.py), the pieces
 (piece.py), their tops (tops.py: the owner, 22 November, "curved, like the combine bunkers, or pointed or some weird
-needless slope": lopsided vaults, ridges, points, sheds, steps, and Valve's own fins and parapets on flat ones), the
+needless slope": lopsided vaults, ridges, sheds, steps, and Valve's own fins and parapets on flat ones; no points), the
 shapes and turned frames (geom.py), the study's numbers (measure.py), the scene (scene.py).
 No module of the game's maps uses any of it yet: the owner looks at the scene first.
 """
@@ -34,6 +34,7 @@ from combine.geom import COLD, FLOOR, SKY, NODRAW  # noqa: E402
 from combine.measure import check, score  # noqa: E402
 from combine.piece import Piece  # noqa: E402
 from combine.scene import scene, tex_scale  # noqa: E402
+from combine.seat import seated  # noqa: E402
 
 
 def combine_piece(kind, box, seed=1, tries=60):
@@ -96,6 +97,9 @@ def scene_map(out, seed):
     print("tops     building %s; intrusion %s; chain %s" % (b["top"], i["top"], ", ".join(c["tops"])))
     print("draw %d of the scene kept (nearest Valve's numbers: %.2f off)" % (info["draw"], info["distance"]))
     print("sealed" if not problems else "\n".join("PROBLEM: " + p for p in problems))
+    walls = seated(out)          # the owner, 22 November: creeping walls never floating or tilted
+    bad = ["PROBLEM: %s at %s: %s" % (m.split("/")[-1], " ".join("%g" % c for c in o), f) for m, o, a, f in walls if f]
+    print("\n".join(bad) or "creeping walls: %d, each upright, its back on a wall and its foot on a floor" % len(walls))
     print("wrote %s" % out)
 
 

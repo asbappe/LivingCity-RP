@@ -11,6 +11,7 @@ from .building import building
 from .chain import wall_chain, intrusion
 from .geom import SKY, NODRAW, FLOOR
 from .piece import Sink
+from . import seat as SE
 
 X1, X2, Y1, Y2, ZT = -2560, 2560, -2816, 4352, 2304
 ROAD, WALK, KERB = "stone/stonefloor006d_c17", "concrete/concretefloor016a", "concrete/concretefloor039b"
@@ -124,6 +125,27 @@ def props(v, chain, r, vis="LC combine scene: props"):
     v.point("prop_static", (g1 + 96, CHAIN_Y - 200, 0), dict(keys, model="models/props_combine/combine_booth_short01a.mdl", angles="0 0 0"), vis)
 
 
+def more_props(v, sinks, chain, b, r, vis="LC combine scene: props"):
+    """More of Valve's props in the yard (the owner, 22 November: "up the occurrences of all the other random geometry
+    and props"), each where nothing else stands: a row of short barricades at 64 off one side of the building's door,
+    one yaw; a second booth inside the gate, turned to it. Drawn from a stream of their own."""
+    rr = TP.own(r, "yard props")
+    room = SE.Room([x for s in sinks for x in SE.as_brushes(s.solids)])
+    put_in, fr = Sink(), b["frame"]
+    g0, g1, _ = b["door"]
+    side = rr.choice((-1, 1))
+    x0 = (g1 + 96) if side > 0 else (g0 - 96)
+    for i in range(rr.choice((5, 6, 7))):
+        SE.stand(room, put_in, "models/props_combine/combine_barricade_short02a.mdl", fr.w((x0 + side * 64 * i, rr.choice((352, 352, 416)) if i == 0 else 352, 0)),
+                 fr.yaw(), sunk=-2)
+    q0, q1 = chain["gate"]
+    for dx in (-224, -288, 192, 256):
+        if SE.stand(room, put_in, "models/props_combine/combine_booth_short01a.mdl", (q0 + dx if dx < 0 else q1 + dx, CHAIN_Y + rr.choice((352, 416)), 0),
+                    rr.choice((240, 255, 285, 300)), sunk=0):
+            break
+    put(v, put_in, vis)
+
+
 def scene(out, seed=1, tries=6):
     """The scene, drawn up to tries times; the draw whose Combine is nearest Valve's numbers (measure.distance) is kept."""
     import os
@@ -178,6 +200,7 @@ def draw(out, seed, n):
     info["building"] = building((-1024, 1792, 0, 1024, 3200, 1536), seed * 10 + n)
     put(v, info["building"]["sink"], "LC combine scene: building")
     props(v, info["chain"], r)
+    more_props(v, (ch, ins, info["building"]["sink"]), info["chain"], info["building"], r)
     # a Combine tower standing on the yard's ground beside the building, as Valve stands all sixteen of theirs
     v.point("prop_static", (1600 if info["building"]["wing"] == "w" else -1600, 2560, 274), {
         "model": "models/props_combine/combinetower001.mdl", "angles": "0 %d 0" % TP.own(r, "tower").choice((0, 15, 30, 300)), "skin": "0", "solid": "6",
