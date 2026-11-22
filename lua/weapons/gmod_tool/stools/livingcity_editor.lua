@@ -58,6 +58,7 @@ local MODES = {
     { id = "desk",        label = "Point: Administrator's desk (her last stand; only if the map's own desk isn't found by itself: on the desk or beside it, within 100 feet of her power)" },
     { id = "suppressor",  label = "Fixture: Combine suppression device (the Nexus mortar: in BLACK it shells rebels under open sky near a Combine zone; blow it up to stop it)" },
     { id = "adminpower",  label = "Fixture: Administrator's power (her last stand: place 2 or 3; # is its guards: 1 manhacks, 2 turrets, 3 mines; its glass screen goes on the side facing you; her shield holds till all are destroyed)", group = true },
+    { id = "advisorscreen", label = "Fixture: Advisor screen (the Administrator reports to the Advisors here and asks them for troops, supplies or units; on a wall in her office, facing you; with none placed there are no Advisors)" },
     { id = "studio",      label = "Point: Administrator's broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "yard",        label = "Point: exercise yard (the morning drill is held here; stand where the rows of citizens will be and aim at where the leader stands)" },
     { id = "parade",      label = "Point: parade route stop (morning parade: in order, the first is where the column forms up; route #)", group = true },
@@ -164,6 +165,7 @@ end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
 local FACE_PLACER = { still = true, cardtable = true, rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, fundtv = true, arrival = true, sit = true, sitchair = true, lean = true, armscrossed = true, drinker = true, couch = true, bedside = true,vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor = true, monitor_hang = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, mounted_gun = true, yard = true }
+FACE_PLACER.advisorscreen = true -- (the Advisor screen: sv_livingcity_advisors.lua)
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end
