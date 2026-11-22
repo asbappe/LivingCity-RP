@@ -1375,6 +1375,58 @@ def self_along(plan, axis, v):
     return (plan.origin[0] if axis == "x" else plan.origin[1]) + v
 
 
+def bad_brushes(text, limit=6):
+    """Every solid in a VMF's text rebuilt from its planes, as vbsp does (the meeting of their half-spaces): one that comes
+    out empty, unbounded ("bounds out of range": vbsp stops), or with a face whose plane holds none of it (a plane facing
+    the wrong way, from corners listed out of turn) is a problem. Displacements are left out."""
+    import itertools
+    def sub(a, b): return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+    def cross(a, b): return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+    def dot(a, b): return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+    big = 60000.0
+    box = [((1, 0, 0), big), ((-1, 0, 0), big), ((0, 1, 0), big), ((0, -1, 0), big), ((0, 0, 1), big), ((0, 0, -1), big)]
+    plane_re = re.compile(r'"plane" "\(([-\d.e ]+)\) \(([-\d.e ]+)\) \(([-\d.e ]+)\)"')
+    out = []
+    for m in re.finditer(r'\n(\t*)solid\n\1\{\n\1\t"id" "(\d+)"(.*?)\n\1\}', text, re.S):
+        body = m.group(3)
+        if "dispinfo" in body:
+            continue
+        pl, why = [], None
+        for pm in plane_re.finditer(body):
+            a, b, c = [tuple(float(x) for x in g.split()) for g in pm.groups()]
+            n = cross(sub(c, a), sub(b, a))
+            ln = dot(n, n) ** 0.5
+            if ln < 1e-9:
+                why = "a face with no plane (its three points in a line)"
+                break
+            n = (n[0] / ln, n[1] / ln, n[2] / ln)
+            pl.append((n, dot(n, a)))
+        if not why:
+            allp, verts = pl + box, []
+            for i, j, k in itertools.combinations(range(len(allp)), 3):
+                (n1, d1), (n2, d2), (n3, d3) = allp[i], allp[j], allp[k]
+                c23, c31, c12 = cross(n2, n3), cross(n3, n1), cross(n1, n2)
+                den = dot(n1, c23)
+                if abs(den) < 1e-9:
+                    continue
+                v = tuple((d1 * c23[q] + d2 * c31[q] + d3 * c12[q]) / den for q in range(3))
+                if all(dot(n, v) <= d + 0.05 for n, d in allp):
+                    verts.append(v)
+            if len(verts) < 4:
+                why = "empty (its planes leave nothing between them)"
+            elif any(max(abs(c) for c in v) > 32768 for v in verts):
+                why = "unbounded: vbsp stops on it (\"bounds out of range\"): a shape's corners listed out of turn"
+            elif any(sum(1 for v in verts if abs(dot(n, v) - d) < 0.05) < 3 for n, d in pl):
+                why = "a face whose plane holds none of it (corners listed out of turn)"
+        if why:
+            first = plane_re.search(body)
+            where = first.group(1) if first else "?"
+            out.append("brush %s near (%s) is %s" % (m.group(2), where, why))
+            if len(out) >= limit:
+                break
+    return out
+
+
 def against(vmf, path, expected, allow=()):
     """Does anything in the piece run into anything in the owner's map? (Boxes against boxes: a brush of theirs that is
     not a box may be reported though it only comes near.) expected: ids of their brushes the piece replaces. allow:
@@ -1453,8 +1505,12 @@ def main():
             print("  PROBLEM: " + p)        # (the piece's own function has already printed its own)
         problems += clashes
     out = args.out or getattr(args, "out_name", None) or "lc_%s%s.vmf" % (args.piece, "_test" if args.test else "")
+    text = vmf.text()
+    for p in bad_brushes(text):         # (as vbsp builds each brush from its planes: the owner's compile stopped on one, 22 November)
+        print("  PROBLEM: " + p)
+        problems.append(p)
     with open(out, "w") as f:
-        f.write(vmf.text())
+        f.write(text)
     print("  written: " + out)
     line, look = node_report(vmf, out[3:-4].replace("_test", "") if out.startswith("lc_") else out)
     if line:

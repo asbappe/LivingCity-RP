@@ -171,6 +171,7 @@ The owner, 20 November: the Resistance's modules, all but the stash, "need to be
 
 ## What the owner's compiles and walks have found (fix the cause, and add a check for its kind)
 
+- **22 November, the canal ring's test map stopped in vbsp++ ("Brush 6369: bounds out of range"):** a slab in `collapse` had its outline's corners listed out of turn, so one face's plane faced the wrong way and the brush had no end. Every build and every merge now rebuilds each brush from its planes as vbsp does (`map_build.bad_brushes`) and fails on one that is empty or unbounded. The same log: `nature/blendsandmud001a` and `nature/blendrubbleash001a` are Half-Life 2's but not in the owner's Garry's Mod; `map_assets.NOT_IN_GMOD` fails them (add others from any compile log).
 - **19 November, the canal alone leaked:** the plain file is open to the road by design. Now `--test` writes a closed version, and the flood check also fails if any entity is outside the sealed space.
 - **19 November, the detailed canal, walked in game:**
   - *A doorway's black back wall seen edge-on* (at 6522 4164 707): the second footbridge's east doorway sat right beside the east arm, so it had no wall on that side. The bridge and its doorways moved 256 south; a check now fails any doorway that is open anywhere but its front.

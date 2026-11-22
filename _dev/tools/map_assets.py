@@ -26,6 +26,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 FACTS = os.path.join(HERE, "asset_facts.json")
 GAMES = ("hl2", "episodic", "lostcoast", "ep2", "hl2mp")     # what Garry's Mod has by itself, and Episode Two last
+# Half-Life 2's own materials that the owner's Garry's Mod does not have on disk all the same (their vbsp said "Failed
+# to find material on disk", 22 November): the lists say hl2, the game does not. Add to it from any compile log.
+NOT_IN_GMOD = {"nature/blendsandmud001a", "nature/blendrubbleash001a"}
 REPOS = {"ValveQCs": "https://github.com/Pinsplash/ValveQCs", "ValveVMTs": "https://github.com/Pinsplash/ValveVMTs"}
 
 
@@ -203,7 +206,9 @@ def main():
         for mat in sorted(materials):
             where = index.get(mat + ".vmt", {})
             game = next((g for g in GAMES if g in where), None)
-            if not game:
+            if mat in NOT_IN_GMOD:
+                problems.append("the material %s is Half-Life 2's but not in the owner's Garry's Mod (their compile could not find it)" % mat)
+            elif not game:
                 problems.append("the material %s does not exist in Half-Life 2 or its episodes%s" % (mat, " (only in: %s)" % ", ".join(sorted(where)) if where else ""))
             elif game == "ep2":
                 notes.append("the material %s is Episode Two's" % mat)

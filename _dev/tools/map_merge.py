@@ -662,6 +662,8 @@ def main():
         " but for %d line added (the sun's name)" % len(add_after) if add_after else ""))
     # the engine's path node limit is for the whole map, flying nodes and hints counted (the owner, 21 November)
     import map_build
+    for p in map_build.bad_brushes("\n".join(merged)):      # (a brush vbsp would stop on: the owner's compile, 22 November)
+        problems.append(p)
     if len(seen_nodes) > map_build.NODE_CAP:
         problems.append("%d path nodes in the merged map, over the engine's %d (walking, flying and hints together): thin the pieces' (map_build.NODE_SHARES)" % (
             len(seen_nodes), map_build.NODE_CAP))

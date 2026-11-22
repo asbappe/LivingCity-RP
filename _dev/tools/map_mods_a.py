@@ -904,7 +904,7 @@ def m_collapse(m, opt):
               slab(far_low, 32, 40, 3, 1), slab(far_low, 88, 257, 3, 1), slab(far_up, 32, 257, 3, 1),
               # ...and on across the bite's ledge
               prism([(328, F + 128), (352, F + 128), (408, F + 240), (384, F + 240)], "y", 256, 384, raw, rough),
-              prism([(440, F + 128), (416, F + 128), (396, F + 168), (380, F + 136)], "y", 257, 384, raw, rough),
+              prism([(380, F + 136), (416, F + 128), (440, F + 128), (396, F + 168)], "y", 257, 384, raw, rough),      # (corners in turn round it: listed out of turn it was not convex, and vbsp stopped on it, the owner's compile of 22 November)
               # the earth that came with the wall, in place of the bank
               prism([(256, F + 128), (128, F), (256, F)], "x", 256, 512, DIRT),
               # the wedge of roadway from the tent down to the standing piece, its skin of cobbles, and the piece itself

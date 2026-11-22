@@ -1360,7 +1360,7 @@ def m_ash(m, opt):
     Disable, Enable), lc_ash_dust (the dust: SpawnDust), lc_ash_tip (a relay: Trigger tips the grate once).
     Left as brushes: the chute's mouth, its hood and its tray.
     Unchecked: the garbage pile and garbage bag models, models/humans/charple01..04.mdl, metalbucket01a, env_smokestack,
-    env_dustpuff, ambient/creatures/flies1.wav, physics/concrete/rock_impact_hard1.wav, nature/blendrubbleash001a
+    env_dustpuff, ambient/creatures/flies1.wav, physics/concrete/rock_impact_hard1.wav; the heap is nature/gravelfloor002a (blendrubbleash001a is not in the owner's Garry's Mod: their compile, 22 November)
     (which of its two textures shows at alpha 0); which way the grate swings (spawnflags 64 or 128: about the chute's top
     edge); the wheelbarrow is loose and turned on its side (roll 85): it settles as it falls."""
     m.open(0, -256, 768, 256)
@@ -1407,7 +1407,7 @@ def m_ash(m, opt):
     for x0 in range(r[0], r[2], 256):
         for y0 in range(r[1], r[3], 256):
             zf = F + m.fr.dz
-            m.b.vmf.world_box((x0, y0, zf, x0 + 256, y0 + 256, zf + 8), MAT["nodraw"], top="nature/blendrubbleash001a", vis=m.b.vis + ": the ash heap",
+            m.b.vmf.world_box((x0, y0, zf, x0 + 256, y0 + 256, zf + 8), MAT["nodraw"], top="nature/gravelfloor002a", vis=m.b.vis + ": the ash heap",
                               disp={"top": (3, lambda i, j, x0=x0, y0=y0: (x0 + j * 32, y0 + i * 32, zf + heap(x0 + j * 32, y0 + i * 32) - 6),
                                             lambda i, j, x0=x0, y0=y0: 255 * min(1.0, heap(x0 + j * 32, y0 + i * 32) / 40.0))})
     for model, u, v, yaw in (("models/props_junk/garbage256_composite001a.mdl", 250, -150, 80), ("models/props_junk/garbage128_composite001a.mdl", 120, 90, 60),
