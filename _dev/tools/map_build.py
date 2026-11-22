@@ -612,10 +612,24 @@ class Vmf:
         self.ents.append(s)
 
     def world_box(self, box, sides, top=None, bottom=None, vis="LC canal: walls and floors", faces=None, disp=None, seals=True, tex=0.25):
-        """A brush of the world. One with a displaced face seals nothing (the compiler drops the rest of it); nor does a clip."""
+        """A brush of the world. One with a displaced face seals nothing (the compiler drops the rest of it); nor does a clip,
+        nor one with a see-through face (a grate, a fence, glass: vbsp makes the whole brush like glass, and the owner's
+        compile of 22 November leaked through a grate floor). So a see-through top or bottom is laid as a thin detail
+        sheet over solid black, and the world brush keeps sealing."""
         nd = MAT["nodraw"]
+        if not disp and (see_through(top) or see_through(bottom)):
+            x1, y1, z1, x2, y2, z2 = box
+            if see_through(top) and z2 - z1 > 2:
+                self.detail([(x1, y1, z2 - 1, x2, y2, z2)], top, vis=vis, faces={"bottom": nd})
+                z2, top = z2 - 1, MAT["black"]
+            if see_through(bottom) and z2 - z1 > 2:
+                self.detail([(x1, y1, z1, x2, y2, z1 + 1)], bottom, vis=vis, faces={"top": nd})
+                z1, bottom = z1 + 1, MAT["black"]
+            box = (x1, y1, z1, x2, y2, z2)
+        if see_through(sides) or any(see_through(m) for m in (faces or {}).values()):
+            seals = False       # (vbsp makes it glass: it seals nothing)
         self.world.append(self.box_text(box, sides, top or nd, bottom or nd, vis, faces=faces, disp=disp, tex=tex))
-        self.boxes.append((box, seals and not disp))
+        self.boxes.append((box, seals and not disp and not see_through(top) and not see_through(bottom)))
 
     def detail(self, boxes, mat, vis="LC canal: details", top=None, faces=None, tex=0.25):
         """Brushes that don't seal or cut up the map (func_detail): stairs, beams, bars, low walls."""
@@ -985,6 +999,14 @@ def barred(vmf, slab, along, vis, back=None):
     vmf.world_box(slab, c, c, c, vis=vis, seals=False)
     if back:
         vmf.detail([back], MAT["black"], vis=vis)
+
+
+SEE_THROUGH = ("metalgrate", "metalfence", "chainlink", "glass", "window", "effects/", "metalbars", "grate0")
+
+
+def see_through(mat):
+    """A material vbsp treats as glass on a world brush (it stops the brush sealing): grates, fences, glass. By name."""
+    return bool(mat) and any(w in mat.lower() for w in SEE_THROUGH)
 
 
 def gate_cap(vmf, cap, bars, along, vis):
