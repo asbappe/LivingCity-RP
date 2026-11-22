@@ -25,13 +25,76 @@ FINISH_RINGS = ((240, 780, 316, 580), (240, 780, 890, 1094), (240, 780, 1146, 13
 FINISH_BOXES = ((-544, -130, 1400, -250, 130, 1570),)
 FINISH_MAT = {"floor": "CONCRETE/CONCRETEWALL036A", "ceiling": "CONCRETE/CONCRETEWALL073A", "wall": "CONCRETE/CONCRETEWALL010A"}
 
+# Valve's lever wall outside the lab door, moved whole into the office (the owner, 22 November: "move the little
+# control/fuse box above it with the lights and the little recess that the switch sat in ... all together on the inside
+# of the office"): the box with its two lights (1234 to 1236), the plate inside the recess (1322) and the recess's
+# striped lining (1378 to 1380, 1382). The hole they leave in the hall's wall is filled (LEVER_RECESS).
+LEVER_BRUSHES = (1234, 1235, 1236, 1322, 1378, 1379, 1380, 1382)
+LEVER_RECESS = (272, 210, 362, 284, 234, 395)
+LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, and where it goes on the office's wall east of the door
 # the piece's brushes left out: the fake door at level B's south end (131; its north twin is the func_brush
-# brush_fake_cit_door_1, dropped with the wiring) and the bottom level's outer wall behind the bedroom (577), rebuilt
-# round the secret door
-SKIP = {131, 577}
-# props of the piece left out: the static door into the bedroom (a working door now) and the big cooling tank in the
-# office (it filled the office's east half)
-DROP_PROPS = (("silo_door01_static", (16, 388, 324)), ("horizontalcoolingtank04", (284, 484, 374)))
+# brush_fake_cit_door_1, dropped with the wiring), the bottom level's outer wall behind the bedroom (577), rebuilt
+# round the secret door, and the lever wall's parts (placed again in the office)
+SKIP = {131, 577} | set(LEVER_BRUSHES)
+# props of the piece left out: the static door into the bedroom (a working door now), the big cooling tank in the
+# office (it filled the office's east half), the bottom level fence's static gate (a swinging one now: fence_gate) and
+# the two flat bundles of pipes across the bedroom, 61 over its floor at their lowest (the owner, 22 November: "the
+# pipes in his bedroom are so low I hit my head on them": pipes under its ceiling instead, bedroom())
+DROP_PROPS = (("silo_door01_static", (16, 388, 324)), ("horizontalcoolingtank04", (284, 484, 374)), ("interior_fence001g", (-156, -280, 383)),
+              ("pipecluster08d_006a", (-186, 232, 502)), ("pipecluster08d_006a", (-164, 228, 326)))
+# the two soundscapes of the silo (the owner, 22 November: "the soundscape in the silo is subtly clicking and cutting in
+# and out"): one for the whole shaft (every floor, the gantry, the lift, the ring halls), and one for the leader's
+# rooms; soundscapes() places them
+SCAPE_SHAFT, SCAPE_ROOM, SCAPE_CAVE = "ep2_silobattle.silo_shut", "ep2_silo.concreteroom", "d1_town.CaveTunnel"
+# the walkway from the gantry's floor up to the rocket's hatch (Valve's stair, its landing and the platform by the
+# hatch), in the piece's frame: kept out of the shaft's player clips (BunkerForest.silo)
+WALKWAY = (-81, 78, 37, 170)
+
+
+def lever_in(p):
+    """A point of Valve's lever wall outside the lab door (its face at x 272, looking -x) on the office's side of the wall
+    east of the door, looking +y: turned a quarter clockwise, Valve's face landing 12 in front of the office's wall (y
+    296), so that the recess's back is the wall itself (y 284)."""
+    import map_prefab as PF
+    r3 = PF.rot(list(LEVER_FROM), 3)
+    x, y, z = PF.rot(list(p), 3)
+    return [x + LEVER_TO[0] - r3[0], y + LEVER_TO[1] - r3[1], z + LEVER_TO[2] - r3[2]]
+
+
+def lever_in_sides(sides):
+    """A brush's sides (a lifted piece's) moved as lever_in moves points."""
+    import map_prefab as PF
+    r3 = PF.rot(list(LEVER_FROM), 3)
+    ld = (LEVER_TO[0] - r3[0], LEVER_TO[1] - r3[1], LEVER_TO[2] - r3[2])
+    out = []
+    for s in sides:
+        s = dict(s, plane=[lever_in(p) for p in s["plane"]], verts=[lever_in(p) for p in s.get("verts", [])],
+                 uaxis=PF.turn_axis(s["uaxis"], 3, ld), vaxis=PF.turn_axis(s["vaxis"], 3, ld))
+        if s.get("corners"):
+            s["corners"] = [lever_in(p) for p in s["corners"]]
+        out.append(s)
+    return out
+
+
+def clip_poly(pts, a, b, c):
+    """A convex polygon cut by a line: the part where a*x + b*y <= c, its new corners rounded to whole units (they lie
+    on the line, which runs along x or y)."""
+    out = []
+    for k in range(len(pts)):
+        p, q = pts[k], pts[(k + 1) % len(pts)]
+        fp, fq = a * p[0] + b * p[1] - c, a * q[0] + b * q[1] - c
+        if fp <= 0:
+            out.append(p)
+        if (fp < 0 < fq) or (fq < 0 < fp):
+            t = fp / float(fp - fq)
+            out.append((int(round(p[0] + (q[0] - p[0]) * t)), int(round(p[1] + (q[1] - p[1]) * t))))
+    clean = []
+    for p in out:
+        if not clean or tuple(p) != tuple(clean[-1]):
+            clean.append(tuple(p))
+    if len(clean) > 1 and clean[0] == clean[-1]:
+        clean.pop()
+    return clean if len(clean) >= 3 else None
 
 
 def W(d, p):
@@ -174,19 +237,18 @@ class Silo:
         self.detail(shapes)
 
     # -- 2. the gantry's hatch --------------------------------------------------------------------------------------
-    def hatch_rail(self):
-        """The hole Valve's hatch left in the gantry over the ladder (x -19..19, y -245..-209, the ladder on its wall
-        side): a rail 44 high round its west and north sides, open on the east, where the ladder's top lets you off
-        (Valve's dismount 41 east of it; the other two are behind the rail and the engine passes over them)."""
-        z1, z2, rail, cap = 1408, 1452, "METAL/METALRAIL012C", "METAL/METALWALL031A"
-        self.detail([prism(self.d, [(-23, -251), (-21, -251), (-21, -205), (-23, -205)], z1, z2, rail, top=cap, bottom=cap),
-                     prism(self.d, [(-21, -207), (23, -207), (23, -205), (-21, -205)], z1, z2, rail, top=cap, bottom=cap)])
+    # The hole Valve's hatch left in the gantry over the ladder (x -19..19, y -245..-209) is open, as Valve's was with
+    # the hatch up: the rail put round it on 21 November is gone (the owner, 22 November: "why are there railings around
+    # the ladder? there isn't even enough room to walk between the railings and the control panel").
 
     # -- 3. the floors ----------------------------------------------------------------------------------------------
     def level_b_doors(self):
         """Level B's two fake doors (a slab painted as a door at each end of the hall by the lift) become working doors
         into the rest of the ring: Episode Two's silo door as every other in the bunker (SILO_DOOR), carried by an unseen
-        func_door on the doorway's slant, sliding 64 toward the shaft into the wall. Valve's keypads beside them stay."""
+        func_door on the doorway's slant, sliding 64 toward the shaft into the wall. Valve's keypads beside them stay.
+        The model's lever and handle are on its own +x side, so it slides toward its -x (as Valve's lab door does): the
+        model faces the other way from the slide, and the handle stays in the doorway (the owner, 22 November: "the
+        doors open the wrong direction for the model (the lever/handle portion are stuck in the wall)")."""
         f, v = self.f, self.v
         for k, (a, b, yaw) in enumerate((((-320, -331), (-250, -263), 45), ((-250, 263), (-320, 331), 315))):
             name = "lc_silo_levelb_door_%d" % (k + 1)
@@ -204,7 +266,7 @@ class Silo:
                 connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
             mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
             v.point("prop_dynamic_override", self.P(mx, my, 1152), {
-                "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(yaw), "parentname": name, "skin": "0",
+                "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(yaw + 180), "parentname": name, "skin": "0",
                 "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
@@ -312,7 +374,93 @@ class Silo:
         a = math.radians(112.5)
         self.prop("props_lab/frame002a", 345 * math.cos(a) - 12, 345 * math.sin(a) - 4, z + 83, 112.5, "s")
         self.prop("props_junk/garbage_coffeemug001a", 345 * math.cos(a) + 10, 345 * math.sin(a) + 6, z + 86, 40, "d")
-        self.light(-170, 390, z + 160, "253 230 159", 35)
+        # its ceiling light: a hanging tube lamp as in the office (its light had none), the light just under it
+        self.prop("props_wasteland/prison_flourescentlight001a", -170, 390, z + 156, 30, "f")
+        self.light(-170, 390, z + 116, "253 230 159", 40)
+        # pipes under its ceiling (508), where Valve's two bundles crossed it low (DROP_PROPS): a run of them from the
+        # shaft's wall to the outer wall, 157 over the floor at their lowest (a player stands 72 tall)
+        a = math.radians(120)
+        self.prop("props_pipes/pipeset08d_256_001a", 420 * math.cos(a), 420 * math.sin(a), z + 172, 120, "s")
+
+    def lever_box(self, pf):
+        """Valve's lever wall, moved whole from the hall outside the lab door to the office's side of the wall east of the
+        door (lever_in): the recess's striped lining and the plate at its back, the box with its two lights over it,
+        set in a block of the same concrete standing 12 out from the office's wall, so the recess is a recess; the
+        lever itself and the lights' sprites move with it (BunkerForest.silo). The hole they leave in the hall's wall
+        is filled with its concrete."""
+        from map_forest import pf_solid
+        v = self.v
+        det = ""
+        for i in LEVER_BRUSHES:
+            det += pf_solid(v, lever_in_sides(pf["solids"][i]["sides"]), 1, self.d, self.vis)[0]
+        v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
+        # the block round the recess (Valve's recess, 24 wide and 33 high, lands at x 249..273, z 362..395)
+        x1, x2, z1, z2 = 237, 292, 350, 411       # (to brush 43, which stands out from the wall at x 292)
+        hx1, hx2, hz1, hz2 = 249, 273, 362, 395
+        cw = "CONCRETE/CONCRETEWALL028A"
+        self.v.detail([wbox(self.d, b) for b in ((x1, 284, z1, hx1, 296, z2), (hx2, 284, z1, x2, 296, z2), (hx1, 284, z1, hx2, 296, hz1),
+                                                 (hx1, 284, hz2, hx2, 296, z2))], cw, vis=self.vis)
+        # the hole in the hall's wall, filled
+        v.world_box(wbox(self.d, LEVER_RECESS), cw, top=cw, bottom=cw, vis=self.vis)
+
+    GATE = (-156, -280, 383, 150)      # Valve's static gate in the bottom level's fence (its middle, its height, its yaw)
+
+    def fence_gate(self):
+        """The little gate in the fence across the bottom level's ring hall (Valve's interior_fence001g, a static prop
+        that never opened) swings now (the owner, 22 November: "the little gate doesn't open, can function as a
+        gate/door that swings open please?"): the same model on an unseen func_door_rotating hinged at its end by the
+        fence's long panel; Use swings it 90 degrees away from whoever opens it, and back. To the gamemode it is a door
+        like the bunker's (the cave's gate is made the same way)."""
+        v = self.v
+        cx, cy, cz, yaw = self.GATE
+        ux, uy = math.cos(math.radians(yaw + 90)), math.sin(math.radians(yaw + 90))      # along the leaf (the model's +y)
+        tx, ty = math.cos(math.radians(yaw)) * 2, math.sin(math.radians(yaw)) * 2         # half its thickness, through it
+        a, b = (cx - 23 * ux, cy - 23 * uy), (cx + 23 * ux, cy + 23 * uy)              # (b: by the long panel, the hinge)
+        leaf = [(int(round(p[0] + s * tx)), int(round(p[1] + s * ty))) for p, s in ((a, -1), (b, -1), (b, 1), (a, 1))]
+        if (leaf[1][0] - leaf[0][0]) * (leaf[2][1] - leaf[0][1]) - (leaf[1][1] - leaf[0][1]) * (leaf[2][0] - leaf[0][0]) < 0:
+            leaf = leaf[::-1]
+        name = "lc_silo_fence_gate"
+        hinge = self.P(b[0], b[1], 374)
+        brush_ent(v, "func_door_rotating", {
+            "targetname": name, "origin": "%d %d %d" % tuple(int(round(c)) for c in hinge), "distance": "90", "speed": "100", "wait": "-1", "lip": "0",
+            "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": "288", "noise1": "doors/gate_move1.wav", "rendermode": "0", "renderamt": "255",
+            "rendercolor": "255 255 255", "disableshadows": "1"}, [prism(self.d, leaf, 324, 426, MAT["nodraw"])], self.vis)
+        v.point("prop_dynamic", self.P(cx, cy, cz), {
+            "targetname": name + "_model", "model": "models/props_wasteland/interior_fence001g.mdl", "angles": "0 %d 0" % wyaw(yaw), "parentname": name,
+            "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"},
+            self.vis)
+
+    def lights(self):
+        """Light for the silo's rooms that had none: the bottom level's ring hall west of the bedroom (a hanging tube lamp
+        as the office's) and level A's near half, round the lift (Episode Two's tube lamps on the outer wall, as on the
+        far half). The bedroom's lamp is in bedroom()."""
+        warm = "253 230 159"
+        z = self.FLOOR
+        self.prop("props_wasteland/prison_flourescentlight001a", -400, 200, z + 156, 63, "f")
+        self.light(-400, 200, z + 116, warm, 60)
+        za = self.LEVEL_A
+        for ang in (120, 225):
+            r, a = self.WALL_A[ang], math.radians(ang)
+            self.prop("props_silo/wall_light", (r - 2) * math.cos(a), (r - 2) * math.sin(a), za + 120, ang + 180, "f")
+            self.light((r - 40) * math.cos(a), (r - 40) * math.sin(a), za + 130, warm, 90)
+
+    def soundscapes(self):
+        """The silo's sound (the owner, 22 November: "the soundscape in the silo is subtly clicking and cutting in and
+        out"). It had Valve's four soundscapes, each heard only 98 to 236 from where it stands, given three different
+        sounds when Valve's rocket ones were taken out: a lab's beeping equipment over the whole top of the shaft
+        (ep2_silo.techroom), the shut silo's hum in the lift and at the bottom, and a small room's tone in the hall by the
+        lab door; walking about, the game kept handing you from one to the next, each fading out as the next came in.
+        Now the whole shaft (the gantry, every floor, the lift, the ring halls) has one sound, the shut silo's hum
+        (SCAPE_SHAFT), from soundscapes that reach each floor; passing from one to another of them changes nothing. The
+        leader's office and bedroom have a concrete room's tone (SCAPE_ROOM), heard once you are inside, and the way out
+        the mine tunnel's (SCAPE_CAVE). Valve's four are left out (BunkerForest.silo)."""
+        G, B, A, F = self.GANTRY, self.LEVEL_B, self.LEVEL_A, self.FLOOR
+        for x, y, z, r, s in ((-420, 0, G + 72, 420, SCAPE_SHAFT), (0, -200, G + 72, 640, SCAPE_SHAFT), (-380, 0, B + 72, 380, SCAPE_SHAFT),
+                              (380, 0, B + 72, 420, SCAPE_SHAFT), (-380, 0, A + 72, 380, SCAPE_SHAFT), (380, 0, A + 72, 420, SCAPE_SHAFT),
+                              (-480, 0, A - 120, 120, SCAPE_SHAFT), (-480, 0, A + 128, 120, SCAPE_SHAFT), (-360, 0, F + 72, 420, SCAPE_SHAFT),
+                              (0, -200, F + 72, 520, SCAPE_SHAFT),
+                              (200, 430, F + 64, 200, SCAPE_ROOM), (-200, 400, F + 64, 200, SCAPE_ROOM)):
+            self.v.point("env_soundscape", self.P(x, y, z), {"soundscape": s, "radius": str(r), "StartDisabled": "0"}, self.f.vis("silo's wiring"))
 
 # ---------------------------------------------------------------------------------------------------------------------
 # 5. The leader's way out (the owner, 21 November: "have a secret escape in his room that goes to a small cave tunnel,
@@ -330,9 +478,9 @@ TW = 80                      # the tunnel's width (everywhere)
 LOW, CROUCH = 112, 48        # its height, and in the two squeezes (players stand 72 tall, crouch 36)
 F_EXIT = 828                 # the exit's floor: the forest's ground where its rim is lowest west of the silo (826 at the wall)
 CAVE_AT = (9060, 5328, F_EXIT)   # where the cave piece's anchor (its mouth's middle on the floor) goes; turned three quarters
-EXIT_HOLE = (9020, 9132, F_EXIT, F_EXIT + 80)     # the way out through the rock face: x from, to; z from, to (at y 5184)
-CUT = (8840, 9184)           # the forest's north wall is cut between these x (the face of rock fills it)
-FACE_TOP = F_EXIT + 176
+EXIT_HOLE = (9020, 9132, F_EXIT, F_EXIT + 80)     # the way out through the rock face: x from, to; z from, to (at y 5168 to 5200)
+CUT = (8720, 9184)           # the forest's north wall is cut between these x (as far west as the cave reaches; the exit fills it)
+FACE_TOP = F_EXIT + 212      # the top of the face of rock, of the wall behind it and of the seal over the roofs (sky above)
 CONTAINER = (8016, 5312, -1272, 9200, 6328, 1072)    # the sealed box round the tunnel (its walls 16 thick inside these)
 
 
@@ -385,6 +533,149 @@ def _taper(s, a, b, w=40.0):
     """1 in the middle of a..b, falling smoothly to 0 at both ends (within w)."""
     d = min(s - a, b - s) / w
     return 0.0 if d <= 0 else 1.0 if d >= 1 else 0.5 - 0.5 * math.cos(math.pi * d)
+
+
+# the tunnel's lamp cable (Escape.lamps): set off at least this far from a wall and this far under the roof, hooked up
+# every CABLE_SPAN or less with this slack (it sags about sqrt(3 * span * slack / 8): 14 over 128)
+CABLE_OFF, CABLE_DROP, CABLE_SPAN, CABLE_SLACK, CABLE_CLEAR = 8, 8, 128, 4, 4
+# where a run's roof bends (a ramp's ends, a squeeze's end), so the cable follows it
+CABLE_KINKS = {1: (9056, 8976, 8192), 5: (8192, 8976), 9: (8976, 8192), 13: (8192, 8516), 17: (8700,)}
+# its way, from the panel to the cave: ("leg", segment, wall, from, to) along a wall of a run ("n", "s", "e", "w"),
+# ("corner", segment, corner) round a turn's outer corner, ("cross", segment, at, wall) over the roof to the other wall
+# on the line where the run meets the next piece
+CABLE_WAY = (("leg", 0, "n", 9180, 9120), ("leg", 1, "n", 9120, 8128), ("corner", 2, "nw"), ("leg", 3, "w", 6200, 6136), ("corner", 4, "sw"),
+             ("leg", 5, "s", 8128, 9040), ("cross", 5, 9040, "n"), ("corner", 6, "ne"), ("leg", 7, "e", 6056, 5992), ("corner", 8, "se"),
+             ("leg", 9, "s", 9040, 8128), ("cross", 9, 8128, "n"), ("corner", 10, "nw"), ("leg", 11, "w", 5912, 5848), ("corner", 12, "sw"),
+             ("leg", 13, "s", 8128, 8580), ("cross", 13, 8580, "n"), ("corner", 14, "ne"), ("leg", 15, "e", 5768, 5460), ("cross", 15, 5460, "w"),
+             ("corner", 16, "sw"), ("leg", 17, "s", 8660, 8736))
+WALL_NORMAL = {"n": (0, -1), "s": (0, 1), "e": (-1, 0), "w": (1, 0)}      # (into the tunnel from that wall)
+
+
+def _wall_of(S, side):
+    x1, y1, x2, y2 = S["box"]
+    return {"n": y2, "s": y1, "e": x2, "w": x1}[side]
+
+
+def _wall_push(S, side, x, y, z):
+    """How far the tunnel's rock comes in from the nominal wall `side` of piece S at the point (x, y) of that wall and
+    height z: the same sum tunnel() hangs that wall's displaced face by (12 x noise x a sine over its height x its
+    ends' taper). Positive: into the tunnel."""
+    x1, y1, x2, y2 = S["box"]
+    ax, fl, hh = S["axis"], S["floor"], S["height"]
+    s = x if ax == "x" else y if ax == "y" else 0
+    t = (z - fl(s)) / float(hh(s))
+    w = math.sin(math.pi * min(1.0, max(0.0, t)))
+    ny = side in ("n", "s")
+    if ax == "x":
+        ends = _taper(x, x1, x2)
+    elif ax == "y":
+        ends = _taper(y, y1, y2)
+    else:
+        ends = _taper(x, x1, x2) if ny else _taper(y, y1, y2)
+    bx, by = (x, _wall_of(S, side)) if ny else (_wall_of(S, side), y)
+    return 12 * _noise(bx, by, z, 3) * w * ends
+
+
+def _closed(S):
+    sides = ("n", "s") if S["axis"] == "x" else ("e", "w") if S["axis"] == "y" else ("n", "s", "e", "w")
+    return [c for c in sides if c not in S["open"]]
+
+
+def _cable_nodes():
+    """The lamp cable's points (CABLE_WAY), each {x, y, z} and, at a lamp, its wall point and the wall's normal. Every
+    point is first set CABLE_OFF from its wall(s) and CABLE_DROP under the roof; then each span is walked (with its sag)
+    and where the rock's bulge would come within CABLE_CLEAR of it, both its ends are moved off that wall by as much."""
+    S = _segments()
+    roof = lambda i, s: S[i]["floor"](s) + S[i]["height"](s)
+    lamps = {}
+    for i, sg in enumerate(S):
+        if not sg["axis"]:
+            continue
+        x1, y1, x2, y2 = sg["box"]
+        a, b = (x1, x2) if sg["axis"] == "x" else (y1, y2)
+        n = max(1, int((b - a) // 400))
+        lamps[i] = [a + (k + 0.5) * (b - a) / n for k in range(n)]
+    nodes = []      # {"x", "y", "z", "walls": [(seg, side)], "lamp": side or None}
+
+    def add(x, y, z, walls, lamp=None):
+        if nodes and abs(nodes[-1]["x"] - x) < 1 and abs(nodes[-1]["y"] - y) < 1:
+            nodes[-1]["walls"] = list(set(nodes[-1]["walls"]) | set(walls))
+            nodes[-1]["lamp"] = nodes[-1]["lamp"] or lamp
+            return
+        nodes.append({"x": float(x), "y": float(y), "z": float(z), "walls": list(walls), "lamp": lamp})
+    for step in CABLE_WAY:
+        if step[0] == "leg":
+            _, i, side, s0, s1 = step
+            sg, (nx, ny) = S[i], WALL_NORMAL[step[2]]
+            wall = _wall_of(sg, side)
+            stops = sorted(set([s0, s1] + [k for k in CABLE_KINKS.get(i, ()) if min(s0, s1) < k < max(s0, s1)]
+                               + [l for l in lamps.get(i, ()) if min(s0, s1) <= l <= max(s0, s1)]), reverse=s0 > s1)
+            full = [stops[0]]
+            for s in stops[1:]:
+                m = int(math.ceil(math.hypot(s - full[-1], roof(i, s) - roof(i, full[-1])) / float(CABLE_SPAN)))
+                full += [full[-1] + (s - full[-1]) * q / float(m) for q in range(1, m)] + [s]
+            for s in full:
+                is_lamp = any(abs(s - l) < 0.5 for l in lamps.get(i, ()))
+                off = CABLE_OFF
+                if is_lamp:      # (through the middle of the lamp's cage, 6 out from the rock it is on)
+                    px, py = (s, wall) if side in ("n", "s") else (wall, s)
+                    off = _wall_push(sg, side, px, py, roof(i, s) - CABLE_DROP) + 6
+                x, y = (s, wall + ny * off) if side in ("n", "s") else (wall + nx * off, s)
+                add(x, y, roof(i, s) - CABLE_DROP, [(i, side)], side if is_lamp else None)
+        elif step[0] == "corner":
+            _, i, c = step
+            sg = S[i]
+            x1, y1, x2, y2 = sg["box"]
+            x = x1 + CABLE_OFF if "w" in c else x2 - CABLE_OFF
+            y = y1 + CABLE_OFF if "s" in c else y2 - CABLE_OFF
+            add(x, y, roof(i, 0) - CABLE_DROP, [(i, c[0]), (i, c[1])])
+        else:
+            _, i, at, side = step
+            sg = S[i]
+            wall = _wall_of(sg, side)
+            nx, ny = WALL_NORMAL[side]
+            x, y = (at, wall + ny * CABLE_OFF) if side in ("n", "s") else (wall + nx * CABLE_OFF, at)
+            add(x, y, roof(i, at) - CABLE_DROP, [(i, side)])
+    # set each point off from the rock by enough: walk every span (and its sag) through the pieces it passes
+    need = [dict() for _ in nodes]       # per node: {side: how much further off that wall}
+
+    def pieces_at(x, y):
+        return [k for k, sg in enumerate(S) if sg["box"][0] - 0.5 <= x <= sg["box"][2] + 0.5 and sg["box"][1] - 0.5 <= y <= sg["box"][3] + 0.5]
+    for k in range(len(nodes) - 1):
+        a, b = nodes[k], nodes[k + 1]
+        L = math.dist((a["x"], a["y"], a["z"]), (b["x"], b["y"], b["z"]))
+        sag = math.sqrt(3 * L * CABLE_SLACK / 8.0)
+        for q in range(11):
+            t = q / 10.0
+            x, y = a["x"] + (b["x"] - a["x"]) * t, a["y"] + (b["y"] - a["y"]) * t
+            zc = a["z"] + (b["z"] - a["z"]) * t - sag * 4 * t * (1 - t)
+            for i in pieces_at(x, y):
+                sg = S[i]
+                for side in _closed(sg):
+                    wall = _wall_of(sg, side)
+                    dist = (wall - y) if side == "n" else (y - wall) if side == "s" else (wall - x) if side == "e" else (x - wall)
+                    if dist > 40:
+                        continue
+                    for zz in (zc, zc + sag * 4 * t * (1 - t)):
+                        deficit = _wall_push(sg, side, x, y, zz) + CABLE_CLEAR - dist
+                        if deficit > 0:
+                            for nd_i in (k, k + 1):
+                                need[nd_i][side] = max(need[nd_i].get(side, 0), deficit)
+    for nd, extra in zip(nodes, need):
+        for side, e in extra.items():
+            nx, ny = WALL_NORMAL[side]
+            nd["x"] += nx * e
+            nd["y"] += ny * e
+        if nd["lamp"]:
+            # the lamp sits on the rock itself (where its bulge is) under the cable, facing into the tunnel
+            i, side = [w for w in nd["walls"] if w[1] == nd["lamp"]][0]
+            sg = S[i]
+            nx, ny = WALL_NORMAL[side]
+            wall = _wall_of(sg, side)
+            px, py = (nd["x"], wall) if side in ("n", "s") else (wall, nd["y"])
+            push = _wall_push(sg, side, px, py, nd["z"])
+            nd["lamp"], nd["normal"] = (px + nx * push, py + ny * push), (nx, ny)
+    return nodes
 
 
 class Escape:
@@ -493,18 +784,38 @@ class Escape:
                         self.disp_box((X2, Y1, zmin, X2 + T, Y2, zmax), "west", wall_pt(-1, 0), wall_alpha)
                     if "w" not in S["open"]:
                         self.disp_box((X1 - T, Y1, zmin, X1, Y2, zmax), "east", wall_pt(1, 0), wall_alpha)
-        # dim light along it: warm, steady, every 400 or so along each run, two thirds up (lesson valve-cave-lighting:
-        # no walking spot far from one)
-        for S in _segments():
-            if not S["axis"]:
-                continue
-            x1, y1, x2, y2 = S["box"]
-            a, b = (x1, x2) if S["axis"] == "x" else (y1, y2)
-            for k in range(max(1, int((b - a) // 400))):
-                s_ = a + (k + 0.5) * (b - a) / max(1, int((b - a) // 400))
-                x, y = (s_, (y1 + y2) / 2.0) if S["axis"] == "x" else ((x1 + x2) / 2.0, s_)
-                z = S["floor"](s_) + 0.6 * S["height"](s_)
-                self.v.point("light", (int(x), int(y), int(z)), {"_light": "255 190 120 35", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.s.lv)
+        self.lamps()
+
+    def lamps(self):
+        """The tunnel's lamps and their cable (the owner, 22 November: "please put little cage lights or whatever on the
+        walls with ropes/wires connecting them in a chain from the beginning to the end"). Dim warm light every 400 or so
+        along each run (lesson valve-cave-lighting: no walking spot far from one), each from a cage lamp
+        (props_c17/light_cagelight02_on) on the wall just under the roof; one cable (cable/cable.vmt, as Valve's) runs
+        from the panel to the cave along the wall's top corner, through every lamp, hooked up every 128 or less so it
+        hangs only a little; at each turn it goes round the outer corner, and where it must change walls it crosses
+        the roof on the line where two pieces meet (no bulge there). Each point is set off from the rock by how far the
+        rock's own bulges come in there (_wall_push), so the cable never runs inside the rock."""
+        v, lv, vis = self.v, self.s.lv, self.vis
+        nodes = _cable_nodes()
+        for k, nd in enumerate(nodes):
+            name = "lc_escape_cable_%d" % k
+            keys = {"targetname": name, "RopeMaterial": "cable/cable.vmt", "Slack": str(CABLE_SLACK), "Subdiv": "4", "Width": "1", "TextureScale": "1",
+                    "MoveSpeed": "64", "NoWind": "1", "Collide": "0", "Barbed": "0", "Breakable": "0", "Dangling": "0", "Type": "0"}
+            if k + 1 < len(nodes):
+                keys["NextKey"] = "lc_escape_cable_%d" % (k + 1)
+            if k == 0:
+                keys["PositionInterpolator"] = "2"
+            v.point("move_rope" if k == 0 else "keyframe_rope", (int(round(nd["x"])), int(round(nd["y"])), int(round(nd["z"]))), keys, vis)
+            if nd.get("lamp"):
+                (mx, my), (nx, ny) = nd["lamp"], nd["normal"]
+                yaw = int(round(math.degrees(math.atan2(ny, nx)))) % 360
+                v.point("prop_static", (int(round(mx)), int(round(my)), int(round(nd["z"]))), {
+                    "model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 %d 0" % yaw, "solid": "0", "skin": "0", "disableshadows": "1",
+                    "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+                v.point("light", (int(round(mx + nx * 16)), int(round(my + ny * 16)), int(round(nd["z"] - 18))), {
+                    "_light": "255 190 120 40", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, lv)
+        self.f.notes.append("the way out's tunnel: %d cage lamps on its walls, one cable through them (%d points) from the panel to the cave"
+                            % (sum(1 for n in nodes if n.get("lamp")), len(nodes)))
 
     # -- the exit ------------------------------------------------------------------------------------------------------
     def cave(self):
@@ -539,8 +850,16 @@ class Escape:
             text += v.editor(self.xvis, indent=t + "\t") + "%s}\n" % t
             v.world.append(text)
         kept = 0
+        # Valve's rocks along the wall that is ours here (the squeeze's hole is in it): the one leaning on it across the
+        # hole is left out and the two beside the hole moved off it (the owner, 22 November: "the rocks are blocking the
+        # way in from the tunnels and I can't crawl out of the tunnel"); keyed by where they lie in Valve's frame
+        rock_out = {(-112, -272, 16)}
+        rock_moved = {(16, -232, -8): (0, -32, 0), (-188, -272, 72): (0, 24, 0)}
         for p in pf["points"]:
             o = p["origin"]
+            here = tuple(int(round(c)) for c in o)
+            if here in rock_out:
+                continue
             if p["classname"] == "env_sprite" or "rock_forest" in p["keys"].get("model", "") or o[0] + o[1] > -16 or o[2] > 180:
                 continue        # (outside the mouth, up on the hillside, or the beacon's glow)
             keys = dict(p["keys"])
@@ -552,77 +871,112 @@ class Escape:
             if cls == "prop_physics":      # (still life: nothing in the leader's cache rolls about)
                 cls = "prop_dynamic_override"
                 keys.update({"solid": "6", "spawnflags": "0", "StartDisabled": "0"})
-            w = [a + b for a, b in zip(PF.rot(o, q), d)]
+            w = [a + b + m for a, b, m in zip(PF.rot(o, q), d, rock_moved.get(here, (0, 0, 0)))]
             v.point(cls, (int(round(w[0])), int(round(w[1])), int(round(w[2]))), keys, self.xvis if cls != "light" else self.s.lv)
             kept += 1
         return kept
 
     def exit_room(self):
-        """What joins the cave to the tunnel and to the forest: its west wall with the last squeeze's hole; the floor
-        under its north half; a porch from its mouth to the forest's wall; the face of rock on the forest's side (on the
-        rim, where the wall is cut) with the way out through it; the big rock that shuts it; the lever inside."""
+        """What joins the cave to the tunnel and to the forest, rebuilt shut tight (the owner, 22 November: "that 'hidden'
+        rock entrance has TONS of holes and gaps and I don't even see the button/lever to open/slide the rock out of the
+        way? It's kind of just a disaster"). Before, the forest's wall was cut only from x 8840, so the cave's south-west
+        corner stood inside the wall's sky; the sky over the cut came down to 1004, into the porch under its roof (1020);
+        and the face of rock and the porch's walls were displaced faces with nothing behind them (displaced faces seal
+        nothing and are drawn from one side only), so you saw the sky and the void through and behind them. Now, where the
+        wall is cut (CUT: as far west as the cave reaches), everything from the sealed floor up to the sky (FACE_TOP) is
+        solid world brushes but the room's air, faced with rock wherever they can be seen: a wall 16 thick on the forest's
+        side with the way out through it, a wall behind the porch's east side, a seal over the cave's and the porch's
+        roofs and one behind the cave's west wall. The displaced rock (the face toward the forest, the porch's walls and
+        roof, the cave's west wall) hangs in front of them, so a crack between two displaced faces shows rock. The rock
+        that shuts the way out is a plug that fills the hole exactly (a func_button only the lever moves, rock-faced both
+        sides), with Valve's forest boulder riding it outside; it slides 176 west into the wall, far enough for the boulder
+        to clear the hole. The lever is on the porch's east wall right by the hole, on a striped plate under a lamp."""
         f, v, F = self.f, self.v, F_EXIT
-        cliff = "nature/blendcliffdirt001a"
-        wall_mat = "nature/blendrockdirt_tunnel03a"
+        cliff, rock, dirt = "nature/blendcliffdirt001a", "nature/blendrockdirt_tunnel03a", "nature/blendgrassdirt01"
+        nd, sky = MAT["nodraw"], MAT["sky"]
+        T = FACE_TOP
+        hx1, hx2, hz1, hz2 = EXIT_HOLE
+        x1, x2 = CUT
 
-        def bulge(axis_n, amp, edges):
-            """A displaced face pushed along axis_n (a unit vector) by noise, nothing on the box's own edges."""
+        def bulge(axis_n, amp, edges, calm=None):
+            """A displaced face pushed along axis_n (a unit vector) by noise, nothing on the box's own edges (nor round
+            calm: (y1, y2, z1, z2), flat for the lever's plate and lamp, easing out over 24)."""
             (ea1, ea2, ia), (eb1, eb2, ib) = edges
 
             def f_(p):
                 w = _taper(p[ia], ea1, ea2, 32) * _taper(p[ib], eb1, eb2, 32)
+                if calm:
+                    cy1, cy2, cz1, cz2 = calm
+                    dy, dz = max(cy1 - p[1], 0, p[1] - cy2), max(cz1 - p[2], 0, p[2] - cz2)
+                    w *= min(1.0, math.hypot(dy, dz) / 24.0)
                 k = amp * _noise(p[0], p[1], p[2], 5) * w
                 return (p[0] + axis_n[0] * k, p[1] + axis_n[1] * k, p[2] + axis_n[2] * k)
             return f_
+        # -- the solid shell (it seals; rock where it can be seen) --
+        # under all of it, and the sky over it
+        v.world_box((x1, 5184, f.zb, x2, 5312, F - 17), nd, vis=self.xvis)
+        v.world_box((x1, 5184, T, x2, 5312, f.lid), sky, sky, sky, vis=self.xvis)
+        # the wall on the forest's side (5184 to 5200) with the way out through it: the face of rock hangs in front of it
+        face_side = {"south": cliff, "north": rock}
+        for b, extra in (((x1, 5184, F - 17, hx1, 5200, T), {"east": cliff}), ((hx2, 5184, F - 17, x2, 5200, T), {"west": cliff}),
+                         ((hx1, 5184, F - 17, hx2, 5200, hz1), {"top": dirt}), ((hx1, 5184, hz2, hx2, 5200, T), {"bottom": cliff})):
+            v.world_box(b, nd, vis=self.xvis, faces=dict(face_side, **extra))
+        # behind the cave's west wall where the forest's wall was (the cave's west wall is displaced: its cracks show this)
+        v.world_box((x1, 5200, F - 17, 8724, 5312, T), nd, vis=self.xvis, faces={"east": rock})
+        # behind the porch's east wall and its north-east corner
+        v.world_box((9172, 5200, F - 17, x2, 5424, T), nd, vis=self.xvis, faces={"west": rock})
+        v.world_box((9140, 5408, F - 17, 9172, 5424, T), nd, vis=self.xvis, faces={"south": rock})
+        # over the cave's and the porch's roofs (their displaced roofs hang under it)
+        v.world_box((x1, 5200, F + 208, x2, 5424, T), nd, vis=self.xvis, faces={"bottom": rock})
+        # -- the displaced rock --
         flat_alpha = lambda p: 120
         floor_alpha = lambda p: 230
         # the cave's west wall (ours), on the line of Valve's south wall: three pieces round the squeeze's hole
-        for (y1, y2, z1, z2) in ((5192, 5380, F - 8, F + 200), (5460, 5656, F - 8, F + 200), (5380, 5460, F + 48, F + 200)):
-            self.disp_box((8724, y1, z1, 8740, y2, z2), "east", bulge((1, 0, 0), 10, ((y1, y2, 1), (z1, z2, 2))), lambda p: 60, mat=wall_mat, vis=self.xvis)
+        for (y1, y2, z1, z2) in ((5192, 5380, F - 8, F + 208), (5460, 5656, F - 8, F + 208), (5380, 5460, F + 48, F + 208)):
+            self.disp_box((8724, y1, z1, 8740, y2, z2), "east", bulge((1, 0, 0), 10, ((y1, y2, 1), (z1, z2, 2))), lambda p: 60, mat=rock, vis=self.xvis)
         # the floor under the cave's north half and the porch (Valve's hillside floor in their map)
-        self.disp_box((8932, 5184, F - 17, 9156, 5712, F - 1), "top", bulge((0, 0, 1), 3, ((8932, 9156, 0), (5184, 5712, 1))), floor_alpha, mat="nature/blendgrassdirt01", sides={"south": wall_mat}, vis=self.xvis)
-        # the porch: from the cave's mouth to the forest's wall, as high as the cave (Valve's roof covers most of it)
-        # (its west side is the end of Valve's own wall, which ran out to the mouth)
-        for box, face, n in (((9156, 5184, F, 9172, 5392, F + 192), "west", (-1, 0, 0)), ((9140, 5392, F, 9172, 5408, F + 192), "south", (0, -1, 0))):
+        self.disp_box((8932, 5200, F - 17, 9156, 5712, F - 1), "top", bulge((0, 0, 1), 3, ((8932, 9156, 0), (5200, 5712, 1))), floor_alpha, mat=dirt, vis=self.xvis)
+        # the porch: from the cave's mouth to the wall on the forest's side, as high as the cave (Valve's roof covers most
+        # of it); its east wall flat where the lever's plate and lamp are
+        lever_calm = (5208, 5264, F + 16, F + 140)
+        for box, face, n, calm in (((9156, 5200, F, 9172, 5392, F + 192), "west", (-1, 0, 0), lever_calm), ((9140, 5392, F, 9172, 5408, F + 192), "south", (0, -1, 0), None)):
             ax_ = (1, 2) if face in ("west", "east") else (0, 2)
-            self.disp_box(box, face, bulge(n, 9, ((box[ax_[0]], box[ax_[0] + 3], ax_[0]), (box[2], box[5], 2))), flat_alpha, mat=wall_mat, vis=self.xvis)
-        for box in ((9124, 5184, F + 192, 9172, 5392, F + 208), (8980, 5184, F + 192, 9124, 5200, F + 208)):
-            self.disp_box(box, "bottom", bulge((0, 0, -1), 6, ((box[0], box[3], 0), (box[1], box[4], 1))), lambda p: 0, mat=wall_mat, vis=self.xvis)
-        # the face of rock on the forest's side, round the way out (hole x 9024..9128, z F..F+76): pushed toward the
-        # forest by noise, straight along every edge, so that its three pieces meet
-        hx1, hx2, hz1, hz2 = EXIT_HOLE
-        for (x1, x2, z1, z2, seen) in ((CUT[0], hx1, F - 48, FACE_TOP, ("west", "east")), (hx2, CUT[1], F - 48, FACE_TOP, ("west", "east")), (hx1, hx2, hz2, FACE_TOP, ("bottom",))):
-            self.disp_box((x1, 5168, z1, x2, 5184, z2), "south", bulge((0, -1, 0), 22, ((x1, x2, 0), (z1, z2, 2))), lambda p: 40, mat=cliff,
-                          sides=dict((n, cliff) for n in seen), vis=self.xvis)
-        # the wall's cut: sealed under the porch, sky over the face
-        nd, sky = MAT["nodraw"], MAT["sky"]
-        v.world_box((CUT[0], 5184, f.zb, CUT[1], 5312, F - 17), nd, vis=self.xvis)
-        v.world_box((CUT[0], 5184, FACE_TOP, CUT[1], 5312, f.lid), sky, sky, sky, vis=self.xvis)
-        # the rock: a func_button that only the lever moves (no use, no touch, no damage: nothing outside opens it), a
-        # forest boulder (props_foliage/rock_forest04, drawn a third larger) riding it, filling the hole; it slides 160
-        # west to open, at 40 a second (4 s), and stops against whoever is in its way. The unseen brush is what blocks.
-        rock, lever = "lc_escape_rock", "lc_escape_lever"
+            self.disp_box(box, face, bulge(n, 9, ((box[ax_[0]], box[ax_[0] + 3], ax_[0]), (box[2], box[5], 2)), calm), flat_alpha, mat=rock, vis=self.xvis)
+        box = (9124, 5200, F + 192, 9172, 5392, F + 208)
+        self.disp_box(box, "bottom", bulge((0, 0, -1), 6, ((box[0], box[3], 0), (box[1], box[4], 1))), lambda p: 0, mat=rock, vis=self.xvis)
+        # the face of rock on the forest's side, round the way out: pushed toward the forest by noise, straight along
+        # every edge, so that its four pieces meet; its ends, its top and the hole's sides are cliff too
+        for (bx1, bx2, z1, z2, seen) in ((x1, hx1, F - 48, T, ("west", "east", "top")), (hx2, x2, F - 48, T, ("west", "east", "top")), (hx1, hx2, hz2, T, ("bottom", "top")),
+                                         (hx1, hx2, F - 48, hz1, ("top",))):
+            self.disp_box((bx1, 5168, z1, bx2, 5184, z2), "south", bulge((0, -1, 0), 22, ((bx1, bx2, 0), (z1, z2, 2))), lambda p: 40, mat=cliff,
+                          sides=dict((s_, cliff) for s_ in seen), vis=self.xvis)
+        # -- the rock: a plug that fills the hole (2 inside each face), only the lever moves it (no use, touch or damage),
+        # Valve's forest boulder (props_foliage/rock_forest04, drawn a third larger) riding it outside; it slides 176 west
+        # into the wall at 44 a second (4 s) and stops against whoever is in its way --
+        rock_n, lever = "lc_escape_rock", "lc_escape_lever"
         mid = (hx1 + hx2) // 2
-        v.brush_entity("func_button", {"targetname": rock, "movedir": "0 180 0", "speed": "40", "lip": "38", "wait": "-1", "spawnflags": "0", "sounds": "0",
-                                       "health": "0", "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255"},
-                       [(mid - 100, 5100, F - 22, mid + 100, 5166, F + 84)], nd, self.xvis)
-        v.point("prop_dynamic_override", (mid, 5150, F + 30), {
-            "targetname": rock + "_model", "model": "models/props_foliage/rock_forest04.mdl", "angles": "0 90 0", "parentname": rock, "solid": "0", "skin": "0",
+        v.brush_entity("func_button", {"targetname": rock_n, "movedir": "0 180 0", "speed": "44", "lip": str(hx2 - hx1 - 176), "wait": "-1", "spawnflags": "0",
+                                       "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
+                       [((hx1, 5170, hz1, hx2, 5198, hz2), {"north": rock, "south": cliff})], cliff, self.xvis)
+        v.point("prop_dynamic_override", (mid, 5150, F + 24), {
+            "targetname": rock_n + "_model", "model": "models/props_foliage/rock_forest04.mdl", "angles": "0 90 0", "parentname": rock_n, "solid": "0", "skin": "0",
             "disableshadows": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0", "renderamt": "255",
             "rendercolor": "255 255 255", "modelscale": "1.3", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
             "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.xvis)
-        v.point("ambient_generic", ((hx1 + hx2) // 2, 5190, F + 40), {"targetname": rock + "_sound", "message": "physics/concrete/rock_scrape_rough_loop1.wav",
-                                                                      "health": "10", "pitch": "90", "pitchstart": "90", "radius": "1500", "spawnflags": "16"}, self.xvis)
-        # the lever: Valve's, as in the leader's office (a func_rot_button pulled down 45 degrees; Use pulls it and
-        # pushes it back), on the porch's east wall facing in
-        lx, ly, lz = 9155, 5300, F + 52
+        v.point("ambient_generic", (mid, 5210, F + 40), {"targetname": rock_n + "_sound", "message": "physics/concrete/rock_scrape_rough_loop1.wav",
+                                                         "health": "10", "pitch": "90", "pitchstart": "90", "radius": "1500", "spawnflags": "16"}, self.xvis)
+        # -- the lever: Valve's, as in the leader's office (a func_rot_button pulled down 45 degrees; Use pulls it and
+        # pushes it back), on a striped plate on the porch's east wall right by the hole, facing in, at hand height,
+        # under a cage lamp --
+        lx, ly, lz = 9150, 5236, F + 52
+        v.detail([(9154, ly - 20, F + 24, 9156, ly + 20, F + 84)], "METAL/METALWALL031A", vis=self.xvis, faces={"west": "DEV/DEV_HAZZARDSTRIPE01A"})
         v.brush_entity("func_rot_button", {"targetname": lever, "angles": "0 0 0", "distance": "-45", "speed": "35", "wait": "-1", "spawnflags": str(1024 | 32 | 128),
                                            "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
                                            "origin": "%d %d %d" % (lx, ly, lz)},
-                       [(lx - 9, ly - 4, lz, lx + 6, ly + 4, lz + 16)], nd, self.xvis,
-                       connections=[("OnPressed", lever + "_sound", "PlaySound", "", 0), ("OnIn", rock, "PressIn", "", 0.3), ("OnIn", rock + "_sound", "PlaySound", "", 0.3),
-                                    ("OnIn", rock + "_sound", "StopSound", "", 4.3), ("OnOut", rock, "PressOut", "", 0.3), ("OnOut", rock + "_sound", "PlaySound", "", 0.3),
-                                    ("OnOut", rock + "_sound", "StopSound", "", 4.3)])
+                       [(lx - 9, ly - 4, lz, lx + 4, ly + 4, lz + 16)], nd, self.xvis,
+                       connections=[("OnPressed", lever + "_sound", "PlaySound", "", 0), ("OnIn", rock_n, "PressIn", "", 0.3), ("OnIn", rock_n + "_sound", "PlaySound", "", 0.3),
+                                    ("OnIn", rock_n + "_sound", "StopSound", "", 4.3), ("OnOut", rock_n, "PressOut", "", 0.3), ("OnOut", rock_n + "_sound", "PlaySound", "", 0.3),
+                                    ("OnOut", rock_n + "_sound", "StopSound", "", 4.3)])
         for model, ang, parent in (("panel_leverbase001a", "0 180 0", None), ("panel_leverhandle001a", "15 180 0", lever)):
             keys = {"model": "models/props_wasteland/%s.mdl" % model, "angles": ang, "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1",
                     "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"}
@@ -631,6 +985,9 @@ class Escape:
             v.point("prop_dynamic", (lx, ly, lz), keys, self.xvis)
         v.point("ambient_generic", (lx, ly, lz + 10), {"targetname": lever + "_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100",
                                                        "pitchstart": "100", "radius": "1250", "spawnflags": "48"}, self.xvis)
+        v.point("prop_static", (9156, ly, F + 120), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 180 0", "solid": "0", "skin": "0",
+                                                    "disableshadows": "1", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, self.xvis)
+        v.point("light", (9138, ly, F + 100), {"_light": "255 196 130 50", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.s.lv)
         v.point("light", (9080, 5260, F + 120), {"_light": "255 196 130 45", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.s.lv)
 
     def container(self):
@@ -674,6 +1031,38 @@ def _escape(self):
                    connections=[("OnPressed", name + "_sound", "PlaySound", "", 0)])
     v.point("ambient_generic", self.P(-64, 490, 344), {"targetname": name + "_sound", "message": "doors/doormove2.wav", "health": "8", "pitch": "80", "pitchstart": "80",
                                                        "radius": "600", "spawnflags": "48"}, self.vis)
+    # the hints (the owner, 22 November: "the escape tunnel needs some sort of hint as to the fact that there is an
+    # entrance there ... like maybe a lambda spraypainted on the little door and a switch somewhere in the room? Maybe you
+    # could steal the little crooked picture from Dr Kleiner's office"): Half-Life 2's lambda sprayed on the panel (it
+    # rides it), and Kleiner's crooked picture as d1_trainstation_05 has it (props_lab/frame001a, 9 degrees off true, on
+    # an unseen func_door_rotating 2 by 2 by 4 that turns it about its own face) on the bedroom's west wall at eye
+    # height. Use straightens it and the panel slides open; Use again tilts it back and the panel shuts. The panel's own
+    # Use still works from both sides (from the tunnel, coming back).
+    v.point("infodecal", self.P(-64, 500, 344), {"texture": "decals/lambdaspray_1a", "LowPriority": "0"}, self.vis)
+    (ax, ay), (bx, by) = self.BED_WALL
+    ln = math.hypot(bx - ax, by - ay)
+    ux, uy = (bx - ax) / ln, (by - ay) / ln
+    nx, ny = uy, -ux
+    if nx * (0 - ax) + ny * (400 - ay) < 0:      # (into the bedroom)
+        nx, ny = -nx, -ny
+    px, py = ax + 98 * ux + nx, ay + 98 * uy + ny
+    facing = int(round(math.degrees(math.atan2(ny, nx))))
+    pic = "lc_silo_crooked_picture"
+    at = tuple(int(round(c)) for c in self.P(px, py, z + 60))
+    brush_ent(v, "func_door_rotating", {
+        "targetname": pic, "origin": "%d %d %d" % at, "angles": "0 %d 0" % wyaw(facing), "distance": "9", "speed": "100", "wait": "-1", "lip": "0", "dmg": "0",
+        "health": "0", "forceclosed": "0", "spawnflags": str(2 | 8 | 16 | 32 | 64 | 256 | 512), "noise1": "physics/wood/wood_box_impact_soft1.wav",
+        "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
+        [[([(at[0] - 1, at[1] - 1, at[2] - 2), (at[0] + 1, at[1] - 1, at[2] - 2), (at[0] + 1, at[1] + 1, at[2] - 2), (at[0] - 1, at[1] + 1, at[2] - 2)], MAT["nodraw"]),
+          ([(at[0] - 1, at[1] - 1, at[2] + 2), (at[0] + 1, at[1] - 1, at[2] + 2), (at[0] + 1, at[1] + 1, at[2] + 2), (at[0] - 1, at[1] + 1, at[2] + 2)], MAT["nodraw"])]
+         + [([(xa, ya, at[2] - 2), (xb, yb, at[2] - 2), (xb, yb, at[2] + 2), (xa, ya, at[2] + 2)], MAT["nodraw"])
+            for (xa, ya), (xb, yb) in (((at[0] - 1, at[1] - 1), (at[0] + 1, at[1] - 1)), ((at[0] + 1, at[1] - 1), (at[0] + 1, at[1] + 1)),
+                                       ((at[0] + 1, at[1] + 1), (at[0] - 1, at[1] + 1)), ((at[0] - 1, at[1] + 1), (at[0] - 1, at[1] - 1)))]],
+        self.vis, connections=[("OnOpen", name, "PressIn", "", 0), ("OnOpen", name + "_sound", "PlaySound", "", 0),
+                               ("OnClose", name, "PressOut", "", 0), ("OnClose", name + "_sound", "PlaySound", "", 0)])
+    v.point("prop_dynamic", at, {"targetname": pic + "_model", "model": "models/props_lab/frame001a.mdl", "angles": "0 %d 9" % wyaw(facing), "parentname": pic,
+                                 "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
+                                 "spawnflags": "0"}, self.vis)
     # an areaportal in the opening, behind the panel (always open): the way out joins the bunker to the forest a second
     # way, so without it the main door's areaportal no longer parts two areas (the owner's compile of 22 November:
     # "Brush 2754: areaportal brush doesn't touch two areas ... AREAPORTAL LEAKED", 2754 being lc_bunker_portal)
@@ -688,6 +1077,9 @@ def _escape(self):
     kept = e.cave()
     e.exit_room()
     e.container()
+    # the way out's sound: the mine tunnel's (Ravenholm's), from the first squeeze and in the cave (soundscapes())
+    for at, r in (((9100, 6240, -1210), 240), ((8880, 5450, F_EXIT + 72), 400)):
+        v.point("env_soundscape", at, {"soundscape": SCAPE_CAVE, "radius": str(r), "StartDisabled": "0"}, self.f.vis("silo's wiring"))
     self.f.notes.append("the leader's way out: a secret panel in his bedroom, a crouch squeeze, a cave tunnel of four ramps up in switchbacks and one south, "
                         "a squeeze into Episode Two's cache cave (%d of its things) on the forest's north rim, and a rock a lever inside slides away" % kept)
 
