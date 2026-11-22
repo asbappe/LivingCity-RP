@@ -244,6 +244,14 @@ class Mod:
     def blocked(self, u1, v1, u2, v2):
         self.b.blocked.append(self.fr.rect(u1, v1, u2, v2))
 
+    def street_side(self):
+        """The module's own side the chain's street runs along (+1 its left bank, -1 its right), or 0 with no street."""
+        up = self.b.upper
+        if not up:
+            return 0
+        s = 1 if up == "left" else -1
+        return -s if self.fr.flip else s
+
     def no_bank(self, u1, v1, u2, v2):
         self.b.no_bank.append(self.fr.rect(u1, v1, u2, v2))
 
@@ -2031,6 +2039,36 @@ def read_layout(path):
     return lay
 
 
+def group_sheds(elems):
+    """A shed over modules ("NAME shed" on each of a few lines one after another): the street over them becomes one shed
+    as long as they are together, as a "shed" line's own (the canal and the modules below are built as they are). Each
+    straight run's sheds are then its train's first and second, in order."""
+    out, group = [], []
+
+    def close():
+        if group:
+            f0 = group[0]["frame"]
+            total = sum(g["length"] for g in group)
+            out.append({"kind": "leg", "frame": Frame(f0.x, f0.y, f0.rot, total), "length": total, "lifted": False, "stairs": False,
+                        "tag": "the shed over " + ", ".join(g["tag"] for g in group), "shed": "start"})
+            del group[:]
+    for e in elems:
+        if e.get("shed_part"):
+            group.append(e)
+            continue
+        close()
+        out.append(e)
+    close()
+    n = 0
+    for e in out:
+        if e["kind"] != "leg":
+            n = 0
+        elif e.get("shed"):
+            n += 1
+            e["shed"] = "start" if n == 1 else "end"
+    return out
+
+
 def build_chain(lay, args):
     upper = lay.get("upper")
     b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper)
@@ -2079,8 +2117,15 @@ def build_chain(lay, args):
         w_in, w_out = widths(name)
         if w_in != width:
             b.problems.append("%s starts %d wide, but the canal there is %d wide: put a %s before it" % (name, w_in, width, "widen" if w_in > width else "narrow"))
+        # (beside a street the wide canal widens on the far side alone: its wall on the street's side runs straight on,
+        # so the street and its tracks pass the wide stretch without a bend; the modules between are moved over to fit)
+        one = None
         if upper and max(w_in, w_out) > CANAL_W:
-            b.problems.append("%s is wide: the wide canal cannot run beside a street" % name)
+            if name in ("widen", "narrow"):
+                one = "oneleft" if s < 0 else "oneright"
+                opt = opt + [one]
+            elif name in ("left", "right", "widetee"):
+                b.problems.append("%s: the wide canal beside a street cannot turn or branch (its one-sided widening would break)" % name)
         width = w_out
         if (name == "straight" or (len(info) > 3 and info[3].get("stretch"))) and opt and opt[0].isdigit():
             length = int(opt[0])      # (a module that can be any length: "tunnel 1536")
@@ -2102,14 +2147,17 @@ def build_chain(lay, args):
             if name == "shed":
                 shed_n += 1
                 e["shed"] = "start" if shed_n == 1 else "end"
+            elif "shed" in opt:
+                e["shed_part"] = True      # (a shed on the street over this module: consecutive ones make one shed)
             elems.append(e)
         elif "up" in opt:
             b.problems.append("%s is to be lifted to the street (\"up\"), but the layout has no street: add a line \"upper left\" or \"upper right\"" % tag)
+        wide_dv = (-s * (WIDE_W - CANAL_W) // 2) if (upper and w_in > CANAL_W and w_out > CANAL_W) else 0     # (between a one-sided widen and narrow)
         if lifted:      # (the module is built on the street; the canal passes below it as a plain stretch)
             m_straight(Mod(b, Frame(x, y, rot, length), "%d the canal under %s" % (n, tag)), ["bare"])
             fr = Frame(x, y, rot, length, flip != (s < 0), shift, dv=s * map_corridor.LIFT_V, dz=map_corridor.LIFT_Z)
         else:
-            fr = Frame(x, y, rot, length, flip, shift)
+            fr = Frame(x, y, rot, length, flip, shift, dv=wide_dv)
         mod = Mod(b, fr, "%d %s" % (n, tag))
         if name not in ("straight", "jog", "tee", "shed"):
             mod.view(40, 0, F, 0, 4, "coming in")
@@ -2119,7 +2167,7 @@ def build_chain(lay, args):
             b.labels.append(fr.pt(length // 2, 0) + (tag,))
         x, y = Frame(x, y, rot, length).pt(length, shift)
     if upper:
-        map_corridor.lay(b, elems, upper, lay.get("cars", 2))
+        map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))

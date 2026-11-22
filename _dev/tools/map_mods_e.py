@@ -27,9 +27,9 @@ def wide_walls(m, u1, u2):
     m.upright(u1, WHALF - 8, u2, WHALF + 64)
 
 
-def odds(m, u1, u2, v, seed):
+def odds(m, u1, u2, v, seed, mid=0):
     """What the wide canal's floor collects: odds and ends from CANAL_JUNK, puddles and trash, the same every build."""
-    m.scatter(u1 + 64, -v, u2 - 64, v, max(1, (u2 - u1) // 384), seed, kinds=CANAL_JUNK)
+    m.scatter(u1 + 64, mid - v, u2 - 64, mid + v, max(1, (u2 - u1) // 384), seed, kinds=CANAL_JUNK)
     canal_grime(m, u1, u2, seed + 1)
 
 
@@ -38,11 +38,39 @@ def seed_of(m, k):
     return k + (x * 7 + y * 13) % 997
 
 
+def one_side(m, opt):
+    """+1 or -1: the side (module's v) a one-sided widening goes to ("oneleft": the world's left of the way the chain
+    runs; the chain asks for it beside a street, so the wall on the street's side runs straight on); 0 if both."""
+    d = 1 if "oneleft" in opt else -1 if "oneright" in opt else 0
+    return -d if m.fr.flip else d
+
+
+def one_sided(m, d, wide_end, step_at, u_wide, wall_u):
+    """widen (wide_end "hi") or narrow ("lo") to one side d: the street's side straight, the far side out 256 then 512."""
+    near, far = (-HALF, HALF) if d > 0 else (HALF, -HALF)
+
+    def span(out):
+        return (min(near, far + d * out), max(near, far + d * out))
+    for (u1, u2), out in zip(step_at, (0, 256, 512) if wide_end == "hi" else (512, 256, 0)):
+        a, c = span(out)
+        m.open(u1, a, u2, c)
+    a, c = span(512)
+    m.upright(wall_u[0], a - 64, wall_u[1], a + 8)
+    m.upright(wall_u[0], c - 8, wall_u[1], c + 64)
+    odds(m, u_wide[0], u_wide[1], 300, seed_of(m, 4100 if wide_end == "hi" else 4200), mid=d * 256)
+
+
 def m_widen(m, opt):
     """The canal widens from 512 to 1024 (Valve's airboat canals' width): 256 of the city canal, then its walls step out
     128 each side, and again 256 on, so it is 1024 wide for its last 256. The banks wrap round both steps (a slope up
     each step's face, a quarter pyramid on each corner) and stop against the wide canal's upright walls. The next
-    module must be a wide one ("wide", "widetee", a turn) or "narrow"."""
+    module must be a wide one ("wide", "widetee", a turn) or "narrow". Beside a street the chain makes it one-sided
+    ("oneleft", "oneright"): the street's wall runs straight on, the far one steps out 256 and 256 again."""
+    d = one_side(m, opt)
+    if d:
+        one_sided(m, d, "hi", ((0, 256), (256, 512), (512, 768)), (512, 768), (520, 832))
+        m.soundscape(SCAPES["courtyard"], 512, d * 256, F, radius=900)
+        return
     m.open(0, -HALF, 256, HALF)
     m.open(256, -HALF - 128, 512, HALF + 128)
     m.open(512, -WHALF, 768, WHALF)
@@ -53,7 +81,12 @@ def m_widen(m, opt):
 
 def m_narrow(m, opt):
     """The wide canal narrows back to 512: the mirror of "widen" (256 of the wide canal, two steps in, 256 of the city
-    canal), the banks starting again round the steps."""
+    canal), the banks starting again round the steps. One-sided beside a street, as "widen"."""
+    d = one_side(m, opt)
+    if d:
+        one_sided(m, d, "lo", ((0, 256), (256, 512), (512, 768)), (0, 256), (-64, 248))
+        m.soundscape(SCAPES["courtyard"], 256, d * 256, F, radius=900)
+        return
     m.open(0, -WHALF, 256, WHALF)
     m.open(256, -HALF - 128, 512, HALF + 128)
     m.open(512, -HALF, 768, HALF)

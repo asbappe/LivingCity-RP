@@ -1966,6 +1966,10 @@ def m_aqueduct(m, opt):
     con = MAT["beam"]
     m.open(0, -256, 1024, 256)
     for s in (1, -1):
+        if s == m.street_side():      # (the street runs over this bank at the trough's own height: the trough ends in a wall there)
+            m.det([(464, 256 * s - (8 if s > 0 else 0), bed - 16, 576, 256 * s + (0 if s > 0 else 8), top)], con)
+            m.taken(416, 192 if s > 0 else -256, F, 608, 256 if s > 0 else -192, b.rim)
+            continue
         v1, v2 = (256, 320) if s > 0 else (-320, -256)
         c1, c2 = (256, 448) if s > 0 else (-448, -256)
         m.low(448, c1, 576, c2, bed + 112, floor=bed)                      # (as high as the canal's bars that shut it; on a way into the wall)

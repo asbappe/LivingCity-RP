@@ -89,7 +89,12 @@ class CorridorPlan(Plan):
                 continue
             vmf.world_box(self.box(x1, y1, self.base, x2, y2, spec[1]), self.floor_side, top=spec[2], vis=self.vis)
             if kind == "open":
-                vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
+                lid = spec[3] if len(spec) > 3 and spec[3] else self.sky      # (a square with a sky of its own, higher: a church's yard)
+                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
+            elif kind == "cellar":      # (a room under a yard open to the sky: Plan's own)
+                ceil, upper, upper_mat, lid = spec[3], spec[4], spec[5], spec[6]
+                vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
+                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
             elif kind == "under":
                 vmf.world_box(self.box(x1, y1, spec[3], x2, y2, STREET), cw, top=spec[4], bottom=self.ceiling, vis=self.vis)
                 vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
@@ -98,6 +103,7 @@ class CorridorPlan(Plan):
                 if top > spec[3]:
                     vmf.world_box(self.box(x1, y1, spec[3], x2, y2, top), brick if spec[5] and spec[3] >= STREET else cw, top=cw, bottom=self.ceiling, vis=self.vis)
                 vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, bottom=None if top > spec[3] else self.ceiling, vis=self.vis)
+        self.raise_sky(vmf)      # (higher skies of their own closed in on every side, as Plan's)
 
 
 class View:
@@ -178,7 +184,7 @@ def lay(b, elems, side, cars):
             leg = []
     if leg:
         legs.append(leg)
-    need = train_len(cars) + 128
+    need = train_len(cars) + 96      # (the back wall's 64, and 16 clear at each end: the train waits against the closed end)
 
     # --- the squares ---
     for e in elems:
@@ -392,7 +398,7 @@ def train(b, n, a, z, s, cars):
     name = "lc_train_%d" % n
     fa, fz = a["frame"], z["frame"]
     TL = train_len(cars)
-    ua, uz = a["length"] // 2, z["length"] // 2
+    ua, uz = (a["length"] + 64) // 2, (z["length"] - 64) // 2      # (the middle of each shed's room: its closed end is 64 thick)
     p1, p2 = fa.at(ua, s * RAIL_V, STREET + 9), fz.at(uz, s * RAIL_V, STREET + 9)
     half = TL // 2
     body = fa.box(ua - half, s * RAIL_V - 70, STREET + 12, ua + half, s * RAIL_V + 70, STREET + 290)
