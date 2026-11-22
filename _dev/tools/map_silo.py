@@ -455,7 +455,7 @@ class Silo:
         leader's office and bedroom have a concrete room's tone (SCAPE_ROOM), heard once you are inside, and the way out
         the mine tunnel's (SCAPE_CAVE). Valve's four are left out (BunkerForest.silo)."""
         G, B, A, F = self.GANTRY, self.LEVEL_B, self.LEVEL_A, self.FLOOR
-        for x, y, z, r, s in ((-420, 0, G + 72, 420, SCAPE_SHAFT), (0, -200, G + 72, 640, SCAPE_SHAFT), (-380, 0, B + 72, 380, SCAPE_SHAFT),
+        for x, y, z, r, s in ((-420, 0, G + 72, 260, SCAPE_SHAFT),     # (260: short of the bunker corridor's own soundscape at the tunnel) (0, -200, G + 72, 640, SCAPE_SHAFT), (-380, 0, B + 72, 380, SCAPE_SHAFT),
                               (380, 0, B + 72, 420, SCAPE_SHAFT), (-380, 0, A + 72, 380, SCAPE_SHAFT), (380, 0, A + 72, 420, SCAPE_SHAFT),
                               (-480, 0, A - 120, 120, SCAPE_SHAFT), (-480, 0, A + 128, 120, SCAPE_SHAFT), (-360, 0, F + 72, 420, SCAPE_SHAFT),
                               (0, -200, F + 72, 520, SCAPE_SHAFT),

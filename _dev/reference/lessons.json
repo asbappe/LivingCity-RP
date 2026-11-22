@@ -3802,6 +3802,66 @@
    "why": "The owner, 22 November, of the cave forest's first compile: \"you literally put a massive pile of boulders in front of the gate...can you not see props or even gauge their general dimensions?\" (rockcluster01 among the rock face's boulders, beside the cave's mouth and its fence gate). The same build had rocks narrowing the old mine's end doorway and the breach, and a stalactite hanging into the breach.",
    "how": "Every piece and module: register each way with vmf.keep_way_clear(box, label) (a forest's keep_way_clear forwards to it; joint() and gallery() do it themselves); map_build.py nudges a prop out of a way or a hinged door's swing as it is placed (Vmf.clear_spot: the nearest clear spot up to 96 away, no deeper into the brushes) and fails the build on any prop still in one (ways_problems: the prop's box from asset_facts.json turned by its yaw; doors in their doorways, timber-set arches and hanging lamps excepted). The owner made it a standing rule for all map work (22 November: \"this should please be a standard instruction for all map edits/creating/modules/etc\"): CLAUDE.md, Map work.",
    "check": "map_build.py ways_problems (every build of every piece and module)"
+  },
+  {
+   "id": "owner-ep2-banded-walls",
+   "tags": [
+    "interiors",
+    "owner"
+   ],
+   "title": "White Forest's banded concrete: the band only on the bottom 128 of a wall, from that room's floor",
+   "rule": "Valve lays concrete/concretewall05b (the banded one) on exactly the bottom 128 of a wall and concretewall05a (plain) above it, never the reverse, both at 0.25 with the texture starting at the floor of the room the face looks into, so the band runs level all round a room and across corners.",
+   "why": "The owner, 22 November, of the forest bunker: \"the wall textures are atrocious, they aren't aligned ... surely EP2 had better aligned textures than this? Adjusted properly on their Y axis?\" (ours had the bands at different heights on each wall and repeating up tall walls).",
+   "how": "BunkerForest: each wall face takes the floor of the room it faces; 05b on the 128 above it, 05a above; stair walls take the floor at the stairs' foot; risers are floor concrete.",
+   "check": "review"
+  },
+  {
+   "id": "owner-every-room-lit",
+   "tags": [
+    "lighting",
+    "owner"
+   ],
+   "title": "Every room and corridor has a lamp, and every lamp model its own light beside it",
+   "rule": "No room, stair or corridor without a light; each light has a model (a lamp, a tube, a cage light) and each lamp model a light entity just in front of it, never inside another prop or brush; Valve's settings for that model (a spot down from ceiling tubes, cone 60, a faint glow; pools, not flat light).",
+   "why": "The owner, 22 November: \"there are also several rooms in the bunker without any lights\"; of the escape tunnel: \"the escape tunnel has light entities but no prop for them\"; of the cave: \"the light prop is inside the girder prop\".",
+   "how": "BunkerForest fails the build if a named room has no light; the tunnel's lights each have a cage lamp and a cable chain.",
+   "check": "review"
+  },
+  {
+   "id": "owner-soundscapes-dont-fight",
+   "tags": [
+    "sound",
+    "owner"
+   ],
+   "title": "One sound to a space; neighbouring soundscapes of different sounds never overlap",
+   "rule": "Soundscapes of different sounds whose radii overlap hand the player back and forth (clicking, cutting in and out). Give a whole space (a shaft and its floors) one sound from several env_soundscapes of the same name, and keep different sounds' radii apart; use names Garry's Mod has (Half-Life 2's own first).",
+   "why": "The owner, 22 November: \"the soundscape in the silo is subtly clicking and cutting in and out, why?\" (four of Valve's, three different sounds, each reaching 98 to 236) and \"can we please add some soundscapes in the bunker?\".",
+   "how": "BunkerForest checks that no two soundscapes of different names overlap (the silo's included).",
+   "check": "review"
+  },
+  {
+   "id": "owner-secret-way-hint",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "A secret way has a hint a player can find, and a puzzle to open it",
+   "rule": "A hidden door must be findable without cheating: a mark on it (a lambda sprayed on the panel) and something in the room to work it (Kleiner's crooked picture from d1_trainstation_05: straighten it with E and the panel opens).",
+   "why": "The owner, 22 November, of the leader's escape: \"the escape tunnel needs some sort of hint as to the fact that there is an entrance there; I only found it by noclipping\".",
+   "how": "map_silo.py: decals/lambdaspray_1a on the panel; frame001a tilted 9 degrees on a func_door_rotating that presses the panel in and out.",
+   "check": "review"
+  },
+  {
+   "id": "owner-lift-stops-off-floor",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "A lift's car stops a few units off each floor, and its cage is solid and turned to its door",
+   "rule": "A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4 above it. The cage the players ride is solid (Valve's brush cage or clips), turned so its open side faces the landing.",
+   "why": "The owner, 22 November: \"when the lift gets to the bottom floor, it's texture is clipping/flashing with the ground below it\"; of the cave's lift: \"the elevator prop is rotated 90 degrees the wrong way and is not solid\".",
+   "how": "The silo's bottom stop is 2 above the floor.",
+   "check": "review"
   }
  ]
 }

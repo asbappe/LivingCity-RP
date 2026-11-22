@@ -3689,3 +3689,48 @@ A prop is placed by its origin, but it takes up its whole model: a boulder pile 
 - **Checked by:** map_build.py ways_problems (every build of every piece and module)
 - **Tags:** props, geometry, owner
 
+### White Forest's banded concrete: the band only on the bottom 128 of a wall, from that room's floor (`owner-ep2-banded-walls`)
+
+Valve lays concrete/concretewall05b (the banded one) on exactly the bottom 128 of a wall and concretewall05a (plain) above it, never the reverse, both at 0.25 with the texture starting at the floor of the room the face looks into, so the band runs level all round a room and across corners.
+
+- **Why:** The owner, 22 November, of the forest bunker: "the wall textures are atrocious, they aren't aligned ... surely EP2 had better aligned textures than this? Adjusted properly on their Y axis?" (ours had the bands at different heights on each wall and repeating up tall walls).
+- **How:** BunkerForest: each wall face takes the floor of the room it faces; 05b on the 128 above it, 05a above; stair walls take the floor at the stairs' foot; risers are floor concrete.
+- **Checked by:** review
+- **Tags:** interiors, owner
+
+### Every room and corridor has a lamp, and every lamp model its own light beside it (`owner-every-room-lit`)
+
+No room, stair or corridor without a light; each light has a model (a lamp, a tube, a cage light) and each lamp model a light entity just in front of it, never inside another prop or brush; Valve's settings for that model (a spot down from ceiling tubes, cone 60, a faint glow; pools, not flat light).
+
+- **Why:** The owner, 22 November: "there are also several rooms in the bunker without any lights"; of the escape tunnel: "the escape tunnel has light entities but no prop for them"; of the cave: "the light prop is inside the girder prop".
+- **How:** BunkerForest fails the build if a named room has no light; the tunnel's lights each have a cage lamp and a cable chain.
+- **Checked by:** review
+- **Tags:** lighting, owner
+
+### One sound to a space; neighbouring soundscapes of different sounds never overlap (`owner-soundscapes-dont-fight`)
+
+Soundscapes of different sounds whose radii overlap hand the player back and forth (clicking, cutting in and out). Give a whole space (a shaft and its floors) one sound from several env_soundscapes of the same name, and keep different sounds' radii apart; use names Garry's Mod has (Half-Life 2's own first).
+
+- **Why:** The owner, 22 November: "the soundscape in the silo is subtly clicking and cutting in and out, why?" (four of Valve's, three different sounds, each reaching 98 to 236) and "can we please add some soundscapes in the bunker?".
+- **How:** BunkerForest checks that no two soundscapes of different names overlap (the silo's included).
+- **Checked by:** review
+- **Tags:** sound, owner
+
+### A secret way has a hint a player can find, and a puzzle to open it (`owner-secret-way-hint`)
+
+A hidden door must be findable without cheating: a mark on it (a lambda sprayed on the panel) and something in the room to work it (Kleiner's crooked picture from d1_trainstation_05: straighten it with E and the panel opens).
+
+- **Why:** The owner, 22 November, of the leader's escape: "the escape tunnel needs some sort of hint as to the fact that there is an entrance there; I only found it by noclipping".
+- **How:** map_silo.py: decals/lambdaspray_1a on the panel; frame001a tilted 9 degrees on a func_door_rotating that presses the panel in and out.
+- **Checked by:** review
+- **Tags:** props, owner
+
+### A lift's car stops a few units off each floor, and its cage is solid and turned to its door (`owner-lift-stops-off-floor`)
+
+A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4 above it. The cage the players ride is solid (Valve's brush cage or clips), turned so its open side faces the landing.
+
+- **Why:** The owner, 22 November: "when the lift gets to the bottom floor, it's texture is clipping/flashing with the ground below it"; of the cave's lift: "the elevator prop is rotated 90 degrees the wrong way and is not solid".
+- **How:** The silo's bottom stop is 2 above the floor.
+- **Checked by:** review
+- **Tags:** props, owner
+

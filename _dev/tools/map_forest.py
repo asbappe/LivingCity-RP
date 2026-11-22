@@ -1365,7 +1365,7 @@ class BunkerForest(Forest):
         (-1440, 416, "zd", "d1_canals.floodgate_machineroom", 180),   # the plant room
         (-640, 1024, "zd", "eli_01_lower_corridor_1", 120),           # the corridor to the silo
         (-640, 1344, "zd-128", "eli_01_lower_corridor_1", 120),       # its stairs
-        (-640, 1568, "zg", "eli_01_lower_corridor_1", 100),           # its end, at the silo's tunnel
+        # (its end at the silo's tunnel is left to the silo's own sound: map_silo.py, Silo soundscapes)
         (640, -256, "zp", "canals_canal_nowater", 160),               # outside the door: the forest again
     )
 
