@@ -43864,6 +43864,125 @@ function Nov21_MapNamesTests()
 end
 Nov21_MapNamesTests()
 
+function Nov22_HQTests()
+    section("22 November: the HQ's later stages: what only it does, what the Combine know, the raid, a ransack's papers")
+    local B, H = LC.Base, LC.HQ
+    local runWas = LC.Running
+    LC.Running = true
+    local setupWas = GetConVar("lc_base_setup_time"):GetInt()
+    _setcvar("lc_base_setup_time", 3)
+    B.Reset()
+    local T0 = Vector(-310000, 310000, 0)
+    local z = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(-500, -500, -16), maxs = T0 + Vector(500, 500, 192) })
+    local boss = newPlayer("HQCommander", "resistance", nil, 99999)
+    B.Poles()
+    local pole = B.poles[LC.RebelLeader(z)]
+    boss:SetPos(pole:GetPos() + Vector(40, 0, 0))
+    LC.BasePoleUse(boss)
+    for _ = 1, 10 do if LC.BaseState() == "live" then break end B.Tick(1) end
+    local hp = LC.HQPos()
+    LC.HQTick()
+    ok(hp and LC.BaseState() == "live" and LC.HQKnowWords() == "nothing", "an HQ up: the Combine know nothing of it", tostring(LC.BaseState()))
+    if not hp then B.Reset() LC.RemoveZone(z) boss:Remove() _setcvar("lc_base_setup_time", tostring(setupWas)) LC.Running = runWas return end
+    -- what only the HQ does
+    LC.RebelSpawnNote(boss)
+    local back = LC.HQSpawnFor(boss)
+    ok(back and back:Distance(hp) < 400, "a Resistance player last nearest it comes back at the HQ", back and back:Distance(hp))
+    local sciHere = ents.Create("prop_physics") sciHere:SetPos(hp + Vector(120, 0, 0)) sciHere:Spawn()
+    local sciFar = ents.Create("prop_physics") sciFar:SetPos(T0 + Vector(9000, 0, 0)) sciFar:Spawn()
+    ok(LC.LabHQWhyNot(sciFar, LCS.LabById.bypass) and LC.LabHQWhyNot(sciFar, LCS.LabById.ied) and not LC.LabHQWhyNot(sciHere, LCS.LabById.ied)
+        and not LC.LabHQWhyNot(sciFar, LCS.LabById.firebomb), "bypass charges and IEDs only from the HQ's own lab; the rest anywhere")
+    local reb, rst = LC.SpawnRebel(hp + Vector(80, 80, 4), z)
+    if reb then reb:SetHealth(20) end
+    _run(5.5)
+    ok(reb and reb:Health() > 20, "a wounded rebel NPC on its ground heals", reb and reb:Health())
+    -- what the Combine know: only players move it
+    local snitch = newPlayer("HQSnitch", "citizen")
+    local kind
+    for _, k in ipairs(LC.InformKinds) do if k.id == "hq" then kind = k end end
+    ok(kind and kind.available(snitch) == nil, "someone who has never been there has nothing to tell")
+    snitch:SetPos(hp + Vector(150, 0, 0))
+    LC.HQTick()
+    snitch:SetPos(T0 + Vector(12000, 0, 0))
+    local site = kind and kind.available(snitch)
+    ok(site ~= nil, "a player who has been on its ground can tell a unit")
+    if site then kind.start(snitch, nil, site) end
+    ok(LC.HQKnowWords() == "a district" and kind.available(snitch) == nil, "told: they know the district (and the same player can't tell it twice)", LC.HQKnowWords())
+    local talker = newPlayer("HQTalker", "resistance", nil, 400)
+    talker:SetPos(hp + Vector(100, 100, 0))
+    LC.HQTick()
+    local words, at = LC.InterrogationIntel(talker, "hideout", true)
+    ok(at and at:Distance(hp) < 1 and LC.HQKnowWords() == "the street", "one of theirs who has been there, telling the truth in the cells: the HQ is the place, and they know the street", LC.HQKnowWords())
+    -- a unit's scouting job, on the HQ's own ground
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "cp_scouthq" then t = x end end
+    local unit = newPlayer("HQScout", "cp")
+    local zonesWas = LC.ZonesOfKind
+    LC.ZonesOfKind = function(k) if k == "rebel" then return { z } end return zonesWas(k) end
+    local spec = t and t.build(unit)
+    LC.ZonesOfKind = zonesWas
+    ok(spec and #spec.stages == 2 and spec.stages[2].search, "the units' scouting job: get there, search it by hand")
+    if spec then spec.stages[2].onDone({ owner = unit, members = { unit }, data = {}, board = "Dispatch", title = spec.title, stages = spec.stages, stage = 2, id = 0 }) end
+    ok(LC.HQKnowWords() == "the building", "scouted the HQ's own ground: they know the building", LC.HQKnowWords())
+    -- a scanner: only one a unit sent counts
+    H.know = 50
+    local cityScanner = ents.Create("npc_cscanner") cityScanner:SetPos(hp + Vector(200, 0, 200)) cityScanner:Spawn()
+    LC.RegisterNPC(cityScanner, "scanner")
+    LC.HQScannerTick(5)
+    ok(H.know == 50, "the city's own scanner over the HQ learns nothing")
+    local heldWas = LC.RadioHeld
+    LC.RadioHeld = function() return true end
+    unit:SetPos(hp + Vector(300, 0, 0))
+    local okS = LC.HQScan(unit, hp)
+    LC.RadioHeld = heldWas
+    local mine
+    for sc in pairs(H.scanners) do mine = sc end
+    if IsValid(mine) then mine:SetPos(hp + Vector(150, 0, 150)) end
+    LC.HQScannerTick(5)
+    ok(okS and H.know > 50 and H.know <= 50 + LC.HQScanMost, "a scanner a unit sends from the radio, with the pole in sight, learns", H.know)
+    ok(LC.HQScanWhyNot(unit) ~= nil, "(one at a time per unit)")
+    for sc, sdata in pairs(H.scanners) do if IsValid(sc) then LC.NPCs[sc] = nil sc:Remove() end if IsValid(sdata.target) then sdata.target:Remove() end end
+    H.scanners = {}
+    LC.NPCs[cityScanner] = nil cityScanner:Remove()
+    -- the raid, ordered by the Administrator, beaten off
+    H.know = 100
+    local adm = newPlayer("HQAdministrator", "admin")
+    ok(LC.HQRaidWhyNot(talker) ~= nil and LC.HQRaidWhyNot(adm) == nil, "at the building, the Administrator (only she) may order the raid")
+    local addWas, authD = LC.LedgerAdd, nil
+    LC.LedgerAdd = function(what, d, why) if what == "authority" then authD = d end end
+    ok(LC.HQRaidOrder(adm) and H.raid ~= nil, "she orders it")
+    local raidJob, defendJob
+    for _, p in ipairs(LC.Postings.cp or {}) do if p.tmpl and p.tmpl.id == "cp_raidhq" and not p.dead then raidJob = p end end
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_defendhq" and not p.dead then defendJob = p end end
+    ok(raidJob and defendJob, "every unit gets the raid on the board, the Resistance the defence", tostring(raidJob) .. " " .. tostring(defendJob))
+    for _, npc in ipairs(H.raid.npcs) do if IsValid(npc) then npc:SetHealth(0) end end
+    unit:SetPos(T0 + Vector(20000, 0, 0))
+    _run(55)
+    LC.LedgerAdd = addWas
+    ok(H.raid == nil and LC.BaseState() == "live", "the raiders dead and no unit on the ground: the raid is beaten off, the flag still flying")
+    ok(authD and authD < 0, "and it costs her authority", tostring(authD))
+    ok(LC.HQRaidWhyNot(adm) ~= nil, "(not again so soon)")
+    -- a ransack's papers
+    local plist = LC.People.list
+    local symp = {}
+    for i = 1, 4 do local pr = LC.NewPerson("citizen") pr.rebel = true symp[i] = pr end
+    local named = LC.HQRansackPapers()
+    local marked = 0
+    for _, pr in ipairs(symp) do if pr.suspect then marked = marked + 1 end end
+    ok(#named == 3 and marked >= 1, "a ransack's papers name three sympathizers: suspects from then on", #named)
+    for _, pr in ipairs(symp) do pr.alive = false end
+    -- tidy
+    if reb then LC.NPCs[reb] = nil reb:Remove() end
+    sciHere:Remove() sciFar:Remove()
+    B.Reset()
+    LC.RemoveZone(z)
+    boss:Remove() snitch:Remove() talker:Remove() unit:Remove() adm:Remove()
+    H.know, H.raid, H.raidNext = 0, nil, 0
+    _setcvar("lc_base_setup_time", tostring(setupWas))
+    LC.Running = runWas
+end
+Nov22_HQTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

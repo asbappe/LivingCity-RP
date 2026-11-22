@@ -20,7 +20,26 @@ The owner, 20 November: "the highest ranking Resistance player (Lieutenant or Co
 ## What changed for what was there before
 
 - **The security monitors** stood in every rebel camp (19 November). With this on they are part of the office and stand only at the live base. `lc_base 0` turns the whole feature off and puts them back in every camp.
-- Nothing else of the camps changes: the quartermaster, the supply crate, the fund's screen and the rest work everywhere as before. **Not built:** services that work only at the live base, the Combine learning where the base is (scouting, informers, prisoners), the Administrator's order to raid it, supply lines. Each is to be described to the owner first.
+- Nothing else of the camps changes: the quartermaster, the supply crate, the fund's screen and the rest work everywhere as before. The later stages (below) were described to the owner and built on 22 November.
+
+## The later stages (the owner, 22 November; `sv_livingcity_hq.lua`, `cl_livingcity_hq.lua`)
+
+**What only the live HQ does** (the owner: "yes to all of"):
+- **Respawn there.** The live HQ counts as one of the Resistance's spawn points: a Resistance player last nearest it (on its ground) comes back there, as at the rebel spawn point they were last nearest. Gone, they come back at a spawn point as before.
+- **Its lab.** Bypass charges and IEDs are made only by a scientist whose lab stands on the HQ's ground (`LC.LabHQOnly`); anywhere else the lab shows "Only the headquarters' lab makes this." With no HQ up nobody makes them. Everything else the lab makes, it makes anywhere.
+- **The wounded heal.** Rebel NPCs on the HQ's ground get 5 health back every 5 seconds.
+
+**What the Combine know of it.** A hidden figure for each site, back to nothing when the base moves, never a number: the Administrator's F2 > City orders shows "The Resistance's headquarters: nothing / rumours / a district / the street / the building". Only players move it (the owner: "a player must inform ... only players will be leaving the city"):
+- **Informing:** a player who has been on its ground tells a unit (the Inform list: "Where the Resistance's headquarters is"), once per site; a district's worth; 40 credits.
+- **Questioning:** a Resistance player in the cells who has been there and tells the truth about the hideout names the HQ (and it is marked for the units, as any hideout told is).
+- **Scouting:** "Scout rebel ground" for units (F4): go to a rebel territory and search it by hand; if it is the HQ's, they learn.
+- **A scanner a unit sends** from the radio's own menu ("Send a scanner to scout", once every 5 minutes): it flies to where they aim for a minute and a half and learns while the HQ's pole is in its sight. The city's own scanners never do (the owner: random scanners must not give it away).
+
+**The raid.** At "the building", the Administrator's City orders > the Resistance's headquarters > **Raid it** (with nobody playing her, the city's own orders it two minutes on, if its authority is 50 or more). Every unit gets **Raid the Resistance headquarters** (F4: get there, tear the flag down as a ransack does), up to six of the nearest NPC units go and tear it down themselves when no rebel is by it, and the Resistance's lookouts warn them on Freq 7, with **Defend the headquarters** on their board. Torn down: a ransack as before, and the Administrator gains authority. Beaten off (the raiders dead and no unit near for 20 seconds) or not done in 8 minutes: it fails, costs her authority, and no raid can follow for 20 minutes.
+
+**A ransack's papers** (the owner: only this of the intel): up to three of the city's sympathizers are named on the CP net and are suspects from then on (a unit's search finds things on them far more often).
+
+No new settings. Tests `Nov22_HQTests`.
 
 ## Settings (all new)
 
@@ -28,4 +47,4 @@ The owner, 20 November: "the highest ranking Resistance player (Lieutenant or Co
 
 ## For other code
 
-`LC.BaseMayLead(ply)`, `LC.BasePoleUse(ply)` (E at a pole), `LC.BaseLive()` (the base's zone, or nil), `LC.BaseState()` (`raising`, `live`, `striking`, `overrun` or nil), `LC.BaseShows(zone)`, `LC.BaseRaise(ply)`, `LC.BaseStrike(ply)`, `LC.BaseOrder(ply)` (the F2 line), `LC.BaseTear(ply)`; hooks `LivingCityBaseLive(zone)`, `LivingCityBaseGone(zone, how)` (`packed`, `ransacked`, `abandoned`), `LivingCityBaseRansacked(zone, credits, unit)`. The office's list is `LC.BaseOffice`; its places are in `data/livingcity/<map>_base.json`. The flag is drawn by `cl_livingcity_base.lua` from the pole's `lc_flag_h`. The pole's prompt is `LC_CL.BasePolePrompt`. The map's markers, with each one's height from its `_top`: `LC.Base.Markers()`. Tests: `BaseTests` (45), `BaseTallPoleTests` (8).
+`LC.BaseMayLead(ply)`, `LC.BasePoleUse(ply)` (E at a pole), `LC.BaseLive()` (the base's zone, or nil), `LC.BaseState()` (`raising`, `live`, `striking`, `overrun` or nil), `LC.BaseShows(zone)`, `LC.BaseRaise(ply)`, `LC.BaseStrike(ply)`, `LC.BaseOrder(ply)` (the F2 line), `LC.BaseTear(ply)`; hooks `LivingCityBaseLive(zone)`, `LivingCityBaseGone(zone, how)` (`packed`, `ransacked`, `abandoned`), `LivingCityBaseRansacked(zone, credits, unit)`. The office's list is `LC.BaseOffice`; its places are in `data/livingcity/<map>_base.json`. The flag is drawn by `cl_livingcity_base.lua` from the pole's `lc_flag_h`. The pole's prompt is `LC_CL.BasePolePrompt`. The map's markers, with each one's height from its `_top`: `LC.Base.Markers()`. Tests: `BaseTests` (45), `BaseTallPoleTests` (8), `Nov22_HQTests` (20). The later stages: `LC.HQPos()`, `LC.HQGround(pos)`, `LC.HQKnowWords()`, `LC.HQLearn(n, how, by)`, `LC.HQRaidOrder(by)`, `LC.BaseTearNPC(npc)`; hooks `LivingCityHQKnown`, `LivingCityHQRaid`, `LivingCityHQRaidOver(won)`.

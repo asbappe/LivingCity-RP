@@ -486,6 +486,15 @@ function LC.BaseTear(ply)
     s.tear = { by = ply, t = 0 }
     return true
 end
+-- A raid's own NPC unit at the pole (sv_livingcity_hq.lua): tears it down the same way, while no rebel is near.
+function LC.BaseTearNPC(npc)
+    local s = B.S
+    if not (s.state and IsValid(npc) and npc:IsNPC() and npc:Health() > 0 and Near(npc, s.pos, 110)) then return false end
+    if s.tear then return false end
+    if #B.Ground(s.pos, cvCore:GetFloat()).rebels > 0 then return false end
+    s.tear = { by = npc, t = 0 }
+    return true
+end
 -- E at a pole: a unit tears a flying flag down; a Lieutenant or Commander does what their F2 line does. (Anyone else of
 -- the Resistance is told by the pole's own prompt that it takes one of those: cl_livingcity_base.lua.)
 function LC.BasePoleUse(ply)
@@ -545,7 +554,8 @@ function B.Tick(dt)
     local g = B.Ground(s.pos, cvCore:GetFloat())
     -- a unit at the pole: it comes down, unless a rebel comes back or the unit leaves it
     if s.tear then
-        if #g.rebels > 0 or not (Unit(s.tear.by) and Near(s.tear.by, s.pos, 160)) then
+        local tearer = Unit(s.tear.by) or (IsValid(s.tear.by) and s.tear.by.IsNPC and s.tear.by:IsNPC() and s.tear.by:Health() > 0)
+        if #g.rebels > 0 or not (tearer and Near(s.tear.by, s.pos, 160)) then
             s.tear = nil
         else
             s.tear.t = s.tear.t + dt

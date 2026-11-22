@@ -1346,6 +1346,12 @@ function LC_CL.QuickRadioRoot()
         Add(Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)))
         Add(Item("Jobs over the radio", function() Send("radiojobs") end))
     end
+    -- calls other modules hang on the radio's own menu (LC_CL.RadioExtras: each a function(me, band) returning an item or nil,
+    -- shaped as for LC_CL.CityOrderExtras): a unit's scouting scanner (cl_livingcity_hq.lua)
+    for _, fn in ipairs(LC_CL.RadioExtras or {}) do
+        local okR, it = LC.Try(fn, me, band)
+        if okR and istable(it) then Add(it) end
+    end
     if held and w:GetNW2Int("lc_bands", 1) > 1 then
         Add(Item("Switch frequency (now " .. (band == "cp" and "the CP net" or (band == "resistance" and "Freq 7" or "nothing")) .. ")", function() Send("radiotune") end))
     end
