@@ -54,6 +54,14 @@ SHAPES = {}      # (a brush's box -> its planes, for the exact test of a point i
 SIDES = {}       # (a brush's box -> ([(material, corners)], "world" or the entity's class), for the flush-face check)
 
 
+
+# The owner's settled choices (22 November), which the scale and palette checks no longer name: the canal's mud and dirt
+# at 0.25 (City 18 lays its own mud and dirt at 0.25: mudfloor004a, dirtfloor005c), and Valve's mud-and-dirt blend on
+# the canal floors, which they saw in the first canal and kept ("Keep the blend"); and Half-Life 2's chain link
+# (metal/metalfence007a), since City 18's own (effects/metalfence007a) is Counter-Strike: Source's alone.
+OWNER_GROUND = ("blendmuddirt", "mudfloor", "dirtfloor")
+OWNER_KEPT = ("nature/blendmuddirt001a", "metal/metalfence007a")
+
 def in_brush(p, box, pad=1.0):
     """Is the point inside the brush itself (its planes), not only its box?"""
     if not inside(p, box, pad):
@@ -658,7 +666,7 @@ def check(path, views=None, only=None, air=None):
                 big_near += 1
             if lms <= 8 and area > 128 * 256:
                 fine_big += 1
-            if usc == 0.25 and any(w in mat for w in ("rock", "cliff", "blend", "dirt", "grass", "sand", "mud")):
+            if usc == 0.25 and any(w in mat for w in ("rock", "cliff", "blend", "dirt", "grass", "sand", "mud")) and not any(w in mat for w in OWNER_GROUND):
                 terrain += 1
             upright = abs(n[2]) < 0.01
             if upright and usc == 0.25 and mat in map_build.SCALE_HALF and hi[2] - lo[2] > 256:
@@ -684,7 +692,7 @@ def check(path, views=None, only=None, air=None):
             say("scale", "%d upright faces longer than 1024 at texture scale 0.25: the pattern repeats a great many times; 0.5 or more (Valve's far walls)" % long_fine)
         if walls >= 20 and on_seam < 0.4 * walls:
             say("seam", "%d of %d walls start their texture on a seam at their foot (Valve: 54 to 56%% on a 128 seam): shift them to start at the floor (map_build.craft)" % (on_seam, walls))
-    # palette: materials City 18 never uses (one line, the commonest few)
+    # palette: materials City 18 never uses (one line, the commonest few), but those the owner has chosen to keep
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):
         import json
@@ -692,7 +700,7 @@ def check(path, views=None, only=None, air=None):
         counts = {}
         for b, mats in brushes:
             for m in mats:
-                if not m.startswith("tools/") and m not in theirs:
+                if not m.startswith("tools/") and m not in theirs and m not in OWNER_KEPT:
                     counts[m] = counts.get(m, 0) + 1
         if counts:
             top = sorted(counts.items(), key=lambda kv: -kv[1])[:6]

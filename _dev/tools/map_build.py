@@ -1134,6 +1134,8 @@ def fence(vmf, plan, high, vis, top=None):
                     bars.append(along(axis, max(start, p - w), min(b, p + w), lo, hi, at + dz, at + high - 4 - dz))      # (and 1 higher at the foot)
             start = prev = a
     nd = MAT["nodraw"]
+    # (City 18's own chain link is effects/metalfence007a, which only Counter-Strike: Source has: map_assets.py fails it.
+    #  The owner chose theirs on 22 November; this is Half-Life 2's of the same look, kept until CS:S is known to be there)
     if sheets["x"]:
         vmf.detail(sheets["x"], MAT["fence"], vis=vis, faces={"west": nd, "east": nd, "top": nd, "bottom": nd})
     if sheets["y"]:
