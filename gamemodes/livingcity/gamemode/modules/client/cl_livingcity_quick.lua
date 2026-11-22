@@ -1068,6 +1068,13 @@ local function OrdersPage()
         items[#items + 1] = arrest
     end
     if me:GetNW2String("lc_bounty_menu", "") ~= "" then items[#items + 1] = Page("Bounties on the wanted", BountyPage) end
+    -- entries other modules hang here (LC_CL.CityOrderExtras: each a function(me) returning an item or nil, an item
+    -- being { label = "...", run = function() end } or { label = "...", page = function() return { title = "...", items = {...} } end },
+    -- with disabled = true to grey it out): the Resistance's headquarters, the Advisors
+    for _, fn in ipairs(LC_CL.CityOrderExtras or {}) do
+        local okE, it = LC.Try(fn, me)
+        if okE and istable(it) then items[#items + 1] = it end
+    end
     -- a public execution at the wall (sv_livingcity_firingsquad.lua): the server sends who may be shot
     items[#items + 1] = Item("Firing squad...", function() net.Start("lc_fsquad_ask") net.SendToServer() end)
     if #(LC_CL.Manpower or {}) > 0 then items[#items + 1] = Page("Combine manpower", ManpowerPage) end
