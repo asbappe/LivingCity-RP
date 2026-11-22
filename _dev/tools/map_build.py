@@ -243,6 +243,7 @@ MAT = {
     "black": "tools/toolsblack",
     "mud": "nature/blendmuddirt001a",   # hl2: mud, blending to dirt
     "clip": "tools/toolsplayerclip",
+    "origin": "tools/toolsorigin",
     "portal": "tools/toolsareaportal",
     "trigger": "tools/toolstrigger",
     "fence": "metal/metalfence007a",    # hl2: chain link
@@ -728,6 +729,15 @@ class Vmf:
             s += self.box_text(b, mat, top or mat, mat, vis, faces=fc, axes=ax)
             self.boxes.append((b, False))
             got.append(b)
+        if cls.startswith("trigger_") and len(got) > 1:
+            # (a trigger of several boxes gets an origin brush low in its biggest box, which is air in a room: Hammer gives a
+            #  brush entity without one an origin at the middle of all its boxes, which can fall in the void between them,
+            #  and the compiler then calls the map leaked; the owner's edit of 22 November: "Entity trigger_multiple
+            #  (10240.00 5536.00 -496.00) leaked!", lc_bunker_inside, 33 boxes over the bunker and the silo)
+            big = max(got, key=lambda g: (g[3] - g[0]) * (g[4] - g[1]) * (g[5] - g[2]))
+            cx, cy = round((big[0] + big[3]) / 2.0), round((big[1] + big[4]) / 2.0)
+            cz = round(min(big[2] + 16, (big[2] + big[5]) / 2.0))
+            s += self.box_text((cx - 4, cy - 4, cz - 4, cx + 4, cy + 4, cz + 4), MAT["origin"], MAT["origin"], MAT["origin"], vis)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
         mats = [m.lower() for m in ([sides] if isinstance(sides, str) else []) + [x[1] for x in boxes if len(x) == 2 and isinstance(x[1], str)]]
