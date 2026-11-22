@@ -18,6 +18,15 @@ import math
 
 from map_build import MAT
 
+
+def lit_from(vmf, name, pos, vis):
+    """A moving model is lit from its own middle; where that middle goes into a wall or the ground as it moves, the model
+    turns black (the owner, 22 November, of the bunker's entrance leaves: "solid black ... while they are moving"). So it
+    takes its light from an unseen point in the open air instead, as Valve's lab door at the silo's bottom does (its
+    lightingorigin, a point in the doorway): an info_target `name` at pos, for the model's "lightingorigin"."""
+    vmf.point("info_target", pos, {"targetname": name, "spawnflags": "1"}, vis)
+    return name
+
 # a nodraw face of the piece that players can now see gets a real face: the levels' ring halls (Valve left the far half
 # of level A, most of level B and the bottom level's outer faces bare) and the gantry's tunnel. (r1, r2, z1, z2) round
 # the shaft's axis, or a box; a face is finished when the point 6 in front of its middle lies in one.
@@ -34,8 +43,29 @@ LEVER_RECESS = (272, 210, 362, 284, 234, 395)
 LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, and where it goes on the office's wall east of the door
 # the piece's brushes left out: the fake door at level B's south end (131; its north twin is the func_brush
 # brush_fake_cit_door_1, dropped with the wiring), the bottom level's outer wall behind the bedroom (577), rebuilt
-# round the secret door, and the lever wall's parts (placed again in the office)
-SKIP = {131, 577} | set(LEVER_BRUSHES)
+# round the secret door, the lever wall's parts (placed again in the office), and the two six-sided posts at the gantry
+# tunnel's mouth (1287, 1288): Valve's hinge posts for its blast door as Valve hung it there; the door is turned round
+# now and brings its own posts at its hinges (BunkerForest.silo_door), and its leaves swung through these (the owner,
+# 22 November: "the silo doors clip through two round/octagon-ish columns when closing")
+SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604}
+# and over the lift's shaft in the walkway (the gantry level's tunnel): Valve's floor there, its two grates and the hull
+# strips round them (1213 to 1218), the strut down its middle and the rails beside it (1604, 1597, 1598): the car comes
+# up into the walkway now, and the walkway's own sliding grates cover the hole when it is gone (BunkerForest.lift; the
+# owner, 22 November: "the massive brush/strut in the middle of the walkway will have to be removed but that's ok")
+# and the tunnel mouth's two narrow jambs (1564, 1566), Valve's too for its door as it hung: the leaves now swing into
+# the tunnel through their lower part (the last 15 degrees), so they start over the leaves' height, 160 over the floor
+MOUTH_JAMBS, MOUTH_JAMB_FROM = (1564, 1566), 1568
+
+
+def trim_mouth(pf):
+    """The tunnel mouth's jambs (MOUTH_JAMBS) raised to start at MOUTH_JAMB_FROM (their foot at 1408 lifted, face and
+    corners alike), clear of the blast door's leaves."""
+    for i in MOUTH_JAMBS:
+        for sd in pf["solids"][i]["sides"]:
+            for key in ("plane", "verts", "corners"):
+                for q in sd.get(key) or []:
+                    if abs(q[2] - 1408) < 0.01:
+                        q[2] = float(MOUTH_JAMB_FROM)
 # props of the piece left out: the static door into the bedroom (a working door now), the big cooling tank in the
 # office (it filled the office's east half), the bottom level fence's static gate (a swinging one now: fence_gate) and
 # the two flat bundles of pipes across the bedroom, 61 over its floor at their lowest (the owner, 22 November: "the
@@ -264,12 +294,13 @@ class Silo:
             brush_ent(v, "func_door", dict(f.SILO_DOOR, **{
                 "targetname": name, "movedir": "0 %d 0" % wyaw(slide), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1",
                 "loopmovesound": "0", "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
-                "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}),
+                "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}),
                 [prism(self.d, leaf, 1152, 1276, MAT["nodraw"])], self.vis,
                 connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
             mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
             v.point("prop_dynamic_override", self.P(mx, my, 1152), {
                 "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(yaw + 180), "parentname": name, "skin": "0",
+                "lightingorigin": lit_from(v, name + "_lighting", self.P(mx, my, 1164), self.vis),
                 "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "modelscale": "1.03", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
@@ -355,10 +386,12 @@ class Silo:
         v.brush_entity("func_door", dict(f.SILO_DOOR, **{
             "targetname": name, "movedir": "0 %d 0" % wyaw(90), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0",
             "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
-            "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}), [wbox(self.d, (14, 340, 324, 18, 439, 448))], MAT["nodraw"], self.vis,
+            "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}), [wbox(self.d, (14, 340, 324, 18, 439, 448))],
+            MAT["nodraw"], self.vis,
             connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
         v.point("prop_dynamic_override", self.P(16, 388, 324), {
             "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(270), "parentname": name, "skin": "0", "solid": "0",
+            "lightingorigin": lit_from(v, name + "_lighting", self.P(24, 384, 332), self.vis),      # (where Valve lit its static door here from)
             "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
             "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
             "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
@@ -430,6 +463,7 @@ class Silo:
             "rendercolor": "255 255 255", "disableshadows": "1"}, [prism(self.d, leaf, 324, 426, MAT["nodraw"])], self.vis)
         v.point("prop_dynamic", self.P(cx, cy, cz), {
             "targetname": name + "_model", "model": "models/props_wasteland/interior_fence001g.mdl", "angles": "0 %d 0" % wyaw(yaw), "parentname": name,
+            "lightingorigin": lit_from(v, name + "_lighting", self.P(cx, cy, cz), self.vis),
             "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"},
             self.vis)
 
@@ -478,7 +512,10 @@ class Silo:
 # little cache cave (valve_ep2_cache_cave), set into the forest's north rim at its lowest point west of the silo, its
 # mouth through the forest's north wall (cut there) behind a big rock that only a lever inside moves.
 TW = 80                      # the tunnel's width (everywhere)
-LOW, CROUCH = 112, 48        # its height, and in the two squeezes (players stand 72 tall, crouch 36)
+LOW, CROUCH = 136, 48        # its height, and in the two squeezes (players stand 72 tall, crouch 36). 112 until 22 November: with the
+                             # timber sets' caps 80 over the floor a standing player could not pass under them (the owner: "can't walk
+                             # through the escape tunnel supports standing; they are too short"); the caps are 92 over it now (TIMBER_CLEAR)
+SQUEEZE_IN = 40              # the last squeeze's roof comes down from the tunnel's height to a crouch over its first 40, as it did (the crouch part as it was)
 F_EXIT = 828                 # the exit's floor: the forest's ground where its rim is lowest west of the silo (826 at the wall)
 CAVE_AT = (9060, 5328, F_EXIT)   # where the cave piece's anchor (its mouth's middle on the floor) goes; turned three quarters
 EXIT_HOLE = (9020, 9132, F_EXIT, F_EXIT + 80)     # the way out through the rock face: x from, to; z from, to (at y 5168 to 5200)
@@ -521,7 +558,7 @@ def _segments():
     run((8580, 5768, 8660, 5848), None, flat(631), low, "ws")
     run((8580, 5460, 8660, 5768), "y", _ramp(5768, 5460, 631, F_EXIT), low, "ns")
     run((8580, 5380, 8660, 5460), None, flat(F_EXIT), low, "ne")
-    run((8660, 5380, 8740, 5460), "x", flat(F_EXIT), lambda s: max(CROUCH, LOW - (s - 8660) * 1.6), "we")       # the last squeeze, into the cave
+    run((8660, 5380, 8740, 5460), "x", flat(F_EXIT), lambda s: max(CROUCH, LOW - (s - 8660) * (LOW - CROUCH) / float(SQUEEZE_IN)), "we")       # the last squeeze, into the cave
     return S
 
 
@@ -542,7 +579,7 @@ def _taper(s, a, b, w=40.0):
 # every CABLE_SPAN or less with this slack (it sags about sqrt(3 * span * slack / 8): 14 over 128)
 CABLE_OFF, CABLE_DROP, CABLE_SPAN, CABLE_SLACK, CABLE_CLEAR = 8, 8, 128, 4, 4
 # where a run's roof bends (a ramp's ends, a squeeze's end), so the cable follows it
-CABLE_KINKS = {1: (9056, 8976, 8192), 5: (8192, 8976), 9: (8976, 8192), 13: (8192, 8516), 17: (8700,)}
+CABLE_KINKS = {1: (9120 - (LOW - CROUCH), 8976, 8192), 5: (8192, 8976), 9: (8976, 8192), 13: (8192, 8516), 17: (8700,)}
 # its way, from the panel to the cave: ("leg", segment, wall, from, to) along a wall of a run ("n", "s", "e", "w"),
 # ("corner", segment, corner) round a turn's outer corner, ("cross", segment, at, wall) over the roof to the other wall
 # on the line where the run meets the next piece
@@ -584,7 +621,37 @@ def _closed(S):
     return [c for c in sides if c not in S["open"]]
 
 
-TIMBER_EVERY, TIMBER_MAX_INSET, TIMBER_CAP = 256, 6, 80      # a set every so often, its posts at most this far off the wall, its cap this far over the floor
+TIMBER_EVERY, TIMBER_MAX_INSET, TIMBER_CLEAR = 256, 7, 92    # a set every so often, its posts at most this far off the wall (so the middle 32 stays clear), its cap's underside
+                                                             # this far over the highest point of the floor under it (bumps and ramps included)
+
+
+def _floor_top(sg, x, y):
+    """The tunnel's displaced floor at (x, y) in a run sg: its floor there and the bump tunnel() gives it (floor_pt)."""
+    x1, y1, x2, y2 = sg["box"]
+    ax = sg["axis"]
+    along = x if ax == "x" else y
+    across = _taper(y, y1, y2) if ax == "x" else _taper(x, x1, x2)
+    ends = _taper(x, x1, x2) if ax == "x" else _taper(y, y1, y2)
+    return sg["floor"](along) + 3 * _noise(x, y, 0, 1) * across * ends
+
+
+def _roof_low(sg, x, y):
+    """The tunnel's displaced roof at (x, y) in a run sg (roof_pt): its height there less the rock hanging from it."""
+    x1, y1, x2, y2 = sg["box"]
+    ax = sg["axis"]
+    along = x if ax == "x" else y
+    across = _taper(y, y1, y2) if ax == "x" else _taper(x, x1, x2)
+    ends = _taper(x, x1, x2) if ax == "x" else _taper(y, y1, y2)
+    return sg["floor"](along) + sg["height"](along) - 10 * abs(_noise(x, y, 7, 2)) * across * ends
+
+
+def _under_cap(sg, sp, f):
+    """f (the floor or the roof) at every 2 over a cap's footprint, 12 along at sp and the run's width across."""
+    x1, y1, x2, y2 = sg["box"]
+    for d in range(-6, 7, 2):
+        a = sp + d
+        for c in range(int(y1 if sg["axis"] == "x" else x1), int(y2 if sg["axis"] == "x" else x2) + 1, 2):
+            yield f(sg, a, c) if sg["axis"] == "x" else f(sg, c, a)
 
 
 def _lamp_spots(S):
@@ -621,23 +688,27 @@ def _timber_sets():
             k += 1
             for off in (0, 32, -32, 64, -64, 96, -96):
                 sp = nominal + off
-                if not (a + 48 <= sp <= b - 48) or any(abs(sp - l) < 48 for l in lamps.get(i, ())) or min(hh(sp - 8), hh(sp + 8)) < 100:
+                if not (a + 48 <= sp <= b - 48) or any(abs(sp - l) < 48 for l in lamps.get(i, ())):
+                    continue
+                # the cap: its underside TIMBER_CLEAR over the highest floor under it, its top at least 4 under the roof
+                # wherever the rock hangs lowest over it (so the lamps' cable resting on it stays under the roof too)
+                cz = int(math.ceil(max(_under_cap(sg, sp, _floor_top)))) + TIMBER_CLEAR
+                if cz + 12 + 4 > min(_under_cap(sg, sp, _roof_low)):
                     continue
                 insets = {}
                 for side in sides:
                     worst = 0.0
                     for ds in (-8, 0, 8):
                         q = sp + ds
-                        for dz in range(4, 108, 8):
+                        for dz in range(4, cz + 12 - int(fl(q)) + 8, 8):
                             z = fl(q) + dz
                             px, py = (q, _wall_of(sg, side)) if ax == "x" else (_wall_of(sg, side), q)
                             worst = max(worst, _wall_push(sg, side, px, py, z))
                     insets[side] = int(math.ceil(worst)) + 1
                 if max(insets.values()) > TIMBER_MAX_INSET:
                     continue
-                lo_f, hi_f = min(fl(sp - 8), fl(sp + 8)), max(fl(sp - 8), fl(sp + 8))
+                lo_f = min(fl(sp - 8), fl(sp + 8))
                 foot = int(math.floor(lo_f)) - 4
-                cz = int(math.ceil(hi_f)) + TIMBER_CAP
                 posts = []
                 for n_, side in enumerate(sides):
                     ins = insets[side]
@@ -657,7 +728,8 @@ def _timber_sets():
 
 def _tunnel_ways():
     """The tunnel's middle as ways kept clear (Vmf.keep_way_clear): along each run, a box 32 wide on the centre line every
-    32, from just over the floor to a standing player's height (its floor rises along a ramp)."""
+    32, from just over the floor to 80 over it, a standing player's height and a little (its floor rises along a ramp).
+    Escape.timbers holds the caps to it too."""
     out = []
     for i, sg in enumerate(_segments()):
         if not sg["axis"]:
@@ -668,7 +740,7 @@ def _tunnel_ways():
         c = (y1 + y2) // 2 if ax == "x" else (x1 + x2) // 2
         for s0 in range(int(a), int(b), 32):
             s1 = min(int(b), s0 + 32)
-            zl, zh = max(fl(s0), fl(s1)) + 4, min(fl(s0), fl(s1)) + 60
+            zl, zh = max(fl(s0), fl(s1)) + 4, min(fl(s0), fl(s1)) + 80
             if zh <= zl:
                 continue
             box = (s0, c - 16, zl, s1, c + 16, zh) if ax == "x" else (c - 16, s0, zl, c + 16, s1, zh)
@@ -702,7 +774,8 @@ def _cable_nodes():
                                + [l for l in lamps.get(i, ()) if min(s0, s1) <= l <= max(s0, s1)] + list(at_sets)), reverse=s0 > s1)
             full = [stops[0]]
             for s in stops[1:]:
-                m = int(math.ceil(math.hypot(s - full[-1], roof(i, s) - roof(i, full[-1])) / float(CABLE_SPAN)))
+                # (16 short of a span: a point on a timber cap sits lower than the roof's, so its span is a little longer)
+                m = int(math.ceil(math.hypot(s - full[-1], roof(i, s) - roof(i, full[-1])) / float(CABLE_SPAN - 16)))
                 full += [full[-1] + (s - full[-1]) * q / float(m) for q in range(1, m)] + [s]
             for s in full:
                 is_lamp = any(abs(s - l) < 0.5 for l in lamps.get(i, ()))
@@ -891,8 +964,9 @@ class Escape:
         just make it like the EP2 and ravenholm tunnels out of dirt and dirt/rock mix textures and have wooden supports
         along the tunnel? so long as I can still walk in there"): every 256 or so along each tall run, two of Episode Two's
         timber posts (props_mining/struts_single01 and _02, 16 square, 176 high: their tops go up into the rock) stood
-        against the walls, and a cap of Ravenholm's timber (woodfloor005a, 12 square) across under the roof, 80 over the
-        floor; the lamps' cable rests on the caps. A set stands only where the rock's bulge leaves the posts within 6 of
+        against the walls, and a cap of Ravenholm's timber (woodfloor005a, 12 square) across under the roof, its underside 92
+        over the highest point of the floor under it (TIMBER_CLEAR: 80 until the owner, 22 November, "can't walk through the
+        escape tunnel supports standing; they are too short"); the lamps' cable rests on the caps. A set stands only where the rock's bulge leaves the posts within 6 of
         the wall (_timber_sets), so the middle 32 stays clear the whole way (map_build's ways check holds it: the tunnel's
         middle is a way kept clear)."""
         v, vis = self.v, self.vis
@@ -907,6 +981,9 @@ class Escape:
             v.detail(caps, "wood/woodfloor005a", vis=vis)
         for box, label in _tunnel_ways():
             v.keep_way_clear(box, label)
+            for c in caps:      # (the ways check sees props only: a cap in the tunnel's standing way fails the build here)
+                if c[0] < box[3] and c[3] > box[0] and c[1] < box[4] and c[4] > box[1] and c[2] < box[5] and c[5] > box[2]:
+                    self.f.problems.append("a timber cap of the way out's tunnel at (%d %d %d) is in the standing way: a player could not walk under it" % c[:3])
         self.f.notes.append("the way out's tunnel: Valve's mine rock (rockwall015a) and floor (blenddirtrock_mine01a), %d timber sets" % len(sets))
 
     def lamps(self):
@@ -1086,6 +1163,7 @@ class Escape:
                        [((hx1, 5170, hz1, hx2, 5198, hz2), {"north": rock, "south": cliff})], cliff, self.xvis)
         v.point("prop_dynamic_override", (mid, 5150, F + 24), {
             "targetname": rock_n + "_model", "model": "models/props_foliage/rock_forest04.mdl", "angles": "0 90 0", "parentname": rock_n, "solid": "0", "skin": "0",
+            "lightingorigin": lit_from(v, rock_n + "_lighting", (mid, 5100, F + 72), self.xvis),      # (in the hollow in front of the face: it slides into the rock)
             "disableshadows": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0", "renderamt": "255",
             "rendercolor": "255 255 255", "modelscale": "1.3", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
             "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.xvis)
@@ -1113,6 +1191,7 @@ class Escape:
                                     ("OnOut", rock_n + "_sound", "StopSound", "", 4.3), ("OnOut", rock_n + "_shove", "Enable", "", 3.7),
                                     ("OnOut", rock_n + "_shove", "Disable", "", 4.6)])
         v.point("prop_dynamic", (lx - 4, ly, lz), {"model": "models/props_c17/trappropeller_lever.mdl", "angles": "0 270 0", "parentname": lever, "solid": "0", "skin": "0",
+                                                   "lightingorigin": lit_from(v, lever + "_lighting", (lx - 32, ly, lz), self.xvis),
                                                    "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"},
                 self.xvis)
         v.point("logic_relay", (lx - 40, ly, lz + 40), {"targetname": auto, "StartDisabled": "0", "spawnflags": "0"}, self.xvis,
@@ -1202,6 +1281,7 @@ def _escape(self):
         self.vis, connections=[("OnOpen", name, "PressIn", "", 0), ("OnOpen", name + "_sound", "PlaySound", "", 0),
                                ("OnClose", name, "PressOut", "", 0), ("OnClose", name + "_sound", "PlaySound", "", 0)])
     v.point("prop_dynamic", at, {"targetname": pic + "_model", "model": "models/props_lab/frame001a.mdl", "angles": "0 %d 9" % wyaw(facing), "parentname": pic,
+                                 "lightingorigin": lit_from(v, pic + "_lighting", self.P(px + 24 * nx, py + 24 * ny, z + 60), self.vis),
                                  "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
                                  "spawnflags": "0"}, self.vis)
     # the button on the tunnel's side: Episode Two's mine lift button (the bunker's wall_button) on the passage's north
