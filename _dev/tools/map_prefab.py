@@ -396,7 +396,10 @@ def solid_text(vmf, sides, q, d, vis, t="\t"):
 
 
 def corner_box(allv):
-    return tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
+    """The box round a placed brush's corners, for the checks only, rounded out to whole units: Valve's slanted faces have
+    corners off the grid (their planes' three points are on it), which the brush keeps as it was."""
+    import math
+    return tuple(math.floor(min(p[k] for p in allv) + 1e-6) for k in range(3)) + tuple(math.ceil(max(p[k] for p in allv) - 1e-6) for k in range(3))
 
 
 def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outside=False, keep=None):

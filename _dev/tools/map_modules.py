@@ -143,6 +143,9 @@ class Build:
         self.views = []       # (label, eye, yaw, pitch): pictures to take with map_view.py
         self.rope_n = 0
         self.pipes = []       # (axis, where along it, wall, wall): pipes to lay across the canal with the dressing
+        self.replaces = set() # ids of the owner's brushes a module stands in the place of (checked by --against)
+        self.stoppers = []    # boxes that stop up an opening meant to join the owner's map, for the seal check only
+        self.allow = []       # boxes round gates where a joined piece's walls may overlap this one's (checked by --against)
 
     def node(self, x, y, z):
         self.vmf.point("info_node", (x, y, z + 40), {"nodeid": self.node_id}, self.vis + ": path nodes")
@@ -198,8 +201,17 @@ class Mod:
                 self.b.plan.cells.pop((i, j), None)
                 self.b.owner.pop((i, j), None)
 
-    def open(self, u1, v1, u2, v2, floor=F, mat=None):
-        self.paint(u1, v1, u2, v2, ("open", floor, mat or MAT["canal_floor"]))
+    def open(self, u1, v1, u2, v2, floor=F, mat=None, sky=None):
+        """Open to the sky; sky: a lid of its own higher than the piece's (a church's yard: the squares round it get sky
+        up to it by themselves)."""
+        self.paint(u1, v1, u2, v2, ("open", floor, mat or MAT["canal_floor"]) + ((sky,) if sky else ()))     # (paint lifts floor and lid with the frame)
+
+    def cellar(self, u1, v1, u2, v2, floor, ceil, upper, mat=None, upper_mat=None, sky=None):
+        """A room under a floor that is open to the sky above: floor to ceil, then a slab to `upper` (the floor of what is
+        over it: a yard's ground, a building's floor), then air to the sky (sky: a lid higher than the piece's, or its own)."""
+        dz = self.fr.dz      # (paint lifts the floor and the ceiling with the frame; the rest is lifted here)
+        self.paint(u1, v1, u2, v2, ("cellar", floor, mat or MAT["canal_floor"], ceil, upper + dz, upper_mat or mat or MAT["canal_floor"],
+                                    (sky + dz) if sky else self.b.sky))
 
     def low(self, u1, v1, u2, v2, ceil, floor=F, mat=None):
         self.paint(u1, v1, u2, v2, ("low", floor, mat or MAT["canal_floor"], ceil))
@@ -748,6 +760,7 @@ def m_tee(m, opt):
              "%s: %s side gate's cap (delete to join)" % (b.vis, m.tag))
     m.portal(0, 382, F, 512, 384, F + GATE_HIGH)
     b.plan.keep_out.append(m.fr.rect(-64, 512, 576, 576))
+    b.allow.append(m.fr.box(-128, 384, BASE, 640, 640, b.sky + 64))    # (the piece joined at the side gate: its walls may overlap these, both solid)
     m.blocked(0, 384, 512, 512)
     m.side(0, 256, 512, 512)
     x, y = m.fr.pt(0, 0)
@@ -765,6 +778,8 @@ def m_gate(m, opt):
     gate_cap(b.vmf, m.fr.box(0, -256, F, 64, 256, F + GATE_HIGH), m.fr.box(80, -256, F, 88, 256, F + GATE_HIGH), m.fr.ax("v"),
              "%s: %s gate's cap (delete to join)" % (b.vis, opt[0] if opt else "a"))
     m.portal(128, -256, F, 130, 256, F + GATE_HIGH)
+    m.side(0, -256, 256, 256)      # (no mud in a culvert: a mud patch is 256 square on the map's grid, and one here reached past the gate's plane into the piece joined to it)
+    b.allow.append(m.fr.box(-64, -448, BASE, 64, 448, b.sky + 64))     # (where the next piece's own walls may overlap this one's: both solid)
     # (nothing of this piece beyond the gate's plane, where the next piece begins; beside a street only the culvert's own width,
     #  since the street needs its end wall)
     b.plan.keep_out.append(m.fr.rect(-64, -256, 0, 256) if b.upper else m.fr.rect(-64, -448, 0, 448))
@@ -1912,7 +1927,7 @@ MODULES = {
 }
 
 
-for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d", "map_mods_e", "map_town"):
+for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d", "map_mods_e", "map_mods_f", "map_town"):
     try:
         MODULES.update(__import__(_more).MODULES)
     except ImportError as e:
@@ -1943,7 +1958,8 @@ def take_views(b, vmf_path, folder, name, cut=None):
 
 
 def read_layout(path):
-    """A layout: "start X Y", "heading E|N|W|S", "rim Z", "end X Y HEADING" (where it must come out), then a module a line."""
+    """A layout: "start X Y", "heading E|N|W|S", "rim Z", "end X Y HEADING" (where it must come out), "close" (no gate at
+    the end: the last module closes the canal), then a module a line."""
     lay = {"name": path.replace("\\", "/").split("/")[-1].rsplit(".", 1)[0], "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": [],
            "upper": None, "cars": 2}
     for raw in open(path):
@@ -1964,6 +1980,8 @@ def read_layout(path):
             lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
         elif words[0] == "cars":
             lay["cars"] = int(words[1])           # (how many cars the trains pull behind the engine)
+        elif words[0] == "close":
+            lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
             lay["modules"].append(words)
     return lay
@@ -1982,7 +2000,7 @@ def build_chain(lay, args):
     for v in (x, y):
         if v % CELL:
             b.problems.append("the start (%d %d) is off the %d grid" % (x, y, CELL))
-    steps = [["gate", "start"]] + lay["modules"] + [["gate", "end"]]
+    steps = [["gate", "start"]] + lay["modules"] + ([] if lay.get("close") else [["gate", "end"]])
     count = {}
     width = CANAL_W       # (how wide the canal is where the chain has got to: 512, or 1024 between a widen and a narrow)
     for n, words in enumerate(steps):
@@ -2116,7 +2134,7 @@ def finish(b, seed, spawn, args):
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)
     link_gates(b)
-    problems, air = check(vmf, seed, [])
+    problems, air = check(vmf, seed, list(b.stoppers))      # (a way meant to open onto the owner's map, as roadend's road: stopped up for the check)
     problems = b.problems + problems
     look_at_props(b)
     args.view_list = list(b.views)      # (map_build.py checks them with map_lint.py once the file is written)
@@ -2569,7 +2587,8 @@ def chain(args):
         print(map_town.ascii_plan(b))
     if args.preview:
         picture(b, args.preview)
-    args.expect_overlap = set()
+    args.expect_overlap = set(b.replaces)      # (the owner's brushes a module stands in the place of: roadend's)
+    args.allow_overlap = list(b.allow)
     args.out_name = "lc_%s%s.vmf" % (lay["name"], "_test" if args.test else "")
     args.after_write = (lambda path: take_views(b, path, args.views, lay["name"])) if args.views else None
     return b.vmf, problems

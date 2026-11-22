@@ -49,6 +49,8 @@ import sys
 REPLACES = {
     "canal": {"15074": None},
     "ring": {"14734": None, "15630": None},
+    "ring_north": {"14734": None, "15630": None},     # (the canal ring's north half: its roadend stands where the old ring's platform did)
+    "ring_south": {},
     "ravenholm": {"65929": None, "51870": None, "62363": None, "15623": None, "33530": None, "28290": None, "34874": None},
     "forest_bunker": {},
     "forest_cave": {},
@@ -188,7 +190,7 @@ def highest_ids(lines):
 
 
 class Piece:
-    def __init__(self, path):
+    def __init__(self, path, test_ok=False):
         self.path = path
         base = os.path.basename(path)
         m = re.match(r"lc_(.+?)\.vmf$", base)
@@ -196,7 +198,9 @@ class Piece:
             raise SystemExit("%s: a piece is a file named lc_NAME.vmf" % base)
         self.name = m.group(1)
         if self.name.endswith("_test"):
-            raise SystemExit("%s is a test file (a sun, a spawn, walls that close it): never in the real map" % base)
+            if not test_ok:
+                raise SystemExit("%s is a test file (a sun, a spawn, walls that close it): never in the real map" % base)
+            self.name = self.name[:-5]
         self.lines, _ = read(path)
         tops = top_blocks(self.lines)
         self.vis = {}                                   # id -> (name, colour)
@@ -257,6 +261,72 @@ def digest(chunk):
     return hashlib.md5("\n".join(chunk).encode("utf-8", "surrogateescape")).hexdigest()
 
 
+# A test map's own world (--blank): nothing but a spawn and the owner's sun (their light_environment's settings, their
+# sky), for walking pieces joined together before they go into the real map.
+BLANK = """versioninfo
+{
+	"editorversion" "400"
+	"editorbuild" "8873"
+	"mapversion" "1"
+	"formatversion" "100"
+	"prefab" "0"
+}
+visgroups
+{
+}
+viewsettings
+{
+	"bSnapToGrid" "1"
+	"bShowGrid" "1"
+	"bShowLogicalGrid" "0"
+	"nGridSpacing" "64"
+	"bShow3DGrid" "0"
+}
+world
+{
+	"id" "1"
+	"mapversion" "1"
+	"classname" "worldspawn"
+	"detailmaterial" "detail/detailsprites"
+	"detailvbsp" "detail.vbsp"
+	"maxpropscreenwidth" "-1"
+	"skyname" "painted"
+}
+entity
+{
+	"id" "2"
+	"classname" "info_player_start"
+	"angles" "0 %(yaw)d 0"
+	"origin" "%(x)d %(y)d %(z)d"
+}
+entity
+{
+	"id" "3"
+	"classname" "light_environment"
+	"_ambient" "175 191 207 13"
+	"_ambientHDR" "-1 -1 -1 1"
+	"_AmbientScaleHDR" "1"
+	"_light" "190 214 193 50"
+	"_lightHDR" "-1 -1 -1 1"
+	"_lightscaleHDR" "1"
+	"angles" "0 149 0"
+	"pitch" "-70"
+	"SunSpreadAngle" "0"
+	"origin" "%(x)d %(y)d %(sz)d"
+}
+cameras
+{
+	"activecamera" "-1"
+}
+cordon
+{
+	"mins" "(-1024 -1024 -1024)"
+	"maxs" "(1024 1024 1024)"
+	"active" "0"
+}
+"""
+
+
 def main():
     ap = argparse.ArgumentParser(description="Write one new VMF: the owner's map with the pieces in it. The owner's file is only read.")
     ap.add_argument("owner", help="the owner's VMF (read, never written)")
@@ -264,11 +334,26 @@ def main():
     ap.add_argument("--out", required=True, help="the new VMF to write")
     ap.add_argument("--keep-caps", action="store_true", help="leave every gate's cap in (the pieces stay shut off from each other)")
     ap.add_argument("--plain", action="store_true", help="do not name the sun and do not add the dream room's red lights")
+    ap.add_argument("--blank", action="store_true", help="a TEST MAP of pieces alone: no owner's map (the first file is a piece too), test builds "
+                    "(lc_NAME_test.vmf) taken, their own spawns and suns left out and one of each added (--spawn; the owner's sun's settings)")
+    ap.add_argument("--spawn", type=int, nargs=4, default=[3648, 1984, 672, 90], metavar=("X", "Y", "Z", "YAW"),
+                    help="--blank: where the test map's one spawn stands (default: the first canal's quay)")
     args = ap.parse_args()
+    base_file = None
+    if args.blank:
+        args.pieces = [args.owner] + args.pieces
+        args.plain = True
+        base_file = args.out + ".base.tmp"
+        x, y, z, yaw = args.spawn
+        with open(base_file, "w", newline="") as f:
+            f.write(BLANK % {"x": x, "y": y, "z": z, "yaw": yaw, "sz": z + 128})
+        args.owner = base_file
     if os.path.abspath(args.out) == os.path.abspath(args.owner):
         raise SystemExit("the new file must not be the owner's own")
 
     lines, eol = read(args.owner)
+    if base_file:
+        os.remove(base_file)
     tops = top_blocks(lines)
     names = [t[0] for t in tops]
     for need in ("visgroups", "world"):
@@ -278,9 +363,16 @@ def main():
     print("the owner's map: %d lines, %d entities, %d path nodes (highest %d); highest ids: object %d, face %d, visgroup %d" % (
         len(lines), names.count("entity"), len(nodes), max(nodes or [0]), obj, side, vis))
 
-    pieces = [Piece(p) for p in args.pieces]
+    pieces = [Piece(p, test_ok=args.blank) for p in args.pieces]
     seen = set()
     for p in pieces:
+        if args.blank:      # (a test map: each test build's own spawn and sun are left out; the map has one of each)
+            p.ents = [e for e in p.ents if not any(p.lines[i].strip() in ('"classname" "info_player_start"', '"classname" "light_environment"') for i in range(e[0], e[1]))]
+        if args.blank and p.name in seen:
+            raise SystemExit("%s is given twice" % p.name)
+        if args.blank:
+            seen.add(p.name)
+            continue
         if p.name not in REPLACES:
             raise SystemExit("%s: not a piece this tool knows what it replaces (add it to REPLACES)" % p.name)
         if p.name in seen:
@@ -290,7 +382,7 @@ def main():
     # --- the owner's brushes the pieces replace: found, checked to be where they were, left out ---
     wanted = {}
     for p in pieces:
-        for bid in REPLACES[p.name]:
+        for bid in ([] if args.blank else REPLACES[p.name]):
             wanted[bid] = p.name
     world = next(t for t in tops if t[0] == "world")
     drop = []                                       # (first line, last line) of what is left out
