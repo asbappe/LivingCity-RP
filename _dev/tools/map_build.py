@@ -1531,6 +1531,11 @@ def main():
     for p in bad_brushes(text):         # (as vbsp builds each brush from its planes: the owner's compile stopped on one, 22 November)
         print("  PROBLEM: " + p)
         problems.append(p)
+    import map_stairs                   # (the owner's walk, 22 November: "WE NEED A CHECK to see if stairs go into walls or geometry")
+    import map_walk                     # (and: "MAKE A CHECK TO CHECK FOR PLAYER ROOM TO WALK")
+    for p in map_stairs.check_text(text) + map_walk.check_text(text):
+        print("  PROBLEM: " + p)
+        problems.append(p)
     with open(out, "w") as f:
         f.write(text)
     print("  written: " + out)

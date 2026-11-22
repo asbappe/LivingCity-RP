@@ -30,10 +30,10 @@ straight 384 pipes
 tenement flip
 barge
 underpass
-busbridge flip
+straight 1024
 left
 # S3: east
-scrapyard
+tunnel 1536
 crypt flip
 tram
 shell

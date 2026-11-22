@@ -113,9 +113,9 @@ def m_basin(m, opt):
     512 section and goes anywhere a plain stretch does ("basin 2560": that long, 2048 at least). Its steps are those of
     "widen" and "narrow" (the banks wrap round them); between them the wide canal's upright walls and deeper dish, a
     walk along the left wall where the basin is 2560 or longer ("flip": the right; "noledge": none), odds and ends.
-    Shorter, or with no walk: Valve's Resistance boathouse (canals_06) on its piles against the left wall, an airboat
-    jetty (canals_05) and a timber lookout (canals_11) off the right wall, lifted whole (map_prefab.py).
-    Unchecked: the boathouse's physics props (drums, crates) as Valve placed them, over a dry canal floor."""
+    (Valve's boathouse, jetty and lookout stood here for one build: the owner's walk, 22 November, "floating props and
+    no walls and a missing ceiling", "why are these on the other side": a piece lifted from a riverbank on piles does
+    not stand in a dry canal. Lesson valve-piece-fit.)"""
     L = m.fr.length
     if L < 2048:
         m.open(0, -HALF, L, HALF)
@@ -129,25 +129,7 @@ def m_basin(m, opt):
     wide_walls(m, 520, L - 520)
     if L >= 2560 and "noledge" not in opt:
         walk_ledge(m, 768, L - 768, 1, wide=True, stairs=2 if L - 1536 >= 1152 else 1)
-    if L < 2560 or "noledge" in opt:
-        # Valve's own, from Route Kanal (the owner, 22 November: "please feel free to copy/paste sections out of HL2 for
-        # the canals"): the Resistance boathouse of canals_06 on its piles against the left wall, an airboat jetty of
-        # canals_05 off the right wall, and the timber lookout of canals_11 further along it; a way 428 wide between
-        from map_prefab import place
-        mid = L // 2
-        place(m, "valve_canal_boathouse_a", mid, WHALF, F, 2)
-        place(m, "valve_canal_jetty_a", mid - 264, -WHALF, F, 0)
-        place(m, "valve_canal_lookout_a", mid + 276, -WHALF + 119, F, 1)
-        m.taken(mid - 368, WHALF - 380, F, mid + 368, WHALF, F + 440)
-        m.taken(mid - 440, -WHALF, F, mid + 440, -WHALF + 240, F + 200)
-        m.blocked(mid - 360, WHALF - 372, mid + 362, WHALF)
-        m.blocked(mid - 430, -WHALF, mid + 400, -WHALF + 232)
-        m.lane(mid, 0, F)
-        m.grime("puddle", mid - 40, -120, F + 1, seed_of(m, 4400))     # (no odds and ends: Valve's pieces fill the basin's floor)
-        m.grime("trash", mid + 120, -60, F + 1, seed_of(m, 4401))
-        m.view(mid - 520, -40, F, 15, 4, "the boathouse and the jetty")
-    else:
-        odds(m, 512, L - 512, 300, seed_of(m, 4400))
+    odds(m, 512, L - 512, 300, seed_of(m, 4400))
     m.soundscape(SCAPES["courtyard"], L // 2, 0, F, radius=max(900, L // 2))
     m.view(560, -40, F, 10, 2, "the basin")
 
@@ -202,12 +184,12 @@ def m_lockgate(m, opt):
     # --- the squares: the wide canal, the piers either side of the leaves, the recesses they open into ---
     m.open(0, -WHALF, L, WHALF)
     for s in (1, -1):
-        m.unpaint(G - 64, min(s * 448, s * WHALF), G, max(s * 448, s * WHALF))
+        m.unpaint(G - 64, min(s * H, s * WHALF), G, max(s * H, s * WHALF))      # (the pier out to the hinge: it stopped at 448 and left a gap each side, the owner saw)
         m.open(G, min(s * WHALF, s * (WHALF + 64)), G + 448, max(s * WHALF, s * (WHALF + 64)))
     m.upright(-64, -WHALF - 448, L + 64, WHALF + 448)          # (every wall upright, as the wide canal's)
     for s in (1, -1):                                           # (no lip or rib on the piers, where the leaves stand)
-        m.no_bank(G - 72, min(s * 440, s * (WHALF + 72)), G + 8, max(s * 440, s * (WHALF + 72)))
-        m.taken(G - 80, min(s * 430, s * (WHALF + 68)), F, G + 470, max(s * 430, s * (WHALF + 68)), F + 600)
+        m.no_bank(G - 72, min(s * (H - 8), s * (WHALF + 72)), G + 8, max(s * (H - 8), s * (WHALF + 72)))
+        m.taken(G - 80, min(s * (H - 18), s * (WHALF + 68)), F, G + 470, max(s * (H - 18), s * (WHALF + 68)), F + 600)
     # --- the booth on the left bank: a room in the wall 192 up, open to the canal, stairs up to it ---
     bz = F + 192
     m.low(576, WHALF, 896, WHALF + 192, F + 352, floor=bz, mat=MAT["quay_floor"])

@@ -168,6 +168,27 @@ LAMP_RECIPES = {
 }
 
 
+BREAKABLE = ("props_junk/wood_crate", "props_junk/cardboard_box", "props_junk/wood_pallet")
+SUPPLY_CRATE = "models/items/item_item_crate.mdl"
+
+
+def breakable(cls, model, keys):
+    """Crates break (the owner, 22 November: "supply crates can't be broken!?!?", "both supply crates were empty"):
+    Half-Life 2's supply crate model is placed as the real thing, an item_item_crate that breaks and gives what the
+    player is short of (Valve's item_dynamic_resupply, two of them); a wooden crate, a cardboard box or a pallet that is
+    not named or parented is a physics prop, asleep until touched, so it breaks as Valve's do."""
+    if model.lower() == SUPPLY_CRATE:
+        k = {kk: vv for kk, vv in keys.items() if kk in ("angles", "targetname", "parentname")}
+        k.update({"CrateType": "0", "ItemClass": "item_dynamic_resupply", "ItemCount": "2", "CrateAppearance": "0", "spawnflags": "0"})
+        return "item_item_crate", k
+    if cls in ("prop_static", "prop_dynamic", "prop_dynamic_override") and any(w in model.lower() for w in BREAKABLE) \
+            and not keys.get("targetname") and not keys.get("parentname"):
+        k = {kk: vv for kk, vv in keys.items() if kk not in ("solid", "disableshadows", "screenspacefade", "StartDisabled", "DefaultAnim")}
+        k["spawnflags"] = "1"      # (asleep until touched: a stack stays a stack)
+        return "prop_physics", k
+    return cls, keys
+
+
 class Mod:
     """One module being built: everything in the module's own coordinates."""
 
@@ -302,6 +323,7 @@ class Mod:
         fade = map_build.prop_fade(model)
         if fade and k.get("fademindist", "-1") == "-1" and not k.get("targetname") and not k.get("parentname"):
             k.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
+        cls, k = breakable(cls, model, k)
         self.point(cls, u, v, zo, k, vis or self.pv)
         self.b.props.append((cls, model, self.fr.at(u, v, zo), wy, self.tag))
 
@@ -525,9 +547,27 @@ class Mod:
         wires: [(the button's output, the thing's name, the input), ...]."""
         if not self.b.test:
             return
-        self.b.vmf.brush_entity("func_button", {"movedir": "0 0 0", "speed": "8", "lip": "4", "wait": "-1", "spawnflags": "1056", "sounds": "0", "health": "0",
-                                                "rendermode": "0", "renderamt": "255", "rendercolor": "255 60 60"}, [self.fr.box(*box)], MM["steel"],
-                                self.b.vis + ": for testing alone (never in the real map)", connections=[(o, n, i, "", 0) for o, n, i in wires])
+        # (a model, never a brush: the owner, 22 November, "no brush buttons, goodness this is not 1995"; Episode Two's
+        #  mine lift button as m.button's, faced away from the thin side of the box it was given, toward the canal)
+        from map_forest import wall_button
+        u1, v1, z1, u2, v2, z2 = box
+        cu, cv = (u1 + u2) // 2, (v1 + v2) // 2
+        if v2 - v1 <= u2 - u1:
+            out = 270 if cv > 0 else 90
+        else:
+            out = 180 if cu > self.fr.length // 2 else 0
+        x, y = self.fr.pt(cu, cv)
+        dx, dy = self.fr.way(out)
+        z = z1 + self.fr.dz
+        hit = (min(x - 10 * abs(dy), x + 10 * dx), min(y - 10 * abs(dx), y + 10 * dy), z - 4, max(x + 10 * abs(dy), x + 10 * dx), max(y + 10 * abs(dx), y + 10 * dy), z + 24)
+        self.b.test_n = getattr(self.b, "test_n", 0) + 1
+        name = "lc_test_button_%d" % self.b.test_n
+        # a press works what the box's in and out did, by turns: a pair (Open and Close, Enable and Disable) becomes Toggle
+        ins = [(n, i) for o, n, i in wires if o in ("OnIn", "OnPressed")]
+        outs = {n: i for o, n, i in wires if o == "OnOut"}
+        pairs = ({"Open", "Close"}, {"Enable", "Disable"})
+        press = [(n, "Toggle" if n in outs and {i, outs[n]} in pairs else i, "", 0) for n, i in ins]
+        wall_button(self.b.vmf, (x, y, z), self.fr.yaw(out), name, hit, self.b.vis + ": for testing alone (never in the real map)", press, "1")
 
     def hut(self, u1, v1, u2, v2, z, mat, high=112, front="lo", open_front=False, door=56):
         """A shack: walls 8 thick, a tin roof, a way in on its front (the low-v or the high-v side)."""
@@ -1467,8 +1507,9 @@ def m_sludge(m, opt):
     m.portal(1376, -128, F, 1378, 128, ceil)
     m.water(704, -128, 1344, 128, floor, floor + 12, sludge)
     m.ent("trigger_multiple", {"targetname": "lc_sludge_gas", "spawnflags": "1", "StartDisabled": "0", "wait": "1"}, [(704, -128, floor, 1344, 128, ceil)], MAT["trigger"])
-    m.ent("func_dustcloud", {"targetname": "lc_sludge_haze", "StartDisabled": "0", "Color": "90 170 60", "SpawnRate": "30", "SpeedMax": "10", "LifetimeMin": "3",
-                             "LifetimeMax": "6", "DistMax": "900", "Alpha": "35", "SizeMin": "80", "SizeMax": "160", "Frozen": "0"},
+    # a dull green haze, faint (it was lime: the owner, 22 November, "just make it NOT lime green, like mild green or dull green")
+    m.ent("func_dustcloud", {"targetname": "lc_sludge_haze", "StartDisabled": "0", "Color": "74 86 60", "SpawnRate": "24", "SpeedMax": "10", "LifetimeMin": "3",
+                             "LifetimeMax": "6", "DistMax": "900", "Alpha": "22", "SizeMin": "80", "SizeMax": "160", "Frozen": "0"},
           [(712, -120, floor + 16, 1336, 120, ceil - 8)], MAT["trigger"], vis=m.b.vis + ": experiments (delete if they misbehave)")
     # the tunnel's shape: chamfers along the roof, ribs, a broken ledge on the left
     wall2 = "concrete/concretewall059c"
@@ -1503,7 +1544,7 @@ def m_sludge(m, opt):
         m.loose("models/props_wasteland/dockplank01a.mdl", u, v, (yaw + 90) % 360, z=floor + 12)
     m.loose("models/props_junk/wood_pallet001a.mdl", 1190, 20, 25, z=floor + 12)
     for u, v in ((950, 30), (1220, -50)):                    # scum coming up
-        m.smoke(u, v, floor + 10, colour="90 140 40", size=6, length=40, rate=3)
+        m.smoke(u, v, floor + 10, colour="62 66 54", size=6, length=40, rate=3)
     m.body("models/humans/charple04.mdl", 1180, -40, 120, z=floor)
     m.det([(638, -160, F + 152, 656, 160, F + 176), (1392, -160, F + 152, 1410, 160, F + 176)], MAT["beam"])     # (2 proud of the walls' faces)
     m.sound("ambient/levels/canals/toxic_slime_loop1.wav", 1024, 0, F + 40, radius=800, volume=6)
@@ -1741,7 +1782,7 @@ def m_underpass(m, opt):
     m.blocked(800, -256, 990, -60)
     # the barnacles, and under each the tell
     for k, (u, v) in enumerate(((380, 10), (576, -130), (640, 120), (832, 70), (1090, -100), (1180, 110))):
-        m.point("npc_barnacle", u, v, roof - 1, {"angles": "0 0 0", "spawnflags": "0"}, m.b.vis + ": barnacles (delete them if the game minds)")
+        m.point("npc_barnacle", u, v, roof - 4, {"angles": "0 0 0", "spawnflags": "0", "RestDist": "16"}, m.b.vis + ": barnacles (delete them if the game minds)")      # (4 under the roof, not 1: the owner, 22 November, "barnacles don't pick me up")
         m.decal("decals/bloodstain_%s" % ("001", "002", "003", "101", "201", "001")[k], u + 6, v - 4, F + 1)
         if k % 2 == 0:
             m.loose("models/gibs/hgibs.mdl", u + 14, v + 10, 40 * k, z=F)
@@ -2103,7 +2144,7 @@ def finish(b, seed, spawn, args):
     dish_plan(b, ch, standing["flat"], bump)
     plan.build(vmf)
     dress_canal_walls(b, ch, standing["props"])
-    ch.mud(47, skip=b.no_mud, bump=bump)
+    ch.mud(47, skip=b.no_mud, bump=bump, flat=standing["flat"])
     settle(b, ch, standing["loose"])
     fences = fence(vmf, walled, 96, b.vis + ": fence along the walls' tops", top=b.rim)
     for (i, j), spec in plan.cells.items():      # (no path node where nobody can stand: a crawl duct)
@@ -2168,11 +2209,13 @@ def standing_things(b):
         if box[2] <= F + 4 and box[5] >= DISH_FLOOR and box[3] > box[0] and box[4] > box[1]:
             flat.append((box[0], box[1], box[3], box[4]))
     for k, text in enumerate(vmf.ents):
-        cls = re.search(r'"classname" "(prop_[a-z_]+)"', text)
+        cls = re.search(r'"classname" "(prop_[a-z_]+|item_item_crate)"', text)
         if not cls or cls.group(1) == "prop_ragdoll":
             continue
         model = re.search(r'"model" "([^"]+)"', text)
         o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        if cls.group(1) == "item_item_crate":
+            model = re.match(r'(.*)', SUPPLY_CRATE)      # (a supply crate: Half-Life 2's own model, a physics thing that comes to rest)
         if not model or not o:
             continue
         ang = re.search(r'"angles" "(-?[\d.]+) (-?[\d.]+) (-?[\d.]+)"', text)
@@ -2190,7 +2233,7 @@ def standing_things(b):
         box = (min(xs), min(ys), z + bb[2], max(xs), max(ys), z + bb[5])
         props.append(box)
         if box[2] <= F + 4 and box[5] >= DISH_FLOOR:
-            if cls.group(1) == "prop_physics" and "parentname" not in text:
+            if cls.group(1) in ("prop_physics", "item_item_crate") and "parentname" not in text:
                 loose.append((k, box))
             else:
                 flat.append((box[0] - 8, box[1] - 8, box[3] + 8, box[4] + 8))
@@ -2217,7 +2260,7 @@ def dish_plan(b, ch, flat, bump=None, floor=DISH_FLOOR):
             continue
         x1, y1 = i * CELL, j * CELL
         bx, by = (i // 4) * 256, (j // 4) * 256
-        if hit(skip, bx, by, bx + 256, by + 256) or hit(banks, x1, y1, x1 + CELL, y1 + CELL) or hit(flat, x1, y1, x1 + CELL, y1 + CELL):
+        if ch.patch_skipped(i // 4, j // 4, skip) or hit(skip, x1, y1, x1 + CELL, y1 + CELL) or hit(banks, x1, y1, x1 + CELL, y1 + CELL) or hit(flat, x1, y1, x1 + CELL, y1 + CELL):
             continue
         if bump and any(abs(bump(x, y)) > 0.5 for x in (x1, x1 + CELL // 2, x1 + CELL) for y in (y1, y1 + CELL // 2, y1 + CELL)):
             continue
@@ -2266,30 +2309,35 @@ def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=
 
 
 def settle(b, ch, loose):
-    """Loose things and floor stains over the dish, brought down onto the mud (a physics prop would fall there; a stain
-    must lie on what it marks): a prop by the lowest point under it, a stain moved to the nearest corner of the grid."""
+    """Loose things and floor stains on the canal's floor, set on the mud or the concrete, whichever is higher there (a
+    physics prop would come to rest there; a stain must lie on what it marks): a prop on the highest point under it, up
+    or down, a stain moved to the nearest corner of the grid."""
     import re
     surf = ch.surface
     if not surf:
         return
 
     def height(x, y):
-        if (int(x // CELL), int(y // CELL)) not in ch.dished:
-            return None      # (on the concrete: a thing partly there stays as it is)
-        x0, y0 = int(x // CELL) * CELL, int(y // CELL) * CELL
+        """The floor a thing rests on here: the mud's skin or the concrete under it, whichever is higher (a crate sat in
+        the mud where it rose, and one floated where the floor fell: the owner's walk, 22 November). None off the canal."""
+        c = (int(x // CELL), int(y // CELL))
+        spec = ch.cells.get(c)
+        if not spec or spec[0] != "open" or spec[2] != MAT["canal_floor"]:
+            return None
+        x0, y0 = c[0] * CELL, c[1] * CELL
         q = [surf.get(p) for p in ((x0, y0), (x0 + CELL, y0), (x0, y0 + CELL), (x0 + CELL, y0 + CELL))]
         if None in q:
-            return None
+            return spec[1]
         fx, fy = (x - x0) / float(CELL), (y - y0) / float(CELL)
-        return (q[0] * (1 - fx) + q[1] * fx) * (1 - fy) + (q[2] * (1 - fx) + q[3] * fx) * fy
+        return max(spec[1], (q[0] * (1 - fx) + q[1] * fx) * (1 - fy) + (q[2] * (1 - fx) + q[3] * fx) * fy)
     moved = {}
     for k, box in loose:
         hs = [height(min(max(x, box[0] + 1), box[3] - 1), min(max(y, box[1] + 1), box[4] - 1))
               for x in (box[0], (box[0] + box[3]) / 2.0, box[3]) for y in (box[1], (box[1] + box[4]) / 2.0, box[4])]
         if None in hs:
             continue
-        drop = int(math.ceil(box[2] - min(min(hs), box[2])))
-        if drop < 1:
+        drop = int(math.floor(box[2] - max(hs)))      # (it rests on the highest point under it: never in the mud, never over a hollow)
+        if drop == 0:
             continue
         text = b.vmf.ents[k]
         o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)

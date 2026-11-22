@@ -43,6 +43,7 @@ from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, fence, gat
 from map_forest import noise
 
 BANK = 128
+GRATE = "metal/metalgrate013a"      # (the outfalls' grates: a grating Half-Life 2 has, already in the owner's compiled maps)
 
 
 class Channel:
@@ -214,6 +215,10 @@ class Channel:
                         continue      # (a module's own brush there: no outfall, rather than two faces in one plane)
                     taken.append(ring)
                     shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
+                    # a grate over the hole, inside Valve's ring (the owner, 22 November: "put a grate over every outpipe/
+                    # drainage pipe on the sidewalls"): a thin sheet of grating 2 in front of the dark, detail (see-through
+                    # on a world brush would stop it sealing)
+                    shapes.append(prism(octagon(p, z, 64), across, min(line + side * 3, line + side * 5), max(line + side * 3, line + side * 5), GRATE))
                     if kind == "wall":      # (Valve's lip: up to 16 under the hole at the wall, falling 32 to its front)
                         top = z - 80
                         shapes.append(prism([(line, fz), (line + side * 32, fz), (line + side * 32, top - 32), (line, top)], axis, p - 96, p + 96, c))
@@ -238,15 +243,34 @@ class Channel:
         self.vmf.detail(saddles, MAT["beam"], vis=self.vis + ": banks, pipes and trim")
         taken += saddles
 
-    def mud(self, seed, skip=(), bump=None):
+    def patch_skipped(self, bi, bj, skip):
+        """Is this patch of mud (256 square on the map's grid) left out? Only when a side room inside it has its floor
+        lower than the canal's (a pit, a basin: mud dipped under the floor would show there). A side room at the
+        canal's height or higher just has the mud dip under its floor (until 22 November every patch a side room
+        touched was left out, which left a square of bare concrete there: the owner saw it at the relay)."""
+        x0, y0 = bi * 256, bj * 256
+        hits = [r for r in skip if x0 < r[2] and x0 + 256 > r[0] and y0 < r[3] and y0 + 256 > r[1]]
+        for i in range(bi * 4, bi * 4 + 4):
+            for j in range(bj * 4, bj * 4 + 4):
+                x, y = i * CELL, j * CELL
+                if any(x < r[2] and x + CELL > r[0] and y < r[3] and y + CELL > r[1] for r in hits):
+                    spec = self.cells.get((i, j))
+                    if spec and spec[0] != "solid" and spec[1] < self.floor_z:
+                        return True
+        return False
+
+    def mud(self, seed, skip=(), bump=None, flat=()):
         """Mud and silt: a second, displaced skin over the floor; mud where it rises above the concrete.
-        bump(x, y): extra height at a place (a heap), added everywhere, the banks' feet too."""
+        bump(x, y): extra height at a place (a heap), added everywhere, the banks' feet too. flat: rectangles where
+        something stands on the floor (the mud keeps under it). Every corner's height is worked out from that corner
+        alone, so two patches meeting share their edge exactly (no crack to see through, the owner's walk)."""
         cells, fz = self.cells, self.floor_z
         dished, dish = self.dished, self.dish
         for (bi, bj) in sorted(set((i // 4, j // 4) for (i, j) in cells if self.kind((i, j)) in ("floor", "gap"))):
             x0, y0 = bi * 256, bj * 256
-            if any(x0 < r[2] and x0 + 256 > r[0] and y0 < r[3] and y0 + 256 > r[1] for r in skip):
+            if self.patch_skipped(bi, bj, skip):
                 continue
+            hits = [r for r in list(skip) + list(flat) if x0 - 8 < r[2] and x0 + 264 > r[0] and y0 - 8 < r[3] and y0 + 264 > r[1]]
             grid, shown = {}, False
             sags = any((bi * 4 + a, bj * 4 + c) in dished for a in range(4) for c in range(4))
             for i in range(5):
@@ -261,12 +285,13 @@ class Channel:
                         h += bump(x, y)
                     if (x, y) in dish:      # (over a dished square: the mud is the floor, sagging to the middle)
                         h = -dish[(x, y)] + max(h, 0.0)
-                    elif sags and any((x // CELL - a, y // CELL - c) in dished for a in (0, 1) for c in (0, 1)):
-                        h = max(h, 1.0)     # (at the edge of the dish: over the lowered concrete's edge)
+                    elif any((x // CELL - a, y // CELL - c) in dished for a in (0, 1) for c in (0, 1)):
+                        h = max(h, 1.0)     # (at the edge of the dish: over the lowered concrete's edge; by the corner, not the patch)
+                    elif any(r[0] - 8 <= x <= r[2] + 8 and r[1] - 8 <= y <= r[3] + 8 for r in hits):
+                        h = min(h, -2.0)    # (in a side room or under a thing standing on the floor: the mud keeps under it)
                     shown = shown or h > 0 or sags
                     grid[(i, j)] = (fz + h, 128 + 127 * noise(x / 110.0, y / 110.0, seed + 2))
-                    if sags:
-                        self.surface[(x, y)] = fz + h
+                    self.surface[(x, y)] = fz + h
             if not shown:
                 continue
             self.vmf.world_box((x0, y0, self.dish_floor if sags else fz, x0 + 256, y0 + 256, fz + (3 if sags else 8)), MAT["nodraw"], top=MAT["mud"], vis=self.vis + ": mud",
