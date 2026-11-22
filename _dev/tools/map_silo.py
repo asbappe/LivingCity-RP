@@ -32,6 +32,7 @@ def lit_from(vmf, name, pos, vis):
 # the shaft's axis, or a box; a face is finished when the point 6 in front of its middle lies in one.
 FINISH_RINGS = ((240, 780, 316, 580), (240, 780, 890, 1094), (240, 780, 1146, 1350))
 FINISH_BOXES = ((-544, -130, 1400, -250, 130, 1570),)
+RING_RAIL = (162, 168)     # level A's rail round the pit's mouth: from, to, out from the axis (Silo.ring_rail)
 FINISH_MAT = {"floor": "CONCRETE/CONCRETEWALL036A", "ceiling": "CONCRETE/CONCRETEWALL073A", "wall": "CONCRETE/CONCRETEWALL010A"}
 
 # Valve's lever wall outside the lab door, moved whole into the office (the owner, 22 November: "move the little
@@ -264,6 +265,22 @@ class Silo:
             pts = [(int(round(r * math.cos(math.radians(a)))), int(round(r * math.sin(math.radians(a))))) for r, a in ((108, a0), (160, a0), (160, a1), (108, a1))]
             shapes.append(prism(self.d, pts, 314, 322, "METAL/METALHULL003A", **grate))
         shapes.append(prism(self.d, [(0, 107), (9, 107), (9, 138), (0, 138)], 314, 322, "METAL/METALHULL003A", **grate))     # (and the slot beside them)
+        self.detail(shapes)
+
+    def ring_rail(self):
+        """A low rail round the pit's mouth at level A, the solid ring's top (the third floor down from the walkway): the
+        owner, 22 November, "third floor down silo lift shaft is missing the gates on the sides to keep anyone from falling
+        into the pit". Valve rails the mouth on the floor over it (level B's ring slab: its low rail of metalrail012c, 32
+        high and 6 thick, round the grate's hole) and at the gantry, but left level A's hole (159 from the axis, the rocket
+        in it) bare; the unseen clip round it stays. The same rail here, 24 lengths from 162 to 168 out, clear of the
+        rocket and of the flag's pole (128 out)."""
+        z, n, r1, r2 = self.LEVEL_A, 24, RING_RAIL[0], RING_RAIL[1]
+        shapes = []
+        for k in range(n):
+            a0, a1 = math.radians(360.0 * k / n), math.radians(360.0 * (k + 1) / n)
+            quad = [(int(round(r * math.cos(a))), int(round(r * math.sin(a)))) for r, a in ((r1, a0), (r2, a0), (r2, a1), (r1, a1))]
+            quad = [quad[0], quad[3], quad[2], quad[1]] if (quad[1][0] - quad[0][0]) * (quad[2][1] - quad[0][1]) - (quad[1][1] - quad[0][1]) * (quad[2][0] - quad[0][0]) < 0 else quad
+            shapes.append(prism(self.d, quad, z, z + 32, "METAL/METALRAIL012C", bottom="METAL/METALWALL031A"))
         self.detail(shapes)
 
     # -- 2. the gantry's hatch --------------------------------------------------------------------------------------
