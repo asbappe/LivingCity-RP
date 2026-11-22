@@ -43,6 +43,5 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   entries from other modules (LC_CL.CityOrderExtras, LC_CL.RadioExtras).
 - 21 November's work (garden, people, waves, squads, strongholds, map tools): TODO.md and git log.
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
-- Map chat (22 November): the bunker and silo fixed to the owner's list (TODO.md, PLAYTEST_ARCHIVE.md); the rule that
-  nothing stands in a way players walk, for every map build (CLAUDE.md, map_build.py); the cave behind the emergency door
-  being rebuilt from Episode Two's maps, Ravenholm's big room in place of the mine office. Merge main before pushing.
+- Map chat: bunker and silo fixed to the owner's list (TODO.md); no prop in a way players walk, every build (CLAUDE.md);
+  the cave behind its emergency door being rebuilt from EP2's maps, Ravenholm's big room for the office. Merge main first.
