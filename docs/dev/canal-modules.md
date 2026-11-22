@@ -155,8 +155,10 @@ Unchecked: env_fire, env_steam rising, ambient/fire/fire_small_loop2.wav.
 
 ### `relay`
 
-7. Cubbage's relay. A concrete quay against the right wall, 128 high, with a stone coping, three mooring cleats and
-an iron ladder down its face, two tyres for fenders, steps up its upstream end with a solid side; and on it a radio
+7. Cubbage's relay. A concrete quay against the right wall, 128 high and 256 deep (room to walk along the shack's
+front: the owner, 22 November, had to noclip to its door), with a stone coping, three mooring cleats and an iron
+ladder down its face, two tyres for fenders, steps the quay's full depth up its upstream end, their solid side flush
+with the quay's face; and on it a radio
 shack built from pieces (map_mods_c.shack: mismatched sheets, a tin roof on posts, a boarded window), netting thrown
 over its roof against eyes above: inside, the set on a table under a desk lamp, its dials glowing, a receiver and a
 logbook by it, a chair, a cot (a bed frame), a shelf of car batteries, the canals' map pinned on the back wall, a
@@ -180,8 +182,9 @@ plate) with one gateway (192 wide, 160 high) shut by a force field between two o
 (combine_fence01b and 01a, 192 high, the owner's own field between them); a camera on the wall over the gateway, the
 Combine's lights either side, Breen's poster and numbers on the wall's face. Behind the wall, on the left bank, a
 guard's platform 128 high (the banks are its ramps) with one of the Combine's booths (combine_booth_short01a), a
-console, a monitor and a health charger on the wall; stairs from it to a walk along the wall's top behind the
-Combine's railing, a parapet before it, two Combine floodlights on its ends for the searchlights. Under the walk on
+console, a monitor and a health charger on the wall; stairs from it (their lowest steps open at the side, climbed
+from the platform beside them) to a walk along the wall's top behind the Combine's railing, a parapet before it,
+two Combine floodlights on its ends for the searchlights. Under the walk on
 the right bank, a chain link holding pen with a sliding gate, the police line on its wall.
 Named for the game: lc_checkpoint_field (a func_brush: Disable opens it, Enable shuts it), lc_checkpoint_hum (its
 sound: StopSound, PlaySound), lc_checkpoint_light and lc_checkpoint_light_b (the searchlights: LightOff, LightOn),
@@ -245,11 +248,12 @@ Four pillars with numbers on them and caged lamps (two lit, two long dead), thre
 island; the island lies under a grated shaft open to the sky, so it stands in daylight (a beam straight down, dust
 hanging in it) while the rest is dim. A plank, a drum and a body float in the water; buckets, cans and bottles lie
 about the ledge and the gallery, things to throw for a blind thing to chase.
-Wading is in the water (the game can tell: a player's water level); the ledge, the planks and the gallery are dry.
+Wading is in the water (the game can tell: a player's water level), down two steps off the kerb beside each walk and
+back up them; the ledge, the planks (each laid over the kerb onto the ledge at its end) and the gallery are dry.
 Named for the game: lc_hive_boss_spot (the island), lc_cistern_gallery (the head of the stair).
 Left as brushes: the tank, its round wall and kerb, its gallery's ring, the landing and the stair and its plate, the
-plank walks and their posts (decks on piers), the shaft's grate, the pillars, the plugs that darken the inflow
-pipes.
+plank walks and their posts (decks on piers), the boards over the kerb, the steps into the water, the shaft's grate,
+the pillars, the plugs that darken the inflow pipes.
 Unchecked: ambient/water/water_flow_loop1.wav, the chains (cable/chain.vmt on ropes), the water pouring (an env_steam
 aimed down and in), func_dustmotes in daylight.
 
@@ -861,8 +865,10 @@ shows red while a gate moves, and on each pier's outer face a railway signal hea
 light_signal002a); a klaxon sounds while a gate moves. The lock chamber says what it is: a dark tide line along its
 walls, depth numbers up the piers' faces.
 
-Inside the lock, on the left bank, a concrete pier (the bank is its ramp, a mooring cleat on it) and stairs up to
-the gantry behind a concrete parapet; on the gantry, behind the city's handrail, the house, concrete with steel
+Inside the lock, on the left bank, the way up to the gantry: from the canal floor a flight of 8 along the bank
+toward gate a (an upstand on its open side) onto a landing against gate a's pier, the concrete pier beside it (an
+oil drum on it), and from the pier a flight of 8 up along the wall behind a concrete parapet; on the gantry, behind
+the city's handrail, the house (its doorway 64 wide and 104 high), concrete with steel
 plate to the waist inside: a slit each way down the canal, a button under each slit's end for the gate on that side
 with a lever panel beside it and two lamps over it (green while that gate is open, red while it is shut), the
 canals' own map on the wall, switch boxes, a desk with a monitor and a chair, a fluorescent tube. On the left wall at
@@ -907,9 +913,10 @@ cable to them from the turbine. Behind the doorway's line a turbine pit (192 squ
 deep in water, steps down into it, the city's handrail round it, hazard stripes round its edge, the turbine's
 casing standing in it), numbers on the walls by the machines. The main leaves through the
 front wall, runs along the canal wall and crosses the canal overhead on a pipe bridge nobody can reach. A steel
-gallery runs round the hall 144 up behind the handrail (stairs in the corner left of the door, a steel plate along
-their open side); on it, over the door, the control desk: a monitor, a lamp, and the button that stops and starts
-the pumps. The door that shuts the doorway (a sliding gate) stands slid open along the wall inside.
+gallery runs round the hall 144 up behind the handrail: its stairs climb along the left wall toward the front wall
+(a steel plate along their open side, room at their foot) onto a landing in the corner left of the door; over the
+door a bay 64 deeper holds the control desk against the front wall, 64 clear behind it: a monitor, a lamp, and the
+button that stops and starts the pumps, facing whoever stands at the desk. The door that shuts the doorway (a sliding gate) stands slid open along the wall inside.
 
 Named for the game:
   lc_pump_wheel     the wheel: a func_rotating (Start, Stop), unseen itself, the wheel model riding on it. It turns
@@ -940,7 +947,8 @@ origin).
 ### `thumper`
 
 EXPERIMENTAL: a Combine thumper. The canal widens to the right into a concrete terrace 512 long and 384 deep,
-128 over the floor (the bank is its ramp). On it, behind the Combine's own fence (combine_fence01b and 01a posts, the
+128 over the floor: a flight of 8 steps against its face climbs to a landing at the gate's foot (an upstand on its
+open side), and the bank either side of the flight is a ramp too. On it, behind the Combine's own fence (combine_fence01b and 01a posts, the
 owner's field between them) with a gate players open (Nova Prospekt's gate in its frame, between two of the posts),
 Half-Life 2's own thumper (prop_thumper, the coast's CombineThumper002, 338 high) on a concrete plinth, fed by a fat
 cable from a Combine generator: it lifts and drops its hammer by itself, shakes the ground, thuds and keeps antlions
@@ -1067,24 +1075,29 @@ players pick such props up is its affair. How weaponstripper looks as a rack (it
 
 ### `swingbridge`
 
-EXPERIMENTAL: a footbridge at the trim's height that turns on a round pier in the middle of the canal. As the
-map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it lies along the
-canal and joins nothing. Each landing is a roofed alcove with a street doorway that is never used (planked over,
-boards nailed across), a green lamp that shows while the bridge is across and a red one while it is turned away
-(and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge that
-drops while the bridge is away, the city's handrail each side of the bridge's end, and at its back wall the canal's
-winch with the button over it that turns the bridge (a press rings a bell, and two seconds later is Toggle). Each
-has its own stairs from the canal floor: a covered flight in the wall, open to the canal on its side behind a
-concrete parapet, running away from the bridge (the left one toward the module's exit, the right one toward its
-entry). Whoever turns the bridge away strands the other bank at that height.
+EXPERIMENTAL: a footbridge 224 over the canal's floor (32 under the trim, so that every room of it is roofed at
+720 or lower and a street along the outside bank passes over it) that turns on a round pier in the middle of the
+canal. As the map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it
+lies along the canal and joins nothing. Each landing is a roofed alcove 192 long and 96 high with a street doorway
+that is never used (planked over, boards nailed across), a green lamp that shows while the bridge is across and a red one while it is turned
+away (and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge
+that drops while the bridge is away, the city's handrail each side of the bridge's end and along the landing's open
+edge, and against its back wall the canal's winch with the button over it that turns the bridge (a press rings a
+bell, and two seconds later is Toggle). Each landing has its own way up from the canal floor (the owner, 22 November:
+"the stairs for the turnbridge on both sides go into the canal walls"): a doorway in the canal's wall beside the
+landing (60 wide, 144 high, in a steel frame), a corridor behind it under the landing, a covered flight of 7 steps
+climbing away from the doorway, a half landing, and a flight of 7 back along the canal's wall (open to the canal over
+the bank behind a concrete parapet, a wall between it and the flight below) up onto the landing. The left one runs
+toward the module's exit, the right one toward its entry. Whoever turns the bridge away strands the other bank at
+that height.
 
-The bridge is 456 long and 64 wide: a plank deck on two steel beams with a truss of posts and a bottom chord under
+The bridge is 458 long and 64 wide: a plank deck on two steel beams with a truss of posts and a bottom chord under
 each and a counterweight under its right end, one func_door_rotating, with the city's handrail along both sides
-riding on it (prop_dynamics parented to it). It turns on a drum: a wide cap on the round pier with a toothed ring
-round it and a motor box driving a pinion. Its corners sweep a circle 461 across;
-the canal is 512 wide and the landings' lips stop 234 from the pier's middle, so it sweeps through nothing (ribs
-and drain stubs are kept off the walls there; the walls' trim line stands 240 out). A gap of 6 is left at each end.
-It has no damage of its own.
+riding on it (prop_dynamics parented to it). Its two ends are arcs about the pier (232 out at the middle) and the
+landings' lips are arcs 1 farther out (the owner: "LOOK AT THAT GAP"): across, the deck meets each lip with 2 or
+less between them, and turning it sweeps past them. It turns on a drum: a wide cap on the round pier with a toothed
+ring round it and a motor box driving a pinion. The canal is 512 wide, so it sweeps through nothing (ribs and drain
+stubs are kept off the walls there). It has no damage of its own.
 
 Named for the game:
   lc_swing_bridge    the bridge: Toggle (or Open: along the canal; Close: across). 12 degrees a second.
@@ -1104,8 +1117,8 @@ with it (props ride on doors so). Which way the winch faces. Which way the arms 
 the canal's axis across the landing; if they swing down through the floor, add 2, Reverse). ambient/alarms/warningbell1.wav.
 
 Left as brushes: the bridge's deck, beams, truss and counterweight (a bridge deck), the pier, its drum, toothed ring,
-motor box and turntable, the landings, their lips and corbels, the stairs and their parapets, the doorways' jambs
-and planking, the barrier arms (dev_hazzardstripe01a).
+motor box and turntable, the landings, their lips and corbels, the stairs, their parapet and the wall between the
+flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstripe01a).
 
 ### `floodroom`
 
@@ -1297,7 +1310,8 @@ frame, a roller conveyor up to it: where the dead go to the ash outfall); a cler
 clipboard, papers, a radio and a Combine screen for the records; a caged lamp over the door outside; a compressor's
 hum.
 Named for the game: lc_morgue_door (a func_door, unseen, the door's model riding on it), lc_morgue_table_1 to _3
-(the tables), lc_morgue_ledger (the desk), lc_morgue_chute (the chute's hatch: where the game sends the dead).
+(the tables), lc_morgue_ledger (the desk), lc_morgue_chute (where the game sends the dead from: on the
+floor at the foot of the conveyor, facing the chute's hatch at its top; a place to stand, not the hatch itself).
 Left as brushes: the room, its tiles and plaster, the door's jambs and head, the drain, the wall of drawers (built
 into the wall: Half-Life 2 has no morgue drawers), the chute's hatch and frame and the conveyor (no model of one).
 Unchecked: models/humans/corpse1.mdl as a ragdoll laid on a table with its motion disabled (spawnflags 16388:
@@ -1418,12 +1432,13 @@ straight run needs two for a train: one to come out of, one to go into. Only whe
 The canal widens from 512 to 1024 (Valve's airboat canals' width): 256 of the city canal, then its walls step out
 128 each side, and again 256 on, so it is 1024 wide for its last 256. The banks wrap round both steps (a slope up
 each step's face, a quarter pyramid on each corner) and stop against the wide canal's upright walls. The next
-module must be a wide one ("wide", "widetee", a turn) or "narrow".
+module must be a wide one ("wide", "widetee", a turn) or "narrow". Beside a street the chain makes it one-sided
+("oneleft", "oneright"): the street's wall runs straight on, the far one steps out 256 and 256 again.
 
 ### `narrow`
 
 The wide canal narrows back to 512: the mirror of "widen" (256 of the wide canal, two steps in, 256 of the city
-canal), the banks starting again round the steps.
+canal), the banks starting again round the steps. One-sided beside a street, as "widen".
 
 ### `wide`
 

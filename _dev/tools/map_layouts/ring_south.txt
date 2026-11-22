@@ -24,7 +24,7 @@ end 6144 1856 N
 # S1: west
 drain nostreet
 overflow flip nostreet
-straight 448
+straight 448 stairs
 collapse flip
 ash
 left
@@ -34,9 +34,9 @@ shanty flip
 camp flip
 vort flip
 sludge flip
-barge
+barge shed
 underpass shed
-straight 640 shed
+straight 640 stairs
 left
 # S3: east
 tunnel 2048 shed

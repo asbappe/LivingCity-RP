@@ -37,7 +37,7 @@ depot shed
 armory shed
 substation
 thumper
-straight 576
+straight 576 stairs
 tee flip 1216
 morgue shed2
 floodroom shed2
@@ -47,7 +47,7 @@ lock
 left
 # N4 and N5: west (the cave forest's branch in the middle)
 stash
-straight 448
+straight 448 stairs
 boathouse
 tee flip
 pipes

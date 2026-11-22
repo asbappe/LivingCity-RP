@@ -4014,6 +4014,18 @@
    "why": "\"DELETE THE BUS, SLANTED METAL DOESN'T EVEN MAKE GEOMETRICAL SENSE\", \"delete the fallen tenament ... HOW WOULD A TENEMANT FALL OVER AND STILL BE UPRIGHT\", \"shipping container/junkyard INSIDE A CANAL? ... DELETE THAT MODULE\" (22 November).",
    "how": "Ask whether a real canal could have it.",
    "check": "by hand"
+  },
+  {
+   "id": "owner-street-ships-with-canals",
+   "tags": [
+    "canal",
+    "streets"
+   ],
+   "title": "The road and railway ship with the canal",
+   "rule": "A canal layout fitted into the map carries its street (a road and a railway on one bank, \"upper left\" or \"upper right\") unless the owner says otherwise: never deliver the canal alone and leave the street as a separate option nobody sees. Where a way leaves the canal on the street's bank, it passes under the road and the piece joined there moves out to meet it.",
+   "why": "\"what ever happened to the road and railroad tracks running parallel and nearby the canal? ... Aren't those supposed to ship with the canal maps? I haven't s a road or railroad track yet\" (22 November); then \"Yes, outside bank\" and \"Bridge over\".",
+   "how": "map_layouts/ring_north.txt and ring_south.txt: \"upper right\", sheds over modules (\"shed\", \"shed2\"), \"stairs\" on a straight in each stretch of street, \"nostreet\" where it cannot run; side_gate_reach() puts a side gate beyond the street.",
+   "check": "map_build.py chain --against every neighbouring piece: nothing runs into anything; the walk check reaches every train's button from the spawn."
   }
  ]
 }

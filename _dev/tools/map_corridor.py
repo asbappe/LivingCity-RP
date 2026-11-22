@@ -444,7 +444,8 @@ def train(b, n, a, z, s, cars):
     for nm, cls in ((name + "_run", "logic_relay"), (name + "_timer", "logic_timer"), (name + "_hurt", "trigger_hurt"), (name + "_horn", "ambient_generic")):
         b.names.append((nm, cls, "train %d" % n))
     v1, v2 = (s * 262, s * 270) if s > 0 else (s * 270, s * 262)
-    m.test_button((a["length"] + 40, v1, STREET + 44, a["length"] + 56, v2, STREET + 60), [("OnIn", name + "_run", "Trigger"), ("OnOut", name + "_run", "Trigger")])
+    fv1, fv2 = sorted((s * (FRONT - 8), s * FRONT))      # (on the frontage's wall, facing the road: a walker stands on the pavement to press it)
+    m.test_button((a["length"] + 40, fv1, STREET + 44, a["length"] + 56, fv2, STREET + 60), [("OnIn", name + "_run", "Trigger"), ("OnOut", name + "_run", "Trigger")])
     m.view(a["length"] + 500, -s * 120, 400, 180, -22, "from the canal, toward the shed")
     m.view(a["length"] + 420, s * 760, STREET, 180, 0, "on the road, toward the shed")
     run = abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])

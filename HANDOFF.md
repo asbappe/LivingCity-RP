@@ -31,11 +31,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 22 November (this chat): **the canal ring round City 18**, every canal module but the town's twelve in it:
-  map_layouts/ring_north.txt (the old ring's route; replaces lc_ring.vmf) and ring_south.txt (round the south),
-  fitted to c18_lc.vmf and checked against every piece; the first canal has a south gate; roadend is the west
-  road's platform. The test map: `python3 _dev/tools/map_ring_walk.py` writes lc_ring_walk.vmf (spawn, sun).
-  docs/dev/map-building.md, "The canal ring". Not compiled yet: the owner's walk comes first.
+- 22 November (this chat): **the canal ring round City 18** (ring_north.txt, ring_south.txt; replaces lc_ring.vmf),
+  fitted to c18_lc.vmf and checked against every piece. The owner walked it once: their faults are fixed and every
+  build now runs a stair check (map_stairs.py) and a walk check (map_walk.py). **A road and railway run along its
+  outside bank** (four trains; the town 704 north and the cave forest 576 west so their branches pass under it);
+  no street over the rail bridge yet (TODO). Test map: `python3 _dev/tools/map_ring_walk.py`. Not compiled yet.
 - Ravenholm's church is in the crypt module, behind the crypt (map_mods_f.church): a tunnel from the crypt to its
   basement. lc_church_grigori and the other names wait for the gamemode (TODO.md, the church).
 - The owner's map is on their Drive (c18_lc.vmf, link-shared): it downloads with curl from

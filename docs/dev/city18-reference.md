@@ -3842,3 +3842,12 @@ No set piece that could not happen: a building fallen over but still upright, a 
 - **Checked by:** by hand
 - **Tags:** canal, geometry
 
+### The road and railway ship with the canal (`owner-street-ships-with-canals`)
+
+A canal layout fitted into the map carries its street (a road and a railway on one bank, "upper left" or "upper right") unless the owner says otherwise: never deliver the canal alone and leave the street as a separate option nobody sees. Where a way leaves the canal on the street's bank, it passes under the road and the piece joined there moves out to meet it.
+
+- **Why:** "what ever happened to the road and railroad tracks running parallel and nearby the canal? ... Aren't those supposed to ship with the canal maps? I haven't s a road or railroad track yet" (22 November); then "Yes, outside bank" and "Bridge over".
+- **How:** map_layouts/ring_north.txt and ring_south.txt: "upper right", sheds over modules ("shed", "shed2"), "stairs" on a straight in each stretch of street, "nostreet" where it cannot run; side_gate_reach() puts a side gate beyond the street.
+- **Checked by:** map_build.py chain --against every neighbouring piece: nothing runs into anything; the walk check reaches every train's button from the spawn.
+- **Tags:** canal, streets
+
