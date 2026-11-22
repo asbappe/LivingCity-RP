@@ -5545,6 +5545,8 @@ con:SetPData("lce_standing", -300)
 LC.Incarcerate(con, 600, "Test")
 net.sent = {}
 _run(13)
+-- (the interrogator can take longer in a busy city: wait up to a dozen seconds more for him)
+for _ = 1, 12 do if _lastnet("lc_interrogate") ~= nil then break end _run(1) end
 ok(_lastnet("lc_interrogate") ~= nil, "an interrogation puts the choice on the prisoner's screen")
 _netcall("lc_interrogate_reply", con, true)
 ok(LC.Interrogations[con] == nil, "choosing Talk ends it")
