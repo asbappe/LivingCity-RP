@@ -43835,16 +43835,11 @@ function Nov22_SupplyLineTests()
     SL.nextAt = nil
     _run(0.5)
     local wait = (SL.nextAt or 0) - CurTime()
-    ok(wait >= 900 - 2 and wait <= 1500, "the next one in 15 to 25 minutes (lc_supply_line_minutes 20)", wait)
+    ok(wait >= 900 - 2 and wait <= 1500, "the next one in 15 to 25 minutes", wait)
     SL.nextAt = CurTime()
     _run(0.5)
     ok(SL.run ~= nil, "and when the time comes, one sets out by itself")
     if SL.run then SL.run.over = true SL.run = nil end
-    _setcvar("lc_supply_lines", 0)
-    SL.nextAt = CurTime()
-    _run(0.5)
-    ok(SL.run == nil and LC.SupplyLineStart() == false, "lc_supply_lines 0: none")
-    _setcvar("lc_supply_lines", 1)
 
     hook.Remove("LivingCityQuestComplete", "SLTest")
     hook.Remove("LivingCityQuestFailed", "SLTest")

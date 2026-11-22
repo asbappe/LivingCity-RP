@@ -6,7 +6,7 @@
     This needs the route marked on the map, as editor points or names in the map pieces."
 
       When        only while the Resistance's headquarters is live (sv_livingcity_base.lua), now and then:
-                  every lc_supply_line_minutes (20), give or take a quarter (15 to 25), one at a time.
+                  every 15 to 25 minutes (SL.MINUTES, give or take a quarter), one at a time.
                   A map with no route has none.
       Routes      the map's own: info_targets named lc_supply_road_1, _2, ... (a courier on foot) and
                   lc_supply_canal_1, _2, ... (a boat), in that order. Or the editor's: "Point: supply line,
@@ -29,7 +29,7 @@
                   him, arrest him, sink the boat): the usual pay. Their marker shows him only once a unit
                   (a player or the Combine's own) has seen him, or once he is half way.
 
-      Settings    lc_supply_lines (1), lc_supply_line_minutes (20)
+      Settings    none: a route on the map turns them on (no route, none); SL.MINUTES is fixed (20)
       For others  LC.SupplyLineStart(kind) (kind "road", "canal" or nil), LC.SupplyLineRoutes(kind),
                   LC.SupplyLines.run (the run under way: kind, state "waiting", "boat", "walk", courier,
                   boat, spotted), hooks LivingCitySupplyLine(run), LivingCitySupplyArrived(run, food,
@@ -43,9 +43,7 @@ LC = LC or {}
 LC.SupplyLines = LC.SupplyLines or {}
 local SL = LC.SupplyLines
 
-local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvOn = CreateConVar("lc_supply_lines", "1", FLAGS, "Now and then, while the Resistance's headquarters is live, a courier walks the road or a boat comes up the canal with food and rounds for its crate (0: never)", 0, 1)
-local cvMinutes = CreateConVar("lc_supply_line_minutes", "20", FLAGS, "Minutes between the Resistance's supply runs, give or take a quarter", 1, 600)
+SL.MINUTES = 20                                                      -- between runs, give or take a quarter (15 to 25)
 
 SL.LOAD_FOOD = 6                                                     -- meals into the crate
 SL.LOAD_ROUNDS = { ammo_pistol = 2, ammo_smg = 1, ammo_buckshot = 1 } -- boxes set on the crate
@@ -182,7 +180,7 @@ function SL.Thing(run)
     return nil
 end
 
-local function Wait() return cvMinutes:GetFloat() * 60 * math.Rand(0.75, 1.25) end
+local function Wait() return SL.MINUTES * 60 * math.Rand(0.75, 1.25) end
 
 local leftovers = {}
 local function Leave(e) if IsValid(e) then leftovers[#leftovers + 1] = { ent = e, at = CurTime() } end end
@@ -357,7 +355,6 @@ end
 
 -- A run, now: the jobs go up, and the courier or the boat sets out once the escort has had its chance.
 function LC.SupplyLineStart(want)
-    if not cvOn:GetBool() then return false, "Supply lines are off (lc_supply_lines 0)." end
     if SL.run then return false, "A supply run is already under way." end
     if not LC.Running then return false, "The city isn't running." end
     local zone = LC.BaseLive and LC.BaseLive()
@@ -510,7 +507,7 @@ function SL.Tick(now)
     local run = SL.run
     if not run then
         -- the next one, while the headquarters is live
-        if not (cvOn:GetBool() and LC.Running and LC.BaseLive and LC.BaseLive()) then return end
+        if not (LC.Running and LC.BaseLive and LC.BaseLive()) then return end
         if not SL.nextAt then SL.nextAt = now + Wait() return end
         if now < SL.nextAt then return end
         SL.nextAt = now + Wait()
@@ -520,7 +517,7 @@ function SL.Tick(now)
         return
     end
     -- no headquarters to bring it to (packed, overrun, torn down), the city stopped, or too long on the way
-    if not cvOn:GetBool() or not LC.Running or not (LC.BaseLive and LC.BaseLive() == run.zone) or now - run.startT > SL.MAX_SECS then
+    if not LC.Running or not (LC.BaseLive and LC.BaseLive() == run.zone) or now - run.startT > SL.MAX_SECS then
         return Stop(run, "off")
     end
     if run.state == "boat" then MoveBoat(run, now) end

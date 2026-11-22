@@ -4,7 +4,7 @@ The owner, 22 November: "Now and then an NPC courier walks the road, or a boat c
 
 ## What happens
 
-- **When:** only while the headquarters is live (its flag at the top: `resistance-base.md`), every 15 to 25 minutes (`lc_supply_line_minutes` 20, give or take a quarter), one at a time. A map with no route has none.
+- **When:** only while the headquarters is live (its flag at the top: `resistance-base.md`), every 15 to 25 minutes, one at a time. A map with no route has none: a route is what turns them on.
 - **By road:** a courier of the Resistance in plain clothes, unarmed, a box in both hands, steps out at the route's first point and walks it, point after point, then on to the headquarters' supply crate (along the city's paths where it has them). Shot at, or with a unit close, he runs.
 - **By canal:** a canal boat with a rebel in it comes up the route on the water, moved smoothly point to point. At the last point it ties up; the boatman takes the box ashore and walks it to the crate.
 - **In:** six meals into the crate, and four boxes of rounds (two pistol, one SMG, one of shells) set on top of it. The Resistance have no stock of rounds (the fund buys them as fighters are issued), so the rounds come as boxes anyone there can pick up.
@@ -27,9 +27,9 @@ Posted as the run starts, on the boards and with the usual "New job" line; nothi
 
 F4 > Admin testing tools > Testing alone > Supplies: "Supply run to the headquarters now" (the headquarters must be live and the map have a route; it says what is missing).
 
-## Settings (both new)
+## Settings
 
-`lc_supply_lines` 1 (on) · `lc_supply_line_minutes` 20.
+None: a route on the map (map names or the editor's points) turns supply runs on; take the route away and there are none.
 
 ## For other code
 
