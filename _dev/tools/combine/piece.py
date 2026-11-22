@@ -2,7 +2,9 @@
 masses in 128 courses, stacks of plates (a big first step, then 4 or 8), ribs on a 256 rhythm broken by pairs, small
 plates straight on big masses, light panels flush in the plates. All of it laid in a Frame (geom.py), so a turned
 piece is built exactly as a square one."""
+from . import tops as TP
 from .geom import METAL, TRIM, LIGHT, COLD, OLD, G, LEANS, ext, loft, rect, cut, clip, legs, rib_run, orient, Frame
+TOWER, GATE = (("point", 2), ("vault", 1), ("steps", 1), ("ridge", 1)), (("shed", 1), ("steps", 1), ("ridge", 1))
 
 
 class Sink:
@@ -232,6 +234,7 @@ class Piece:
         self.course([(-T2, HA - 128), (-T2, HA), (-T2 - r.choice(LEANS), HA)], a + 16, c - 16)
         self.tabs(("v", -T2, -1), a + 32, L - 64, 64)
         self.fbox(("u", 0, -1), -T1 + 16, -T1 + 64, 0, H - 160, 0, 8, self.plate)
+        self.top = TP.crown(self, TP.pick(r), a, c, -T2, 0, HA, r, "u", False)
 
     def gate(self, W=None, ho=256, T=256):
         """A passage whose two sides differ: thin plates three to five deep on one, leaning in high on the other."""
@@ -267,6 +270,7 @@ class Piece:
         c = wl + W + wr * r.choice((5, 7, 9)) // 192 * 16
         self.course([(-T, HB - 128), (-T, HB), (-T - r.choice(LEANS), HB)], *r.choice(((wl + W + 16, c), (c, L - 16))))
         self.tabs(bk, wl + W + 32, L - 48, 64)
+        self.top = TP.crown(self, TP.pick(r, (), GATE), 160, wl - 32, -T, 0, H, r, "u", False)
         return wl, W
 
     def tower(self):
@@ -285,6 +289,7 @@ class Piece:
         top = rect(c16(a1), -Y + c16(b2), X - c16(a2) - 40, -c16(b1) + 32)
         self.add(loft(bot, top, Hc, Hc + 128, self.mm))
         self.mass(top, Hc + 128, H)
+        self.top = TP.crown(self, TP.pick(r, (), TOWER), top[0][0], top[1][0], top[0][1], top[2][1], H, r, "u", False)
         # foot: the west face battered (looks up); a lower slab pressed on the south face at one end, its head set back
         self.add(ext([(0, 0), (-32, 0), (0, 128)], 1, -Y, -b1, self.mm))
         self.mass(rect(X - wa, 0, X, 64), 0, ha - 128)

@@ -119,6 +119,45 @@ walls (combineinnerwall*, combineinnerwallcluster1024) 39: 74% tilted, mostly ro
 pitch 6 to 54, 49% at free yaws, nearest twin a median 900 away. combine_intwallunit 43, 86% square, nearest twin 64
 to 124 apart. Railings (railing_128, 256, 512) 233, 60% square.
 
+## Tops (22 November)
+
+The owner: "are combine structures as 'flat' on top? From my memory, they are either curved, like the combine
+bunkers, or pointed or some weird needless slope". Measured from outside in 25 maps with Combine exteriors (d3_c17_09,
+10a, 10b, 11, 12, 12b; ep1_c17_00, 01, 05, 06; d3_citadel_01; ep2_outland_07, 10; d2_coast_01, 03 to 05, 07 to 11; d2_prison_06 to
+08; d3_c17_13 and d2_coast_12, the bunkers, were not in the scratch folder), the 3D sky left out. Combine brushes
+grouped by touch; the roof of a group is the highest face looking up (0 to 70 degrees) over each 8 or 16 cell; a cell
+counts when the first solid above it is a sky brush; a top is the roof cells joined within 128 of height, kept when
+4096 square units or more, 128 or more over the group's foot, and 40% or more of its rim drops 128 or more (6 floors
+and plazas left out). Scripts in the chat's scratch folder (`work/tops/tops.py`, `summ.py`, `curves.py`).
+
+**The answer.** Valve's Combine brushwork is flat on top. 57 tops open to the sky: 25 are tool-textured nodraw (half
+the top area, 19.6 million square units: d3_citadel_01 14, d2_prison_06 7), so nobody sees them; of the 28 textured
+ones (32 less copies: one block is the same piece in d3_c17_10a, 11 and 12, two pairs in d2_prison_08) 21 are flat
+(75%), 4 stepped (14%), 3 flat or stepped with a sloped edge (11%); none single-sloped, pointed, ridged or curved. By
+area flat 64%, stepped 36% (the depot's roofs), sloped under 1%. The curves and points the owner remembers are models:
+combine_bunker01 (272 by 410 by 262; in none of these maps), combinetower001 (226 by 284 by 549; all 16 stand on the
+ground or an old floor, none on a top), the Citadel and its walls (the sky).
+
+**Slopes.** 14 degrees (1 in 4) on a chamfered edge (d3_citadel_01, a quarter of that top); 59 and 65 on the sides of
+d2_coast_09's Combine post (about 30% of its top, the rest flat at two levels). No 45, no 1 in 2 on any top.
+
+**Curves.** None outside. Searched in all 27 maps, the Citadel's insides too, for chains of faces sharing edges and
+turning about one level axis: only Breen's office ceiling (d3_breen_01), 7 arcs of 4 segments, 11 to 13 degrees a
+segment, 90 to 280 wide, radius 400 to 1450, facing down.
+
+**Where top meets wall: the skyline is broken, not shaped.** Of 32 textured tops: fins (thin solids 32 or less rising
+64 or more over the roof) on 9 (the depot roof 35, the others 1 to 8); a creeping wall (combineinnerwall001a, 001c,
+cluster1024) hung at the top of 8; a parapet or a higher step along a fifth or more of the rim on 9; an overhang of 8
+or more on 4 (59 and 64, two ledges; 320 and 352, cantilevers); a sloped rim on 3; nothing at all on 11. Two of three
+flat tops carry something on the skyline. combine_generator01 stands on Combine solids 128 or more up in 15 of its 55
+placings.
+
+**For the generator** (`_dev/tools/combine/tops.py`): the owner asked for the curved, pointed and sloped tops, so the
+masses get them in brushes as Valve's models have them, lopsided as the Combine is (vault segments of 11 to 13 degrees,
+crown off the middle; two slopes of different ratios; slopes that stop short; steps then a slope), the roofs round
+them Valve's broken skyline (fins in pairs, a generator, a creeping wall over the edge), and the tower model stands on
+the ground. Lesson valve-combine-tops (proposed).
+
 ## Pictures
 
 - `arch_01_core_lozenge.png`: styleguide_core from the south-west (map_view, iso SW, whole map). The reactor room as

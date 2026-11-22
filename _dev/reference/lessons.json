@@ -3775,6 +3775,20 @@
    "why": "The owner, 21 November: \"I am totally ok with them just copy/pasting sections, rooms, etc out of the HL2 and episodes VMF files and adapting them to the gamemode\" (and earlier that day: \"I am totally ok with you literally copy/pasting rooms and sections of the HL2 / EP1 / EP2 games\").",
    "how": "Get Valve's VMFs (docs/dev/valve-ingest-progress.md, \"Getting the maps again\"; they stay in the chat's scratch folder, never in the repo). Lift the piece: python3 _dev/tools/map_prefab.py extract F.vmf NAME X1 Y1 Z1 X2 Y2 Z2 --anchor X Y Z --note \"...\" (75 pieces already lifted: docs/dev/prefabs.md). Look up every entity in it: python3 _dev/tools/vdc.py --card CLASS. Garry's Mod has Episode One and Two content built in, so the piece's models and materials are there.",
    "check": "map_assets.py and map_lint.py on the result; no entity left in that its card says is single-player only."
+  },
+  {
+   "id": "valve-combine-tops",
+   "tags": [
+    "combine",
+    "valve",
+    "geometry",
+    "owner"
+   ],
+   "title": "Valve's Combine brushwork is flat on top; the skyline is broken, and the curves are models",
+   "rule": "A Combine structure's top in brushes is flat (3 in 4) or stepped, its skyline broken by fins in pairs, a creeping wall hung over the edge, a parapet or a higher step, or a generator (2 in 3 of the flat ones); a sloped edge now and then (1 in 4, 14 degrees; 59 to 65 on a post). Curved and pointed Combine tops are models (combine_bunker01, combinetower001, the Citadel); in brushes, for the owner's look, build them lopsided: vault segments of 11 to 13 degrees with the crown off the middle, two slopes of different ratios, slopes that stop short, steps then a slope, 45 degrees or less. The owner's choice beats Valve's here (22 November: Combine tops should be \"curved, like the combine bunkers, or pointed or some weird needless slope ... not flat\"): our generator gives 11 in 13 tops those shapes (`combine/tops.py`, WEIGHTS).",
+   "why": "25 maps with Combine exteriors (d3_c17_09 to 12b, ep1_c17_00 to 06, d3_citadel_01, ep2_outland_07 and 10, d2_coast, d2_prison_06 to 08), 3D sky left out: 57 tops open to the sky, 25 of them nodraw (half the top area, unseen); of 28 textured ones 21 flat, 4 stepped, 3 with a sloped edge, none curved, pointed or single-sloped. Fins on 9 of 32, creeping walls at the top on 8, parapet or higher step on 9, overhang 8+ on 4, nothing on 11. combinetower001: all 16 on the ground; combine_generator01 on Combine solids 128+ up in 15 of 55. Arcs in Combine brushwork: only Breen's office ceiling (4 segments, 11 to 13 degrees, radius 400 to 1450). The owner, 22 November: 'are combine structures as flat on top? ... curved, like the combine bunkers, or pointed or some weird needless slope', then 'please add this concept to the generator'.",
+   "how": "map_combine.py (combine/tops.py): crown(piece, kind, ...) for vault, ridge, point, shed, steps or flat (fins and a parapet), WEIGHTS for the shares; the building's attic in two parts (a vault on the bigger), the wing, the intrusion, every pier and tower crowned; fins on a third of the wall's runs; a generator and a creeping wall on the building's roof; the tower model on the ground. A module with a plain flat Combine top seen from the ground: give it fins, a parapet or one of the crowns.",
+   "check": "review; map_combine.py check (looking up 43 to 62%, walls at 0.9+ under 43%)"
   }
  ]
 }
