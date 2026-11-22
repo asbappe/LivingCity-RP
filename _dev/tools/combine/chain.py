@@ -3,8 +3,8 @@ block (valve-combine-meets-old).
 
 wall_chain: straight runs 200 to 1000 long, each turned 3 to 17 degrees from the last (the line wanders up to 34 off
 the grid and is steered back), 768 high, the inner face plumb over a plinth 48 out, the outer face battered about 4.5
-degrees (so the foot is twice the head); ribs following the lean on a 256 rhythm broken by pairs, small plates on the
-foot and the plinth; a pier at every joint (a head leaning over, a stack with its light panel); a gate with unequal
+degrees (so the foot is twice the head); ribs following the lean on a 256 rhythm broken by pairs, a band on the
+foot; a pier at every joint (a head leaning over, a stack with its light panel); a gate with unequal
 sides where it crosses the road; a tower at each end. Every run is laid in a frame turned by a whole-number vector,
 so its corners are whole and its faces flat.
 
@@ -32,7 +32,7 @@ def run(p, k, H, r):
     T, Le, Pl = q(64), lean_units(p.fr, H), q(48)
     step = H // Le
     # the outer face, lopsided: ribs or fins following the lean on a third of it (the 256 rhythm broken by pairs); on
-    # the rest a staircase of panels following the lean, highest at the end away from the ribs, small plates at its foot
+    # the rest a staircase of panels following the lean, highest at the end away from the ribs, a band at its foot
     fa = k * r.choice((30, 35, 40)) // 100
     first = r.random() < 0.5
     (ra, rb), (ta, tb) = ((q(96), fa), (fa + q(32), k - q(64))) if first else ((k - fa, k - q(96)), (q(64), k - fa - q(32)))
@@ -49,7 +49,7 @@ def run(p, k, H, r):
         big, small = max(q(64), (a1 - a0) * r.choice((25, 33, 40)) // 100), r.choice((0, q(4), q(8)))
         a0, a1 = (a0 + big, a1 - small) if first else (a0 + small, a1 - big)
         za, zt = za + step * max(1, 32 // step), zt - step * r.choice((0, 1, 2))
-    # the inner face: a stack over most of it from one end, ribs in pairs and small plates on the rest
+    # the inner face: a stack over most of it from one end, ribs in pairs on the rest
     s0 = s1 = None
     if k * p.fr.L >= 512:
         sm = k * r.choice((55, 60, 70)) // 100
@@ -65,9 +65,10 @@ def run(p, k, H, r):
         if p.clear(("v", 0, 1), x, w):
             p.add(ext([(Le, 0), (Le + d, 0), (d, H), (0, H)], 0, x, x + w, TRIM))
     t = max(1, q(p.thick[0]))
-    for x in rib_run(max(ta, q(144)), min(tb, k - q(144)) - q(32), q(32), r, None, q(128), (q(32), q(96))):
+    xs = rib_run(max(ta, q(144)), min(tb, k - q(144)) - q(32), q(32), r, None, q(128), (q(32), q(96)))
+    if xs:                                     # one band along the foot, where a row of small plates stood
         a, b = Le - z0 // step, Le - z1 // step
-        p.add(ext([(a, z0), (a + t, z0), (b + t, z1), (b, z1)], 0, x, x + q(32), p.plate))
+        p.add(ext([(a, z0), (a + t, z0), (b + t, z1), (b, z1)], 0, xs[0], xs[-1] + q(32), p.plate))
     for i, (b0, b1, zl, zh, e0, e1, mat) in enumerate(lays):
         nxt = lays[i + 1][:2] if i + 1 < len(lays) else ()
         js = sorted({b0, b1} | {j for j in nxt if b0 < j < b1})
@@ -81,7 +82,7 @@ def run(p, k, H, r):
     p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 40)
     p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 88)
     rt = TP.own(r, "run", k)
-    if rt.random() < 0.35:                     # fins on the head of a third of the runs (Valve's broken skyline)
+    if rt.random() < 0.65:                     # fins on the head of two runs in three (Valve's broken skyline)
         a = max(q(144), k * rt.choice((1, 2, 3)) // 8)          # (clear of the piers at both ends)
         TP.fins(p, a, min(k - q(144), a + k * rt.choice((3, 4)) // 8), -T, 0, H, r)
     if s0 is not None:
@@ -103,10 +104,10 @@ def pier(p, u0, H, r, T, Le, Pl, lamp=False):
     p.course2(v1, v0, Hp - 128, Hp, u0 - P, u0 + P, (q(32), q(40), q(16)))
     p.stack(("v", v1, 1), u0 - P + e0, u0 + P - e1, r.choice((64, 128)), Hp - 256, r.randint(3, 4))
     p.tabs(("u", u0 + P, 1), v0 + q(16), v1 - q(16), r.choice((192, 320)))
-    kind = TP.pick(r, kinds=(("point", 2), ("ridge", 1), ("shed", 1), ("steps", 2)))
+    kind = TP.pick(r, kinds=(("ridge", 2), ("shed", 2), ("steps", 2), ("flat", 1)))
     p.top = TP.crown(p, kind, u0 - P, u0 + P, v0, v1, Hp, r, across="u", ribs=False)
-    if lamp:
-        p.sink.lamps.append((p.w((u0 - P + q(24), v1 + 1, H - 96)), (p.fr.yaw() + r.choice((-30, -15, 15, 30))) % 360, 30))
+    turn = r.choice((-30, -15, 15, 30)) if lamp else TP.own(r, "lamp", u0).choice((-30, -15, 15, 30))   # (a lamp on every pier)
+    p.sink.lamps.append((p.w((u0 - P + q(24), v1 + 1, H - 96)), (p.fr.yaw() + turn) % 360, 30))
 
 
 def heading(r, cur, y, y0, west):
@@ -187,7 +188,7 @@ def intrusion(block, sink, r, mat, ceiling="concrete/concreteceiling004a", turn=
         sink.old.append([([(x, y, 0) for x, y in piece], mat), ([(x, y, RH) for x, y in piece], mat)] +
                         [([(piece[i][0], piece[i][1], 0), (piece[i - 1][0], piece[i - 1][1], 0), (piece[i - 1][0], piece[i - 1][1], RH),
                            (piece[i][0], piece[i][1], RH)], mat) for i in range(len(piece))])
-    # the mass: courses, a head leaning over toward the block, a stack on the face to the street, ribs, small plates
+    # the mass: courses, a head leaning over toward the block, a stack on the face to the street, ribs
     q = p.q
     (s0, s1), jj = p.zone(0, ln - q(160), "lo")
     p.mass(rect(0, -wd, ln, 0), 0, Hm - 128, (jj,))
@@ -208,7 +209,6 @@ def intrusion(block, sink, r, mat, ceiling="concrete/concreteceiling004a", turn=
     for v in (-RD + 80, -RD + 208):
         rm.fbox(("u", 0, 1), v, v + 16, 200, 232, 0, 16, rm.mm)
     sink.lights.append(((cx1 + RW // 2, cy1 + RD // 2, RH - 48), "255 224 144 120"))
-    sink.props.append(("models/props_combine/combineinnerwall001c.mdl", (foot[2][0] + 224, by2 + 56, 400),
-                       (r.randint(14, 40), (90 + r.randint(-40, 40)) % 360, 180 + r.randint(-15, 15))))
+    r.randint(14, 40), r.randint(-40, 40), r.randint(-15, 15)     # (the tilted creeping wall's draws: it floated, it went)
     sink.lamps.append((fr.w((s0 + q(32), q(64) + 1, 352)), (fr.yaw() + 15) % 360 // 15 * 15, 30))
     return {"door": (d0, d1, DH), "room": (cx1, cy1, cx2, cy2, RH), "turn": "1 in 2" if k == 2 else "45", "mass": foot, "top": p.top}

@@ -42,4 +42,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   drive.usercontent.google.com (the connector refuses files over 10 MB). Valve's VMF zip likewise.
 - Earlier 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
-- Another chat works on the silo, the rocket and the Combine generator: merge main before pushing.
+- Map chat: bunker and silo fixed to the owner's list (TODO.md); no prop in a way players walk, every build (CLAUDE.md);
+  the cave's back rebuilt from Valve's maps: Ravenholm's big room (for the office), the emergency door, EP2's holdout
+  and lift, ep2_outland_03's antlion tunnels, the extract. docs/dev/map-building.md. Merge main first.

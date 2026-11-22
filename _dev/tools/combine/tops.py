@@ -3,11 +3,12 @@ they are either curved, like the combine bunkers, or pointed or some weird needl
 concept to the generator". Measured first (_dev/reference/valve_citadel/notes/architecture_notes.md, "Tops"; lesson
 valve-combine-tops): Valve's own Combine brushwork is flat on top three times in four (stepped or with a sloped edge
 the rest, never curved or pointed), but two of three of those flat tops have their skyline broken (fins, a creeping
-wall hung over the edge, a parapet or a higher step, a generator); the curves and points are Valve's models (the
+wall, a parapet or a higher step, a generator); the curves and points are Valve's models (the
 bunker, the towers, the Citadel). So the masses get the owner's shapes in brushes, lopsided as the Combine is (curved
-vaults with their crown off the middle, ridges and points with two different slopes, single slopes that stop short,
-steps then a slope), and some tops Valve's broken flat (fins in pairs, a parapet on part of one edge), in the shares
-of WEIGHTS. No top is left plain flat.
+vaults with their crown off the middle, ridges with two different slopes, single slopes that stop short, steps then a
+slope), and some tops Valve's broken flat (fins in pairs, a parapet on part of one edge), in the shares of WEIGHTS.
+No top is left plain flat, and none is pointed: the owner, 22 November, of the four-sided points on the entrance's
+piers, "they look very wrong for a combine structure, so please remove those from the generator".
 
 A top is a line across the piece, (s, height over z) pairs, pushed along the piece: each edge of the line a solid
 with upright sides down to z, so every face is flat and every corner whole (on the 4 grid in a square frame; whole
@@ -135,20 +136,6 @@ def steps(p, s0, s1, r, flip=None, k=None):
     return clean(p, line, s0, s1)
 
 
-def point(p, u0, u1, v0, v1, z, r, mat=None):
-    """A lopsided point over a small top: four slopes up to an apex off the middle, the steepest 45."""
-    au = u0 + g(p, (u1 - u0) * r.choice((1, 2)) / 3.0)
-    av = v0 + g(p, (v1 - v0) * r.choice((1, 2)) / 3.0)
-    au, av = min(u1 - 1, max(u0 + 1, au)), min(v1 - 1, max(v0 + 1, av))
-    h = z4(min(au - u0, u1 - au, av - v0, v1 - av) * p.fr.L)
-    if h < 16:
-        return False
-    m, top = mat or p.mm, (au, av, z + h)
-    base = [(u0, v0, z), (u1, v0, z), (u1, v1, z), (u0, v1, z)]
-    p.add([(base, m)] + [([base[i], base[i - 1], top], m) for i in range(4)])
-    return True
-
-
 def fins(p, u0, u1, v0, v1, z, r, back=True):
     """Fins standing on a top in pairs or on a beat (rib_run), 16 thick, their tops slanting, along its back edge."""
     r, w, n = own(r, "fins", u0, v0, z), max(1, g(p, 16 / p.fr.L)), 0
@@ -158,9 +145,29 @@ def fins(p, u0, u1, v0, v1, z, r, back=True):
     lo = max(lo, hi - z4(d * p.fr.L))                 # the slant 45 or less
     if not back:
         hi, lo = lo, hi
-    for x in rib_run(u0 + max(1, g(p, 32 / p.fr.L)), u1 - w, w, r, r.choice(("pair", "even", "free")), max(2, g(p, 128 / p.fr.L))):
+    xs = rib_run(u0 + max(1, g(p, 32 / p.fr.L)), u1 - w, w, r, r.choice(("pair", "even", "free")), max(2, g(p, 128 / p.fr.L)))
+    if not xs and u1 - u0 >= 3 * w:                   # (a small top still gets one, off its middle: never plain flat)
+        xs = [u0 + g(p, (u1 - u0) / 3.0)]
+    for x in xs:
         p.add(ext([(va, z), (vb, z), (vb, z + lo), (va, z + hi)], 0, x, x + w, TRIM))
         n += 1
+    return n
+
+
+def fin_row(p, face, s0, s1, z0):
+    """Fins standing out of a face of p on z0, 16 thick, 64 or 96 out, their tops falling at 45 to the tip, in pairs on
+    a 256 beat (or on a beat), kept off the middles of the faces (fins against a wall, where small plates stood).
+    Drawn from a stream of their own, so the rest of a draw stays as it was."""
+    rr = own(p.r, "fin row", face, s0, z0)
+    q, w, n = p.q, p.q(16), 0
+    out, hi = rr.choice((64, 96)), rr.choice((128, 160))
+    lo = hi - int(round(q(out) * p.fr.L))
+    ax, pl, sg = face
+    for x in rib_run(s0, s1 - w, w, rr, rr.choice(("pair", "pair", "even")), q(256)):
+        if p.clear(face, x, w):
+            p.add(ext([(pl, z0), (pl + sg * q(out), z0), (pl + sg * q(out), z0 + lo), (pl, z0 + hi)], 0 if ax == "v" else 1, x, x + w, TRIM))
+            p.take(face, x, x + w, z0, z0 + hi)
+            n += 1
     return n
 
 
@@ -194,8 +201,6 @@ def _crown(p, kind, u0, u1, v0, v1, z, r, across, ribs, over):
         n = fins(p, u0, u1, v0, v1, z, r)
         parapet(p, u0, u1, v0, v1, z, r)
         return "flat with %d fins" % n
-    if kind == "point":
-        return "point" if point(p, u0, u1, v0, v1, z, r) else crown(p, "ridge", u0, u1, v0, v1, z, r)
     across = across or ("v" if (v1 - v0) * 1.0 <= (u1 - u0) else "u")
     s0, s1, a, b, axis = (v0, v1 + over, u0, u1, 0) if across == "v" else (u0, u1, v0, v1 + over, 1)
     make = {"vault": vault, "ridge": ridge, "shed": shed, "steps": steps}[kind]
@@ -219,7 +224,7 @@ def _crown(p, kind, u0, u1, v0, v1, z, r, across, ribs, over):
         xs = set()
     for c0, c1 in zip(cuts, cuts[1:]):
         lift(p, line, c0, c1, z, TRIM if c0 in xs else p.mm, axis, 8 if c0 in xs else 0)
-    # small plates straight across the joint under the end faces, where the crown stands 48 or more over z
+    # the row of small plates across the joint under the end faces is still drawn (so the draw stays), none laid
     hs = [x for x, hh in line if hh >= 48]
     if hs and max(hs) - min(hs) >= 4:
         ends = ((("v", b, 1), ("v", a, -1)) if axis == 1 else (("u", b, 1), ("u", a, -1)))

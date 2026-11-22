@@ -261,8 +261,8 @@ def digest(chunk):
     return hashlib.md5("\n".join(chunk).encode("utf-8", "surrogateescape")).hexdigest()
 
 
-# A test map's own world (--blank): nothing but a spawn and the owner's sun (their light_environment's settings, their
-# sky), for walking pieces joined together before they go into the real map.
+# A test map's own world (--blank): nothing but a spawn, the owner's sun (their light_environment's settings, their
+# sky) and an env_sun where that light comes from (as test_extras does), for walking pieces joined before they go in.
 BLANK = """versioninfo
 {
 	"editorversion" "400"
@@ -314,6 +314,22 @@ entity
 	"SunSpreadAngle" "0"
 	"origin" "%(x)d %(y)d %(sz)d"
 }
+entity
+{
+	"id" "4"
+	"classname" "env_sun"
+	"angles" "-70 149 0"
+	"pitch" "-70"
+	"use_angles" "1"
+	"rendercolor" "100 80 80"
+	"overlaycolor" "0 0 0"
+	"size" "16"
+	"overlaysize" "-1"
+	"material" "sprites/light_glow02_add_noz"
+	"overlaymaterial" "sprites/light_glow02_add_noz"
+	"HDRColorScale" "1.0"
+	"origin" "%(x)d %(y)d %(uz)d"
+}
 cameras
 {
 	"activecamera" "-1"
@@ -335,7 +351,7 @@ def main():
     ap.add_argument("--keep-caps", action="store_true", help="leave every gate's cap in (the pieces stay shut off from each other)")
     ap.add_argument("--plain", action="store_true", help="do not name the sun and do not add the dream room's red lights")
     ap.add_argument("--blank", action="store_true", help="a TEST MAP of pieces alone: no owner's map (the first file is a piece too), test builds "
-                    "(lc_NAME_test.vmf) taken, their own spawns and suns left out and one of each added (--spawn; the owner's sun's settings)")
+                    "(lc_NAME_test.vmf) taken, their own spawns, suns and env_suns left out and one of each added (--spawn; the owner's sun's settings)")
     ap.add_argument("--spawn", type=int, nargs=4, default=[3648, 1984, 672, 90], metavar=("X", "Y", "Z", "YAW"),
                     help="--blank: where the test map's one spawn stands (default: the first canal's quay)")
     args = ap.parse_args()
@@ -346,7 +362,7 @@ def main():
         base_file = args.out + ".base.tmp"
         x, y, z, yaw = args.spawn
         with open(base_file, "w", newline="") as f:
-            f.write(BLANK % {"x": x, "y": y, "z": z, "yaw": yaw, "sz": z + 128})
+            f.write(BLANK % {"x": x, "y": y, "z": z, "yaw": yaw, "sz": z + 128, "uz": z + 160})
         args.owner = base_file
     if os.path.abspath(args.out) == os.path.abspath(args.owner):
         raise SystemExit("the new file must not be the owner's own")
@@ -367,7 +383,8 @@ def main():
     seen = set()
     for p in pieces:
         if args.blank:      # (a test map: each test build's own spawn and sun are left out; the map has one of each)
-            p.ents = [e for e in p.ents if not any(p.lines[i].strip() in ('"classname" "info_player_start"', '"classname" "light_environment"') for i in range(e[0], e[1]))]
+            p.ents = [e for e in p.ents if not any(p.lines[i].strip() in ('"classname" "info_player_start"', '"classname" "light_environment"', '"classname" "env_sun"')
+                                                   for i in range(e[0], e[1]))]
         if args.blank and p.name in seen:
             raise SystemExit("%s is given twice" % p.name)
         if args.blank:

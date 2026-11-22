@@ -955,6 +955,11 @@ def test_extras(vmf, start, yaw, vis):
     vmf.point("light_environment", (start[0], start[1], start[2] + 128), {
         "_light": "190 214 193 50", "_ambient": "175 191 207 13", "_lightHDR": "-1 -1 -1 1", "_ambientHDR": "-1 -1 -1 1",
         "_lightscaleHDR": "1", "_ambientscaleHDR": "1", "angles": "0 149 0", "pitch": "-70", "SunSpreadAngle": "0"}, vis)
+    # the sun itself in the sky, where that light comes from (the owner, 22 November: "could you please put a spawn point
+    # and env_sun so I can see outside in the test map?"): the light's own angles with use_angles, as the wiki advises
+    vmf.point("env_sun", (start[0], start[1], start[2] + 160), {
+        "angles": "-70 149 0", "pitch": "-70", "use_angles": "1", "rendercolor": "100 80 80", "overlaycolor": "0 0 0", "size": "16",
+        "overlaysize": "-1", "material": "sprites/light_glow02_add_noz", "overlaymaterial": "sprites/light_glow02_add_noz", "HDRColorScale": "1.0"}, vis)
 
 
 def bar_row(box, along, gap=24):

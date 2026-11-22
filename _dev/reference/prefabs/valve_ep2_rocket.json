@@ -1,6 +1,6 @@
 {
 "name": "valve_ep2_rocket",
-"note": "Episode Two's rocket as it stands in White Forest's silo (ep2_outland_11), in the silo piece's own frame (anchor 1824 -9936 -1728, the shaft's axis on the pit floor, the same as valve_ep2_silo): stage 1 (347 to 747) with its three engines, stage 2 (731 to 939), stage 3 (874 to 1263), the nose (rocket.mdl, 1238 to 1629) and the hatch (rocket_hatch, a prop_dynamic). About 97 across from the axis at most. With Valve's steam round it: three jets from the engines' exhaust (on from the start, 85 long, grey) and two small vents at the nose (on), and the big jet at the nose (steamjet_rocket_1, here rocket_nose_jet, off: Valve's story starts it). The hatch at the top is kept open (the owner, 22 November: \"keep the little door at the top of the rocket open\"): a logic_auto plays the hatch model's 'closing' sequence at spawn and HoldAnimation keeps its last frame (Valve's door_rocket_hatch, a nodraw func_door_rotating, plays 'closing' when it opens, so that sequence is the hatch opening). Left out: its lighting origins, the hatch's func_door_rotating (nodraw), the welder's sparks and glow (parented to a citizen welder in Valve's map). Valve's launch (ep2_outland_12a: rocket_low on a func_tracktrain) is not in it.",
+"note": "Episode Two's rocket as it stands in White Forest's silo (ep2_outland_11), in the silo piece's own frame (anchor 1824 -9936 -1728, the shaft's axis on the pit floor, the same as valve_ep2_silo): stage 1 (347 to 747) with its three engines, stage 2 (731 to 939), stage 3 (874 to 1263), the nose (rocket.mdl, 1238 to 1629) and the hatch (rocket_hatch, a prop_dynamic). About 97 across from the axis at most. With Valve's steam round it: three jets from the engines' exhaust (on from the start, 85 long, grey) and two small vents at the nose (on), and the big jet at the nose (steamjet_rocket_1, here rocket_nose_jet, off: Valve's story starts it). The hatch at the top is open (the owner, 22 November: \"keep the little door at the top of the rocket open\"): the hatch model's own idle is the open hatch, as Valve's map starts it (Lamarr climbs in; then Valve's door_rocket_hatch, a nodraw func_door_rotating the player uses, plays the model's 'closing' sequence to shut it). Nothing plays a sequence at spawn: a logic_auto that played 'closing' at spawn, holding its last frame, shut the hatch instead (the owner, 22 November: \"the rocket door is shut\"), and is gone. Left out: its lighting origins, the hatch's func_door_rotating (nodraw), the welder's sparks and glow (parented to a citizen welder in Valve's map). Valve's launch (ep2_outland_12a: rocket_low on a func_tracktrain) is not in it.",
 "from": "ep2_outland_11.vmf",
 "box": [
 1724,
@@ -147,8 +147,7 @@
 "solid": "0",
 "spawnflags": "0",
 "StartDisabled": "0",
-"targetname": "rocket_hatch",
-"HoldAnimation": "1"
+"targetname": "rocket_hatch"
 }
 },
 {
@@ -360,25 +359,7 @@
 }
 }
 ],
-"wiring": [
-{
-"classname": "logic_auto",
-"origin": [
-0,
-60,
-1260
-],
-"keys": {
-"spawnflags": "1"
-},
-"connections": [
-[
-"OnMapSpawn",
-"rocket_hatch,SetAnimation,closing,0.5,-1"
-]
-]
-}
-],
+"wiring": [],
 "reserve": {
 "what": "Set aside, not placed (the owner, 22 November: \"keep that in reserve/hidden for now; we will want that welder to appear during the final rocket quest/ending as we prep the rocket\"): Valve's welder at work on the rocket, standing on the grate ring of level A beside it: the citizen (npc_citizen cit_welder_01a1, male_01) held in his welding loop by a scripted_sequence (ss_cit_welder_01a1, welder_loop), his sparks (env_spark spark_welding_2) and blue glow (env_sprite sprite_welding_2), both put on his left hand by a logic_auto (SetParent, SetParentAttachment anim_attachment_lh), a logic_timer (timer_spark_welding_01, every 1.5 to 3 s: sparks, glow and the weld sound on and off; StartDisabled, Valve's lift enabled it), its stop relay and the weld loop (ep2_outland_11.weld_loop, an Episode Two sound script: untested in Garry's Mod).",
 "names": [

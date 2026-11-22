@@ -3689,3 +3689,84 @@ A prop is placed by its origin, but it takes up its whole model: a boulder pile 
 - **Checked by:** map_build.py ways_problems (every build of every piece and module)
 - **Tags:** props, geometry, owner
 
+### White Forest's banded concrete: the band only on the bottom 128 of a wall, from that room's floor (`owner-ep2-banded-walls`)
+
+Valve lays concrete/concretewall05b (the banded one) on exactly the bottom 128 of a wall and concretewall05a (plain) above it, never the reverse, both at 0.25 with the texture starting at the floor of the room the face looks into, so the band runs level all round a room and across corners.
+
+- **Why:** The owner, 22 November, of the forest bunker: "the wall textures are atrocious, they aren't aligned ... surely EP2 had better aligned textures than this? Adjusted properly on their Y axis?" (ours had the bands at different heights on each wall and repeating up tall walls).
+- **How:** BunkerForest: each wall face takes the floor of the room it faces; 05b on the 128 above it, 05a above; stair walls take the floor at the stairs' foot; risers are floor concrete.
+- **Checked by:** review
+- **Tags:** interiors, owner
+
+### Every room and corridor has a lamp, and every lamp model its own light beside it (`owner-every-room-lit`)
+
+No room, stair or corridor without a light; each light has a model (a lamp, a tube, a cage light) and each lamp model a light entity just in front of it, never inside another prop or brush; Valve's settings for that model (a spot down from ceiling tubes, cone 60, a faint glow; pools, not flat light).
+
+- **Why:** The owner, 22 November: "there are also several rooms in the bunker without any lights"; of the escape tunnel: "the escape tunnel has light entities but no prop for them"; of the cave: "the light prop is inside the girder prop".
+- **How:** BunkerForest fails the build if a named room has no light; the tunnel's lights each have a cage lamp and a cable chain.
+- **Checked by:** review
+- **Tags:** lighting, owner
+
+### One sound to a space; neighbouring soundscapes of different sounds never overlap (`owner-soundscapes-dont-fight`)
+
+Soundscapes of different sounds whose radii overlap hand the player back and forth (clicking, cutting in and out). Give a whole space (a shaft and its floors) one sound from several env_soundscapes of the same name, and keep different sounds' radii apart; use names Garry's Mod has (Half-Life 2's own first).
+
+- **Why:** The owner, 22 November: "the soundscape in the silo is subtly clicking and cutting in and out, why?" (four of Valve's, three different sounds, each reaching 98 to 236) and "can we please add some soundscapes in the bunker?".
+- **How:** BunkerForest checks that no two soundscapes of different names overlap (the silo's included).
+- **Checked by:** review
+- **Tags:** sound, owner
+
+### A secret way has a hint a player can find, and a puzzle to open it (`owner-secret-way-hint`)
+
+A hidden door must be findable without cheating: a mark on it (a lambda sprayed on the panel) and something in the room to work it (Kleiner's crooked picture from d1_trainstation_05: straighten it with E and the panel opens).
+
+- **Why:** The owner, 22 November, of the leader's escape: "the escape tunnel needs some sort of hint as to the fact that there is an entrance there; I only found it by noclipping".
+- **How:** map_silo.py: decals/lambdaspray_1a on the panel; frame001a tilted 9 degrees on a func_door_rotating that presses the panel in and out.
+- **Checked by:** review
+- **Tags:** props, owner
+
+### A lift's car stops a few units off each floor, and its cage is solid and turned to its door (`owner-lift-stops-off-floor`)
+
+A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4 above it. The cage the players ride is solid (Valve's brush cage or clips), turned so its open side faces the landing.
+
+- **Why:** The owner, 22 November: "when the lift gets to the bottom floor, it's texture is clipping/flashing with the ground below it"; of the cave's lift: "the elevator prop is rotated 90 degrees the wrong way and is not solid".
+- **How:** The silo's bottom stop is 2 above the floor.
+- **Checked by:** review
+- **Tags:** props, owner
+
+### Join Valve's pieces with the cut hidden: cap faces inside the kept tunnel, consecutive maps at their shared landmark (`join-valve-cuts`)
+
+Lift whole connected sections of Valve's maps, so Valve's own tunnels join inside each piece; between two consecutive maps (ep2_outland_03 and 04, say) place both pieces with their shared info_landmark (landmark_outland_03_04 in both files) at the same point, and their shared transition area lines up exactly. Where a Valve tunnel must be cut, cut it where it is narrow (or at Valve's own seal there, an areaportal's frame), on the piece's own grid where it has one, and put the capping wall's face 32 to 64 INSIDE what is kept of the tunnel (never on the cut plane), so the cut edges of the displacements and the nodraw end faces of the brushes are inside the wall. Give every face of ours that can be seen a real material (top and bottom too: world_box leaves them nodraw), and nodraw only where a face touches something solid or faces the void. Lift with --keep-nodraw, so Valve's own nodraw shell keeps the piece shut where it is not cut. A Valve map's sky becomes black underground.
+
+- **Why:** The owner, 22 November, of the first workings behind the cave forest's emergency door: "every single connecting room has nodraw faces visible inwards towards the player ... a rock wall is inserted and blocking the little tunnel ... a dev texture blocking the cave/tunnel ... there is nothing there and i literally can just walk off the edge of the map ... is it not possible to at the very least have little tunnels copy/pasted from EP2 that loop around and meet at the other little tunnel entrances?"
+- **How:** map_prefab.py extract --centroid --keep-nodraw; in map_forest.py, CaveForest.lifted() (sky made black, dev/ materials refused), clip_x() for a Valve box wall that runs past a cut; each joint registered in self.joints (a box and points in the way's air). The cave forest's rebuild (22 November) could not use the 03-04 landmark: placed at it, ep2_outland_04's caves land south of the forest's north wall, so its antlion tunnels are ep2_outland_03's own, north of the holdout.
+- **Checked by:** map_forest.py CaveForest.joints_check (every build of forest_cave): floods each joint's air in 8 unit cells and fails on a nodraw face in view, a point of the way inside something, or a way through a joint that is shut
+- **Tags:** geometry, owner, valve, interiors
+
+### Few small square plates on Combine walls: a few per structure, beside doors (`owner-combine-few-studs`)
+
+Small square plates or studs (32 by 32, standing a few units proud of a face) go on a Combine structure only a few at a time: two or so per structure, where Valve keeps its small pieces (beside a door, at a joint). Never rows of them across walls, inside or out, and never as the thing that makes the scale jump. Give the walls their life with the other geometry instead: plate layers and steps, leaning courses, turned parts, ribs in pairs, fins against walls and on tops, the tops themselves, and Valve's props (generators, lamps with their beams, pipes, booths, barricade rows, consoles).
+
+- **Why:** The owner, 22 November, after compiling the Combine scene: "the little squares that jut out of the walls? They are EVERYWHERE all over the inside of the structure and outside and the generator seems to be reliant on them and using them too much: so please massively reduce their occurrence and just up the occurrences of all the other random geometry and props, as the rest looks very good". The scene had 319 pieces 48 or less every way (281 of them the generator's small plates); now 6.
+- **How:** combine/piece.py tabs(keep=, near=): the row is still drawn (so a draw stays as it was) but only keep plates are laid, nearest near (a door); every call passes 0 except two beside the building's door and two beside the gate. A narrow stack plate keeps no joint at its foot; a run's foot is one band. Count by size before sending: pieces with every side 48 or less (see docs/dev/map-building.md, the Combine section). Valve's small-against-big measure (9.7 to 25.1% over ten Citadel maps) falls to about 5% without the studs: the owner's eye wins over that number.
+- **Checked by:** review; count pieces 48 or less every way in map_combine.py scene (a few per structure)
+- **Tags:** combine, owner, geometry, facades, interiors
+
+### Creeping walls stand upright on a wall or as a wall, never floating or tilted (`owner-creeping-walls-on-a-wall`)
+
+Every combineinnerwall* creeping wall model stands upright (pitch and roll 0, turned only in yaw), either flat against a wall (its back on the wall's face, its foot on a floor or a ledge) or as a wall itself (standing on the ground, closing a gap or lining a run). Never hung at odd angles off an edge or out of a face, whatever Valve's tilted ones do. Size it from the model's real box so it sits exactly, and keep it where nothing else (a plate, a rib, a wedge) stands inside it.
+
+- **Why:** The owner, 22 November: "one massive issue is the two instances of 'models/props_combine/combineinnerwall001c.mdl' are just floating at odd angles out of everything and these should never do that; they can instead be put on a wall or used as a wall". Valve tilts 74% of theirs; the owner's choice wins. Valve's own upright 001c (d3_c17_10b, four at yaw 180, 252 apart) line a run.
+- **How:** combine/seat.py: wall() finds a spot on a face from the model's box in _dev/tools/asset_facts.json (001c is 90 deep, 253 wide, 805 tall about its middle; 001a 306 by 296 by 999), origin = the face + half the depth along the face's normal, foot on the floor; Room.meets refuses a spot where any brush is inside the box. Keep a stretch of the wall clear for it (the building's back keeps its wedges off one). seated(VMF) checks any map: back within 2 of a wall, foot within 2 of a floor, pitch and roll 0, nothing inside; map_combine.py scene prints it.
+- **Checked by:** machine: combine/seat.py seated() (printed by map_combine.py scene)
+- **Tags:** combine, owner, props
+
+### No pyramid tops on Combine structures (`owner-combine-no-pyramid-tops`)
+
+A Combine pier, pillar, column or tower never ends in a pyramid (four slopes up to an apex, lopsided or not). Use the other tops: a lopsided vault, a ridge of two different slopes, a shed slope (one that may stop short and drop), steps then a slope, or a flat top with fins and a parapet. This narrows lesson valve-combine-tops, whose list of the owner's shapes still says pointed.
+
+- **Why:** The owner, 22 November: "last issue is the off-kilter pyramid structures on the pillars/columns at the entrance to the combine area, they look very wrong for a combine structure, so please remove those from the generator".
+- **How:** combine/tops.py has no point kind any more; the piers draw ridge 2, shed 2, steps 2, flat 1; the towers vault 2, steps 2, ridge 1, flat 1; a flat top always gets at least one fin.
+- **Checked by:** review; map_combine.py scene prints every top (no 'point')
+- **Tags:** combine, owner, geometry
+
