@@ -215,6 +215,7 @@ local GUIDE = {
         "Press E on bins, dumpsters and fridges to search them: scrap, rags, chemicals, tins, seeds, sometimes gun parts.",
         "Fishing line (from the Commissary): stand in the canal or look at it, choose Fish in F3, and keep still: a cast takes up to 45 seconds, and most come up empty. Cook what you catch.",
         "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. Looking at it, F1 > Donate food to the crate adds to it. A walled garden's soil takes seeds too: melons and pumpkins.",
+        "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. The Combine find it only through people: keep it quiet.",
         "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Each of you can take one tin every 15 minutes. Look at the crate to see what's in it and when more is due.",
         "Crate running low? Take a Headcrab hunt from the Operations board (F4): kill four headcrabs in the infested ground, pick up their raw meat (E) and stand by the crate. Each headcrab is a meal for the camp, and it pays more while the crate is empty.",
         "F3 > Make: craft bandages and lockpicks by hand, anywhere. Everything else is sold by the quartermaster and the black market.",
