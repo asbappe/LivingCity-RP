@@ -810,6 +810,8 @@ setting lc_ending_shalom_sayings =
 setting lc_ending_shalom_sections = 7.4:gather,35.7:walk,62.1:hora,111.5:lift,125.7:hora,153.9:in,157.4:hora,180.4:in,183.9:build,205.1:peak,219.2:hora,224.5:in,231.5:final,273.9:outro,288.5:end
 setting lc_ending_song_volume = harpies=4,shalom=2
 setting lc_ending_standup_bpm = 133
+setting lc_ending_standup_branch_out = 220
+setting lc_ending_standup_branch_up = 380
 setting lc_ending_standup_crowd = 14
 setting lc_ending_standup_drain = 4
 setting lc_ending_standup_max = 60

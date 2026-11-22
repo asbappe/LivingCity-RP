@@ -3464,9 +3464,8 @@ TICK.plane = function(now)
 end
 
 -- Standup (a codeword): the rope. Every other beat from lc_ending_standup_sections'
--- "hang", someone else is strung up: a rope from whatever is above them (a
--- ledge, a balcony, a ceiling), or from the nearest wall of a building, or
--- failing both, from the sky. Players are spread through the song; the
+-- "hang", someone else is strung up: a rope from a branch of an oak (planted
+-- beside them, or one near them with a branch free). Players are spread through the song; the
 -- city's people (the Combine's units too) fill the beats between, and when
 -- there's nobody left, new people turn up near you to be next. The hanged
 -- swing and struggle while their health drains; at nothing they go limp,
@@ -3506,13 +3505,117 @@ local function RopeAnchor(pos)
     return pos + Vector(0, 0, 500), Vector(0, 0, 0)
 end
 
+-- The hanging oaks (the owner, 22 November: "make sure that the standup dream hangs people from the model
+-- models/props_foliage/oak_tree01.mdl"). Every rope is tied to a branch of an oak: one is planted beside
+-- whoever goes up next, unless an oak near them has a branch free (six round its trunk). Where no oak can
+-- stand near them, they're taken to one that has a branch free. RopeAnchor is only for a server without
+-- the model, or with no room left for another entity.
+local OakBranch -- (the rest kept inside: this file is at Lua's 200 locals)
+do
+local HANG_TREE = "models/props_foliage/oak_tree01.mdl"
+local cvBranchOut = CreateConVar("lc_ending_standup_branch_out", "220", FLAGS, "Standup: how far from an oak's trunk the ropes hang")
+local cvBranchUp  = CreateConVar("lc_ending_standup_branch_up", "380", FLAGS, "Standup: how high up the oak the ropes are tied")
+local BRANCHES, OAK_MAX, OAK_APART = 6, 20, 400
+
+local function InDream(g) return not (E.dream and LC.DreamHolds) or LC.DreamHolds(E.dream, g) end
+
+-- Room for an oak's trunk at g: in the dream (if one), reachable from where the hanged stands, nobody
+-- on the spot; strict, also the sky (or a high ceiling) over it and no other oak's trunk close by.
+local function OakRoom(g, from, strict)
+    if not g or not InDream(g) or (from and not Clear(from, g)) then return false end
+    if strict then
+        local tr = util.TraceLine({ start = g + Vector(0, 0, 40), endpos = g + Vector(0, 0, cvBranchUp:GetFloat() + 120), mask = MASK_SOLID_BRUSHONLY })
+        if tr.Hit and not tr.HitSky then return false end
+        for _, o in ipairs(E.oaks) do if IsValid(o.e) and (o.pos - g):Length2D() < OAK_APART then return false end end
+    end
+    if ents.FindInSphere then
+        for _, o in ipairs(ents.FindInSphere(g, 48)) do
+            if IsValid(o) and not o.lcHang and ((o.IsPlayer and o:IsPlayer()) or (o.IsNPC and o:IsNPC())) then return false end
+        end
+    end
+    return true
+end
+
+-- One of the oak's free branches: the rope's top and the ground under it (forced: the first free one,
+-- whatever is under it).
+local function TakeBranch(o, force)
+    local out, up = cvBranchOut:GetFloat(), cvBranchUp:GetFloat()
+    for k = 0, BRANCHES - 1 do
+        if not o.used[k] then
+            local a = o.a0 + k * (math.pi * 2 / BRANCHES)
+            local top = o.pos + Vector(math.cos(a) * out, math.sin(a) * out, up)
+            local g = Ground(Vector(top.x, top.y, o.pos.z))
+            if force or (g and math.abs(g.z - o.pos.z) < 120 and Clear(o.pos, g) and InDream(g)) then
+                o.used[k] = true
+                return top, g or o.pos
+            end
+            o.used[k] = "blocked" -- (a wall, a drop or the dream's edge under it)
+        end
+    end
+end
+
+local function PlantOak(spot, a0)
+    local e = Prop(HANG_TREE, spot)
+    if not IsValid(e) then return nil end
+    e:SetAngles(Angle(0, math.random(0, 359), 0))
+    local o = { e = e, pos = spot, a0 = a0, used = {} }
+    E.oaks[#E.oaks + 1] = o
+    return o
+end
+
+-- The branch for someone standing at pos: the rope's top and the ground under it (nil: no oak to be had).
+function OakBranch(pos)
+    if util.IsValidModel and not util.IsValidModel(HANG_TREE) then return nil end
+    E.oaks = E.oaks or {}
+    local live = {}
+    for _, o in ipairs(E.oaks) do if IsValid(o.e) then live[#live + 1] = o end end
+    table.sort(live, function(x, y) return (x.pos - pos):Length2D() < (y.pos - pos):Length2D() end)
+    local full = #live >= OAK_MAX
+    -- an oak near them with a branch free (once there are enough oaks, any of them)
+    for _, o in ipairs(live) do
+        if not full and (o.pos - pos):Length2D() > cvBranchOut:GetFloat() + 500 then break end
+        local top, g = TakeBranch(o)
+        if top then return top, g end
+    end
+    -- a new one beside them, its first branch over them
+    local g = Ground(pos) or pos
+    local out, start = cvBranchOut:GetFloat(), math.random(0, 7)
+    if not full then
+        for pass = 1, 2 do
+            for i = 0, 7 do
+                local a = (start + i) * math.pi / 4
+                local spot = Ground(g + Vector(math.cos(a) * out, math.sin(a) * out, 0))
+                if OakRoom(spot, g, pass == 1) then
+                    local o = PlantOak(spot, a + math.pi)
+                    if not o then return nil end
+                    local top, bg = TakeBranch(o)
+                    if top then return top, bg end
+                end
+            end
+        end
+    end
+    -- no room for one here: taken to an oak that has a branch free, else one planted where they stand
+    for _, o in ipairs(live) do local top, bg = TakeBranch(o) if top then return top, bg end end
+    local o = PlantOak(g, math.rad(math.random(0, 359)))
+    if not o then return nil end
+    return TakeBranch(o, true)
+end
+end
+
 local function Hang(e)
     if not IsValid(e) or e.lcHang or e.lcEndTaken then return false end
     local pos = e:GetPos()
-    local anchor = RopeAnchor(pos)
-    local g = Ground(pos)
-    local drop = anchor.z - 110 - 72 -- (a rope, then the person under it)
-    local feet = math.max(drop, ((g and g.z) or pos.z) + 25)
+    local anchor, under = OakBranch(pos)
+    local feet
+    if anchor then
+        -- (from an oak's branch: a long rope, feet a little off the ground)
+        feet = math.min(under.z + 30, anchor.z - 72 - 30)
+    else
+        anchor = RopeAnchor(pos)
+        local g = Ground(pos)
+        local drop = anchor.z - 110 - 72 -- (a rope, then the person under it)
+        feet = math.max(drop, ((g and g.z) or pos.z) + 25)
+    end
     e.lcHang = { anchor = anchor, base = Vector(anchor.x, anchor.y, feet), t0 = CurTime() }
     -- (drained fast enough to go limp before the song ends, however late they went up)
     local left = ((E.holdUntil or (CurTime() + 60)) - CurTime()) - 3
@@ -3567,7 +3670,7 @@ SETUP.standup = function()
         if sct.kind == "last" then lastAt = now + sct.t end
     end
     E.holdUntil = E.holdUntil or (now + 110)
-    E.hanged, E.crowd = {}, {}
+    E.hanged, E.crowd, E.oaks = {}, {}, {}
     E.beatLen = 60 / math.max(1, cvStandupBPM:GetFloat())
     -- the players, spread through the song; everyone else on the beats between
     local ps = LC.EndingPlayers()

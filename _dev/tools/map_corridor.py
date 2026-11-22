@@ -89,7 +89,12 @@ class CorridorPlan(Plan):
                 continue
             vmf.world_box(self.box(x1, y1, self.base, x2, y2, spec[1]), self.floor_side, top=spec[2], vis=self.vis)
             if kind == "open":
-                vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
+                lid = spec[3] if len(spec) > 3 and spec[3] else self.sky      # (a square with a sky of its own, higher: a church's yard)
+                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
+            elif kind == "cellar":      # (a room under a yard open to the sky: Plan's own)
+                ceil, upper, upper_mat, lid = spec[3], spec[4], spec[5], spec[6]
+                vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
+                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
             elif kind == "under":
                 vmf.world_box(self.box(x1, y1, spec[3], x2, y2, STREET), cw, top=spec[4], bottom=self.ceiling, vis=self.vis)
                 vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
@@ -98,6 +103,7 @@ class CorridorPlan(Plan):
                 if top > spec[3]:
                     vmf.world_box(self.box(x1, y1, spec[3], x2, y2, top), brick if spec[5] and spec[3] >= STREET else cw, top=cw, bottom=self.ceiling, vis=self.vis)
                 vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, bottom=None if top > spec[3] else self.ceiling, vis=self.vis)
+        self.raise_sky(vmf)      # (higher skies of their own closed in on every side, as Plan's)
 
 
 class View:
@@ -178,10 +184,12 @@ def lay(b, elems, side, cars):
             leg = []
     if leg:
         legs.append(leg)
-    need = train_len(cars) + 128
+    need = train_len(cars) + 96      # (the back wall's 64, and 16 clear at each end: the train waits against the closed end)
 
     # --- the squares ---
     for e in elems:
+        if e["kind"] == "gap":      # (a stretch with no street: "nostreet")
+            continue
         fr, L = e["frame"], e["length"]
         if e["kind"] == "leg":
             if e.get("shed"):
@@ -211,7 +219,7 @@ def lay(b, elems, side, cars):
             for i in range(r[0] // CELL, r[2] // CELL):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     plan.front.add((i, j))
-        elif (e["kind"] == "right") == (s > 0):      # (a turn away from the street's side: the street goes round the outside of it)
+        elif e["kind"] in ("left", "right") and (e["kind"] == "right") == (s > 0):      # (a turn away from the street's side: the street goes round the outside of it)
             band(fr, 0, EDGE, 256 + FRONT, FRONT, road, e["tag"])
             r = fr.rect(512, s * -256, 256 + FRONT, s * 256)
             for i in range(r[0] // CELL, r[2] // CELL):
@@ -258,11 +266,12 @@ def lay(b, elems, side, cars):
             u0 = max(64, min(L - 512, L // 2 - 256) // 64 * 64)
             v1, v2 = sv(192, 256)
             m.steps(u0, v1, v2, F, STREET, "u", 1)
+            m.det([(u0 - 48, v1, F, u0, v2, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])      # (an apron at their foot: the mud kept level there)
             m.no_bank(u0 - 8, s * 256 - 8, u0 + 392, s * 256 + 8)
             m.blocked(u0, v1, u0 + 392, v2)
             m.taken(u0, v1, F, u0 + 384, v2, STREET)
             top = (u0 + 384, u0 + 448)
-            stairs.append(top)
+            stairs.append((top[0] - 64, top[1]))      # (the parapet stops a square short: its top steps step off sideways onto the street)
             m.det([(top[0], sv(TRACK, ROAD_IN)[0], STREET, top[1], sv(TRACK, ROAD_IN)[1], STREET + 9)], MM["wood"], vis=dv)
             m.lane(u0 - 24, s * 224, F)
             m.lane(u0 + 190, s * 224, F + 128)
@@ -271,7 +280,11 @@ def lay(b, elems, side, cars):
             m.lane(top[0] + 32, s * 544, STREET)
             e["crossing"] = top
             m.view(u0 - 60, s * 150, F, 20 if s > 0 else 340, -16, "the stairs up to the street")
-        # the canal's edge: a low parapet, chain link on it
+        # the canal's edge: a low parapet, chain link on it (not where a bridge meets the street: b.edge_gaps)
+        for u in range(0, L, CELL):
+            px, py = fr.pt(u + 32, s * (EDGE + 6))
+            if any(r[0] <= px <= r[2] and r[1] <= py <= r[3] for r in b.edge_gaps):
+                stairs.append((u, u + CELL))
         for a, c in runs(EDGE + 32, stairs):
             v1, v2 = sv(EDGE, EDGE + 12)
             m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"], vis=dv)
@@ -392,7 +405,7 @@ def train(b, n, a, z, s, cars):
     name = "lc_train_%d" % n
     fa, fz = a["frame"], z["frame"]
     TL = train_len(cars)
-    ua, uz = a["length"] // 2, z["length"] // 2
+    ua, uz = (a["length"] + 64) // 2, (z["length"] - 64) // 2      # (the middle of each shed's room: its closed end is 64 thick)
     p1, p2 = fa.at(ua, s * RAIL_V, STREET + 9), fz.at(uz, s * RAIL_V, STREET + 9)
     half = TL // 2
     body = fa.box(ua - half, s * RAIL_V - 70, STREET + 12, ua + half, s * RAIL_V + 70, STREET + 290)
@@ -431,7 +444,8 @@ def train(b, n, a, z, s, cars):
     for nm, cls in ((name + "_run", "logic_relay"), (name + "_timer", "logic_timer"), (name + "_hurt", "trigger_hurt"), (name + "_horn", "ambient_generic")):
         b.names.append((nm, cls, "train %d" % n))
     v1, v2 = (s * 262, s * 270) if s > 0 else (s * 270, s * 262)
-    m.test_button((a["length"] + 40, v1, STREET + 44, a["length"] + 56, v2, STREET + 60), [("OnIn", name + "_run", "Trigger"), ("OnOut", name + "_run", "Trigger")])
+    fv1, fv2 = sorted((s * (FRONT - 8), s * FRONT))      # (on the frontage's wall, facing the road: a walker stands on the pavement to press it)
+    m.test_button((a["length"] + 40, fv1, STREET + 44, a["length"] + 56, fv2, STREET + 60), [("OnIn", name + "_run", "Trigger"), ("OnOut", name + "_run", "Trigger")])
     m.view(a["length"] + 500, -s * 120, 400, 180, -22, "from the canal, toward the shed")
     m.view(a["length"] + 420, s * 760, STREET, 180, 0, "on the road, toward the shed")
     run = abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])

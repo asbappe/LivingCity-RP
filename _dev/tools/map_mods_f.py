@@ -7,7 +7,7 @@ the ring's south half leaves (map_layouts/ring_north.txt ends with it; ring_sout
 """
 
 from map_build import GATE_HIGH, MAT, gate_cap
-from map_modules import BASE, F, SCAPES, canal_grime
+from map_modules import BASE, F, SCAPES, canal_grime, side_gate_reach
 
 ROAD_W = 840          # the west road's surface (184 higher than the east one: map_ring.py)
 ROAD_SKY = 2336       # the sky over the west road (the owner's brush 14734 reached it)
@@ -67,14 +67,15 @@ def m_roadend(m, opt):
     m.light(704, 440, ROAD_W + 300, "255 214 170 300")
     cage_lamp(m, 900, 252, F + 200, 180)
     # the side gate in the right wall: where the south half of the ring begins
-    m.low(576, -512, L, -256, F + GATE_HIGH)
-    gate_cap(b.vmf, m.fr.box(576, -512, F, L, -448, F + GATE_HIGH), m.fr.box(576, -432, F, L, -424, F + GATE_HIGH), m.fr.ax("u"),
+    g = side_gate_reach(m, -1, 512)      # (beyond the street, if one runs over this bank: the way passes under it)
+    m.low(576, -g, L, -256, F + GATE_HIGH)
+    gate_cap(b.vmf, m.fr.box(576, -g, F, L, -g + 64, F + GATE_HIGH), m.fr.box(576, -g + 80, F, L, -g + 88, F + GATE_HIGH), m.fr.ax("u"),
              "%s: %s side gate's cap (delete to join the south half)" % (b.vis, m.tag))
     m.portal(576, -384, F, L, -382, F + GATE_HIGH)
-    b.plan.keep_out.append(m.fr.rect(512, -4096, L + 64, -512))
-    b.allow.append(m.fr.box(448, -640, BASE, L + 128, -384, b.sky + 64))
-    m.blocked(576, -512, L, -384)
-    m.side(576, -512, L, -256)
+    b.plan.keep_out.append(m.fr.rect(512, -4096, L + 64, -g))
+    b.allow.append(m.fr.box(448, -g - 128, BASE, L + 128, -g + 128, b.sky + 64))
+    m.blocked(576, -g, L, -384)
+    m.side(576, -g, L, -256)
     m.grime("number", 576 - 8, -320, F + 180, 77)
     from map_modules import TRIM
     m.det([(576, -256, TRIM + 128, L, -248, TRIM + 136)], "stone/stonewall050f")      # a course over the gate
@@ -84,7 +85,7 @@ def m_roadend(m, opt):
     m.soundscape(SCAPES["courtyard"], L // 2, 0, F, radius=900)
     m.view(900, -60, F, 140, 8, "the platform and its stairs")
     m.view(400, 384, ROAD_W, 270, 10, "from the road's end")
-    gx, gy = m.fr.pt((576 + L) // 2, -512)
+    gx, gy = m.fr.pt((576 + L) // 2, -g)
     b.notes.append("%s: its side gate is at (%d %d), heading %s: the ring's south half starts there" % (
         (m.tag, gx, gy) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[m.fr.way(270)],)))
 
@@ -174,7 +175,8 @@ def church(m, cz, ceil, tunnel_u):
     wall(u1, v2 - t, u2, v2, [(a, c, wz0, wz1) for a, c in wins if a != 448] + [(352, 416, NF - 16, NF + 128)], "u")   # the back: the side door
     wall(u2 - t, v1 + t, u2, v2 - t, [(mid - 24, mid + 24, wz0 + 32, wz1 + 32)], "v")                              # the east end, a window over the altar
     wall(u1, v1 + t, u1 + t, v2 - t, [(mid - 48, mid + 48, NF - 16, NF + 160)], "v")                              # the west end: the front doors
-    m.det([(u1 - 8, v1 - 8, G - 8, u2 + 8, v2 + 8, G + 48)], PLINTH)                                             # the plinth, proud of the walls
+    m.det([(u1 - 8, v1 - 8, G - 8, u2 + 8, v1, G + 48), (u1 - 8, v2, G - 8, u2 + 8, v2 + 8, G + 48),           # the plinth, proud of the walls: a band round
+           (u1 - 8, v1, G - 8, u1, v2, G + 48), (u2, v1, G - 8, u2 + 8, v2, G + 48)], PLINTH)                     # them outside (it was a slab over the whole floor)
     m.det([(u1 - 4, v1 - 4, WT - 24, u2 + 4, v2 + 4, WT - 8)], "plaster/plasterwall029d")                        # a band under the eaves
     for a, c in wins:                                                                                            # stone sills
         m.det([(a - 4, v1 - 6, wz0 - 8, c + 4, v1 + t + 4, wz0 + 2)], PLINTH)
@@ -253,7 +255,7 @@ def church(m, cz, ceil, tunnel_u):
     # --- the basement: the stair up, the Resistance's stores ---
     m.steps(792, 1544, 1656, cz, NF, "u", -1)
     m.det([(576, 1536, NF, 832, 1544, NF + 40)], SCREEN)                                                        # a rail of boards round the well
-    m.det([(578, 1537, cz, 830, 1543, NF - 8)], CELLAR_FLOOR)                                                   # its side, filled
+    m.det([(578, 1537, cz, 700, 1543, NF - 8)], CELLAR_FLOOR)                                                   # (it stops short of the stair's foot: it walled the foot off, the walk check found)                                                   # its side, filled
     m.blocked(576, 1536, 832, 1664)
     m.lane(800, 1600, cz)
     m.lane(520, 1600, NF)

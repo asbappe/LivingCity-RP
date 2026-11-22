@@ -8,41 +8,46 @@
 # The crypt is on its bottom run, the church behind it to the south (the owner, 22 November: "the crypt is between
 # the church and the canal, with the exposed wall going into the canal, and then the crypt tunnel leads to the
 # basement of the church").
+#
+# The street (the owner, 22 November: "Yes, outside bank"): a road and a railway along the ring's outside bank,
+# a train on each long straight run between two sheds ("shed" on a module's line: the street over it is the shed).
+# The street starts after the overflow ("nostreet" before it: the north half's corner and Ravenholm's join are
+# there). The modules with rooms too tall to pass under the street are flipped to the city's side (ash, tram,
+# cistern, swingbridge).
 
 start -3648 1920
 heading W
 rim 784
+upper right
 end 6144 1856 N
 
 # S1: west
-drain
-overflow flip
-straight 448
+drain nostreet
+overflow flip nostreet
+straight 448 stairs
 collapse flip
-ash flip
+ash
 left
 # S2: south
+straight 2048 shed
 shanty flip
 camp flip
 vort flip
 sludge flip
-straight 384 pipes
-tenement flip
-barge
-underpass
-busbridge flip
+barge shed
+underpass shed
+straight 640 stairs
 left
 # S3: east
-scrapyard
+tunnel 2048 shed
 crypt flip
-tram
+tram flip
 shell
-straight 512 bridge
 widen
 lockgate
 narrow
-cistern
-wreck
+cistern flip shed
+wreck shed
 basin
 left
 # S4: north
@@ -50,10 +55,10 @@ execwall flip
 lift flip
 pumphouse flip
 quay flip
-arcade
-aqueduct
-chimney
-swingbridge
-relay
-straight 576
-breach
+arcade shed
+aqueduct shed
+chimney flip
+swingbridge flip
+relay shed
+straight 576 shed
+breach shed

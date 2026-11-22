@@ -270,14 +270,22 @@ def panel_fence(m, a, b, z, clip=True):
         m.world((lo, v1 - 1, z, hi, v1 + 1, z + 128) if along_u else (u1 - 1, lo, z, u1 + 1, hi, z + 128), MAT["clip"], seals=False)
 
 
-def fence_gate(m, name, u, v, z, along="u", hinge_low=True):
+def fence_gate(m, name, u, v, z, along="u", hinge_low=True, open_frame=False):
     """Nova Prospekt's gate (interior_fence001g) hung in its frame (interior_fence002e, 64 wide) whose middle is at
     (u, v), standing on z, in a fence running `along` u or v: players open it by Use (the frame's unseen door of the
     same name turns, the model rides on it; the gamemode's door rules reach it). The owner, of the pit's: the gate
-    "has to be fitted inside of the gate frames"."""
+    "has to be fitted inside of the gate frames". open_frame: the frame model is not solid and an unseen clip stands
+    in each of its two posts instead, so the room-to-walk check (which reads a model as its whole box) sees the way
+    through it; in the game the posts stop players either way."""
     from map_mods_b import swing_door
     yaw = 90 if along == "u" else 0
-    m.static("models/props_wasteland/interior_fence002e.mdl", u, v, yaw, z)
+    if open_frame:
+        m.prop("prop_static", "models/props_wasteland/interior_fence002e.mdl", u, v, yaw, z, {"solid": "0", "disableshadows": "0", "screenspacefade": "0",
+                                                                                            "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
+        for a, c in ((-33, -24), (24, 33)):
+            m.world((u + a, v - 3, z, u + c, v + 3, z + 128) if along == "u" else (u - 3, v + a, z, u + 3, v + c, z + 128), MAT["clip"], seals=False)
+    else:
+        m.static("models/props_wasteland/interior_fence002e.mdl", u, v, yaw, z)
     s = -1 if hinge_low else 1
     if along == "u":
         h = (u + s * 23, v, z + 54)
@@ -560,8 +568,10 @@ def m_lock(m, opt):
     light_signal002a); a klaxon sounds while a gate moves. The lock chamber says what it is: a dark tide line along its
     walls, depth numbers up the piers' faces.
 
-    Inside the lock, on the left bank, a concrete pier (the bank is its ramp, a mooring cleat on it) and stairs up to
-    the gantry behind a concrete parapet; on the gantry, behind the city's handrail, the house, concrete with steel
+    Inside the lock, on the left bank, the way up to the gantry: from the canal floor a flight of 8 along the bank
+    toward gate a (an upstand on its open side) onto a landing against gate a's pier, the concrete pier beside it (an
+    oil drum on it), and from the pier a flight of 8 up along the wall behind a concrete parapet; on the gantry, behind
+    the city's handrail, the house (its doorway 64 wide and 104 high), concrete with steel
     plate to the waist inside: a slit each way down the canal, a button under each slit's end for the gate on that side
     with a lever panel beside it and two lamps over it (green while that gate is open, red while it is shut), the
     canals' own map on the wall, switch boxes, a desk with a monitor and a chair, a fluorescent tube. On the left wall at
@@ -596,10 +606,11 @@ def m_lock(m, opt):
     L, top, deck = 1536, F + 296, TRIM
     quay = MAT["quay_floor"]
     m.open(0, -256, L, 256)
-    # the pier inside the lock on the left bank: the dressing gives it a 45 degree bank, which is its ramp
+    # the pier inside the lock on the left bank, the landing between the two flights up to the gantry (no bank against
+    # it: the lower flight stands there)
     m.open(448, 192, 576, 256, floor=F + 128, mat=quay)
     m.side(448, 192, 576, 256)
-    m.no_bank(440, 192, 456, 256)
+    m.no_bank(440, 184, 736, 264)
 
     gates = (("a", 384), ("b", 1152))
     for g, u0 in gates:
@@ -649,12 +660,21 @@ def m_lock(m, opt):
                                                    (pre + "lamp_open", "ShowSprite", "", 4.5)] + moving + [(pre + "shut", "Enable", "", 5.5)], on=False)
     m.point("logic_auto", 768, 0, deck + 150, {"spawnflags": "1"}, connections=[("OnMapSpawn", "lc_lock_gate_*", "PressIn", "", 0.5)])
 
-    # the stairs from the pier to the gantry, on a plinth, with a concrete parapet on the open side
+    # the way up to the gantry (the owner, 22 November: the check found the house could not be walked to): from the
+    # canal floor a flight of 8 along the pier's face toward gate a, an upstand on its open side, onto a landing against
+    # gate a's pier that joins the pier; then the flight of 8 from the pier up along the wall, on a plinth, a concrete
+    # parapet between it and the flight below
+    m.steps(704, 128, 192, F, F + 128, "u", -1)
+    m.stair_side(704, 192, 122, 128, F, F + 128, -1)
+    m.det([(454, 128, F, 512, 192, F + 128)], MAT["canal_wall"], top=quay)
+    m.det([(454, 122, F, 512, 128, F + 160)], MAT["beam"])
     m.steps(528, 192, 256, F + 128, deck, "u", 1)
     m.det([(576, 192, F, 720, 256, F + 128)], MAT["canal_wall"])
     m.shapes([prism([(527, F + 128), (527, F + 164), (720, deck + 36), (720, deck)], "y", 190, 196, MAT["beam"])])    # (2 proud of the steps' side)
-    m.blocked(448, 128, 720, 256)
-    m.lane(500, 224, F + 128)
+    m.blocked(448, 120, 720, 256)
+    m.lane(740, 160)
+    m.lane(600, 160, F + 64)
+    m.lane(496, 192, F + 128)
     m.lane(624, 224, F + 192)
 
     # the gantry: a slab on two steel girders from wall to wall, corbels under their ends
@@ -679,13 +699,13 @@ def m_lock(m, opt):
     for u in (h1, h2 - 8):                                        # the two ends: a slit each, 32 high at eye height
         walls += [(u, w1, deck, u + 8, w2, deck + 48), (u, w1, deck + 80, u + 8, w2, hz), (u, w1, deck + 48, u + 8, -72, deck + 80), (u, 72, deck + 48, u + 8, w2, deck + 80)]
     walls += [(h1 + 8, w1, deck, h2 - 8, w1 + 8, hz)]             # the right side: blind
-    walls += [(h1 + 8, w2 - 8, deck, 792, w2, hz), (840, w2 - 8, deck, h2 - 8, w2, hz), (792, w2 - 8, deck + 88, 840, w2, hz)]   # the left side: the doorway
+    walls += [(h1 + 8, w2 - 8, deck, 784, w2, hz), (848, w2 - 8, deck, h2 - 8, w2, hz), (784, w2 - 8, deck + 104, 848, w2, hz)]   # the left side: the doorway, 64 wide and 104 high
     m.det(walls, MAT["beam"])
     m.det([(h1 - 8, w1 - 8, hz, h2 + 8, w2 + 8, hz + 8)], "metal/metalroof008a")
     m.det([(h1 + 8, w1 + 8, deck, h2 - 8, w2 - 8, deck + 1)], "metal/metalfloor005a")
     plate = "metal/metalwall030a"                                 # steel to the waist inside (the ends 1 lower than the sides: no shared tops)
     m.det([(h1 + 8, w1 + 12, deck + 1, h1 + 12, w2 - 12, deck + 44), (h2 - 12, w1 + 12, deck + 1, h2 - 8, w2 - 12, deck + 44)], plate)
-    m.det([(h1 + 8, w1 + 8, deck + 1, h2 - 8, w1 + 12, deck + 45), (h1 + 8, w2 - 12, deck + 1, 792, w2 - 8, deck + 45), (840, w2 - 12, deck + 1, h2 - 8, w2 - 8, deck + 45)], plate)
+    m.det([(h1 + 8, w1 + 8, deck + 1, h2 - 8, w1 + 12, deck + 45), (h1 + 8, w2 - 12, deck + 1, 784, w2 - 8, deck + 45), (848, w2 - 12, deck + 1, h2 - 8, w2 - 8, deck + 45)], plate)
     m.static("models/props_canal/canalmap001.mdl", 780, w1 + 12, 270, z=deck + 48)               # the canals' own map, on the blind wall
     m.static("models/props_lab/powerbox01a.mdl", 860, w1 + 26, 90, z=deck + 56)
     m.static("models/props_lab/powerbox02b.mdl", 840, w1 + 19, 90, z=deck + 70)
@@ -715,8 +735,7 @@ def m_lock(m, opt):
     m.lamp(816, 0, deck - 24, "255 220 170 90")
     m.static("models/props_c17/light_cagelight02_on.mdl", 512, 255, 270, z=F + 250)
     m.light(512, 240, F + 256, "255 220 170 120")
-    m.static("models/props_c17/oildrum001.mdl", 480, 228, 0, z=F + 128)
-    m.static("models/props_docks/dock01_cleat01a.mdl", 462, 210, 90, z=F + 128)
+    m.static("models/props_c17/oildrum001.mdl", 464, 240, 0, z=F + 128)
     m.loose("models/props_junk/wood_crate001a.mdl", 980, -90, 20)
     for k, u in enumerate((480, 600, 1000, 1100)):                 # the tide line: dark stains along both walls, over the banks
         m.grime("stain", u, 256, F + 160, 30 + k)
@@ -787,72 +806,91 @@ def m_railbridge(m, opt):
     That train005 is a flat car (its size is read: 118 wide, 460 long, 54 high; its look is not), and which of its
     ends is its front (it is the same both ways round in its size)."""
     b = m.b
-    L, rim, c, far = 1024, b.rim, 480, 1280
+    L, rim, c = 1024, b.rim, 480
     D = rim - 144                                   # the rails' bed
     wide = 96                                       # half a tunnel's width
+    import map_corridor
+    street = m.street_side()
+    # where each tunnel's mouth is: in the canal's wall, or on a street's bank behind the street (an overpass carries
+    # the line over the road and tracks: the owner, 22 November, "cant you just make an overpass?")
+    T0 = {s: (map_corridor.FRONT if s == street else 256) for s in (1, -1)}
+    FAR = {s: T0[s] + 1024 for s in (1, -1)}
     m.open(0, -256, L, 256)
     from map_mods_c import cage_lamp
     for s in (1, -1):
-        lo, hi = (256, far) if s > 0 else (-far, -256)
+        t0, far = T0[s], FAR[s]
+        lo, hi = (t0, far) if s > 0 else (-far, -t0)
         m.low(c - wide, lo, c + wide, hi, rim, floor=D, mat="nature/dirtfloor005c")
         m.side(c - wide, lo, c + wide, hi)
         m.blocked(c - wide, lo, c + wide, hi)
-        m.portal(c - wide, min(s * 318, s * 320), D, c + wide, max(s * 318, s * 320), rim)
+        m.portal(c - wide, min(s * (t0 + 62), s * (t0 + 64)), D, c + wide, max(s * (t0 + 62), s * (t0 + 64)), rim)
         m.det([(c - wide, min(s * far, s * (far - 8)), D, c + wide, max(s * far, s * (far - 8)), rim)], MAT["black"])
         ribs = []
-        for v in (448, 704, 960, 1216):
+        for v in (t0 + 192, t0 + 448, t0 + 704, t0 + 960):
             v1, v2 = min(s * v, s * (v + 16)), max(s * v, s * (v + 16))
             ribs += [(c - wide, v1, D, c - wide + 8, v2, rim - 8), (c + wide - 8, v1, D, c + wide, v2, rim - 8), (c - wide, v1, rim - 8, c + wide, v2, rim)]
         m.det(ribs, MAT["beam"])
-        # the mouth: a pilaster each side from the bank to the rim, and the abutment the girders rest on
-        a1, a2 = min(s * 232, s * 256), max(s * 232, s * 256)
-        p1, p2 = min(s * 238, s * 256), max(s * 238, s * 256)                       # (2 proud of the wall and 2 into the mouth: the trim's ends hide in them)
-        m.det([(c - wide - 16, p1, F, c - wide + 2, p2, rim), (c + wide - 2, p1, F, c + wide + 16, p2, rim)], MAT["beam"])
+        # the mouth: a pilaster each side from the bank (or the street) to the rim, and the abutment the girders rest on
+        foot = map_corridor.STREET if s == street else F
+        a1, a2 = min(s * (t0 - 24), s * t0), max(s * (t0 - 24), s * t0)
+        p1, p2 = min(s * (t0 - 18), s * t0), max(s * (t0 - 18), s * t0)             # (2 proud of the wall and 2 into the mouth: the trim's ends hide in them)
+        m.det([(c - wide - 16, p1, foot, c - wide + 2, p2, rim), (c + wide - 2, p1, foot, c + wide + 16, p2, rim)], MAT["beam"])
         m.det([(c - 88, a1, D - 104, c + 88, a2, D - 16)], MAT["beam"])
-        m.taken(c - wide - 24, a1, F, c + wide + 24, a2, rim)
+        m.taken(c - wide - 24, a1, foot, c + wide + 24, a2, rim)
+        if s == street:
+            # over the street: a pier at the canal's edge (behind the parapet), one on the kerb between the tracks and the
+            # road, each with a cap under the girders; the walk along the canal's edge passes behind the first
+            for e1, e2 in ((256, 276), (map_corridor.ROAD_IN + 8, map_corridor.ROAD_OUT - 8)):
+                q1, q2 = min(s * e1, s * e2), max(s * e1, s * e2)
+                m.det([(c - 56, q1, foot, c + 56, q2, D - 72)], MAT["canal_wall"])
+                m.det([(c - 88, q1 - (4 if s < 0 else 0), D - 72, c + 88, q2 + (4 if s > 0 else 0), D - 56)], MAT["beam"])
         # a pier at the bank's foot
         q1, q2 = min(s * 128, s * 160), max(s * 128, s * 160)
         m.det([(c - 56, q1, F, c + 56, q2, D - 72)], MAT["canal_wall"])
         m.det([(c - 88, q1 - 12, D - 72, c + 88, q2 + 12, D - 56)], MAT["beam"])
         m.blocked(c - 96, q1 - 32, c + 96, q2 + 32)
         # the signal beside the mouth on the wall: a railway signal head, its red glow in front of it; the mouth's marks
-        m.static("models/props_trainstation/light_signal002a.mdl", c - wide - 80, s * 214, 270 if s > 0 else 90, z=D - 20)
-        sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - wide - 80, s * 168, D + 60, "255 50 30", 0.4, on=False)
+        m.static("models/props_trainstation/light_signal002a.mdl", c - wide - 80, s * (t0 - 42), 270 if s > 0 else 90, z=D - 20)
+        sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - wide - 80, s * (t0 - 88), D + 60, "255 50 30", 0.4, on=False)
         m.taken(c - wide - 130, a1, D - 30, c - wide - 30, a2, D + 110)
-        m.grime("number", c + wide + 60, s * 256, D + 60, 1 if s > 0 else 2)
-        m.grime("danger", c + wide + 60, s * 256, D - 40, 3 if s > 0 else 4)
+        m.grime("number", c + wide + 60, s * t0, D + 60, 1 if s > 0 else 2)
+        m.grime("danger", c + wide + 60, s * t0, D - 40, 3 if s > 0 else 4)
         m.grime("graffiti", c, s * 128, F + 100, 5 if s > 0 else 6)                     # (on the pier's face)
         cage_lamp(m, c, s * 128, F + 160, 270 if s > 0 else 90, "255 214 160 50", lit=s > 0)
     # the bridge: two plate girders with the bed between them, cross girders under it
     girders, stiff = [], []
+    vl, vh = -T0[-1], T0[1]                          # (the girders run from mouth to mouth: over the canal, and over a street)
     for s in (1, -1):
         g1, g2 = min(s * 64, s * 80), max(s * 64, s * 80)
-        girders += [(c + g1, -256, D - 56, c + g2, 256, D + 32)]
-        girders += [(c + g1 - 4, -256, D + 32, c + g2 + 4, 256, D + 36), (c + g1 - 4, -256, D - 60, c + g2 + 4, 256, D - 56)]
+        girders += [(c + g1, vl, D - 56, c + g2, vh, D + 32)]
+        girders += [(c + g1 - 4, vl, D + 32, c + g2 + 4, vh, D + 36), (c + g1 - 4, vl, D - 60, c + g2 + 4, vh, D - 56)]
         o1, o2 = min(s * 80, s * 83), max(s * 80, s * 83)
-        stiff += [(c + o1, v, D - 56, c + o2, v + 6, D + 32) for v in range(-227, 256, 64)]
+        stiff += [(c + o1, v, D - 56, c + o2, v + 6, D + 32) for v in range(vl + 29, vh, 64)]
     m.det(girders, STEEL)
     m.det(stiff, PIPE)
-    m.det([(c - 64, -256, D - 16, c + 64, 256, D)], STEEL)
-    m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in range(-200, 201, 100)], PIPE)
+    m.det([(c - 64, vl, D - 16, c + 64, vh, D)], STEEL)
+    m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in range(vl + 56, vh - 55, 100)], PIPE)
     m.taken(c - 90, -256, D - 64, c + 90, 256, D + 40)
     # the track: ballast on the bed, ties on the bridge and a little way in, rails the whole way (broken where the
     # areaportals stand), an overhead wire on three posts from tunnel to tunnel
-    m.det([(c - 52, -256, D, c + 52, 256, D + 1)], MM["gravel"])
-    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(-312, 304, 48) if not (-322 < v < -306 or 306 < v + 12 < 322)], "wood/woodfloor006b")
+    m.det([(c - 52, vl, D, c + 52, vh, D + 1)], MM["gravel"])
+    pa, pb = -(T0[-1] + 62), T0[1] + 62                # (the areaportals: no tie or rail through them)
+    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(pa + 6, pb - 8, 48) if not (pa - 4 < v < pa + 12 or pb - 16 < v + 12 < pb + 4)], "wood/woodfloor006b")
     posts = []
-    for v in (-176, 0, 176):
+    for v in [-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256]:
         posts += [(c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134)]
     m.det(posts, PIPE)
-    m.rope([(c, -460, D + 126), (c, -176, D + 128), (c, 0, D + 128), (c, 176, D + 128), (c, 460, D + 126)], slack=6, width=1)
+    wire = [(c, -(T0[-1] + 204), D + 126)] + [(c, v, D + 128) for v in sorted([-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256])] + [(c, T0[1] + 204, D + 126)]
+    m.rope(wire, slack=6, width=1)
     rails = []
-    for a, e in ((-far + 8, -320), (-318, 318), (320, far - 8)):
+    for a, e in ((-FAR[-1] + 8, pa - 2), (pa, pb), (pb + 2, FAR[1] - 8)):
         rails += [(c - 30, a, D, c - 26, e, D + 6), (c + 26, a, D, c + 30, e, D + 6)]
     m.det(rails, PIPE)
 
     # the train, standing where it waits: the left tunnel, its middle on lc_rail_p1. The tracktrain itself is unseen;
     # two flat cars (train005, 460 long) ride on it, one with two bundles of steel beams, one with three crates
-    tv, base = 800, D + 6
+    tv, base = T0[1] + 544, D + 6                   # (it waits in the left tunnel, 544 in: wholly hidden)
+    tr = T0[-1] + 544
     parts = [((c - 58, tv - 468, base + 2, c + 58, tv + 468, base + 94), MAT["nodraw"])]
     brush(m, "func_tracktrain", {
         "targetname": "lc_rail_train", "target": "lc_rail_p1", "origin": "%d %d %d" % (m.fr.at(c, tv, base)), "orientationtype": "0", "velocitytype": "0",
@@ -870,11 +908,11 @@ def m_railbridge(m, opt):
         m.point("env_dustpuff", c + (k - 1) * 30, v, D - 62, {"targetname": "lc_rail_dust_%d" % (k + 1), "scale": "14", "speed": "8", "color": "110 104 96", "angles": "90 0 0"})
     dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (1.2, 1.7, 2.2, 2.8)]
     stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv - 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
-             ("lc_rail_p3", -(tv - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", -tv, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
+             ("lc_rail_p3", -(tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", -tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
     for name, v, nxt, flags, wires in stops:
         m.point("path_track", c, v, base, {"targetname": name, "target": nxt, "spawnflags": flags, "orientationtype": "0", "speed": "0", "radius": "0"},
                 b.vis + ": the train", connections=wires)
-    sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, 320, D + 64, radius=4000)
+    sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, T0[1] + 64, D + 64, radius=4000)
     m.point("env_shake", c, 0, D, {"targetname": "lc_rail_shake", "amplitude": "3", "radius": "1000", "duration": "3.5", "frequency": "35", "spawnflags": "0"})
     m.relay("lc_rail_run", c, 0, D + 180, [("lc_rail_horn", "PlaySound", "", 0), ("lc_rail_signal_*", "ShowSprite", "", 0), ("lc_rail_train", "StartForward", "", 2),
                                            ("lc_rail_signal_*", "HideSprite", "", 10)])
@@ -895,10 +933,10 @@ def m_railbridge(m, opt):
     m.lane(c, 0)
     m.view(180, -40, F, 8, -14, "the bridge from the canal")
     m.view(c + 360, -100, F, 138, -16, "the left tunnel's mouth and the bridge")
-    m.view(c - 56, 300, D, 86, 2, "in the left tunnel: the train where it waits")
+    m.view(c - 56, T0[1] + 44, D, 86, 2, "in the left tunnel: the train where it waits")
     m.view(c + 60, 40, F, 200, -30, "under the bridge")
     b.notes.append("%s: the rails are at z %d (the walls' top less 144); the train waits at (%d %d) and stops at (%d %d)" % (
-        (m.tag, D + 6) + m.fr.pt(c, tv) + m.fr.pt(c, -tv)))
+        (m.tag, D + 6) + m.fr.pt(c, tv) + m.fr.pt(c, -tr)))
 
 
 def m_pumphouse(m, opt):
@@ -913,9 +951,10 @@ def m_pumphouse(m, opt):
     deep in water, steps down into it, the city's handrail round it, hazard stripes round its edge, the turbine's
     casing standing in it), numbers on the walls by the machines. The main leaves through the
     front wall, runs along the canal wall and crosses the canal overhead on a pipe bridge nobody can reach. A steel
-    gallery runs round the hall 144 up behind the handrail (stairs in the corner left of the door, a steel plate along
-    their open side); on it, over the door, the control desk: a monitor, a lamp, and the button that stops and starts
-    the pumps. The door that shuts the doorway (a sliding gate) stands slid open along the wall inside.
+    gallery runs round the hall 144 up behind the handrail: its stairs climb along the left wall toward the front wall
+    (a steel plate along their open side, room at their foot) onto a landing in the corner left of the door; over the
+    door a bay 64 deeper holds the control desk against the front wall, 64 clear behind it: a monitor, a lamp, and the
+    button that stops and starts the pumps, facing whoever stands at the desk. The door that shuts the doorway (a sliding gate) stands slid open along the wall inside.
 
     Named for the game:
       lc_pump_wheel     the wheel: a func_rotating (Start, Stop), unseen itself, the wheel model riding on it. It turns
@@ -954,7 +993,7 @@ def m_pumphouse(m, opt):
     m.side(320, 256, 1024, 832)
     m.blocked(576, 640, 768, 832)
     m.blocked(448, 420, 896, 640)
-    m.blocked(320, 320, 384, 544)
+    m.blocked(320, 320, 384, 664)
     # the doorway's steel frame on the canal side, and the door itself (a sliding gate) slid open along the wall inside
     m.det([(568, 248, F, 578, 256, F + 144), (766, 248, F, 776, 256, F + 144), (568, 248, F + 144, 776, 256, F + 160)], STEEL)   # (the banks' ends hide in its posts)
     m.taken(560, 232, F, 784, 256, F + 168)
@@ -967,7 +1006,7 @@ def m_pumphouse(m, opt):
         boxes = [(320, 320, z1, 576, 320 + t, z2), (768, 320, z1, 1024, 320 + t, z2), (320, 832 - t, z1, 576, 832, z2), (768, 832 - t, z1, 1024, 832, z2),
                  (320, 536, z1, 320 + t, 824, z2), (1024 - t, 328, z1, 1024, 824, z2)]
         if z2 > F + 160:
-            boxes.append((320, 328, max(z1, F + 160), 320 + t, 536, z2))          # (over the stairs along the left wall)
+            boxes.append((320, 328, max(z1, F + 160), 320 + t, 536, z2))          # (over the stairs' upper half and the landing at their head)
         if z2 > F + 144:
             boxes.append((576, 320, max(z1, F + 144), 768, 320 + t, z2))          # (over the doorway)
         if z2 > F + 96:
@@ -975,17 +1014,25 @@ def m_pumphouse(m, opt):
         m.det(boxes, mat)
     m.det([(576, 828, F - 96, 768, 832, F + 96)], "concrete/concretewall059c")        # (the pit's back wall, under the base course)
 
-    # the gallery: steel grating on posts, the city's handrail on its open edge, stairs up in the corner left of the door
-    m.det([(320, 768, G - 8, 1024, 832, G), (320, 536, G - 8, 384, 768, G), (960, 320, G - 8, 1024, 768, G), (384, 320, G - 8, 960, 384, G)], PIPE, top=grate)
-    m.det([(u, v, F, u + 6, v + 6, G - 8) for u, v in ((384, 536), (378, 762), (540, 762), (804, 762), (954, 762), (954, 560), (954, 378), (804, 378), (540, 378), (386, 378))], PIPE)
-    m.steps(320, 320, 384, F, G, "v", 1)
-    m.shapes([prism([(320, F), (320, F + 36), (536, G + 36), (536, G)], "x", 382, 386, STEEL)])
+    # the gallery: steel grating on posts, the city's handrail on its open edge, a bay over the door for the control desk
+    # (the owner, 22 November, of the desk standing across the gallery: "THERE IS NO ROOM TO WALK HERE"), and the
+    # stairs along the left wall climbing toward the front wall, onto a landing in the corner left of the door that is
+    # the front gallery's end (the owner: "room with the turning wheel has stairs going into the wall")
+    m.det([(320, 768, G - 8, 1024, 832, G), (320, 544, G - 8, 384, 768, G), (960, 320, G - 8, 1024, 768, G), (320, 320, G - 8, 960, 384, G),
+           (576, 384, G - 8, 768, 448, G)], PIPE, top=grate)
+    m.det([(u, v, F, u + 6, v + 6, G - 8) for u, v in ((384, 544), (378, 762), (540, 762), (804, 762), (954, 762), (954, 560), (954, 378), (804, 378),
+                                                       (576, 442), (762, 442), (386, 378))], PIPE)
+    m.steps(600, 320, 384, F, G, "v", -1)
+    m.shapes([prism([(604, F), (604, F + 36), (384, G + 36), (384, G)], "x", 382, 386, STEEL)])
     handrail(m, (384, 770), (960, 770), G)
     handrail(m, (382, 544), (382, 768), G)
+    handrail(m, (320, 546), (384, 546), G)                        # (across the left arm's end, over the stairs)
     handrail(m, (962, 384), (962, 768), G)
-    handrail(m, (384, 382), (608, 382), G)
-    handrail(m, (736, 382), (960, 382), G)
-    handrail(m, (386, 320), (386, 384), G)
+    handrail(m, (384, 382), (576, 382), G)
+    handrail(m, (768, 382), (960, 382), G)
+    handrail(m, (576, 446), (768, 446), G)
+    handrail(m, (574, 384), (574, 448), G)
+    handrail(m, (770, 384), (770, 448), G)
 
     # the turbine pit: steps down along its near side, the handrail round it, the turbine's casing in the water
     m.steps(784, 576, 608, F - 96, F, "v", -1)
@@ -1022,9 +1069,9 @@ def m_pumphouse(m, opt):
     m.det([(328, 640, H - 24, 1016, 656, H)], "metal/metaltruss017a")
     m.static("models/props_c17/pulleywheels_large01.mdl", 480, 648, 0, z=H - 70)
     m.static("models/props_c17/pulleyhook01.mdl", 480, 648, 0, z=H - 214)
-    m.static("models/props_lab/powerbox01a.mdl", 342, 600, 0, z=F + 50)
-    m.static("models/props_lab/powerbox02b.mdl", 336, 640, 0, z=F + 70)
-    m.rope([(342, 600, F + 104), (630, 736, F + 40)], slack=60, width=2)
+    m.static("models/props_lab/powerbox01a.mdl", 342, 700, 0, z=F + 50)
+    m.static("models/props_lab/powerbox02b.mdl", 336, 740, 0, z=F + 70)
+    m.rope([(342, 700, F + 104), (630, 736, F + 40)], slack=60, width=2)
 
     # outside: the main along the canal wall, then across on the pipe bridge (its middle at pu)
     pu = cx + 384
@@ -1037,12 +1084,13 @@ def m_pumphouse(m, opt):
     m.taken(wu - 40, 200, hz - 56, pu + 48, 256, hz + 40)
     m.taken(pu - 48, -256, hz - 56, pu + 48, -200, hz + 40)
 
-    # the control desk on the gallery over the door: a monitor, the lamp, the button on its top
-    m.static("models/props_wasteland/controlroom_desk001b.mdl", cx, 363, 270, z=G)
-    m.static("models/props_wasteland/controlroom_monitor001a.mdl", cx - 24, 368, 270, z=G + 34)
-    m.button("lc_pump_button", cx + 18, 352, G + 34, 270, [("lc_pump_stop", "Trigger", "", 0), ("lc_pump_start", "Trigger", "", 0)], wait="3.5")
-    m.static("models/props_combine/combine_light002a.mdl", cx + 44, 372, 270, z=G + 34)
-    sprite(m, "lc_pump_glow", cx + 44, 370, G + 74, "120 255 140", 0.2)
+    # the control desk against the front wall in the bay over the door (64 clear behind it): a monitor, the lamp, the
+    # button on its top facing whoever stands at it
+    m.static("models/props_wasteland/controlroom_desk001b.mdl", cx, 349, 270, z=G)
+    m.static("models/props_wasteland/controlroom_monitor001a.mdl", cx - 24, 348, 270, z=G + 34)
+    m.button("lc_pump_button", cx + 18, 362, G + 34, 90, [("lc_pump_stop", "Trigger", "", 0), ("lc_pump_start", "Trigger", "", 0)], wait="3.5")
+    m.static("models/props_combine/combine_light002a.mdl", cx + 44, 344, 270, z=G + 34)
+    sprite(m, "lc_pump_glow", cx + 44, 342, G + 74, "120 255 140", 0.2)
     sound(m, "lc_pump_sound", "ambient/machines/pump_loop_1.wav", cx, 552, F + 100, loops=True, on=True, radius=1400, volume=8)
     sound(m, "lc_pump_down", "ambient/machines/thumper_shutdown1.wav", cx, 552, F + 100, radius=1400)
     sound(m, "lc_pump_up", "ambient/machines/thumper_startup1.wav", cx, 552, F + 100, radius=1400)
@@ -1066,12 +1114,15 @@ def m_pumphouse(m, opt):
     m.blocked(wu - 80, wv - 40, wu + 80, 800)
     m.lane(cx, 392)
     m.lane(352, 650, G)
+    m.lane(352, 680)
+    m.lane(352, 352, G)
     m.lane(cx, 800, G)
     m.lane(992, 550, G)
     m.lane(cx - 80, 344, G)
     m.view(cx, 120, F, 90, 0, "the way in")
     m.view(cx, 340, F, 75, 0, "the hall from the door: the pit ahead, the wheel to the right")
-    m.view(cx - 80, 344, G, 62, 16, "from the control desk")
+    m.view(cx, 420, G, 270, 10, "at the control desk, in its bay")
+    m.view(352, 720, F, 270, 8, "the stairs up to the gallery")
     m.view(440, 690, F, 345, 8, "the pit and the pump")
     m.view(1180, -100, F, 190, -24, "the pipe bridge")
     b.notes.append("%s: the hall's floor is z %d, its gallery z %d, its roof z %d; the pit's floor z %d under %d of water" % (m.tag, F, G, H, F - 96, 24))
@@ -1083,7 +1134,8 @@ def m_pumphouse(m, opt):
 
 def m_thumper(m, opt):
     """EXPERIMENTAL: a Combine thumper. The canal widens to the right into a concrete terrace 512 long and 384 deep,
-    128 over the floor (the bank is its ramp). On it, behind the Combine's own fence (combine_fence01b and 01a posts, the
+    128 over the floor: a flight of 8 steps against its face climbs to a landing at the gate's foot (an upstand on its
+    open side), and the bank either side of the flight is a ramp too. On it, behind the Combine's own fence (combine_fence01b and 01a posts, the
     owner's field between them) with a gate players open (Nova Prospekt's gate in its frame, between two of the posts),
     Half-Life 2's own thumper (prop_thumper, the coast's CombineThumper002, 338 high) on a concrete plinth, fed by a fat
     cable from a Combine generator: it lifts and drops its hammer by itself, shakes the ground, thuds and keeps antlions
@@ -1125,11 +1177,22 @@ def m_thumper(m, opt):
     m.side(256, -640, 768, -256)
     m.taken(256, -264, F, 768, -256, P + 100)
     m.blocked(256, -640, 768, -256)
+    # the way up (the owner, 22 November: the check found the terrace could not be walked to): a flight of 8 against the
+    # terrace's face, toward the gate, an upstand on its open side, onto a landing at the gate's foot; the bank stays a
+    # ramp either side of it
+    m.no_bank(440, -264, 712, -248)
+    m.steps(448, -256, -192, F, P, "u", 1)
+    m.stair_side(448, 192, -192, -186, F, P, 1)
+    m.det([(640, -256, F, 704, -192, P)], MAT["canal_wall"], top=MAT["quay_floor"])
+    m.det([(640, -192, F, 704, -186, P + 32)], MAT["beam"])
+    m.blocked(448, -256, 704, -186)
+    m.lane(420, -160)
+    m.lane(544, -224, F + 64)
     # the Combine's fence across the terrace, 48 back from its edge: posts and fields, the gate in its frame between
     fv = -304
     combine_field(m, (264, fv), (568, fv), P)
     combine_field(m, (648, fv), (760, fv), P, hum=False)
-    fence_gate(m, "lc_thumper_gate", 608, fv, P, "u")
+    fence_gate(m, "lc_thumper_gate", 608, fv, P, "u", open_frame=True)
     # the plinth, and the thumper on it (its box centred on the plinth: the model's middle is off its origin)
     m.shapes([vprism(octagon(cu, cv, 76), P, P + 16, MAT["beam"])])
     top = P + 16 + 338
@@ -1176,7 +1239,7 @@ def m_thumper(m, opt):
     m.det([(832, 312, F, 896, 320, F + 64)], MAT["black"])
     m.taken(820, 240, F, 908, 256, F + 90)
     m.target("lc_thumper_burrow", 864, 280, F + 8, 270)
-    for model, u, v, yaw in (("rockgranite03a", 820, 236, 30), ("rockgranite03b", 930, 238, 200), ("rockgranite02a", 900, 166, 100)):
+    for model, u, v, yaw in (("rockgranite03a", 796, 232, 30), ("rockgranite03b", 934, 238, 200), ("rockgranite02a", 1000, 176, 100)):     # (beside the mouth, never in front of it)
         m.static("models/props_wasteland/%s.mdl" % model, u, v, yaw, z=F)
     sx, sy = m.fr.pt(864, 240)
 
@@ -1570,25 +1633,56 @@ def m_armory(m, opt):
 # 7. The swing bridge (experimental)
 # ---------------------------------------------------------------------------
 
-def m_swingbridge(m, opt):
-    """EXPERIMENTAL: a footbridge at the trim's height that turns on a round pier in the middle of the canal. As the
-    map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it lies along the
-    canal and joins nothing. Each landing is a roofed alcove with a street doorway that is never used (planked over,
-    boards nailed across), a green lamp that shows while the bridge is across and a red one while it is turned away
-    (and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge that
-    drops while the bridge is away, the city's handrail each side of the bridge's end, and at its back wall the canal's
-    winch with the button over it that turns the bridge (a press rings a bell, and two seconds later is Toggle). Each
-    has its own stairs from the canal floor: a covered flight in the wall, open to the canal on its side behind a
-    concrete parapet, running away from the bridge (the left one toward the module's exit, the right one toward its
-    entry). Whoever turns the bridge away strands the other bank at that height.
+def street_landing(m, s, cu, deck, arc, lip, U, B, Y):
+    """The swing bridge's end on a street's bank: no landing room, the bridge meets the street's canal edge (a gap in its
+    parapet), the lip and handrails as on a landing, the button on a steel post at the edge with its lamps, the barrier arm."""
+    m.b.edge_gaps.append(m.fr.rect(cu - 72, s * 236, cu + 72, s * 284))
+    m.shapes([vprism([(a[0], s * a[1]), (c[0], s * c[1]), (c[0], s * 256), (a[0], s * 256)], deck - 16, deck, MAT["beam"], MAT["quay_floor"])
+              for a, c in zip(arc, arc[1:])])
+    m.shapes([prism([(s * 256, deck - 56), (s * 256, deck - 16), (s * 236, deck - 16)], "x", cu - 64, cu + 64, MAT["beam"])])
+    handrail(m, (cu - 64, s * 238), (cu - 32, s * 238), deck)
+    handrail(m, (cu + 32, s * 238), (cu + 64, s * 238), deck)
+    tag = "a" if s > 0 else "b"
+    wu = U(608)
+    m.det([B(600, 296, deck, 616, 312, deck + 80)], STEEL)                                                    # (the post)
+    m.button("lc_swing_wheel_" + tag, wu, s * 296, deck + 52, Y(270), [("lc_swing_bell", "PlaySound", "", 0), ("lc_swing_bridge", "Toggle", "", 2)], wait="10")
+    sprite(m, "lc_swing_lamp_" + tag, wu - 6, s * 304, deck + 90, "120 255 120", 0.3)
+    sprite(m, "lc_swing_red_" + tag, wu + 6, s * 304, deck + 90, "255 50 30", 0.3, on=False)
+    sprite(m, "lc_swing_red_%s2" % tag, U(336), s * 168, deck + 90, "255 50 30", 0.35, on=False)
+    ay = s * (lip + 10)
+    brush(m, "func_door_rotating", {
+        "targetname": "lc_swing_arm_" + tag, "origin": "%d %d %d" % m.fr.at(cu - 58, ay, deck + 38), "distance": "85", "speed": "40", "wait": "-1", "lip": "0",
+        "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": str(32 + (64 if m.fr.ax("v") == "x" else 128)), "health": "0", "ignoredebris": "0",
+        "loopmovesound": "0", "noise1": "Doors.Move10", "noise2": "Doors.FullOpen4", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
+        "renderfx": "0", "disableshadows": "1"}, [(cu - 60, ay - 2, deck + 35, cu + 50, ay + 2, deck + 41)], "dev/dev_hazzardstripe01a")
+    m.det([(cu - 64, ay - 4, deck, cu - 54, ay + 4, deck + 34)], STEEL)      # (its post)
+    m.taken(*B(252, 228, deck - 60, 772, 256, deck + 120))
 
-    The bridge is 456 long and 64 wide: a plank deck on two steel beams with a truss of posts and a bottom chord under
+
+def m_swingbridge(m, opt):
+    """EXPERIMENTAL: a footbridge 224 over the canal's floor (32 under the trim, so that every room of it is roofed at
+    720 or lower and a street along the outside bank passes over it) that turns on a round pier in the middle of the
+    canal. As the map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it
+    lies along the canal and joins nothing. Each landing is a roofed alcove 192 long and 96 high with a street doorway
+    that is never used (planked over, boards nailed across), a green lamp that shows while the bridge is across and a red one while it is turned
+    away (and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge
+    that drops while the bridge is away, the city's handrail each side of the bridge's end and along the landing's open
+    edge, and against its back wall the canal's winch with the button over it that turns the bridge (a press rings a
+    bell, and two seconds later is Toggle). Each landing has its own way up from the canal floor (the owner, 22 November:
+    "the stairs for the turnbridge on both sides go into the canal walls"): a doorway in the canal's wall beside the
+    landing (60 wide, 144 high, in a steel frame), a corridor behind it under the landing, a covered flight of 7 steps
+    climbing away from the doorway, a half landing, and a flight of 7 back along the canal's wall (open to the canal over
+    the bank behind a concrete parapet, a wall between it and the flight below) up onto the landing. The left one runs
+    toward the module's exit, the right one toward its entry. Whoever turns the bridge away strands the other bank at
+    that height.
+
+    The bridge is 458 long and 64 wide: a plank deck on two steel beams with a truss of posts and a bottom chord under
     each and a counterweight under its right end, one func_door_rotating, with the city's handrail along both sides
-    riding on it (prop_dynamics parented to it). It turns on a drum: a wide cap on the round pier with a toothed ring
-    round it and a motor box driving a pinion. Its corners sweep a circle 461 across;
-    the canal is 512 wide and the landings' lips stop 234 from the pier's middle, so it sweeps through nothing (ribs
-    and drain stubs are kept off the walls there; the walls' trim line stands 240 out). A gap of 6 is left at each end.
-    It has no damage of its own.
+    riding on it (prop_dynamics parented to it). Its two ends are arcs about the pier (232 out at the middle) and the
+    landings' lips are arcs 1 farther out (the owner: "LOOK AT THAT GAP"): across, the deck meets each lip with 2 or
+    less between them, and turning it sweeps past them. It turns on a drum: a wide cap on the round pier with a toothed
+    ring round it and a motor box driving a pinion. The canal is 512 wide, so it sweeps through nothing (ribs and drain
+    stubs are kept off the walls there). It has no damage of its own.
 
     Named for the game:
       lc_swing_bridge    the bridge: Toggle (or Open: along the canal; Close: across). 12 degrees a second.
@@ -1608,58 +1702,97 @@ def m_swingbridge(m, opt):
     the canal's axis across the landing; if they swing down through the floor, add 2, Reverse). ambient/alarms/warningbell1.wav.
 
     Left as brushes: the bridge's deck, beams, truss and counterweight (a bridge deck), the pier, its drum, toothed ring,
-    motor box and turntable, the landings, their lips and corbels, the stairs and their parapets, the doorways' jambs
-    and planking, the barrier arms (dev_hazzardstripe01a)."""
+    motor box and turntable, the landings, their lips and corbels, the stairs, their parapet and the wall between the
+    flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstripe01a)."""
     b = m.b
-    L, cu, deck = 1024, 512, TRIM
-    half, wide = 228, 32
-    reach = int((half * half + wide * wide) ** 0.5) + 1          # how far a corner swings out
-    lip = 234
-    if reach >= lip:
-        b.problems.append("%s: the bridge's corners (%d out) would hit the landings' lips (%d out)" % (m.tag, reach, lip))
+    street = m.street_side()
+    L, cu, deck = 1024, 512, (TRIM if street else TRIM - 32)      # (beside a street the deck is at the street's height and meets it on that bank)
+    half, wide, cap = 229, 32, 232          # the deck's straight sides end 229 out; its ends are arcs reaching 232
+    lip = cap + 1                           # the lips' edges: arcs 1 farther out than the deck's ends
+    ends = [(cu - 32, half), (cu - 16, 231), (cu, cap), (cu + 16, 231), (cu + 32, half)]
+    reach = max(math.hypot(u - cu, v) for u, v in ends)
+    arc = [(cu + du, int(math.ceil(math.sqrt(lip * lip - du * du)))) for du in range(-64, 65, 16)]
+    inner = min(math.hypot((a[0] + c[0]) / 2.0 - cu, (a[1] + c[1]) / 2.0) for a, c in zip(arc, arc[1:]))
+    if reach >= inner:
+        b.problems.append("%s: the bridge's ends (%d out) would hit the landings' lips (%d out)" % (m.tag, reach, inner))
     m.open(0, -256, L, 256)
-    for s in (1, -1):                                             # s 1: the left bank, its stairs toward the exit; -1: the right, toward the entry
-        def V(a, c):
-            return (min(s * a, s * c), max(s * a, s * c))
-        w1, w2 = V(256, 320)
-        m.low(cu - 64, w1, cu + 64, w2, deck + 112, floor=deck, mat=MAT["quay_floor"])
-        for i in range(6):
-            a = cu + s * (64 + 64 * i)
-            top = deck - (64 * i * 8) // 12
-            m.low(min(a, a + s * 64), w1, max(a, a + s * 64), w2, min(deck + 112, (top + 136) // 8 * 8))
-        m.side(min(cu - s * 64, cu + s * 448), w1, max(cu - s * 64, cu + s * 448), w2)
-        m.blocked(min(cu - s * 64, cu + s * 448), w1, max(cu - s * 64, cu + s * 448), w2)
-        m.steps(cu + s * 448, w1, w2, F, deck, "u", -s)
-        # a concrete parapet down the flight's open side
-        r1, r2 = V(254, 260)                                      # (2 proud of the flight's side and the wall's face)
-        lo, hi = cu + s * 64, cu + s * 448
-        m.shapes([prism([(hi, F), (hi, F + 36), (lo, deck + 36), (lo, deck)], "y", r1, r2, MAT["beam"])])
-        # the landing: its lip out toward the bridge on a corbel, the handrail each side of the bridge's end, the street
-        # door (Nova Prospekt's heavy door between jambs, shut for good: not the city's door, which opens), a lamp
-        l1, l2 = V(lip, 256)
-        m.det([(cu - 64, l1, deck - 16, cu + 64, l2, deck)], MAT["beam"], top=MAT["quay_floor"])
-        m.shapes([prism([(s * 256, deck - 56), (s * 256, deck - 16), (s * lip, deck - 16)], "x", cu - 64, cu + 64, MAT["beam"])])
-        handrail(m, (cu - 64, s * (lip + 4)), (cu - 32, s * (lip + 4)), deck)
-        handrail(m, (cu + 32, s * (lip + 4)), (cu + 64, s * (lip + 4)), deck)
-        f1, f2 = V(304, 320)
-        du = cu - s * 24                                          # the doorway's middle: on the landing's side away from the stairs
-        m.det([(du - 39, f1, deck, du - 31, f2, deck + 112), (du + 31, f1, deck, du + 39, f2, deck + 112)], MAT["beam"])
-        m.det([(du - 31, V(316, 320)[0], deck, du + 31, V(316, 320)[1], deck + 112)], "wood/woodwall006a")     # (planked over, never used)
-        from map_town import board
+    from map_town import board
+    for s in (1, -1):
+        # drawn for the left bank; the right is the same turned half round about the pier
+        def U(u):
+            return cu + s * (u - cu)
+
+        def R(u1, v1, u2, v2):
+            return (min(U(u1), U(u2)), min(s * v1, s * v2), max(U(u1), U(u2)), max(s * v1, s * v2))
+
+        def B(u1, v1, z1, u2, v2, z2):
+            r = R(u1, v1, u2, v2)
+            return (r[0], r[1], z1, r[2], r[3], z2)
+
+        def Y(yaw):
+            return (yaw + (0 if s > 0 else 180)) % 360
+        if s == street:
+            street_landing(m, s, cu, deck, arc, lip, U, B, Y)
+            continue
+        mid = F + (deck - F) // 2                                 # the half landing: each flight climbs 112 in 7 steps
+        roof_lo, roof_up = (F + 160, F + 200, mid + 128), (deck + 96, deck + 80, mid + 144)    # (each flight's roof, stepping with it)
+        # the landing (192 long, the bridge's end in its far half), 96 high
+        m.low(*R(384, 256, 576, 320), deck + 96, floor=deck, mat=MAT["quay_floor"])
+        # the way up: the doorway in the canal's wall, the corridor behind it under the landing, the lower flight up
+        # away from it, the half landing, the upper flight back along the canal's wall onto the landing
+        m.low(*R(320, 256, 384, 320), F + 144)
+        m.low(*R(320, 320, 576, 384), F + 144)
+        for k in range(3):
+            m.low(*R(576 + 64 * k, 320, 640 + 64 * k, 384), roof_lo[k])
+            m.low(*R(576 + 64 * k, 256, 640 + 64 * k, 320), roof_up[k], floor=mid)
+        m.low(*R(768, 256, 832, 384), mid + 128, floor=mid)
+        m.side(*R(320, 256, 832, 384))
+        m.blocked(*R(320, 256, 832, 384))
+        lo2, hi2 = sorted((s * 320, s * 384))
+        m.steps(U(576), lo2, hi2, F, mid, "u", s)
+        m.det([B(744, 320, F, 768, 384, mid)], MAT["canal_wall"], top=MAT["stairs"])      # (the half landing's end over the lower flight's cell)
+        lo1, hi1 = sorted((s * 256, s * 320))
+        m.steps(U(744), lo1, hi1, mid, deck, "u", -s)
+        m.det([B(max(578, 576 + 64 * k), 320, F, 640 + 64 * k, 324, roof_lo[k]) for k in range(3)], MAT["beam"])     # (the wall between the flights)
+        r1, r2 = sorted((s * 254, s * 260))                       # the parapet on the upper flight's open side (2 proud of the wall's face)
+        m.shapes([prism([(U(744), mid - 8), (U(744), mid + 36), (U(576), deck + 36), (U(576), deck - 8)], "y", r1, r2, MAT["beam"])])
+        m.det([B(744, 254, mid - 8, 832, 260, mid + 36)], MAT["beam"])
+        m.det([B(312, 248, F, 322, 256, F + 144), B(382, 248, F, 392, 256, F + 144), B(312, 248, F + 144, 392, 256, F + 160)], STEEL)   # the doorway's frame
+        m.taken(*B(304, 228, F, 840, 256, deck + 120))
+        cage_lamp(m, U(448), s * 384, F + 92, Y(270), "238 226 162 40")
+        cage_lamp(m, U(832), s * 352, mid + 72, Y(180), "238 226 162 40")
+        m.lane(U(352), s * 290)
+        m.lane(U(448), s * 352)
+        m.lane(U(800), s * 320, mid)
+        # the landing's lip: an arc about the pier, out to meet the bridge's end, on a corbel; the handrail each side of
+        # the bridge's end and along the landing's open edge
+        m.shapes([vprism([(a[0], s * a[1]), (c[0], s * c[1]), (c[0], s * 256), (a[0], s * 256)], deck - 16, deck, MAT["beam"], MAT["quay_floor"])
+                  for a, c in zip(arc, arc[1:])])
+        m.shapes([prism([(s * 256, deck - 56), (s * 256, deck - 16), (s * 236, deck - 16)], "x", cu - 64, cu + 64, MAT["beam"])])
+        handrail(m, (cu - 64, s * 238), (cu - 32, s * 238), deck)
+        handrail(m, (cu + 32, s * 238), (cu + 64, s * 238), deck)
+        handrail(m, (min(U(384), U(448)), s * 258), (max(U(384), U(448)), s * 258), deck)
+        # the street door on the back wall (Nova Prospekt's heavy door between jambs, shut for good: not the city's
+        # door, which opens), the lamp
+        f1, f2 = sorted((s * 304, s * 320))
+        p1, p2 = sorted((s * 316, s * 320))
+        du = U(432)
+        m.det([(du - 39, f1, deck, du - 31, f2, deck + 96), (du + 31, f1, deck, du + 39, f2, deck + 96)], MAT["beam"])
+        m.det([(du - 31, p1, deck, du + 31, p2, deck + 96)], "wood/woodwall006a")     # (planked over, never used)
         for z, roll in ((deck + 34, 82), (deck + 72, 99)):
-            board(m, du, s * 312, z, 270 if s > 0 else 90, roll)
-        cage_lamp(m, cu + s * 40, s * 320, deck + 92, 270 if s > 0 else 90, "255 220 170 45")
-        m.static("models/props_trainstation/light_signal002a.mdl", cu - s * 112, s * 214, 270 if s > 0 else 90, z=deck + 10)    # the signal on the wall beside it
-        m.taken(cu - s * 112 - 50, V(200, 256)[0], deck, cu - s * 112 + 50, V(200, 256)[1], deck + 140)
-        m.taken(cu - 260, V(228, 256)[0], deck - 60, cu + 260, V(228, 256)[1], deck + 120)
-        # the winch at the back wall, the button over it that turns the bridge, and the green lamp over that
+            board(m, du, s * 312, z, Y(270), roll)
+        cage_lamp(m, U(556), s * 320, deck + 60, Y(270), "255 220 170 45")
+        m.static("models/props_trainstation/light_signal002a.mdl", U(336), s * 214, Y(270), z=deck + 10)    # the signal on the wall beside it
+        m.taken(*B(286, 200, deck, 386, 256, deck + 140))
+        m.taken(*B(252, 228, deck - 60, 772, 256, deck + 120))
+        # the winch against the back wall, the button over it that turns the bridge, and the green lamp over that
         tag = "a" if s > 0 else "b"
-        wu = cu + s * 44                                          # (between the door's jamb and the stairs' head)
-        m.static("models/props_canal/winch02.mdl", wu, s * 290, 0 if s > 0 else 180, z=deck)
-        m.button("lc_swing_wheel_" + tag, wu, s * 320, deck + 56, 270 if s > 0 else 90, [("lc_swing_bell", "PlaySound", "", 0), ("lc_swing_bridge", "Toggle", "", 2)], wait="10")
-        sprite(m, "lc_swing_lamp_" + tag, wu, s * 314, deck + 96, "120 255 120", 0.3)
-        sprite(m, "lc_swing_red_" + tag, wu, s * 314, deck + 84, "255 50 30", 0.3, on=False)
-        sprite(m, "lc_swing_red_%s2" % tag, cu - s * 112, s * 168, deck + 90, "255 50 30", 0.35, on=False)
+        wu = U(507)
+        m.static("models/props_canal/winch02.mdl", wu, s * 300, Y(90), z=deck)
+        m.button("lc_swing_wheel_" + tag, wu, s * 320, deck + 52, Y(270), [("lc_swing_bell", "PlaySound", "", 0), ("lc_swing_bridge", "Toggle", "", 2)], wait="10")
+        sprite(m, "lc_swing_lamp_" + tag, wu - 12, s * 314, deck + 84, "120 255 120", 0.3)
+        sprite(m, "lc_swing_red_" + tag, wu + 12, s * 314, deck + 84, "255 50 30", 0.3, on=False)
+        sprite(m, "lc_swing_red_%s2" % tag, U(336), s * 168, deck + 90, "255 50 30", 0.35, on=False)
         # the barrier arm across the landing's edge: drawn down, hinged at its end by the wall's corner
         ay = s * (lip + 10)
         brush(m, "func_door_rotating", {
@@ -1668,8 +1801,7 @@ def m_swingbridge(m, opt):
             "loopmovesound": "0", "noise1": "Doors.Move10", "noise2": "Doors.FullOpen4", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
             "renderfx": "0", "disableshadows": "1"}, [(cu - 60, ay - 2, deck + 35, cu + 50, ay + 2, deck + 41)], "dev/dev_hazzardstripe01a")
         m.det([(cu - 64, ay - 4, deck, cu - 54, ay + 4, deck + 34)], STEEL)      # (its post)
-        m.lane(cu, s * 290, deck)
-        m.lane(cu + s * 256, s * 288, F + 128)
+        m.lane(U(480), s * 290, deck)
 
     # the pier: a round concrete post, a wide drum on it with a toothed ring round it and a motor box driving a pinion,
     # a steel turntable on the drum
@@ -1685,7 +1817,8 @@ def m_swingbridge(m, opt):
     m.det([(cu + 78, -14, deck - 96, cu + 102, 14, deck - 62)], "metal/metalhull010c")        # (the motor box, on a bracket off the post)
     m.det([(cu + 36, -6, deck - 100, cu + 80, 6, deck - 96)], STEEL)
     m.blocked(cu - 64, -64, cu + 64, 64)
-    # the bridge, drawn across: two steel beams, a plank deck, cross ties; the handrail each side rides on it
+    # the bridge, drawn across: two steel beams, a plank deck with its arced ends, cross ties; the handrail each side
+    # rides on it
     wood = MM["wood"]
     parts = [((cu - wide, -half, deck - 16, cu + wide, half, deck), wood)]
     for s in (1, -1):
@@ -1695,13 +1828,19 @@ def m_swingbridge(m, opt):
         for n, kind in ((128, "long"), (128, "long"), (128, "long"), (64, "medium")):
             ride(m, "lc_swing_bridge", "models/props_c17/handrail04_%s.mdl" % kind, cu + s * (wide - 2), p + n // 2, 0, deck)
             p += n
-    parts += [((cu - 28, v, deck - 30, cu + 28, v + 6, deck - 18), STEEL) for v in (-half + 4, -110, -3, 104, half - 10)]
+    parts += [((cu - 28, v, deck - 30, cu + 28, v + 6, deck - 18), STEEL) for v in (-half + 5, -110, -3, 104, half - 11)]
     for s in (1, -1):                                             # a truss under each beam: posts and a bottom chord
         a, c = min(s * 22, s * 26), max(s * 22, s * 26)
-        parts.append(((cu + a, -half + 8, deck - 60, cu + c, half - 8, deck - 56), STEEL))
-        parts += [((cu + a, v, deck - 56, cu + c, v + 4, deck - 32), STEEL) for v in range(-half + 8, half - 8, 54)]
-    parts.append(((cu - 18, -half + 10, deck - 62, cu + 18, -half + 70, deck - 32), MAT["beam"]))     # the counterweight, under its right end
-    swing_gate(m, "lc_swing_bridge", parts, (cu, 0, deck - 16), mat=STEEL, speed=12, flags="32", connections=[
+        parts.append(((cu + a, -half + 9, deck - 60, cu + c, half - 9, deck - 56), STEEL))
+        parts += [((cu + a, v, deck - 56, cu + c, v + 4, deck - 32), STEEL) for v in range(-half + 9, half - 9, 54)]
+    parts.append(((cu - 18, -half + 11, deck - 62, cu + 18, -half + 71, deck - 32), MAT["beam"]))     # the counterweight, under its right end
+    shapes = [vprism([(x[0], x[1]), (x[3], x[1]), (x[3], x[4]), (x[0], x[4])], x[2], x[5], mat) for x, mat in parts]
+    for s in (1, -1):
+        shapes.append(vprism([(u, s * v) for u, v in ends], deck - 16, deck, wood))
+    brush_shapes(m, "func_door_rotating", {
+        "targetname": "lc_swing_bridge", "origin": "%d %d %d" % (m.fr.at(cu, 0, deck - 16)), "distance": "90", "speed": "12", "wait": "-1", "lip": "0",
+        "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": "32", "health": "0", "ignoredebris": "0", "loopmovesound": "0", "locked_sentence": "0",
+        "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1"}, shapes, connections=[
         ("OnOpen", "lc_swing_move", "PlaySound", "", 0), ("OnClose", "lc_swing_move", "PlaySound", "", 0), ("OnOpen", "lc_swing_lamp_*", "HideSprite", "", 0),
         ("OnFullyOpen", "lc_swing_move", "StopSound", "", 0), ("OnFullyClosed", "lc_swing_move", "StopSound", "", 0), ("OnFullyOpen", "lc_swing_stop", "PlaySound", "", 0),
         ("OnFullyClosed", "lc_swing_stop", "PlaySound", "", 0), ("OnFullyClosed", "lc_swing_lamp_*", "ShowSprite", "", 0),
@@ -1715,10 +1854,11 @@ def m_swingbridge(m, opt):
     m.lane(cu, 120, deck)
     m.lane(cu, -120, deck)
     m.view(150, 60, F, 0, -12, "the bridge from the canal")
-    m.view(cu + 10, 300, deck, 270, 10, "from the left landing, across the bridge")
-    m.view(900, 150, F, 160, -18, "the left bank's stairs")
-    m.view(cu - 40, -290, deck, 60, 6, "on the right landing: the wheel")
-    b.notes.append("%s: the bridge turns about (%d %d); its deck is z %d; its corners swing %d out, the landings' lips are %d out, the walls 256" % (
+    m.view(cu + 10, 290, deck, 270, 10, "from the left landing, across the bridge")
+    m.view(240, 120, F, 30, 2, "the left bank's doorway and stairs")
+    m.view(700, 300, F + 128, 180, 4, "the left bank's half landing, up the upper flight")
+    m.view(cu - 40, -280, deck, 60, 6, "on the right landing: the wheel")
+    b.notes.append("%s: the bridge turns about (%d %d); its deck is z %d; its ends reach %d out, the landings' lips are %d out, the walls 256" % (
         (m.tag,) + m.fr.pt(cu, 0) + (deck, reach, lip)))
 
 

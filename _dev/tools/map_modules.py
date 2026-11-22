@@ -124,6 +124,7 @@ class Build:
         self.vmf = Vmf()
         self.vis = "LC %s" % name
         self.upper = upper    # "left" or "right": the bank built up to the street (map_corridor.py), or None
+        self.edge_gaps = []   # (boxes on the street's canal edge with no parapet there: where a bridge meets the street)
         self.deck, self.viaduct, self.sheds, self.lifted = set(), set(), set(), set()
         if upper:
             import map_corridor
@@ -166,6 +167,27 @@ LAMP_RECIPES = {
     "dome": (60, 30, 1, "lamp", 9, 25, 2.0, 1 / 6.0),
     "bell": (60, 30, 2, "lamp", 6, 16, 2.0, 1 / 6.0),
 }
+
+
+BREAKABLE = ("props_junk/wood_crate", "props_junk/cardboard_box", "props_junk/wood_pallet")
+SUPPLY_CRATE = "models/items/item_item_crate.mdl"
+
+
+def breakable(cls, model, keys):
+    """Crates break (the owner, 22 November: "supply crates can't be broken!?!?", "both supply crates were empty"):
+    Half-Life 2's supply crate model is placed as the real thing, an item_item_crate that breaks and gives what the
+    player is short of (Valve's item_dynamic_resupply, two of them); a wooden crate, a cardboard box or a pallet that is
+    not named or parented is a physics prop, asleep until touched, so it breaks as Valve's do."""
+    if model.lower() == SUPPLY_CRATE:
+        k = {kk: vv for kk, vv in keys.items() if kk in ("angles", "targetname", "parentname")}
+        k.update({"CrateType": "0", "ItemClass": "item_dynamic_resupply", "ItemCount": "2", "CrateAppearance": "0", "spawnflags": "0"})
+        return "item_item_crate", k
+    if cls in ("prop_static", "prop_dynamic", "prop_dynamic_override") and any(w in model.lower() for w in BREAKABLE) \
+            and not keys.get("targetname") and not keys.get("parentname"):
+        k = {kk: vv for kk, vv in keys.items() if kk not in ("solid", "disableshadows", "screenspacefade", "StartDisabled", "DefaultAnim")}
+        k["spawnflags"] = "1"      # (asleep until touched: a stack stays a stack)
+        return "prop_physics", k
+    return cls, keys
 
 
 class Mod:
@@ -222,6 +244,14 @@ class Mod:
 
     def blocked(self, u1, v1, u2, v2):
         self.b.blocked.append(self.fr.rect(u1, v1, u2, v2))
+
+    def street_side(self):
+        """The module's own side the chain's street runs along (+1 its left bank, -1 its right), or 0 with no street."""
+        up = self.b.upper
+        if not up or getattr(self, "no_street", False):
+            return 0
+        s = 1 if up == "left" else -1
+        return -s if self.fr.flip else s
 
     def no_bank(self, u1, v1, u2, v2):
         self.b.no_bank.append(self.fr.rect(u1, v1, u2, v2))
@@ -302,6 +332,7 @@ class Mod:
         fade = map_build.prop_fade(model)
         if fade and k.get("fademindist", "-1") == "-1" and not k.get("targetname") and not k.get("parentname"):
             k.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
+        cls, k = breakable(cls, model, k)
         self.point(cls, u, v, zo, k, vis or self.pv)
         self.b.props.append((cls, model, self.fr.at(u, v, zo), wy, self.tag))
 
@@ -525,9 +556,27 @@ class Mod:
         wires: [(the button's output, the thing's name, the input), ...]."""
         if not self.b.test:
             return
-        self.b.vmf.brush_entity("func_button", {"movedir": "0 0 0", "speed": "8", "lip": "4", "wait": "-1", "spawnflags": "1056", "sounds": "0", "health": "0",
-                                                "rendermode": "0", "renderamt": "255", "rendercolor": "255 60 60"}, [self.fr.box(*box)], MM["steel"],
-                                self.b.vis + ": for testing alone (never in the real map)", connections=[(o, n, i, "", 0) for o, n, i in wires])
+        # (a model, never a brush: the owner, 22 November, "no brush buttons, goodness this is not 1995"; Episode Two's
+        #  mine lift button as m.button's, faced away from the thin side of the box it was given, toward the canal)
+        from map_forest import wall_button
+        u1, v1, z1, u2, v2, z2 = box
+        cu, cv = (u1 + u2) // 2, (v1 + v2) // 2
+        if v2 - v1 <= u2 - u1:
+            out = 270 if cv > 0 else 90
+        else:
+            out = 180 if cu > self.fr.length // 2 else 0
+        x, y = self.fr.pt(cu, cv)
+        dx, dy = self.fr.way(out)
+        z = z1 + self.fr.dz
+        hit = (min(x - 10 * abs(dy), x + 10 * dx), min(y - 10 * abs(dx), y + 10 * dy), z - 4, max(x + 10 * abs(dy), x + 10 * dx), max(y + 10 * abs(dx), y + 10 * dy), z + 24)
+        self.b.test_n = getattr(self.b, "test_n", 0) + 1
+        name = "lc_test_button_%d" % self.b.test_n
+        # a press works what the box's in and out did, by turns: a pair (Open and Close, Enable and Disable) becomes Toggle
+        ins = [(n, i) for o, n, i in wires if o in ("OnIn", "OnPressed")]
+        outs = {n: i for o, n, i in wires if o == "OnOut"}
+        pairs = ({"Open", "Close"}, {"Enable", "Disable"})
+        press = [("OnPressed", n, "Toggle" if n in outs and {i, outs[n]} in pairs else i, "", 0) for n, i in ins]
+        wall_button(self.b.vmf, (x, y, z), self.fr.yaw(out), name, hit, self.b.vis + ": for testing alone (never in the real map)", press, "1")
 
     def hut(self, u1, v1, u2, v2, z, mat, high=112, front="lo", open_front=False, door=56):
         """A shack: walls 8 thick, a tin roof, a way in on its front (the low-v or the high-v side)."""
@@ -749,20 +798,33 @@ def m_jog(m, opt):
     m.soundscape(SCAPES["courtyard"], 512, s // 2, F, radius=900)
 
 
+def side_gate_reach(m, side, reach):
+    """How far out a side gate on the module's side (+1 left, -1 right) is: `reach`, or where a street runs over that bank,
+    beyond the street and its frontage (the side way passes under the road and the tracks: the owner, 22 November, "Bridge
+    over"); the piece joined there moves out to meet it."""
+    if m.street_side() != side:
+        return reach
+    import map_corridor
+    return max(reach, map_corridor.FRONT + 64)
+
+
 def m_tee(m, opt):
     """A way off to the left: a standard gate in the left wall (512 wide, 256 high), capped until another piece, or
     another layout's start, is joined to it. A number painted beside the gate, puddles and trash, the courtyard's
     soundscape."""
     b = m.b
+    g = side_gate_reach(m, 1, 512)      # (where the side gate is: under a street on this bank, beyond the street)
+    g = max([g] + [int(w) for w in opt if w.isdigit()])      # ("tee flip 1152": further out still, to meet a piece where it is)
     m.open(0, -256, 512, 256)
-    m.low(0, 256, 512, 512, F + GATE_HIGH)
-    gate_cap(b.vmf, m.fr.box(0, 448, F, 512, 512, F + GATE_HIGH), m.fr.box(0, 424, F, 512, 432, F + GATE_HIGH), m.fr.ax("u"),
+    m.low(0, 256, 512, g, F + GATE_HIGH)
+    gate_cap(b.vmf, m.fr.box(0, g - 64, F, 512, g, F + GATE_HIGH), m.fr.box(0, g - 88, F, 512, g - 80, F + GATE_HIGH), m.fr.ax("u"),
              "%s: %s side gate's cap (delete to join)" % (b.vis, m.tag))
-    m.portal(0, 382, F, 512, 384, F + GATE_HIGH)
-    b.plan.keep_out.append(m.fr.rect(-64, 512, 576, 576))
-    b.allow.append(m.fr.box(-128, 384, BASE, 640, 640, b.sky + 64))    # (the piece joined at the side gate: its walls may overlap these, both solid)
-    m.blocked(0, 384, 512, 512)
-    m.side(0, 256, 512, 512)
+    import map_corridor
+    m.portal(0, 382, F, 512, 384, min(F + GATE_HIGH, map_corridor.STREET - 16) if g > 512 else F + GATE_HIGH)      # (under a street the culvert's roof is the street's deck)
+    b.plan.keep_out.append(m.fr.rect(-64, g, 576, g + 64))
+    b.allow.append(m.fr.box(-128, g - 128, BASE, 640, g + 128, b.sky + 64))    # (the piece joined at the side gate: its walls may overlap these, both solid)
+    m.blocked(0, 384, 512, g)
+    m.side(0, 256, 512, g)
     x, y = m.fr.pt(0, 0)
     canal_grime(m, 0, 512, 3000 + (x * 7 + y * 13) % 997)
     m.grime("number", 512, 320, F + 180, x + y)               # (a number on the gate's cheek, where the side way leaves)
@@ -771,7 +833,7 @@ def m_tee(m, opt):
     m.grime("stain", 400, 256, F + GATE_HIGH + 40, x + y + 2)
     m.soundscape(SCAPES["courtyard"], 256, 0, F, radius=768)
     dx, dy = m.fr.way(90)
-    b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, 512) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
+    b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, g) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
 
 
 def m_gate(m, opt):
@@ -1254,8 +1316,10 @@ def m_vort(m, opt):
 
 
 def m_relay(m, opt):
-    """7. Cubbage's relay. A concrete quay against the right wall, 128 high, with a stone coping, three mooring cleats and
-    an iron ladder down its face, two tyres for fenders, steps up its upstream end with a solid side; and on it a radio
+    """7. Cubbage's relay. A concrete quay against the right wall, 128 high and 256 deep (room to walk along the shack's
+    front: the owner, 22 November, had to noclip to its door), with a stone coping, three mooring cleats and an iron
+    ladder down its face, two tyres for fenders, steps the quay's full depth up its upstream end, their solid side flush
+    with the quay's face; and on it a radio
     shack built from pieces (map_mods_c.shack: mismatched sheets, a tin roof on posts, a boarded window), netting thrown
     over its roof against eyes above: inside, the set on a table under a desk lamp, its dials glowing, a receiver and a
     logbook by it, a chair, a cot (a bed frame), a shelf of car batteries, the canals' map pinned on the back wall, a
@@ -1273,21 +1337,25 @@ def m_relay(m, opt):
     b = m.b
     top, steel = F + 128, "metal/metalhull010c"
     m.open(0, -256, 1024, 256)
-    m.open(320, -256, 832, -64, floor=top, mat=MAT["quay_floor"])
-    m.side(320, -256, 832, -64)
-    m.no_bank(120, -264, 840, -56)                       # (a quay with upright sides, and steps up its upstream end)
-    run = m.steps(128, -256, -192, F, top, "u", 1)
-    m.stair_side(127, run + 1, -194, -190, F, top, high=36, mat="stone/stonewall050f")     # (the steps' own sides hide in it)
-    m.det([(320, -68, top, 832, -60, top + 6)], "stone/stonewall050f")               # the coping along the quay's edge
-    for u in (420, 610, 800):                                                         # mooring cleats on it
-        m.static("models/props_docks/dock01_cleat01a.mdl", u, -78, 0, z=top)
-    m.ladder(700, -64, F, top, 90)
-    m.blocked(680, -64, 720, 0)
+    m.open(320, -256, 832, 0, floor=top, mat=MAT["quay_floor"])
+    m.side(320, -256, 832, 0)
+    m.no_bank(120, -264, 840, 8)                         # (a quay with upright sides, and steps up its upstream end)
+    # the steps: the quay's whole depth, the canal's wall on one side and on the other a solid side whose face is the quay's
+    run = m.steps(128, -256, -8, F, top, "u", 1)
+    m.stair_side(128, run, -8, 0, F, top, high=36, mat="stone/stonewall050f")
+    m.det([(64, -256, F, 128, 0, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])         # a worn apron at their foot (the mud kept level there)
+    m.det([(320, -8, top, 832, 0, top + 6)], "stone/stonewall050f")                   # the coping along the quay's edge
+    # (the walk along the shack's front, kept clear: 64 and more before its doorway, the cleats and the coping beyond it)
+    m.b.vmf.keep_way_clear(m.fr.box(336, -96, top + 4, 600, -24, top + 100), "the walk along the relay shack's front")
+    for u in (470, 620, 790):                                                         # mooring cleats on it, at its edge
+        m.static("models/props_docks/dock01_cleat01a.mdl", u, -16, 0, z=top)
+    m.ladder(700, 0, F, top, 90)
+    m.blocked(680, 0, 720, 64)
     for u in (480, 560):                                                              # tyres for fenders, against the quay's face
-        m.loose("models/props_vehicles/tire001b_truck.mdl", u, -50, 90, z=F)
-    m.blocked(120, -256, 320, -180)
-    m.lane(112, -224, F)
-    m.lane(336, -224, top)
+        m.loose("models/props_vehicles/tire001b_truck.mdl", u, 8, 90, z=F)
+    m.blocked(120, -256, 320, 0)
+    m.lane(112, -128, F)
+    m.lane(336, -48, top)
     # the shack
     shack(m, 344, -248, 544, -100, top, 71, high=100, window="boards", front="hi")
     m.det([(336, -262, top + 116, 552, -76, top + 117)], "metal/metalfence007a")       # netting thrown over the roof
@@ -1317,7 +1385,7 @@ def m_relay(m, opt):
                                                  "renderfx": "0", "spawnflags": "1"}, m.lv)
     m.det([(660, -188, tip + 14, 684, -164, tip + 16)], steel)                              # (a cap over the lamp: seen from the canal, not from above)
     m.static("models/props_rooftop/antenna04a.mdl", 520, -232, 0, z=top + 118)             # an aerial on the shack's roof
-    for (gu, gv, gz) in ((330, -72, top + 4), (824, -72, top + 4), (824, -256, top + 220)):
+    for (gu, gv, gz) in ((330, -16, top + 4), (824, -16, top + 4), (824, -256, top + 220)):
         m.rope([(672, -176, tip - 40), (gu, gv, gz)], slack=10, width=1)
     m.rope([(672, -176, tip), (700, 256, b.rim - 24)], slack=60, width=1)                   # the long-wire aerial, across to the far wall (into it, under its top)
     m.rope([(540, -106, top + 98), (667, -171, top + 300)], slack=30, width=1)              # the shack's feed, up to the pole
@@ -1334,12 +1402,12 @@ def m_relay(m, opt):
     m.loose("models/props_c17/oildrum001.mdl", 590, -196, 0, z=top)
     m.loose("models/props_junk/gascan001a.mdl", 612, -224, 30, z=top)
     m.blocked(608, -240, 832, -100)
-    m.taken(320, -256, F, 832, -64, tip)
-    for kind, u, v, z, sd in (("stain", 500, -64, F + 60, 1), ("number", 360, -64, F + 90, 2), ("lambda", 560, -100, top + 50, 3), ("puddle", 600, 60, F + 1, 4)):
+    m.taken(320, -256, F, 832, 0, tip)
+    for kind, u, v, z, sd in (("stain", 500, 0, F + 60, 1), ("number", 360, 0, F + 90, 2), ("lambda", 560, -100, top + 50, 3), ("puddle", 600, 60, F + 1, 4)):
         m.grime(kind, u, v, z, sd)
     m.soundscape(SCAPES["courtyard"], 512, 60, F, radius=700)
     m.soundscape(SCAPES["house"], 444, -170, top, radius=110)
-    for u, v in ((580, -90), (444, -80), (760, -90)):
+    for u, v in ((580, -60), (444, -60), (760, -60)):
         m.lane(u, v, top)
     m.view(120, 120, F, 325, -14, "the mast")
     m.view(444, -40, top, 270, 0, "into the shack")
@@ -1467,8 +1535,9 @@ def m_sludge(m, opt):
     m.portal(1376, -128, F, 1378, 128, ceil)
     m.water(704, -128, 1344, 128, floor, floor + 12, sludge)
     m.ent("trigger_multiple", {"targetname": "lc_sludge_gas", "spawnflags": "1", "StartDisabled": "0", "wait": "1"}, [(704, -128, floor, 1344, 128, ceil)], MAT["trigger"])
-    m.ent("func_dustcloud", {"targetname": "lc_sludge_haze", "StartDisabled": "0", "Color": "90 170 60", "SpawnRate": "30", "SpeedMax": "10", "LifetimeMin": "3",
-                             "LifetimeMax": "6", "DistMax": "900", "Alpha": "35", "SizeMin": "80", "SizeMax": "160", "Frozen": "0"},
+    # a dull green haze, faint (it was lime: the owner, 22 November, "just make it NOT lime green, like mild green or dull green")
+    m.ent("func_dustcloud", {"targetname": "lc_sludge_haze", "StartDisabled": "0", "Color": "74 86 60", "SpawnRate": "24", "SpeedMax": "10", "LifetimeMin": "3",
+                             "LifetimeMax": "6", "DistMax": "900", "Alpha": "22", "SizeMin": "80", "SizeMax": "160", "Frozen": "0"},
           [(712, -120, floor + 16, 1336, 120, ceil - 8)], MAT["trigger"], vis=m.b.vis + ": experiments (delete if they misbehave)")
     # the tunnel's shape: chamfers along the roof, ribs, a broken ledge on the left
     wall2 = "concrete/concretewall059c"
@@ -1503,7 +1572,7 @@ def m_sludge(m, opt):
         m.loose("models/props_wasteland/dockplank01a.mdl", u, v, (yaw + 90) % 360, z=floor + 12)
     m.loose("models/props_junk/wood_pallet001a.mdl", 1190, 20, 25, z=floor + 12)
     for u, v in ((950, 30), (1220, -50)):                    # scum coming up
-        m.smoke(u, v, floor + 10, colour="90 140 40", size=6, length=40, rate=3)
+        m.smoke(u, v, floor + 10, colour="62 66 54", size=6, length=40, rate=3)
     m.body("models/humans/charple04.mdl", 1180, -40, 120, z=floor)
     m.det([(638, -160, F + 152, 656, 160, F + 176), (1392, -160, F + 152, 1410, 160, F + 176)], MAT["beam"])     # (2 proud of the walls' faces)
     m.sound("ambient/levels/canals/toxic_slime_loop1.wav", 1024, 0, F + 40, radius=800, volume=6)
@@ -1554,11 +1623,12 @@ def m_cistern(m, opt):
     island; the island lies under a grated shaft open to the sky, so it stands in daylight (a beam straight down, dust
     hanging in it) while the rest is dim. A plank, a drum and a body float in the water; buckets, cans and bottles lie
     about the ledge and the gallery, things to throw for a blind thing to chase.
-    Wading is in the water (the game can tell: a player's water level); the ledge, the planks and the gallery are dry.
+    Wading is in the water (the game can tell: a player's water level), down two steps off the kerb beside each walk and
+    back up them; the ledge, the planks (each laid over the kerb onto the ledge at its end) and the gallery are dry.
     Named for the game: lc_hive_boss_spot (the island), lc_cistern_gallery (the head of the stair).
     Left as brushes: the tank, its round wall and kerb, its gallery's ring, the landing and the stair and its plate, the
-    plank walks and their posts (decks on piers), the shaft's grate, the pillars, the plugs that darken the inflow
-    pipes.
+    plank walks and their posts (decks on piers), the boards over the kerb, the steps into the water, the shaft's grate,
+    the pillars, the plugs that darken the inflow pipes.
     Unchecked: ambient/water/water_flow_loop1.wav, the chains (cable/chain.vmt on ropes), the water pouring (an env_steam
     aimed down and in), func_dustmotes in daylight."""
     from map_mods_c import cage_lamp, centred, chain, dustmotes, pour, ring_rail, ring_segments
@@ -1608,7 +1678,7 @@ def m_cistern(m, opt):
     # the gallery: a smooth ring of slab, a landing where the stair comes up, the handrail round its inner edge
     m.shapes(ring_segments(cu, cv, RG - 8, RW + 8, G - 8, G, MAT["beam"], 40, phase=0.5, alt=True))
     m.det([(640, -684, G - 7, 896, -640, G + 2)], "metal/metalhull010c")                   # (a steel landing, 2 proud of the ring)
-    ring_rail(m, cu, cv, RG + 2, G, 42, skip=(0, 21))                                        # (open over the two ladders' heads)
+    ring_rail(m, cu, cv, RG + 2, G, 42, skip=(20, 41))                                       # (open over the two ladders' heads)
     LD = int(round((RG - 8) * math.cos(math.pi / 40)))                                       # (the ring's inner edge, flat across each axis)
     for lu, lv, out in ((cu + LD, cv + 24, 180), (cu - LD, cv - 24, 0)):
         m.ladder(lu, lv, F, G, out)
@@ -1623,8 +1693,24 @@ def m_cistern(m, opt):
         planks.append((a1, cv - 32, F - 6, a2, cv + 32, F - 1) if axis == "u" else (cu - 32, a1, F - 6, cu + 32, a2, F - 1))
         for a in range(a1 + 60, a2 - 20, 160):
             posts.append((a, cv - 28, basin, a + 8, cv + 28, F - 6) if axis == "u" else (cu - 28, a, basin, cu + 28, a + 8, F - 6))
+    # where each walk meets the kerb, a board laid over the kerb's top onto the ledge (the kerb's segments on the two
+    # u axes are 1 taller than on the v axes: ring_segments' alt), so the walk runs on from the ledge to the island
+    KI = int(math.ceil(RK * math.cos(math.pi / 36)))                                       # (the kerb's inner face, flat across each axis)
+    for (a1, a2, axis, zk) in ((cu + KI, cu + 640, "u", F + 2), (cu - 640, cu - KI, "u", F + 2), (cv + KI, cv + 640, "v", F + 1), (cv - 640, cv - KI, "v", F + 1)):
+        planks.append((a1, cv - 32, zk, a2, cv + 32, zk + 3) if axis == "u" else (cu - 32, a1, zk, cu + 32, a2, zk + 3))
     m.det(planks, "wood/woodfloor006b")
     m.det(posts, "wood/woodwall006a")
+    # and steps down off the kerb into the water beside each walk, one flight in each quarter of it, for wading (and out)
+    steps = []
+    for k in range(4):
+        def turn(u, v, k=k):
+            for _ in range(k):
+                u, v = -v, u
+            return u, v
+        for d1, d2, z in ((-KI, -KI + 32, F - 10), (-KI + 32, -KI + 56, F - 21)):
+            (u1, v1), (u2, v2) = turn(d1, 32), turn(d2, 96)
+            steps.append((cu + min(u1, u2), cv + min(v1, v2), basin, cu + max(u1, u2), cv + max(v1, v2), z))
+    m.det(steps, MAT["canal_wall"], top=MAT["stairs"])
     # the shaft's grate, the pillars' heads and feet, the inflow pipes, the chains
     m.det([(cu - 128, cv - 128 + 32 * k, ceil - 8, cu + 128, cv - 122 + 32 * k, ceil) for k in range(9)] + [(cu - 4, cv - 128, ceil - 14, cu + 4, cv + 128, ceil - 8)], MAT["bars"])
     m.det([(p[0] - 16, p[1] - 16, ceil - 24, p[2] + 16, p[3] + 16, ceil) for p in pillars] + [(p[0] - 12, p[1] - 12, basin, p[2] + 12, p[3] + 12, F + 8) for p in pillars], MAT["beam"])
@@ -1741,7 +1827,7 @@ def m_underpass(m, opt):
     m.blocked(800, -256, 990, -60)
     # the barnacles, and under each the tell
     for k, (u, v) in enumerate(((380, 10), (576, -130), (640, 120), (832, 70), (1090, -100), (1180, 110))):
-        m.point("npc_barnacle", u, v, roof - 1, {"angles": "0 0 0", "spawnflags": "0"}, m.b.vis + ": barnacles (delete them if the game minds)")
+        m.point("npc_barnacle", u, v, roof - 4, {"angles": "0 0 0", "spawnflags": "0", "RestDist": "16"}, m.b.vis + ": barnacles (delete them if the game minds)")      # (4 under the roof, not 1: the owner, 22 November, "barnacles don't pick me up")
         m.decal("decals/bloodstain_%s" % ("001", "002", "003", "101", "201", "001")[k], u + 6, v - 4, F + 1)
         if k % 2 == 0:
             m.loose("models/gibs/hgibs.mdl", u + 14, v + 10, 40 * k, z=F)
@@ -1784,8 +1870,9 @@ def m_checkpoint(m, opt):
     (combine_fence01b and 01a, 192 high, the owner's own field between them); a camera on the wall over the gateway, the
     Combine's lights either side, Breen's poster and numbers on the wall's face. Behind the wall, on the left bank, a
     guard's platform 128 high (the banks are its ramps) with one of the Combine's booths (combine_booth_short01a), a
-    console, a monitor and a health charger on the wall; stairs from it to a walk along the wall's top behind the
-    Combine's railing, a parapet before it, two Combine floodlights on its ends for the searchlights. Under the walk on
+    console, a monitor and a health charger on the wall; stairs from it (their lowest steps open at the side, climbed
+    from the platform beside them) to a walk along the wall's top behind the Combine's railing, a parapet before it,
+    two Combine floodlights on its ends for the searchlights. Under the walk on
     the right bank, a chain link holding pen with a sliding gate, the police line on its wall.
     Named for the game: lc_checkpoint_field (a func_brush: Disable opens it, Enable shuts it), lc_checkpoint_hum (its
     sound: StopSound, PlaySound), lc_checkpoint_light and lc_checkpoint_light_b (the searchlights: LightOff, LightOn),
@@ -1836,21 +1923,26 @@ def m_checkpoint(m, opt):
     m.grime("number", W1, 130, F + 150, 23)
     # the walk along the wall's top: the wall itself and a deck behind it, brackets under it, a parapet before it, the
     # Combine's railing behind it (the stairs come up onto the walk at its left end)
-    m.det([(W2, -256, top - 16, 672, 188, top)], steel)                                 # (from v 188 on the stairs are the floor)
+    m.det([(W2, -256, top - 16, 672, 192, top)], steel)                                 # (from v 192 on the stairs are the floor)
     m.shapes([prism([(W2, top - 16), (W2 + 80, top - 16), (W2, top - 96)], "y", v - 8, v + 8, steel) for v in (-240, -128, 128, 176)])
     m.det([(W1 - 1, v, top, W1 + 17, v + 64, top + 40) for v in range(-256, 256, 128)] + [(W1, -256, top, W1 + 16, 256, top + 24)], cmb)   # (chest high: a guard sees over it)
     m.det([(W1 + 16, -256, top, 672, -192, top + 40)], cmb)
     combine_rail(m, (668, -192), (668, 192), top)
     # the searchlights, on the wall's two ends against the canal's walls (the middle of the walk left clear to look over)
-    for v, yaw, name in ((224, 196, "lc_checkpoint_light"), (-160, 164, "lc_checkpoint_light_b")):
+    for v, yaw, name in ((160, 196, "lc_checkpoint_light"), (-160, 164, "lc_checkpoint_light_b")):    # (clear of the stairs' head)
         m.static("models/props_combine/combine_light001b.mdl", W1 + 50, v, yaw, z=top)
         m.spot(W1 + 20, v, top + 60, "190 225 255 900", yaw, pitch=16, cone=30, name=name)
-    # the guard's platform: stairs to the wall's top along the canal's wall, the Combine's booth, a console, a monitor
+    # the guard's platform: stairs to the wall's top along the canal's wall, the Combine's booth, a console, a monitor.
+    # The stairs step off onto the walk where its deck runs beside them (u 576 to 672); their lowest steps are open at the
+    # side, so they are climbed from the platform beside them, and the steel plate runs along their open side between
+    # the two (u 672 to 816)
     m.steps(864, 192, 256, pz, top, "u", -1)
-    m.shapes([prism([(864, pz), (864, pz + 36), (W2, top + 36), (W2, top)], "y", 188, 192, steel)])
+    m.shapes([prism([(816, pz + 32), (816, pz + 68), (672, pz + 164), (672, pz + 128)], "y", 188, 192, steel)])
+    m.b.vmf.keep_way_clear(m.fr.box(600, 196, pz + 4, 864, 256, top + 72), "the checkpoint's stairs")
+    m.b.vmf.keep_way_clear(m.fr.box(816, 128, pz + 4, 872, 192, pz + 76), "the way onto the checkpoint's stairs")
     m.static("models/props_combine/combine_booth_short01a.mdl", 1010, 212, 270, z=pz)
     m.blocked(936, 128, 1088, 256)
-    m.static("models/props_combine/combine_interface001.mdl", 900, 162, 270, z=pz)
+    m.static("models/props_combine/combine_interface001.mdl", 898, 172, 180, z=pz)       # (facing the stairs' foot, clear of the way on)
     m.static("models/props_combine/combine_intmonitor001.mdl", 920, 246, 270, z=pz)
     m.point("item_healthcharger", 1080, 255, pz + 48, {"angles": "0 %d 0" % m.fr.yaw(270)})
     combine_lamp(m, 760, 256, pz + 150, 270)
@@ -1990,6 +2082,38 @@ def read_layout(path):
     return lay
 
 
+def group_sheds(elems):
+    """A shed over modules ("NAME shed" on each of a few lines one after another): the street over them becomes one shed
+    as long as they are together, as a "shed" line's own (the canal and the modules below are built as they are). Each
+    straight run's sheds are then its train's first and second, in order."""
+    out, group = [], []
+
+    def close():
+        if group:
+            f0 = group[0]["frame"]
+            total = sum(g["length"] for g in group)
+            out.append({"kind": "leg", "frame": Frame(f0.x, f0.y, f0.rot, total), "length": total, "lifted": False, "stairs": False,
+                        "tag": "the shed over " + ", ".join(g["tag"] for g in group), "shed": "start"})
+            del group[:]
+    for e in elems:
+        if e.get("shed_part"):
+            if group and group[-1]["shed_part"] != e["shed_part"]:
+                close()
+            group.append(e)
+            continue
+        close()
+        out.append(e)
+    close()
+    n = 0
+    for e in out:
+        if e["kind"] != "leg":
+            n = 0
+        elif e.get("shed"):
+            n += 1
+            e["shed"] = "start" if n == 1 else "end"
+    return out
+
+
 def build_chain(lay, args):
     upper = lay.get("upper")
     b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper)
@@ -2013,7 +2137,10 @@ def build_chain(lay, args):
             size = width      # (a turn as wide as the canal: 512 square, or 1024 in the wide canal)
             fr = Frame(x, y, rot, size)
             m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt + (["wide"] if size > CANAL_W else []))
-            elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
+            if "nostreet" not in opt:
+                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
+            else:
+                elems.append({"kind": "gap", "tag": "%d %s turn" % (n, name)})
             shed_n = 0
             x, y = fr.pt(size // 2, size // 2 if name == "left" else -size // 2)
             rot = (rot + (1 if name == "left" else -1)) % 4
@@ -2021,13 +2148,17 @@ def build_chain(lay, args):
         if name == "gate" and opt[0] == "end" and width != CANAL_W:
             b.problems.append("the chain ends %d wide: put a narrow before its end (its gate is %d wide)" % (width, CANAL_W))
         if name == "gate":
+            nb = steps[n + 1] if opt[0] == "start" and n + 1 < len(steps) else steps[n - 1] if opt[0] == "end" and n > 0 else []
+            if "nostreet" in nb[1:]:
+                opt = opt + ["nostreet"]
             fr = Frame(x, y, rot, 256, flip=(opt[0] == "end"))
             m_gate(Mod(b, fr, "the %s gate" % opt[0]), opt)
             if opt[0] == "start":
                 seed = fr.at(192, 0, F + 32)
                 spawn = (fr.at(224, 0, F + 16), fr.yaw(0))
             b.labels.append(fr.pt(128, 0) + ("gate",))
-            elems.append({"kind": "leg", "frame": Frame(x, y, rot, 256), "length": 256, "tag": "the %s gate" % opt[0]})
+            elems.append({"kind": "gap", "tag": "the %s gate" % opt[0]} if "nostreet" in opt else
+                         {"kind": "leg", "frame": Frame(x, y, rot, 256), "length": 256, "tag": "the %s gate" % opt[0]})
             x, y = Frame(x, y, rot, 256).pt(256, 0)
             continue
         if name not in MODULES:
@@ -2038,8 +2169,15 @@ def build_chain(lay, args):
         w_in, w_out = widths(name)
         if w_in != width:
             b.problems.append("%s starts %d wide, but the canal there is %d wide: put a %s before it" % (name, w_in, width, "widen" if w_in > width else "narrow"))
+        # (beside a street the wide canal widens on the far side alone: its wall on the street's side runs straight on,
+        # so the street and its tracks pass the wide stretch without a bend; the modules between are moved over to fit)
+        one = None
         if upper and max(w_in, w_out) > CANAL_W:
-            b.problems.append("%s is wide: the wide canal cannot run beside a street" % name)
+            if name in ("widen", "narrow"):
+                one = "oneleft" if s < 0 else "oneright"
+                opt = opt + [one]
+            elif name in ("left", "right", "widetee"):
+                b.problems.append("%s: the wide canal beside a street cannot turn or branch (its one-sided widening would break)" % name)
         width = w_out
         if (name == "straight" or (len(info) > 3 and info[3].get("stretch"))) and opt and opt[0].isdigit():
             length = int(opt[0])      # (a module that can be any length: "tunnel 1536")
@@ -2053,7 +2191,9 @@ def build_chain(lay, args):
         tag = name if name in ("straight", "jog", "tee", "shed") else "%s%s" % (name, " %d" % count[name] if count[name] > 1 else "")
         shift = jog_shift(opt) if name == "jog" else 0
         lifted = bool(upper) and "up" in opt
-        if upper:
+        if upper and "nostreet" in opt:      # (no street over this one: the street stops before it and starts again after)
+            elems.append({"kind": "gap", "tag": "%d %s" % (n, tag)})
+        elif upper:
             if name == "jog":
                 b.problems.append("a jog cannot be used where the street runs beside the canal (the street would break): use turns")
             e = {"kind": "leg", "frame": Frame(x, y, rot, length), "length": length, "tag": "%d %s" % (n, tag), "lifted": lifted,
@@ -2061,15 +2201,19 @@ def build_chain(lay, args):
             if name == "shed":
                 shed_n += 1
                 e["shed"] = "start" if shed_n == 1 else "end"
+            elif any(w.startswith("shed") for w in opt):
+                e["shed_part"] = [w for w in opt if w.startswith("shed")][0]      # (a shed on the street over this module: consecutive ones with the same word, "shed" or "shed2", make one shed)
             elems.append(e)
         elif "up" in opt:
             b.problems.append("%s is to be lifted to the street (\"up\"), but the layout has no street: add a line \"upper left\" or \"upper right\"" % tag)
+        wide_dv = (-s * (WIDE_W - CANAL_W) // 2) if (upper and w_in > CANAL_W and w_out > CANAL_W) else 0     # (between a one-sided widen and narrow)
         if lifted:      # (the module is built on the street; the canal passes below it as a plain stretch)
             m_straight(Mod(b, Frame(x, y, rot, length), "%d the canal under %s" % (n, tag)), ["bare"])
             fr = Frame(x, y, rot, length, flip != (s < 0), shift, dv=s * map_corridor.LIFT_V, dz=map_corridor.LIFT_Z)
         else:
-            fr = Frame(x, y, rot, length, flip, shift)
+            fr = Frame(x, y, rot, length, flip, shift, dv=wide_dv)
         mod = Mod(b, fr, "%d %s" % (n, tag))
+        mod.no_street = "nostreet" in opt
         if name not in ("straight", "jog", "tee", "shed"):
             mod.view(40, 0, F, 0, 4, "coming in")
             mod.cubemap(length // 2, 0)
@@ -2078,7 +2222,7 @@ def build_chain(lay, args):
             b.labels.append(fr.pt(length // 2, 0) + (tag,))
         x, y = Frame(x, y, rot, length).pt(length, shift)
     if upper:
-        map_corridor.lay(b, elems, upper, lay.get("cars", 2))
+        map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))
@@ -2103,7 +2247,7 @@ def finish(b, seed, spawn, args):
     dish_plan(b, ch, standing["flat"], bump)
     plan.build(vmf)
     dress_canal_walls(b, ch, standing["props"])
-    ch.mud(47, skip=b.no_mud, bump=bump)
+    ch.mud(47, skip=b.no_mud, bump=bump, flat=standing["flat"])
     settle(b, ch, standing["loose"])
     fences = fence(vmf, walled, 96, b.vis + ": fence along the walls' tops", top=b.rim)
     for (i, j), spec in plan.cells.items():      # (no path node where nobody can stand: a crawl duct)
@@ -2168,11 +2312,13 @@ def standing_things(b):
         if box[2] <= F + 4 and box[5] >= DISH_FLOOR and box[3] > box[0] and box[4] > box[1]:
             flat.append((box[0], box[1], box[3], box[4]))
     for k, text in enumerate(vmf.ents):
-        cls = re.search(r'"classname" "(prop_[a-z_]+)"', text)
+        cls = re.search(r'"classname" "(prop_[a-z_]+|item_item_crate)"', text)
         if not cls or cls.group(1) == "prop_ragdoll":
             continue
         model = re.search(r'"model" "([^"]+)"', text)
         o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        if cls.group(1) == "item_item_crate":
+            model = re.match(r'(.*)', SUPPLY_CRATE)      # (a supply crate: Half-Life 2's own model, a physics thing that comes to rest)
         if not model or not o:
             continue
         ang = re.search(r'"angles" "(-?[\d.]+) (-?[\d.]+) (-?[\d.]+)"', text)
@@ -2190,7 +2336,7 @@ def standing_things(b):
         box = (min(xs), min(ys), z + bb[2], max(xs), max(ys), z + bb[5])
         props.append(box)
         if box[2] <= F + 4 and box[5] >= DISH_FLOOR:
-            if cls.group(1) == "prop_physics" and "parentname" not in text:
+            if cls.group(1) in ("prop_physics", "item_item_crate") and "parentname" not in text:
                 loose.append((k, box))
             else:
                 flat.append((box[0] - 8, box[1] - 8, box[3] + 8, box[4] + 8))
@@ -2217,7 +2363,7 @@ def dish_plan(b, ch, flat, bump=None, floor=DISH_FLOOR):
             continue
         x1, y1 = i * CELL, j * CELL
         bx, by = (i // 4) * 256, (j // 4) * 256
-        if hit(skip, bx, by, bx + 256, by + 256) or hit(banks, x1, y1, x1 + CELL, y1 + CELL) or hit(flat, x1, y1, x1 + CELL, y1 + CELL):
+        if ch.patch_skipped(i // 4, j // 4, skip) or hit(skip, x1, y1, x1 + CELL, y1 + CELL) or hit(banks, x1, y1, x1 + CELL, y1 + CELL) or hit(flat, x1, y1, x1 + CELL, y1 + CELL):
             continue
         if bump and any(abs(bump(x, y)) > 0.5 for x in (x1, x1 + CELL // 2, x1 + CELL) for y in (y1, y1 + CELL // 2, y1 + CELL)):
             continue
@@ -2266,30 +2412,35 @@ def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=
 
 
 def settle(b, ch, loose):
-    """Loose things and floor stains over the dish, brought down onto the mud (a physics prop would fall there; a stain
-    must lie on what it marks): a prop by the lowest point under it, a stain moved to the nearest corner of the grid."""
+    """Loose things and floor stains on the canal's floor, set on the mud or the concrete, whichever is higher there (a
+    physics prop would come to rest there; a stain must lie on what it marks): a prop on the highest point under it, up
+    or down, a stain moved to the nearest corner of the grid."""
     import re
     surf = ch.surface
     if not surf:
         return
 
     def height(x, y):
-        if (int(x // CELL), int(y // CELL)) not in ch.dished:
-            return None      # (on the concrete: a thing partly there stays as it is)
-        x0, y0 = int(x // CELL) * CELL, int(y // CELL) * CELL
+        """The floor a thing rests on here: the mud's skin or the concrete under it, whichever is higher (a crate sat in
+        the mud where it rose, and one floated where the floor fell: the owner's walk, 22 November). None off the canal."""
+        c = (int(x // CELL), int(y // CELL))
+        spec = ch.cells.get(c)
+        if not spec or spec[0] != "open" or spec[2] != MAT["canal_floor"]:
+            return None
+        x0, y0 = c[0] * CELL, c[1] * CELL
         q = [surf.get(p) for p in ((x0, y0), (x0 + CELL, y0), (x0, y0 + CELL), (x0 + CELL, y0 + CELL))]
         if None in q:
-            return None
+            return spec[1]
         fx, fy = (x - x0) / float(CELL), (y - y0) / float(CELL)
-        return (q[0] * (1 - fx) + q[1] * fx) * (1 - fy) + (q[2] * (1 - fx) + q[3] * fx) * fy
+        return max(spec[1], (q[0] * (1 - fx) + q[1] * fx) * (1 - fy) + (q[2] * (1 - fx) + q[3] * fx) * fy)
     moved = {}
     for k, box in loose:
         hs = [height(min(max(x, box[0] + 1), box[3] - 1), min(max(y, box[1] + 1), box[4] - 1))
               for x in (box[0], (box[0] + box[3]) / 2.0, box[3]) for y in (box[1], (box[1] + box[4]) / 2.0, box[4])]
         if None in hs:
             continue
-        drop = int(math.ceil(box[2] - min(min(hs), box[2])))
-        if drop < 1:
+        drop = int(math.floor(box[2] - max(hs)))      # (it rests on the highest point under it: never in the mud, never over a hollow)
+        if drop == 0:
             continue
         text = b.vmf.ents[k]
         o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)

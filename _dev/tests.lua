@@ -16808,6 +16808,19 @@ for _, h in ipairs(E.client.hangs) do if h.e == who:EntIndex() then coneFor = tr
 ok(coneFor, "with a white cone hat over the head (each screen draws it on the hanged, from the list it's sent)")
 ok(not who.frozen and who:GetMoveType() == MOVETYPE_NONE and #E.client.hangs >= 1 and E.client.hangs[1].a, "the rope goes up to something, and they can't get down (but they can look about)",
     tostring(who.frozen) .. " " .. tostring(who:GetMoveType()) .. " " .. tostring(#E.client.hangs))
+do -- (the owner, 22 November: hung from models/props_foliage/oak_tree01.mdl)
+    local onOak, n = 0, 0
+    for _, x in ipairs(E.hanged) do
+        local h = x.lcHang
+        n = n + 1
+        for _, o in ipairs(E.oaks or {}) do
+            if h and IsValid(o.e) and o.e:GetModel() == "models/props_foliage/oak_tree01.mdl" and math.abs((h.anchor - o.pos):Length2D() - 220) < 1
+                and math.abs(h.anchor.z - o.pos.z - 380) < 1 and math.abs(h.base.x - h.anchor.x) < 1 then onOak = onOak + 1 break end
+        end
+    end
+    ok(n >= 2 and onOak == n, "every rope is tied to a branch of an oak (oak_tree01), the hanged under it", onOak .. "/" .. n)
+    E.lcTestOaks = E.oaks
+end
 runToS(4.5)
 ok(who.lcEndTaken and who:GetNW2Bool("lc_limp", false) and who.alive, "they lose health on the rope, then go limp, and look on (nobody really dies)")
 ok(hook.Run("CanPlayerSuicide", who) == false, "and there's no way out of it")
@@ -16819,6 +16832,7 @@ runToS(10.5)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and the city resets")
 _run(6)
 ok(not a.lcHang and a:GetNW2Float("lc_hanged", 0) == 0 and a.frozen == false and (not a.GetMaterial or a:GetMaterial() == ""), "(everyone cut down, the paint off)")
+do local gone = true for _, o in ipairs(E.lcTestOaks or {}) do if IsValid(o.e) then gone = false end end ok(gone, "(and the oaks gone)") end
 _setcvar("lc_ending_standup_sections", "11:hang,104:last,110:end")
 _setcvar("lc_ending_standup_drain", 4)
 -- Bloom: everyone dances, the song speeds up, and they spin up one at a time (short timings for the test)

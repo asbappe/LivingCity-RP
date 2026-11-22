@@ -3931,6 +3931,101 @@
    "why": "The owner, 22 November, of the silo's doors: \"the silo doors should not violently kill people, they just need to shove people back a bit so they don't get stuck AT THE CLOSE, not during the entire closing sequence\"; then of the cave's emergency door, Ravenholm's gate and tunnel door and the canal's lock gates, which still killed: \"considering how dying in the gamemode means a new character, yes just shove, not kill\".",
    "how": "map_forest.shove(vmf, name, parts, vis, fit=True): parts are (box, push yaw, speed); each a trigger_push, StartDisabled, flags 11 (players, NPCs, loose things); the wiring Enables it at the close and Disables it 0.3 s after (fit=False keeps an unseen one out of the fit check where it stands in the owner's own brushes). In use: the bunker's flat doors, the silo's blast door, the leader's escape rock, the cave's emergency door, Ravenholm's gate wall (shoved off it as it starts to rise; the unseen wall's place cleared before it comes back) and tunnel door, and the canal's lock gates (the end of each swing, shut and open). On a strip narrower than a player (a wall's top), two pushes 15 either side of its middle, so each touches only those on its own side.",
    "check": "review"
+  },
+  {
+   "id": "owner-stairs-go-somewhere",
+   "tags": [
+    "stairs",
+    "geometry"
+   ],
+   "title": "Every flight of stairs goes somewhere",
+   "rule": "A flight has room to step on at its foot, headroom over every step, and a landing at its top a player steps onto (ahead or to either side). Never into a wall, a ceiling or the air.",
+   "why": "\"WE NEED A CHECK to see if stairs go into walls or geometry, over half the stairs just go into walls so far\" (22 November, walking the canal ring).",
+   "how": "map_stairs.py finds every flight by shape and judges it with a player's size.",
+   "check": "map_build.py (every build, PROBLEM)"
+  },
+  {
+   "id": "owner-room-to-walk",
+   "tags": [
+    "geometry",
+    "props",
+    "doors"
+   ],
+   "title": "A player can walk to everything the place offers",
+   "rule": "Every door that opens, every button and every standing spot the game names can be walked to from the canal (a step of 18, a jump of 44, ladders, slopes to 45 degrees); no prop cuts a walk in two; at least 48 clear on galleries and before doorways.",
+   "why": "\"IN THE SAME WHEELHOUSE THERE IS NO ROOM TO WALK HERE, MAKE A CHECK TO CHECK FOR PLAYER ROOM TO WALK\"; the relay shack with no room before its door (22 November).",
+   "how": "map_walk.py walks the floors of the file.",
+   "check": "map_build.py (every build, PROBLEM)"
+  },
+  {
+   "id": "owner-no-brush-buttons",
+   "tags": [
+    "props",
+    "logic"
+   ],
+   "title": "No brush buttons, ever",
+   "rule": "A button is a model (m.button: Episode Two's mine lift button; Valve's CombineButton) with an unseen func_button round it; the --test buttons too.",
+   "why": "\"no brush buttons, goodness this is not 1995. NO BRUSH BUTTONS\" (22 November).",
+   "how": "Mod.button, Mod.test_button (map_forest.wall_button).",
+   "check": "map_lint.py"
+  },
+  {
+   "id": "owner-crates-break",
+   "tags": [
+    "props"
+   ],
+   "title": "Crates break, supply crates hold supplies",
+   "rule": "Half-Life 2's supply crate is the item_item_crate entity (item_dynamic_resupply); wooden crates, cardboard boxes and pallets are physics props that break.",
+   "why": "\"supply crates can't be broken!?!?\", \"both supply crates were empty\" (22 November).",
+   "how": "map_modules.breakable() in Mod.prop.",
+   "check": "map_build.py"
+  },
+  {
+   "id": "owner-obey-model-choices",
+   "tags": [
+    "props"
+   ],
+   "title": "Use the models the owner named",
+   "rule": "When the owner names models (the tram's cars: the train Episode Two starts inside, wrecked_train and wrecked_train_02 from ep2_outland_01), use them; if one cannot be used, ask, never swap quietly.",
+   "why": "\"I TOLD YOU to use the EP2 train cars from the beginning of EP2 and I was ignored ... please actually obey me\" (22 November).",
+   "how": "Valve's own map shows which models it uses (grep its VMF).",
+   "check": "by hand"
+  },
+  {
+   "id": "valve-piece-fit",
+   "tags": [
+    "prefab",
+    "props"
+   ],
+   "title": "A lifted piece must fit where it goes",
+   "rule": "A piece lifted from Valve's maps keeps what held it up and what it hid: one that stood on piles over water, against a cliff, or whose back was never seen (nodraw) does not go in a dry canal against a wall.",
+   "why": "Valve's boathouse in the basin: \"floating props and no walls and a missing ceiling\", \"why are these on the other side\" (22 November).",
+   "how": "Count a piece's nodraw faces and props hanging in the air before placing it.",
+   "check": "by hand"
+  },
+  {
+   "id": "owner-sensible-set-pieces",
+   "tags": [
+    "canal",
+    "geometry"
+   ],
+   "title": "Set pieces that make physical sense",
+   "rule": "No set piece that could not happen: a building fallen over but still upright, a bus hanging in slanted brushes, a junkyard of containers inside a canal. Deleted at the owner's word: tenement, busbridge, scrapyard.",
+   "why": "\"DELETE THE BUS, SLANTED METAL DOESN'T EVEN MAKE GEOMETRICAL SENSE\", \"delete the fallen tenament ... HOW WOULD A TENEMANT FALL OVER AND STILL BE UPRIGHT\", \"shipping container/junkyard INSIDE A CANAL? ... DELETE THAT MODULE\" (22 November).",
+   "how": "Ask whether a real canal could have it.",
+   "check": "by hand"
+  },
+  {
+   "id": "owner-street-ships-with-canals",
+   "tags": [
+    "canal",
+    "streets"
+   ],
+   "title": "The road and railway ship with the canal",
+   "rule": "A canal layout fitted into the map carries its street (a road and a railway on one bank, \"upper left\" or \"upper right\") unless the owner says otherwise: never deliver the canal alone and leave the street as a separate option nobody sees. Where a way leaves the canal on the street's bank, it passes under the road and the piece joined there moves out to meet it.",
+   "why": "\"what ever happened to the road and railroad tracks running parallel and nearby the canal? ... Aren't those supposed to ship with the canal maps? I haven't s a road or railroad track yet\" (22 November); then \"Yes, outside bank\" and \"Bridge over\".",
+   "how": "map_layouts/ring_north.txt and ring_south.txt: \"upper right\", sheds over modules (\"shed\", \"shed2\"), \"stairs\" on a straight in each stretch of street, \"nostreet\" where it cannot run; side_gate_reach() puts a side gate beyond the street.",
+   "check": "map_build.py chain --against every neighbouring piece: nothing runs into anything; the walk check reaches every train's button from the spawn."
   }
  ]
 }
