@@ -395,6 +395,15 @@ def solid_text(vmf, sides, q, d, vis, t="\t"):
     return text, allv
 
 
+def fade_small(cls, keys):
+    """A small unnamed prop of a piece fades far off, as Valve fades a third of theirs (the lint's rule); its skin is kept."""
+    if cls.startswith("prop") and keys.get("model") and not keys.get("targetname") and not keys.get("parentname"):
+        import map_build
+        fade = map_build.prop_fade(keys["model"])
+        if fade and str(keys.get("fademindist", "-1")) in ("-1", "") or (fade and str(keys.get("fademaxdist", "0")) in ("0", "")):
+            keys.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1]), "fadescale": "1"})
+
+
 def corner_box(allv):
     """The box round a placed brush's corners, for the checks only, rounded out to whole units: Valve's slanted faces have
     corners off the grid (their planes' three points are on it), which the brush keeps as it was."""
@@ -461,6 +470,7 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outs
                 a = nums(keys["angles"])
                 keys["angles"] = "%s %s %s" % (fmt(a[0]), fmt((a[1] + 90 * q) % 360), fmt(a[2]))
             pos = [a + b for a, b in zip(rot(p["origin"], q), d)]
+            fade_small(p["classname"], keys)
             vmf.point(p["classname"], tuple(pos), keys, m.pv if p["classname"].startswith("prop") else m.lv)
         return pf
     place_logic(m, pf, list(pf["points"]) + wires, q, d, tag, keep_outside)
@@ -548,6 +558,7 @@ def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
             a = nums(keys["angles"])
             keys["angles"] = "%s %s %s" % (fmt(a[0]), fmt((a[1] + 90 * q) % 360), fmt(a[2]))
         pos = [a + b for a, b in zip(rot(e["origin"], q), d)]
+        fade_small(cls, keys)
         vmf.point(cls, tuple(pos), keys, m.pv if cls.startswith("prop") else m.lv if cls in KEEP_POINTS else lv, connections=outs)
 
 

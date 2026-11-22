@@ -766,6 +766,9 @@ def m_tee(m, opt):
     x, y = m.fr.pt(0, 0)
     canal_grime(m, 0, 512, 3000 + (x * 7 + y * 13) % 997)
     m.grime("number", 512, 320, F + 180, x + y)               # (a number on the gate's cheek, where the side way leaves)
+    m.det([(0, 248, TRIM + 128, 512, 256, TRIM + 136)], "stone/stonewall050f")      # a course over the gate (the lint: a bare wall)
+    m.grime("stain", 160, 256, F + GATE_HIGH + 96, x + y + 1)
+    m.grime("stain", 400, 256, F + GATE_HIGH + 40, x + y + 2)
     m.soundscape(SCAPES["courtyard"], 256, 0, F, radius=768)
     dx, dy = m.fr.way(90)
     b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, 512) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
@@ -993,7 +996,7 @@ def m_overflow(m, opt):
     # what the flood left against the plate
     m.static("models/props_debris/concrete_chunk01a.mdl", 250, 96, 40, z=F + 4)
     m.static("models/props_debris/broken_pile001a.mdl", 780, 96, 200, z=F + 4)
-    m.static("models/props_foliage/driftwood_03a.mdl", 500, 190, 10, z=F + 6)
+    m.static("models/props_foliage/driftwood_03a.mdl", 430, 120, 10, z=F + 6)
     m.static("models/props_foliage/driftwood_03a.mdl", 596, 176, 160, z=F + 6)
     m.loose("models/props_junk/wood_pallet001a.mdl", 690, 70, 25, z=F + 12)
     m.body("models/humans/charple02.mdl", 520, 420, 70)

@@ -39,7 +39,7 @@ def m_example(m, opt):
 MODULES = {"example": (1024, m_example, "what it is")}
 ```
 
-`opt` is the words after the name on a layout line (`["1280", "flip"]`).
+`opt` is the words after the name on a layout line (`["1280", "flip"]`). A layout line `close` ends the chain with no gate (its last module closes the canal, as `roadend` does). A module can set `b.replaces` (ids of the owner's brushes it stands in the place of), `b.allow` (boxes round its gates where a joined piece's walls may overlap its own: both solid) and `b.stoppers` (boxes stopping up an opening meant to join the owner's map, for the seal check only). `map_mods_f.py` holds the ring's own (`roadend`, the church).
 
 ## Coordinates and heights
 
@@ -57,6 +57,8 @@ The plan is squares of 64, seen from above. Paint them and the walls, floors, ro
 
 - `m.open(u1, v1, u2, v2, floor=F, mat=None)`: open to the sky.
 - `m.low(u1, v1, u2, v2, ceil, floor=F, mat=None)`: under a roof at `ceil` (solid concrete above it up to the rim).
+- `m.open(..., sky=Z)`: open to a sky of its own, higher than the chain's (the church's yard): the builder raises a column of sky on every square round it, so keep such a place walled in. Neither the fence nor the canal's dressing touches it.
+- `m.cellar(u1, v1, u2, v2, floor, ceil, upper, mat=None, upper_mat=None, sky=None)`: a room from `floor` to `ceil`, a slab to `upper` (the floor of what is over it), air above to the sky (its own `sky` or the chain's): a basement under a building, a tunnel under a yard.
 - Anything not painted is solid or nothing. A pillar is squares left unpainted in the middle of a room, or taken back out with `m.unpaint(u1, v1, u2, v2)`.
 - **A square's floor can be at any height.** Higher than `F` beside the canal: the dressing treats it as a wall and puts a 45 degree bank against it, which makes a walkable ramp up to a platform 128 high (the relay's pier, the checkpoint's platform). Higher than 128: build stairs (`m.steps`).
 - `m.side(u1, v1, u2, v2)`: tell the mud to stay out of a side room. Call it for everything that is not open canal.

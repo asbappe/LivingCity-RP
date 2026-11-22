@@ -76,10 +76,13 @@ def m_roadend(m, opt):
     m.blocked(576, -512, L, -384)
     m.side(576, -512, L, -256)
     m.grime("number", 576 - 8, -320, F + 180, 77)
+    from map_modules import TRIM
+    m.det([(576, -256, TRIM + 128, L, -248, TRIM + 136)], "stone/stonewall050f")      # a course over the gate
+    m.grime("stain", 760, -256, F + GATE_HIGH + 80, 78)
     x, y = m.fr.pt(0, 0)
     canal_grime(m, 0, L, 4000 + (x * 7 + y * 13) % 997)
     m.soundscape(SCAPES["courtyard"], L // 2, 0, F, radius=900)
-    m.view(980, -120, F, 40, 8, "the platform and its stairs")
+    m.view(900, -60, F, 140, 8, "the platform and its stairs")
     m.view(400, 384, ROAD_W, 270, 10, "from the road's end")
     gx, gy = m.fr.pt((576 + L) // 2, -512)
     b.notes.append("%s: its side gate is at (%d %d), heading %s: the ring's south half starts there" % (

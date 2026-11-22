@@ -153,7 +153,8 @@ def wall_stair(m, start, v1, v2, sign, rail_v):
 def drain_water(m, box):
     """Water that the aqueduct's valve drains: it sinks 30 (into the concrete under it, out of sight) when told Open."""
     m.b.vmf.brush_entity("func_water_analog", {"targetname": "lc_aqueduct_water", "movedir": "90 0 0", "speed": "6", "movedistance": "30",
-                                               "startposition": "0", "WaveHeight": "0"}, [m.fr.box(*box)], MAT["nodraw"], m.b.vis + ": water and sludge", top=MM["water"])
+                                               "startposition": "0", "WaveHeight": "0", "startsound": "ambient/water/water_flow_loop1.wav"},
+                         [m.fr.box(*box)], MAT["nodraw"], m.b.vis + ": water and sludge", top=MM["water"])
 
 
 def clip(m, box):
@@ -1556,8 +1557,8 @@ def m_chimney(m, opt):
             shapes.append(frustum(at([r1[i], r1[j], inner[j], inner[i]]), at([r2[i], r2[j], inner[j], inner[i]]), jz(z1, i), jz(z2, i), mat))
         shapes.append(frustum(at([rad(crown)[i], rad(crown)[j], inner[j], inner[i]]), at([ring(170)[i], ring(170)[j], inner[j], inner[i]]), jz(crown, i), g - 8, BRICK))
         shapes.append(frustum(at([ring(161)[i], ring(161)[j], foot[j], foot[i]]), at([ring(158)[i], ring(158)[j], foot[j], foot[i]]), plinth, plinth + 6 + i % 2, "stone/stonewall050f"))
-    shapes += [vprism(at([(-64, 160), (-24, 160), (-24, 100), (-40, 100)]), F, plinth, STONE), vprism(at([(24, 160), (64, 160), (40, 100), (24, 100)]), F, plinth, STONE),
-               vprism(at([(-24, 160), (24, 160), (24, 100), (-24, 100)]), F + 96, plinth, STONE)]
+    shapes += [vprism(at([(-64, 160), (-24, 160), (-24, 100), (-40, 100)]), F, plinth + 2, STONE), vprism(at([(24, 160), (64, 160), (40, 100), (24, 100)]), F, plinth + 2, STONE),
+               vprism(at([(-24, 160), (24, 160), (24, 100), (-24, 100)]), F + 96, plinth + 2, STONE)]      # (the doorway's frame 2 proud of the plinth's top: no two tops in one plane)
     for (z1, z2, mat) in courses:
         r1, r2 = rad(z1), rad(z2)
         shapes.append(frustum(at([r1[1], r1[2], inner[2], inner[1]]), at([r2[1], r2[2], inner[2], inner[1]]), jz(z1, 1), jz(z2, 1), mat))
@@ -2458,9 +2459,10 @@ def m_aqueduct(m, opt):
         c1, c2 = (256, 448) if s > 0 else (-448, -256)
         m.low(448, c1, 576, c2, bed + 112, floor=bed)                      # (as high as the canal's bars that shut it; on a way into the wall)
         m.side(448, c1, 576, c2)
-        lift = "lc_aqueduct_bars"                                           # (the valve lifts the bars into the wall: the owner, 21 November)
+        lift = "lc_aqueduct_bars"                                           # (the valve lifts the bars into the wall: the owner, 21 November; Valve's d1_canals sounds for a gate a wheel moves)
         m.b.vmf.brush_entity("func_movelinear", {"targetname": lift, "movedir": "-90 0 0", "speed": "28", "movedistance": "116", "spawnflags": "8",
-                                                 "startposition": "0", "blockdamage": "0"}, [m.fr.box(508, 264 * s - 1, bed + 100, 516, 264 * s + 1, bed + 108)],
+                                                 "startposition": "0", "blockdamage": "0", "startsound": "d1_canals.citizen_gate.Move1",
+                                                 "stopsound": "d1_canals.citizen_gate.FullClose1"}, [m.fr.box(508, 264 * s - 1, bed + 100, 516, 264 * s + 1, bed + 108)],
                              "tools/toolsinvisible", m.dv)
         m.prop("prop_dynamic", M_ + "props_canal/canal_bars004.mdl", 512, 264 * s, 90, bed, {"solid": "0", "parentname": lift, "disableshadows": "1"})
         m.b.vmf.brush_entity("func_brush", {"targetname": "lc_aqueduct_bars_clip", "Solidity": "2", "StartDisabled": "0", "spawnflags": "2", "rendermode": "10"},

@@ -22,7 +22,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `boathouse` | 1024 | a smugglers' boat shed in the left wall: a roll-up door, a slipway, a hatch to a cellar | `lc_boathouse_button_in`, `lc_boathouse_button_out`, `lc_boathouse_cellar`, `lc_boathouse_door`, `lc_boathouse_hatch`, `lc_boathouse_hatch_button` | `map_mods_a.py` |
 | `arcade` | 1536 | a market arcade over the canal on three arches: a covered walk above, a stair on each bank | `lc_arcade_upper` | `map_mods_a.py` |
 | `chimney` | 1024 | a round yard on the right with a hollow brick chimney to climb: a lookout over the whole canal | `lc_chimney_top` | `map_mods_a.py` |
-| `crypt` | 1024 | the left wall broken into a church crypt: pillars, niches with stone coffins, an altar, a bricked stair | `lc_crypt_altar` | `map_mods_a.py` |
+| `crypt` | 1024 | the left wall broken into a church crypt: pillars, coffins, an altar, a tunnel to Ravenholm's church in its walled graveyard behind | `lc_church_altar`, `lc_church_grigori`, `lc_church_side_door`, `lc_crypt_altar` | `map_mods_a.py` |
 | `lift` | 1024 | EXPERIMENTAL: a freight lift from the canal floor up to a loading dock with a street gate (a cap to delete) | `lc_lift_button_high`, `lc_lift_button_low`, `lc_lift_button_ride`, `lc_lift_counterweight`, `lc_lift_dock`, `lc_lift_platform`, `lc_lift_street` | `map_mods_a.py` |
 | `barge` | 1280 | a river barge grounded askew: a hideout in its hold, a wheelhouse, a gangplank from the bank | `lc_barge_hold`, `lc_barge_wheel` | `map_mods_a.py` |
 | `busbridge` | 1024 | a bus hanging nose-down from the left street: climb through it to a pavement and a street doorway (a cap to delete) | `lc_bus_street`, `lc_bus_top` | `map_mods_a.py` |
@@ -55,6 +55,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_chute`, `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
 | `lockgate` | 2048 | Valve's lock gates across the wide canal: toggled open and shut, a klaxon, a control booth, a passage round | `lc_lockgate_beacon`, `lc_lockgate_close`, `lc_lockgate_closed`, `lc_lockgate_klaxon`, `lc_lockgate_leaf_a`, `lc_lockgate_leaf_b`, `lc_lockgate_open`, `lc_lockgate_opened`, `lc_lockgate_portal`, `lc_lockgate_state`, `lc_lockgate_switch`, `lc_lockgate_switch_light`, `lc_lockgate_switch_model`, `lc_lockgate_toggle` | `map_mods_e.py` |
+| `roadend` | 1088 | the west road's end: a platform at the road's height, stairs down, and a side gate on (the ring's north half ends here) | none | `map_mods_f.py` |
 | `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it (the game puts the flagpole at its door) | `lc_hq_desk`, `lc_hq_map`, `lc_hq_table` | `map_town.py` |
 | `flats` | 768 | a house to live in: a front door that opens, a hall, and two flats of a kitchen and a bedroom each (stove, sink, fridge, table, bed) | `lc_flat_1`, `lc_flat_2`, `lc_flat_door` | `map_town.py` |
 | `straight` | 1024 | plain canal ("straight 1536", "straight 1024 bridge") | none | `map_modules.py` |
@@ -497,7 +498,8 @@ canal's. Four squat pillars carry arches both ways. In each side wall two burial
 one of the graveyard's carved lids; one lid is ajar, bones lie in a niche. In the middle of the nave stands a tomb
 that has been opened, its lid leaning against it, a skull in it and bones spilled beside it. At the back Lost
 Coast's monastery altar on a step, two of its tall candlesticks, a cross cut in the wall behind it (lc_crypt_altar),
-and to its right a stair that once went up into the church: bricked up, with a crack of daylight at the top. Stone
+and to its right the old stair up into the church, its bricks broken through: a tunnel under the churchyard runs on
+to the church's basement, and Ravenholm's church stands behind (map_mods_f.church). Stone
 plaques on the walls. It is lit by people, not by fittings: candles here and there (a cluster on the altar, one in
 a niche, one on a pillar's base, a few by the tomb, one on the stair; the other pillars dark), dust hanging in their
 light, a little day at the hole. The Resistance uses it: a radio on the altar, a mattress for the wounded, the lambda
@@ -505,7 +507,7 @@ on the wall. Water from the canal stains the wall by the hole and stands on the 
 (prison.general_dripping_tunnel). Quiet and old: a place to hide, to meet, or to be buried.
 Named for the game: lc_crypt_altar (an info_target before the altar).
 Left as brushes: the crypt, pillars, vault, niches, the coffins' carved bases, the altar's step, the cross cut in
-the wall, the plaques, the bricked stair, the broken slabs and teeth round the hole, the candle stubs (no model of one
+the wall, the plaques, the broken slabs and teeth round the hole, the candle stubs (no model of one
 exists).
 Unchecked: the bones (models/gibs) as prop_dynamics; which way the altar faces; the look of stone/stonefloor006d_c17
 and stone/stonewall040f; whether the candles' small lights are enough to see by; the func_dustmotes keys.
@@ -1405,6 +1407,21 @@ d1_canals.Floodgate_Stop (Half-Life 2's canal sounds); that locks_large and lock
 with no gaps (Valve kept theirs far behind the gates); which way CombineButton faces (turned out of the wall and
 tipped back 30, as Valve's).
 
+### `roadend`
+
+The west road's end (the owner's brushes 14734, the sky wall, and 15630, the unseen wall before it, are what it
+stands in the place of: map_merge.py leaves them out). Built for one place: heading south at x -3136, from y 2752
+to 1664 (map_layouts/ring_north.txt), with the road's opening at x -2608, y 1920..2560, its surface z 840.
+
+On the left bank a platform at the road's height (256 by 640, open to the sky as the old ring's was) carries the
+road on to the canal's edge; a flight of 28 steps (16 up, 24 along) runs south down the left wall from its north
+end to the canal's floor, filled under and railed on its open side, and the platform's edge is railed. The far
+(right) wall has a standard gate (512 wide, 256 high, capped until the ring's south half is joined to it): the way
+on round the south of the city. The canal ends past the platform, as the old ring's did (the city stands 64 beyond).
+A lamppost on the platform, a caged lamp over the stairs' foot, a puddle and trash; the courtyard's soundscape.
+With --test the road's opening is shut by a wall of sky (the city is not there to close it).
+Unchecked: nothing new (the old ring's platform, stairs and threshold, rebuilt to fit one module).
+
 ### `hq`
 
 The Resistance leader's office. A doorway in the left wall into a briefing room (a long table and benches, a
@@ -1497,3 +1514,6 @@ The canal widens into a basin 1024 wide and narrows again within one module, so 
 512 section and goes anywhere a plain stretch does ("basin 2560": that long, 2048 at least). Its steps are those of
 "widen" and "narrow" (the banks wrap round them); between them the wide canal's upright walls and deeper dish, a
 walk along the left wall where the basin is 2560 or longer ("flip": the right; "noledge": none), odds and ends.
+Shorter, or with no walk: Valve's Resistance boathouse (canals_06) on its piles against the left wall, an airboat
+jetty (canals_05) and a timber lookout (canals_11) off the right wall, lifted whole (map_prefab.py).
+Unchecked: the boathouse's physics props (drums, crates) as Valve placed them, over a dry canal floor.
