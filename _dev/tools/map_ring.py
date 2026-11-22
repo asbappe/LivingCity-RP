@@ -309,7 +309,7 @@ class Channel:
 NODE_AIR, AIR_UP = 150, 160      # Valve's flying nodes: about 150 apart, 120 over the ground nodes (lane_cells lays the walking ones)
 
 
-NODE_LEVELS = ((2, 1, 150), (2, 2, 256), (3, 2, 384), (4, 3, 512))      # (every how many squares in the open, in corridors; flying nodes apart): densest first
+NODE_LEVELS = ((2, 1, 150), (2, 2, 256), (3, 2, 384), (4, 3, 512), (6, 4, 768), (8, 5, 1024))      # (every how many squares in the open, in corridors; flying nodes apart): densest first
 
 
 def lane_cells(cells, floor_of, roofed, blocked=(), banks=(), open_every=2, tight_every=1):

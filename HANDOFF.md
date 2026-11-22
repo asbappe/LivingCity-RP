@@ -31,17 +31,16 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 22 November. The HQ's later stages, as the owner chose (docs/features/resistance-base.md, "The later stages"):
-  respawn at the live HQ, its lab alone makes bypass charges and IEDs, rebels heal there; what the Combine know of it
-  moves only by players (informing, a prisoner's truth, a unit's scouting job, a scanner a unit sends: never the city's
-  own scanners); the raid from City orders with Defend the headquarters; a ransack names three sympathizers.
-- Supply lines (docs/features/supply-lines.md): a courier on the road or a boat up the canal, routes from
-  lc_supply_road_N / lc_supply_canal_N or the editor's supply line points. No setting: a route turns them on.
-- Advisor screens (docs/features/advisors.md): requests, a report every 3 nights, rations cut, an officer, removal.
-  No setting: placing a screen turns them on. One new text place (her line from the Advisors): house_rules.json.
-- Forest cave: lc_hq_setup_cave and its rebel territory before the mine office. City orders and the radio menu take
-  entries from other modules (LC_CL.CityOrderExtras, LC_CL.RadioExtras).
-- 21 November's work (garden, people, waves, squads, strongholds, map tools): TODO.md and git log.
+- 22 November (this chat): **the canal ring round City 18**, every canal module but the town's twelve in it:
+  map_layouts/ring_north.txt (the old ring's route; replaces lc_ring.vmf) and ring_south.txt (round the south),
+  fitted to c18_lc.vmf and checked against every piece; the first canal has a south gate; roadend is the west
+  road's platform. The test map: `python3 _dev/tools/map_ring_walk.py` writes lc_ring_walk.vmf (spawn, sun).
+  docs/dev/map-building.md, "The canal ring". Not compiled yet: the owner's walk comes first.
+- Ravenholm's church is in the crypt module, behind the crypt (map_mods_f.church): a tunnel from the crypt to its
+  basement. lc_church_grigori and the other names wait for the gamemode (TODO.md, the church).
+- The owner's map is on their Drive (c18_lc.vmf, link-shared): it downloads with curl from
+  drive.usercontent.google.com (the connector refuses files over 10 MB). Valve's VMF zip likewise.
+- Earlier 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
 - Map chat: bunker and silo fixed to the owner's list (TODO.md); no prop in a way players walk, every build (CLAUDE.md);
   the cave's back rebuilt from Valve's maps: Ravenholm's big room (for the office), the emergency door, EP2's holdout

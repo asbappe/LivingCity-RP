@@ -112,7 +112,10 @@ def m_basin(m, opt):
     """The canal widens into a basin 1024 wide and narrows again within one module, so it starts and ends on the plain
     512 section and goes anywhere a plain stretch does ("basin 2560": that long, 2048 at least). Its steps are those of
     "widen" and "narrow" (the banks wrap round them); between them the wide canal's upright walls and deeper dish, a
-    walk along the left wall where the basin is 2560 or longer ("flip": the right; "noledge": none), odds and ends."""
+    walk along the left wall where the basin is 2560 or longer ("flip": the right; "noledge": none), odds and ends.
+    Shorter, or with no walk: Valve's Resistance boathouse (canals_06) on its piles against the left wall, an airboat
+    jetty (canals_05) and a timber lookout (canals_11) off the right wall, lifted whole (map_prefab.py).
+    Unchecked: the boathouse's physics props (drums, crates) as Valve placed them, over a dry canal floor."""
     L = m.fr.length
     if L < 2048:
         m.open(0, -HALF, L, HALF)
@@ -126,7 +129,25 @@ def m_basin(m, opt):
     wide_walls(m, 520, L - 520)
     if L >= 2560 and "noledge" not in opt:
         walk_ledge(m, 768, L - 768, 1, wide=True, stairs=2 if L - 1536 >= 1152 else 1)
-    odds(m, 512, L - 512, 300, seed_of(m, 4400))
+    if L < 2560 or "noledge" in opt:
+        # Valve's own, from Route Kanal (the owner, 22 November: "please feel free to copy/paste sections out of HL2 for
+        # the canals"): the Resistance boathouse of canals_06 on its piles against the left wall, an airboat jetty of
+        # canals_05 off the right wall, and the timber lookout of canals_11 further along it; a way 428 wide between
+        from map_prefab import place
+        mid = L // 2
+        place(m, "valve_canal_boathouse_a", mid, WHALF, F, 2)
+        place(m, "valve_canal_jetty_a", mid - 264, -WHALF, F, 0)
+        place(m, "valve_canal_lookout_a", mid + 276, -WHALF + 119, F, 1)
+        m.taken(mid - 368, WHALF - 380, F, mid + 368, WHALF, F + 440)
+        m.taken(mid - 440, -WHALF, F, mid + 440, -WHALF + 240, F + 200)
+        m.blocked(mid - 360, WHALF - 372, mid + 362, WHALF)
+        m.blocked(mid - 430, -WHALF, mid + 400, -WHALF + 232)
+        m.lane(mid, 0, F)
+        m.grime("puddle", mid - 40, -120, F + 1, seed_of(m, 4400))     # (no odds and ends: Valve's pieces fill the basin's floor)
+        m.grime("trash", mid + 120, -60, F + 1, seed_of(m, 4401))
+        m.view(mid - 520, -40, F, 15, 4, "the boathouse and the jetty")
+    else:
+        odds(m, 512, L - 512, 300, seed_of(m, 4400))
     m.soundscape(SCAPES["courtyard"], L // 2, 0, F, radius=max(900, L // 2))
     m.view(560, -40, F, 10, 2, "the basin")
 

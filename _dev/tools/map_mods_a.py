@@ -153,7 +153,8 @@ def wall_stair(m, start, v1, v2, sign, rail_v):
 def drain_water(m, box):
     """Water that the aqueduct's valve drains: it sinks 30 (into the concrete under it, out of sight) when told Open."""
     m.b.vmf.brush_entity("func_water_analog", {"targetname": "lc_aqueduct_water", "movedir": "90 0 0", "speed": "6", "movedistance": "30",
-                                               "startposition": "0", "WaveHeight": "0"}, [m.fr.box(*box)], MAT["nodraw"], m.b.vis + ": water and sludge", top=MM["water"])
+                                               "startposition": "0", "WaveHeight": "0", "startsound": "ambient/water/water_flow_loop1.wav"},
+                         [m.fr.box(*box)], MAT["nodraw"], m.b.vis + ": water and sludge", top=MM["water"])
 
 
 def clip(m, box):
@@ -1556,8 +1557,8 @@ def m_chimney(m, opt):
             shapes.append(frustum(at([r1[i], r1[j], inner[j], inner[i]]), at([r2[i], r2[j], inner[j], inner[i]]), jz(z1, i), jz(z2, i), mat))
         shapes.append(frustum(at([rad(crown)[i], rad(crown)[j], inner[j], inner[i]]), at([ring(170)[i], ring(170)[j], inner[j], inner[i]]), jz(crown, i), g - 8, BRICK))
         shapes.append(frustum(at([ring(161)[i], ring(161)[j], foot[j], foot[i]]), at([ring(158)[i], ring(158)[j], foot[j], foot[i]]), plinth, plinth + 6 + i % 2, "stone/stonewall050f"))
-    shapes += [vprism(at([(-64, 160), (-24, 160), (-24, 100), (-40, 100)]), F, plinth, STONE), vprism(at([(24, 160), (64, 160), (40, 100), (24, 100)]), F, plinth, STONE),
-               vprism(at([(-24, 160), (24, 160), (24, 100), (-24, 100)]), F + 96, plinth, STONE)]
+    shapes += [vprism(at([(-64, 160), (-24, 160), (-24, 100), (-40, 100)]), F, plinth + 2, STONE), vprism(at([(24, 160), (64, 160), (40, 100), (24, 100)]), F, plinth + 2, STONE),
+               vprism(at([(-24, 160), (24, 160), (24, 100), (-24, 100)]), F + 96, plinth + 2, STONE)]      # (the doorway's frame 2 proud of the plinth's top: no two tops in one plane)
     for (z1, z2, mat) in courses:
         r1, r2 = rad(z1), rad(z2)
         shapes.append(frustum(at([r1[1], r1[2], inner[2], inner[1]]), at([r2[1], r2[2], inner[2], inner[1]]), jz(z1, 1), jz(z2, 1), mat))
@@ -1682,7 +1683,8 @@ def m_crypt(m, opt):
     one of the graveyard's carved lids; one lid is ajar, bones lie in a niche. In the middle of the nave stands a tomb
     that has been opened, its lid leaning against it, a skull in it and bones spilled beside it. At the back Lost
     Coast's monastery altar on a step, two of its tall candlesticks, a cross cut in the wall behind it (lc_crypt_altar),
-    and to its right a stair that once went up into the church: bricked up, with a crack of daylight at the top. Stone
+    and to its right the old stair up into the church, its bricks broken through: a tunnel under the churchyard runs on
+    to the church's basement, and Ravenholm's church stands behind (map_mods_f.church). Stone
     plaques on the walls. It is lit by people, not by fittings: candles here and there (a cluster on the altar, one in
     a niche, one on a pillar's base, a few by the tomb, one on the stair; the other pillars dark), dust hanging in their
     light, a little day at the hole. The Resistance uses it: a radio on the altar, a mattress for the wounded, the lambda
@@ -1690,7 +1692,7 @@ def m_crypt(m, opt):
     (prison.general_dripping_tunnel). Quiet and old: a place to hide, to meet, or to be buried.
     Named for the game: lc_crypt_altar (an info_target before the altar).
     Left as brushes: the crypt, pillars, vault, niches, the coffins' carved bases, the altar's step, the cross cut in
-    the wall, the plaques, the bricked stair, the broken slabs and teeth round the hole, the candle stubs (no model of one
+    the wall, the plaques, the broken slabs and teeth round the hole, the candle stubs (no model of one
     exists).
     Unchecked: the bones (models/gibs) as prop_dynamics; which way the altar faces; the look of stone/stonefloor006d_c17
     and stone/stonewall040f; whether the candles' small lights are enough to see by; the func_dustmotes keys."""
@@ -1759,13 +1761,14 @@ def m_crypt(m, opt):
     m.det([(256, 532, cz + 44, 258, 572, cz + 76), (766, 404, cz + 44, 768, 444, cz + 76), (360, 830, cz + 50, 400, 832, cz + 82)], "stone/stonewall050f")   # plaques
     m.target("lc_crypt_altar", 512, 730, cz + 8, 90)
     m.blocked(448, 768, 576, 832)
-    # --- the stair up into the church: three steps, then brick, black through the gap at its top ---
-    m.steps(840, 656, 752, cz, cz + 24, "v", 1)
-    m.det([(640, 876, cz, 768, 892, ceil - 14)], BRICK)
-    m.det([(640, 892, cz, 768, 960, ceil)], MAT["black"])
+    # --- the old stair up into the church: its bricks broken through, the way on is a tunnel under the churchyard to
+    # the church's basement (the owner, 22 November: "the crypt tunnel leads to the basement of the church") ---
     m.det([(640, 832, cz, 656, 876, ceil - 12), (752, 832, cz, 768, 876, ceil - 12), (640, 832, ceil - 12, 768, 846, ceil)], STONE)
-    m.spot(704, 872, ceil - 8, "210 220 240 50", 270, pitch=35, cone=30)                  # a crack of day over the bricks: the church above
-    m.blocked(640, 832, 768, 960)
+    put(m, P + "props_debris/concrete_chunk02a.mdl", 668, 900, 40, z=cz)                  # what is left of the bricks
+    m.det([(744, 880, cz, 768, 900, cz + 22)], BRICK)
+    m.lane(704, 900, cz)
+    from map_mods_f import church
+    church(m, cz, ceil, 640)
     # --- candle stubs: a stub of wax, a small steady light, a glow ---
     # (lit by people, not fittings: a cluster on the altar, one in a niche, one on a pillar's base, a few on the floor
     # by the tomb, one on the stair; the other pillars dark)
@@ -1788,7 +1791,7 @@ def m_crypt(m, opt):
     m.view(512, -40, F, 90, -12, "the hole in the wall")
     m.view(512, 300, cz, 90, 2, "coming in: the nave, the tomb, the altar")
     m.view(330, 350, cz, 60, 4, "the left aisle: niches, pillars")
-    m.view(530, 700, cz, 40, 2, "the altar and the bricked stair")
+    m.view(530, 700, cz, 40, 2, "the altar and the way to the church")
     m.view(700, 420, cz, 20, 6, "a niche: the lid ajar")
     b.notes.append("%s: the crypt's floor is z %d, its roof z %d; the hole is 128 wide at the top of the left bank" % (m.tag, cz, ceil))
 
@@ -2456,9 +2459,10 @@ def m_aqueduct(m, opt):
         c1, c2 = (256, 448) if s > 0 else (-448, -256)
         m.low(448, c1, 576, c2, bed + 112, floor=bed)                      # (as high as the canal's bars that shut it; on a way into the wall)
         m.side(448, c1, 576, c2)
-        lift = "lc_aqueduct_bars"                                           # (the valve lifts the bars into the wall: the owner, 21 November)
+        lift = "lc_aqueduct_bars"                                           # (the valve lifts the bars into the wall: the owner, 21 November; Valve's d1_canals sounds for a gate a wheel moves)
         m.b.vmf.brush_entity("func_movelinear", {"targetname": lift, "movedir": "-90 0 0", "speed": "28", "movedistance": "116", "spawnflags": "8",
-                                                 "startposition": "0", "blockdamage": "0"}, [m.fr.box(508, 264 * s - 1, bed + 100, 516, 264 * s + 1, bed + 108)],
+                                                 "startposition": "0", "blockdamage": "0", "startsound": "d1_canals.citizen_gate.Move1",
+                                                 "stopsound": "d1_canals.citizen_gate.FullClose1"}, [m.fr.box(508, 264 * s - 1, bed + 100, 516, 264 * s + 1, bed + 108)],
                              "tools/toolsinvisible", m.dv)
         m.prop("prop_dynamic", M_ + "props_canal/canal_bars004.mdl", 512, 264 * s, 90, bed, {"solid": "0", "parentname": lift, "disableshadows": "1"})
         m.b.vmf.brush_entity("func_brush", {"targetname": "lc_aqueduct_bars_clip", "Solidity": "2", "StartDisabled": "0", "spawnflags": "2", "rendermode": "10"},
@@ -2853,7 +2857,7 @@ MODULES = {
     "boathouse": (1024, m_boathouse, "a smugglers' boat shed in the left wall: a roll-up door, a slipway, a hatch to a cellar"),
     "arcade": (1536, m_arcade, "a market arcade over the canal on three arches: a covered walk above, a stair on each bank"),
     "chimney": (1024, m_chimney, "a round yard on the right with a hollow brick chimney to climb: a lookout over the whole canal"),
-    "crypt": (1024, m_crypt, "the left wall broken into a church crypt: pillars, niches with stone coffins, an altar, a bricked stair"),
+    "crypt": (1024, m_crypt, "the left wall broken into a church crypt: pillars, coffins, an altar, a tunnel to Ravenholm's church in its walled graveyard behind"),
     "lift": (1024, m_lift, "EXPERIMENTAL: a freight lift from the canal floor up to a loading dock with a street gate (a cap to delete)"),
     "barge": (1280, m_barge, "a river barge grounded askew: a hideout in its hold, a wheelhouse, a gangplank from the bank"),
     "busbridge": (1024, m_busbridge, "a bus hanging nose-down from the left street: climb through it to a pavement and a street doorway (a cap to delete)"),

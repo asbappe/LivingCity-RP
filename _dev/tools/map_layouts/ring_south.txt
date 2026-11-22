@@ -1,0 +1,59 @@
+# The canal ring round City 18, its south half: from the side gate of ring_north.txt's last module (roadend, at the
+# west road's end) west and round the south of the city, clear of the dream room, and up the east side to a new
+# gate in the first canal's south wall (x 5888..6400 at y 1856). Fitted to the owner's map of 19 November: every
+# module's side rooms reach only where nothing is (checked with
+#   python3 map_build.py chain --layout map_layouts/ring_south.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf
+# which must say nothing runs into anything).
+#
+# The crypt is on its bottom run, the church behind it to the south (the owner, 22 November: "the crypt is between
+# the church and the canal, with the exposed wall going into the canal, and then the crypt tunnel leads to the
+# basement of the church").
+
+start -3648 1920
+heading W
+rim 784
+end 6144 1856 N
+
+# S1: west
+drain
+overflow flip
+straight 448
+collapse flip
+ash flip
+left
+# S2: south
+shanty flip
+camp flip
+vort flip
+sludge flip
+straight 384 pipes
+tenement flip
+barge
+underpass
+busbridge flip
+left
+# S3: east
+scrapyard
+crypt flip
+tram
+shell
+straight 512 bridge
+widen
+lockgate
+narrow
+cistern
+wreck
+basin
+left
+# S4: north
+execwall flip
+lift flip
+pumphouse flip
+quay flip
+arcade
+aqueduct
+chimney
+swingbridge
+relay
+straight 576
+breach

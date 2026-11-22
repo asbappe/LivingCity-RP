@@ -46,7 +46,9 @@ CELL = 64
 # engine's node limit"): City 18 already has about 1826 walking and 580 flying, and our pieces are merged into it, so
 # each piece has a share of what is left (1690), and its nodes are thinned to fit (map_ring.lane_cells, NODE_LEVELS).
 NODE_CAP, CITY18_NODES = 4096, 2406
-NODE_SHARES = {"canal": 150, "ring": 300, "forest_bunker": 150, "forest_cave": 270, "ravenholm": 150, "south": 300, "town": 330}
+# (22 November: the canal ring's two halves take the old ring's and the old south sketch's 600 and the 40 left over;
+#  the old ring, map_ring.py, is what ring_north replaces: built by itself it is held to NODE_SHARE_OTHER)
+NODE_SHARES = {"canal": 150, "ring_north": 260, "forest_bunker": 150, "forest_cave": 270, "ravenholm": 150, "ring_south": 380, "town": 330}
 NODE_SHARE_OTHER = 400      # (a layout not planned for the merge yet: kept to a piece's size all the same)
 NODE_CLASSES = ("info_node", "info_node_air", "info_node_hint", "info_node_air_hint", "info_node_climb")
 
@@ -880,12 +882,53 @@ class Plan:
             floor, floor_mat = spec[1], spec[2]
             vmf.world_box(self.box(x1, y1, self.base, x2, y2, floor), self.floor_side, top=floor_mat, vis=self.vis)
             if spec[0] == "open":
-                vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
+                lid = spec[3] if len(spec) > 3 and spec[3] else self.sky      # (a square with a sky of its own, higher: a church's yard)
+                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
+            elif spec[0] == "cellar":      # (a room under a floor that is open to the sky: a church's basement, a tunnel under a yard)
+                ceil, upper, upper_mat, lid = spec[3], spec[4], spec[5], spec[6]
+                vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
+                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
             else:
                 first = True
                 for a, b, mat in self.bands(spec[3]):
                     vmf.world_box(self.box(x1, y1, a, x2, y2, b), mat, top=self.roof if b == self.top else None, bottom=self.ceiling if first else None, vis=self.vis)
                     first = False
+        self.raise_sky(vmf)
+
+    def lid_top(self, spec):
+        """How high a square's sky (or solid) reaches: the piece's top, or a higher lid of its own."""
+        if spec and spec[0] == "open" and len(spec) > 3 and spec[3]:
+            return max(self.top, spec[3] + 16)
+        if spec and spec[0] == "cellar":
+            return max(self.top, spec[6] + 16)
+        return self.top
+
+    def raise_sky(self, vmf):
+        """Where a square's sky is higher than the piece's (open with a lid of its own, or a cellar's), every square round
+        it gets a column of sky up to that height on top of what it has, so the high air is closed in on every side."""
+        need = {}
+        for c, spec in self.cells.items():
+            top = self.lid_top(spec)
+            if top <= self.top:
+                continue
+            for di in (-1, 0, 1):
+                for dj in (-1, 0, 1):
+                    n = (c[0] + di, c[1] + dj)
+                    if n in self.cells and self.lid_top(self.cells[n]) < top:
+                        need[n] = max(need.get(n, 0), top)
+        rows = {}
+        for (i, j), top in need.items():
+            rows.setdefault((j, top, self.lid_top(self.cells[(i, j)])), []).append(i)
+        for (j, top, low), cols in sorted(rows.items()):
+            cols.sort()
+            start = prev = cols[0]
+            for i in cols[1:] + [None]:
+                if i is not None and i == prev + 1:
+                    prev = i
+                    continue
+                vmf.world_box(self.box(start * CELL, j * CELL, low, (prev + 1) * CELL, (j + 1) * CELL, top), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
+                if i is not None:
+                    start = prev = i
 
 
 def prism(profile, axis, a, b, mat, end_mat=None):
@@ -1057,12 +1100,12 @@ def fence(vmf, plan, high, vis, top=None):
     cells = plan.cells
     runs = {}
     for (i, j), spec in cells.items():
-        if spec[0] != "open":
+        if spec[0] != "open" or (len(spec) > 3 and spec[3]):      # (a yard with a sky of its own is no canal: a churchyard has its own wall)
             continue
         x, y = i * CELL, j * CELL
         for (di, dj, axis, line, side, a) in ((0, -1, "x", y, 1, x), (0, 1, "x", y + CELL, -1, x), (-1, 0, "y", x, 1, y), (1, 0, "y", x + CELL, -1, y)):
             nb = cells.get((i + di, j + dj))
-            if nb is None or nb[0] == "open":
+            if nb is None or nb[0] in ("open", "cellar"):
                 continue
             at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 else top
             runs.setdefault((axis, line, side, at), []).append(a)
@@ -1091,6 +1134,8 @@ def fence(vmf, plan, high, vis, top=None):
                     bars.append(along(axis, max(start, p - w), min(b, p + w), lo, hi, at + dz, at + high - 4 - dz))      # (and 1 higher at the foot)
             start = prev = a
     nd = MAT["nodraw"]
+    # (City 18's own chain link is effects/metalfence007a, which only Counter-Strike: Source has: map_assets.py fails it.
+    #  The owner chose theirs on 22 November; this is Half-Life 2's of the same look, kept until CS:S is known to be there)
     if sheets["x"]:
         vmf.detail(sheets["x"], MAT["fence"], vis=vis, faces={"west": nd, "east": nd, "top": nd, "bottom": nd})
     if sheets["y"]:
@@ -1146,6 +1191,7 @@ def canal(args):
     plan.paint(P((4352, 2304, 4608, 2816)), culvert)                      #    its end: a culvert to the east gate (x 4608)
     plan.paint(P((2560, 2816, 3072, 3584)), canal_floor)                  # D: the fork's north arm
     plan.paint(P((2560, 3584, 3072, 3840)), culvert)                      #    its end: a culvert to the north gate (y 3840)
+    plan.paint(P((2560, 0, 3072, 256)), culvert)                          # under the turn north, a culvert to the south gate (y 0): where the canal ring's south half comes in (22 November)
     plan.paint(P((3072, 1280, 3328, 1664)), ("low", floor_z, MAT["canal_floor"], floor_z + 192)) # a low bay off B: somewhere to hide
     plan.paint(P((64, 768, 256, 896)), doorway)                           # where the quay's footbridge lands, in the north wall
     plan.paint(P((2432, 1792, 2560, 2048)), doorway)                      # the second footbridge's two ends, either side of B
@@ -1160,12 +1206,14 @@ def canal(args):
     # the two gates, closed until something is joined: each cap is inside the canal's own last 64 units
     gate_cap(vmf, B(4544, 2304, floor_z, 4608, 2816, floor_z + GATE_HIGH), B(4520, 2304, floor_z, 4528, 2816, floor_z + GATE_HIGH), "y", "LC canal: east gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, floor_z + GATE_HIGH), B(2560, 3752, floor_z, 3072, 3760, floor_z + GATE_HIGH), "x", "LC canal: north gate's cap (delete to join)")
+    gate_cap(vmf, B(2560, 0, floor_z, 3072, 64, floor_z + GATE_HIGH), B(2560, 80, floor_z, 3072, 88, floor_z + GATE_HIGH), "x", "LC canal: south gate's cap (delete to join the canal ring)")
 
     # areaportals: across each gate's culvert and across the road's end, so what is beyond one is drawn only as far as
     # it can be seen through it (each stands a little in from the opening, so it has air on both sides even when capped)
     pv = "LC canal: areaportals"
     vmf.areaportal(B(4478, 2304, floor_z, 4480, 2816, floor_z + GATE_HIGH), pv)
     vmf.areaportal(B(2560, 3710, floor_z, 3072, 3712, floor_z + GATE_HIGH), pv)
+    vmf.areaportal(B(2560, 128, floor_z, 3072, 130, floor_z + GATE_HIGH), pv)
     vmf.areaportal(B(0, 32, road_z, 640, 34, sky), pv)
 
     if args.test:
@@ -1182,9 +1230,10 @@ def canal(args):
     # a low wall along the quay's edge (open where the footbridge starts) and round the landing
     vmf.detail([B(0, 240, road_z, 72, 256, road_z + 40), B(248, 240, road_z, 512, 256, road_z + 40), B(512, 368, road_z, 640, 384, road_z + 40), B(512, 256, road_z, 528, 368, road_z + 40)], MAT["canal_wall"])
 
-    no_bank = [P((448, 192, 1088, 320)), P((3008, 1792, 3136, 1856))]   # the stairs; the ladder's slot (below)
+    no_bank = [P((448, 192, 1088, 320)), P((3008, 1792, 3136, 1856)), P((2560, 192, 3072, 320))]   # the stairs; the ladder's slot (below); the south gate's mouth
     # what is already on the walls: nothing put on them after this may come within 24 units of any of it
     taken = [B(448, 256, floor_z, 1088, 384, road_z + 64),                                    # the stairs and their landing
+             B(2560, 192, floor_z, 3072, 320, floor_z + GATE_HIGH + 64),                       # the south gate's mouth
                              B(64, 256, road_z - 16, 256, 768, road_z + 40),                 # the quay's footbridge
                              B(2560, 1856, road_z - 16, 3072, 1984, road_z + 40),            # the second footbridge
                              B(3008, 1792, floor_z, 3072, 1856, road_z + 128)]               # the ladder
@@ -1248,7 +1297,7 @@ def canal(args):
     # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
     # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before)
     import map_modules
-    ch, _ = map_modules.dress_piece(vmf, plan, "canal", "LC canal", taken, no_bank, [], 71, pipes=[("x", ox + 1600, oy + 256, oy + 768)], rim=wall_top)
+    ch, _ = map_modules.dress_piece(vmf, plan, "canal", "LC canal", taken, no_bank, [P((2560, 0, 3072, 256))], 71, pipes=[("x", ox + 1600, oy + 256, oy + 768)], rim=wall_top)
 
     # --- where the city's people can walk: the flat of the floor, the quay, the stairs, the bridges ----------------
     blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] + set_blocked # (the stairs, behind each gate's bars, the set pieces)
@@ -1306,8 +1355,8 @@ def canal(args):
         st["banks"], st["fills"], len(ch.made.get("walls", [])), st["ribs"], st["stubs"], fences))
     print("  set pieces: a container, wrecked cars and a skip, a boat, rubble, a street carried over the east arm, a barricade; the walls' concrete ends at z %d" % wall_top)
     print("  it fills x %d to %d, y %d to %d, z %d to %d (the road's sky plug to %d)" % (min(xs), max(xs), min(ys), max(ys), plan.base, plan.top, args.road_sky))
-    print("  gates (a culvert %d wide, %d high, floor z %d): east at x %d, y %d to %d; north at y %d, x %d to %d" % (
-        GATE_WIDE, GATE_HIGH, floor_z, ox + 4608, oy + 2304, oy + 2816, oy + 3840, ox + 2560, ox + 3072))
+    print("  gates (a culvert %d wide, %d high, floor z %d): east at x %d, y %d to %d; north at y %d, x %d to %d; south (the canal ring's) at y %d, x %d to %d" % (
+        GATE_WIDE, GATE_HIGH, floor_z, ox + 4608, oy + 2304, oy + 2816, oy + 3840, ox + 2560, ox + 3072, oy, ox + 2560, ox + 3072))
     if problems:
         for p in problems:
             print("  PROBLEM: " + p)
@@ -1326,9 +1375,10 @@ def self_along(plan, axis, v):
     return (plan.origin[0] if axis == "x" else plan.origin[1]) + v
 
 
-def against(vmf, path, expected):
+def against(vmf, path, expected, allow=()):
     """Does anything in the piece run into anything in the owner's map? (Boxes against boxes: a brush of theirs that is
-    not a box may be reported though it only comes near.) expected: ids of their brushes the piece replaces."""
+    not a box may be reported though it only comes near.) expected: ids of their brushes the piece replaces. allow:
+    boxes round the piece's gates where another piece's walls may overlap its own (both solid: harmless)."""
     import map_survey
     theirs = []
     root = map_survey.read_vmf(path)
@@ -1345,6 +1395,9 @@ def against(vmf, path, expected):
     for box, _ in vmf.boxes:
         for b in grid.near((box[0] + box[3]) / 2.0, (box[1] + box[4]) / 2.0, max(box[3] - box[0], box[4] - box[1]) / 2.0):
             if b.id not in expected and all(box[k] < b.maxs[k] - 0.5 and box[k + 3] > b.mins[k] + 0.5 for k in range(3)):
+                cut = [max(box[k], b.mins[k]) for k in range(3)] + [min(box[k + 3], b.maxs[k]) for k in range(3)]
+                if any(all(a[k] <= cut[k] + 0.5 and cut[k + 3] <= a[k + 3] + 0.5 for k in range(3)) for a in allow):
+                    continue
                 hits[b.id] = (b.mins, b.maxs)
     if not hits:
         print("  checked against %s: nothing in the piece runs into anything in it%s" % (path.split("/")[-1], (" (but brush %s, which it replaces)" % ", ".join(sorted(expected))) if expected else ""))
@@ -1366,7 +1419,7 @@ def main():
     ap.add_argument("--road-sky", type=int, default=2784, help="canal: the height of the sky over the road it joins (default 2784)")
     ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4600 the forests, 5000 the ring, 5300 ravenholm; the map's own stop at 3043)")
     ap.add_argument("--preview", help="forests: also write a picture of the piece from above to this file (needs Pillow)")
-    ap.add_argument("--against", help="the owner's own VMF: also check that nothing in the piece runs into anything in it (apart from the brush the piece replaces)")
+    ap.add_argument("--against", nargs="+", help="the owner's own VMF: also check that nothing in the piece runs into anything in it (apart from the brush the piece replaces)")
     ap.add_argument("--layout", default="map_layouts/south.txt", help="chain: the layout to build (a text file: where it starts, then a module a line)")
     ap.add_argument("--name", default="", help="module: which one (leave out to list them)")
     ap.add_argument("--heading", choices=["E", "N", "W", "S"], default=None, help="chain, module: the way it heads from its start (default: the layout's; east)")
@@ -1393,7 +1446,9 @@ def main():
         print("  PROBLEM: " + p)
         problems.append(p)
     if args.against:
-        clashes = against(vmf, args.against, getattr(args, "expect_overlap", {"15074"} if args.piece == "canal" else set()))
+        clashes = []
+        for path in args.against:      # (the owner's map, and any other piece's file: nothing may run into any of them)
+            clashes += against(vmf, path, getattr(args, "expect_overlap", {"15074"} if args.piece == "canal" else set()), getattr(args, "allow_overlap", ()))
         for p in clashes:
             print("  PROBLEM: " + p)        # (the piece's own function has already printed its own)
         problems += clashes
