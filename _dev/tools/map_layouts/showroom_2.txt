@@ -1,4 +1,4 @@
-# Test map 2: tenement, quay, collapse, boathouse, arcade, crypt, lift, barge, shell, aqueduct
+# Test map 2: quay, collapse, boathouse, arcade, crypt, lift, barge, shell, aqueduct, pipes
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_2.txt --test
 
@@ -6,18 +6,18 @@ start -3072 -4096
 heading E
 rim 784
 
-tenement
 quay
 collapse
 boathouse
 arcade
-
-left
-straight 3008
-left
-
 crypt
+
+left
+straight 2752
+left
+
 lift
 barge
 shell
 aqueduct
+pipes

@@ -19,6 +19,8 @@ python3 map_floating.py lc_mod_NAME.vmf                        # does any prop t
 python3 map_lint.py lc_mod_NAME.vmf                            # the owner's corrections by machine (every build prints these as LOOK lines too)
 ```
 
+Every build also runs the stair check (`map_stairs.py`: headroom, a way off at the top and on at the foot) and the walk check (`map_walk.py`: every `lc_` spot, door and button a player can reach, no prop cutting a walk in two); a fault in either fails the build. Both run on any VMF by hand too (the owner, 22 November: "over half the stairs just go into walls").
+
 **Pictures cost usage to read (the owner asked for restraint, 20 November):** pass the checks first, then read ONE small picture of a new module (`map_view.py ... --size 800 520`), and another only if something in it is in doubt. Do not use `--views` sheets as a routine.
 
 A picture when you do look (`map_view.py` draws brushes in flat colours, props as boxes of their true size, light roughly: `docs/dev/map-view.md`). A build also prints `LOOK:` lines for props that reach into a wall, stand taller than the roof over them or lie under the floor: clear them. A module is done when the check passes all ways, `map_assets.py` passes, there are no `LOOK:` lines left unexplained, AND the pictures show what was meant.

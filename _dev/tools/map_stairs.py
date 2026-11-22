@@ -66,6 +66,23 @@ def boxes_of(text):
     return out
 
 
+def mud_boxes(text):
+    """The mud's displaced skins (world brushes with a dispinfo): floor to stand on at a stair's foot, never a blocker."""
+    out = []
+    w0 = text.find("\nworld\n")
+    if w0 < 0:
+        return out
+    w1 = text.find("\nentity\n", w0)
+    for m in SOLID.finditer(text[w0:w1 if w1 > 0 else len(text)]):
+        body = m.group(3)
+        if "dispinfo" not in body:
+            continue
+        pts = [tuple(float(c) for c in g.split()) for pm in PLANE.finditer(body) for g in pm.groups()]
+        if pts:
+            out.append(tuple(min(p[k] for p in pts) for k in range(3)) + tuple(max(p[k] for p in pts) for k in range(3)))
+    return out
+
+
 class Grid:
     def __init__(self, boxes, cell=256):
         self.cell, self.cells = cell, {}
@@ -132,6 +149,8 @@ def check_text(text, limit=12, where=None):
     """Problems (strings) for the flights in a VMF's text. where(x, y): a name for a place (the module it is in)."""
     boxes = boxes_of(text)
     grid = Grid(boxes)
+    muds = mud_boxes(text)
+    mud_grid = Grid(muds)
     problems = []
 
     def hits(region, skip, floor):
@@ -155,6 +174,10 @@ def check_text(text, limit=12, where=None):
                 continue
             b = boxes[i]
             if z - STEP - 2 <= b[5] <= z + STEP and overlap(b, r, 0) >= 8 and overlap(b, r, 1) >= 8:
+                return True
+        for i in mud_grid.near(r):      # (the canal's mud: its skin rises and dips over a dished floor, so a wide band)
+            b = muds[i]
+            if z - STEP - 48 <= b[5] <= z + STEP + 48 and overlap(b, r, 0) >= 8 and overlap(b, r, 1) >= 8:
                 return True
         return False
 
