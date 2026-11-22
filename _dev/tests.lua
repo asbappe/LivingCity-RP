@@ -43281,7 +43281,8 @@ function Nov21_CombineActsTests()
         can:SetPos(LC.StaticBins[1].pos + Vector(0, 0, 10))
         local before = LC.Standing(tp)
         _run(1)
-        ok(LC.Standing(tp) == before + 3, "in the bin: a little Civil Standing", LC.Standing(tp) - before)
+        -- (at least the can's 3: something else of the city's can pay them in the same second, in a busy shard)
+        ok(LC.Standing(tp) >= before + 3, "in the bin: a little Civil Standing", LC.Standing(tp) - before)
     else
         ok(false, "(the can was dropped)")
     end
