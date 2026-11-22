@@ -8,6 +8,7 @@ one tall hall with a walkway reached by a ramp of 1 in 2 on one side, a higher w
 stops in the air, plates and light panels on its walls. Kept when it passes the study's mirror test."""
 import random
 
+from . import tops as TP
 from .geom import TILE, LEANS, TURNS, ext, rect, Frame
 from .measure import score
 from .piece import Piece, Sink
@@ -62,6 +63,20 @@ class Building(Piece):
             self.tabs(f, a, b, H + 32)
             self.tabs(f, a, b, H + 160)
         self.ribs(("u", 256, -1), -Y + 320, -Y + 320 + (Y - 640) * 5 // 8, H + 64, H + 192, 16, 8, None, 128, across=True)
+        # the tops (tops.py): the attic crowned in one of the owner's shapes, its line across the front so the street
+        # sees it; the roof round it Valve's way (fins in pairs on the back edge, a generator, a creeping wall over the edge)
+        # the attic in two parts side by side, a vault (the bunker's curve) on the bigger, another shape on the other
+        rt = TP.own(r, "roof")
+        m = 256 + (X - 512) * rt.choice((5, 6, 10, 11)) // 16 // 64 * 64
+        big, other = (0 if m - 256 >= X - 256 - m else 1), TP.pick(r, ("flat", "vault"))
+        self.top = " and ".join(TP.crown(self, "vault" if i == big else other, a, b, -Y + 256, -256, H + 256, r, across="u",
+                                         over=rt.choice((0, 48)) if i == big else 0) for i, (a, b) in enumerate(((256, m), (m, X - 256))))
+        TP.fins(self, X // 2 - rt.choice((0, 256)), X - T - 32, -Y, -256, H, r)
+        g = rt.choice((X - 192, 192))
+        self.sink.props += [("models/props_combine/combine_generator01.mdl", self.w((g, v, H + 96)), (0, (self.fr.yaw() + rt.choice((0, 90))) % 360, 0))
+                            for v in (-Y // 2 - 64, -Y // 2 + 96)[: rt.choice((1, 2))]]
+        self.sink.props.append(("models/props_combine/combineinnerwall001c.mdl", self.w((X * rt.choice((3, 5, 7)) // 10, -Y - 52, H - 280)),
+                                (rt.randint(14, 40), (self.fr.yaw() + 180 + rt.randint(-30, 30)) % 360, 180 + rt.randint(-15, 15))))
         # ---- the wider side: a deep stack with its light, a lower one by the door ----
         self.stack(fr, s0, s1, r.choice((0, 64, 128)), H - r.choice((128, 256)), r.randint(4, 6))
         if o1 - o0 >= 192:
@@ -172,6 +187,8 @@ def wing(b, side, turn, r):
     p.ribs(fr_face, r0, r1, 64, Hw - 192, 16, 8, "pair", 256)
     p.tabs(("u", tip, -1 if tip == 0 else 1), -wd + q(24), -q(24), Hw // 2)
     p.ribs(("v", -wd, -1), q(64), ln - q(96), 128, Hw - 256, 32, 48, None, 256)
+    kind = TP.pick(r, kinds=(("shed", 2), ("vault", 1), ("steps", 1)))
+    p.top = TP.crown(p, kind, 0, ln, -wd, 0, Hw, r, across="u" if kind == "shed" else "v")
     return fr, p
 
 
@@ -212,4 +229,4 @@ def building(box, seed=1, tries=6, sink=None):
         for k in ("solids", "old", "boxes", "lights", "lamps", "props"):
             getattr(sink, k).extend(getattr(b.sink, k))
     return {"sink": b.sink, "draw": n, "mirrored": bad, "walls": walls, "passages": pas, "door": door, "wing": side,
-            "frame": b.fr, "size": (b.size[0], b.size[1], b.H)}
+            "frame": b.fr, "size": (b.size[0], b.size[1], b.H), "top": b.top}

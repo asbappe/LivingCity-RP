@@ -158,7 +158,7 @@ def check(path, quiet=False):
         return pc(np.mean([test(x) for x in xs]) if len(xs) else 0)
     nums = {"below06": float(np.mean([x < 0.6 for x in art])) if art else 0.0, "at09": float(np.mean([x >= 0.9 for x in art])) if art else 0.0,
             "passages": float(np.median(pas)) if pas else 0.0, "smallbig": float(np.mean([x >= 8 for x in rat])) if rat else 0.0,
-            "steps": Counter(steps), "off": off / tot}
+            "steps": Counter(steps), "off": off / tot, "up": up / (lean or 1)}
     if quiet:
         return nums
     print("Combine in %s: %d brushes, %.1f million square units seen (Valve's ranges in brackets)" % (os.path.basename(path), len(comb), tot / 1e6))
@@ -184,11 +184,11 @@ def check(path, quiet=False):
 
 def distance(nums):
     """How far a map's Combine is from Valve's: walls below 0.6 near 30%, at 0.9 or more under 43%, passages under
-    0.3, small against big near 16%, the leading steps 64, 48, 56, 4, 8."""
+    0.3, small against big near 16%, the leading steps 64, 48, 56, 4, 8, leaning faces looking up 43 to 62%."""
     st = nums["steps"]
     lead = sum(v for k, v in st.items() if k in (4, 8, 48, 56, 64)) / float(sum(st.values()) or 1)
     return (abs(nums["below06"] - 0.30) * 2 + max(0.0, nums["at09"] - 0.43) * 2 + max(0.0, nums["passages"] - 0.3) * 2
-            + abs(nums["smallbig"] - 0.158) * 3 + max(0.0, 0.6 - lead))
+            + abs(nums["smallbig"] - 0.158) * 3 + max(0.0, 0.6 - lead) + max(0.0, nums["up"] - 0.62, 0.43 - nums["up"]) * 2)
 
 
 def score(solids, old=()):

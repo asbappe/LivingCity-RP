@@ -6,6 +6,7 @@ builder does: the air from the start must not reach the outside)."""
 import random
 
 from map_build import Vmf, test_extras, check as seal_check
+from . import tops as TP
 from .building import building
 from .chain import wall_chain, intrusion
 from .geom import SKY, NODRAW, FLOOR
@@ -177,6 +178,10 @@ def draw(out, seed, n):
     info["building"] = building((-1024, 1792, 0, 1024, 3200, 1536), seed * 10 + n)
     put(v, info["building"]["sink"], "LC combine scene: building")
     props(v, info["chain"], r)
+    # a Combine tower standing on the yard's ground beside the building, as Valve stands all sixteen of theirs
+    v.point("prop_static", (1600 if info["building"]["wing"] == "w" else -1600, 2560, 274), {
+        "model": "models/props_combine/combinetower001.mdl", "angles": "0 %d 0" % TP.own(r, "tower").choice((0, 15, 30, 300)), "skin": "0", "solid": "6",
+        "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, "LC combine scene: props")
     test_extras(v, START, 90, sk)
     problems, air = seal_check(v, (START[0], START[1], 64), [])
     with open(out, "w") as fh:

@@ -13,6 +13,7 @@ drives in from outside, cut 128 into it at its deepest corner (16 or 8 at the ot
 the wall round it cut to fit; inside, Combine plates flush and square on the old walls, one run standing 16 off."""
 import math
 
+from . import tops as TP
 from .geom import LEANS, TRIM, ext, rect, rib_run, minus, Frame
 from .piece import Piece
 
@@ -79,6 +80,10 @@ def run(p, k, H, r):
         p.add(ext([(-T, H - 128), (-T, H), (-T - q(r.choice(LEANS)), H)], 0, h0, h1, mm))
     p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 40)
     p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 88)
+    rt = TP.own(r, "run", k)
+    if rt.random() < 0.35:                     # fins on the head of a third of the runs (Valve's broken skyline)
+        a = max(q(144), k * rt.choice((1, 2, 3)) // 8)          # (clear of the piers at both ends)
+        TP.fins(p, a, min(k - q(144), a + k * rt.choice((3, 4)) // 8), -T, 0, H, r)
     if s0 is not None:
         o0, o1 = (s1 + q(48), k - q(48)) if s0 < k // 2 else (q(48), s0 - q(48))
         p.stack(("v", -T, -1), s0, s1, 160, H - 128, r.randint(3, 4), light=False)
@@ -98,6 +103,8 @@ def pier(p, u0, H, r, T, Le, Pl, lamp=False):
     p.course2(v1, v0, Hp - 128, Hp, u0 - P, u0 + P, (q(32), q(40), q(16)))
     p.stack(("v", v1, 1), u0 - P + e0, u0 + P - e1, r.choice((64, 128)), Hp - 256, r.randint(3, 4))
     p.tabs(("u", u0 + P, 1), v0 + q(16), v1 - q(16), r.choice((192, 320)))
+    kind = TP.pick(r, kinds=(("point", 2), ("ridge", 1), ("shed", 1), ("steps", 2)))
+    p.top = TP.crown(p, kind, u0 - P, u0 + P, v0, v1, Hp, r, across="u", ribs=False)
     if lamp:
         p.sink.lamps.append((p.w((u0 - P + q(24), v1 + 1, H - 96)), (p.fr.yaw() + r.choice((-30, -15, 15, 30))) % 360, 30))
 
@@ -144,9 +151,12 @@ def wall_chain(sink, r, x_west, x_east, y0, gate, H=768):
         T, Le, Pl = run(p, k, H, r)
         pier(p, ge, H, r, T, Le, Pl, lamp=i % 2 == 0)
     (wx, wy), (ex, ey) = ends
+    towers = []
     for box in ((wx - 512, wy - 352, 0, wx + 128, wy + 288, H + 384), (ex - 128, ey - 352, 0, ex + 512, ey + 288, H + 384)):
-        Piece.from_box(box, r, sink).tower()
-    return {"runs": [(p.fr.o, (p.fr.a, p.fr.b), k) for p, k, _ in runs], "gate": (gx0 + wl, gx0 + wl + W), "ends": ends}
+        towers.append(Piece.from_box(box, r, sink))
+        towers[-1].tower()
+    return {"runs": [(p.fr.o, (p.fr.a, p.fr.b), k) for p, k, _ in runs], "gate": (gx0 + wl, gx0 + wl + W), "ends": ends,
+            "tops": [p.top for p, _, _ in runs] + [g.top] + [t.top for t in towers]}
 
 
 def intrusion(block, sink, r, mat, ceiling="concrete/concreteceiling004a", turn=None):
@@ -187,6 +197,8 @@ def intrusion(block, sink, r, mat, ceiling="concrete/concreteceiling004a", turn=
     p.ribs(("v", 0, 1), s1 + q(48), ln - q(96), 448, Hm - 192, 16, 8, "pair", 256)
     p.tabs(("u", 0, -1), -wd + q(24), -q(24), 256)
     p.ribs(("v", -wd, -1), q(64), ln - q(128), 128, Hm - 256, 32, 48, None, 256)
+    kind = TP.pick(r, ("flat",))
+    p.top = TP.crown(p, kind, 0, ln, -wd, 0, Hm, r, across="u" if kind == "shed" else "v")
     # inside: plates flush and square on the old walls (the Nexus's way), one run 16 off on brackets, a cold panel
     rm = Piece(Frame((cx1, cy1, 0)), (RW, RD), RH, r, sink)
     rm.tiles(("v", 0, -1), 48, RW - 64, 0, 224, 0, rm.thick[0] if rm.thick[0] > 2 else 4, light=True)
@@ -199,4 +211,4 @@ def intrusion(block, sink, r, mat, ceiling="concrete/concreteceiling004a", turn=
     sink.props.append(("models/props_combine/combineinnerwall001c.mdl", (foot[2][0] + 224, by2 + 56, 400),
                        (r.randint(14, 40), (90 + r.randint(-40, 40)) % 360, 180 + r.randint(-15, 15))))
     sink.lamps.append((fr.w((s0 + q(32), q(64) + 1, 352)), (fr.yaw() + 15) % 360 // 15 * 15, 30))
-    return {"door": (d0, d1, DH), "room": (cx1, cy1, cx2, cy2, RH), "turn": "1 in 2" if k == 2 else "45", "mass": foot}
+    return {"door": (d0, d1, DH), "room": (cx1, cy1, cx2, cy2, RH), "turn": "1 in 2" if k == 2 else "45", "mass": foot, "top": p.top}

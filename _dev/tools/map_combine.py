@@ -17,7 +17,9 @@ two sides each other's mirror (the study's walls.py test, a draw that fails it d
 
 Structures (combine/): building (building.py: a centred mass 1536 to 2048 across with an off-centre skin, a turned
 wing, a gate with unequal sides, a tall hall with walkways), wall_chain and intrusion (chain.py), the pieces
-(piece.py), the shapes and turned frames (geom.py), the study's numbers (measure.py), the scene (scene.py).
+(piece.py), their tops (tops.py: the owner, 22 November, "curved, like the combine bunkers, or pointed or some weird
+needless slope": lopsided vaults, ridges, points, sheds, steps, and Valve's own fins and parapets on flat ones), the
+shapes and turned frames (geom.py), the study's numbers (measure.py), the scene (scene.py).
 No module of the game's maps uses any of it yet: the owner looks at the scene first.
 """
 import argparse
@@ -91,6 +93,7 @@ def scene_map(out, seed):
                      " ".join("%.2f" % s for s, lv, a in b["walls"] if lv >= 3) or "-", " ".join("%.2f" % m for m in b["passages"]) or "-")))
     print("chain     %d runs, turns %s; gate %d..%d" % (len(c["runs"]), " ".join("%d/%d" % d for _, d, _ in c["runs"]), *c["gate"]))
     print("intrusion turned %s, door at y %d..%d" % (i["turn"], i["door"][0], i["door"][1]))
+    print("tops     building %s; intrusion %s; chain %s" % (b["top"], i["top"], ", ".join(c["tops"])))
     print("draw %d of the scene kept (nearest Valve's numbers: %.2f off)" % (info["draw"], info["distance"]))
     print("sealed" if not problems else "\n".join("PROBLEM: " + p for p in problems))
     print("wrote %s" % out)
