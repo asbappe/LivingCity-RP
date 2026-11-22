@@ -208,7 +208,11 @@ local function End(run, how)
     if SL.run == run then SL.run = nil end
     SL.last = run
     SL.nextAt = CurTime() + Wait()
+    -- (its jobs still on a board come off: the two posted as it set out, and any a board offered while it was on)
     for _, p in ipairs(run.postings or {}) do if not p.q then p.dead = true end end
+    for _, list in pairs(LC.Postings or {}) do
+        for _, p in ipairs(list) do if not p.q and istable(p.data) and p.data.run == run then p.dead = true end end
+    end
     if run.how ~= "sunk" then Leave(run.boat) end
     if IsValid(run.rider) then Leave(run.rider) end
 end
