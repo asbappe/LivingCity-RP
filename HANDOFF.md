@@ -40,7 +40,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   stand on the floor, Valve's prop/craft rules, wire lint, map_security.py (tripwires): TODO.md.
 - The other chat: Valve ingestion DONE (docs/dev/valve-ingest-progress.md); the forest cave (Ravenholm's mine, the
   shaft head and EP2's alarm, a lift down to EP2's nest chambers: lc_forest_cave.vmf); the playable silo, the leader's
-  office, bedroom and escape tunnel (map_silo.py); map-placed territories (lc_zone_..., CORE.md); the Combine
+  office, bedroom and escape tunnel (map_silo.py); the rocket back in the silo (22 November: Valve's steam, its hatch held
+  open, the flag's pole beside it; a launch ending is to shape with the owner: TODO.md); map-placed territories (lc_zone_..., CORE.md); the Combine
   generator's round two (combine/, lc_combine_scene.vmf waits on the owner). Not compiled yet.
 - Open for the owner: HQ later stages and Advisor screens (shape first); Combine sleep, the lab's dark look (models);
   the south canal layout (needs c18_lc.vmf); lift and bunker door speeds; the mounted gun; NPC lessons to build.

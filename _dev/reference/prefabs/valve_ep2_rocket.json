@@ -1,0 +1,382 @@
+{
+"name": "valve_ep2_rocket",
+"note": "Episode Two's rocket as it stands in White Forest's silo (ep2_outland_11), in the silo piece's own frame (anchor 1824 -9936 -1728, the shaft's axis on the pit floor, the same as valve_ep2_silo): stage 1 (347 to 747) with its three engines, stage 2 (731 to 939), stage 3 (874 to 1263), the nose (rocket.mdl, 1238 to 1629) and the hatch (rocket_hatch, a prop_dynamic). About 97 across from the axis at most. With Valve's steam round it: three jets from the engines' exhaust (on from the start, 85 long, grey) and two small vents at the nose (on), and the big jet at the nose (steamjet_rocket_1, here rocket_nose_jet, off: Valve's story starts it). The hatch at the top is kept open (the owner, 22 November: \"keep the little door at the top of the rocket open\"): a logic_auto plays the hatch model's 'closing' sequence at spawn and HoldAnimation keeps its last frame (Valve's door_rocket_hatch, a nodraw func_door_rotating, plays 'closing' when it opens, so that sequence is the hatch opening). Left out: its lighting origins, the hatch's func_door_rotating (nodraw), the welder's sparks and glow (parented to a citizen welder in Valve's map). Valve's launch (ep2_outland_12a: rocket_low on a func_tracktrain) is not in it.",
+"from": "ep2_outland_11.vmf",
+"box": [
+1724,
+-10036,
+-1400,
+1924,
+-9836,
+-90
+],
+"anchor": [
+1824,
+-9936,
+-1728
+],
+"size": [
+200,
+200,
+1310
+],
+"solids": [],
+"points": [
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+1254.17
+],
+"keys": {
+"angles": "0 180 0",
+"disableselfshadowing": "1",
+"disableshadows": "0",
+"disablevertexlighting": "1",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+347.0
+],
+"keys": {
+"angles": "0 60 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "800",
+"fademindist": "780",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_engine.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+347.0
+],
+"keys": {
+"angles": "0 300 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "800",
+"fademindist": "780",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_engine.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+347.0
+],
+"keys": {
+"angles": "0 180 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "800",
+"fademindist": "780",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_engine.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+0.0,
+0.0,
+1254.0
+],
+"keys": {
+"angles": "0 180 0",
+"disablereceiveshadows": "0",
+"disableshadows": "1",
+"ExplodeDamage": "0",
+"ExplodeRadius": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"maxdxlevel": "0",
+"MinAnimTime": "5",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_hatch.mdl",
+"PerformanceMode": "0",
+"pressuredelay": "0",
+"RandomAnimation": "0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"SetBodyGroup": "0",
+"skin": "0",
+"solid": "0",
+"spawnflags": "0",
+"StartDisabled": "0",
+"targetname": "rocket_hatch",
+"HoldAnimation": "1"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+347.0
+],
+"keys": {
+"angles": "0 0 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_stage1.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+739.0
+],
+"keys": {
+"angles": "0 0 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_stage2.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+0.0,
+0.0,
+926.63
+],
+"keys": {
+"angles": "0 180 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_silo/rocket_stage3.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "env_steam",
+"origin": [
+44.0,
+24.0,
+351.0
+],
+"keys": {
+"angles": "90 270 0",
+"EndSize": "25",
+"InitialState": "1",
+"JetLength": "85",
+"Rate": "10",
+"renderamt": "20",
+"rendercolor": "167 167 167",
+"rollspeed": "2",
+"spawnflags": "1",
+"Speed": "24",
+"SpreadSpeed": "16",
+"StartSize": "10",
+"type": "0"
+}
+},
+{
+"classname": "env_steam",
+"origin": [
+-41.0,
+49.0,
+1505.0
+],
+"keys": {
+"angles": "45 135 -180",
+"EndSize": "36",
+"InitialState": "0",
+"JetLength": "220",
+"Rate": "30",
+"renderamt": "140",
+"rendercolor": "131 131 131",
+"rollspeed": "8",
+"spawnflags": "1",
+"Speed": "340",
+"SpreadSpeed": "32",
+"StartSize": "6",
+"targetname": "rocket_nose_jet",
+"type": "0"
+}
+},
+{
+"classname": "env_steam",
+"origin": [
+-42.0,
+48.0,
+1505.0
+],
+"keys": {
+"angles": "45 159.5 -180",
+"EndSize": "8",
+"InitialState": "1",
+"JetLength": "30",
+"Rate": "14",
+"renderamt": "70",
+"rendercolor": "112 112 112",
+"rollspeed": "8",
+"spawnflags": "1",
+"Speed": "100",
+"SpreadSpeed": "12",
+"StartSize": "3",
+"type": "0"
+}
+},
+{
+"classname": "env_steam",
+"origin": [
+-43.0,
+-53.0,
+1461.0
+],
+"keys": {
+"angles": "45 234.5 180",
+"EndSize": "16",
+"InitialState": "1",
+"JetLength": "30",
+"Rate": "14",
+"renderamt": "50",
+"rendercolor": "131 131 131",
+"rollspeed": "8",
+"spawnflags": "1",
+"Speed": "80",
+"SpreadSpeed": "18",
+"StartSize": "4",
+"type": "0"
+}
+},
+{
+"classname": "env_steam",
+"origin": [
+-44.0,
+24.0,
+351.0
+],
+"keys": {
+"angles": "90 270 0",
+"EndSize": "25",
+"InitialState": "1",
+"JetLength": "85",
+"Rate": "10",
+"renderamt": "20",
+"rendercolor": "167 167 167",
+"rollspeed": "2",
+"spawnflags": "1",
+"Speed": "24",
+"SpreadSpeed": "16",
+"StartSize": "10",
+"type": "0"
+}
+},
+{
+"classname": "env_steam",
+"origin": [
+0.0,
+-52.0,
+351.0
+],
+"keys": {
+"angles": "90 270 0",
+"EndSize": "25",
+"InitialState": "1",
+"JetLength": "85",
+"Rate": "10",
+"renderamt": "20",
+"rendercolor": "167 167 167",
+"rollspeed": "2",
+"spawnflags": "1",
+"Speed": "24",
+"SpreadSpeed": "16",
+"StartSize": "10",
+"type": "0"
+}
+}
+],
+"wiring": [
+{
+"classname": "logic_auto",
+"origin": [
+0,
+60,
+1260
+],
+"keys": {
+"spawnflags": "1"
+},
+"connections": [
+[
+"OnMapSpawn",
+"rocket_hatch,SetAnimation,closing,0.5,-1"
+]
+]
+}
+]
+}
