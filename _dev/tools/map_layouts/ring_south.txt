@@ -27,7 +27,7 @@ camp flip
 vort flip
 sludge flip
 straight 384 pipes
-tenement flip
+straight 1280
 barge
 underpass
 straight 1024
