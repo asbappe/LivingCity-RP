@@ -114,6 +114,7 @@ def m_substation(m, opt):
     m.no_bank(56, -264, 840, -56)
     m.steps(64, -256, -192, F, top, "u", 1)
     m.det([(65, -196, F, 256, -193, F + 8)], MAT["beam"])      # (1 inside the steps: no face in their planes)
+    m.det([(16, -256, F, 64, -192, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])     # a worn apron at their foot (the mud kept level there)
     m.blocked(56, -256, 256, -180)
     m.lane(48, -224, F)
     m.lane(280, -224, top)
@@ -422,7 +423,8 @@ def m_morgue(m, opt):
     clipboard, papers, a radio and a Combine screen for the records; a caged lamp over the door outside; a compressor's
     hum.
     Named for the game: lc_morgue_door (a func_door, unseen, the door's model riding on it), lc_morgue_table_1 to _3
-    (the tables), lc_morgue_ledger (the desk), lc_morgue_chute (the chute's hatch: where the game sends the dead).
+    (the tables), lc_morgue_ledger (the desk), lc_morgue_chute (where the game sends the dead from: on the
+    floor at the foot of the conveyor, facing the chute's hatch at its top; a place to stand, not the hatch itself).
     Left as brushes: the room, its tiles and plaster, the door's jambs and head, the drain, the wall of drawers (built
     into the wall: Half-Life 2 has no morgue drawers), the chute's hatch and frame and the conveyor (no model of one).
     Unchecked: models/humans/corpse1.mdl as a ragdoll laid on a table with its motion disabled (spawnflags 16388:
@@ -485,7 +487,7 @@ def m_morgue(m, opt):
     m.det([(760, 600, F + 48, 768, 608, F + 108), (760, 680, F + 48, 768, 688, F + 108), (760, 600, F + 108, 768, 688, F + 116), (760, 600, F + 40, 768, 688, F + 48)],
           "metal/metalhull010c")
     m.det([(764, 608, F + 48, 766, 680, F + 108)], MAT["black"])
-    m.target("lc_morgue_chute", 750, 644, F + 60, 0)
+    m.target("lc_morgue_chute", 652, 644, F + 8, 0)                  # (the conveyor's foot: the hatch over its rollers is out of reach)
     m.det([(680, 610, F, 684, 614, F + 44), (680, 674, F, 684, 678, F + 44), (740, 610, F, 744, 614, F + 44), (740, 674, F, 744, 678, F + 44),
            (676, 610, F + 44, 760, 614, F + 48), (676, 674, F + 44, 760, 678, F + 48)], MAT["bars"])
     m.shapes([pipe_v(u, F + 47, 3, 614, 674) for u in range(684, 756, 12)])

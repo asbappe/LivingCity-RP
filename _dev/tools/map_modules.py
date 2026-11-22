@@ -574,7 +574,7 @@ class Mod:
         ins = [(n, i) for o, n, i in wires if o in ("OnIn", "OnPressed")]
         outs = {n: i for o, n, i in wires if o == "OnOut"}
         pairs = ({"Open", "Close"}, {"Enable", "Disable"})
-        press = [(n, "Toggle" if n in outs and {i, outs[n]} in pairs else i, "", 0) for n, i in ins]
+        press = [("OnPressed", n, "Toggle" if n in outs and {i, outs[n]} in pairs else i, "", 0) for n, i in ins]
         wall_button(self.b.vmf, (x, y, z), self.fr.yaw(out), name, hit, self.b.vis + ": for testing alone (never in the real map)", press, "1")
 
     def hut(self, u1, v1, u2, v2, z, mat, high=112, front="lo", open_front=False, door=56):
@@ -1302,8 +1302,10 @@ def m_vort(m, opt):
 
 
 def m_relay(m, opt):
-    """7. Cubbage's relay. A concrete quay against the right wall, 128 high, with a stone coping, three mooring cleats and
-    an iron ladder down its face, two tyres for fenders, steps up its upstream end with a solid side; and on it a radio
+    """7. Cubbage's relay. A concrete quay against the right wall, 128 high and 256 deep (room to walk along the shack's
+    front: the owner, 22 November, had to noclip to its door), with a stone coping, three mooring cleats and an iron
+    ladder down its face, two tyres for fenders, steps the quay's full depth up its upstream end, their solid side flush
+    with the quay's face; and on it a radio
     shack built from pieces (map_mods_c.shack: mismatched sheets, a tin roof on posts, a boarded window), netting thrown
     over its roof against eyes above: inside, the set on a table under a desk lamp, its dials glowing, a receiver and a
     logbook by it, a chair, a cot (a bed frame), a shelf of car batteries, the canals' map pinned on the back wall, a
@@ -1321,21 +1323,25 @@ def m_relay(m, opt):
     b = m.b
     top, steel = F + 128, "metal/metalhull010c"
     m.open(0, -256, 1024, 256)
-    m.open(320, -256, 832, -64, floor=top, mat=MAT["quay_floor"])
-    m.side(320, -256, 832, -64)
-    m.no_bank(120, -264, 840, -56)                       # (a quay with upright sides, and steps up its upstream end)
-    run = m.steps(128, -256, -192, F, top, "u", 1)
-    m.stair_side(127, run + 1, -194, -190, F, top, high=36, mat="stone/stonewall050f")     # (the steps' own sides hide in it)
-    m.det([(320, -68, top, 832, -60, top + 6)], "stone/stonewall050f")               # the coping along the quay's edge
-    for u in (420, 610, 800):                                                         # mooring cleats on it
-        m.static("models/props_docks/dock01_cleat01a.mdl", u, -78, 0, z=top)
-    m.ladder(700, -64, F, top, 90)
-    m.blocked(680, -64, 720, 0)
+    m.open(320, -256, 832, 0, floor=top, mat=MAT["quay_floor"])
+    m.side(320, -256, 832, 0)
+    m.no_bank(120, -264, 840, 8)                         # (a quay with upright sides, and steps up its upstream end)
+    # the steps: the quay's whole depth, the canal's wall on one side and on the other a solid side whose face is the quay's
+    run = m.steps(128, -256, -8, F, top, "u", 1)
+    m.stair_side(128, run, -8, 0, F, top, high=36, mat="stone/stonewall050f")
+    m.det([(64, -256, F, 128, 0, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])         # a worn apron at their foot (the mud kept level there)
+    m.det([(320, -8, top, 832, 0, top + 6)], "stone/stonewall050f")                   # the coping along the quay's edge
+    # (the walk along the shack's front, kept clear: 64 and more before its doorway, the cleats and the coping beyond it)
+    m.b.vmf.keep_way_clear(m.fr.box(336, -96, top + 4, 600, -24, top + 100), "the walk along the relay shack's front")
+    for u in (470, 620, 790):                                                         # mooring cleats on it, at its edge
+        m.static("models/props_docks/dock01_cleat01a.mdl", u, -16, 0, z=top)
+    m.ladder(700, 0, F, top, 90)
+    m.blocked(680, 0, 720, 64)
     for u in (480, 560):                                                              # tyres for fenders, against the quay's face
-        m.loose("models/props_vehicles/tire001b_truck.mdl", u, -50, 90, z=F)
-    m.blocked(120, -256, 320, -180)
-    m.lane(112, -224, F)
-    m.lane(336, -224, top)
+        m.loose("models/props_vehicles/tire001b_truck.mdl", u, 8, 90, z=F)
+    m.blocked(120, -256, 320, 0)
+    m.lane(112, -128, F)
+    m.lane(336, -48, top)
     # the shack
     shack(m, 344, -248, 544, -100, top, 71, high=100, window="boards", front="hi")
     m.det([(336, -262, top + 116, 552, -76, top + 117)], "metal/metalfence007a")       # netting thrown over the roof
@@ -1365,7 +1371,7 @@ def m_relay(m, opt):
                                                  "renderfx": "0", "spawnflags": "1"}, m.lv)
     m.det([(660, -188, tip + 14, 684, -164, tip + 16)], steel)                              # (a cap over the lamp: seen from the canal, not from above)
     m.static("models/props_rooftop/antenna04a.mdl", 520, -232, 0, z=top + 118)             # an aerial on the shack's roof
-    for (gu, gv, gz) in ((330, -72, top + 4), (824, -72, top + 4), (824, -256, top + 220)):
+    for (gu, gv, gz) in ((330, -16, top + 4), (824, -16, top + 4), (824, -256, top + 220)):
         m.rope([(672, -176, tip - 40), (gu, gv, gz)], slack=10, width=1)
     m.rope([(672, -176, tip), (700, 256, b.rim - 24)], slack=60, width=1)                   # the long-wire aerial, across to the far wall (into it, under its top)
     m.rope([(540, -106, top + 98), (667, -171, top + 300)], slack=30, width=1)              # the shack's feed, up to the pole
@@ -1382,12 +1388,12 @@ def m_relay(m, opt):
     m.loose("models/props_c17/oildrum001.mdl", 590, -196, 0, z=top)
     m.loose("models/props_junk/gascan001a.mdl", 612, -224, 30, z=top)
     m.blocked(608, -240, 832, -100)
-    m.taken(320, -256, F, 832, -64, tip)
-    for kind, u, v, z, sd in (("stain", 500, -64, F + 60, 1), ("number", 360, -64, F + 90, 2), ("lambda", 560, -100, top + 50, 3), ("puddle", 600, 60, F + 1, 4)):
+    m.taken(320, -256, F, 832, 0, tip)
+    for kind, u, v, z, sd in (("stain", 500, 0, F + 60, 1), ("number", 360, 0, F + 90, 2), ("lambda", 560, -100, top + 50, 3), ("puddle", 600, 60, F + 1, 4)):
         m.grime(kind, u, v, z, sd)
     m.soundscape(SCAPES["courtyard"], 512, 60, F, radius=700)
     m.soundscape(SCAPES["house"], 444, -170, top, radius=110)
-    for u, v in ((580, -90), (444, -80), (760, -90)):
+    for u, v in ((580, -60), (444, -60), (760, -60)):
         m.lane(u, v, top)
     m.view(120, 120, F, 325, -14, "the mast")
     m.view(444, -40, top, 270, 0, "into the shack")
@@ -1603,11 +1609,12 @@ def m_cistern(m, opt):
     island; the island lies under a grated shaft open to the sky, so it stands in daylight (a beam straight down, dust
     hanging in it) while the rest is dim. A plank, a drum and a body float in the water; buckets, cans and bottles lie
     about the ledge and the gallery, things to throw for a blind thing to chase.
-    Wading is in the water (the game can tell: a player's water level); the ledge, the planks and the gallery are dry.
+    Wading is in the water (the game can tell: a player's water level), down two steps off the kerb beside each walk and
+    back up them; the ledge, the planks (each laid over the kerb onto the ledge at its end) and the gallery are dry.
     Named for the game: lc_hive_boss_spot (the island), lc_cistern_gallery (the head of the stair).
     Left as brushes: the tank, its round wall and kerb, its gallery's ring, the landing and the stair and its plate, the
-    plank walks and their posts (decks on piers), the shaft's grate, the pillars, the plugs that darken the inflow
-    pipes.
+    plank walks and their posts (decks on piers), the boards over the kerb, the steps into the water, the shaft's grate,
+    the pillars, the plugs that darken the inflow pipes.
     Unchecked: ambient/water/water_flow_loop1.wav, the chains (cable/chain.vmt on ropes), the water pouring (an env_steam
     aimed down and in), func_dustmotes in daylight."""
     from map_mods_c import cage_lamp, centred, chain, dustmotes, pour, ring_rail, ring_segments
@@ -1657,7 +1664,7 @@ def m_cistern(m, opt):
     # the gallery: a smooth ring of slab, a landing where the stair comes up, the handrail round its inner edge
     m.shapes(ring_segments(cu, cv, RG - 8, RW + 8, G - 8, G, MAT["beam"], 40, phase=0.5, alt=True))
     m.det([(640, -684, G - 7, 896, -640, G + 2)], "metal/metalhull010c")                   # (a steel landing, 2 proud of the ring)
-    ring_rail(m, cu, cv, RG + 2, G, 42, skip=(0, 21))                                        # (open over the two ladders' heads)
+    ring_rail(m, cu, cv, RG + 2, G, 42, skip=(20, 41))                                       # (open over the two ladders' heads)
     LD = int(round((RG - 8) * math.cos(math.pi / 40)))                                       # (the ring's inner edge, flat across each axis)
     for lu, lv, out in ((cu + LD, cv + 24, 180), (cu - LD, cv - 24, 0)):
         m.ladder(lu, lv, F, G, out)
@@ -1672,8 +1679,24 @@ def m_cistern(m, opt):
         planks.append((a1, cv - 32, F - 6, a2, cv + 32, F - 1) if axis == "u" else (cu - 32, a1, F - 6, cu + 32, a2, F - 1))
         for a in range(a1 + 60, a2 - 20, 160):
             posts.append((a, cv - 28, basin, a + 8, cv + 28, F - 6) if axis == "u" else (cu - 28, a, basin, cu + 28, a + 8, F - 6))
+    # where each walk meets the kerb, a board laid over the kerb's top onto the ledge (the kerb's segments on the two
+    # u axes are 1 taller than on the v axes: ring_segments' alt), so the walk runs on from the ledge to the island
+    KI = int(math.ceil(RK * math.cos(math.pi / 36)))                                       # (the kerb's inner face, flat across each axis)
+    for (a1, a2, axis, zk) in ((cu + KI, cu + 640, "u", F + 2), (cu - 640, cu - KI, "u", F + 2), (cv + KI, cv + 640, "v", F + 1), (cv - 640, cv - KI, "v", F + 1)):
+        planks.append((a1, cv - 32, zk, a2, cv + 32, zk + 3) if axis == "u" else (cu - 32, a1, zk, cu + 32, a2, zk + 3))
     m.det(planks, "wood/woodfloor006b")
     m.det(posts, "wood/woodwall006a")
+    # and steps down off the kerb into the water beside each walk, one flight in each quarter of it, for wading (and out)
+    steps = []
+    for k in range(4):
+        def turn(u, v, k=k):
+            for _ in range(k):
+                u, v = -v, u
+            return u, v
+        for d1, d2, z in ((-KI, -KI + 32, F - 10), (-KI + 32, -KI + 56, F - 21)):
+            (u1, v1), (u2, v2) = turn(d1, 32), turn(d2, 96)
+            steps.append((cu + min(u1, u2), cv + min(v1, v2), basin, cu + max(u1, u2), cv + max(v1, v2), z))
+    m.det(steps, MAT["canal_wall"], top=MAT["stairs"])
     # the shaft's grate, the pillars' heads and feet, the inflow pipes, the chains
     m.det([(cu - 128, cv - 128 + 32 * k, ceil - 8, cu + 128, cv - 122 + 32 * k, ceil) for k in range(9)] + [(cu - 4, cv - 128, ceil - 14, cu + 4, cv + 128, ceil - 8)], MAT["bars"])
     m.det([(p[0] - 16, p[1] - 16, ceil - 24, p[2] + 16, p[3] + 16, ceil) for p in pillars] + [(p[0] - 12, p[1] - 12, basin, p[2] + 12, p[3] + 12, F + 8) for p in pillars], MAT["beam"])
@@ -1833,8 +1856,9 @@ def m_checkpoint(m, opt):
     (combine_fence01b and 01a, 192 high, the owner's own field between them); a camera on the wall over the gateway, the
     Combine's lights either side, Breen's poster and numbers on the wall's face. Behind the wall, on the left bank, a
     guard's platform 128 high (the banks are its ramps) with one of the Combine's booths (combine_booth_short01a), a
-    console, a monitor and a health charger on the wall; stairs from it to a walk along the wall's top behind the
-    Combine's railing, a parapet before it, two Combine floodlights on its ends for the searchlights. Under the walk on
+    console, a monitor and a health charger on the wall; stairs from it (their lowest steps open at the side, climbed
+    from the platform beside them) to a walk along the wall's top behind the Combine's railing, a parapet before it,
+    two Combine floodlights on its ends for the searchlights. Under the walk on
     the right bank, a chain link holding pen with a sliding gate, the police line on its wall.
     Named for the game: lc_checkpoint_field (a func_brush: Disable opens it, Enable shuts it), lc_checkpoint_hum (its
     sound: StopSound, PlaySound), lc_checkpoint_light and lc_checkpoint_light_b (the searchlights: LightOff, LightOn),
@@ -1885,21 +1909,26 @@ def m_checkpoint(m, opt):
     m.grime("number", W1, 130, F + 150, 23)
     # the walk along the wall's top: the wall itself and a deck behind it, brackets under it, a parapet before it, the
     # Combine's railing behind it (the stairs come up onto the walk at its left end)
-    m.det([(W2, -256, top - 16, 672, 188, top)], steel)                                 # (from v 188 on the stairs are the floor)
+    m.det([(W2, -256, top - 16, 672, 192, top)], steel)                                 # (from v 192 on the stairs are the floor)
     m.shapes([prism([(W2, top - 16), (W2 + 80, top - 16), (W2, top - 96)], "y", v - 8, v + 8, steel) for v in (-240, -128, 128, 176)])
     m.det([(W1 - 1, v, top, W1 + 17, v + 64, top + 40) for v in range(-256, 256, 128)] + [(W1, -256, top, W1 + 16, 256, top + 24)], cmb)   # (chest high: a guard sees over it)
     m.det([(W1 + 16, -256, top, 672, -192, top + 40)], cmb)
     combine_rail(m, (668, -192), (668, 192), top)
     # the searchlights, on the wall's two ends against the canal's walls (the middle of the walk left clear to look over)
-    for v, yaw, name in ((224, 196, "lc_checkpoint_light"), (-160, 164, "lc_checkpoint_light_b")):
+    for v, yaw, name in ((160, 196, "lc_checkpoint_light"), (-160, 164, "lc_checkpoint_light_b")):    # (clear of the stairs' head)
         m.static("models/props_combine/combine_light001b.mdl", W1 + 50, v, yaw, z=top)
         m.spot(W1 + 20, v, top + 60, "190 225 255 900", yaw, pitch=16, cone=30, name=name)
-    # the guard's platform: stairs to the wall's top along the canal's wall, the Combine's booth, a console, a monitor
+    # the guard's platform: stairs to the wall's top along the canal's wall, the Combine's booth, a console, a monitor.
+    # The stairs step off onto the walk where its deck runs beside them (u 576 to 672); their lowest steps are open at the
+    # side, so they are climbed from the platform beside them, and the steel plate runs along their open side between
+    # the two (u 672 to 816)
     m.steps(864, 192, 256, pz, top, "u", -1)
-    m.shapes([prism([(864, pz), (864, pz + 36), (W2, top + 36), (W2, top)], "y", 188, 192, steel)])
+    m.shapes([prism([(816, pz + 32), (816, pz + 68), (672, pz + 164), (672, pz + 128)], "y", 188, 192, steel)])
+    m.b.vmf.keep_way_clear(m.fr.box(600, 196, pz + 4, 864, 256, top + 72), "the checkpoint's stairs")
+    m.b.vmf.keep_way_clear(m.fr.box(816, 128, pz + 4, 872, 192, pz + 76), "the way onto the checkpoint's stairs")
     m.static("models/props_combine/combine_booth_short01a.mdl", 1010, 212, 270, z=pz)
     m.blocked(936, 128, 1088, 256)
-    m.static("models/props_combine/combine_interface001.mdl", 900, 162, 270, z=pz)
+    m.static("models/props_combine/combine_interface001.mdl", 898, 172, 180, z=pz)       # (facing the stairs' foot, clear of the way on)
     m.static("models/props_combine/combine_intmonitor001.mdl", 920, 246, 270, z=pz)
     m.point("item_healthcharger", 1080, 255, pz + 48, {"angles": "0 %d 0" % m.fr.yaw(270)})
     combine_lamp(m, 760, 256, pz + 150, 270)
