@@ -387,29 +387,13 @@ class Forest:
 
     def keep_way_clear(self, box, label):
         """A space players must be able to walk through (a doorway, a hole, a gate's approach, a gallery's middle), as a
-        box in the forest's own frame: finish() fails the piece if any prop's real size (asset_facts.json) stands in it."""
-        if not hasattr(self, "ways"):
-            self.ways = []
-        self.ways.append((tuple(self.box(*box)), label))
+        box in the forest's own frame: map_build fails the piece if any prop's real size (asset_facts.json) stands in it
+        (Vmf.keep_way_clear, ways_problems)."""
+        self.vmf.keep_way_clear(self.box(*box), label)
 
     def ways_check(self):
-        """Every prop against every space kept clear: its box from the model's own size, turned by its yaw. A door (a
-        prop_door_rotating) is meant to stand in its doorway and is not counted."""
-        import map_assets
-        for box, label in getattr(self, "ways", []):
-            x1, y1, z1, x2, y2, z2 = box
-            for cls, pos, model, yaw in self.vmf.props:
-                if cls == "prop_door_rotating" or any(k in model for k in ("struts_tunnel", "struts_wall", "light_cagelight")):
-                    continue          # (a door stands in its doorway; timber sets are arches over the way, their middle open; lamps hang overhead)
-                b = map_assets.size(model)
-                if not b:
-                    continue
-                c, sn = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
-                xs = [pos[0] + x * c - y * sn for x in (b[0], b[3]) for y in (b[1], b[4])]
-                ys = [pos[1] + x * sn + y * c for x in (b[0], b[3]) for y in (b[1], b[4])]
-                if min(xs) < x2 and max(xs) > x1 and min(ys) < y2 and max(ys) > y1 and pos[2] + b[2] < z2 and pos[2] + b[5] > z1:
-                    self.problems.append("%s (%d by %d) at (%d %d %d) stands in the way at %s" % (
-                        model.rsplit("/", 1)[-1], max(xs) - min(xs), max(ys) - min(ys), pos[0], pos[1], pos[2], label))
+        """(map_build runs the check for every piece now: ways_problems.)"""
+        return
 
     def vis(self, what):
         return "LC %s: %s" % (self.name, what)
@@ -2111,8 +2095,8 @@ class CaveForest(Forest):
             ("models/props_forest/stove01.mdl", 56, 476, 0), ("models/props_c17/lockers001a.mdl", 300, 28, 0), ("models/props_junk/wood_crate001a.mdl", 60, 48, 20),
             ("models/props_forest/bunkbed.mdl", 600, 242, 90), ("models/props_forest/bunkbed.mdl", 730, 242, 90), ("models/props_forest/footlocker01_closed.mdl", 600, 36, 0),
             ("models/props_forest/footlocker01_closed.mdl", 730, 36, 0),
-            ("models/props_forest/shelves_wood.mdl", 800, 350, 270), ("models/props_forest/shelves_wood.mdl", 800, 450, 270), ("models/props_junk/wood_crate001a.mdl", 540, 470, 20),
-            ("models/props_junk/wood_crate001a.mdl", 612, 478, 65), ("models/props_junk/wood_crate002a.mdl", 570, 340, 30), ("models/props_c17/oildrum001.mdl", 700, 330, 15),
+            ("models/props_forest/shelves_wood.mdl", 800, 350, 270), ("models/props_forest/shelves_wood.mdl", 800, 450, 270), ("models/props_junk/wood_crate001a.mdl", 575, 500, 20),
+            ("models/props_junk/wood_crate001a.mdl", 640, 470, 65), ("models/props_junk/wood_crate002a.mdl", 600, 318, 30),     # (out of the store's door's swing) ("models/props_c17/oildrum001.mdl", 700, 330, 15),
             ("models/props_c17/furnituretable002a.mdl", 384, 716, 0), ("models/props_wasteland/controlroom_chair001a.mdl", 384, 660, 0),
             ("models/props_wasteland/kitchen_shelf002a.mdl", 478, 640, 270),
         )
