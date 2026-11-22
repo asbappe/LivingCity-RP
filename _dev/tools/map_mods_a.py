@@ -1897,7 +1897,7 @@ def m_shell(m, opt):
     #     are these little step-pyramids?"), named together for the game ---
     for k, (u, v, r) in enumerate(((560, -60, 34), (430, -40, 28), (620, -130, 24), (500, 30, 22), (350, -110, 26), (690, -30, 20), (590, 60, 18))):
         z = F + max(0, -128 - v)
-        m.dynamic("models/props_hive/nest_sm_flat.mdl", u, v, 37 * k, z, name="lc_shell_growth", solid=False)
+        m.static("models/props_hive/nest_sm_flat.mdl", u, v, 37 * k, z)
     for k, (u, v) in enumerate(((600, -20), (410, -90), (520, 80), (700, -100))):
         m.target("lc_shell_patch_%d" % (k + 1), u, v, F + 8, 90 * k)
     for (u, v, yaw) in ((650, 40, 30), (380, 20, 200), (540, -110, 120)):

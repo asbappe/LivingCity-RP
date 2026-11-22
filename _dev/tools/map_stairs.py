@@ -184,24 +184,39 @@ def check_text(text, limit=12, where=None):
             if b:
                 bad = "it runs into something solid over its step at height %d (a brush at x %d..%d y %d..%d z %d..%d)" % ((t[5],) + tuple(int(v) for v in (b[0], b[3], b[1], b[4], b[2], b[5])))
                 break
+        def side(tread, z, ahead):
+            """The ways off a tread at height z: straight on (ahead), or to either side of it (a flight that turns onto a
+            landing); (brush in the way or None, floor there) for the first that is clear, else the straight one's."""
+            ways = []
+            t0, t1 = tread[run], tread[run + 3]
+            edge = t1 if ahead > 0 else t0
+            ways.append(region(edge, edge + ahead * ROOM, z + 2, z + PLAYER_H))
+            for c, sgn in ((lo, -1), (hi, 1)):      # (to either side of the tread, as deep as a body)
+                a, b2 = sorted((c, c + sgn * ROOM))
+                ways.append((t0, a, z + 2, t1, b2, z + PLAYER_H) if run == 0 else (a, t0, z + 2, b2, t1, z + PLAYER_H))
+            first = None
+            for w in ways:
+                blk = hits(w, skip, z)
+                fl = floor_at(w, z, skip)
+                if first is None:
+                    first = (blk, fl)
+                if not blk and fl:
+                    return None, True
+            return first
         if not bad:
-            far = tr[-1][run + 3] if s > 0 else tr[-1][run]
             top = tr[-1][5]
-            reg = region(far, far + s * ROOM, top + 2, top + PLAYER_H)
-            b = hits(reg, skip, top)
+            b, fl = side(tr[-1], top, s)
             if b:
-                bad = "there is no room to step off at its top (height %d): a brush at x %d..%d y %d..%d z %d..%d" % ((top,) + tuple(int(v) for v in (b[0], b[3], b[1], b[4], b[2], b[5])))
-            elif not floor_at(reg, top, skip):
-                bad = "it ends in the air at its top (height %d): no floor beyond it" % top
+                bad = "there is no room to step off at its top (height %d), ahead or to either side: a brush at x %d..%d y %d..%d z %d..%d" % ((top,) + tuple(int(v) for v in (b[0], b[3], b[1], b[4], b[2], b[5])))
+            elif not fl:
+                bad = "it ends in the air at its top (height %d): no floor ahead or to either side" % top
         if not bad:
-            near = tr[0][run] if s > 0 else tr[0][run + 3]
             base = tr[0][5] - rise
-            reg = region(near - s * ROOM, near, base + 2, base + PLAYER_H)
-            b = hits(reg, skip, base)
+            b, fl = side(tr[0], base, -s)
             if b:
-                bad = "there is no room to step on at its foot (height %d): a brush at x %d..%d y %d..%d z %d..%d" % ((int(base),) + tuple(int(v) for v in (b[0], b[3], b[1], b[4], b[2], b[5])))
-            elif not b and not floor_at(reg, base, skip):
-                bad = "its foot is in the air (height %d): no floor before it" % base
+                bad = "there is no room to step on at its foot (height %d), before it or to either side: a brush at x %d..%d y %d..%d z %d..%d" % ((int(base),) + tuple(int(v) for v in (b[0], b[3], b[1], b[4], b[2], b[5])))
+            elif not fl:
+                bad = "its foot is in the air (height %d): no floor before it or to either side" % base
         if bad:
             problems.append("stairs: %s: %s" % (label, bad))
             if len(problems) >= limit:

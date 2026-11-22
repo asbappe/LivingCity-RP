@@ -174,7 +174,8 @@ def church(m, cz, ceil, tunnel_u):
     wall(u1, v2 - t, u2, v2, [(a, c, wz0, wz1) for a, c in wins if a != 448] + [(352, 416, NF - 16, NF + 128)], "u")   # the back: the side door
     wall(u2 - t, v1 + t, u2, v2 - t, [(mid - 24, mid + 24, wz0 + 32, wz1 + 32)], "v")                              # the east end, a window over the altar
     wall(u1, v1 + t, u1 + t, v2 - t, [(mid - 48, mid + 48, NF - 16, NF + 160)], "v")                              # the west end: the front doors
-    m.det([(u1 - 8, v1 - 8, G - 8, u2 + 8, v2 + 8, G + 48)], PLINTH)                                             # the plinth, proud of the walls
+    m.det([(u1 - 8, v1 - 8, G - 8, u2 + 8, v1, G + 48), (u1 - 8, v2, G - 8, u2 + 8, v2 + 8, G + 48),           # the plinth, proud of the walls: a band round
+           (u1 - 8, v1, G - 8, u1, v2, G + 48), (u2, v1, G - 8, u2 + 8, v2, G + 48)], PLINTH)                     # them outside (it was a slab over the whole floor)
     m.det([(u1 - 4, v1 - 4, WT - 24, u2 + 4, v2 + 4, WT - 8)], "plaster/plasterwall029d")                        # a band under the eaves
     for a, c in wins:                                                                                            # stone sills
         m.det([(a - 4, v1 - 6, wz0 - 8, c + 4, v1 + t + 4, wz0 + 2)], PLINTH)
