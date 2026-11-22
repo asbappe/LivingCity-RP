@@ -950,13 +950,15 @@ class WFPlan(Plan):
     Adjusted properly on their Y axis?"). A stair takes the floor at its foot (the band shows under the steps as they go
     down). A face looking out of the piece takes `outside` (the ground at the bunker's door), a face against another
     square nothing. `others`: Plans on the same grid whose rooms these walls may look into. `sills`: doorway squares whose
-    floor stops 4 short, for the sill of a door frame (room_doors)."""
+    floor stops 4 short, for the sill of a door frame (room_doors). `windows`: wall squares a window goes through,
+    {square: (bottom, top)} of the gap left in them, which BunkerForest.shutter_window fills in round the window."""
 
     def __init__(self, origin, base, top, outside=None, **kw):
         Plan.__init__(self, origin, [(base, top, FMAT["wf_upper"])], **kw)
         self.outside = outside
         self.others = []
         self.sills = set()
+        self.windows = {}
 
     def looks_at(self, c):
         """The floor of the room a face looks into from square c's side: ("room", floor), ("out",) or None (a solid square)."""
@@ -972,7 +974,8 @@ class WFPlan(Plan):
         for (i, j), spec in self.cells.items():
             facing_of[(i, j)] = tuple(self.looks_at((i + di, j + dj)) for _, di, dj in WF_DIRS)
             if spec[0] == "solid":
-                cols = ((self.base, self.top, None, self.roof),)
+                gap = self.windows.get((i, j))
+                cols = ((self.base, gap[0], None, None), (gap[1], self.top, None, self.roof)) if gap else ((self.base, self.top, None, self.roof),)
             elif spec[0] == "low":
                 cols = ((self.base, spec[1] - (4 if (i, j) in self.sills else 0), None, spec[2]), (spec[3], self.top, self.ceiling, self.roof))
             else:
@@ -1125,6 +1128,7 @@ class BunkerForest(Forest):
             for i in range(u1 // CELL, u2 // CELL):
                 for j in range(v1 // CELL, v2 // CELL):
                     (plan, deep)[level].sills.add((i, j))
+        self.window_spots()
         self.buildings.append((plan, self.B0, zd - 110))
         self.rooms += [(plan, self.B0), (deep, self.B0)]
         if (self.B0[0] - 320) % PATCH:
@@ -1400,7 +1404,7 @@ class BunkerForest(Forest):
             # and south walls and the line between its two doors (y 656 to 752) stays clear
             ("props_outland/generator_static01a", 125, 608, zl, 0, "s"), ("props_forest/shelves_wood", 256, 593, zl, 90, "s"),
             ("props_silo/electricalbox02", 192, 831, zl, 270, "s"), ("props_silo/tirestack2", 150, 788, zl, 30, "s"), ("props_silo/tirestack3", 215, 788, zl, 0, "s"),
-            ("props_silo/barrelwarning", 285, 800, zl, 20, "d"),
+            ("props_silo/barrelwarning", 258, 798, zl, 20, "d"),      # (back from the wall: the window beside the door is there)
             # the radio room: the base's control room, as White Forest's
             ("props_wasteland/controlroom_desk001a", -534, 704, zd + 17, 180, "d"), ("props_silo/desk_console1", -534, 674, zd + 34, 180, "s"),
             ("props_silo/desk_console3", -534, 734, zd + 34, 180, "s"), ("props_wasteland/controlroom_chair001a", -585, 704, zd + 20, 0, "d"),
@@ -1546,22 +1550,29 @@ class BunkerForest(Forest):
         door at the silo's bottom (SILO_DOOR: speed 60, lip 32, its sounds, a prop with no default animation). Use opens
         and shuts it; it starts shut; the wheel unlocks as it opens and stays unlocked, and locks when it is shut again.
         To the gamemode these ARE doors (its door rules apply to func_door). A keypad beside each, 52 up as Valve's: a
-        model only (the door opens by Use, and a keypad that opened it would get round the gamemode's locks)."""
+        model only (the door opens by Use, and a keypad that opened it would get round the gamemode's locks). Beside most,
+        on the side the leaf comes to rest on, Valve's shuttered window (window_spots, shutter_window); where one is, the
+        keypad goes on the other side, the side the leaf slides into, as on Valve's lab door."""
         v, vis = self.vmf, self.vis("bunker room doors")
         pieces, shapes = [], []
         for k, (level, (u1, v1, u2, v2), way, room, slide) in enumerate(self.ROOM_DOORS):
             plan = (self.plan, self.deep)[level]
             z = (self.zl, self.zd)[level]
             B, W = plan.box, plan.world
-            self.surround(plan, way, (u1, v1, u2, v2), z, pieces, shapes)
+            window = self.windows.get(k)
+            near = ("south", "north") if way == "x" else ("west", "east")
+            self.surround(plan, way, (u1, v1, u2, v2), z, pieces, shapes, window=window and near[window[1] > 0])
+            if window:
+                self.shutter_window(plan, way, window[0], window[1], room > 0, z, pieces, shapes, vis)
+            ks = slide if window else -slide      # (the keypad's side along the wall: +1 north or east)
             if way == "x":      # the way through runs east-west: the leaf stands across it, north to south, and slides along y
                 a, b, m = v1 + 16, v2 - 16, (u1 + u2) // 2
                 leaf, at, yaw, movedir = B(m - 2, a, z - 4, m + 2, b, z + 120), W(m, (a + b) // 2, z), 90, 90 if slide > 0 else 270
-                pad = (W(u1 - 1, v1 - 12 if slide > 0 else v2 + 12, z + 52), 180) if room > 0 else (W(u2 + 1, v1 - 12 if slide > 0 else v2 + 12, z + 52), 0)
+                pad = (W(u1 - 1, v2 + 12 if ks > 0 else v1 - 12, z + 52), 180) if room > 0 else (W(u2 + 1, v2 + 12 if ks > 0 else v1 - 12, z + 52), 0)
             else:               # the way through runs north-south: the leaf stands across it, east to west, and slides along x
                 a, b, m = u1 + 16, u2 - 16, (v1 + v2) // 2
                 leaf, at, yaw, movedir = B(a, m - 2, z - 4, b, m + 2, z + 120), W((a + b) // 2, m, z), 0, 0 if slide > 0 else 180
-                pad = (W(u1 - 12 if slide > 0 else u2 + 12, v1 - 1, z + 52), 270) if room > 0 else (W(u1 - 12 if slide > 0 else u2 + 12, v2 + 1, z + 52), 90)
+                pad = (W(u2 + 12 if ks > 0 else u1 - 12, v1 - 1, z + 52), 270) if room > 0 else (W(u2 + 12 if ks > 0 else u1 - 12, v2 + 1, z + 52), 90)
             # (the model's lever and handle are on its own +x side: it faces away from the way it slides, so they trail and stay
             # in the doorway, as on Valve's lab door. The owner, 22 November, of the deep level's door before the stairs to the
             # silo, the one that slid toward its own +x: "opens the wrong direction".)
@@ -1585,7 +1596,103 @@ class BunkerForest(Forest):
             v.boxes.append((box, False))
         v.ents.append(s + v.editor(vis, "0 180 0") + "}\n")
         v.detail_shapes(shapes, vis)
-        self.notes.append("the bunker's rooms: %d of Episode Two's silo doors, sliding as White Forest's (Use slides each 64 into the wall; they start shut)" % len(self.ROOM_DOORS))
+        self.notes.append("the bunker's rooms: %d of Episode Two's silo doors, sliding as White Forest's (Use slides each 64 into the wall; they start shut), "
+                          "%d with Valve's shuttered window beside (none beside door %s: no room on both sides of the wall)" % (
+                              len(self.ROOM_DOORS), len(self.windows), ", ".join(str(n) for n, _ in self.window_skips)))
+
+    # Episode Two's shuttered window beside the lab door at the silo's bottom (ep2_outland_11, read from valve_ep2_silo on
+    # 22 November; the owner: "next to the resistance leader's office's door, there is a little glass window with shutters;
+    # can we get those next to most of the doors (on the side of the door to which the door closes ...)"): an opening 31
+    # wide and 86 high through the wall, 18 over the floor; in it a frame of metalhull003a 2 thick (its sides 6 deep, with
+    # metaltruss008a on their backs), the glass 27 by 82 (glasswindow007a, a func_breakable nothing breaks: Valve's keys),
+    # and on one side 14 slats of metaldoor046a 1 thick and 7 deep, tilted up toward the glass, every 6 from 23 over the
+    # floor. Depths from the slatted face of the wall, heights from the floor, all as Valve's. (Valve's opening is 9 from
+    # the door's; here 12, the frame's concrete beside the doorway.)
+    WINDOW_GLASS = {"health": "999999", "minhealthdmg": "999", "material": "0", "propdata": "24", "spawnflags": "1", "explodemagnitude": "0", "explosion": "0",
+                    "ExplodeDamage": "0", "ExplodeRadius": "0", "gibdir": "0 0 0", "nodamageforces": "0", "PerformanceMode": "0", "physdamagescale": "1.0",
+                    "pressuredelay": "0", "spawnobject": "0", "disableshadows": "0", "disablereceiveshadows": "0", "renderamt": "255",
+                    "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0"}
+
+    def window_spots(self):
+        """Which of the bunker's room doors get a shuttered window (shutter_window): in the wall square beside the doorway
+        on the side its leaf comes to rest on when shut (away from the side it slides into), where that square is wall with
+        a room on both its sides at the door's floor (a window between two rooms of the bunker, never out of it, so it
+        crosses no areaportal). Its gap is left in the wall (WFPlan.windows). self.windows: {door's index: (the square, the
+        way along the wall away from the doorway, +1 north or east; its floor)}; self.window_skips: [(door's number, why not)]."""
+        self.windows, self.window_skips = {}, []
+        for k, (level, (u1, v1, u2, v2), way, room, slide) in enumerate(self.ROOM_DOORS):
+            plan, z, r = (self.plan, self.deep)[level], (self.zl, self.zd)[level], -slide
+            if way == "x":
+                cell = (u1, v2, u2, v2 + CELL) if r > 0 else (u1, v1 - CELL, u2, v1)
+                beside = ((cell[0] - CELL, cell[1]), (cell[2], cell[1]))
+            else:
+                cell = (u2, v1, u2 + CELL, v2) if r > 0 else (u1 - CELL, v1, u1, v2)
+                beside = ((cell[0], cell[1] - CELL), (cell[0], cell[3]))
+            sq = (cell[0] // CELL, cell[1] // CELL)
+            if plan.cells.get(sq) != ("solid",) or any(plan.looks_at((x // CELL, y // CELL)) != ("room", z) for x, y in beside):
+                self.window_skips.append((k + 1, "the wall on its closing side has a room on one side only"))
+                continue
+            plan.windows[sq] = (z, z + WF_BAND)
+            self.windows[k] = (cell, r, z)
+
+    def shutter_window(self, plan, way, cell, r, front, z, pieces, shapes, vis):
+        """Valve's shuttered window (WINDOW_GLASS) in the wall square `cell` beside a doorway (window_spots): r the way along
+        the wall away from the doorway, `front` True when the slats are on the square's west or south face (the keypad's,
+        as Valve's are on the hall's side, its keypad's). The wall round the opening as world (its faces as the walls',
+        WF_BAND; the opening's sides, sill and head in plain 05a), the frame (pieces) and slats (shapes) as func_detail,
+        the glass its own func_breakable."""
+        v = self.vmf
+        x1, y1, x2, y2 = cell
+        if way == "x":      # the wall runs north-south: its depth is along x
+            d1, d2, c1, c2, dn, along, wv = x1, x2, y1, y2, ("west", "east"), ("south", "north"), "0 1 0"
+
+            def P(d, w, h):
+                return plan.world(d, w, h)
+        else:
+            d1, d2, c1, c2, dn, along, wv = y1, y2, x1, x2, ("south", "north"), ("west", "east"), "1 0 0"
+
+            def P(d, w, h):
+                return plan.world(w, d, h)
+        e = c1 if r > 0 else c2                 # the square's edge at the doorway
+        f, s = (d1, 1) if front else (d2, -1)   # the slatted face, and the way into the wall from it
+        door_side, far_side = (along[0], along[1]) if r > 0 else (along[1], along[0])
+        back = dn[1] if s > 0 else dn[0]        # the frame's face away from the slats
+
+        def box(ta, tb, da, db, ha, hb):
+            """ta to tb along the wall from the doorway, da to db deep from the slatted face, ha to hb over the floor."""
+            a, b = P(f + s * da, e + r * ta, z + ha), P(f + s * db, e + r * tb, z + hb)
+            return tuple(min(a[q], b[q]) for q in range(3)) + tuple(max(a[q], b[q]) for q in range(3))
+        deep = d2 - d1
+        # the wall round the opening: under it, over it, and the rest of the square beyond it
+        for ta, tb, ha, hb, top, bottom, side in ((0, 31, 0, 18, FMAT["wf_upper"], None, None), (0, 31, 104, WF_BAND, None, FMAT["wf_upper"], None),
+                                                  (31, CELL, 0, WF_BAND, None, None, door_side)):
+            faces = {n: wf_face(n, z, z + ha, z + hb) for n in dn}
+            if side:
+                faces[side] = wf_face(side, z - 1024, z, z + WF_BAND)
+            wf_box(v, box(ta, tb, 0, deep, ha, hb), faces, vis, top=top, bottom=bottom)
+        # the frame: sill, sides, head
+        hull_ax = ("[%s 0] 0.0938" % wv, "[0 0 -1 0] 0.3359")
+        for ta, tb, da, db, ha, hb, outer in ((0, 31, 10, 12, 18, 20, None), (0, 2, 6, 12, 20, 104, door_side), (29, 31, 6, 12, 20, 104, far_side),
+                                              (2, 29, 10, 12, 102, 104, None)):
+            faces = {n: self.HULL for n in FACE_ORDER}
+            axes = {n: hull_ax for n in dn}
+            if outer:
+                for n in (outer, back):
+                    faces[n] = self.FRAME_BACK
+                    axes.pop(n, None)
+            pieces.append((box(ta, tb, da, db, ha, hb), faces, axes))
+        # the glass
+        glass_ax = ("[%s 0] 0.15" % wv, "[0 0 -1 0] 0.15")
+        v.brush_entity("func_breakable", dict(self.WINDOW_GLASS), [(box(2, 29, 10, 12, 20, 102), {}, {n: glass_ax for n in dn})], self.GLASS, vis)
+        # the slats, each a plate tilted up toward the glass
+        for q in range(14):
+            h = 23 + 6 * q
+            prof = ((3, h), (10, h + 2), (10, h + 3), (3, h + 1))
+            ends = [[P(f + s * dd, e + r * t, z + hh) for dd, hh in prof] for t in (2, 29)]
+            sh = [(ends[0], self.SLAT), (ends[1][::-1], self.SLAT)]
+            for p in range(4):
+                sh.append(([ends[0][p], ends[0][(p + 1) % 4], ends[1][(p + 1) % 4], ends[1][p]], self.SLAT))
+            shapes.append(sh)
 
     # White Forest's surround for its silo doors, copied from ep2_outland_11 (prop_door_silo_1 and the lab door, read 22
     # November; the owner: the old frames were an "awful texture choice and it's repeating and looks like a game from
@@ -1594,11 +1701,13 @@ class BunkerForest(Forest):
     # gusset in each top corner. The faces into the opening are metaltruss029a at 0.16 (metaltruss017a on the track),
     # the 4 wide faces out to the rooms metalpipe003a at 0.25 laid along each strip, the sill's top metalhull003a.
     TRUSS, TRACK, PIPE, HULL = "metal/metaltruss029a", "metal/metaltruss017a", "metal/metalpipe003a", "metal/metalhull003a"
+    FRAME_BACK, GLASS, SLAT = "metal/metaltruss008a", "glass/glasswindow007a", "metal/metaldoor046a"     # (the shuttered window's: shutter_window)
 
-    def surround(self, plan, way, rect, z, pieces, shapes):
+    def surround(self, plan, way, rect, z, pieces, shapes, window=None):
         """The surround of one doorway (its squares `rect`, the way through it "x" or "y", its floor z): the wall filled in to
         Valve's opening (concrete, its faces laid as the walls beside it) and Valve's metal lining, as (box, faces, axes)
-        in pieces and the corner gussets in shapes."""
+        in pieces and the corner gussets in shapes. window: the side ("north" ...) a shuttered window is on, whose opening's
+        side is the fill's face there (shutter_window)."""
         u1, v1, u2, v2 = rect
         if way == "x":      # through along x: the depth is x, the width y
             d1, d2, w1, w2 = u1, u2, v1, v2
@@ -1637,6 +1746,9 @@ class BunkerForest(Forest):
             for name, f in ((front, f_front), (back, f_back)):
                 got = wf_face(name, f, max(za, f), z + 128)
                 faces[name], axes[name] = got
+            side = lo if wa == w1 else hi if wb == w2 else None
+            if side and side == window:
+                faces[side], axes[side] = wf_face(side, z - 1024, z, z + 128)
             pieces.append((box(d1, d2, wa, wb, za, z + 128), faces, axes))
         # Valve's lining: jambs, head and sill in three lengths, the door's track in the middle
         a, b = w1 + 12, w2 - 12           # the opening in the wall, 104
@@ -1780,6 +1892,8 @@ class BunkerForest(Forest):
             for x1, y1, x2, y2, spec in p.rectangles():
                 if spec[0] != "solid" and not (skip and x1 >= skip[0] and x2 <= skip[2] and y1 >= skip[1] and y2 <= skip[3]):
                     inside.append(B(x1, y1, spec[1] - 8, x2, y2, spec[3]))      # (from under a doorway's sill)
+        for cell, r, z in self.windows.values():      # (and the shuttered windows beside the room doors: shutter_window)
+            inside.append(B(cell[0], cell[1], z, cell[2], cell[3], z + WF_BAND))
         inside.append(self.silo_inside())
         fv = self.vis("bunker door's failsafe (delete to let it stay shut when empty)")
         v.brush_entity("trigger_multiple", {"targetname": "lc_bunker_inside", "spawnflags": "1", "wait": "1", "StartDisabled": "0"}, inside, MAT["trigger"], fv,
