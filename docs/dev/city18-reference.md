@@ -3734,3 +3734,12 @@ A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4
 - **Checked by:** review
 - **Tags:** props, owner
 
+### Join Valve's pieces with the cut hidden: cap faces inside the kept tunnel, consecutive maps at their shared landmark (`join-valve-cuts`)
+
+Lift whole connected sections of Valve's maps, so Valve's own tunnels join inside each piece; between two consecutive maps (ep2_outland_03 and 04, say) place both pieces with their shared info_landmark (landmark_outland_03_04 in both files) at the same point, and their shared transition area lines up exactly. Where a Valve tunnel must be cut, cut it where it is narrow (or at Valve's own seal there, an areaportal's frame), on the piece's own grid where it has one, and put the capping wall's face 32 to 64 INSIDE what is kept of the tunnel (never on the cut plane), so the cut edges of the displacements and the nodraw end faces of the brushes are inside the wall. Give every face of ours that can be seen a real material (top and bottom too: world_box leaves them nodraw), and nodraw only where a face touches something solid or faces the void. Lift with --keep-nodraw, so Valve's own nodraw shell keeps the piece shut where it is not cut. A Valve map's sky becomes black underground.
+
+- **Why:** The owner, 22 November, of the first workings behind the cave forest's emergency door: "every single connecting room has nodraw faces visible inwards towards the player ... a rock wall is inserted and blocking the little tunnel ... a dev texture blocking the cave/tunnel ... there is nothing there and i literally can just walk off the edge of the map ... is it not possible to at the very least have little tunnels copy/pasted from EP2 that loop around and meet at the other little tunnel entrances?"
+- **How:** map_prefab.py extract --centroid --keep-nodraw; in map_forest.py, CaveForest.lifted() (sky made black, dev/ materials refused), clip_x() for a Valve box wall that runs past a cut; each joint registered in self.joints (a box and points in the way's air). The cave forest's rebuild (22 November) could not use the 03-04 landmark: placed at it, ep2_outland_04's caves land south of the forest's north wall, so its antlion tunnels are ep2_outland_03's own, north of the holdout.
+- **Checked by:** map_forest.py CaveForest.joints_check (every build of forest_cave): floods each joint's air in 8 unit cells and fails on a nodraw face in view, a point of the way inside something, or a way through a joint that is shut
+- **Tags:** geometry, owner, valve, interiors
+
