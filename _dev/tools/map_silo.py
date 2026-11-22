@@ -47,7 +47,11 @@ LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, an
 # tunnel's mouth (1287, 1288): Valve's hinge posts for its blast door as Valve hung it there; the door is turned round
 # now and brings its own posts at its hinges (BunkerForest.silo_door), and its leaves swung through these (the owner,
 # 22 November: "the silo doors clip through two round/octagon-ish columns when closing")
-SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES)
+SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604}
+# and over the lift's shaft in the walkway (the gantry level's tunnel): Valve's floor there, its two grates and the hull
+# strips round them (1213 to 1218), the strut down its middle and the rails beside it (1604, 1597, 1598): the car comes
+# up into the walkway now, and the walkway's own sliding grates cover the hole when it is gone (BunkerForest.lift; the
+# owner, 22 November: "the massive brush/strut in the middle of the walkway will have to be removed but that's ok")
 # and the tunnel mouth's two narrow jambs (1564, 1566), Valve's too for its door as it hung: the leaves now swing into
 # the tunnel through their lower part (the last 15 degrees), so they start over the leaves' height, 160 over the floor
 MOUTH_JAMBS, MOUTH_JAMB_FROM = (1564, 1566), 1568
