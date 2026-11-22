@@ -3680,3 +3680,30 @@ A Combine structure's top in brushes is flat (3 in 4) or stepped, its skyline br
 - **Checked by:** review; map_combine.py check (looking up 43 to 62%, walls at 0.9+ under 43%)
 - **Tags:** combine, valve, geometry, owner
 
+### Few small square plates on Combine walls: a few per structure, beside doors (`owner-combine-few-studs`)
+
+Small square plates or studs (32 by 32, standing a few units proud of a face) go on a Combine structure only a few at a time: two or so per structure, where Valve keeps its small pieces (beside a door, at a joint). Never rows of them across walls, inside or out, and never as the thing that makes the scale jump. Give the walls their life with the other geometry instead: plate layers and steps, leaning courses, turned parts, ribs in pairs, fins against walls and on tops, the tops themselves, and Valve's props (generators, lamps with their beams, pipes, booths, barricade rows, consoles).
+
+- **Why:** The owner, 22 November, after compiling the Combine scene: "the little squares that jut out of the walls? They are EVERYWHERE all over the inside of the structure and outside and the generator seems to be reliant on them and using them too much: so please massively reduce their occurrence and just up the occurrences of all the other random geometry and props, as the rest looks very good". The scene had 319 pieces 48 or less every way (281 of them the generator's small plates); now 6.
+- **How:** combine/piece.py tabs(keep=, near=): the row is still drawn (so a draw stays as it was) but only keep plates are laid, nearest near (a door); every call passes 0 except two beside the building's door and two beside the gate. A narrow stack plate keeps no joint at its foot; a run's foot is one band. Count by size before sending: pieces with every side 48 or less (see docs/dev/map-building.md, the Combine section). Valve's small-against-big measure (9.7 to 25.1% over ten Citadel maps) falls to about 5% without the studs: the owner's eye wins over that number.
+- **Checked by:** review; count pieces 48 or less every way in map_combine.py scene (a few per structure)
+- **Tags:** combine, owner, geometry, facades, interiors
+
+### Creeping walls stand upright on a wall or as a wall, never floating or tilted (`owner-creeping-walls-on-a-wall`)
+
+Every combineinnerwall* creeping wall model stands upright (pitch and roll 0, turned only in yaw), either flat against a wall (its back on the wall's face, its foot on a floor or a ledge) or as a wall itself (standing on the ground, closing a gap or lining a run). Never hung at odd angles off an edge or out of a face, whatever Valve's tilted ones do. Size it from the model's real box so it sits exactly, and keep it where nothing else (a plate, a rib, a wedge) stands inside it.
+
+- **Why:** The owner, 22 November: "one massive issue is the two instances of 'models/props_combine/combineinnerwall001c.mdl' are just floating at odd angles out of everything and these should never do that; they can instead be put on a wall or used as a wall". Valve tilts 74% of theirs; the owner's choice wins. Valve's own upright 001c (d3_c17_10b, four at yaw 180, 252 apart) line a run.
+- **How:** combine/seat.py: wall() finds a spot on a face from the model's box in _dev/tools/asset_facts.json (001c is 90 deep, 253 wide, 805 tall about its middle; 001a 306 by 296 by 999), origin = the face + half the depth along the face's normal, foot on the floor; Room.meets refuses a spot where any brush is inside the box. Keep a stretch of the wall clear for it (the building's back keeps its wedges off one). seated(VMF) checks any map: back within 2 of a wall, foot within 2 of a floor, pitch and roll 0, nothing inside; map_combine.py scene prints it.
+- **Checked by:** machine: combine/seat.py seated() (printed by map_combine.py scene)
+- **Tags:** combine, owner, props
+
+### No pyramid tops on Combine structures (`owner-combine-no-pyramid-tops`)
+
+A Combine pier, pillar, column or tower never ends in a pyramid (four slopes up to an apex, lopsided or not). Use the other tops: a lopsided vault, a ridge of two different slopes, a shed slope (one that may stop short and drop), steps then a slope, or a flat top with fins and a parapet. This narrows lesson valve-combine-tops, whose list of the owner's shapes still says pointed.
+
+- **Why:** The owner, 22 November: "last issue is the off-kilter pyramid structures on the pillars/columns at the entrance to the combine area, they look very wrong for a combine structure, so please remove those from the generator".
+- **How:** combine/tops.py has no point kind any more; the piers draw ridge 2, shed 2, steps 2, flat 1; the towers vault 2, steps 2, ridge 1, flat 1; a flat top always gets at least one fin.
+- **Checked by:** review; map_combine.py scene prints every top (no 'point')
+- **Tags:** combine, owner, geometry
+

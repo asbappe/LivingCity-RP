@@ -10,7 +10,8 @@ import random
 
 from . import tops as TP
 from .geom import TILE, LEANS, TURNS, ext, rect, Frame
-from .measure import score
+from . import seat as SE
+from .measure import score, as_brushes
 from .piece import Piece, Sink
 
 
@@ -63,8 +64,11 @@ class Building(Piece):
             self.tabs(f, a, b, H + 32)
             self.tabs(f, a, b, H + 160)
         self.ribs(("u", 256, -1), -Y + 320, -Y + 320 + (Y - 640) * 5 // 8, H + 64, H + 192, 16, 8, None, 128, across=True)
+        # fins standing on the roof against the attic where those rows of small plates were (fins against a wall)
+        for f, a, b in ((("v", -256, 1), *((rb + 48, X - 304) if ra == 320 else (304, ra - 48))), (("v", -Y + 256, -1), 304, X - 304)):
+            TP.fin_row(self, f, a, b, H)
         # the tops (tops.py): the attic crowned in one of the owner's shapes, its line across the front so the street
-        # sees it; the roof round it Valve's way (fins in pairs on the back edge, a generator, a creeping wall over the edge)
+        # sees it; the roof round it Valve's way (fins in pairs on the back edge, a generator)
         # the attic in two parts side by side, a vault (the bunker's curve) on the bigger, another shape on the other
         rt = TP.own(r, "roof")
         m = 256 + (X - 512) * rt.choice((5, 6, 10, 11)) // 16 // 64 * 64
@@ -73,10 +77,10 @@ class Building(Piece):
                                          over=rt.choice((0, 48)) if i == big else 0) for i, (a, b) in enumerate(((256, m), (m, X - 256))))
         TP.fins(self, X // 2 - rt.choice((0, 256)), X - T - 32, -Y, -256, H, r)
         g = rt.choice((X - 192, 192))
-        self.sink.props += [("models/props_combine/combine_generator01.mdl", self.w((g, v, H + 96)), (0, (self.fr.yaw() + rt.choice((0, 90))) % 360, 0))
-                            for v in (-Y // 2 - 64, -Y // 2 + 96)[: rt.choice((1, 2))]]
-        self.sink.props.append(("models/props_combine/combineinnerwall001c.mdl", self.w((X * rt.choice((3, 5, 7)) // 10, -Y - 52, H - 280)),
-                                (rt.randint(14, 40), (self.fr.yaw() + 180 + rt.randint(-30, 30)) % 360, 180 + rt.randint(-15, 15))))
+        # generators on the roof beside the attic, two on one side and one or two on the other (stood in seat_props,
+        # where nothing else stands)
+        self.gens = [((u, v, H), (self.fr.yaw() + rt.choice((0, 90))) % 360) for u, vs in ((g, (-Y // 2 - 64, -Y // 2 + 96)),
+                     (X - g, (-Y // 2 - 160, -Y // 2 + 32)[: rt.choice((1, 2))])) for v in vs]
         # ---- the wider side: a deep stack with its light, a lower one by the door ----
         self.stack(fr, s0, s1, r.choice((0, 64, 128)), H - r.choice((128, 256)), r.randint(4, 6))
         if o1 - o0 >= 192:
@@ -96,7 +100,7 @@ class Building(Piece):
                 self.fbox(fr, x, x + 32, z, z + 32, 0, gap, self.mm)
                 self.take(fr, x, x + 32, z, z + 32)
         self.tabs(("v", gap + 16, 1), f0 + 16, f0 + fw - 16, (fz0 + fz1) // 2)
-        self.tabs(fr, rb0 + 16, rb1 - 16, hb + 32, 8)
+        self.tabs(fr, rb0 + 16, rb1 - 16, hb + 32, 8, keep=2, near=g1 if left else g0)     # (two beside the door)
         self.tabs(fr, rb0 + 16, rb1 - 16, H - 128)
         # ---- the gate: cheeks of unequal size, one jamb plates deep, the other leaning in high ----
         self.fbox(fr, g0 - 96, g0, 0, ho + 256, 0, 64, self.mm)
@@ -107,7 +111,7 @@ class Building(Piece):
         self.fbox(("u", g1, -1), -T + 48, -64, 32, 96, 0, 8, self.plate)
         self.sink.lamps += [(self.w((g0 - 48, 70, ho + 96)), (self.fr.yaw() + 30) % 360, 30),
                             (self.w((g1 + 32, 54, ho - 64)), (self.fr.yaw() - 15) % 360, 30)]
-        # ---- the sides and the back: bands in pairs on one part of the west face, stacks on the rest; small plates ----
+        # ---- the sides and the back: bands in pairs on one part of the west face, stacks on the rest ----
         self.ribs(("u", 0, -1), -Y + 64, sp, 192, H - 192, 16, 8, "pair", 256, across=True)
         self.stack(("u", 0, -1), sp + 64, -T - 96, 64, H // 2 + 128, 3, light=False)
         self.stack(("u", X, 1), -Y + 96, ea, H // 2, H - 192, 3, light=False)
@@ -117,10 +121,17 @@ class Building(Piece):
         self.stack(("v", -Y, -1), b0, b1, 128, H - 256, r.randint(3, 5), light=False)
         for z in (64, H // 2 + 32, H - 160):
             self.tabs(("v", -Y, -1), 64, X - 64, z)
+        # a stretch of the back left bare for creeping walls standing on the ground (seat_props); the wedges keep off it
+        fa, fb = (b1, X - 64) if b0 == 64 else (64, b0 - 160)
+        cw = 608 if fb - fa >= 640 else 288 if fb - fa >= 320 else 0
+        k = TP.own(r, "creeping").randrange((fb - fa - cw) // 16 + 1) if cw else 0
+        self.cw = (fa + 16 * k, fa + 16 * k + cw)
         x = 64
         while x + 224 < X:
             if not b0 - 160 < x < b1:
-                self.wedge(("v", -Y, -1), x, 128, r.choice((256, 384)), self.turns[-1], x > X // 2)
+                h = r.choice((256, 384))
+                if not (cw and self.cw[0] - 112 < x < self.cw[1] + 16):
+                    self.wedge(("v", -Y, -1), x, 128, h, self.turns[-1], x > X // 2)
             x += 96 + r.choice((112, 176, 240))
         self.interior(T, X, Y, H, g0, g1, ia, ib)
         return g0, g1, ho
@@ -156,7 +167,7 @@ class Building(Piece):
             self.tabs(("u", T, 1), -Y + T + 64, -T - 64, z)
         wide = g0 - T > X - T - g1
         self.stack(("v", -T, -1), ia, ib, 128, H - 384, 3)
-        self.tabs(("v", -T, -1), *((g1 + 32, X - T - 32, 64) if wide else (T + 32, g0 - 32, 64)))
+        self.tabs(("v", -T, -1), *((g1 + 32, X - T - 32, 64) if wide else (T + 32, g0 - 32, 64)), keep=2, near=g1 if wide else g0)
         self.lights.append((self.w((X // 2, -Y // 2, H - 256)), "147 226 240 300"))
         self.sink.props += [("models/props_combine/combine_intwallunit.mdl", self.w((T + 4, v, 160)), (0, (self.fr.yaw() + 90) % 360, 0))
                             for v in (-Y // 2 - 56, -Y // 2 + 40)]
@@ -193,18 +204,53 @@ def wing(b, side, turn, r):
 
 
 def dress(b, side, r):
-    """Valve's props on its walls: a creeping wall hung tilted on the bare side (74% of theirs tilted, mostly rolled near
-    180, pitched 6 to 54, half at free yaws); rising pipes on the wing's side, two in five turned 15 off the wall."""
-    X, Y, H = b.size[0], b.size[1], b.H
-    fu, yaw, out = (X, 0, 1) if side == "w" else (0, 180, -1)
-    pos = b.w((fu + out * 112, -Y * r.choice((3, 4, 5)) // 8, H // 2 + r.choice((-128, 0, 128))))
-    b.sink.props.append(("models/props_combine/combineinnerwall001a.mdl", pos,
-                         (r.randint(6, 54), (yaw + r.randint(-40, 40)) % 360, 180 + r.randint(-15, 15))))
-    fu, yaw, out = (0, 180, -1) if side == "w" else (X, 0, 1)
-    v = -Y + 192
-    for k in range(3):
-        b.sink.props.append(("models/props_combine/pipes01_single01a.mdl", b.w((fu + out * 12, v - 28 * k, 0)),
-                             (0, (yaw + (15 if k == 1 else 0)) % 360, 0)))
+    """The draws of the tilted creeping wall that hung on the bare side, still made so the rest of a draw stays as it
+    was (the creeping walls and the pipes are stood in seat_props now, where nothing else stands)."""
+    r.choice((3, 4, 5)), r.choice((-128, 0, 128)), r.randint(6, 54), r.randint(-40, 40), r.randint(-15, 15)
+
+
+def seat_props(b, seed):
+    """Creeping walls as the owner asked (22 November: never "floating at odd angles out of everything ... put on a
+    wall or used as a wall"): upright, the back flat on a wall, the foot on the floor, where nothing else stands. On
+    the bare stretch of the back a combineinnerwall001a and a 001c side by side on the ground (lining it, as Valve
+    stands its upright 001c in d3_c17_10b), or the 001c alone; inside, a 001c on the hall's back wall."""
+    X, Y, T = b.size[0], b.size[1], 128
+    rr = random.Random("creeping walls %d" % seed)
+    room = SE.Room(as_brushes(b.solids) + as_brushes(b.old, "world"))
+    fr = b.fr
+    n_back = (fr.b / fr.L, -fr.a / fr.L)
+    c0, c1 = getattr(b, "cw", (0, 0))
+    models = ("models/props_combine/combineinnerwall001a.mdl", "models/props_combine/combineinnerwall001c.mdl")
+    out, jobs = (-n_back[0], -n_back[1]), []
+    if c1 - c0 >= 608:                         # the 001a at one end of the stretch, the 001c beside it
+        wa = 2 * int(SE.bbox(models[0])[4]) + 2
+        ea = (c0, c0 + wa + 16) if rr.random() < 0.5 else (c1 - wa - 16, c1)
+        jobs += [(models[0], lambda s: b.w((s, -Y, 0)), out, 0, ea), (models[1], lambda s: b.w((s, -Y, 0)), out, 0, (c0, c1))]
+    elif c1 > c0:
+        jobs.append((models[1], lambda s: b.w((s, -Y, 0)), out, 0, (c0, c1)))
+    jobs.append((models[1], lambda s: b.w((s, -Y + T, 0)), n_back, 8, (T, X - T)))
+    for model, along, n, zf, (s0, s1) in jobs:
+        hw = int(SE.bbox(model)[4]) + 1
+        got = SE.wall(room, model, along, n, (s0 + hw, s1 - hw), zf, rr)
+        if got:
+            room.add(SE.obb_brush(model, *got))
+            b.sink.props.append((model, got[0], (0, got[1], 0)))
+    # Valve's props, each where nothing else stands: the roof's generators; two consoles on the hall's floor before the
+    # wall units; a second run of rising pipes on the side away from the wing, where the face is bare
+    for (u, v, z), yaw in getattr(b, "gens", ()):
+        SE.stand(room, b.sink, "models/props_combine/combine_generator01.mdl", b.w((u, v, z)), yaw)
+    for v in (-Y // 2 - 160, -Y // 2 + 112):
+        SE.stand(room, b.sink, "models/props_combine/combine_interface001.mdl", b.w((T + rr.choice((224, 256, 288)), v, 8)), (fr.yaw(False) + 180) % 360)
+    pipe = "models/props_combine/pipes01_single01a.mdl"
+    for fu, yaw, out in (((0, 180, -1), (X, 0, 1)) if b.wing == "w" else ((X, 0, 1), (0, 180, -1))):
+        runs, after = 0, -Y
+        for v, off in ((v, off) for v in range(-Y + 192, -T - 128, 32) for off in (12, 20, 28)):
+            spots = [(b.w((fu + out * off, v - 28 * k, 0)), (yaw + (15 if k == 1 else 0) + fr.yaw(False)) % 360) for k in range(3)]
+            if runs == 2 or v < after or not all(SE.stand(SE.Room(list(room.B)), SE.Sink(), pipe, p, y) for p, y in spots):
+                continue
+            for p, y in spots:
+                SE.stand(room, b.sink, pipe, p, y)
+            runs, after = runs + 1, v + 256          # (up to two runs of three on a side, 256 or more apart)
 
 
 def building(box, seed=1, tries=6, sink=None):
@@ -225,6 +271,8 @@ def building(box, seed=1, tries=6, sink=None):
         if not bad:
             break
     bad, n, b, walls, pas, door, side = best
+    b.wing = side
+    seat_props(b, seed)
     if sink is not None:
         for k in ("solids", "old", "boxes", "lights", "lamps", "props"):
             getattr(sink, k).extend(getattr(b.sink, k))
