@@ -72,7 +72,7 @@ delete it if the gamemode is to send them itself).
 import random
 
 from map_build import CELL, MAT, Plan, Vmf, check, dress_keys, loose_flags, loose_yaw, stand_z, standing_prop, test_extras
-from map_forest import crusher
+from map_forest import shove
 
 R = {   # (the owner's own, from their streets and their sewer, but the last three)
     "road": "stone/stonefloor006d_c17", "strip_s": "stone/stonefloor006f_c17", "strip_n": "stone/stonefloor006e_c17", "walk": "concrete/concretefloor016a",
@@ -293,11 +293,13 @@ def ravenholm(args):
                                        "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0",
                                        "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, gv)
     DY, DX = 120, (TX1 + TX2) // 2
-    for name, x1, x2, way, edge in (("lc_raven_tdoor_w", TX1, DX, "0 180 0", (DX - 2, DY + 3, FLOOR, DX + 14, DY + 13, CEIL)),
-                                    ("lc_raven_tdoor_e", DX, TX2, "0 0 0", (DX - 14, DY + 3, FLOOR, DX + 2, DY + 13, CEIL))):
+    for name, x1, x2, way in (("lc_raven_tdoor_w", TX1, DX, "0 180 0"), ("lc_raven_tdoor_e", DX, TX2, "0 0 0")):
         vmf.brush_entity("func_button", {"targetname": name, "movedir": way, "speed": "24", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
                                          "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"}, [((x1, DY + 2, FLOOR, x2, DY + 14, CEIL), R["gate"])], R["gate"], gv)
-        crusher(vmf, name, edge, gv, "lc_raven_door_crush")
+    # nothing kills (the owner, 22 November: "considering how dying in the gamemode means a new character, yes just shove,
+    # not kill"): in the last moments of the shut, whoever is between the leaves is pushed out of their way, back towards
+    # Ravenholm on its side and on to the sewer on the sewer's side (harder: who stands in the middle goes there)
+    shove(vmf, "lc_raven_door_shove", [((TX1, DY - 24, FLOOR, TX2, DY + 8, CEIL), 270, 200), ((TX1, DY + 8, FLOOR, TX2, DY + 40, CEIL), 90, 300)], gv)
     vmf.detail([(TX1, DY - 4, FLOOR, TX1 + 8, DY + 20, CEIL), (TX2 - 8, DY - 4, FLOOR, TX2, DY + 20, CEIL), (TX1 + 8, DY - 4, CEIL - 12, TX2 - 8, DY + 20, CEIL)],
                "metal/metalcombine002", vis=gv)
     # What the gamemode's job reads (sv_livingcity_flush.lua; the owner: "she can trigger a combine wide quest to infiltrate
@@ -359,8 +361,18 @@ def ravenholm(args):
         #  high and must go 474 to be out of sight, inside the lowered slab: a lip of -290.)
         mover("lc_raven_wall", DOWN, 6, 36, ((93, -2526, 648, 107, -2188, 944),) + slab)
         mover("lc_raven_wall_top", DOWN, -290, 36, ((98, -2558, 944, 102, -2150, 1128), line, {"west": ("[0 -1 0 2.77832] 0.25", "[0 0 -1 0] 0.25")}))
-        # (rising again, the wall kills whoever stands on it and deletes what lies on it, as the other great doors do)
-        crusher(vmf, "lc_raven_wall", (94, -2525, 944, 106, -2189, 958), gv, "lc_raven_gate_crush")
+        # Nothing kills (the owner, 22 November: "considering how dying in the gamemode means a new character, yes just
+        # shove, not kill"). Rising again, the wall would carry up whoever stands on it: as it starts (before it moves,
+        # until its top is 72 over the road and nobody steps or jumps on), whoever stands on it is shoved off it, to the
+        # side they stand on. Each push is a strip 9 wide whose inner edge is 15 from the wall's middle: anyone on the
+        # wall touches the one on their own side and goes off that way (only one standing within 1 of the middle touches
+        # both, and goes to the city, the harder push). In the last moments of the shut, before the unseen wall comes
+        # back, the same is done over the whole of its place, so nobody is left standing in it: to the city on the
+        # city's side, into the quarter on the quarter's (shove(); not held to the fit check: unseen, not solid, and
+        # standing in the owner's street, pillars and houses as their unseen wall does; named lc_raven_gate_..., never
+        # lc_raven_wall_...: the wiring moves lc_raven_wall*).
+        shove(vmf, "lc_raven_gate_rise_shove", [((76, -2526, 648, 85, -2188, 800), 180, 300), ((115, -2526, 648, 124, -2188, 800), 0, 200)], gv, fit=False)
+        shove(vmf, "lc_raven_gate_shove", [((65, -2639, 648, 85, -2075, 1280), 180, 300), ((115, -2639, 648, 197, -2075, 1280), 0, 200)], gv, fit=False)
         # the unseen wall the owner has round it (so nobody gets over): there while the gate is shut, gone while it is open
         vmf.brush_entity("func_brush", {"targetname": "lc_raven_gate_clip", "Solidity": "0", "StartDisabled": "0", "solidbsp": "0", "spawnflags": "2", "rendermode": "0",
                                         "renderamt": "255", "rendercolor": "255 255 255", "vrad_brush_cast_shadows": "0", "disableshadows": "1", "invert_exclusion": "0"},
@@ -389,9 +401,11 @@ def ravenholm(args):
                                            "radius": "3000", "spawnflags": "16" if loops else "48", "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0",
                                            "lfomodvol": "0", "lforate": "0", "lfotype": "0", "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, gv)
 
-    def relays(name, moves, took, at, makers, source, crush=None, clip=None, also=()):
+    def relays(name, moves, took, at, makers, source, shoves=(), clip=None, also=()):
         """name_open and name_shut (one live at a time), name_opened and name_closed for the gamemode to hear.
-        moves: (what moves, how long into the opening, how long into the shutting); also: more to fire as it opens."""
+        moves: (what moves, how long into the opening, how long into the shutting); also: more to fire as it opens;
+        shoves: (a shove's name, when into the shutting it goes on, when off); clip: an unseen wall, there while shut
+        (it comes back 0.3 after the shut is done, when the last shove has emptied its place)."""
         sound(name + "_move", "Streetwar.d3_c17_11_garage_move1", source, at, loops=True)
         sound(name + "_stop", "Streetwar.d3_c17_11_garage_stop1", source, (at[0], at[1] + 16, at[2]))
         opening = [("OnTrigger", name + "_open", "Disable", "", 0), ("OnTrigger", name + "_move", "PlaySound", "", 0.5),
@@ -405,18 +419,21 @@ def ravenholm(args):
             opening.append(("OnTrigger", what, "PressIn", "", 0.5 + wait_open))
             shutting.append(("OnTrigger", what, "PressOut", "", 0.5 + wait_shut))
         opening += [("OnTrigger", what, action, "", 0.5) for what, action in also]
-        if crush:
-            shutting += [("OnTrigger", crush, "Enable", "", 0.5), ("OnTrigger", crush, "Disable", "", 0.9 + took)]
+        for what, on, off in shoves:
+            shutting += [("OnTrigger", what, "Enable", "", on), ("OnTrigger", what, "Disable", "", off)]
         if clip:
             opening.append(("OnTrigger", clip, "Disable", "", 0.5))
-            shutting.append(("OnTrigger", clip, "Enable", "", 0.5 + took))
+            shutting.append(("OnTrigger", clip, "Enable", "", 0.8 + took))
         vmf.point("logic_relay", (at[0], at[1], at[2] + 16), {"targetname": name + "_open", "StartDisabled": "0", "spawnflags": "0"}, gv, connections=opening)
         vmf.point("logic_relay", (at[0], at[1], at[2] + 32), {"targetname": name + "_shut", "StartDisabled": "1", "spawnflags": "0"}, gv, connections=shutting)
         vmf.point("logic_relay", (at[0], at[1], at[2] + 48), {"targetname": name + "_opened", "StartDisabled": "0", "spawnflags": "0"}, gv)
         vmf.point("logic_relay", (at[0], at[1], at[2] + 64), {"targetname": name + "_closed", "StartDisabled": "0", "spawnflags": "0"}, gv)
+    # (the shoves' times, into the shutting: the gate's wall rises from 0.5 for 8.1 s, then the rails come out, all done
+    #  by 0.5 + 11.4; the tunnel's leaves close from 0.5 for 3.7 s. Each shove at the close: its last 0.6 s and 0.3 after)
     relays("lc_raven_gate", [("lc_raven_rail_*", 0, 8.6), ("lc_raven_wall*", 3.0, 0)], 11.4, W(40, 190, Z + 96), "lc_raven_maker", "lc_raven_wall",
-           crush="lc_raven_gate_crush", clip="lc_raven_gate_clip")
-    relays("lc_raven_door", [("lc_raven_tdoor_*", 0, 0)], 3.7, (1312, ys + 60, ZS + 60), "lc_raven_door_maker", "lc_raven_tdoor_w", crush="lc_raven_door_crush")
+           shoves=[("lc_raven_gate_rise_shove", 0, 2.5), ("lc_raven_gate_shove", 11.3, 12.2)], clip="lc_raven_gate_clip")
+    relays("lc_raven_door", [("lc_raven_tdoor_*", 0, 0)], 3.7, (1312, ys + 60, ZS + 60), "lc_raven_door_maker", "lc_raven_tdoor_w",
+           shoves=[("lc_raven_door_shove", 3.6, 4.5)])
 
     # --- what is made while a way is open: zombies and headcrabs, sent walking to that way's far side ----------------------
     def makers(name, child, march, goal, spots, every=14, alive=2):

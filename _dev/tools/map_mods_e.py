@@ -179,9 +179,10 @@ def m_lockgate(m, opt):
     For people on foot, the way round: in the right wall a doorway upstream of the gates, a passage 128 wide inside the
     wall, lit, past the gates, and a doorway back into the canal beyond the recesses (its own areaportal, always open).
     The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut); the Combine, or rebels
-    laying an ambush, shut them at the booth (the owner, 21 November). Nothing stops a leaf: what it meets dies or is
-    broken (damage 10000, as Valve's), loose things in its way are deleted, it never waits. Path nodes go round by
-    the passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
+    laying an ambush, shut them at the booth (the owner, 21 November). Nothing kills (the owner, 22 November: "considering
+    how dying in the gamemode means a new character, yes just shove, not kill"; until then a leaf killed whatever it met):
+    in the last moments of each swing a shove pushes whoever is in a leaf's way out of it. Path nodes go round by the
+    passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
     Named for the game: lc_lockgate_open, lc_lockgate_close and lc_lockgate_toggle (logic_relays the gamemode fires:
     the klaxon, the beacon and the leaves), lc_lockgate_opened and lc_lockgate_closed (logic_relays fired when the
     leaves have finished moving), lc_lockgate_switch (the button in the booth: it fires lc_lockgate_toggle),
@@ -251,8 +252,8 @@ def m_lockgate(m, opt):
         m.world((G - 63, min(s * 440, s * 448), F, G - 1, max(s * 440, s * 448), LOCK_TOP), MAT["canal_wall"])      # (1 in from the pier's faces: the fence's posts end there)
         cage_lamp(m, G - 64, s * 480, F + 300, 180, colour="255 214 170 60")
     m.world((G - 64, -448, LOCK_TOP, G, 448, sky), MAT["sky"])
-    leaf = {"spawnflags": "512", "speed": "15", "distance": "80", "wait": "-1", "lip": "0", "dmg": "10000", "health": "0", "angles": "0 0 0", "spawnpos": "0",
-            "noise1": "d1_canals.Floodgate_Move_Short", "noise2": "d1_canals.Floodgate_Stop", "forceclosed": "1", "ignoredebris": "0", "solidbsp": "0",
+    leaf = {"spawnflags": "512", "speed": "15", "distance": "80", "wait": "-1", "lip": "0", "dmg": "0", "health": "0", "angles": "0 0 0", "spawnpos": "0",
+            "noise1": "d1_canals.Floodgate_Move_Short", "noise2": "d1_canals.Floodgate_Stop", "forceclosed": "0", "ignoredebris": "0", "solidbsp": "0",
             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1", "locked_sentence": "0", "unlocked_sentence": "0"}
     state = [("OnOpen", "lc_lockgate_state", "SetValue", "1", 0), ("OnOpen", "lc_lockgate_portal", "Open", "", 0),
              ("OnOpen", "lc_lockgate_switch_model", "SetAnimation", "togglein", 0), ("OnOpen", "lc_lockgate_switch_light", "Color", "0 255 0", 0.2),
@@ -262,23 +263,32 @@ def m_lockgate(m, opt):
              ("OnClose", "lc_lockgate_switch_light", "SetScale", "0.05", 0.2), ("OnClose", "lc_lockgate_switch_light", "SetScale", "0.1", 0.3),
              ("OnFullyOpen", "lc_lockgate_opened", "Trigger", "", 0),
              ("OnFullyClosed", "lc_lockgate_portal", "Close", "", 0), ("OnFullyClosed", "lc_lockgate_closed", "Trigger", "", 0)]
-    from map_forest import crusher
+    from map_forest import shove
+    swing = 80 / 15.0              # (a leaf's swing, in seconds: 80 degrees at 15 a second)
     for name, s, model, flags, off in (("lc_lockgate_leaf_a", 1, "locks_large_b", "512", (37, -164)), ("lc_lockgate_leaf_b", -1, "locks_large", "514", (36, 163))):
         hx, hy, hz = m.fr.at(G - 4, s * H, F + 248)
         keys = dict(leaf, targetname=name, spawnflags=flags, origin="%d %d %d" % (hx, hy, hz))
         lo, hi = min(0, s * (H + 64)), max(0, s * (H + 64))
-        # the leaf's own brush is as thick as Valve's model (the model rides on it, not solid itself): what it meets dies
-        # or breaks (damage 10000, as Valve's), and nothing holds it (forceclosed; the owner, 21 November: "make the crush
-        # anything"); while it swings, unseen boxes on its leading face kill whoever is in the way and delete what lies there
-        # (map_forest.crusher, the owner's silo doors' way), one for closing (its upstream face), one for opening
-        shut, opening = name.replace("leaf", "crush") + "_shut", name.replace("leaf", "crush") + "_open"
-        wires = [("OnClose", shut, "Enable", "", 0), ("OnClose", opening, "Disable", "", 0), ("OnFullyClosed", shut, "Disable", "", 0),
-                 ("OnOpen", opening, "Enable", "", 0), ("OnOpen", shut, "Disable", "", 0), ("OnFullyOpen", opening, "Disable", "", 0)]
+        # The leaf's own brush is as thick as Valve's model (the model rides on it, not solid itself). It used to kill: what
+        # it met died or broke (damage 10000, as Valve's), nothing held it (forceclosed; the owner, 21 November: "make the
+        # crush anything"), and unseen boxes on its leading faces killed whoever was in the way (map_forest's crusher, the
+        # silo doors' way then). The owner's newer word replaces that (22 November, of every door that killed: "considering
+        # how dying in the gamemode means a new character, yes just shove, not kill"): no damage, not forced closed, and in
+        # the last moments of each swing a shove (map_forest.shove) pushes whoever is in its way out of it. Shutting (it
+        # swings upstream into the gate line): across its half of the gate line, upstream on the upstream side (harder)
+        # and downstream on the downstream side, which also empties the gap between the two leaves' ends as they meet.
+        # Opening (it swings downstream to lie along the wall): between it and the wall, back into its recess, where it
+        # leaves 50 or more clear when open. Each from its own start (OnClose, OnOpen): on 0.6 s before the swing is done,
+        # off 0.3 s after.
+        shut, opening = name.replace("leaf", "shove") + "_shut", name.replace("leaf", "shove") + "_open"
+        t_on, t_off = round(swing - 0.6, 2), round(swing + 0.3, 2)
+        wires = [("OnClose", shut, "Enable", "", t_on), ("OnClose", shut, "Disable", "", t_off), ("OnOpen", opening, "Enable", "", t_on),
+                 ("OnOpen", opening, "Disable", "", t_off)]
         b.vmf.brush_entity("func_door_rotating", keys, [m.fr.box(G - 68, lo, F + 8, G + 136, hi, F + 564)], MAT["nodraw"], m.dv,
                            connections=(state if s > 0 else []) + wires)
         b.names.append((name, "func_door_rotating", m.tag))
-        crusher(b.vmf, name, m.fr.box(G - 82, lo, F + 8, G - 68, hi, F + 564), m.dv, shut)
-        crusher(b.vmf, name, m.fr.box(G + 136, lo, F + 8, G + 150, hi, F + 564), m.dv, opening)
+        shove(b.vmf, shut, [(m.fr.box(G - 104, lo, F + 8, G + 34, hi, F + 200), m.fr.yaw(180), 300), (m.fr.box(G + 34, lo, F + 8, G + 172, hi, F + 200), m.fr.yaw(0), 200)], m.dv)
+        shove(b.vmf, opening, [(m.fr.box(G, s * H, F + 8, G + 448, s * (WHALF + 64), F + 200), m.fr.yaw(90 if s > 0 else 270), 200)], m.dv)
         tilted(m, "prop_dynamic", "models/props_canal/%s.mdl" % model, G - 4 + off[0], s * H + off[1], F, 0,
                keys={"parentname": name, "solid": "0", "disableshadows": "1"})
     b.vmf.areaportal(m.fr.box(G - 26, -440, F, G - 24, 440, LOCK_TOP), b.vis + ": areaportals", name="lc_lockgate_portal")
