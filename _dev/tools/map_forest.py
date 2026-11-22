@@ -1622,6 +1622,7 @@ class CaveForest(Forest):
     # straight on. sight() measures how far a straight line from outside the mouth reaches; it must stop short of the chamber.
     BEND = (768, 1536, -960)
     CHAMBER = (1728, 2368)              # past the bend: the wide chamber the mine office is in
+    REBEL_ZONE = ("lc_zone_rebel_r720_h420_cave", 8)   # the territory over the office and the chamber before it (a base can be raised there)
     OFFICE = (1792, 2304)               # the office's front, along the chamber's east wall (two of the skin's 256 pieces)
     FRONT, FRONT_HIGH = 256, 192        # that front: this far east of the chamber's middle, and this high
     SPRING = 2624                       # how far in the spring is: a low slot in the west wall the stream runs out of
@@ -2065,6 +2066,12 @@ class CaveForest(Forest):
         # left outside it in the chamber: a cart, cut timber
         for model, x, y, yaw in (("models/props_mining/flatbed_cart01.mdl", ax - 130, ay - 150, 80), ("models/props_mining/wood_stack.mdl", ax - 120, ay + 600, 10)):
             self.stand(model, x, y, self.cave_floor(x, y), yaw, "mine office")
+        # a Resistance headquarters can be raised here (the owner, 22 November: a flag and office spot in the cave, as the
+        # silo has): the pole's marker in the chamber before the office's door, under the cave's open height, and a rebel
+        # territory over the chamber's end and the whole office (map-placed territories, CORE.md: lc_zone_<kind>_r_h_)
+        hx, hy = ax - 160, ay + 256
+        v.point("info_target", self.w(hx, hy, self.cave_floor(hx, hy) + 8), {"targetname": "lc_hq_setup_cave", "spawnflags": "0"}, ov)
+        v.point("info_target", self.w(ax + 300, ay + 384, zf + 8), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, ov)
         for (u, w) in ((-90, 256), (40, 256), (120, 120), (120, 400), (300, 256), (420, 96), (420, 416), (540, 96), (680, 150), (540, 416), (680, 400),
                        (352, 470), (352, 560), (400, 660)):
             self.node(ax + u, ay + w, zf)
