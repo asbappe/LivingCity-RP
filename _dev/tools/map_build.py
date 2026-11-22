@@ -153,7 +153,7 @@ def dress_keys(model, x, y, keys):
     return k
 
 
-WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight")     # (arches over the way, their middle open; lamps hung overhead)
+WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight", "missile_doors")     # (arches over the way, their middle open; lamps hung overhead; Silo 2's leaves, the bunker door's, which slide out of the way and stand rolled upright and scaled, past what this box can turn)
 
 
 def prop_box(model, pos, yaw):

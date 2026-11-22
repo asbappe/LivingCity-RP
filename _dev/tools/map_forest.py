@@ -363,6 +363,7 @@ class Forest:
     RIM, RIM_WIDE = 440, 420
     SHORE_MUD = True # ground just above a water's level turns to dirt (the pond's shore)
     TREES = 0.75     # how thickly trees stand (the owner, after walking both: "too thick with trees ... reduce it about 25%")
+    ROCKS_N, LOGS_N = 34, 12     # how many rocks and fallen logs
 
     def __init__(self, name, origin, z0, seed, first_node, gate):
         self.name, self.seed = name, seed
@@ -617,6 +618,10 @@ class Forest:
         self.vmf.point(cls, at, keys, self.vis(what))
         self.placed.append({"ent": len(self.vmf.ents) - 1, "pt": len(self.vmf.points) - 1, "model": model, "at": at, "angles": keys.get("angles", "0 0 0"), "movable": None})
 
+    def thin(self, x, y):
+        """How much thinner than the rule the trees stand here (1: as the rule says). A forest may thin its own."""
+        return 1.0
+
     def plant(self, leafy_near=None):
         """Trees, undergrowth, rocks and fallen wood, by rule: thick on the ridge, none on paths, water or buildings."""
         rnd, n = self.rnd, {"trees": 0, "plants": 0, "rocks": 0, "logs": 0}
@@ -628,7 +633,7 @@ class Forest:
                 want = 0.30 + 0.34 * (0.5 + 0.5 * noise(x / 700.0, y / 700.0, self.seed + 4))
                 if d < 380:
                     want = 0.85
-                want *= self.TREES
+                want *= self.TREES * self.thin(x, y)
                 if rnd.random() > want or self.kept_clear(x, y):
                     continue
                 sl = self.slope(x, y)
@@ -648,7 +653,7 @@ class Forest:
                 continue
             self.static(rnd.choice(PLANTS), x, y, self.natural(x, y) - 2, rnd.randrange(0, 360, 5), "rocks, plants and fallen wood", solid=0, fade=(1500, 2000))
             n["plants"] += 1
-        for kind, models, count, sink in (("rocks", ROCKS, 34, 10), ("logs", LOGS, 12, 4)):
+        for kind, models, count, sink in (("rocks", ROCKS, self.ROCKS_N, 10), ("logs", LOGS, self.LOGS_N, 4)):
             for _ in range(900):
                 if n[kind] >= count:
                     break
@@ -749,10 +754,13 @@ class Forest:
         self.vmf.point("info_node", self.w(x, y, z + 16), {"nodeid": self.node_id}, self.vis("path nodes"))
         self.node_id += 1
 
+    NODE_STEP = 256     # the ground's path nodes, this far apart
+
     def ground_nodes(self):
-        """Where the city's people can walk: a node every 256 units on ground that is dry, open and not steep."""
-        for y in range(128, self.D, 256):
-            for x in range(128, self.W, 256):
+        """Where the city's people can walk: a node every NODE_STEP units on ground that is dry, open and not steep."""
+        step = self.NODE_STEP
+        for y in range(step // 2, self.D, step):
+            for x in range(step // 2, self.W, step):
                 if self.slope(x, y) > 0.5 or self.wet(x, y) or any(math.hypot(x - tx, y - ty) < 56 for tx, ty in self.trees):
                     continue
                 inside = False
@@ -1002,6 +1010,28 @@ class BunkerForest(Forest):
     B0 = (2368, 3072)               # the bunker's own corner: its door's wall is its south side. (Its x is chosen so the foot of
                                     # the second stairs, 320 west of it, is on a line between two ground patches: see height().)
     DOOR = (512, 768)               # the doorway, in the bunker's own coordinates: 256 wide and 192 high, shut by two sliding leaves
+    # thinner (the owner, 22 November: "can we also please thin out the forest and rocks in the forest area? they are way
+    # too thick and even the watchtower is useless because you can't see anything from it"): about half the trees (thin()),
+    # half the rocks and fallen logs
+    ROCKS_N, LOGS_N = 17, 6
+
+    def thin(self, x, y):
+        """The bunker forest's trees, about half as many as the rule gives, in Episode Two's way (clusters and clearings,
+        not an even scatter: a slow noise decides which, a clearing keeping a tree in seven of a cluster's), and thinner
+        still near the trail, the pond and the bunker, so there are views across the valley. The rim (380 deep) keeps
+        most of its trees (0.7 of the rule): they hide the forest's edge. Nothing here draws on the forest's random numbers."""
+        d = min(x, self.W - x, y, self.D - y)
+        if d < 380:
+            return 0.7
+        c = 0.5 + 0.5 * noise(x / 900.0, y / 900.0, self.seed + 21)
+        f = 0.14 + 0.86 * smooth((c - 0.3) / 0.45)
+        tr = min(path_dist(x, y, t) for t in self.trails) if self.trails else 1e9
+        f *= 0.3 + 0.7 * smooth((tr - 120) / 420.0)
+        cx, cy, rx, ry = self.POND
+        f *= 0.3 + 0.7 * smooth((math.hypot((x - cx) / rx, (y - cy) / ry) - 1.15) / 0.9)
+        bx, by = self.B0
+        f *= 0.3 + 0.7 * smooth(rect_dist(x, y, (bx - 384, by - 420, bx + 1280, by + 1100)) / 520.0)
+        return min(1.0, 0.9 * f)
 
     def setup(self):
         z0 = self.z0
@@ -1059,7 +1089,7 @@ class BunkerForest(Forest):
         low = WFPlan(origin, zg - 64, zd + 224, **look)
         low.keep_out += [(-100000, -100000, 100000, 1152), (-100000, 1600, 100000, 100000)]
         low.paint((-704, 1152, -576, 1536), ("low", zg, fm, zd + 160))      # the stairs (their steps are detail)
-        low.paint((-704, 1536, -576, 1600), ("low", zg, fm, zg + 160))      # the last of the corridor, as high as the silo's tunnel
+        low.paint((-768, 1536, -512, 1600), ("low", zg, fm, zg + 192))      # the last of the corridor, as wide and high as the silo's door (silo_door)
         low.walls()
         self.low = low
         # the silo: its west tunnel (now turned to face south) meets the corridor's end at y 1600 of the bunker, its
@@ -1098,7 +1128,7 @@ class BunkerForest(Forest):
         # the mound the bunker is under: level with its roof, falling away on every side
         bx, by = self.B0
         mound = self.zp + 268 * (1 - smooth(rect_dist(x, y, (bx - 384, by + 448, bx + 1280, by + 1100)) / 400.0))
-        h = max(h, mound)
+        h = max(h, mound, self.exit_berm(x, y))
         # flat at the door, as far as the door swings
         h = lerp(h, self.zp, 1 - smooth(rect_dist(x, y, (bx + 448, by - 340, bx + 832, by)) / 170.0))
         # the pond: a bowl, a shore, and nothing else below the water near it
@@ -1118,6 +1148,38 @@ class BunkerForest(Forest):
         elif 640 <= x <= 2368 and 704 <= y <= 2112:
             h = max(h, lv + 12)
         return self.gate_pad(x, y, h)
+
+    # the leader's way out on the north rim (map_silo.py): the hollow in front of its face of rock, level with the hole's
+    # sill, and the ridge that hides it, along its front and up its east side to the forest's wall (map coordinates)
+    EXIT_HOLLOW = (8640, 5080, 9420, 822)          # from x, from y (to the wall), to x; its floor
+    EXIT_RIDGE = ((8860, 5000), (9420, 5000), (9420, 5200))
+    EXIT_RIDGE_TOP = 910
+
+    # (with the forest thinned there is more open ground: the ground's nodes a little further apart keep the piece within
+    # its share of path nodes, 150)
+    NODE_STEP = 288
+
+    def node(self, x, y, z):
+        # (no path node in the hollow before the leader's way out, nor on the ridge that hides it: the city's people walking
+        # there would give it away)
+        X, Y = x + self.ox, y + self.oy
+        if 8560 <= X <= 9520 and Y >= 4900 and z > 700:
+            return
+        Forest.node(self, x, y, z)
+
+    def exit_berm(self, x, y):
+        """The ground the leader's way out wants (the owner, 22 November: "I can see the secret tunnel exit even clearer,
+        and even from the lookout tower"): a ridge 910 high in front of the face of rock and up its east side, sides of 45
+        degrees, so the hole (828 to 908) is out of sight from the valley and from the bunker, and inside it a hollow at
+        the hole's sill (822) that opens west, the way the escapers go. Only ever raises the ground (natural takes the
+        highest)."""
+        X, Y = x + self.ox, y + self.oy
+        h = -1e9
+        x1, y1, x2, floor = self.EXIT_HOLLOW
+        if Y >= y1 and x1 <= X <= x2:
+            h = floor - max(0.0, x1 + 120 - X) * 0.3          # (easing down to the ground at its open west end)
+        d = path_dist(X, Y, self.EXIT_RIDGE)
+        return max(h, self.EXIT_RIDGE_TOP - max(0.0, d - 16))
 
     def extra_dirt(self, x, y):
         bx, by = self.B0
@@ -1144,7 +1206,7 @@ class BunkerForest(Forest):
         self.silo()
         self.dress()
         self.soundscapes()
-        self.lookout()
+        self.roof_fence()
         for model, x, y, yaw in (("models/props_c17/concrete_barrier001a.mdl", bx + 380, by - 110, 80), ("models/props_c17/concrete_barrier001a.mdl", bx + 920, by - 130, 100),
                                  ("models/props_vehicles/truck001a.mdl", bx + 300, by - 360, 35)):
             self.stand(model, x, y, self.natural(x, y), yaw, "structures", fade=(2800, 3400))
@@ -1369,92 +1431,58 @@ class BunkerForest(Forest):
         (640, -256, "zp", "canals_canal_nowater", 160),               # outside the door: the forest again
     )
 
-    LOOKOUT = (640, 176)       # the lookout's middle, in the bunker's own coordinates: on the roof over the room inside the door
-
-    def lookout(self):
-        """A timber lookout on the bunker's roof (the owner, 22 November: "can we also do something with the roof of the
-        bunker? either nodraw it or put something up there (a lookout tower or something maybe?)"). The roof is level with
-        the mound's top behind and stands out of the ground over the door, so players see it and walk onto it from the
-        hill: not nodraw. Over the room inside the door, looking down the trail to the pond, a tower in Episode Two's farm
-        timber (woodfloor005a, lesson "farm timber"): four posts 8 square, girts and a brace each side, a plank deck 192
-        over the roof with a rail round it, a pitched tin roof (34 degrees) over that; a metal ladder up its back to the
-        deck, set as the owner's own map sets its ladders (map_modules' ladder: metalladder002 props, a useable ladder
-        and its two dismounts)."""
-        v, W = self.vmf, self.plan.world
-        vis = self.vis("lookout on the bunker's roof")
-        wood, deck_m, tin = "wood/woodfloor005a", "wood/woodfloor007a", FMAT["office_ceiling"]
-        cx, cy = self.LOOKOUT
-        rz = self.zp + 272                 # the roof's top
-        dz = rz + 192                      # the deck's top
-        top = dz + 104                     # the posts' tops, under the roof
-        B = self.plan.box
-        boxes = []
-        for sx in (-1, 1):                 # the posts
-            for sy in (-1, 1):
-                px, py = cx + 64 * sx, cy + 64 * sy
-                boxes.append(B(px - 4, py - 4, rz, px + 4, py + 4, top))
-        for z1, z2, th in ((rz + 76, rz + 84, 4), (dz + 20, dz + 24, 4), (dz + 40, dz + 44, 4)):     # a girt, then the rail's two bars, round the four sides
-            for side in ("w", "e", "s", "n"):
-                if side in "we":
-                    x = cx - 64 if side == "w" else cx + 64
-                    boxes.append(B(x - th // 2, cy - 60, z1, x + th // 2, cy + 60, z2))
-                elif side == "s" or z1 < dz:
-                    y = cy - 64 if side == "s" else cy + 64
-                    boxes.append(B(cx - 60, y - th // 2, z1, cx + 60, y + th // 2, z2))
-                else:                      # (the rail's north side leaves a gap at the ladder)
-                    y = cy + 64
-                    boxes += [B(cx - 60, y - 2, z1, cx - 24, y + 2, z2), B(cx + 24, y - 2, z1, cx + 60, y + 2, z2)]
-        for y in (cy - 64, cy + 64):       # the deck's two beams, post to post, and the deck on them
-            boxes.append(B(cx - 60, y - 5, dz - 18, cx + 60, y + 5, dz - 8))
-        v.detail(boxes, wood, vis=vis)
-        v.detail([B(cx - 80, cy - 80, dz - 8, cx + 80, cy + 80, dz)], wood, vis=vis, top=deck_m)
-        shapes = []
-        for x in (cx - 64, cx + 64):       # a brace each side, from one post's foot to the other's girt
-            for (ya, yb) in ((cy - 60, cy + 60),):
-                lo = [(ya, rz + 2), (yb, rz + 74), (yb, rz + 86), (ya, rz + 14)]
-                ends = [[W(xx, yy, zz) for yy, zz in lo] for xx in sorted((x + 3 * (1 if x > cx else -1), x + 7 * (1 if x > cx else -1)))]      # (nailed on the outside: no face in a girt's plane)
-                sh = [(ends[0], wood), (ends[1][::-1], wood)]
-                for q in range(4):
-                    r = (q + 1) % 4
-                    sh.append(([ends[0][q], ends[0][r], ends[1][r], ends[1][q]], wood))
-                shapes.append(sh)
-        for y in (cy - 64, cy + 64):
-            for (xa, xb) in ((cx - 60, cx + 60),):
-                lo = [(xa, rz + 2), (xb, rz + 74), (xb, rz + 86), (xa, rz + 14)]
-                ends = [[W(xx, yy, zz) for xx, zz in lo] for yy in sorted((y + 3 * (1 if y > cy else -1), y + 7 * (1 if y > cy else -1)))]
-                sh = [(ends[0], wood), (ends[1][::-1], wood)]
-                for q in range(4):
-                    r = (q + 1) % 4
-                    sh.append(([ends[0][q], ends[0][r], ends[1][r], ends[1][q]], wood))
-                shapes.append(sh)
-        # the roof: two slopes of tin, 34 degrees, over a ridge along x (each 4 thick, out 16 past the posts)
-        half, rise = 88, 60                # (60 over 88: 34 degrees)
-        for sgn in (-1, 1):
-            e, r = cy + half * sgn, cy
-            bot = [W(cx - 88, e, top), W(cx + 88, e, top), W(cx + 88, r, top + rise), W(cx - 88, r, top + rise)]
-            upp = [(p[0], p[1], p[2] + 4) for p in bot]
-            sh = [(bot, tin), (upp[::-1], tin)]
-            for q in range(4):
-                rr = (q + 1) % 4
-                sh.append(([bot[q], bot[rr], upp[rr], upp[q]], tin))
-            shapes.append(sh)
-        v.detail_shapes(shapes, vis)
-        # the ladder up its back (north), as map_modules.ladder sets one: pieces of 128 to the deck, the top piece turned
-        # round, a useable ladder 28 out, a dismount 70 out at its foot and one 42 in on the deck
-        x, y = W(cx, cy + 80, 0)[:2]
-        z = rz
-        while z < dz:
-            v.point("prop_static", (x, y, z), {"model": "models/props_c17/metalladder002.mdl", "angles": "0 90 0", "skin": "0", "solid": "6", "fademindist": "-1",
-                                               "fadescale": "1"}, vis)
-            z += 128
-        v.point("prop_static", (x, y, dz), {"model": "models/props_c17/metalladder002b.mdl", "angles": "0 270 0", "skin": "0", "solid": "6", "fademindist": "-1",
-                                            "fadescale": "1"}, vis)
-        v.point("func_useableladder", (x, y + 28, rz + 130), {"point0": "%d %d %d" % (x, y + 28, rz + 4), "point1": "%d %d %d" % (x, y + 28, dz + 12),
-                                                              "spawnflags": "0", "StartDisabled": "0"}, vis)
-        v.point("info_ladder_dismount", (x, y + 70, rz + 1), {}, vis)
-        v.point("info_ladder_dismount", (x, y - 42, dz + 1), {}, vis)
-        self.notes.append("the lookout: a timber tower on the bunker's roof over its door, its deck at z %d (192 over the roof), a ladder up its back; the roof is reached "
-                          "on foot from the mound behind" % dz)
+    def roof_fence(self):
+        """The bunker's roof (the owner, 22 November: "please add fencing around the bunker roof perimeter, it just looks too
+        bare and remove the watchtower please. No one should walk on top of the bunker"): Episode Two's barbed fence as
+        White Forest's base has it at its gate (props_wasteland/exterior_fence002b to _e, 152 high, too high to jump),
+        standing all round the roof's edge, its outer side on the edge; and an unseen player clip over the whole roof from
+        its top to the sky, so nobody stands on it from the mound behind or from anywhere else. The roof is every brush of
+        the bunker's whose top is the roof's (zp + 272), read off the 64 grid, and its edge is where that runs out. The
+        timber lookout that stood on it (22 November) is gone."""
+        v, rz = self.vmf, self.zp + 272
+        vis = self.vis("bunker roof: its fence and clip")
+        roof = [b for b, _ in v.boxes if b[5] == rz and b[2] < rz]
+        cells = set()
+        for x1, y1, _, x2, y2, _ in roof:
+            for x in range(int(x1) // 64 * 64, int(x2), 64):
+                for y in range(int(y1) // 64 * 64, int(y2), 64):
+                    if x1 <= x and x + 64 <= x2 and y1 <= y and y + 64 <= y2:
+                        cells.add((x, y))
+        clip = "tools/toolsplayerclip"
+        for x1, y1, _, x2, y2, _ in roof:
+            v.world_box((x1, y1, rz, x2, y2, self.lid), clip, top=clip, bottom=clip, vis=vis, seals=False)
+        # the edge, as runs along x and along y; each side of a cell with no roof beyond it is a piece of edge
+        edges = {}
+        for (x, y) in cells:
+            for (dx, dy, key) in ((0, -1, ("s", y)), (0, 1, ("n", y + 64)), (-1, 0, ("w", x)), (1, 0, ("e", x + 64))):
+                if (x + 64 * dx, y + 64 * dy) not in cells:
+                    edges.setdefault(key, []).append(x if dx == 0 else y)
+        pieces = ((512, "e"), (256, "d"), (128, "c"), (64, "b"))
+        n = 0
+        for (side, at), starts in sorted(edges.items()):
+            starts.sort()
+            runs, a0 = [], starts[0]
+            for k in range(1, len(starts) + 1):
+                if k == len(starts) or starts[k] != starts[k - 1] + 64:
+                    runs.append((a0, starts[k - 1] + 64))
+                    if k < len(starts):
+                        a0 = starts[k]
+            inward = {"s": 13, "n": -13, "w": 13, "e": -13}[side]
+            for r1, r2 in runs:
+                pos = r1
+                while pos < r2:
+                    length, tag = next((L, t) for L, t in pieces if L <= r2 - pos) if r2 - pos >= 64 else (64, "b")
+                    mid = pos + length / 2.0
+                    if side in "sn":
+                        at_xy, yaw = (mid, at + inward), 90
+                    else:
+                        at_xy, yaw = (at + inward, mid), 0
+                    v.point("prop_static", (int(round(at_xy[0])), int(round(at_xy[1])), rz + 76), {
+                        "model": "models/props_wasteland/exterior_fence002%s.mdl" % tag, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6",
+                        "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+                    n += 1
+                    pos += length
+        self.notes.append("the bunker's roof: %d lengths of barbed fence round its edge, a player clip over all of it (nobody stands on it); no lookout" % n)
 
     def soundscapes(self):
         v, W = self.vmf, self.plan.world
@@ -1513,6 +1541,10 @@ class BunkerForest(Forest):
                 a, b, m = u1 + 16, u2 - 16, (v1 + v2) // 2
                 leaf, at, yaw, movedir = B(a, m - 2, z - 4, b, m + 2, z + 120), W((a + b) // 2, m, z), 0, 0 if slide > 0 else 180
                 pad = (W(u1 - 12 if slide > 0 else u2 + 12, v1 - 1, z + 52), 270) if room > 0 else (W(u1 - 12 if slide > 0 else u2 + 12, v2 + 1, z + 52), 90)
+            # (the model's lever and handle are on its own +x side: it faces away from the way it slides, so they trail and stay
+            # in the doorway, as on Valve's lab door. The owner, 22 November, of the deep level's door before the stairs to the
+            # silo, the one that slid toward its own +x: "opens the wrong direction".)
+            yaw = (movedir + 180) % 360
             name = "lc_bunker_room_door_%d" % (k + 1)
             v.brush_entity("func_door", dict(self.SILO_DOOR, **{
                 "targetname": name, "movedir": "0 %d 0" % movedir, "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0",
@@ -1623,67 +1655,71 @@ class BunkerForest(Forest):
                     sh.append((quad, self.TRUSS if q == 1 else MAT["nodraw"]))      # (the slope, from the head's corner to the jamb's, faces the opening)
                 shapes.append(sh)
 
-    DOOR_SPEED = 6      # the main door's leaves, degrees a second: Valve's own (60 degrees in 10 s)
+    DOOR_SPEED = 6      # the silo's blast door's leaves, degrees a second: Valve's own (60 degrees in 10 s)
+    FLAT_SPEED = 16     # the bunker door's two flat leaves, units a second: each slides 128, so 8 s
+    FLAT_SCALE = 0.654  # Silo 2's leaves drawn at this size: 136 along the wall each, 216 high, 19 thick
+
+    def shove(self, name, parts, vis):
+        """No door here kills or crushes (the owner, 22 November: "the silo doors should not violently kill people, they just
+        need to shove people back a bit so they don't get stuck AT THE CLOSE, not during the entire closing sequence"):
+        unseen trigger_pushes (`name`) across a doorway, off but for the door's last moments of closing (the wiring turns
+        them on and off), each pushing whoever (players, NPCs, loose things) is in it away from the door's plane on its
+        side. parts: (box, the way it pushes as a yaw, speed). The two sides push unequally, so that whoever stands across
+        the plane goes one way, not nowhere."""
+        for box, yaw, speed in parts:
+            self.vmf.brush_entity("trigger_push", {"targetname": name, "StartDisabled": "1", "spawnflags": "11", "pushdir": "0 %d 0" % yaw, "speed": str(speed),
+                                                   "alternateticksfix": "0"}, [box], MAT["trigger"], vis)
 
     def door(self):
-        """The bunker's door: White Forest's round blast door (the owner, 21 November: "the bunker/silo doors for whiteforest
-        from EP2"), lifted from ep2_outland_11 as the piece valve_ep2_bunker_door: the doors that shut the silo's west
-        tunnel in Valve's map. A drum of concrete and steel 224 wide: its lower 160 is two leaves hinged at the inside that
-        swing 60 degrees outward at Valve's 6 a second (10 s), with a lock bar in the floor that drops first and rises again
-        once they are shut, and Valve's start, loop and end sounds; its top 32 is the drum's fixed head. They stand open.
-        A button inside shuts them (a klaxon, a steady red light, the swing, a boom, a shake) and opens them again; nothing
-        outside does (the owner, 19 November: "only be opened from the inside"). Each leaf is a func_rot_button used as a
-        mover (PressIn swings it open, PressOut shut; with no flags neither Use, touch nor a shot moves it) and the bar a
-        func_button, so none of it is a door to the gamemode, whose door rules (kicks, lockpicks, NPCs opening doors) apply
-        to func_door, func_door_rotating, func_movelinear and prop_door_rotating: only this wiring moves it. Nothing stops
-        it (crusher). If the bunker is left shut with nobody inside, it opens itself after twenty seconds."""
+        """The bunker's door from the forest: flat doors that close, copied from the ones over the top of Silo 2 in Episode
+        Two (the owner, 22 November: "the entrance to the bunker needs it's own flat doors that close (same as the ones at
+        the top of the silo 2 in EP2)"): the piece valve_ep2_silo2_doors, Valve's two leaves (missile_doors.mdl) that lie
+        flat over that silo and slide together, stood upright here as a sliding pair in the 256 by 192 doorway, drawn at
+        FLAT_SCALE (each 136 along the wall: 8 into the jamb, meeting the other in the middle; 216 high, its top in the
+        lintel), each carried by an unseen func_button (a mover only the wiring moves: PressIn slides it 128 into the front
+        wall, PressOut back), with Valve's sounds (launchdoors_close_start, its loop and its end). They stand open. A button
+        inside shuts them (a klaxon, a steady red light, the slide) and opens them again; nothing outside does (the owner,
+        19 November: "only be opened from the inside"). Nothing kills: in the last moments of the close a shove (shove())
+        pushes whoever is in the doorway out of it, in or out. If the bunker is left shut with nobody inside, it opens itself
+        after twenty seconds. White Forest's round blast door that stood here first is the silo's door now (silo_door())."""
         v, plan, zp = self.vmf, self.plan, self.zp
         B, W = plan.box, plan.world
-        vis, dv = self.vis("structures"), self.vis("bunker door (the leaves, the button, the wiring)")
+        dv = self.vis("bunker door (the leaves, the button, the wiring)")
         u1, u2 = self.DOOR
         mid, top = (u1 + u2) // 2, zp + 192
-        pf = PF.load("valve_ep2_bunker_door")
-        q, d = 1, W(mid, 32, zp)         # Valve's outside (west) to ours (south); the drum's face on the front wall's face
-        half = int(pf["size"][1]) // 2
-        pf_solids(v, pf, q, d, vis)      # the drum's head, its jambs and hinge posts (detail)
-        for a, b in ((u1, mid - half), (mid + half, u2)):      # the doorway filled to the drum each side (world: the areaportal's edges)
-            wf_box(v, B(a, 0, zp, b, 64, top), {k: wf_face(k, zp, zp, top) for k in ("east", "west", "north", "south")}, vis)
-        travel = 60.0 / self.DOOR_SPEED
-        for w in pf["wiring"]:
-            if w["classname"] != "func_door_rotating":
-                continue
-            south = w["origin"][1] < 0
-            name = "lc_bunker_door_" + ("east" if south else "west")      # (turned, Valve's south leaf is our east one)
-            pf_brush_entity(v, "func_rot_button", {
-                "targetname": name, "angles": "0 0 0", "distance": "60", "speed": str(self.DOOR_SPEED), "wait": "-1", "lip": "0",
-                "spawnflags": str(int(w["keys"]["spawnflags"]) & 2), "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0",
-                "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0", "disableshadows": "0"},
-                w["brushes"], q, d, dv, origin=pf_point(w["origin"], q, d))
-            # (nothing stops it: the crusher rides the leaf over its own swing and the drum's inside, from its face to 16 past its hinge)
-            c = [pf_point(p, q, d) for p in ((-32, -80 if south else 0, 0), (44, 0 if south else 80, 160))]
-            crusher(v, name, tuple(int(min(c[0][k], c[1][k])) for k in range(3)) + tuple(int(max(c[0][k], c[1][k])) for k in range(3)), dv, "lc_bunker_crush")
-            if south:
-                lock = [x for x in pf["wiring"] if x["keys"].get("targetname") == "doorlock_biground_1"][0]
-                dl = (d[0], d[1], d[2] - 1)      # (sunk 1 into the floor: only its pins show, and no face lies in the floor's plane)
-                pf_brush_entity(v, "func_button", {
-                    "targetname": "lc_bunker_lock", "movedir": "90 0 0", "speed": "100", "lip": "0", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
-                    "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
-                    "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, lock["brushes"], q, dl, dv, origin=pf_point(lock["origin"], q, dl))
-        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv,
-                connections=[("OnMapSpawn", "lc_bunker_lock", "PressIn", "", 0.4), ("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
-        # an areaportal across the doorway, shut with the leaves, so the bunker is not drawn from outside nor the forest from
-        # inside. It stands across the leaves' own swing: a shut door is only drawn from both sides if it is on both sides
-        # of its areaportal (the owner, of the first sliding door, which had it behind them: "when they close they become invisible").
-        portal = B(mid - half, 31, zp, mid + half, 33, top)
+        pf = PF.load("valve_ep2_silo2_doors")
+        sc = self.FLAT_SCALE
+        half = int(round(104 * sc))                      # (68: half a leaf along the wall)
+        travel = 128.0 / self.FLAT_SPEED
+        model = [p for p in pf["points"] if p["keys"].get("model", "").endswith("missile_doors.mdl")][0]["keys"]
+        e0, e1 = W(0, 0, 0), W(1, 0, 0)
+        east = int(round(math.degrees(math.atan2(e1[1] - e0[1], e1[0] - e0[0])))) % 360       # (the bunker's +u in the map)
+        for tag, (a, b), way, roll in (("west", (u1 - 8, mid), -1, -90), ("east", (mid, u2 + 8), 1, 90)):
+            name = "lc_bunker_door_" + tag
+            yaw = (east + (0 if way > 0 else 180)) % 360        # (the model's own +x away from the middle: its meeting edge is its -x, as in Valve's)
+            v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % yaw, "speed": str(self.FLAT_SPEED), "lip": "8", "wait": "-1", "spawnflags": "0",
+                                           "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
+                           [B(a, 24, zp, b, 40, top)], MAT["nodraw"], dv)
+            keys = {k: model[k] for k in ("model", "skin", "MinAnimTime", "MaxAnimTime", "RandomAnimation", "SetBodyGroup", "PerformanceMode", "pressuredelay",
+                                          "ExplodeDamage", "ExplodeRadius") if k in model}
+            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1",
+                         "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "modelscale": str(sc), "StartDisabled": "0", "renderamt": "255",
+                         "rendercolor": "255 255 255"})
+            v.point("prop_dynamic", W((a + b) // 2 if way > 0 else (a + b) // 2, 32, zp + int(round(164.8 * sc))), keys, dv)
+        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
+        # an areaportal across the doorway, in the leaves' plane, shut with them, so the bunker is not drawn from outside
+        # nor the forest from inside (a shut door is only drawn from both sides if it is on both sides of its areaportal)
+        portal = B(u1, 31, zp, u2, 33, top)
         self.vmf.portals.append(portal)
         v.brush_entity("func_areaportal", {"targetname": "lc_bunker_portal", "StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
-        # a floor plate 1 thick over the doorway's whole floor, across the areaportal's plane: a detail face belongs to every
-        # leaf it touches, so it is drawn from both sides of the shut portal (the owner: with the door shut, "a gap at the
-        # leaves' foot" showed the forest ground, because the floor between the leaves and the portal was the outside's
-        # and was not drawn from inside). The portal still meets the world's floor under it on its bottom edge.
-        v.detail([B(mid - half, 0, zp, mid + half, 64, zp + 1)], FMAT["wf_floor"], vis=vis)
+        # a floor plate 1 thick over the doorway's whole floor, across the areaportal's plane (a detail face belongs to every
+        # leaf it touches, so it is drawn from both sides of the shut portal: with it, no gap shows at the leaves' foot)
+        v.detail([B(u1, 0, zp, u2, 64, zp + 1)], FMAT["wf_floor"], vis=self.vis("structures"))
+        v.keep_way_clear(B(u1, -48, zp + 4, u2, 20, zp + 110), "the bunker's doorway (outside the leaves)")     # (the leaves' own plane is theirs)
+        v.keep_way_clear(B(u1, 44, zp + 4, u2, 112, zp + 110), "the bunker's doorway (inside the leaves)")
+        # the shove at the close: outside the leaves pushing out, inside pushing in (harder)
+        self.shove("lc_bunker_shove", [(B(u1, 0, zp, u2, 32, zp + 160), (east + 270) % 360, 200), (B(u1, 32, zp, u2, 64, zp + 160), (east + 90) % 360, 300)], dv)
 
-        # sounds (Valve's blast door's own, and the klaxon and groan the owner heard), the red light, the shake
         def sound(name, message, at, loops=False):
             # (spawnflags: 16 starts silent, 32 says "not looped". A sound that loops must NOT have 32: with it the entity
             #  never counts the sound as playing, so StopSound does nothing. The owner: "the closing sound NEVER STOPS".)
@@ -1693,29 +1729,23 @@ class BunkerForest(Forest):
                                             "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, dv)
         at = W(mid, 32, zp + 96)
         sound("lc_bunker_alarm", "ambient/alarms/klaxon1.wav", W(mid, 100, zp + 170))
-        sound("lc_bunker_start", "ep2_outland_11.blastdoors_open_start", at)
-        sound("lc_bunker_move", "ep2_outland_11.blastdoors_open_loop", at, loops=True)
-        sound("lc_bunker_stop", "ep2_outland_11.blastdoors_open_end", at)
-        sound("lc_bunker_slam", "ep2_outland_11.blastdoors_close_end", at)
-        sound("lc_bunker_groan", "ambient/materials/metal_stress4.wav", at)
+        sound("lc_bunker_start", "ep2_outland_11.launchdoors_close_start", at)
+        sound("lc_bunker_move", "ep2_outland_11.launchdoors_close_loop", at, loops=True)
+        sound("lc_bunker_stop", "ep2_outland_11.launchdoors_close_end", at)
         for pos in (W(mid, -28, zp + 240), W(mid, 150, zp + 190)):
             v.point("light", pos, {"targetname": "lc_bunker_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
                                    "style": "0"}, dv)
-        v.point("env_shake", at, {"targetname": "lc_bunker_shake", "amplitude": "7", "radius": "900", "duration": "1.6", "frequency": "40", "spawnflags": "0"}, dv)
-        # the wiring. Shutting: klaxon and light at once, the leaves start a second later and swing for `travel` seconds,
-        # then the boom, the groan, the shake, the bar rises and the areaportal shuts.
+        # the wiring. Shutting: klaxon and light at once, the leaves start a second later and slide for `travel` seconds;
+        # the shove for the last 0.6 s and 0.3 after; the end sound and the areaportal as they meet.
         end = 1 + travel
         shut = [("OnTrigger", "lc_bunker_close", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0)]
         shut += [("OnTrigger", "lc_bunker_alarm", "PlaySound", "", round(1.7 * k, 1)) for k in range(int(end / 1.7) + 1)]
-        shut += [("OnTrigger", "lc_bunker_door_*", "PressOut", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
-                 ("OnTrigger", "lc_bunker_crush", "Enable", "", 1), ("OnTrigger", "lc_bunker_crush", "Disable", "", end + 0.3),
-                 ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", end), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", end + 0.1),
-                 ("OnTrigger", "lc_bunker_shake", "StartShake", "", end), ("OnTrigger", "lc_bunker_lock", "PressOut", "", end), ("OnTrigger", "lc_bunker_portal", "Close", "", end + 0.2),
+        shut += [("OnTrigger", "lc_bunker_door_*", "PressOut", "", 1), ("OnTrigger", "lc_bunker_start", "PlaySound", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1.5),
+                 ("OnTrigger", "lc_bunker_shove", "Enable", "", end - 0.6), ("OnTrigger", "lc_bunker_shove", "Disable", "", end + 0.3),
+                 ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end), ("OnTrigger", "lc_bunker_portal", "Close", "", end + 0.2),
                  ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 2.5), ("OnTrigger", "lc_bunker_open", "Enable", "", end + 2)]
-        # Opening: the bar drops first (Valve's), the start sound, the leaves a second later, the end sound as they stop.
-        unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 0),
-                  ("OnTrigger", "lc_bunker_lock", "PressIn", "", 0), ("OnTrigger", "lc_bunker_start", "PlaySound", "", 0),
-                  ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door_*", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+        unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0), ("OnTrigger", "lc_bunker_start", "PlaySound", "", 0),
+                  ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door_*", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1.5),
                   ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end), ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 1),
                   ("OnTrigger", "lc_bunker_close", "Enable", "", end + 2)]
         relay = W(mid, 200, zp + 120)
@@ -1744,6 +1774,99 @@ class BunkerForest(Forest):
         v.point("logic_relay", (relay[0] + 32, relay[1], relay[2]), {"targetname": "lc_bunker_empty", "StartDisabled": "0", "spawnflags": "0"}, fv,
                 connections=[("OnTrigger", "lc_bunker_inside", "TouchTest", "", 20)])
         self.inside_boxes = inside
+
+    def silo_door(self):
+        """White Forest's round blast door (the piece valve_ep2_bunker_door) at the actual entrance of the silo (the owner,
+        22 November: "the silo doors at the entrance to the bunker need to be moved to the actual entrance to the silo"):
+        where it stood in Valve's own map, at the mouth of the silo's west tunnel (x -564 of the silo piece), the drum in
+        the hull's thickness at the end of the corridor from the bunker (widened there to 256 and 192 high: bunker()), and
+        turned half round from Valve's so that its leaves swing into the silo's tunnel, where there is room (on the
+        corridor's side are the last steps). A drum of concrete and steel 224 wide: its lower 160 two leaves hinged on the
+        corridor's side that swing 60 degrees at Valve's 6 a second (10 s), a lock bar in the floor, Valve's start, loop and
+        end sounds. It stands open. An inner door: a button each side (the corridor's east wall, the silo tunnel's east
+        wall) shuts it and opens it again for whoever is on either side, with a klaxon and a steady red light. Each leaf is a
+        func_rot_button used as a mover, so none of it is a door to the gamemode. Nothing kills: in the last moments of the
+        close a shove (shove()) pushes whoever is in the doorway out of it. Its own areaportal, lc_silo_blast_portal, in the
+        leaves' swing, shuts with it: the bunker's areaportal still parts the bunker from the forest, this one the silo
+        from the bunker, the secret panel's the silo from the way out."""
+        v = self.vmf
+        sx, sy, sz = self.silo_at
+        zg = self.zg
+        vis, dv = self.vis("structures"), self.vis("silo door (the leaves, the buttons, the wiring)")
+        pf = PF.load("valve_ep2_bunker_door")
+        q, d = 3, (sx, sy - 564, zg)
+        half = int(pf["size"][1]) // 2       # (112)
+        top = zg + 192
+        y0, y1 = sy - 608, sy - 544            # (the corridor's last 64, in the hull's thickness)
+        pf_solids(v, pf, q, d, vis)            # the drum's head, its jambs and hinge posts (detail)
+        for a, b in ((sx - 128, sx - half), (sx + half, sx + 128)):      # the doorway filled to the drum each side (world: the areaportal's edges)
+            wf_box(v, (a, y0, zg, b, y1, top), {k: wf_face(k, zg, zg, top) for k in ("east", "west", "north", "south")}, vis)
+        travel = 60.0 / self.DOOR_SPEED
+        for w in pf["wiring"]:
+            if w["classname"] != "func_door_rotating":
+                continue
+            south = w["origin"][1] < 0
+            name = "lc_silo_blast_leaf_" + ("a" if south else "b")
+            pf_brush_entity(v, "func_rot_button", {
+                "targetname": name, "angles": "0 0 0", "distance": "60", "speed": str(self.DOOR_SPEED), "wait": "-1", "lip": "0",
+                "spawnflags": str(int(w["keys"]["spawnflags"]) & 2), "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0",
+                "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0", "disableshadows": "0"},
+                w["brushes"], q, d, dv, origin=pf_point(w["origin"], q, d))
+            if south:
+                lock = [x for x in pf["wiring"] if x["keys"].get("targetname") == "doorlock_biground_1"][0]
+                dl = (d[0], d[1], d[2] - 1)      # (sunk 1 into the floor: only its pins show, and no face lies in the floor's plane)
+                pf_brush_entity(v, "func_button", {
+                    "targetname": "lc_silo_blast_lock", "movedir": "90 0 0", "speed": "100", "lip": "0", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
+                    "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
+                    "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, lock["brushes"], q, dl, dv, origin=pf_point(lock["origin"], q, dl))
+        v.point("logic_auto", (sx, sy - 700, zg + 150), {"spawnflags": "1"}, dv,
+                connections=[("OnMapSpawn", "lc_silo_blast_lock", "PressIn", "", 0.4), ("OnMapSpawn", "lc_silo_blast_leaf*", "PressIn", "", 0.5)])
+        portal = (sx - half, sy - 565, zg, sx + half, sy - 563, top)
+        v.portals.append(portal)
+        v.brush_entity("func_areaportal", {"targetname": "lc_silo_blast_portal", "StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
+        v.detail([(sx - half, sy - 600, zg, sx + half, sy - 528, zg + 1)], FMAT["wf_floor"], vis=vis)
+        v.keep_way_clear((sx - 64, sy - 680, zg + 4, sx + 64, sy - 460, zg + 110), "the silo's door")
+        self.shove("lc_silo_blast_shove", [((sx - half, sy - 620, zg, sx + half, sy - 564, zg + 160), 270, 200), ((sx - half, sy - 564, zg, sx + half, sy - 508, zg + 160), 90, 300)], dv)
+
+        def sound(name, message, at, loops=False):
+            v.point("ambient_generic", at, {"targetname": name, "message": message, "health": "10", "pitch": "100", "pitchstart": "100", "radius": "2200",
+                                            "spawnflags": "16" if loops else "48",
+                                            "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0",
+                                            "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, dv)
+        at = (sx, sy - 564, zg + 96)
+        sound("lc_silo_blast_alarm", "ambient/alarms/klaxon1.wav", (sx, sy - 660, zg + 150))
+        sound("lc_silo_blast_start", "ep2_outland_11.blastdoors_open_start", at)
+        sound("lc_silo_blast_move", "ep2_outland_11.blastdoors_open_loop", at, loops=True)
+        sound("lc_silo_blast_stop", "ep2_outland_11.blastdoors_open_end", at)
+        sound("lc_silo_blast_slam", "ep2_outland_11.blastdoors_close_end", at)
+        sound("lc_silo_blast_groan", "ambient/materials/metal_stress4.wav", at)
+        for pos in ((sx, sy - 640, zg + 150), (sx, sy - 480, zg + 150)):
+            v.point("light", pos, {"targetname": "lc_silo_blast_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
+                                   "style": "0"}, dv)
+        v.point("env_shake", at, {"targetname": "lc_silo_blast_shake", "amplitude": "5", "radius": "700", "duration": "1.6", "frequency": "40", "spawnflags": "0"}, dv)
+        end = 1 + travel
+        shut = [("OnTrigger", "lc_silo_blast_close", "Disable", "", 0), ("OnTrigger", "lc_silo_blast_light", "TurnOn", "", 0)]
+        shut += [("OnTrigger", "lc_silo_blast_alarm", "PlaySound", "", round(1.7 * k, 1)) for k in range(int(end / 1.7) + 1)]
+        shut += [("OnTrigger", "lc_silo_blast_leaf*", "PressOut", "", 1), ("OnTrigger", "lc_silo_blast_move", "PlaySound", "", 1),
+                 ("OnTrigger", "lc_silo_blast_shove", "Enable", "", end - 0.6), ("OnTrigger", "lc_silo_blast_shove", "Disable", "", end + 0.3),
+                 ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_slam", "PlaySound", "", end),
+                 ("OnTrigger", "lc_silo_blast_groan", "PlaySound", "", end + 0.1), ("OnTrigger", "lc_silo_blast_shake", "StartShake", "", end),
+                 ("OnTrigger", "lc_silo_blast_lock", "PressOut", "", end), ("OnTrigger", "lc_silo_blast_portal", "Close", "", end + 0.2),
+                 ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 2.5), ("OnTrigger", "lc_silo_blast_open", "Enable", "", end + 2)]
+        unshut = [("OnTrigger", "lc_silo_blast_open", "Disable", "", 0), ("OnTrigger", "lc_silo_blast_light", "TurnOn", "", 0),
+                  ("OnTrigger", "lc_silo_blast_groan", "PlaySound", "", 0), ("OnTrigger", "lc_silo_blast_lock", "PressIn", "", 0),
+                  ("OnTrigger", "lc_silo_blast_start", "PlaySound", "", 0), ("OnTrigger", "lc_silo_blast_portal", "Open", "", 0.9),
+                  ("OnTrigger", "lc_silo_blast_leaf*", "PressIn", "", 1), ("OnTrigger", "lc_silo_blast_move", "PlaySound", "", 1),
+                  ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_stop", "PlaySound", "", end),
+                  ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 1), ("OnTrigger", "lc_silo_blast_close", "Enable", "", end + 2)]
+        relay = (sx + 16, sy - 700, zg + 120)
+        v.point("logic_relay", relay, {"targetname": "lc_silo_blast_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
+        v.point("logic_relay", (relay[0] + 16, relay[1], relay[2]), {"targetname": "lc_silo_blast_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
+        press = [("OnPressed", "lc_silo_blast_close", "Trigger", "", 0), ("OnPressed", "lc_silo_blast_open", "Trigger", "", 0)]
+        # the buttons: on the corridor's east wall by its last step, and on the silo tunnel's east wall past the leaves
+        wall_button(v, (sx + 64, sy - 620, zg + 40), 180, "lc_silo_blast_button_corridor", (sx + 54, sy - 630, zg + 36, sx + 64, sy - 610, zg + 64), dv, press, "9")
+        wall_button(v, (sx + 126, sy - 470, zg + 32), 180, "lc_silo_blast_button_silo", (sx + 116, sy - 480, zg + 28, sx + 126, sy - 460, zg + 56), dv, press, "9")
+        self.notes.append("the silo's door: White Forest's round blast door at the mouth of the silo's tunnel, a button each side, its own areaportal")
 
     def silo_inside(self):
         """The silo's whole inside (the hull's inner faces: 1088 square round the shaft's axis, from 64 under the pit floor
@@ -1866,7 +1989,7 @@ class BunkerForest(Forest):
                                "exit_airlock_rope_1_2": [276, 290, 442], "exit_airlock_rope_2_2": [270, 290, 442],
                                "exit_airlock_rope_1_3": [196, 290, 442], "exit_airlock_rope_2_3": [196, 290, 438]}.get(tn, e["origin"])
             if tn == "door_silo_lab_outside_1":     # (the Resistance leader's office: Use opens and shuts it, as the bunker's doors)
-                k.update({"spawnflags": str(int(k["spawnflags"]) | 256), "wait": "-1", "locked_sound": "DoorHandles.Locked2"})
+                k.update({"spawnflags": str(int(k["spawnflags"]) | 256), "wait": "-1", "locked_sound": "DoorHandles.Locked2", "forceclosed": "0", "dmg": "0"})
                 e["out"] = [("OnOpen", "prop_door_silo_lab_outside_1", "SetAnimation", "unlock", 0), ("OnFullyClosed", "prop_door_silo_lab_outside_1", "SetAnimation", "lock", 0)]
             if tn == "exit_airlock_blastdoor_lever":     # (a lever, not a door to the gamemode: pulled, it shuts and locks the door; pushed back, unlocks it)
                 e["classname"] = "func_rot_button"
@@ -1886,7 +2009,7 @@ class BunkerForest(Forest):
                 k["StartDisabled"] = "1"
             if tn == "lift_door_2_b":      # (a mover only the wiring moves, not a door to the gamemode)
                 e["classname"] = "func_button"
-                k.update({"spawnflags": "0", "wait": "-1", "sounds": "0", "health": "0"})
+                k.update({"spawnflags": "0", "wait": "-1", "sounds": "0", "health": "0", "dmg": "0", "forceclosed": "0"})      # (no harm: Valve's dmg 10 is gone)
         extra = self.lift() + [{"classname": "ambient_generic", "origin": [261, 300, 384], "keys": {
             "targetname": "lab_lever_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100", "pitchstart": "100", "radius": "1250", "spawnflags": "48"}}]
         pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
@@ -1918,6 +2041,7 @@ class BunkerForest(Forest):
         ms.lights()
         ms.soundscapes()
         ms.escape()
+        self.silo_door()
         self.notes.append("the silo made playable: %d nodraw faces players now see finished; the pit covered at the bottom level; level B's two doors; "
                           "the leader's office (Valve's lever, its recess and its box inside) and bedroom; the fence gate swings; one soundscape for the shaft" % finished)
         for dz in (1408 + 64, 322 + 64):
@@ -1950,7 +2074,7 @@ class BunkerForest(Forest):
         v.world_box((x1 - T, y1 - T, z1 - T, x2 + T, y2 + T, z1), nd, top=cw, vis=hv)
         v.world_box((x1 - T, y1 - T, z2, x2 + T, y2 + T, roof), nd, bottom=cw, vis=hv)
         for b in MS.split_box((x1 - T, y1, z1, x1, y2, z2), MS.HULL_HOLE):     # (the leader's way out passes it: map_silo.py)
-            v.world_box(b, cw, vis=hv)
+            v.world_box(b, cw, top=cw, bottom=cw, vis=hv)       # (the squeeze's hole through it: concrete floor and roof too, not nodraw)
         v.world_box((x2, y1, z1, x2 + T, y2, z2), nd, faces={"west": cw}, vis=hv)
         v.world_box((x1 - T, y2, z1, x2 + T, y2 + T, z2), nd, faces={"south": cw}, vis=hv)
         cx1, cx2, cz = ax - 128, ax + 128, self.zg - 64      # (the corridor's end and its walls fill the south wall's middle)
