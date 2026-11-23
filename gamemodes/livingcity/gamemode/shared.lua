@@ -148,6 +148,7 @@ LC_MODULES = {
         "sv_livingcity_progress",
         "sv_livingcity_march", -- (after prison: arrested by a unit NPC, you're walked to the cells)
         "sv_livingcity_arrest", -- (after march: the baton's arrests, struggles, and walking prisoners in)
+        "sv_livingcity_lipsync", -- (mouths that move with the recorded voices; before the voices' folders are read)
         "sv_livingcity_propaganda",
         "sv_livingcity_announcer", -- (after propaganda: it borrows the Administrator's speakers)
         "sv_livingcity_quests",
@@ -358,7 +359,6 @@ LC_MODULES = {
         "cl_livingcity_kick",
         "cl_livingcity_arrest", -- (the struggle bar when someone resists arrest)
         "cl_livingcity_cremator", -- (the Cremator's flame)
-        "cl_livingcity_lipsync", -- (mouths that move with the recorded voices)
         "cl_livingcity_vortcharge", -- (a vortigaunt charging a vest: the green beam from its hand)
         "cl_livingcity_dragrope", -- (the rope a stalker tows a body on)
         "cl_livingcity_fmenus", -- (F3 and F4: each one's key shuts the other's window and opens its own)

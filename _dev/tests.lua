@@ -44454,6 +44454,111 @@ function Nov22_HQTests()
 end
 Nov22_HQTests()
 
+function Nov23_LipSyncTests() -- (the owner, 23 November: "I REALLY need you to engineer a solution to NPCs not lip syncing")
+    section("23 November: lip sync: a recording's own phoneme track is left to the game; else the server works the jaw with its loudness")
+    local function U32(n) return string.char(n % 256, math.floor(n / 256) % 256, math.floor(n / 65536) % 256, math.floor(n / 16777216) % 256) end
+    local function U16(n) return string.char(n % 256, math.floor(n / 256) % 256) end
+    -- a .wav: 0.3 s quiet, 0.4 s loud, 0.3 s quiet (22050 Hz, 16-bit, mono), with or without a phoneme track
+    local function Wav(track)
+        local rate, parts = 22050, {}
+        for i = 1, rate do
+            local t = i / rate
+            local v = (t > 0.3 and t < 0.7) and math.floor(12000 * math.sin(i * 0.05)) or 0
+            if v < 0 then v = v + 65536 end
+            parts[#parts + 1] = U16(v)
+        end
+        local pcm = table.concat(parts)
+        local body = "WAVE" .. "fmt " .. U32(16) .. U16(1) .. U16(1) .. U32(rate) .. U32(rate * 2) .. U16(2) .. U16(16)
+            .. "data" .. U32(#pcm) .. pcm
+        if track then body = body .. "VDAT" .. U32(#track) .. track .. ((#track % 2 == 1) and "\0" or "") end
+        return "RIFF" .. U32(#body) .. body
+    end
+    _files["sound/livingcity/citizens/lstest_hi_male1.wav"] = Wav(nil)
+    _files["sound/livingcity/citizens/lstest_baked_male1.wav"] = Wav("VERSION 1.0\nPLAINTEXT\n{\nhi\n}\nWORDS\n{\n}\n")
+    LC.LipSyncForget()
+    local v = LC.LipSyncVoice("livingcity/citizens/lstest_hi_male1.wav")
+    ok(v and not v.phonemes and v.env and #v.env >= 45, "a plain .wav: no track, its loudness read every 20 ms", v and v.env and #v.env)
+    local env = v and v.env or {}
+    ok(LC.LipSyncLevel(env, 0.1) < 0.1 and LC.LipSyncLevel(env, 0.5) > 0.8 and LC.LipSyncLevel(env, 0.85) < 0.1,
+        "quiet where it is quiet, loud where it is loud", string.format("%.2f %.2f %.2f", LC.LipSyncLevel(env, 0.1), LC.LipSyncLevel(env, 0.5), LC.LipSyncLevel(env, 0.85)))
+    local b = LC.LipSyncVoice(")sound/livingcity/citizens/lstest_baked_male1.wav")
+    ok(b and b.phonemes == true, "a .wav with Faceposer's track (lipsync_bake.py) is known as one (the marks in front of a name ignored)")
+
+    -- an .mp3: frames whose gains say loud, then frames coded as silence
+    local function Frame(loud)
+        local bytes = { 0xFF, 0xFB, 0x90, 0xC4 } -- (MPEG-1 layer III, 128 kbps, 44.1 kHz, mono: 417 bytes)
+        for i = 5, 417 do bytes[i] = 0 end
+        local function Put(off, n, val) -- side info starts at byte 5
+            for k = n - 1, 0, -1 do
+                local bitAt = off + (n - 1 - k)
+                local idx = 5 + math.floor(bitAt / 8)
+                if math.floor(val / 2 ^ k) % 2 == 1 then bytes[idx] = bytes[idx] + 2 ^ (7 - bitAt % 8) end
+            end
+        end
+        for g = 0, 1 do
+            local off = 18 + g * 59
+            if loud then Put(off, 12, 900) Put(off + 12, 9, 200) Put(off + 21, 8, 170) end
+        end
+        local s = {}
+        for i, x in ipairs(bytes) do s[i] = string.char(x) end
+        return table.concat(s)
+    end
+    local mp3 = {}
+    for i = 1, 40 do mp3[i] = Frame(i > 10 and i <= 25) end -- (26 ms a frame: loud from about 0.26 s to 0.65 s)
+    _files["sound/livingcity/citizens/lstest_mp_male1.mp3"] = table.concat(mp3)
+    local lv = LC.LipSyncMp3Levels(_files["sound/livingcity/citizens/lstest_mp_male1.mp3"])
+    ok(#lv == 80 and lv[1][2] < 0 and lv[30][2] > 0, "an .mp3's frames are read without decoding it (two pieces a frame, silence known)", #lv)
+    local m = LC.LipSyncVoice("livingcity/citizens/lstest_mp_male1.mp3")
+    local me = m and m.env or {}
+    ok(LC.LipSyncLevel(me, 0.1) < 0.1 and LC.LipSyncLevel(me, 0.45) > 0.8 and LC.LipSyncLevel(me, 0.9) < 0.1, "and its loudness follows",
+        string.format("%.2f %.2f %.2f", LC.LipSyncLevel(me, 0.1), LC.LipSyncLevel(me, 0.45), LC.LipSyncLevel(me, 0.9)))
+
+    -- a .wav beside an .mp3 of the same name is the one used
+    local kept = LC.PreferWav({ "say_a_male1.mp3", "say_a_male1.wav", "say_b_male1.mp3", "c.OGG", "c.wav", "d.WAV", "d.mp3" })
+    ok(table.concat(kept, " ") == "say_a_male1.wav say_b_male1.mp3 c.wav d.WAV", "an .mp3 or .ogg with a .wav of its name is left out", table.concat(kept, " "))
+
+    -- the face: a citizen with a jaw, worked on the server (sent to every player with the NPC)
+    local function Face(ent, flexes)
+        local w = {}
+        ent.GetFlexNum = function() return flexes and 40 or 0 end
+        ent.GetFlexIDByName = function(_, n) return flexes and flexes[n] or nil end
+        ent.GetFlexBounds = function() return 0, 1 end
+        ent.GetFlexWeight = function(_, id) return w[id] or 0 end
+        ent.SetFlexWeight = function(_, id, x) w[id] = x end
+        return w
+    end
+    local npc = ents.Create("npc_citizen") npc:SetPos(Vector(-154000, -154000, 0)) npc:Spawn()
+    npc:SetModel("models/humans/group01/male_lstest.mdl")
+    local w = Face(npc, { jaw_drop = 3, right_part = 5, left_part = 6 })
+    ok(LC.MarkTalking(npc, "livingcity/citizens/lstest_hi_male1.wav") == true and LC.LipSyncTalking[npc] ~= nil, "a citizen saying a plain recording: the server works their face")
+    local from = LC.LipSyncTalking[npc] and LC.LipSyncTalking[npc].from or CurTime()
+    local function JawAt(t) for k = 0, 4 do LC.LipSyncWork(from + t - 0.08 + k * 0.02) end return w[3] or 0 end
+    local early, mid, late = JawAt(0.1), JawAt(0.5), JawAt(0.92)
+    ok(early < 0.1 and mid > 0.4 and late < 0.1, "the jaw shut while it is quiet, open while it is loud (worked a little ahead: players see faces a moment late)",
+        string.format("%.2f %.2f %.2f", early, mid, late))
+    JawAt(0.5)
+    ok((w[5] or 0) > 0.2 and (w[6] or 0) > 0.2, "the lips part with it", tostring(w[5]))
+    LC.LipSyncWork(from + 5)
+    ok(LC.LipSyncTalking[npc] == nil and (w[3] or 0) == 0, "and close when the line is over")
+    -- a baked one is the game's: the server keeps off it
+    ok(LC.MarkTalking(npc, "livingcity/citizens/lstest_baked_male1.wav") == true and LC.LipSyncTalking[npc] == nil, "a recording with its phoneme track: left to the game's own lip sync")
+    -- a recording that can't be read still moves the mouth (a talking pattern)
+    ok(LC.LipSyncStart(npc, "livingcity/citizens/lstest_nofile_male1.ogg", 2) == true, "a recording that can't be read: the server still works the jaw")
+    local opened = 0
+    for k = 1, 30 do LC.LipSyncWork(from + 0.05 * k) if (w[3] or 0) > 0.05 then opened = opened + 1 end end
+    ok(opened >= 5, "in a talking pattern", opened)
+    LC.LipSyncWork(from + 60)
+    -- a mask has no jaw
+    local cop = ents.Create("npc_metropolice") cop:SetPos(Vector(-154100, -154000, 0)) cop:Spawn()
+    cop:SetModel("models/police_lstest.mdl")
+    Face(cop, nil)
+    ok(LC.LipSyncStart(cop, "livingcity/citizens/lstest_hi_male1.wav", 2) == false, "a metrocop's mask: nothing to move")
+    npc:Remove() cop:Remove()
+    for _, k in ipairs({ "lstest_hi_male1.wav", "lstest_baked_male1.wav", "lstest_mp_male1.mp3" }) do _files["sound/livingcity/citizens/" .. k] = nil end
+    LC.LipSyncForget()
+end
+Nov23_LipSyncTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

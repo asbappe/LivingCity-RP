@@ -118,7 +118,7 @@ local clips = {}
 function LC.CubbageClip(id)
     if clips[id] == nil then
         clips[id] = false
-        for _, n in ipairs(file.Find("sound/" .. LC.CubbageVoiceRoot .. "answer_" .. id .. "*", "GAME") or {}) do
+        for _, n in ipairs(LC.PreferWav(file.Find("sound/" .. LC.CubbageVoiceRoot .. "answer_" .. id .. "*", "GAME"))) do
             local ext = string.lower(string.match(n, "%.(%w+)$") or "")
             local base = string.match(n, "^answer_(.-)%d*%.%w+$")
             if base == id and (ext == "wav" or ext == "mp3" or ext == "ogg") then clips[id] = LC.CubbageVoiceRoot .. n break end
@@ -127,7 +127,7 @@ function LC.CubbageClip(id)
     return clips[id] or nil
 end
 do -- (sent to players when the map starts, like every recording)
-    for _, n in ipairs(file.Find("sound/" .. LC.CubbageVoiceRoot .. "*", "GAME") or {}) do
+    for _, n in ipairs(LC.PreferWav(file.Find("sound/" .. LC.CubbageVoiceRoot .. "*", "GAME"))) do
         if resource and resource.AddFile then resource.AddFile("sound/" .. LC.CubbageVoiceRoot .. n) end
     end
 end
