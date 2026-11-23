@@ -2100,14 +2100,17 @@ class BunkerForest(Forest):
         sx, sy, sz = self.silo_at
         return (sx - 544, sy - 544, sz - 64, sx + 544, sy + 544, sz + 1824)
 
-    # the lift's stops: the silo piece's floors with a landing on the lift shaft, bottom to top (its bottom level, the solid
-    # ring's top, the ring slab's top). A floor becomes a stop by adding its height here (with its landing open in the
-    # piece): its path point, gate, call button and wiring are all made from this list.
+    # the lift's stops: the silo piece's floors with a landing on the lift shaft, bottom to top. A floor becomes a stop by
+    # adding its height here (with its landing open in the piece): its path point, gate, call button and wiring are all
+    # made from this list. Only the bottom level and the walkway since 23 November (the owner: "I cannot find any
+    # reasonable use for the mid levels of the silo; only the top and bottom floors ... program the lift to only go to the
+    # top and bottom floors"): the car rides past levels A and B (896, 1152), whose landings are shut (map_silo.Silo.
+    # shaft_shut); putting one back means opening its landing in the piece again too.
     # The top stop is the walkway into the silo from the bunker (the gantry level), where the car stands in the walkway with
     # both its ends open (lift(): the owner, 22 November, "can the lift sit in this space/walkway when at the top floor, with
     # both front and back doors open, and then if someone uses the lift it lowers to another floor and then the floor
     # grates slide back over the hole where the lift was to make the walkway?").
-    LIFT_STOPS = (320, 896, 1152, 1408)
+    LIFT_STOPS = (320, 1408)
     LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
     LIFT_BUILT = 1152            # the car's floor where Valve built it (level B): its parts are placed there and it goes to its top stop at the start
     LIFT_HOLE = (-544, -72, -416, 72)   # the shaft's mouth in the walkway's floor (Valve's grates and middle strut over it are left out: map_silo.SKIP)
@@ -2263,7 +2266,7 @@ class BunkerForest(Forest):
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_TOP], q, d)), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
         # the playable silo (map_silo.py): the pit covered, level B's doors, the ring halls dressed, the shuttered windows
-        # from level B's quarters onto the rocket, the leader's office
+        # from level B's quarters onto the rocket, the lift's shaft shut at levels A and B, the leader's office
         # (with Valve's lever wall moved inside) and bedroom, the bottom level's fence gate, light where rooms had none,
         # the silo's soundscapes, and the leader's way out
         ms = MS.Silo(self, d)
@@ -2272,6 +2275,7 @@ class BunkerForest(Forest):
         ms.level_b_doors()
         ms.ring_dress()
         ms.shaft_windows(pf)
+        ms.shaft_shut(pf)
         ms.office()
         ms.lever_box(pf)
         ms.bedroom()
@@ -2329,7 +2333,9 @@ class BunkerForest(Forest):
         """The silo's lift, in the piece's frame (named as the piece's: lc_silo_...), as entities for pf_entities. The owner,
         21 November: it starts at the top, "can go to any floor it is called to", each floor's gate shut while the lift is
         elsewhere, a re-usable call button at each floor, and in the car "two different PROPER PROP buttons, one on top of
-        the other, and one goes up a floor and the other goes down a floor".
+        the other, and one goes up a floor and the other goes down a floor". Since 23 November it stops only at the bottom
+        level and the walkway (LIFT_STOPS: "program the lift to only go to the top and bottom floors"), so up and down
+        each send it to the other end, past the shut levels A and B.
         How it works: Valve's car (lift_2, a func_tracktrain) runs on a path point per stop (lift_stop_N, N counted from
         the bottom; forward is down). A trip to stop N enables every point but the one just past N in the way it goes, so
         the car's path ends at N: it stops exactly there and the point's OnPass fires lift_arrive_N, the only arrival relay
