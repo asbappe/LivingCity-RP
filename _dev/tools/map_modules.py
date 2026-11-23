@@ -119,8 +119,9 @@ class Frame:
 class Build:
     """One file being made: its plan, and what the modules leave for the dressing and the checks."""
 
-    def __init__(self, name, rim, first_node, upper=None):
+    def __init__(self, name, rim, first_node, upper=None, wall=None):
         self.name, self.rim, self.sky = name, rim, rim + 384
+        self.street_wall = wall   # "combine": a Combine wall between the city and the street (map_corridor.combine_wall)
         self.vmf = Vmf()
         self.vis = "LC %s" % name
         self.upper = upper    # "left" or "right": the bank built up to the street (map_corridor.py), or None
@@ -128,7 +129,7 @@ class Build:
         self.deck, self.viaduct, self.sheds, self.lifted = set(), set(), set(), set()
         if upper:
             import map_corridor
-            self.sky = map_corridor.STREET + 768
+            self.sky = map_corridor.STREET + (1024 if wall == "combine" else 768)      # (room over the Combine wall's piers)
             self.plan = map_corridor.CorridorPlan(BASE, rim, self.sky, self.vis + ": walls and floors")
         else:
             self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
@@ -805,7 +806,7 @@ def side_gate_reach(m, side, reach):
     if m.street_side() != side:
         return reach
     import map_corridor
-    return max(reach, map_corridor.FRONT + 64)
+    return max(reach, map_corridor.front_line(m.b) + 64)
 
 
 def m_tee(m, opt):
@@ -2073,8 +2074,13 @@ def read_layout(path):
             lay["ground"] = words[1].lower()     # ("ground street": a town, map_town.py)
         elif words[0] == "upper":
             lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
+        elif words[0] == "wall":
+            lay["wall"] = words[1].lower()        # ("wall combine": a Combine wall between the city and the street)
         elif words[0] == "cars":
             lay["cars"] = int(words[1])           # (how many cars the trains pull behind the engine)
+        elif words[0] == "road":                  # ("road X1 Y1 X2 Y2 Z [replaces ID ...]": a road from the street to one of the owner's)
+            ids = words[words.index("replaces") + 1:] if "replaces" in words else []
+            lay.setdefault("roads", []).append(tuple(int(w) for w in words[1:6]) + (tuple(ids),))
         elif words[0] == "close":
             lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
@@ -2116,7 +2122,7 @@ def group_sheds(elems):
 
 def build_chain(lay, args):
     upper = lay.get("upper")
-    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper)
+    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper, lay.get("wall"))
     b.test = bool(args.test)
     elems, shed_n = [], 0
     if upper:
@@ -2149,7 +2155,7 @@ def build_chain(lay, args):
             b.problems.append("the chain ends %d wide: put a narrow before its end (its gate is %d wide)" % (width, CANAL_W))
         if name == "gate":
             nb = steps[n + 1] if opt[0] == "start" and n + 1 < len(steps) else steps[n - 1] if opt[0] == "end" and n > 0 else []
-            if "nostreet" in nb[1:]:
+            if "nostreet" in nb[1:] or lay.get("wall") == "combine":      # (a Combine wall closes the street's end inside the chain, never on the piece joined at the gate)
                 opt = opt + ["nostreet"]
             fr = Frame(x, y, rot, 256, flip=(opt[0] == "end"))
             m_gate(Mod(b, fr, "the %s gate" % opt[0]), opt)
@@ -2223,6 +2229,10 @@ def build_chain(lay, args):
         x, y = Frame(x, y, rot, length).pt(length, shift)
     if upper:
         map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
+        for road in lay.get("roads", []):
+            map_corridor.spur(b, *road)
+        if b.street_wall == "combine":
+            map_corridor.combine_wall(b)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))

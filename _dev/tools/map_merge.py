@@ -49,8 +49,7 @@ import sys
 REPLACES = {
     "canal": {"15074": None},
     "ring": {"14734": None, "15630": None},
-    "ring_north": {"14734": None, "15630": None},     # (the canal ring's north half: its roadend stands where the old ring's platform did)
-    "ring_south": {},
+    "ring": {"14734": None, "15630": None},     # (the canal ring: its road to the west road stands where the owner's road end was)
     "ravenholm": {"65929": None, "51870": None, "62363": None, "15623": None, "33530": None, "28290": None, "34874": None},
     "forest_bunker": {},
     "forest_cave": {},

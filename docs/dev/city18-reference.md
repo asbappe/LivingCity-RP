@@ -3844,10 +3844,10 @@ No set piece that could not happen: a building fallen over but still upright, a 
 
 ### The road and railway ship with the canal (`owner-street-ships-with-canals`)
 
-A canal layout fitted into the map carries its street (a road and a railway on one bank, "upper left" or "upper right") unless the owner says otherwise: never deliver the canal alone and leave the street as a separate option nobody sees. Where a way leaves the canal on the street's bank, it passes under the road and the piece joined there moves out to meet it.
+A canal layout fitted into the map carries its street (a road and a railway on one bank) unless the owner says otherwise, and the street runs between the city and the canal: the canal is then the world's edge, a divider players cannot cross, and its far wall hides the void. Never deliver the canal alone and leave the street as a separate option nobody sees. Where there is no room between the city and the canal, move the canal out, not the street.
 
-- **Why:** "what ever happened to the road and railroad tracks running parallel and nearby the canal? ... Aren't those supposed to ship with the canal maps? I haven't s a road or railroad track yet" (22 November); then "Yes, outside bank" and "Bridge over".
-- **How:** map_layouts/ring_north.txt and ring_south.txt: "upper right", sheds over modules ("shed", "shed2"), "stairs" on a straight in each stretch of street, "nostreet" where it cannot run; side_gate_reach() puts a side gate beyond the street.
+- **Why:** "what ever happened to the road and railroad tracks running parallel and nearby the canal? ... Aren't those supposed to ship with the canal maps? I haven't s a road or railroad track yet" (22 November); then "Yes, outside bank" and "Bridge over". Then, 23 November: "if we have a road between the city and the canal then we can 'cheese' ... the canal will be a physical deterrent and divider ... I think we need to have the road AND the railway between the city and the canals".
+- **How:** map_layouts/ring.txt: "upper left" all round, the runs moved out where the city came within 1344 of the canal's middle, side rooms on the outside, sheds over modules ("shed", "shed2"), "stairs" on a straight per stretch, "road" for a road from the street to one of the owner's (map_corridor.spur).
 - **Checked by:** map_build.py chain --against every neighbouring piece: nothing runs into anything; the walk check reaches every train's button from the spawn.
 - **Tags:** canal, streets
 

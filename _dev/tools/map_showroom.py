@@ -21,7 +21,7 @@ sys.path.insert(0, HERE)
 import map_modules as mm
 
 SKIP = ("straight", "jog", "tee", "shed", "tunnel", "widen", "narrow", "wide", "widetee", "basin", "lockgate",     # (the canal itself; the wide canal goes in map_layouts/wide.txt)
-        "roadend")      # (built for one place, the west road's end: it is in map_layouts/ring_north.txt)
+        "roadend")      # (built for one place, the west road's end; the canal ring now meets that road with its street instead)
 ROW = 6200      # about how long a row may be
 
 

@@ -1,4 +1,4 @@
-"""The canal ring's test map: the first canal and both halves of the ring (map_layouts/ring_north.txt, ring_south.txt)
+"""The canal ring's test map: the first canal and the ring (map_layouts/ring.txt)
 built as test files and joined into ONE file to compile and walk by itself, with one spawn (on the first canal's quay)
 and the owner's sun. Everything stands at its real place in City 18's coordinates, so what is walked here is what goes
 into the real map (the owner, 22 November: "I will need a test map once you are done with this so that I can walk it
@@ -9,10 +9,9 @@ into the c18 points").
     python3 map_ring_walk.py --against c18_lc.vmf    # ...and first checks both halves and the first canal against the owner's map
 
 The real map is made with map_merge.py from the plain (not test) files, as ever:
-    python3 map_build.py canal && python3 map_build.py chain --layout map_layouts/ring_north.txt --first-node 5000
-    python3 map_build.py chain --layout map_layouts/ring_south.txt --first-node 6000
-    python3 map_merge.py c18_lc.vmf lc_canal.vmf lc_ring_north.vmf lc_ring_south.vmf ... --out c18_lc_merged.vmf
-(ring_north stands in the place of the old ring, lc_ring.vmf: never merge both.)
+    python3 map_build.py canal && python3 map_build.py chain --layout map_layouts/ring.txt --first-node 5000
+    python3 map_merge.py c18_lc.vmf lc_canal.vmf lc_ring.vmf ... --out c18_lc_merged.vmf
+(the ring stands in the place of the old ring, lc_ring.vmf: never merge both.)
 """
 
 import argparse
@@ -41,14 +40,13 @@ def main():
     ap.add_argument("--out", default="lc_ring_walk.vmf")
     args = ap.parse_args()
     py = sys.executable
-    plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring_north.txt", "--first-node", "5000"]),
-             ("chain", ["--layout", "map_layouts/ring_south.txt", "--first-node", "6000"])]
+    plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"])]
     if args.against:
         print("checking against: " + " ".join(args.against))
         for piece, extra in plain:
             run([py, "map_build.py", piece] + extra + ["--against"] + args.against + ["--out", os.devnull])
     print("building the test pieces:")
-    names = ["lc_canal_test.vmf", "lc_ring_north_test.vmf", "lc_ring_south_test.vmf"]
+    names = ["lc_canal_test.vmf", "lc_ring_test.vmf"]
     for (piece, extra), name in zip(plain, names):
         run([py, "map_build.py", piece] + extra + ["--test", "--out", name])
     print("joining them:")

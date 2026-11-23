@@ -14,6 +14,8 @@ two sides each other's mirror (the study's walls.py test, a draw that fails it d
                                                                        it with a gate, the building behind, an intrusion
     python3 map_combine.py test --out lc_combine_test.vmf [--seed N]    one of each small piece (wall, gate, tower, skin)
     python3 map_combine.py check FILE.vmf                               the study's numbers for the Combine in any VMF
+    python3 map_combine.py perimeter --out lc_combine_perimeter.vmf [--length 3072] [--height 768] [--seed N]
+                                                                       the city's perimeter wall, a template to repeat
 
 Structures (combine/): building (building.py: a centred mass 1536 to 2048 across with an off-centre skin, a turned
 wing, a gate with unequal sides, a tall hall with walkways), wall_chain and intrusion (chain.py), the pieces
@@ -86,6 +88,30 @@ def test_map(out, seed):
     print("wrote %s" % out)
 
 
+def perimeter_map(out, seed, length=3072, H=768):
+    """The perimeter wall's template on a test map: the wall along y 0 from x 0 to length, its ribbed outer face to
+    the south, a floor and a sky, the player standing out on the south looking at it."""
+    from combine.chain import perimeter
+    from combine.piece import Sink
+    from combine.scene import put
+    r = random.Random("perimeter %d" % seed)
+    sink = Sink()
+    info = perimeter(sink, r, 0, length, 0, H, outer=-1)
+    v = Vmf()
+    put(v, sink, "LC combine: the perimeter wall")
+    x1, y1, x2, y2, z2 = -512, -2048, length + 512, 768, H + 1024
+    sk = "LC combine: floor and sky (for testing alone)"
+    v.world_box((x1, y1, -16, x2, y2, 0), NODRAW, FLOOR, NODRAW, sk)
+    for b in ((x1 - 16, y1, -16, x1, y2, z2), (x2, y1, -16, x2 + 16, y2, z2), (x1 - 16, y1 - 16, -16, x2 + 16, y1, z2),
+              (x1 - 16, y2, -16, x2 + 16, y2 + 16, z2), (x1 - 16, y1 - 16, z2, x2 + 16, y2 + 16, z2 + 16)):
+        v.world_box(b, SKY, SKY, SKY, sk)
+    test_extras(v, (length // 2, -1400, 16), 90, sk)
+    with open(out, "w") as fh:
+        fh.write(v.text())
+    print("perimeter: %d runs (%s), tops %s" % (len(info["runs"]), " ".join(str(k) for _, k in info["runs"]), ", ".join(info["tops"])))
+    print("wrote %s" % out)
+
+
 def scene_map(out, seed):
     info, problems = scene(out, seed)
     b, c, i = info["building"], info["chain"], info["intrusion"]
@@ -112,8 +138,14 @@ def main():
         t.add_argument("--out", default=os.path.join(HERE, default))
         t.add_argument("--seed", type=int, default=1)
     sub.add_parser("check", help="the study's numbers for the Combine in a VMF (read as text only)").add_argument("vmf")
+    t = sub.add_parser("perimeter", help="the city's perimeter wall as a template: a straight run of it on a test map")
+    t.add_argument("--out", default=os.path.join(HERE, "lc_combine_perimeter.vmf"))
+    t.add_argument("--seed", type=int, default=1)
+    t.add_argument("--length", type=int, default=3072)
+    t.add_argument("--height", type=int, default=768)
     a = ap.parse_args()
-    {"scene": lambda: scene_map(a.out, a.seed), "test": lambda: test_map(a.out, a.seed), "check": lambda: check(a.vmf)}[a.cmd]()
+    {"scene": lambda: scene_map(a.out, a.seed), "test": lambda: test_map(a.out, a.seed), "check": lambda: check(a.vmf),
+     "perimeter": lambda: perimeter_map(a.out, a.seed, a.length, a.height)}[a.cmd]()
 
 
 if __name__ == "__main__":

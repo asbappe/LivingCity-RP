@@ -212,3 +212,27 @@ def intrusion(block, sink, r, mat, ceiling="concrete/concreteceiling004a", turn=
     r.randint(14, 40), r.randint(-40, 40), r.randint(-15, 15)     # (the tilted creeping wall's draws: it floated, it went)
     sink.lamps.append((fr.w((s0 + q(32), q(64) + 1, 352)), (fr.yaw() + 15) % 360 // 15 * 15, 30))
     return {"door": (d0, d1, DH), "room": (cx1, cy1, cx2, cy2, RH), "turn": "1 in 2" if k == 2 else "45", "mass": foot, "top": p.top}
+
+
+def perimeter(sink, r, x0, x1, y0, H=768, outer=-1):
+    """A straight Combine wall from x0 to x1 along the line y0: a template to repeat round the city's edge (the owner,
+    23 November: "a simple combine exterior wall for the city, to see from the outside ... simple combine metal and maybe
+    simple designs on it ... just not a rectangle bare wall"). wall_chain's runs laid straight, 768 to 1024 long, each
+    drawn afresh (so no two alike: the ribs on a 256 rhythm broken by pairs, the stepped plates, the band at the foot,
+    fins on two heads in three), a pier with its Combine lamp over every joint and at both ends. outer: the side its
+    battered, ribbed face looks to (-1 south, +1 north)."""
+    runs, x = [], x0
+    while x1 - x >= 512:
+        k = min(r.choice((768, 896, 1024)), x1 - x)
+        if x1 - x - k < 512:
+            k = x1 - x                       # (no stub at the end: the last run takes what is left)
+        fr = Frame((x, y0, 0), (1, 0)) if outer < 0 else Frame((x + k, y0, 0), (-1, 0))
+        runs.append((Piece(fr, (k, 0), H, r, sink), k))
+        x += k
+    for i, (p, k) in enumerate(runs):
+        T, Le, Pl = run(p, k, H, r)
+        pier(p, 0, H, r, T, Le, Pl, lamp=i % 2 == 0)
+        if i == len(runs) - 1:
+            pier(p, k, H, r, T, Le, Pl, lamp=True)
+    return {"runs": [(p.fr.o, k) for p, k in runs], "tops": [p.top for p, _ in runs]}
+

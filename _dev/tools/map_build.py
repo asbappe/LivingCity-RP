@@ -47,8 +47,8 @@ CELL = 64
 # each piece has a share of what is left (1690), and its nodes are thinned to fit (map_ring.lane_cells, NODE_LEVELS).
 NODE_CAP, CITY18_NODES = 4096, 2406
 # (22 November: the canal ring's two halves take the old ring's and the old south sketch's 600 and the 40 left over;
-#  the old ring, map_ring.py, is what ring_north replaces: built by itself it is held to NODE_SHARE_OTHER)
-NODE_SHARES = {"canal": 150, "ring_north": 260, "forest_bunker": 150, "forest_cave": 270, "ravenholm": 150, "ring_south": 380, "town": 330}
+#  the old ring, map_ring.py, is what the canal ring replaces: built by itself it is held to NODE_SHARE_OTHER)
+NODE_SHARES = {"canal": 150, "ring": 640, "forest_bunker": 150, "forest_cave": 270, "ravenholm": 150, "town": 330}
 NODE_SHARE_OTHER = 400      # (a layout not planned for the merge yet: kept to a piece's size all the same)
 NODE_CLASSES = ("info_node", "info_node_air", "info_node_hint", "info_node_air_hint", "info_node_climb")
 
