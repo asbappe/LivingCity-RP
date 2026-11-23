@@ -34,9 +34,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
   beside the next victim, six branches each). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
 - 22 and 23 November (this chat): **the canal ring round City 18**, one piece (map_layouts/ring.txt), fitted to
-  c18_lc.vmf and checked against every piece. **The road and railway run between the city and the canal** (the owner,
-  23 November), four trains, a road climbing to the owner's west road; four runs moved out to make room, the town and
-  cave forest with them. Every build runs a stair and a walk check. Test map: map_ring_walk.py. Not compiled yet.
+  c18_lc.vmf and checked against every piece. The road and railway run between the city and the canal all the way
+  round (round the first canal's east bank there, `round east`); four trains out of tunnels in the ruins over rail
+  bridges (`left back`), buffer stops at every other track end; modules beside the street adapted. Every build checks
+  stairs, walking and areaportals. Test map: map_ring_walk.py. Not compiled yet.
 - From the city out: the owner's city, a Combine wall (`wall combine`), the road, the railway, the canal, then ruins and
   rooftops beyond the far wall, turning to EP2 pine forest by the two forests (`backdrop`, map_backdrop.py).
 - Ravenholm's church is behind the crypt (map_mods_f.church); its names wait for the gamemode (TODO.md, the church).
