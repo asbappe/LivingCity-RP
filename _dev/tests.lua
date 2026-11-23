@@ -29035,6 +29035,11 @@ function RebelEventTests()
     _run(20)
     ok(dockAt and dockAt >= sk.arrivedAt and dockNear, "rations are docked \"near a Resistance attack\" only once the fighters are really there", tostring(dockAt) .. " " .. tostring(sk.arrivedAt))
     hook.Remove("LivingCityRationsDocked", "RebelEventTests")
+    -- (the owner, 23 November: "we need an overwatch squad to respond within 20-30 seconds to rebel attacks like that")
+    for _ = 1, 10 do if sk.owSent or sk.done then break end _run(1) end
+    local ow = 0
+    for _, u in ipairs(sk.units) do local st = IsValid(u) and LC.NPCs[u] if st and st.role == "soldier" then ow = ow + 1 end end
+    ok(sk.owSent and ow >= 1 and CurTime() - sk.arrivedAt <= 31, "within half a minute an Overwatch squad comes in to it", ow .. " soldiers, " .. math.floor(CurTime() - sk.arrivedAt) .. " s")
     local sent = {}
     for _, u in ipairs(sk.units) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].unmanaged then sent[#sent + 1] = u end end
     sk.ends = CurTime()
