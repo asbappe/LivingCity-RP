@@ -116,3 +116,10 @@ breach
 left nostreet
 straight 448 nostreet
 right nostreet
+
+# The road round the first canal's east side (the owner, 23 November, of the street ending at this jog: "you need to
+# compensate for the road hitting the canal by either making a bridge or having it go around the canal"; they chose
+# round its east side): from the street's end a deck over the jog, the road north to the first canal's south edge,
+# up the first canal's east bank and over its east arm (the first canal's own piece: map_build.canal), then from its
+# north edge over the north run's canal on a bridge into the north run's street. Where: map_corridor.ROUND.
+round east

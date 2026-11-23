@@ -1086,3 +1086,249 @@ def combine_wall(b, seed=1):
     put(b.vmf, sink, b.vis + ": the Combine wall")
     b.notes.append("the Combine wall between the city and the street: %d stretches, %d runs, %d lamps" % (len(segs), sum(1 for _ in sink.solids) and len(segs), len(sink.lamps)))
 
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The road round the first canal's east side (the owner, 23 November, of the street that ended at the last jog: "the road
+# just ends at the canal ... you need to compensate for the road hitting the canal by either making a bridge or having it
+# go around the canal"; they chose round its east side). From the east run's street end the road crosses the jog on a
+# deck, runs north to the first canal's south edge, where the first canal's own piece carries it up its east bank and over
+# its east arm on a bridge (map_build.canal); from the first canal's north edge the ring takes it again and carries it
+# west over the north run's canal on a bridge into the north run's street. One ring road. On this stretch alone the
+# canal is between the road and the city, so its Combine wall stands on the road's far (east) side.
+# ---------------------------------------------------------------------------------------------------------------------
+
+ROUND = {
+    "mid": 6144,                          # the middle of the first canal's run north, of the ring's end gate and of its north run
+    "deck": (6016, 1088, 7232, 1600),     # the ring's deck over the jog (from the east run's street end to the bank road)
+    "south": (1600, 1856),                # the ring's: the bank road from the deck to the first canal's south edge
+    "canal": (1856, 5696),                # the first canal's: up its east bank (map_build.canal)
+    "arm": (4160, 4672),                  # its east arm, which the road crosses on a bridge
+    "north": (5696, 6400),                # the ring's: from the first canal's north edge to the bridge's far side
+    "turn": 5952,                         # where the road turns west onto the bridge (the tracks end there)
+    "bridge": (5888, 5952, 6400, 6400),   # over the north run's canal, into its street
+}
+
+
+def east_bank(x_mid, y1, y2, road_only=()):
+    """The squares of a street on the east bank of a canal running north whose middle is x_mid, from y1 to y2, laid as
+    the chain's street is (the canal's edge, the tracks, the road and its pavements out to the frontage, which stands
+    behind a Combine wall's foot), and the squares of the Combine wall's core beyond it. road_only: stretches of y that
+    are all roadway (a turning place). Gives ({square: floor material}, {core squares})."""
+    from map_modules import MM
+    fr_line = FRONT + 64
+    street, core = {}, set()
+    for j in range(y1 // CELL, y2 // CELL):
+        plain = any(a <= j * CELL < b for a, b in road_only)
+        for a, c, mat in ((EDGE, TRACK, MM["walk"]), (TRACK, ROAD_IN, MM["gravel"]), (ROAD_IN, fr_line, MM["road"])):
+            for i in range((x_mid + a) // CELL, (x_mid + c) // CELL):
+                street[(i, j)] = MM["road"] if plain else mat
+        core.add(((x_mid + fr_line) // CELL, j))
+    return street, core
+
+
+def bank_tops(x_mid):
+    """What a deck carrying the east bank's street has on top, by x: (x1, x2, material)."""
+    from map_modules import MM
+    return [(x_mid + EDGE, x_mid + TRACK, MM["walk"]), (x_mid + TRACK, x_mid + ROAD_IN, MM["gravel"]), (x_mid + ROAD_IN, x_mid + FRONT + 64, MM["road"])]
+
+
+class _Det:
+    """Just enough of a module (map_modules.Mod) for chain_link: boxes in a frame, as details."""
+
+    def __init__(self, vmf, fr, vis):
+        self.vmf, self.fr, self.dv = vmf, fr, vis
+
+    def det(self, boxes, mat, top=None, vis=None, faces=None):
+        self.vmf.detail([self.fr.box(*x) for x in boxes], mat, vis=vis or self.dv, top=top)
+
+
+def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer=(), buffers=(), planks=(), lane=None, lanes_at=()):
+    """What stands on the east bank's street, as on the chain's (lay): the low parapet and chain link along the canal's
+    edge over the stretches of y in `edge`, sleepers and rails over `tracks`, the inner pavement over `pave` and its kerb
+    rail over `rail`, the outer pavement up to the Combine wall's foot over `outer`, a buffer stop across the tracks at
+    each (y1, y2) in `buffers`, planks across the tracks at each (y1, y2) in `planks` (where people cross them), and a
+    path node on the edge walk and on the road at each y in `lanes_at` (lane(x, y, z))."""
+    from map_modules import MM, Frame, chain_link
+    fr = Frame(x_mid, 0, 1, 0)       # (u is y; v is west of the middle, so the east bank is v < 0)
+    m = _Det(vmf, fr, vis)
+    s = -1
+
+    def sv(a, c):
+        return (s * c, s * a)
+    for a, c in edge:
+        v1, v2 = sv(EDGE, EDGE + 12)
+        m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"])
+        chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72)
+    ties, rails = [], []
+    for a, c in tracks:
+        v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
+        for u in range(a // CELL * CELL, c, CELL):      # (on the map's grid, as the chain's are: the same spacing across a join)
+            ties += [(w, v1, STREET, w + 12, v2, STREET + 3) for w in (u + 10, u + 42) if a <= w and w + 12 <= c]
+        for g in (-40, 37):
+            w1, w2 = sv(RAIL_V + g, RAIL_V + g + 3)
+            rails.append((a, w1, STREET + 3, c, w2, STREET + 9))
+    if ties:
+        m.det(ties, MM["beam_wood"])
+        m.det(rails, MAT["bars"])
+    for a, c in pave:
+        v1, v2 = sv(ROAD_IN, ROAD_OUT)
+        m.det([(a, v1, STREET, c, v2, STREET + 8)], MM["walk"])
+    for a, c in rail:
+        v1, v2 = sv(ROAD_IN + 2, ROAD_IN + 6)
+        m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, c, 128)]
+              + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"])
+    for a, c in outer:
+        v1, v2 = sv(960, FRONT + 64)
+        m.det([(a, v1, STREET, c, v2, STREET + 8)], MM["walk"])
+    for a, c in buffers:      # (a block of concrete across the tracks' end, a beam on it)
+        v1, v2 = sv(TRACK + 24, ROAD_IN - 24)
+        m.det([(a, v1, STREET, c, v2, STREET + 48)], MAT["canal_wall"], top=MAT["beam"])
+    for a, c in planks:      # (1 over the rails' tops: no shared face to flicker)
+        v1, v2 = sv(TRACK, ROAD_IN)
+        m.det([(a, v1, STREET, c, v2, STREET + 10)], MM["wood"])
+    if lane:
+        for u in lanes_at:
+            lane(x_mid + 288, u, STREET)
+            lane(x_mid + 800, u, STREET)
+
+
+def deck_parapets(cells, x1, y1, x2, y2):
+    """The edges of a deck that look down into a canal (the square beyond is open ground lower than the street), as
+    boxes 16 thick inside the deck, joined into runs; the runs along x stop 16 short of a corner a run along y takes."""
+    def low(c):
+        spec = cells.get(c)
+        return bool(spec) and spec[0] == "open" and spec[1] < STREET - 16
+
+    def runs(ok, a0, a1):
+        out, start = [], None
+        for a in range(a0, a1 + CELL, CELL):
+            if a < a1 and ok(a):
+                start = a if start is None else start
+            elif start is not None:
+                out.append((start, a))
+                start = None
+        return out
+    west = runs(lambda y: low((x1 // CELL - 1, y // CELL)), y1, y2)
+    east = runs(lambda y: low((x2 // CELL, y // CELL)), y1, y2)
+    boxes = [(x1, a, x1 + 16, c) for a, c in west] + [(x2 - 16, a, x2, c) for a, c in east]
+    for y, j, inside in ((y1, y1 // CELL - 1, (y1, y1 + 16)), (y2, y2 // CELL, (y2 - 16, y2))):
+        for a, c in runs(lambda x: low((x // CELL, j)), x1, x2):
+            if a == x1 and any(r[0] <= y <= r[1] for r in west):
+                a += 16
+            if c == x2 and any(r[0] <= y <= r[1] for r in east):
+                c -= 16
+            boxes.append((a, inside[0], c, inside[1]))
+    return boxes
+
+
+def road_deck(vmf, vis, x1, y1, x2, y2, span, parapets=(), tops=None):
+    """A road carried over a canal at the street's height: a slab 24 thick whose top is the street (tops: [(x1, x2,
+    material)] for the bands of a street on it; the roadway's cobbles if none), girders under it every 96 from bank to
+    bank (span: "x" or "y", the way they run), a parapet 48 high on each of `parapets` ((x1, y1, x2, y2) on the plan, and
+    the height it stands on if not the deck's: a pavement's), and lights under it, which roofs the canal. Gives back the
+    room it takes, for the canal's dressing to keep clear of."""
+    import map_build
+    from map_modules import MM
+    for a, c, mat in (tops or [(x1, x2, MM["road"])]):
+        vmf.detail([(max(a, x1), y1, STREET - 24, min(c, x2), y2, STREET)], MAT["beam"], vis=vis, top=mat)
+    if span == "y":
+        girders = [(x, y1, STREET - 56, x + 24, y2, STREET - 24) for x in range(x1 + 40, x2 - 40, 96)]
+    else:
+        girders = [(x1, y, STREET - 56, x2, y + 24, STREET - 24) for y in range(y1 + 40, y2 - 40, 96)]
+    vmf.detail(girders, MAT["bars"], vis=vis)
+    if parapets:
+        vmf.detail([(p[0], p[1], p[4] if len(p) > 4 else STREET, p[2], p[3], (p[4] if len(p) > 4 else STREET) + 48) for p in parapets], MAT["canal_wall"], vis=vis)
+    n = max(1, (max(x2 - x1, y2 - y1) + 383) // 768)
+    for k in range(n):
+        t = (2 * k + 1) / (2.0 * n)
+        x, y = (int(x1 + (x2 - x1) * t), (y1 + y2) // 2) if x2 - x1 >= y2 - y1 else ((x1 + x2) // 2, int(y1 + (y2 - y1) * t))
+        keys = {"_light": "255 214 170 45", "_lightHDR": "-1 -1 -1 1", "style": "0"}
+        keys.update(map_build.falloff("fill"))
+        vmf.point("light", (x, y, STREET - 112), keys, vis)
+    return (x1, y1, STREET - 120, x2, y2, STREET + 64)
+
+
+def road_cap(vmf, vis, name, x_mid, y1, y2, sky):
+    """What stops up the bank road where it runs on into another piece, while nothing is joined there: black walls across
+    the road and over the Combine wall's core, in a visgroup named as the gates' caps are (map_merge.py leaves both pieces'
+    out where they meet)."""
+    fr_line, k = x_mid + FRONT + 64, MAT["black"]
+    group = "%s: %s gate's cap (delete to join)" % (vis, name)
+    vmf.world_box((x_mid + EDGE, y1, STREET, fr_line, y2, sky), k, k, k, vis=group)
+    vmf.world_box((fr_line, y1, STREET + WALL_H - 8, fr_line + 64, y2, sky), k, k, k, vis=group)
+
+
+def round_gaps(b):
+    """Before the chain's street is laid: where the bridge round the first canal lands on the north run's street, no
+    parapet on the canal's edge and no rail between the tracks and the road."""
+    x1, y1, x2, y2 = ROUND["bridge"]
+    b.edge_gaps.append((x1 - 32, y1, x1 + 16, y2))
+
+
+def round_east(b):
+    """The ring's share of the road round the first canal's east side (ROUND, above), once the chain's street is laid:
+    the deck over the jog, the bank road on to the first canal's south edge, the bank road from its north edge to the
+    bridge over the north run's canal, the bridge; the Combine wall's core on the road's far side; a cap at each place
+    where the first canal's piece carries the road on."""
+    R = ROUND
+    cells, mid = b.plan.cells, R["mid"]
+    if getattr(b, "street_wall", None) != "combine":
+        b.problems.append("round east: the road round the first canal needs the Combine wall (\"wall combine\")")
+        return
+    vis = b.vis + ": the road round the first canal"
+    core_h = STREET + WALL_H - 8
+    street, core = east_bank(mid, *R["south"])
+    north, ncore = east_bank(mid, *R["north"], road_only=[(R["turn"], R["north"][1])])
+    street.update(north)
+    core |= ncore
+    yn = R["north"][1]
+    core |= {(i, yn // CELL) for i in range((mid + EDGE) // CELL, (mid + FRONT + 128) // CELL)}      # (across the road's north end)
+
+    def canal(c):
+        spec = cells.get(c)
+        return bool(spec) and spec[0] == "open" and spec[1] < STREET - 16
+    # (plain wall where the core would meet the canal: the chain link along the canal's walls would stand on a core's top)
+    core = {c for c in core if not any(canal((c[0] + di, c[1] + dj)) for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)))}
+    for c, mat in sorted(street.items()):
+        if c in cells:
+            b.problems.append("the road round the first canal runs into %s at (%d %d)" % (b.owner.get(c, "something"), c[0] * CELL, c[1] * CELL))
+            continue
+        cells[c] = ("open", STREET, mat)
+        b.owner[c] = "the road round the first canal"
+        b.deck.add(c)
+    for c in sorted(core):
+        if c in cells:
+            b.problems.append("the Combine wall round the first canal runs into %s at (%d %d)" % (b.owner.get(c, "something"), c[0] * CELL, c[1] * CELL))
+            continue
+        cells[c] = ("low", core_h, CORE, b.sky)
+        b.owner[c] = "the Combine wall"
+    # (the wall's dressing; at the first canal's north edge this stretch's pier stands over the join, and the first canal
+    #  leaves its own last three squares plain so the two never stand in each other; the north end's first square is left
+    #  plain so its pier does not overhang the canal)
+    b.combine_core = set(getattr(b, "combine_core", set())) | {c for c in core if c != ((mid + EDGE + 64) // CELL, yn // CELL)}
+    # where the first canal's piece carries the road on: kept out of this piece's walls, stopped up for it alone
+    fr_line = mid + FRONT + 64
+    for y_join, side in ((R["south"][1], 1), (R["north"][0], -1)):
+        b.plan.keep_out.append((mid + EDGE, y_join, fr_line + 64, y_join + 64) if side > 0 else (mid + EDGE, y_join - 64, fr_line + 64, y_join))
+        a, c = (y_join - 64, y_join) if side > 0 else (y_join, y_join + 64)
+        road_cap(b.vmf, b.vis, "the east road's %s" % ("south" if side > 0 else "north"), mid, a, c, b.sky)
+        b.allow.append((mid + EDGE - 64, y_join - 128, 0, fr_line + 192, y_join + 128, b.sky + 64))
+    # the deck over the jog, and the bridge over the north run's canal (a parapet wherever an edge looks down into a canal)
+    # (and no trim along the tops of the walls they rest on: it would stand 16 proud of the deck)
+    x1, y1, x2, y2 = R["deck"]
+    b.taken.append(road_deck(b.vmf, vis, x1, y1, x2, y2, "y", deck_parapets(cells, x1, y1, x2, y2)))
+    b.no_bank += [(x1, y1 - 8, x2, y1 + 8), (x1, y2 - 8, x2, y2 + 8)]
+    bx1, by1, bx2, by2 = R["bridge"]
+    b.taken.append(road_deck(b.vmf, vis, bx1, by1, bx2, by2, "x", deck_parapets(cells, bx1, by1, bx2, by2)))
+    b.no_bank += [(bx1 - 8, by1, bx1 + 8, by2), (bx2 - 8, by1, bx2 + 8, by2)]
+    # on the bank road: the tracks from a buffer stop at the deck to the first canal, and from it to a buffer stop at the
+    # turn (the rails' ends inside the buffer stops)
+    s1, s2 = R["south"]
+    n1, t = R["north"][0], R["turn"]
+    east_bank_dress(b.vmf, vis, mid, rail=[(s1, s2), (n1, t)], tracks=[(s1 + 16, s2), (n1, t - 16)], pave=[(s1, s2), (n1, t)], outer=[(s1, s2), (n1, yn)],
+                    buffers=[(s1, s1 + 32), (t - 32, t)], lane=lambda x, y, z: b.lanes.append((x, y, z)), lanes_at=(s1 + 128, n1 + 128, (t + yn) // 2))
+    for x, y in ((6272, 1216), (6656, 1344), (6976, 1536), ((bx1 + bx2) // 2 - 128, (by1 + by2) // 2), ((bx1 + bx2) // 2 + 128, (by1 + by2) // 2)):
+        b.lanes.append((x, y, STREET))
+    b.notes.append("the road round the first canal: a deck over the jog (x %d..%d, y %d..%d), the bank road to the first canal's south edge (y %d) "
+                   "and from its north edge (y %d) to a bridge over the north run's canal (y %d..%d) into its street" % (x1, x2, y1, y2, s2, n1, by1, by2))
+

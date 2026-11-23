@@ -1280,17 +1280,19 @@ def road_bridge(vmf, plan, axis, a, b, lo, hi, floor, trim, vis):
 
 def canal(args):
     # the road ends at the owner's brush 15074 (x 3328..3968, y 1856..1872): its city side is this piece's south edge
+    import map_corridor as mc
     ox, oy = args.origin
     road_z, floor_z = 656, 400
-    sky = road_z + 512
+    sky = road_z + 1024      # (1024 over the road, as the ring's street: room over the Combine wall beside the road on its east bank)
     # (plain concrete to 128 over the road and a fence on it, as the ring: the owner, of the brick band both canals had over
     #  the concrete, "can we just make the canal walls a bit higher instead of using brickwork at the top", then of this
     #  canal: "yes please make the first canal match")
     wall_top = road_z + 128
     # (the squares in the map's own coordinates, as the ring's and the modules' are, so the canal modules' dressing can
     #  dress this canal too: the owner, 21 November, "yes please". Everything below is written from the road's end, as
-    #  before: P, B and W move it to the map.)
-    plan = Plan((0, 0), [(floor_z - 64, wall_top, MAT["canal_wall"]), (wall_top, sky + 16, MAT["sky"])], sky=sky)
+    #  before: P, B and W move it to the map. The plan is the street's kind, which knows a room under a road and the
+    #  Combine wall's core.)
+    plan = mc.CorridorPlan(floor_z - 64, wall_top, sky, "LC canal: walls and floors")
 
     def P(r):
         return (r[0] + ox, r[1] + oy, r[2] + ox, r[3] + oy)
@@ -1316,8 +1318,34 @@ def canal(args):
     plan.paint(P((2560, 0, 3072, 256)), culvert)                          # under the turn north, a culvert to the south gate (y 0): where the canal ring's south half comes in (22 November)
     plan.paint(P((3072, 1280, 3328, 1664)), ("low", floor_z, MAT["canal_floor"], floor_z + 192)) # a low bay off B: somewhere to hide
     plan.paint(P((64, 768, 256, 896)), doorway)                           # where the quay's footbridge lands, in the north wall
-    plan.paint(P((2432, 1792, 2560, 2048)), doorway)                      # the second footbridge's two ends, either side of B
-    plan.paint(P((3072, 1792, 3200, 2048)), doorway)                      # (wall on every side but the front: clear of the bay and of the east arm)
+    plan.paint(P((2432, 1792, 2560, 2048)), doorway)                      # the second footbridge's west end, in B's west wall (wall on every side but the front)
+    #                                                                       (its east end lands on the road on the east bank)
+
+    # the road round the canal's east side (the owner, 23 November: the ring's street "just ends at the canal ... you need
+    # to compensate for the road hitting the canal by either making a bridge or having it go around the canal"; they chose
+    # round its east side): the ring brings it to this piece's south edge and takes it on at its north edge
+    # (map_corridor.ROUND); here it runs up B's east bank as the ring's street does (the canal's edge, the tracks, the road
+    # and its pavements), over the east arm on a bridge, with the Combine wall's core along its far side. The low bay off B
+    # is a room under it.
+    R = mc.ROUND
+    road_y1, road_y2 = R["canal"]
+    arm_y1, arm_y2 = R["arm"]
+    core_top = road_z + mc.WALL_H - 8
+    street, core = mc.east_bank(R["mid"], road_y1, road_y2)
+    road_cells, under_cells = set(), set()
+    for c, mat in sorted(street.items()):
+        if arm_y1 <= c[1] * CELL < arm_y2:
+            continue      # (the arm: the bridge carries the road over it)
+        spec = plan.cells.get(c)
+        if spec and spec[0] == "low" and spec[3] <= road_z - 16:
+            plan.cells[c] = ("under", spec[1], spec[2], spec[3], mat)
+            under_cells.add(c)
+        else:
+            plan.cells[c] = ("open", road_z, mat)
+            road_cells.add(c)
+    core = {c for c in core if not arm_y1 <= c[1] * CELL < arm_y2}
+    for c in core:
+        plan.cells[c] = ("low", core_top, mc.CORE, sky)
 
     vmf = Vmf()
     cells = plan.cells
@@ -1329,6 +1357,13 @@ def canal(args):
     gate_cap(vmf, B(4544, 2304, floor_z, 4608, 2816, floor_z + GATE_HIGH), B(4520, 2304, floor_z, 4528, 2816, floor_z + GATE_HIGH), "y", "LC canal: east gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, floor_z + GATE_HIGH), B(2560, 3752, floor_z, 3072, 3760, floor_z + GATE_HIGH), "x", "LC canal: north gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 0, floor_z, 3072, 64, floor_z + GATE_HIGH), B(2560, 80, floor_z, 3072, 88, floor_z + GATE_HIGH), "x", "LC canal: south gate's cap (delete to join the canal ring)")
+    # ...and the road on the east bank at both its ends, where the ring carries it on
+    mc.road_cap(vmf, "LC canal", "the east road's south", R["mid"], road_y1, road_y1 + 64, sky)
+    mc.road_cap(vmf, "LC canal", "the east road's north", R["mid"], road_y2 - 64, road_y2, sky)
+    # (where the pieces joined at the gates and the road's ends may overlap this one's walls: both solid, as a chain's gates allow)
+    fr_line = R["mid"] + mc.FRONT + 64
+    args.allow_overlap = [B(2368, -64, 0, 3264, 64, sky + 64), B(2368, 3776, 0, 3264, 3904, sky + 64), B(4544, 2112, 0, 4672, 3008, sky + 64),
+                          (R["mid"] + 192, road_y1 - 128, 0, fr_line + 192, road_y1 + 128, sky + 64), (R["mid"] + 192, road_y2 - 128, 0, fr_line + 192, road_y2 + 128, sky + 64)]
 
     # areaportals: across each gate's culvert and across the road's end, so what is beyond one is drawn only as far as
     # it can be seen through it (each stands a little in from the opening, so it has air on both sides even when capped)
@@ -1353,6 +1388,9 @@ def canal(args):
     vmf.detail([B(0, 240, road_z, 72, 256, road_z + 40), B(248, 240, road_z, 512, 256, road_z + 40), B(512, 368, road_z, 640, 384, road_z + 40), B(512, 256, road_z, 528, 368, road_z + 40)], MAT["canal_wall"])
 
     no_bank = [P((448, 192, 1088, 320)), P((3008, 1792, 3136, 1856)), P((2560, 192, 3072, 320))]   # the stairs; the ladder's slot (below); the south gate's mouth
+    # (and no trim along the walls' tops where a deck rests on them: it would stand 16 proud of the deck: where the second
+    #  footbridge meets the road, and the arm's walls under the road's bridge)
+    no_bank += [P((3064, 1856, 3080, 1984)), (R["mid"] + mc.EDGE, arm_y1 - 8, fr_line, arm_y1 + 8), (R["mid"] + mc.EDGE, arm_y2 - 8, fr_line, arm_y2 + 8)]
     # what is already on the walls: nothing put on them after this may come within 24 units of any of it
     taken = [B(448, 256, floor_z, 1088, 384, road_z + 64),                                    # the stairs and their landing
              B(2560, 192, floor_z, 3072, 320, floor_z + GATE_HIGH + 64),                       # the south gate's mouth
@@ -1378,12 +1416,15 @@ def canal(args):
     for model, x, y, yaw in (("models/props_debris/concrete_chunk01a.mdl", 2740, 2190, 40), ("models/props_debris/broken_pile001a.mdl", 2890, 2240, 200),
                              ("models/props_debris/concrete_chunk02a.mdl", 2700, 2300, 110)):
         static(model, x, y, yaw)
-    taken.append(road_bridge(vmf, plan, "x", ox + 3520, ox + 3776, oy + 2304, oy + 2816, floor_z, road_z, sv))
+    # (the street over the east arm is the road on the east bank, on a bridge from B's edge to the Combine wall's line,
+    #  a parapet on its east side looking up the arm; its west side has the road's own parapet)
+    taken.append(mc.road_deck(vmf, sv, R["mid"] + mc.EDGE, arm_y1, fr_line, arm_y2, "y", parapets=[(fr_line - 16, arm_y1, fr_line, arm_y2, road_z + 8)], tops=mc.bank_tops(R["mid"])))
     static("models/props_debris/barricade_tall01a.mdl", 2740, 3160, 20)
     set_blocked += [(1080, 500, 1520, 680), (2000, 400, 2500, 660), (2700, 1000, 2900, 1240), (2650, 2130, 2960, 2360), (2640, 3060, 2860, 3260)]
     lanes += [(1300, 430), (2240, 400), (2940, 1120), (2990, 2240), (2940, 3160)]
 
-    # --- two footbridges that go somewhere: each lands in a doorway in the wall, barred at its back ----------
+    # --- two footbridges that go somewhere: the quay's lands in a doorway in the wall, barred at its back; the second
+    # goes from a doorway like it in B's west wall to the road on the east bank ----------
     rail = MAT["canal_wall"]
     vmf.detail([B(64, 256, road_z - 16, 256, 768, road_z)], MAT["beam"], top=MAT["quay_floor"])                        # from the quay, over A
     vmf.detail([B(64, 256, road_z, 72, 768, road_z + 40), B(248, 256, road_z, 256, 768, road_z + 40)], rail)
@@ -1391,7 +1432,6 @@ def canal(args):
     vmf.detail([B(2560, 1856, road_z, 3072, 1864, road_z + 40), B(2560, 1976, road_z, 3072, 1984, road_z + 40)], rail)
     barred(vmf, B(64, 872, road_z, 256, 880, road_z + 112), "x", "LC canal: details", back=B(64, 888, road_z, 256, 896, road_z + 112))
     barred(vmf, B(2448, 1792, road_z, 2456, 2048, road_z + 112), "y", "LC canal: details", back=B(2432, 1792, road_z, 2440, 2048, road_z + 112))
-    barred(vmf, B(3176, 1792, road_z, 3184, 2048, road_z + 112), "y", "LC canal: details", back=B(3192, 1792, road_z, 3200, 2048, road_z + 112))
     # a ladder up to the second bridge, in a slot left in the east bank: set up the way the owner's own map does its ladders
     # (ladder pieces 128 tall, the climbing line 28 out from them, a place to step off at each end)
     for z, model, yaw in ((floor_z, "metalladder002", 180), (floor_z + 128, "metalladder002", 180), (road_z, "metalladder002b", 0)):
@@ -1416,10 +1456,30 @@ def canal(args):
         vmf.point("prop_physics", at, dress_keys(model, at[0], at[1], {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
                                                                         "spawnflags": loose_flags(model)}), "LC canal: props")
 
+    # --- the road on the east bank: what stands on it, as on the ring's street; the Combine wall along its far side -----
+    # (the parapet stops where the second footbridge and the ladder from the canal's floor come up onto it, and planks
+    #  cross the tracks there; a path node every 512 on the edge walk and on the road)
+    road_nodes = []
+    gap1, gap2 = oy + 1792, oy + 1984       # (the ladder's slot and the footbridge, y 3648 to 3840)
+    mc.east_bank_dress(vmf, "LC canal: the road on the east bank", R["mid"], edge=[(road_y1, gap1), (gap2, road_y2)], rail=[(road_y1, gap1 + 64), (gap2, road_y2)],
+                       tracks=[(road_y1, road_y2)], pave=[(road_y1, road_y2)], outer=[(road_y1, road_y2)], planks=[(gap1 + 64, gap2)],
+                       lane=lambda x, y, z: road_nodes.append((x, y, z)), lanes_at=range(road_y1 + 192, road_y2, 512))
+    import types      # (not over its last three squares at the north edge, where the ring's stretch beyond ends in a pier over the join,
+    #                    nor over the two each side of the arm, so no pier overhangs the water)
+    dressed = {c for c in core if c[1] * CELL < road_y2 - 192 and not arm_y1 - 128 <= c[1] * CELL < arm_y2 + 128}
+    mc.combine_wall(types.SimpleNamespace(combine_core=dressed, deck=road_cells | under_cells, name="canal", vmf=vmf, vis="LC canal", notes=[]))
+
     # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
-    # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before)
+    # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before. The dressing sees
+    #  the road as wall to its own height and the room under it as a low room, as a chain's does; the chain link along the
+    #  walls' tops stays off the road, the room under it and the Combine wall's core)
     import map_modules
-    ch, _ = map_modules.dress_piece(vmf, plan, "canal", "LC canal", taken, no_bank, [P((2560, 0, 3072, 256))], 71, pipes=[("x", ox + 1600, oy + 256, oy + 768)], rim=wall_top)
+    plan.walls()
+    view = mc.View(plan, {c: (("solid", road_z) if c in road_cells else ("solid", core_top) if c in core else ("low",) + spec[1:4] if c in under_cells else spec)
+                          for c, spec in plan.cells.items()})
+    walled = mc.View(plan, {c: spec for c, spec in plan.cells.items() if c not in core and c not in under_cells})
+    ch, _ = map_modules.dress_piece(vmf, plan, "canal", "LC canal", taken, no_bank, [P((2560, 0, 3072, 256))], 71, pipes=[("x", ox + 1600, oy + 256, oy + 768)], rim=wall_top,
+                                    view=view)
 
     # --- where the city's people can walk: the flat of the floor, the quay, the stairs, the bridges ----------------
     blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] + set_blocked # (the stairs, behind each gate's bars, the set pieces)
@@ -1435,10 +1495,12 @@ def canal(args):
     def air_node(x, y, z):      # (flying nodes for scanners over the canal: Valve's, the owner, 21 November)
         vmf.point("info_node_air", (x, y, z), {"nodeid": node_id[0], "nodeheight": "0"}, "LC canal: flying nodes")
         node_id[0] += 1
-    ch.nodes(lambda x, y, z: node(x - ox, y - oy, z), [P(r) for r in blocked], air=air_node, share=node_share("canal"), extra=len(lanes) + 11)
+    ch.nodes(lambda x, y, z: node(x - ox, y - oy, z), [P(r) for r in blocked], air=air_node, share=node_share("canal"), extra=len(lanes) + 11 + len(road_nodes))
     for x, y in lanes:
         node(x, y, floor_z)
-    fences = fence(vmf, plan, 96, "LC canal: fence along the walls' tops", top=wall_top)
+    for x, y, z in road_nodes:
+        node(x - ox, y - oy, z)
+    fences = fence(vmf, walled, 96, "LC canal: fence along the walls' tops", top=wall_top)
     for x, y, z in ((576, 320, road_z), (736, 320, road_z - 64), (832, 320, road_z - 128), (928, 320, road_z - 208), (1056, 320, floor_z),
                     (160, 384, road_z), (160, 512, road_z), (160, 640, road_z), (2688, 1920, road_z), (2816, 1920, road_z), (2944, 1920, road_z)):
         node(x, y, z)
@@ -1458,7 +1520,7 @@ def canal(args):
     problems, air = check(vmf, W(1280, 512, floor_z + 32), [] if args.test else [stopper])
     # a doorway is open on its front only: wall on its other three sides (one that opened sideways onto the east arm
     # showed the black wall at its back edge-on: the owner, 19 November)
-    for (x1, y1, x2, y2, front) in ((64, 768, 256, 896, "south"), (2432, 1792, 2560, 2048, "east"), (3072, 1792, 3200, 2048, "west")):
+    for (x1, y1, x2, y2, front) in ((64, 768, 256, 896, "south"), (2432, 1792, 2560, 2048, "east")):
         for i in range(x1 // CELL - 1, x2 // CELL + 1):
             for j in range(y1 // CELL - 1, y2 // CELL + 1):
                 if x1 // CELL <= i < x2 // CELL and y1 // CELL <= j < y2 // CELL:
@@ -1476,6 +1538,8 @@ def canal(args):
     print("  details: %d banks, %d corner fills, %d lengths of wall trim with %d ribs, %d outfalls, 2 pipes, 2 footbridges, 1 ladder, %d runs of fence" % (
         st["banks"], st["fills"], len(ch.made.get("walls", [])), st["ribs"], st["stubs"], fences))
     print("  set pieces: a container, wrecked cars and a skip, a boat, rubble, a street carried over the east arm, a barricade; the walls' concrete ends at z %d" % wall_top)
+    print("  the road round its east side: up the east bank from y %d to y %d (the ring's road at both ends, capped for this file alone), over the east arm on a bridge, "
+          "the Combine wall's core along its far side at x %d..%d" % (road_y1, road_y2, fr_line, fr_line + 64))
     print("  it fills x %d to %d, y %d to %d, z %d to %d (the road's sky plug to %d)" % (min(xs), max(xs), min(ys), max(ys), plan.base, plan.top, args.road_sky))
     print("  gates (a culvert %d wide, %d high, floor z %d): east at x %d, y %d to %d; north at y %d, x %d to %d; south (the canal ring's) at y %d, x %d to %d" % (
         GATE_WIDE, GATE_HIGH, floor_z, ox + 4608, oy + 2304, oy + 2816, oy + 3840, ox + 2560, ox + 3072, oy, ox + 2560, ox + 3072))
