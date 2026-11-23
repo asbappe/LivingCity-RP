@@ -15450,6 +15450,21 @@ local hb = ents.Create("lc_bed") hb:SetPos(bz.pos + Vector(60, 0, 0)) hb:Spawn()
 local sleeper, sst = LC.SpawnCitizen(bz.pos + Vector(-60, 0, 0))
 sst.leaveAt = nil
 sleeper.seqs = { Lying_Down = 5 } -- (the offline stand-in's models have no animations unless given some)
+sleeper.SetupBones = false -- (as on a real server: Garry's Mod has SetupBones on players' screens only)
+-- (the stand-in world has no ragdolls: one, and bones the server can't read, for the still copy)
+local ivmWasB, createWasB = util.IsValidModel, ents.Create
+util.IsValidModel = function() return true end
+sleeper.LookupBone = function() return 0 end
+sleeper.GetBonePosition = function() return nil end
+sleeper.CallOnRemove, sleeper.RemoveCallOnRemove = function() end, function() end
+ents.Create = function(cls)
+    local e = createWasB(cls)
+    if cls == "prop_ragdoll" and e then
+        e.GetPhysicsObjectCount = function() return 0 end
+        e.TranslatePhysBoneToBone = function() return 0 end
+    end
+    return e
+end
 local bedtime = LC.Bedtime
 LC.Bedtime = function() return true end
 LC.StartLeaving(sleeper, sst, false, "test")
@@ -15457,6 +15472,25 @@ ok(sst.bedKey ~= nil and LC.NPCStr(sleeper, "lc_doing", "") == "going home to be
 for _ = 1, 40 do _run(0.5) if sst.state == "abed" then break end end
 ok(sst.state == "abed" and IsValid(sleeper) and LC.NPCStr(sleeper, "lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)",
     tostring(sst.state) .. " seq=" .. tostring(sleeper.LookupSequence and sleeper:LookupSequence("Lying_Down")) .. " model=" .. tostring(sleeper:GetModel()))
+util.IsValidModel, ents.Create = ivmWasB, createWasB
+do -- an editor bed point clicked off-centre, facing across the bed: lies along it, in the middle, head at the wall
+    local trWas = util.TraceLine
+    -- a mattress 80 long (y -40 to 40) and 30 wide (x -15 to 15), its top at z 20; a wall at y 60
+    util.TraceLine = function(t)
+        local st, en = t.start, t.endpos
+        if st.z > en.z then
+            if math.abs(st.x) <= 15 and math.abs(st.y) <= 40 then return { Hit = true, HitPos = Vector(st.x, st.y, 20), Fraction = 0.5 } end
+            return { Hit = true, HitPos = Vector(st.x, st.y, 0), Fraction = 0.9 }
+        end
+        if en.y > 60 and st.y < 60 then return { Hit = true, Fraction = (60 - st.y) / (en.y - st.y), HitPos = Vector(st.x, 60, st.z) } end
+        return { Hit = false, Fraction = 1, HitPos = en }
+    end
+    local mid, yaw = LC.BedPointLie(Vector(0, 20, 20), 0)
+    util.TraceLine = trWas
+    ok(math.abs(mid.y) < 9 and math.abs(((yaw - 90 + 180) % 360) - 180) < 1,
+        "an editor bed lies along its mattress, in the middle, head to the wall (the owner, 23 November: sleepers through walls)", tostring(mid) .. " " .. yaw)
+end
+ok(sst.bedL and IsValid(sst.bedL.double) and (sleeper.nodraw == true), "a still copy of them lies on the bed, the real one hidden (the owner, 23 November: one stood on the bed, \"asleep\")", tostring(sst.bedL) .. " double=" .. tostring(sst.bedL and sst.bedL.double) .. " nodraw=" .. tostring(sleeper.nodraw) .. " ss=" .. tostring(sst.bedL and sst.bedL.ss))
 local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
 ost.leaveAt = nil
 ok(LC.FreeBedIn(bz, other) == nil, "one sleeper to a bed")
