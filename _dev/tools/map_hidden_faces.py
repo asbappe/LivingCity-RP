@@ -84,12 +84,15 @@ def main():
 
     brushes, faces, disps, seeds, things = [], [], [], [], []      # (planes, bbox) solid; (side id, mat, poly, normal) candidates
     every = []      # (solid id, "world" or "detail", bbox, sides, opaque, planes): every brush that could go (--brushes)
+    every_point = []      # (class, name, origin): every point entity (--brushes checks none stands out in the void)
     for top in root.kids:
         if top.name == "world":
             owner, sols = "world", [k for k in top.kids if k.name == "solid"]
         elif top.name == "entity":
             cls = top.kv.get("classname", "")
             o = mv.nums(top.kv.get("origin", ""))
+            if len(o) == 3 and not [k for k in top.kids if k.name == "solid"]:
+                every_point.append((cls, top.kv.get("targetname", "") or top.kv.get("model", ""), o))
             if cls.startswith("info_player") and len(o) == 3:
                 seeds.append((o[0], o[1], o[2] + 36))
             elif len(o) == 3 and cls.startswith(("light", "prop_", "npc_", "item_", "env_sprite", "point_spotlight")):
@@ -313,6 +316,10 @@ def main():
                 break
         void = flood(void, out_air)
         print("the void outside the seal: %.1f M cubes" % (void.sum() / 1e6))
+        for cls, name, o in every_point:      # (a thing out in the void: the compiler stops on a leak)
+            i = idx(o)
+            if (i >= 0).all() and (i < n).all() and void[tuple(i)]:
+                print("  LEAK: %s %s at %s stands outside the sealed map" % (cls, name, [round(c) for c in o]))
         m = int(round(16 / C))      # (16 of margin round every brush)
         pocket = out_air & ~void & ~reached      # (air inside the seal nobody sees: sealed pockets, the ground under the terrain)
         kinds = {}
