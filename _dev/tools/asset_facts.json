@@ -5257,6 +5257,24 @@
 "static": true,
 "v": 2
 },
+"models/props_buildings/collapsedbuilding01a.mdl": {
+"bbox": [
+-175.0,
+-344.8,
+-202.6,
+157.7,
+346.0,
+194.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_buildings/collapsedbuilding01awall.mdl": {
 "bbox": [
 -39.9,
@@ -5265,6 +5283,24 @@
 47.6,
 323.0,
 88.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/collapsedbuilding02a.mdl": {
+"bbox": [
+-180.7,
+-164.2,
+-88.9,
+179.3,
+166.1,
+132.2
 ],
 "built_static": true,
 "collides": true,
@@ -5880,6 +5916,24 @@
 ],
 "built_static": true,
 "collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/short_building001a.mdl": {
+"bbox": [
+-75.4,
+-51.4,
+-95.0,
+75.4,
+49.2,
+94.6
+],
+"built_static": true,
+"collides": true,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
@@ -8860,6 +8914,10 @@
 "ragdoll": false,
 "static": false,
 "v": 2
+},
+"models/props_c17/smokestack001a.mdl": {
+"elsewhere": [],
+"game": null
 },
 "models/props_c17/statue_horse.mdl": {
 "bbox": [
@@ -14693,6 +14751,42 @@
 18.2,
 64.5,
 65.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/building_brokenexterior001b.mdl": {
+"bbox": [
+-8.3,
+-64.3,
+-64.8,
+20.1,
+64.2,
+64.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/building_brokenexterior001c.mdl": {
+"bbox": [
+-8.3,
+-64.4,
+-64.2,
+16.8,
+64.3,
+64.5
 ],
 "built_static": true,
 "collides": true,
@@ -28795,6 +28889,24 @@
 134.2,
 270.3,
 101.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_rooftop/rooftopcluser09a.mdl": {
+"bbox": [
+-479.2,
+-322.8,
+-160.0,
+162.3,
+0.6,
+136.3
 ],
 "built_static": true,
 "collides": true,

@@ -37,7 +37,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   c18_lc.vmf and checked against every piece. **The road and railway run between the city and the canal** (the owner,
   23 November), four trains, a road climbing to the owner's west road; four runs moved out to make room, the town and
   cave forest with them. Every build runs a stair and a walk check. Test map: map_ring_walk.py. Not compiled yet.
-- The Combine perimeter wall template: `python3 _dev/tools/map_combine.py perimeter` (not placed in a map yet).
+- From the city out: the owner's city, a Combine wall (`wall combine`), the road, the railway, the canal, then ruins and
+  rooftops beyond the far wall, turning to EP2 pine forest by the two forests (`backdrop`, map_backdrop.py).
 - Ravenholm's church is behind the crypt (map_mods_f.church); its names wait for the gamemode (TODO.md, the church).
 - The owner's map (c18_lc.vmf) and Valve's VMF zip are on their Drive: curl from drive.usercontent.google.com.
 - Also 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).
