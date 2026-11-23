@@ -364,6 +364,9 @@ do -- the whole person in the picture, head to feet (the owner, 23 November: "zo
         problems[#problems + 1] = "character picture doesn't fit the whole person: " .. tostring(dist) .. " (sees " .. math.floor(seen) .. " of 72)"
     end
 end
+if LC_CL.HousingBlockTally({ residents = 1, npcs = 8, beds = 12, free = 3, m = 20 }) ~= "9 live there, 12 beds, 3 free at night, 20 m away" then
+    problems[#problems + 1] = "Housing Allocation's block tally: " .. tostring(LC_CL.HousingBlockTally({ residents = 1, npcs = 8, beds = 12, free = 3, m = 20 }))
+end
 net._q = { "Ida Hoffman" }
 okI, errI = pcall(net["recv_lcc_suggested"])
 if not okI then problems[#problems + 1] = "suggested name: " .. tostring(errI) end

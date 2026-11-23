@@ -15502,6 +15502,11 @@ do -- an editor bed point clicked off-centre, facing across the bed: lies along 
         "an editor bed lies along its mattress, in the middle, head to the wall (the owner, 23 November: sleepers through walls)", tostring(mid) .. " " .. yaw)
 end
 ok(sst.bedL and IsValid(sst.bedL.double) and (sleeper.nodraw == true), "a still copy of them lies on the bed, the real one hidden (the owner, 23 November: one stood on the bed, \"asleep\")", tostring(sst.bedL) .. " double=" .. tostring(sst.bedL and sst.bedL.double) .. " nodraw=" .. tostring(sleeper.nodraw) .. " ss=" .. tostring(sst.bedL and sst.bedL.ss))
+do -- Housing Allocation's tally (the owner, 23 November: "0 living there" while the city's people slept there)
+    local t = LC.BlockBedTally({ [31] = 1 })[31]
+    ok(t and t.beds >= 1 and t.free == math.max(0, t.beds - t.npcs - 1), "a block's beds are counted, and what's free at night once its citizens and players are in them",
+        t and (t.beds .. " beds, " .. t.npcs .. " citizens, " .. t.free .. " free"))
+end
 local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
 ost.leaveAt = nil
 ok(LC.FreeBedIn(bz, other) == nil, "one sleeper to a bed")

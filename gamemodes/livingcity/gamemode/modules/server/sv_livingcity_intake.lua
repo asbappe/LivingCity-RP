@@ -252,6 +252,33 @@ function LC.RegisterPerson(ply, how)
 end
 
 -- The blocks, and how many people live in each.
+-- Each block's beds and who sleeps in them at night (the owner, 23 November: the terminal said "0 live there" while the
+-- city's own people flock there at night): { [block] = { beds, npcs (the city's citizens who call it home), free } },
+-- free counting the players who live there too.
+function LC.BlockBedTally(players)
+    local out = {}
+    local zones = LC.ZonesOfKind and LC.ZonesOfKind("block") or {}
+    for _, a in ipairs(LC.Amenities and LC.Amenities("bed") or {}) do
+        for _, z in ipairs(zones) do
+            if (z.group or 0) > 0 and LCZ and LCZ.Contains and LCZ.Contains(z, a.pos, 0) then
+                local t = out[z.group] or { beds = 0, npcs = 0 }
+                out[z.group] = t
+                t.beds = t.beds + 1
+                break
+            end
+        end
+    end
+    for _, p in ipairs(LC.People and LC.People.list or {}) do
+        if p.alive and p.role == "citizen" and p.home then
+            local t = out[p.home] or { beds = 0, npcs = 0 }
+            out[p.home] = t
+            t.npcs = t.npcs + 1
+        end
+    end
+    for b, t in pairs(out) do t.free = math.max(0, t.beds - t.npcs - ((players or {})[b] or 0)) end
+    return out
+end
+
 local function Residents()
     local counts = {}
     for _, p in ipairs(player.GetAll()) do
@@ -472,9 +499,11 @@ function LC.SendDesk(ply, ent)
     if kind == "labor" and LC.LaborDeskInfo then t.labor = LC.LaborDeskInfo(ply) end
     if kind == "housing" then
         local counts = Residents()
+        local beds = LC.BlockBedTally(counts)
         for _, b in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
             local c = LC.BlockCenter and LC.BlockCenter(b)
-            t.blocks[#t.blocks + 1] = { n = b, name = LC.BlockName(b), residents = counts[b] or 0,
+            local bt = beds[b] or { beds = 0, npcs = 0, free = 0 }
+            t.blocks[#t.blocks + 1] = { n = b, name = LC.BlockName(b), residents = counts[b] or 0, beds = bt.beds, npcs = bt.npcs, free = bt.free,
                 m = c and math.max(1, math.floor(c:Distance(ent:GetPos()) / 40 + 0.5)) or nil }
         end
     end
