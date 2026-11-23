@@ -10,9 +10,10 @@ silo is placed turned a quarter, so the piece's +x is the map's north and its +y
 
 What the silo's floors are (heights over the anchor): the pit (covered at the bottom level by a grate, pit_cover); the
 bottom level, 320 (the shaft's floor round the flag's pole, a ring hall round the shaft, the leader's office behind the
-lab door and his bedroom beside it); the solid ring, 576 to 896; level A, 896 (a ring hall, the lift's middle stop);
-the ring slab; level B, 1152 (the lift's top stop: a hall by the lift and, through two doors, the rest of the ring:
-the quarters); the gantry, 1408 (where the corridor from the bunker comes in; the ladder down to level B).
+lab door and his bedroom beside it); the solid ring, 576 to 896; level A, 896 (a ring hall); the ring slab; level B,
+1152 (a hall by the lift and, through two doors, the rest of the ring: the quarters); the gantry, 1408 (where the
+corridor from the bunker comes in; the ladder down to level B). The lift stops only at the bottom level and the
+gantry's walkway; its shaft is shut at levels A and B (Silo.shaft_shut).
 """
 import math
 
@@ -50,19 +51,31 @@ LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, an
 # and 67, 14.5 degrees past each; clear of Valve's ladder at 270, the racks against the shaft's side of the wall from
 # 324 to 350 and the frames by the rocket from 73 to 99)
 SHAFT_WINDOWS = (246, 258, 270)
+# the lift's shaft shut at levels A and B (the owner, 23 November: "I cannot find any reasonable use for the mid levels of
+# the silo; only the top and bottom floors. Can we stretch the parts of the lift shaft that have fencing/pipes and can't
+# be "seen through" to the silo and just stretch/copy/mirror them to fill any visible gaps between the top and bottom
+# floor and program the lift to only go to the top and bottom floors?"): the lift passes both without stopping
+# (BunkerForest.LIFT_STOPS), so their landings' fixed gates, bars and frames (1034 to 1045) and Valve's fence panels
+# either side of the shaft at level B (988 to 997) are left out, and Silo.shaft_shut fills what a rider saw out through
+# them with copies of the shaft's solid stretch under level A: Valve's recessed metal panel on the landing's side
+# (SHAFT_PANEL, with the pipes and the wire fence before it) and the shaft's plain side walls (SHAFT_SIDES, by the side
+# they stand on)
+SHAFT_SHUT = set(range(988, 998)) | set(range(1034, 1046))
+SHAFT_PANEL, SHAFT_SIDES = 45, ((1, 165), (-1, 163))
 # the piece's brushes left out: the fake door at level B's south end (131; its north twin is the func_brush
 # brush_fake_cit_door_1, dropped with the wiring), the bottom level's outer wall behind the bedroom (577), rebuilt
 # round the secret door, the lever wall's parts (placed again in the office), and the two six-sided posts at the gantry
 # tunnel's mouth (1287, 1288): Valve's hinge posts for its blast door as Valve hung it there; the door is turned round
 # now and brings its own posts at its hinges (BunkerForest.silo_door), and its leaves swung through these (the owner,
 # 22 November: "the silo doors clip through two round/octagon-ish columns when closing")
-SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604} | set(SHAFT_WINDOWS)
+SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604} | set(SHAFT_WINDOWS) | SHAFT_SHUT
 # and over the lift's shaft in the walkway (the gantry level's tunnel): Valve's floor there, its two grates and the hull
 # strips round them (1213 to 1218), the strut down its middle and the rails beside it (1604, 1597, 1598): the car comes
 # up into the walkway now, and the walkway's own sliding grates cover the hole when it is gone (BunkerForest.lift; the
 # owner, 22 November: "the massive brush/strut in the middle of the walkway will have to be removed but that's ok")
 # and the three segments of level B's shaft wall cut for the shuttered windows (SHAFT_WINDOWS: placed again in four
 # pieces round each opening by Silo.shaft_windows)
+# and the lift's landings and fences at levels A and B (SHAFT_SHUT: the shaft is shut there by Silo.shaft_shut)
 # and the tunnel mouth's two narrow jambs (1564, 1566), Valve's too for its door as it hung: the leaves now swing into
 # the tunnel through their lower part (the last 15 degrees), so they start over the leaves' height, 160 over the floor
 MOUTH_JAMBS, MOUTH_JAMB_FROM = (1564, 1566), 1568
@@ -545,6 +558,65 @@ class Silo:
                                 1, self.d, self.vis)[0]
         v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
         f.notes.append("level B's quarters: %d of Valve's shuttered windows in the shaft's wall, looking out on the rocket" % len(SHAFT_WINDOWS))
+
+    def shaft_shut(self, pf):
+        """The lift's shaft at levels A and B, which the lift passes without stopping (SHAFT_SHUT), shut with the shaft's
+        own parts from its solid stretch between the bottom level and level A, stretched to fit, so that from the car the
+        shaft runs on unbroken from the bottom level to the walkway. On the landing's side, between the pillars and from
+        the floor's slab to the slab over it (level A 896 to 1088, level B 1152 to 1392, under the gantry's): Valve's
+        recessed metal panel (SHAFT_PANEL: citadel_metalwall060a, 28 behind the pillars' faces; its back the hall's
+        concrete; its ends in the pillars, its top and foot on the slabs, nodraw), and before it Valve's three runs of
+        pipes and its wire fence, as under level A. Either side of the shaft, in the gap between the outer wall's slant
+        and the pillar by the landing (x -512 to -440: open at level A, Valve's fence panels at level B, open over level
+        B up to the gantry's slab): the shaft's plain side wall (SHAFT_SIDES: ep2_concretewall01b on the shaft's face;
+        01c on the band under the gantry's slab, as the pillars beside it have), 16 thick, its faces against other
+        brushes nodraw. World brushes, as Valve's are: 8 where 22 were."""
+        from map_forest import pf_solid
+        v = self.v
+
+        def stretched(i, box, faces=None):
+            """Valve's brush i moved and stretched onto box (a straight scale along each axis), its faces' textures left
+            where they lie in the world, so each pattern runs on as on the brush it was copied from. faces: {outward
+            normal: material} to change."""
+            sides = pf["solids"][i]["sides"]
+            pts = [p for sd in sides for p in (sd.get("verts") or sd.get("corners") or sd["plane"])]
+            lo, hi = [min(p[k] for p in pts) for k in range(3)], [max(p[k] for p in pts) for k in range(3)]
+
+            def f(p):
+                return [box[k] + (p[k] - lo[k]) * (box[k + 3] - box[k]) / float(hi[k] - lo[k]) for k in range(3)]
+            out = []
+            for sd in sides:
+                n = tuple(int(round(c)) for c in side_plane(sd["plane"])[0])
+                s = dict(sd, plane=[f(p) for p in sd["plane"]], verts=[f(p) for p in sd.get("verts") or []], corners=[f(p) for p in sd.get("corners") or []])
+                s["material"] = (faces or {}).get(n, s["material"])
+                out.append(s)
+            return out
+
+        def put(sides):
+            v.world.append(pf_solid(v, sides, 1, self.d, self.vis)[0])
+        nd = MAT["nodraw"].upper()
+        for z1, z2 in ((self.LEVEL_A, 1088), (self.LEVEL_B, 1392)):
+            put(stretched(SHAFT_PANEL, (-388, -80, z1, -384, 80, z2), {(0, 1, 0): nd, (0, -1, 0): nd, (0, 0, 1): nd, (0, 0, -1): nd}))
+        for way, i in SHAFT_SIDES:
+            y1, y2 = (96, 112) if way > 0 else (-112, -96)
+            for z1, z2 in ((self.LEVEL_A, 1088), (self.LEVEL_B, 1280), (1280, 1344)):
+                hide = {(1, 0, 0): nd, (-1, 0, 0): nd, (0, 0, 1): nd, (0, 0, -1): nd}
+                if z1 == 1280:
+                    hide[(0, -way, 0)] = "CONCRETE/EP2_CONCRETEWALL01C"
+                put(stretched(i, (-512, y1, z1, -440, y2, z2), hide))
+        # Valve's pipes before the panel (three runs, 3 out from it, a 128 length and a 64 or 128 more, end to end from
+        # the floor's slab up; at level B the last 16 in the gantry's slab, as Valve's go into the lintel under level A)
+        # and its wire fence (14 out from the pillars' faces: one standing on level A's slab, two one over the other at
+        # level B, as under level A)
+        for z1, lengths, fences in ((self.LEVEL_A, (128, 64), (956,)), (self.LEVEL_B, (128, 128), (1212, 1332))):
+            for y, pitch in ((20, -90), (1, 90), (-47, 90)):
+                z = z1
+                for n in lengths:
+                    self.prop("props_pipes/pipeset02d_%d_001a" % n, -391, y, z + n // 2, 90, pitch=pitch)
+                    z += n
+            for zf in fences:
+                self.prop("props_wasteland/interior_fence003b", -414, 0, zf, 180, extra={"disableshadows": "1"})
+        self.f.notes.append("the lift's shaft shut at levels A and B (it passes them): Valve's panel, pipes and fence on the landing's side, its plain wall at the sides")
 
     # -- 4. the leader's office and bedroom -------------------------------------------------------------------------
     def office(self):
