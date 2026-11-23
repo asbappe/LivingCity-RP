@@ -2031,12 +2031,15 @@ def chain_link(m, a, b, z, high=96, post=128):
     (u1, v1), (u2, v2) = a, b
     along_u = v1 == v2
     lo, hi = (min(u1, u2), max(u1, u2)) if along_u else (min(v1, v2), max(v1, v2))
+    posts = list(range(lo, hi + 1, post))
+    if hi - posts[-1] > 64:
+        posts.append(hi)      # (one at the far end too, wherever the last falls more than 64 short of it)
     if along_u:
         m.det([(lo, v1 - 1, z, hi, v1 + 1, z + high)], MAT["fence"])
-        bars = [(lo, v1 - 2, z + high - 4, hi, v1 + 2, z + high)] + [(min(p, hi - 4), v1 - 2, z, min(p, hi - 4) + 4, v1 + 2, z + high - 4) for p in range(lo, hi + 1, post)]
+        bars = [(lo, v1 - 2, z + high - 4, hi, v1 + 2, z + high)] + [(min(p, hi - 4), v1 - 2, z, min(p, hi - 4) + 4, v1 + 2, z + high - 4) for p in posts]
     else:
         m.det([(u1 - 1, lo, z, u1 + 1, hi, z + high)], MAT["fence"])
-        bars = [(u1 - 2, lo, z + high - 4, u1 + 2, hi, z + high)] + [(u1 - 2, min(p, hi - 4), z, u1 + 2, min(p, hi - 4) + 4, z + high - 4) for p in range(lo, hi + 1, post)]
+        bars = [(u1 - 2, lo, z + high - 4, u1 + 2, hi, z + high)] + [(u1 - 2, min(p, hi - 4), z, u1 + 2, min(p, hi - 4) + 4, z + high - 4) for p in posts]
     m.det(bars, MAT["bars"])
 
 
