@@ -6,50 +6,30 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 ## A new character's first hour
 
-- [ ] **A new face:** forty seconds of black screen, whirring and wet sounds, a clang, a ding. Too long, too short, too gross? [needs a person: feel]
 
 ## Jobs
 
-- [ ] **Housing block inspection:** the trail goes to a door of the block, the door stays shut until you set the charge or kick it in, the furniture stands on the floor inside. [needs a person: the real map's doors and rooms]
-- [ ] **Job board:** place "Fixture: job board" in the city, on rebel ground and on Combine ground. Do the lists show on it, and does E open your jobs? [needs a person: the lists on its glass]
-- [ ] **Job steps that replaced standing about:** Address the citizens, The secret mass (do the three gather?), Leak the schedule, Dead drop, letters at the door; the needle game on Break them out and on a vortigaunt's jobs (is its wording odd for a vortigaunt?). [needs a person: watching them happen, and the wording]
 
 ## Civil Protection
 
-- [ ] **Guns on rebel ground as a unit:** walk into rebel territory: no "LOWER YOUR WEAPON" prompt, and every gun fires, also after !build and after sleeping in their bed. [needs a person: no test yet, try it]
-- [ ] **Backup when you are down:** bleeding out with units of your squad near: does one kneel by you and get you up? Called over the radio from far off, do they come in from out of sight? [needs a person: the kneel and the arrival on the real map]
-- [ ] **Interrogation:** F2 > Interrogate someone in a cell: three questions, baton, Done, the answers written underneath. Readable, and in the way of anything? [needs a person: the list on screen]
-- [ ] **Gas masks and the gas:** in chlorine gas the mask goes on by itself with the visor edge and breathing; people without one cover the mouth, cough and run out. How does the mask sit on a face (`lc_gasmask_fit`)? [needs a person: the mask and the hand over the mouth]
 
 ## The Resistance
 
-- [ ] **The lab scientist:** start something and walk off: does he keep at it, tell you when it is done, and hand it only to you? After a raid, no blood left on him or the bench? [needs a person: blood left behind, by eye]
-- [ ] **A vortigaunt charging your vest:** E on a freed one: it turns, raises its hands, a green beam pulses to your chest for three seconds. Is there a charging animation? [needs a person: the animation and beam]
-- [ ] **The medic:** one in each rebel territory; E on him when hurt. Does he stay put and patch up hurt rebels near him? [needs a person: watching him]
-- [ ] **Operations:** as a Lieutenant, plan one straight from the F4 Operations board. Does the leader get the clipboard, how does it sit in the hand, do its boxes tick? [needs a person: the clipboard by eye]
 
 ## The city and its people
 
 
 ## The Administrator, the collapse and the ending
 
-- [ ] **Speeches:** with a speech crowd point placed, Give a speech: do the NPCs stand in rows facing the stand, does the podium look right? With nobody as Administrator she speaks at midday herself: are the pauses right, and does Colonel Cubbage answer at the camp? [needs a person: the crowd, the podium, the pacing]
-- [ ] **The collapse to BLACK:** editor > The collapse > "collapse to BLACK now": the G-Man in front of you (nobody else sees him), then the curfew; as a rebel under open sky a ring on the ground, the whistle, the blast, one at a time. [needs a person: the scene and the shelling, by eye and ear]
-- [ ] **Her last stand:** the purple bubble, the beam from each transformer, sparks, smoke and blasts as it breaks; manhacks, turrets, mines; the shield panels you can carry; the hums, zaps and clanks. [needs a person: watching the fight]
 
 ## Dreams
 
-- [ ] **The dreams' grounds:** after uploading `livingcity_content.zip` and a FastDL sync, test a few dreams from the editor (Freeze, Citizen; Dance Marathon; The Midnight Rally; Ravenholm): is each picture the right size underfoot, not stretched or tiny, and does the mood still fit? [needs a person: how it looks]
 
 ## Staff tools
 
-- [ ] **Save with the gamemode:** Q > Tools > Miscount > Save with the gamemode: left click a spawned prop, change map: is it back? Saved props glow green only while the tool is out. [needs a person: a real map change]
 
 ## Needs the real server
 
-- [ ] **Pictures:** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync, change map, join from a clean client: the civil posters, the dream posters and the spray can's two new marks show their pictures, sharp enough to read. [needs the real server: uploads and FastDL]
-- [ ] **Recordings:** run `lc_voice_missing` and `lc_hl2_lines` in the server console and bring back the output and `data/livingcity/hl2_lines.txt`. Songs for dreams go in `sound/livingcity/dreams/` as `<codeword>1.mp3`. [needs the real server: its console and files]
-- [ ] **The director, free talk and her voice:** editor panel > "The director and free talk": paste the key, Save, Test. Then say something to a named citizen in chat: do they answer, in a voice right for the city? Compare the debug report's requests with the bill. [needs the real server: your key]
 - [ ] **Files to bring back:** `data/livingcity/minds/` after a few hours, `data/livingcity/chronicle/` after a week, and a play study folder (`data/livingcity/study/` on your PC, after Stop and save). Does play feel heavier with the study on? [needs the real server: files only you can copy]
 - [ ] **Guns over a restart:** draw a bought pistol and SMG, restart the server, rejoin: both are in your pockets to draw again. [needs the real server: a real restart]
 - [ ] **Uneven sides:** with many Resistance players to few Combine: more patrols, a reaction squad about 15 seconds after a kill, a dropship squad at a checkpoint attack, the "Combine are desperate" notice; a rebel who reconnects within 7 minutes is still a rebel. [needs the real server: many real players or bots]
