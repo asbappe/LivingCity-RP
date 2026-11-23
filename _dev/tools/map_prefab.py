@@ -115,7 +115,12 @@ def resolves(target, names):
     return [t] if t in names else []
 
 
-def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=(), centroid=False, force=(), keep_nodraw=False):
+def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=(), centroid=False, force=(), keep_nodraw=False,
+            portals=False, clips=False, with_names=(), without=()):
+    """(portals: the source's areaportals go in the wiring too, placed only with place(..., portals=True); clips: its
+    player clips are kept as brushes; with_names: entities of those names (Hammer wildcards) are wired wherever they
+    stand; without: entities of those names or classes are left out altogether, Valve's story say.)"""
+    import fnmatch
     import map_view as mv
     root = mv.read(path)
     x1, y1, z1, x2, y2, z2 = box
@@ -167,8 +172,20 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
             out.append(s)
         return out
 
+    seen = SEEN_TOOLS + (("tools/toolsplayerclip",) if clips else ())
+
     def all_tools(sides):
-        return all("tools/" in s["material"].lower() and not s["material"].lower().startswith(SEEN_TOOLS) for s in sides)
+        return all("tools/" in s["material"].lower() and not s["material"].lower().startswith(seen) for s in sides)
+
+    def free(cls):      # (a class this lift does not wire)
+        return unwired(cls) and not (portals and cls in ("func_areaportal", "func_areaportalwindow"))
+
+    def match(pats, v):
+        v = (v or "").lower()
+        return bool(v) and any(fnmatch.fnmatchcase(v, p.lower()) for p in pats)
+
+    def wanted(top):
+        return match(with_names, top.kv.get("targetname", ""))
 
     kept = set()      # (the source's entities the piece holds, by id())
     places = {}       # (where each entity is in the source: its origin, or the middle of its brushes)
@@ -176,20 +193,21 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
         if top.name not in ("world", "entity"):
             continue
         cls = top.kv.get("classname", "worldspawn")
+        if top.name == "entity" and (match(without, top.kv.get("targetname", "")) or match(without, cls)):
+            continue      # (--without: left out altogether)
         if top.name == "entity" and not any(k.name == "solid" for k in top.kids):
             if "origin" not in top.kv:
                 continue
             o = nums(top.kv["origin"])
             places[id(top)] = o
             conns = connections_of(top)
-            if cls in KEEP_POINTS:
-                if inside(o):
-                    keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin"))
-                    points.append({"classname": cls, "origin": rel(o), "keys": keys})
-                    if conns:
-                        points[-1]["connections"] = conns
-                    kept.add(id(top))
-            elif not unwired(cls) and inside(o, b=wb):
+            if cls in KEEP_POINTS and inside(o):
+                keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin"))
+                points.append({"classname": cls, "origin": rel(o), "keys": keys})
+                if conns:
+                    points[-1]["connections"] = conns
+                kept.add(id(top))
+            elif (cls not in KEEP_POINTS or wanted(top)) and not free(cls) and (inside(o, b=wb) or wanted(top)):
                 keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin", "classname"))
                 wiring.append({"classname": cls, "origin": rel(o), "keys": keys, "connections": conns})
                 kept.add(id(top))
@@ -202,7 +220,7 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
         if top.name == "entity":
             conns = connections_of(top)
             tname = top.kv.get("targetname", "")
-            if (cls not in STATIC_BRUSHES or tname or conns) and not unwired(cls) and brushes and all(inside(p, b=wb) for p in allc):
+            if (cls not in STATIC_BRUSHES or tname or conns) and not free(cls) and brushes and (all(inside(p, b=wb) for p in allc) or wanted(top)):
                 keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin", "classname"))
                 e = {"classname": cls, "keys": keys, "connections": conns, "brushes": [moved(b[0]) for b in brushes]}
                 if "origin" in top.kv:
@@ -212,7 +230,7 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
                 kept.add(id(top))
                 live = tname
             if cls not in STATIC_BRUSHES:
-                if wired is None and unwired(cls):
+                if wired is None and free(cls):
                     continue
                 cls = "%s (taken shut, as a static slab)" % cls      # (a moving brush: its look, shut, for a piece placed without its logic)
         for sides, allv, sid in brushes:
@@ -675,6 +693,11 @@ def check():
     place(m2, json.loads(json.dumps(pf)), 0, 0, 0, 0, wiring=False)
     t2 = b2.vmf.text()
     want(t2.count("METAL/METALDOOR001A") == 6 and '"func_door"' not in t2 and "trigger_once" not in t2, "wiring=False places the slab and no logic")
+    pf4 = extract(path, "check_gate4", (0, 0, -16, 512, 512, 512), anchor=(256, 128, 0), lib=tmp, with_names=("story_*",), without=("snd_gate", "trigger_once"))
+    w4 = dict((e["classname"], e) for e in pf4.get("wiring", []))
+    want("ambient_generic" not in w4 and "trigger_once" not in w4 and "func_door" in w4, "--without leaves out by name and by class: %s" % sorted(w4))
+    want(any(e["keys"].get("targetname") == "story_relay" for e in pf4["wiring"]) and not any(o["name"] == "story_relay" for o in pf4.get("outside", [])),
+         "--with wires a named entity outside the box")
     b3 = Build("prefab_check3", 784, 500)      # (23 November: every player, world brushes, portals and nodes, for the Combine autogun)
     m3 = Mod(b3, Frame(0, 0, 0, 64), "prefab")
     more = json.loads(json.dumps(pf))
@@ -710,6 +733,10 @@ def main():
     e.add_argument("--centroid", action="store_true")
     e.add_argument("--force", nargs="*", default=[])
     e.add_argument("--keep-nodraw", action="store_true", help="keep the source's plain nodraw blocks (the shell a cave is shut in with)")
+    e.add_argument("--portals", action="store_true", help="keep the source's areaportals in the wiring (placed only with place(..., portals=True))")
+    e.add_argument("--clips", action="store_true", help="keep the source's player clips as brushes")
+    e.add_argument("--with", dest="with_names", nargs="*", default=[], help="names (wildcards) wired wherever they stand in the map")
+    e.add_argument("--without", nargs="*", default=[], help="names or classes (wildcards) left out altogether: the source's story")
     sub.add_parser("list")
     s = sub.add_parser("show")
     s.add_argument("name")
@@ -718,7 +745,8 @@ def main():
     sub.add_parser("check")
     a = ap.parse_args()
     if a.cmd == "extract":
-        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop), centroid=a.centroid, force=tuple(a.force), keep_nodraw=a.keep_nodraw)
+        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop), centroid=a.centroid, force=tuple(a.force), keep_nodraw=a.keep_nodraw,
+                     portals=a.portals, clips=a.clips, with_names=tuple(a.with_names), without=tuple(a.without))
         nd = sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp"))
         print("%s: %d brushes (%d displaced faces), %d props/lights/decals, %d wired (%d names outside, %d firing in), %d by %d by %d" % (
             a.name, len(pf["solids"]), nd, len(pf["points"]), len(pf.get("wiring", [])), len(pf.get("outside", [])), len(pf.get("fired_from_outside", [])),
