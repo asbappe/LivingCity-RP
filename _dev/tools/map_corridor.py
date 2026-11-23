@@ -296,7 +296,7 @@ def lay(b, elems, side, cars):
             v1, v2 = sv(192, 256)
             m.steps(u0, v1, v2, F, STREET, "u", 1)
             m.det([(u0 - 48, v1, F, u0, v2, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])      # (an apron at their foot: the mud kept level there)
-            m.no_bank(u0 - 8, s * 256 - 8, u0 + 392, s * 256 + 8)
+            m.no_bank(u0 - 8, s * 256 - 8, u0 + 384, s * 256 + 8)      # (the bank runs on right up to the stairs' back: the owner, 23 November, "why is the slope not meeting the back of the stairs?")
             m.blocked(u0, v1, u0 + 392, v2)
             m.taken(u0, v1, F, u0 + 384, v2, STREET)
             top = (u0 + 384, u0 + 448)

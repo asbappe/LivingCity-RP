@@ -42,7 +42,7 @@ SCAPES = {"tunnel": "prison.general_dripping_tunnel", "watery": "prison.watery_h
           "square": "d1_trainstation.TerminalSquare", "rooftop": "d1_town.Rooftop"}
 # Decals Half-Life 2 has (checked in Valve's lists), by what they show: m.grime picks one.
 GRIME = {"stain": ["decals/decalstain%03da" % n for n in (1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)],
-         "drain": ["decals/decalconcretedrain00%da" % n for n in (1, 2, 3)],
+         "drain": ["decals/decalstain%03da" % n for n in (2, 5, 9, 12)],      # (blotches: decalconcretedrain lies on its side on a wall and has a pipe drawn in it, the owner, 23 November)
          "trash": ["decals/trashdecal0%da" % n for n in (1, 2, 3, 4, 5)],
          "crack": ["decals/plaster%03da" % n for n in (1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)],
          "poster": ["decals/decal_posterbreen", "decals/decalposter002a", "decals/decalposter002b", "decals/decalposter003a", "decals/decalposter004a",
@@ -2259,6 +2259,7 @@ def finish(b, seed, spawn, args):
     ch = Channel(vmf, canal, F, TRIM, b.vis)
     for axis, at, lo, hi in b.pipes:
         ch.pipes(axis, at, lo, hi, b.taken)
+    ch.wall_top = b.rim      # (the outer walls' real top: the outfalls go high in them when there is room)
     ch.dress(b.no_bank, b.taken, outfalls=True, upright=b.upright, avoid=standing["props"])
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
     dish_plan(b, ch, standing["flat"], bump)
@@ -2502,7 +2503,7 @@ def dress_canal_walls(b, ch, avoid=()):
         c = (p // CELL, line // CELL - (1 if side > 0 else 0)) if axis == "x" else (line // CELL - (1 if side > 0 else 0), p // CELL)
         spec = ch.cells.get(c)
         return spec[1] if spec and spec[0] == "solid" and len(spec) > 1 else b.rim
-    for (axis, line, side, a, b2) in made.get("walls", []):
+    for (axis, line, side, a, b2) in ([] if b.upper else made.get("walls", [])):      # (beside a street no caged lamps: they hung on the far wall nobody reaches, lighting nothing, the owner, 23 November; the street's lamps and the Combine wall's light the canal)
         off = 0 if side > 0 else LAMP_STEP // 2
         p = a + 160 + (off - (a + 160)) % LAMP_STEP
         while p <= b2 - 160:
@@ -2522,23 +2523,25 @@ def dress_canal_walls(b, ch, avoid=()):
                     b.vmf.point("light", (lx, ly, F + LAMP_Z - 10), {"_light": "255 214 170 70", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"},
                                 b.vis + ": canal lamps")
             p += LAMP_STEP
+    holes = [(o[0], o[1], o[2], o[3]) for o in made.get("outfalls", [])] + [(o[0], o[1], o[2], o[3]) for o in made.get("stubs", [])]
     for k, (axis, line, side, at) in enumerate(made.get("ribs", [])):
         if rnd.random() < 0.18:
-            wx, wy = (at + 120, line) if axis == "x" else (line, at + 120)
-            b.vmf.point("infodecal", (wx, wy, F + 200 + rnd.randrange(0, 120)), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")
+            g = at + 120
+            if any(h[0] == axis and h[1] == line and h[2] == side and abs(h[3] - g) < 224 for h in holes):
+                continue      # (never across a culvert or a drain: the owner, 23 November, "the graffiti on the side is cut off by the culvert")
+            wx, wy = (g, line) if axis == "x" else (line, g)
+            b.vmf.point("infodecal", (wx, wy, F + 192), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")      # (in the band between the bank's top and the trim)
     for (axis, line, side, at, z, kind) in made.get("outfalls", []):
         x, y = at_wall(axis, line, side, at, 7)      # (its back flush with the wall, as Valve's)
         b.vmf.point("prop_static", (x, y, z), {"model": "models/props_canal/canal_cap001.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "6",
                                                "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls")
-        if kind == "bank":      # (the stain runs down the bank's slope from under the ring)
-            wx, wy = at_wall(axis, line, side, at, 24)
-            b.vmf.point("infodecal", (wx, wy, F + BANK - 24), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
-        else:                   # (on the wall between Valve's lip and the hole)
-            wx, wy = at_wall(axis, line, side, at, 0)
-            b.vmf.point("infodecal", (wx, wy, z - 72), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        # a stain on the wall's own face under the ring, between it and the trim's band (a blotch: the drain streaks
+        # came out lying on their sides, the owner, 23 November)
+        wx, wy = at_wall(axis, line, side, at, 0)
+        b.vmf.point("infodecal", (wx, wy, z - 100), {"texture": rnd.choice(GRIME["stain"])}, b.vis + ": canal grime")
     for (axis, line, side, at, z) in made.get("stubs", []):
         wx, wy = (at, line) if axis == "x" else (line, at)
-        b.vmf.point("infodecal", (wx, wy, z - 44), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        b.vmf.point("infodecal", (wx, wy, z - 40), {"texture": rnd.choice(GRIME["stain"])}, b.vis + ": canal grime")
 
 
 # Cover NPCs fight from (Valve, lesson valve-cover-hints): a cover hint behind each piece of low cover, on both sides of
