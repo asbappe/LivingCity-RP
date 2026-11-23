@@ -37989,6 +37989,24 @@
 "static": false,
 "v": 2
 },
+"models/vortigaunt_slave.mdl": {
+"bbox": [
+-15.0,
+-15.0,
+0.0,
+15.0,
+15.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
 "models/weapons/w_357.mdl": {
 "bbox": [
 -8.6,

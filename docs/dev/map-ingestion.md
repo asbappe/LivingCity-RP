@@ -180,6 +180,7 @@ owner-approved list on `TODO.md` ("Owner-approved Valve findings" and the lines 
   census, sections, props, logic, craft, views, aggregate): measuring, views, statistics, merging lessons
   (`merge-lessons FILE`, the same as `map_lessons.py --merge FILE`: it adds new ids, appends "extra" sentences,
   refuses em dashes, taken ids and unknown fields, and rewrites the reference page).
+- `map_setpieces.py`: every set piece worth lifting in the 105 shipped maps (wired groups, rare models, effects), ranked; the picks: `docs/dev/valve-setpieces.md`.
 - `map_view.py`: pictures of any VMF (from above, cut away, from a player's eye); `docs/dev/map-view.md`.
 - `map_lint.py`: reads a VMF fast (`read`), corners from planes; the owner's corrections as checks (flush, bare,
   overlap, view, fire, mattress...).

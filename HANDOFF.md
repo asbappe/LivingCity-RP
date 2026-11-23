@@ -31,9 +31,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 23 November (this chat): **EP2's Combine autogun lifted and built out** as `valve_ep2_cannon` (ep2_outland_09):
-  bay, guns, finders (every player), generator intake, blow-up, clips, areaportals, nodes, safe zone, demonstration
-  fire. Test map: map_cannon_test.py (lc_cannon_test.vmf), not compiled yet; real-map spot waits on the owner.
+- 23 November (this chat): **EP2's Combine autogun lifted and built out** (`valve_ep2_cannon`; test map
+  map_cannon_test.py, not compiled yet). **Nova Prospekt's vortigaunt torture cell** lifted (`valve_prison_vort_torture`).
+  **map_setpieces.py** ranks set pieces in all 105 shipped maps; picks for the owner: docs/dev/valve-setpieces.md.
 - 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
   beside the next victim). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
 - 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt), fitted to c18_lc.vmf: road and railway

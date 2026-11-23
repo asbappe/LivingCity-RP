@@ -130,6 +130,11 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   every player its target, clips, areaportals, its own path nodes and link, a safe zone, demonstration fire, and a test
   map, `map_cannon_test.py`.
 
+- **Set pieces to lift, and the vortigaunt torture cell (the owner, 23 November: "is there a way to find other unique
+  assets ... how about the interrogation chair in nova prospekt"):** `map_setpieces.py` scans all 105 shipped maps for
+  wired groups with rare models and effects; the picks are in `docs/dev/valve-setpieces.md` for the owner to choose
+  from. The cell lifted as `valve_prison_vort_torture` (d2_prison_03; `docs/dev/prefabs.md`).
+
 - **The silo made playable (the owner, 21 November):** every floor usable (Valve's silo hides whole floors behind
   nodraw: only its top and bottom were meant to be walked), the lift serving them all, and a Resistance Leader's office
   in it. Next, after the compile fixes (TODO.md).
