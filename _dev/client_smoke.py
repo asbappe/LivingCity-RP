@@ -354,6 +354,16 @@ util.JSONToTable = function() return { name = "Ada Grey", model = LCF.CitizenMod
 net._q = { 1 }
 okI, errI = pcall(net["recv_lcc_open"])
 if not okI then problems[#problems + 1] = "character window: " .. tostring(errI) end
+do -- the whole person in the picture, head to feet (the owner, 23 November: "zoomed in about 2x too much")
+    local cam, look
+    local pv = { IsValid = function() return true end, SetFOV = function() end, SetCamPos = function(_, v) cam = v end, SetLookAt = function(_, v) look = v end }
+    local en = { IsValid = function() return true end, GetRenderBounds = function() return Vector(-16, -16, 0), Vector(16, 16, 72) end }
+    local okF, dist = pcall(LC_CL.CreatorFit, pv, en)
+    local seen = okF and dist and 2 * dist * math.tan(math.rad(16)) * 0.75 or 0
+    if not okF or not cam or not look or seen < 72 * 1.05 or math.abs(look.z - 36) > 4 then
+        problems[#problems + 1] = "character picture doesn't fit the whole person: " .. tostring(dist) .. " (sees " .. math.floor(seen) .. " of 72)"
+    end
+end
 net._q = { "Ida Hoffman" }
 okI, errI = pcall(net["recv_lcc_suggested"])
 if not okI then problems[#problems + 1] = "suggested name: " .. tostring(errI) end

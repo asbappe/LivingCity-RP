@@ -323,6 +323,7 @@ local NOT_CITIZEN = { "police", "combine", "zombie", "corpse", "skeleton", "char
 function LC.CreatorChoices()
     local out, seen = {}, {}
     local function Add(path, skins, bg)
+        if istable(bg) and next(bg) == nil then bg = nil end -- (none listed: any, as with skins; the owner, 23 November: the first look offered nothing)
         if path and not seen[path] then seen[path] = true out[#out + 1] = { path = path, skins = skins, bg = bg } end
     end
     local o = Outfits()[CREATOR]
