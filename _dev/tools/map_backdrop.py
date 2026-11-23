@@ -21,6 +21,12 @@ Layout lines (map_modules.read_layout keeps them for this file):
     backdrop ruins                      the default kind (also turns the backdrop on)
     backdrop forest X1 Y1 X2 Y2         a rectangle where it is Episode Two's pine forest instead
     backdrop clear X1 Y1 X2 Y2          a rectangle kept free for another piece (the town, a forest, the owner's map)
+    backdrop brushes                    the ruins' buildings as brushes, as they were before the Propper++ kit
+
+The buildings are the Propper++ kit's models (map_propkit.py, _dev/propkit/; the owner, 23 November, chose models for
+the heaviest brushwork: "we need it to not be nodrawn but to be deleted/non existent"), prop_statics with no collision
+and only the faces seen from the street and the canal; Valve's own props (roof things, rubble, poles, trees, rocks)
+stay as they are.
 
 How it is seen decides what stands where: players stand on the street (eyes at STREET + 64) under the chain's sky
 (b.sky), and look over the outer wall's top (the rim). A thing beyond the wall is seen only above the line from their
@@ -91,11 +97,14 @@ def pick(rnd, weighted):
 
 
 def parse(lines):
-    """The layout's backdrop lines: {"forests": [rect], "clear": [rect]}."""
-    out = {"forests": [], "clear": [], "problems": []}
+    """The layout's backdrop lines: {"forests": [rect], "clear": [rect], "brushes": bool}."""
+    out = {"forests": [], "clear": [], "problems": [], "brushes": False}
     for words in lines:
         kind = words[0].lower() if words else "ruins"
         if kind == "ruins":
+            continue
+        if kind == "brushes" and len(words) == 1:
+            out["brushes"] = True
             continue
         if kind in ("forest", "clear") and len(words) == 5:
             x1, y1, x2, y2 = (int(w) for w in words[1:])
@@ -194,6 +203,7 @@ class Backdrop:
         opts = parse(lay.get("backdrop", []))
         b.problems.extend(opts["problems"])
         self.forests, self.clear = opts["forests"], opts["clear"]
+        self.brushes = opts["brushes"]      # (the buildings as brushes, not the kit's models)
         self.legs, end = walk(lay)
         if lay.get("end") and tuple(lay["end"]) != end:      # (its walk of the layout must be build_chain's own)
             b.problems.append("the backdrop's walk of the layout comes out at (%d %d) heading %s, not where the chain does" % end)
@@ -523,11 +533,20 @@ class Backdrop:
 
     def ruins(self):
         """Buildings on lots along the band (oriented to the canal beside them), then broken walls, rubble, collapsed
-        blocks, poles and a few dead trees on what is left."""
-        rnd = self.rnd
+        blocks, poles and a few dead trees on what is left. The buildings are the Propper++ kit's models (kit_lots),
+        or brushes with "backdrop brushes" (brush_lots)."""
         self.count, self.taken = {}, {}
         free = self.free_squares()
         self.free = free
+        if self.brushes:
+            self.brush_lots(free)
+        else:
+            self.kit_lots(free)
+        self.leftovers(free)
+
+    def brush_lots(self, free):
+        """Brush buildings (building()) on lots of 3 to 10 squares along by 3 to 7 out, as many as fit."""
+        rnd = self.rnd
         order = sorted(free)
         rnd.shuffle(order)
         for c in order:
@@ -546,15 +565,115 @@ class Backdrop:
                     break
             else:
                 continue
-            gap = 0 if rnd.random() < 0.45 else 1
-            for q in fp:
-                for di in range(-gap, gap + 1):
-                    for dj in range(-gap, gap + 1):
-                        free.discard((q[0] + di, q[1] + dj))
+            self.take_lot(free, fp, rnd)
             xs, ys = [q[0] for q in fp], [q[1] for q in fp]
             rect = (min(xs) * CELL, min(ys) * CELL, (max(xs) + 1) * CELL, (max(ys) + 1) * CELL)
             self.building(rect, out, ruin)
-        # what is left: a broken wall standing alone, rubble, a collapsed block, a pole, a dead tree
+
+    def take_lot(self, free, fp, rnd):
+        """A lot's squares (and, more often than not, one square round it) are no longer free."""
+        gap = 0 if rnd.random() < 0.45 else 1
+        for q in fp:
+            for di in range(-gap, gap + 1):
+                for dj in range(-gap, gap + 1):
+                    free.discard((q[0] + di, q[1] + dj))
+
+    def kit_lots(self, free):
+        """Buildings from the Propper++ kit (map_propkit.py: the owner, 23 November, chose models for the heaviest
+        brushwork, which have no brushes and only the faces seen) on lots along the band: on each, the kind drawn as the
+        brush buildings' were (blocks 3, houses 3, shells 4; and now and then a collapsed block), four pieces of that
+        kind drawn (as the brush lots tried four sizes), and of those the one that fits on free squares there and whose
+        roof comes nearest the height wanted (low in front, taller behind: as building()), never past the cone and always
+        seen over the wall; its front to the canal. A kit building has no back (nobody on the street or in the canal can
+        see it), so none stands where its back would be seen (back_seen: where the band bends round)."""
+        import map_propkit as PK
+        kit = PK.load()
+        P = kit["pieces"]
+        rnd = self.rnd
+        order = sorted(free)
+        rnd.shuffle(order)
+        kinds = (("block", 3), ("house", 3), ("shell", 4), ("collapsed", 1))
+        for c in order:
+            if c not in free:
+                continue
+            x, y = c[0] * CELL + CELL // 2, c[1] * CELL + CELL // 2
+            ruin = 1.0 - self.forest_w(x, y)
+            if rnd.random() > 0.55 * ruin or self.rise(x, y) > 48:
+                continue
+            out = self.band[c]
+            along = (-out[1], out[0])
+            want = self.rim + 192 + 0.42 * self.d_at(self.d_lid, x, y) + rnd.choice((-64, 0, 0, 64, 128, 192)) - 128 * (1 - ruin)
+            kind = pick(rnd, kinds)
+            names = kit["ruins"].get(kind, [])
+            fits = []
+            for name in rnd.sample(names, min(4, len(names))):      # (four of the kind drawn, as the brush lots tried four sizes)
+                w, d = P[name]["size"][0] // CELL, P[name]["size"][1] // CELL
+                fp = [(c[0] + a * along[0] + k * out[0], c[1] + a * along[1] + k * out[1]) for a in range(w) for k in range(d)]
+                if not all(q in free for q in fp):
+                    continue
+                xs, ys = [q[0] for q in fp], [q[1] for q in fp]
+                x1, y1, x2, y2 = min(xs) * CELL, min(ys) * CELL, (max(xs) + 1) * CELL, (max(ys) + 1) * CELL
+                near = min(self.cone(x1, y1), self.cone(x2, y1), self.cone(x1, y2), self.cone(x2, y2))
+                seen = max(self.seen(x1, y1), self.seen(x2, y1), self.seen(x1, y2), self.seen(x2, y2))
+                if self.rim + P[name]["box"][5] > near - 16 or self.rim + P[name]["top"] < seen + 64:
+                    continue
+                fits.append((abs(self.rim + P[name]["top"] - want), name, fp, (x1, y1, x2, y2)))
+            got = None
+            for _, name, fp, rect in sorted(fits):      # (the one whose roof comes nearest the height wanted)
+                if not self.back_seen((rect[0] + rect[2]) / 2.0, (rect[1] + rect[3]) / 2.0, P[name]["box"][4], out):
+                    got = (name, fp, rect)
+                    break
+            if not got:
+                continue
+            name, fp, rect = got
+            self.take_lot(free, fp, rnd)
+            self.kit_building(name, rect, out)
+
+    def kit_building(self, name, rect, out):
+        """A building of the kit on its lot, its front to the canal; on a block's roof chimney pipes and aerials (as on
+        the brush blocks), in a shell now and then a heap of rubble fallen in."""
+        import map_propkit as PK
+        p = PK.load()["pieces"][name]
+        x1, y1, x2, y2 = rect
+        cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+        keys = {"solid": "0", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
+        self.m.prop("prop_static", PK.model(name), cx, cy, facing(out), self.rim, keys)
+        what = {"block": "blocks", "house": "houses", "shell": "shells", "collapsed": "collapsed blocks"}.get(p["kind"], p["kind"])
+        self.count[what] = self.count.get(what, 0) + 1
+        top = self.rim + p["top"]
+        if p["kind"] == "block":
+            self.roof_things(rect, top)
+        elif p["kind"] == "shell" and self.rnd.random() < 0.5:
+            self.put(pick(self.rnd, RUBBLE), cx, cy, self.rnd.randint(0, 359), top, why="rubble")
+
+    def back_seen(self, x, y, back, out):
+        """Would the back of a kit piece standing at (x, y) with its front to the canal (its back `back` out from its
+        middle, the way out) be seen? Only where the band bends round, as on the inside of a turn away from the street:
+        a square of the street or of the canal's floor beyond the back's line, within 6000 of it and less than 75
+        degrees off straight behind it, counts as seen (a glimpse along the band past the other ruins does not)."""
+        import numpy as np
+        if getattr(self, "_viewers", None) is None:
+            b = self.b
+            floor = ("open", self.F, MAT["canal_floor"])
+            where = set(b.deck) | set(b.lifted) | set(b.viaduct) | {c for c, spec in b.plan.cells.items() if spec == floor}
+            self._viewers = np.array([(i * CELL + CELL / 2.0, j * CELL + CELL / 2.0) for (i, j) in sorted(where) if (i, j) not in self.band]
+                                     or [(1e9, 1e9)])
+        px, py = x + out[0] * back, y + out[1] * back
+        dx, dy = self._viewers[:, 0] - px, self._viewers[:, 1] - py
+        s = dx * out[0] + dy * out[1]
+        d2 = dx * dx + dy * dy
+        return bool(np.any((s > 64) & (d2 < 6000.0 ** 2) & (s * s > 0.067 * d2)))
+
+    def leftovers(self, free):
+        """What is left: a broken wall standing alone, rubble, a collapsed block, a pole, a dead tree (with the kit, its
+        collapsed blocks and broken walls among Valve's, their fronts to the canal)."""
+        rnd = self.rnd
+        collapsed, walls = COLLAPSED, BROKEN_WALLS
+        if not self.brushes:
+            import map_propkit as PK
+            kit = PK.load()
+            collapsed = COLLAPSED + [(PK.model(n), 2) for n in kit["ruins"].get("collapsed", [])]
+            walls = BROKEN_WALLS + [(PK.model(n), 2) for n in kit["ruins"].get("broken wall", [])]
         left = sorted(free)
         rnd.shuffle(left)
         for c in left:
@@ -567,9 +686,11 @@ class Backdrop:
             r = rnd.random()
             z = self.rim
             if r < 0.025 * ruin:
-                ok = self.put(pick(rnd, COLLAPSED), x, y, rnd.choice((0, 90, 180, 270)) + rnd.randint(-12, 12), z, why="collapsed blocks", on=free)
+                model = pick(rnd, collapsed)
+                ok = self.put_ruin(model, x, y, rnd.choice((0, 90, 180, 270)) + rnd.randint(-12, 12), z, c, "collapsed blocks", free)
             elif r < 0.06 * ruin:
-                ok = self.put(pick(rnd, BROKEN_WALLS), x, y, rnd.choice((0, 90, 180, 270)), z, why="broken walls", on=free)
+                model = pick(rnd, walls)
+                ok = self.put_ruin(model, x, y, rnd.choice((0, 90, 180, 270)), z, c, "broken walls", free)
             elif r < 0.085 * ruin:
                 ok = self.put(pick(rnd, RUBBLE), x, y, rnd.randint(0, 359), z, why="rubble", on=free)
             elif r < 0.092:
@@ -582,6 +703,18 @@ class Backdrop:
                 bx = self.last
                 for q in cells_of((bx[0] - 2 * CELL, bx[1] - 2 * CELL, bx[3] + 2 * CELL, bx[4] + 2 * CELL)):
                     free.discard(q)
+
+    def put_ruin(self, model, x, y, yaw, z, c, why, free):
+        """A collapsed block or a broken wall: Valve's at the yaw drawn, or the kit's with its front to the canal (and not
+        where its back would be seen)."""
+        import map_propkit as PK
+        if model.startswith(PK.MODELS):
+            out = self.band[c]
+            back = PK.load()["pieces"][model[len(PK.MODELS):-4]]["box"][4]
+            if self.back_seen(x, y, back, out):
+                return False
+            yaw = facing(out)
+        return self.put(model, x, y, yaw, z, why=why, on=free)
 
     def building(self, rect, out, ruin):
         """One building on its lot: a block with a flat roof and things on it, a house with a pitched roof and a
@@ -784,6 +917,11 @@ class Backdrop:
             len(self.band), n_forest, self.lid, len(self.was), ", ".join("%d %s" % (v, k) for k, v in sorted(self.count.items()))))
         for n in self.notes:
             b.notes.append("  " + n)
+
+
+def facing(out):
+    """The yaw that turns a kit piece (its front to -y) to look back against out (the way out from the canal)."""
+    return int(round(math.degrees(math.atan2(-out[0], out[1])))) % 360
 
 
 def overlap3(a, b):
