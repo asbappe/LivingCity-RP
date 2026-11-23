@@ -42,17 +42,27 @@ FINISH_MAT = {"floor": "CONCRETE/CONCRETEWALL036A", "ceiling": "CONCRETE/CONCRET
 LEVER_BRUSHES = (1234, 1235, 1236, 1322, 1378, 1379, 1380, 1382)
 LEVER_RECESS = (272, 210, 362, 284, 234, 395)
 LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, and where it goes on the office's wall east of the door
+# level B's shuttered windows (the owner, 23 November: "on floor 2 of the silo: can you add 3 of those shutter windows
+# that sit next to some of the doors in the wall between the new area you built and the rocket?"): the three segments of
+# the shaft's wall (Valve's world brushes, 15 degrees round each, 1152 to 1280, 32 thick) cut for them (Silo.
+# shaft_windows), 292.5, 352.5 and 52.5 degrees round from +x: 60 apart along the quarters, each in a plain stretch
+# that looks across the ring slab and its rail to the rocket (the five columns rising through level B stand at 307, 7
+# and 67, 14.5 degrees past each; clear of Valve's ladder at 270, the racks against the shaft's side of the wall from
+# 324 to 350 and the frames by the rocket from 73 to 99)
+SHAFT_WINDOWS = (246, 258, 270)
 # the piece's brushes left out: the fake door at level B's south end (131; its north twin is the func_brush
 # brush_fake_cit_door_1, dropped with the wiring), the bottom level's outer wall behind the bedroom (577), rebuilt
 # round the secret door, the lever wall's parts (placed again in the office), and the two six-sided posts at the gantry
 # tunnel's mouth (1287, 1288): Valve's hinge posts for its blast door as Valve hung it there; the door is turned round
 # now and brings its own posts at its hinges (BunkerForest.silo_door), and its leaves swung through these (the owner,
 # 22 November: "the silo doors clip through two round/octagon-ish columns when closing")
-SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604}
+SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604} | set(SHAFT_WINDOWS)
 # and over the lift's shaft in the walkway (the gantry level's tunnel): Valve's floor there, its two grates and the hull
 # strips round them (1213 to 1218), the strut down its middle and the rails beside it (1604, 1597, 1598): the car comes
 # up into the walkway now, and the walkway's own sliding grates cover the hole when it is gone (BunkerForest.lift; the
 # owner, 22 November: "the massive brush/strut in the middle of the walkway will have to be removed but that's ok")
+# and the three segments of level B's shaft wall cut for the shuttered windows (SHAFT_WINDOWS: placed again in four
+# pieces round each opening by Silo.shaft_windows)
 # and the tunnel mouth's two narrow jambs (1564, 1566), Valve's too for its door as it hung: the leaves now swing into
 # the tunnel through their lower part (the last 15 degrees), so they start over the leaves' height, 160 over the floor
 MOUTH_JAMBS, MOUTH_JAMB_FROM = (1564, 1566), 1568
@@ -126,6 +136,94 @@ def clip_poly(pts, a, b, c):
     if len(clean) > 1 and clean[0] == clean[-1]:
         clean.pop()
     return clean if len(clean) >= 3 else None
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+
+def _unit(a):
+    ln = math.sqrt(_dot(a, a)) or 1.0
+    return [c / ln for c in a]
+
+
+def side_plane(pts):
+    """A side's plane from its three points as Hammer reads them (clockwise seen from outside): (its outward normal, its
+    distance from the origin along it)."""
+    n = _unit(_cross([pts[0][k] - pts[1][k] for k in range(3)], [pts[2][k] - pts[1][k] for k in range(3)]))
+    return n, _dot(n, pts[0])
+
+
+def face_axes(n, scale=0.25):
+    """A face's texture axes laid along it, as convex_text lays them (level one way, down the slope the other)."""
+    import map_prefab as PF
+    if abs(n[2]) > 0.99:
+        u, w = (1.0, 0.0, 0.0), (0.0, -1.0, 0.0)
+    else:
+        hl = math.hypot(n[0], n[1])
+        u = (-n[1] / hl, n[0] / hl, 0.0)
+        w = _cross(n, u)
+        w = [-c for c in w] if w[2] > 0 else w
+    return tuple("[%s %s %s 0] %s" % (PF.fmt(round(a[0], 4)), PF.fmt(round(a[1], 4)), PF.fmt(round(a[2], 4)), PF.fmt(scale)) for a in (u, w))
+
+
+def planes_solid(planes):
+    """A convex brush given by its planes as the sides of a lifted piece (for map_forest.pf_solid): planes is [(outward
+    normal, distance, side), ...], each side with its three points, material and texture (a lifted piece's own, or a
+    new one's). Each side's corners are where its plane lies inside all the others (clockwise seen from outside); a
+    plane that keeps nothing of the brush is left out."""
+    out = []
+    for i, (n, d, sd) in enumerate(planes):
+        u = _unit(_cross(n, (0.0, 0.0, 1.0)) if abs(n[2]) < 0.9 else _cross(n, (1.0, 0.0, 0.0)))
+        w = _cross(n, u)
+        c = [n[k] * d for k in range(3)]
+        poly = [[c[k] + 65536.0 * (a * u[k] + b * w[k]) for k in range(3)] for a, b in ((1, 1), (-1, 1), (-1, -1), (1, -1))]
+        for j, (m, e, _) in enumerate(planes):
+            if j == i or not poly:
+                continue
+            nxt = []
+            for k in range(len(poly)):
+                p, q = poly[k], poly[(k + 1) % len(poly)]
+                fp, fq = _dot(m, p) - e, _dot(m, q) - e
+                if fp <= 1e-7:
+                    nxt.append(p)
+                if (fp < -1e-7 and fq > 1e-7) or (fp > 1e-7 and fq < -1e-7):
+                    nxt.append([p[a] + (q[a] - p[a]) * fp / (fp - fq) for a in range(3)])
+            poly = nxt
+        pts = []
+        for p in poly[::-1]:         # (anticlockwise seen from outside as made: turned clockwise)
+            p = [round(x) if abs(x - round(x)) < 1e-6 else x for x in p]
+            if not pts or max(abs(p[a] - pts[-1][a]) for a in range(3)) > 1e-3:
+                pts.append(p)
+        if len(pts) > 1 and max(abs(pts[0][a] - pts[-1][a]) for a in range(3)) <= 1e-3:
+            pts.pop()
+        if len(pts) < 3:
+            continue
+        out.append(dict(sd, verts=pts, corners=pts))
+    return out
+
+
+def faces_solid(faces, look):
+    """A convex brush given by its faces' corners as the sides of a lifted piece (for map_forest.pf_solid): each face
+    turned clockwise seen from outside, its three points its first, a third and two thirds round; look(normal) gives
+    its material and texture axes."""
+    allv = [p for f in faces for p in f]
+    mid = [sum(p[k] for p in allv) / len(allv) for k in range(3)]
+    out = []
+    for f in faces:
+        fc = [sum(p[k] for p in f) / len(f) for k in range(3)]
+        n = _cross([f[0][k] - f[1][k] for k in range(3)], [f[2][k] - f[1][k] for k in range(3)])
+        if _dot(n, [fc[k] - mid[k] for k in range(3)]) < 0:
+            f = f[::-1]
+        n = side_plane(f[:3])[0]
+        mat, ua, va = look(n)
+        k = len(f)
+        out.append({"plane": [f[0], f[k // 3], f[2 * k // 3]], "verts": list(f), "corners": list(f), "material": mat, "uaxis": ua, "vaxis": va, "lightmapscale": "16"})
+    return out
 
 
 def W(d, p):
@@ -364,6 +462,89 @@ class Silo:
         self.prop("props_wasteland/kitchen_shelf002a", *(at(100, r[105] - 18) + (zb, 100 + 180, "d")))
         self.prop("props_wasteland/kitchen_shelf002a", *(at(255, r[255] - 18) + (zb, 255 + 180, "d")))
         self.f.notes.append("the silo's ring halls: level A's far half the work hall, level B behind its two doors the quarters (4 bunks), lit by 9 tube lamps")
+
+    def shaft_windows(self, pf):
+        """Three of Valve's shuttered windows (BunkerForest.shutter_window, the one beside the bunker's room doors) in the
+        shaft's wall between level B's quarters and the shaft, looking out on the rocket (SHAFT_WINDOWS; the owner, 23
+        November: "can you add 3 of those shutter windows ... in the wall between the new area you built and the
+        rocket?"). Each wall segment is curved Valve's way (a brush of its own, its faces off the grid), so the window is
+        laid square to the segment's face in the quarters, in its middle: the segment is placed again as the four world
+        brushes round the opening (31 wide, 86 high, 18 over the floor), Valve's own faces kept and the silo's concrete
+        (010a) on the new ones; in the opening, at shutter_window's depths from the slatted face and heights from the
+        floor, the frame of hull steel (metaltruss008a on its sides' backs) and the 14 slats as func_detail, the glass a
+        func_breakable nothing breaks (WINDOW_GLASS). The slats are on the quarters' side, as Valve's are on the hall's
+        side of the lab door."""
+        from map_forest import pf_solid, pf_brush_entity
+        import map_prefab as PF
+        f, v, z0, hw = self.f, self.v, self.LEVEL_B, 15.5
+        det = ""
+        for i in SHAFT_WINDOWS:
+            sides = pf["solids"][i]["sides"]
+            valve = [side_plane(sd["plane"]) + (sd,) for sd in sides]
+            outer = top = bottom = None
+            for n, d, sd in valve:
+                fc = [sum(p[k] for p in sd["corners"]) / len(sd["corners"]) for k in range(3)]
+                if _dot(n, _unit([fc[0], fc[1], 0.0])) > 0.95:
+                    outer = (n, sd)
+                top = sd if n[2] > 0.99 else top
+                bottom = sd if n[2] < -0.99 else bottom
+            if not (outer and top and bottom and len(sides) == 6):
+                raise ValueError("solid %d of the silo is not a segment of level B's shaft wall" % i)
+            # the window's own frame: w along the wall from the middle of the face in the quarters, dep into the wall from
+            # that face (toward the shaft), h over the floor
+            s = [-outer[0][0], -outer[0][1], 0.0]
+            t = [s[1], -s[0], 0.0]
+            foot = [p for p in outer[1]["corners"] if abs(p[2] - z0) < 0.01]
+            O = [(foot[0][0] + foot[1][0]) / 2.0, (foot[0][1] + foot[1][1]) / 2.0, float(z0)]
+
+            def L(w, dep, h):
+                return [O[0] + w * t[0] + dep * s[0], O[1] + w * t[1] + dep * s[1], z0 + h]
+
+            def new(pts, out, ax):
+                """A cut through the segment: its plane through pts (the same three points for every piece it bounds, so
+                that the pieces meet in one plane), facing `out`."""
+                pts = [[round(c, 4) for c in p] for p in pts]
+                pts = pts if _dot(side_plane(pts)[0], out) > 0 else pts[::-1]
+                return side_plane(pts) + ({"plane": pts, "material": FINISH_MAT["wall"], "uaxis": ax[0], "vaxis": ax[1], "lightmapscale": "16"},)
+            reveal = ("[%s %s 0 0] 0.25" % (PF.fmt(round(s[0], 4)), PF.fmt(round(s[1], 4))), outer[1]["vaxis"])
+            mt, up, down = [-c for c in t], (0.0, 0.0, 1.0), (0.0, 0.0, -1.0)
+            side_l, side_r = [L(-hw, 0, 0), L(-hw, 0, 128), L(-hw, 32, 0)], [L(hw, 0, 0), L(hw, 0, 128), L(hw, 32, 0)]
+            sill, head = [L(-hw, 0, 18), L(hw, 0, 18), L(0, 32, 18)], [L(-hw, 0, 104), L(hw, 0, 104), L(0, 32, 104)]
+            for cut in ([new(side_l, t, reveal)], [new(side_r, mt, reveal)],
+                        [new(side_l, mt, reveal), new(side_r, t, reveal), new(sill, up, (top["uaxis"], top["vaxis"]))],
+                        [new(side_l, mt, reveal), new(side_r, t, reveal), new(head, down, (bottom["uaxis"], bottom["vaxis"]))]):
+                v.world.append(pf_solid(v, planes_solid(valve + cut), 1, self.d, self.vis)[0])
+
+            def prism(prof, w1, w2):
+                """The faces of a prism over prof ([(dep, h)], round it) from w1 to w2."""
+                a, b = [L(w1, dp, h) for dp, h in prof], [L(w2, dp, h) for dp, h in prof]
+                return [a, b[::-1]] + [[a[k], a[(k + 1) % len(a)], b[(k + 1) % len(a)], b[k]] for k in range(len(a))]
+
+            def box(w1, w2, d1, d2, h1, h2):
+                return prism(((d1, h1), (d2, h1), (d2, h2), (d1, h2)), w1, w2)
+
+            def across(scale):
+                return "[%s %s 0 0] %s" % (PF.fmt(round(t[0], 4)), PF.fmt(round(t[1], 4)), scale)
+            # the frame: sill, sides, head (the sides' faces against the opening's sides and their backs metaltruss008a)
+            for w1, w2, d1, d2, h1, h2, way in ((-hw, hw, 10, 12, 18, 20, 0), (-hw, 2 - hw, 6, 12, 20, 104, -1), (hw - 2, hw, 6, 12, 20, 104, 1),
+                                                (2 - hw, hw - 2, 10, 12, 102, 104, 0)):
+                def look(n, way=way):
+                    if way and (_dot(n, t) * way > 0.99 or _dot(n, s) > 0.99):
+                        return (f.FRAME_BACK.upper(),) + face_axes(n)
+                    if abs(_dot(n, s)) > 0.99:
+                        return f.HULL.upper(), across("0.0938"), "[0 0 -1 0] 0.3359"
+                    return (f.HULL.upper(),) + face_axes(n)
+                det += pf_solid(v, faces_solid(box(w1, w2, d1, d2, h1, h2), look), 1, self.d, self.vis)[0]
+            # the glass
+            pf_brush_entity(v, "func_breakable", dict(f.WINDOW_GLASS), [faces_solid(box(2 - hw, hw - 2, 10, 12, 20, 102), lambda n: (
+                (f.GLASS.upper(), across("0.15"), "[0 0 -1 0] 0.15") if abs(_dot(n, s)) > 0.99 else (f.GLASS.upper(),) + face_axes(n)))], 1, self.d, self.vis)
+            # the slats, each a plate tilted up toward the glass
+            for q in range(14):
+                h = 23 + 6 * q
+                det += pf_solid(v, faces_solid(prism(((3, h), (10, h + 2), (10, h + 3), (3, h + 1)), 2 - hw, hw - 2), lambda n: (f.SLAT.upper(),) + face_axes(n)),
+                                1, self.d, self.vis)[0]
+        v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
+        f.notes.append("level B's quarters: %d of Valve's shuttered windows in the shaft's wall, looking out on the rocket" % len(SHAFT_WINDOWS))
 
     # -- 4. the leader's office and bedroom -------------------------------------------------------------------------
     def office(self):
