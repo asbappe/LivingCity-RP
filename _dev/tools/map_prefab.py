@@ -502,6 +502,8 @@ def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
         for k, val in e["keys"].items():
             lk = k.lower()
             if lk in NOT_NAMES:
+                if lk in ("model", "message", "texture"):
+                    keys[k] = val      # (never a name, but kept: a prop placed with its logic lost its model until 23 November)
                 continue
             r = ren(val) if val and not val.startswith("!") else None
             if r:
@@ -630,6 +632,7 @@ def check():
     want("story_relay" not in text and "!player" not in text and "!activator\x1bSpeakResponseConcept" in text, "outputs outside the piece dropped, !player made !activator")
     want(text.count("METAL/METALDOOR001A") == 12 and text.count('"classname" "func_door"') == 2, "each door placed live once, its slab left out")
     want('"movedir" "0 180 0"' in text, "a turned copy's door moves turned")
+    want(text.count('"model" "models/props_c17/light_cagelight01_on.mdl"') == 2, "a prop placed with its logic keeps its model")
     want(text.count('"classname" "info_node"') == 0 and "func_areaportal" not in text, "the map's nodes and areaportals stay out")
     b2 = Build("prefab_check2", 784, 9000)
     m2 = Mod(b2, Frame(0, 0, 0, 64), "prefab")

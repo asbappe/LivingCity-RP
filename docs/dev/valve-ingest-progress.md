@@ -123,6 +123,11 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   d2_prison_08, a slot 128 wide down the teleport room's floor under a Combine glass lid; six dials, seven glows, six
   beams lighting in six steps about 26 s apart; `docs/dev/prefabs.md`, "Pieces with their wiring (Nova Prospekt)").
 
+- **The Combine autogun (the owner, 23 November: "pull out the entire combine autocannon entity/logic/effects/AI/etc,
+  including the brushes, destruction open, etc."):** lifted as `valve_ep2_cannon` (**done 23 November**: ep2_outland_09,
+  the turret bay with its three guns, finders, generator, grenade intake, blow-up and blown wall; `docs/dev/prefabs.md`,
+  "Pieces with their wiring (the Combine autogun)").
+
 - **The silo made playable (the owner, 21 November):** every floor usable (Valve's silo hides whole floors behind
   nodraw: only its top and bottom were meant to be walked), the lift serving them all, and a Resistance Leader's office
   in it. Next, after the compile fixes (TODO.md).
