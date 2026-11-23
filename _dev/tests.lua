@@ -16602,6 +16602,18 @@ local sky = LC.EndingSky(Vector(0, 0, 0))
 util.TraceLine = traceWas
 ok(sky.r >= 300 and (sky.centre.x + sky.r < 1000 or sky.centre.x - sky.r > 1000) and math.abs(sky.z - 2780) < 1,
     "whatever flies keeps to open sky: under the map's sky, on the roomiest circle that misses the buildings", math.floor(sky.r) .. " round x " .. math.floor(sky.centre.x) .. " at " .. math.floor(sky.z))
+-- (the owner, 23 November: "Every dream with something flying is absolutely broken in the dream zone") a dream zone drawn
+-- at the editor's default height (192) no longer holds what flies 70 off the floor; a tall one still caps it; the plane's
+-- own body (or any prop) is never taken for a roof; and the numa numa plane flies nose first
+do
+    local short = { zone = { box = LCZ.BoxFromCorners(Vector(-500, -500, 0), Vector(500, 500, 0), 192) } }
+    local tall = { zone = { box = LCZ.BoxFromCorners(Vector(-500, -500, 0), Vector(500, 500, 0), 1800) } }
+    ok(LC.DreamTop(short) > 50000 and LC.DreamTop(tall) == tall.zone.box.maxs.z, "a short dream zone caps nothing that flies; a tall one still does", LC.DreamTop(short))
+    local pr = ents.Create("prop_physics")
+    ok(LC.EndingMapOnly(nil) and not LC.EndingMapOnly(pr), "the air above a flier is measured against the map alone, never a prop (its own body)")
+    pr:Remove()
+    ok(GetConVar("lc_ending_plane_model_yaw"):GetFloat() == 90, "the plane flies nose first (was -90: backwards)")
+end
 -- the landing zone up on a roof, the streets 1500 below: spots are still found
 local tlWas2 = util.TraceLine
 util.TraceLine = function(t)
@@ -23096,6 +23108,14 @@ LC.ItemUse(p, "stimulant")
 LC.RestTick(CurTime())
 ok(tiredBefore and not p:GetNW2Bool("lc_tired", false) and LC.TiredDue(p) >= p:GetNW2Float("lc_wired_until", 0) - 1 and p:GetNW2Float("lc_groggy_until", 0) == 0,
     "exhausted after a day awake, a stimulant opens your eyes for as long as it lasts (the owner, 23 November)")
+p:SetNW2Float("lc_wired_until", 0)
+LC.RestTick(CurTime())
+local tiredAgain = p:GetNW2Bool("lc_tired", false)
+p.lcDreaming = "plane"
+LC.RestTick(CurTime())
+ok(tiredAgain and not p:GetNW2Bool("lc_tired", false), "in a dream nobody is tired: no eyelids, no weakness (the owner, 23 November)")
+p.lcDreaming = nil
+p:SetNW2Float("lc_wired_until", CurTime() + 900)
 p.lcAwakeSince = awakeS
 LC.RestTick(CurTime())
 local okS, whyS = LC.SleepIn(p, nil)

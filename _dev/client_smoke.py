@@ -4141,6 +4141,20 @@ net._q = { { id = "water", phase = "reset", name = "The Flood" } }
 net.recv_lc_ending()
 _advance(2)
 paint()
+-- a dream doesn't reset the city: no "The city resets." (the owner, 23 November)
+do
+    local said = {}
+    local stoWas = draw.SimpleTextOutlined
+    draw.SimpleTextOutlined = function(t, ...) said[#said + 1] = tostring(t) return stoWas(t, ...) end
+    net._q = { {} }
+    net.recv_lc_ending()
+    net._q = { { id = "plane", phase = "reset", name = "Numa numa", dream = true } }
+    net.recv_lc_ending()
+    _advance(2)
+    paint()
+    draw.SimpleTextOutlined = stoWas
+    for _, t in ipairs(said) do if string.find(t, "city resets", 1, true) then return "a dream ends with \"The city resets.\"" end end
+end
 net._q = { {} }
 net.recv_lc_ending()
 if LC_CL.Ending() ~= nil then return "ending: not cleared" end
@@ -5103,6 +5117,12 @@ local ok, e = pcall(function()
     _me.nw.lc_wired_until = CurTime() + 60
     if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "tired but on a stimulant, and the eyelids still close (the owner, 23 November)" end
     _me.nw.lc_wired_until = 0
+    _me.nw.lc_dreaming = true
+    if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "tired in a dream, and the eyelids close (the owner, 23 November)" end
+    _me.nw.lc_dreaming = nil
+    _me.nw.lc_ko_until = CurTime() + 5
+    if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "knocked out, and the eyelids are drawn too" end
+    _me.nw.lc_ko_until = 0
     _me.nw.lc_tired = false
     if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "not tired, and the eyelids close" end
     -- Civil Protection in action: their own music
