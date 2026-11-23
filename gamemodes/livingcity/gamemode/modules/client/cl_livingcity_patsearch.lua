@@ -221,6 +221,11 @@ local function TargetPanel()
     return p
 end
 
+-- (R is the slip key while you're searched, never reload as well: it raised your fists; the owner, 23 November)
+hook.Add("PlayerBindPress", "LivingCityPatSlipKey", function(_, bind)
+    if IsValid(targetPanel) and bind and string.find(bind, "+reload", 1, true) then return true end
+end)
+
 net.Receive("lc_pat_open", function()
     local t = util.JSONToTable(net.ReadString() or "") or {}
     if t.role == "unit" then

@@ -235,7 +235,7 @@ local function Push(F)
     local anyDone = false
     for _, sp in ipairs(F.spots) do if sp.done then anyDone = true end end
     local t = { learn = F.learn, step = F.step, checking = F.checking, secs = F.secs, spots = {},
-        slip = F.slipUsed and "used" or (anyDone and "ready" or "wait"), key = "R", tip = F.tip }
+        slip = F.slipUsed and "used" or (anyDone and "ready" or "wait"), key = "R", tip = F.tip, hands = F.handsWait or nil }
     for i, sp in ipairs(F.spots) do
         local mine = {}
         for _, it in ipairs(sp.items) do mine[#mine + 1] = ItemName(it) end
@@ -286,6 +286,13 @@ local function StartSearch(F, learn)
     ply:SetNW2Float("lcu_stop_until", CurTime() + 30)
     if Up(F.cop) and LC.PlayGesture then LC.PlayGesture(F.cop, LC.FRISK_ANIMS or {}, 6) end
     Say(F, "npc/metropolice/vo/apply.wav")
+    -- hands up first, the way every unit's stop goes (the owner, 23 November: "Press F1 > put hands up ... was not covered
+    -- in the tutorial, can we add that to the tutorial please and make it a game requirement?"): the search waits for it
+    if not ply:GetNW2Bool("lc_handsup", false) then
+        F.handsWait = true
+        F.tip = nil -- (the panel's big line says it: "Hands up: F1 > Put my hands up")
+        Say(F, "npc/metropolice/vo/holdit.wav")
+    end
     if F.learn then
         ply:SetPData("lc_tut_lesson", "1") -- (seen it once: next time "Just search me" is the first choice)
     end
@@ -598,6 +605,14 @@ local function Step(F, now)
             return
         end
         ply:SetNW2Float("lcu_stop_until", now + 5)
+        if F.handsWait then
+            if not ply:GetNW2Bool("lc_handsup", false) then return end
+            F.handsWait = nil
+            F.tip = F.learn and TIPS.intro or nil
+            F.nextAt = now + (F.learn and LEARN_INTRO or 0.6)
+            Push(F)
+            return
+        end
         if F.checking then
             if now >= F.checkAt + F.secs then
                 CheckSpot(F, F.checking)

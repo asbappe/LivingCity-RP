@@ -10675,6 +10675,13 @@ ok(not LC.PlayerIsWanted(a), "standing next to the unit at the desk is never obs
 net.sent = {}
 _netcall("lc_tut_choice", a, true)
 local st = Payload("lc_tut_state")
+ok(st and st.hands and not st.checking, "first, hands up: the search waits for F1 > Put my hands up (the owner, 23 November)", st and tostring(st.hands))
+Later(3)
+ok(not (Payload("lc_tut_state") or {}).checking, "(and waits as long as they don't)")
+net.sent = {}
+a:SetNW2Bool("lc_handsup", true)
+Later(1)
+st = Payload("lc_tut_state")
 ok(st and st.learn and st.tip and string.find(st.tip, "four spots", 1, true), "the lesson explains each step", st and st.tip)
 ok(st and st.spots and #st.spots == 4 and string.find(st.spots[4].mine or "", "practice", 1, true), "with a practice note to hide, in the boots")
 Later(5)
@@ -10690,6 +10697,7 @@ ok(not LC.PlayerIsWanted(a) and a:GetPData("lc_tut_lesson", "0") == "1", "nothin
 
 -- contraband is taken, with a warning
 local b = newPlayer("TutorSmuggler", "citizen")
+b:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 LC.GiveItem(b, "moonshine", 6)
 b:SetPos(post1.pos + Vector(-50, 0, 0))
@@ -10706,6 +10714,7 @@ ok(not LC.PlayerIsWanted(b) and has(b.chat, "warning"), "with a warning, not a c
 
 -- out of the station unregistered: searched if nobody has, cuffed, walked back to Civil Intake (never to the cells)
 local c = newPlayer("TutorRunaway", "citizen")
+c:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 c.lcTutSearched = true
 local outside = T0 + Vector(6000, 0, 0)
@@ -10727,6 +10736,7 @@ ok(not (LC.Prisoners and LC.Prisoners[c]) and not LC.Marching[c], "and never in 
 
 -- registered but never searched, out of the station: searched there, and let go
 local d = newPlayer("TutorUnsearched", "citizen")
+d:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 LC.RegisterPerson(d, "test")
 d:SetPos(outside + Vector(0, 300, 0))
@@ -10745,6 +10755,7 @@ ok(d.lcTutSearched and not LC.IsTied(d), "searched, and on their way (registered
 -- off
 _setcvar("lc_intake_tutor", 0)
 local e = newPlayer("TutorOff", "citizen")
+e:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 ok(not LC.TutorWants(e), "lc_intake_tutor 0: nobody is searched at the desks")
 _setcvar("lc_intake_tutor", 1)

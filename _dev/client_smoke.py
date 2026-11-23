@@ -1815,6 +1815,8 @@ local okTS, errTS = pcall(function()
     net.recv_lc_tut_state()
     local _, panel = LC_CL.TutorPanels()
     if not IsValid(panel) then error("no panel for the person searched") end
+    local blk = hook.t.PlayerBindPress and hook.t.PlayerBindPress.LivingCityTutorSlipKey
+    if not (blk and blk(_me, "+reload", true) == true) then error("R while being searched also reloads: it raised your fists (the owner, 23 November)") end
     doc = { found = "Moonshine x2" }
     net.recv_lc_tut_done()
     LC_CL.TutorOpenPractice()
