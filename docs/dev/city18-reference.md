@@ -3878,3 +3878,12 @@ Every brush face that faces the void, a sealed pocket nobody can reach or see in
 - **Checked by:** map_hidden_faces.py prints how many faces it would change; 0 on a clean map.
 - **Tags:** owner, geometry, lighting
 
+### A train comes from out of sight and leaves the same way; a track never just stops (`owner-trains-from-out-of-view`)
+
+No box on the street for a train to wait in: a train comes out of a dark tunnel beyond the canal (black a little way in, which nobody passes), crosses on a bridge onto the tracks and goes back the same way, waiting unseen in solid ground. A train is one rigid func_tracktrain and cannot bend round a curve, so it comes in only where a run's track can run straight on past a corner. Every other track end is a buffer stop short of any square where two streets cross: no track ends against a fence or a canal, and none stubs across another road.
+
+- **Why:** The owner, 23 November, of the brick sheds the trains came out of: "it's just a box where the train comes out for some reason ... Can we maybe instead have them either come from out of view (like the far side with the ruins/dead trees) through a tunnel or something with a black void that the player can't pass through and cross over top the canal via a bridge and then go onto the train tracks? They should also exit in the same fashion." And of the tracks at a corner (5792 8448 708): "here the train tracks just awkwardly cross and end at the fence/canal? what on earth?"
+- **How:** map_corridor.rail_runs: "left back" or "left over" on a turn line of a street chain carries a run's track straight on past the corner over the next canal into a tunnel (crossing_squares, crossing_build, hide_trains, tunnel_train); every other end gets buffer_stop. first_in_way finds what stands over the rails, and the train stops short of it.
+- **Checked by:** map_build.py chain (a PROBLEM if a tunnel's canal, its mouth or its hidden train runs into anything, or a train has no room); review
+- **Tags:** owner, canal, streets, logic
+
