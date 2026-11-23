@@ -61,6 +61,10 @@ DECK_UNDER = STREET - 48    # the underside of a train's bridge (its cross girde
 SPEED = 700             # the trains' speed, and the slower one they come to a stop at
 STOP_SPEED = 120
 STRIPE = "dev/dev_hazzardstripe01a"      # (as the owner's map paints its edges)
+# One sleeper a square, 16 wide, its underside on the ballast never drawn (there were two, 12 wide: 1,668 brushes round the
+# ring; the owner's compile of it ran out of faces, 23 November). TIE: where it lies in each 64 of track.
+TIE = (24, 40)
+POST = 256              # the kerb rail's and the edge's chain link's posts, one every POST (were 128)
 
 
 class CorridorPlan(Plan):
@@ -97,24 +101,24 @@ class CorridorPlan(Plan):
                     vmf.world_box(self.box(x1, y1, STREET, x2, y2, top), brick, top=cw, vis=self.vis)
                 else:
                     vmf.world_box(self.box(x1, y1, self.base, x2, y2, top), cw, vis=self.vis)
-                vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, vis=self.vis)
+                self.sky_box(x1, y1, top, x2, y2, self.top, sky)      # (every sky box joined at the end: Plan.sky_box)
                 continue
             vmf.world_box(self.box(x1, y1, self.base, x2, y2, spec[1]), CORE if spec[2] == CORE else self.floor_side, top=spec[2], vis=self.vis)
             if kind == "open":
                 lid = spec[3] if len(spec) > 3 and spec[3] else self.sky      # (a square with a sky of its own, higher: a church's yard)
-                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
+                self.sky_box(x1, y1, lid, x2, y2, max(self.top, lid + 16), sky, sky, sky)
             elif kind == "cellar":      # (a room under a yard open to the sky: Plan's own)
                 ceil, upper, upper_mat, lid = spec[3], spec[4], spec[5], spec[6]
                 vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
-                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
+                self.sky_box(x1, y1, lid, x2, y2, max(self.top, lid + 16), sky, sky, sky)
             elif kind == "under":
                 vmf.world_box(self.box(x1, y1, spec[3], x2, y2, STREET), cw, top=spec[4], bottom=self.ceiling, vis=self.vis)
-                vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
+                self.sky_box(x1, y1, self.sky, x2, y2, self.top, sky, sky, sky)
             else:
                 top = spec[4]
                 if top > spec[3]:
                     vmf.world_box(self.box(x1, y1, spec[3], x2, y2, top), brick if spec[5] and spec[3] >= STREET else cw, top=cw, bottom=self.ceiling, vis=self.vis)
-                vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, bottom=None if top > spec[3] else (sky if spec[2] == CORE else self.ceiling), vis=self.vis)
+                self.sky_box(x1, y1, top, x2, y2, self.top, sky, bottom=None if top > spec[3] else (sky if spec[2] == CORE else self.ceiling))
         self.raise_sky(vmf)      # (higher skies of their own closed in on every side, as Plan's)
 
 
@@ -341,7 +345,7 @@ def lay(b, elems, side, cars):
         for a, c in runs(EDGE + 32, stairs):
             v1, v2 = sv(EDGE, EDGE + 12)
             m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"], vis=dv)
-            chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72)
+            chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72, POST)
         # the tracks: sleepers and two rails wherever there is ballast, in the open and in the sheds; on a run whose ends
         # rail_runs planned, only between those ends, and across the square where two streets cross the rails alone
         # (laid in its road)
@@ -354,8 +358,7 @@ def lay(b, elems, side, cars):
             ok = u < L and (c in b.deck or c in b.sheds or c in b.viaduct) and (span is None or span[0] <= u <= span[1] - CELL)
             if ok and not (span is not None and c in junction):
                 v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
-                ties.append((u + 10, v1, STREET, u + 22, v2, STREET + 3))
-                ties.append((u + 42, v1, STREET, u + 54, v2, STREET + 3))
+                ties.append((u + TIE[0], v1, STREET, u + TIE[1], v2, STREET + 3))
             if ok and start is None:
                 start = u
             elif not ok and start is not None:
@@ -364,7 +367,7 @@ def lay(b, elems, side, cars):
                     rails.append((start, v1, STREET + 3, u, v2, STREET + 9))
                 start = None
         if ties:
-            m.det(ties, MM["beam_wood"], vis=dv)
+            m.det(ties, MM["beam_wood"], vis=dv, faces={"bottom": MAT["nodraw"]})
             m.det(rails, MAT["bars"], vis=dv)
         # between the tracks and the road: the inner pavement, a kerb and a rail (open at a crossing)
         for a, c in runs(ROAD_IN + 32):
@@ -372,7 +375,7 @@ def lay(b, elems, side, cars):
             m.det([(a, v1, STREET, c, v2, STREET + 8)], walk, vis=dv)
         for a, c in runs(ROAD_IN + 32, stairs):
             v1, v2 = sv(ROAD_IN + 2, ROAD_IN + 6)
-            m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, c, 128)] + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"], vis=dv)
+            m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, max(a + 1, c - 64), POST)] + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"], vis=dv)
         if not e.get("lifted") and getattr(b, "street_wall", None) == "combine":
             for a, c in runs(FR - 32):          # (the outer pavement up to the Combine wall's foot; the wall itself: combine_wall)
                 v1, v2 = sv(960, FR)
@@ -795,8 +798,8 @@ def crossing_build(b, Q, sq, tag):
     ties, rails = [], []
     t1, t2 = sv(RAIL_V - 68, RAIL_V + 68)
     for u in range(wall + 64, 0, 64):
-        ties += [(u + 10, t1, STREET, u + 22, t2, STREET + 3), (u + 42, t1, STREET, u + 54, t2, STREET + 3)]
-    m.det(ties, MM["beam_wood"], vis=dv)
+        ties.append((u + TIE[0], t1, STREET, u + TIE[1], t2, STREET + 3))
+    m.det(ties, MM["beam_wood"], vis=dv, faces={"bottom": MAT["nodraw"]})
     for g in (-40, 37):
         r1, r2 = sv(RAIL_V + g, RAIL_V + g + 3)
         rails.append((wall + 8, r1, STREET + 3, 0, r2, STREET + 9))
@@ -1282,7 +1285,7 @@ class _Det:
         self.vmf, self.fr, self.dv = vmf, fr, vis
 
     def det(self, boxes, mat, top=None, vis=None, faces=None):
-        self.vmf.detail([self.fr.box(*x) for x in boxes], mat, vis=vis or self.dv, top=top)
+        self.vmf.detail([self.fr.box(*x) for x in boxes], mat, vis=vis or self.dv, top=top, faces=faces)
 
 
 def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer=(), buffers=(), planks=(), lane=None, lanes_at=()):
@@ -1301,24 +1304,24 @@ def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer
     for a, c in edge:
         v1, v2 = sv(EDGE, EDGE + 12)
         m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"])
-        chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72)
+        chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72, POST)
     ties, rails = [], []
     for a, c in tracks:
         v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
         for u in range(a // CELL * CELL, c, CELL):      # (on the map's grid, as the chain's are: the same spacing across a join)
-            ties += [(w, v1, STREET, w + 12, v2, STREET + 3) for w in (u + 10, u + 42) if a <= w and w + 12 <= c]
+            ties += [(u + TIE[0], v1, STREET, u + TIE[1], v2, STREET + 3)] if a <= u + TIE[0] and u + TIE[1] <= c else []
         for g in (-40, 37):
             w1, w2 = sv(RAIL_V + g, RAIL_V + g + 3)
             rails.append((a, w1, STREET + 3, c, w2, STREET + 9))
     if ties:
-        m.det(ties, MM["beam_wood"])
+        m.det(ties, MM["beam_wood"], faces={"bottom": MAT["nodraw"]})
         m.det(rails, MAT["bars"])
     for a, c in pave:
         v1, v2 = sv(ROAD_IN, ROAD_OUT)
         m.det([(a, v1, STREET, c, v2, STREET + 8)], MM["walk"])
     for a, c in rail:
         v1, v2 = sv(ROAD_IN + 2, ROAD_IN + 6)
-        m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, c, 128)]
+        m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, max(a + 1, c - 64), POST)]
               + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"])
     for a, c in outer:
         v1, v2 = sv(960, FRONT + 64)

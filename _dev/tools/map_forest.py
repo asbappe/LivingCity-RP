@@ -1121,8 +1121,7 @@ class BunkerForest(Forest):
         # the silo: its west tunnel (now turned to face south) meets the corridor's end at y 1600 of the bunker, its
         # gantry level is the corridor's floor; the forest's north wall is cut where the corridor and its walls pass
         self.silo_at = (origin[0] - 640, origin[1] + 1600 + 544, zg - 1408)
-        # (and where the leader's way out comes through it onto the rim, west of the silo: map_silo.py)
-        self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512), (MS.CUT[0] - self.ox, MS.CUT[1] - self.ox)]
+        self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512)]      # (the leader's way out came through it too, until 23 November)
         self.plan, self.deep = plan, deep
         for p in (plan, deep, low):     # (each one's walls may look into the others' rooms where they meet)
             p.others = [q for q in (plan, deep, low) if q is not p]
@@ -1245,7 +1244,7 @@ class BunkerForest(Forest):
         # the bunker's rooms must be shut in on every side but the doorway (for the look of it, and for the door's areaportal):
         # with the doorway stopped up, air from inside must not reach the forest. The silo and the way to it are inside.
         # (and with the leader's way out stopped where it comes through the forest's wall: map_silo.py)
-        closed = flood(v, W(640, 160, zp + 64), [B(512, 0, zp, 768, 64, zp + 192), (MS.CUT[0], self.oy + self.D, MS.F_EXIT - 17, MS.CUT[1], self.oy + self.D + WALL, MS.FACE_TOP)])
+        closed = flood(v, W(640, 160, zp + 64), [B(512, 0, zp, 768, 64, zp + 192)])
         if closed[0] is None or reaches(closed, self.w(self.W / 2, self.D / 2, self.lid - 100)):
             self.problems.append("the bunker's rooms are open to the hill somewhere other than the doorway")
         sx, sy, sz = self.silo_at
@@ -1253,7 +1252,7 @@ class BunkerForest(Forest):
                               (-640, 1000, zd + 64, "corridor to the silo"), (-640, 1568, zg + 64, "corridor's end at the silo")):
             if not reaches(closed, W(u, w, z)):
                 self.problems.append("the bunker's %s can't be reached from its door" % what)
-        for dz, what in ((1408 + 64, "gantry level"), (322 + 64, "bottom level")):
+        for dz, what in ((1408 + 64, "gantry level"),):
             if not reaches(closed, (sx, sy, sz + dz)):
                 self.problems.append("the silo's %s can't be reached from the bunker's door" % what)
         # the door's failsafe counts everyone inside: every bit of air the door leads to (but the leader's way out, a way
@@ -1261,8 +1260,7 @@ class BunkerForest(Forest):
         seen, full, axes, leak = closed
         missed = 0
         if seen:
-            cx = list(MS.CONTAINER)
-            cx[3] = self.silo_inside()[0]        # (and its hole through the silo's hull)
+            cx = [0, 0, 0, -1, -1, -1]      # (the leader's way out, a way out beyond the hull, was left out of the count; it is gone)
             for c in seen:
                 lo = [axes[a][c[a]] for a in range(3)]
                 hi = [axes[a][c[a] + 1] for a in range(3)]
@@ -2098,7 +2096,7 @@ class BunkerForest(Forest):
         """The silo's whole inside (the hull's inner faces: 1088 square round the shaft's axis, from 64 under the pit floor
         to the collar's top), as one box: everything in it counts as inside the bunker."""
         sx, sy, sz = self.silo_at
-        return (sx - 544, sy - 544, sz - 64, sx + 544, sy + 544, sz + 1824)
+        return (sx - 544, sy - 544, sz + self.SILO_PIT - 256, sx + 544, sy + 544, sz + 1824)      # (from the hull's floor, under the pit's)
 
     # the lift's stops: the silo piece's floors with a landing on the lift shaft, bottom to top. A floor becomes a stop by
     # adding its height here (with its landing open in the piece): its path point, gate, call button and wiring are all
@@ -2113,14 +2111,15 @@ class BunkerForest(Forest):
     LIFT_STOPS = (320, 1408)
     LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
     LIFT_BUILT = 1152            # the car's floor where Valve built it (level B): its parts are placed there and it goes to its top stop at the start
+    SILO_PIT = 1152     # the silo cut to its top floor (the owner, 23 November): the pit's black floor, a level under the top floor's
     LIFT_HOLE = (-544, -72, -416, 72)   # the shaft's mouth in the walkway's floor (Valve's grates and middle strut over it are left out: map_silo.SKIP)
     GRATE_SPEED, GRATE_AFTER = 48, 4.5  # the walkway's two sliding grates: units a second; seconds after the car leaves the top before they close
     LIFT_CALL_TOP = (-384, 86)          # the walkway's call button: on its end frame's face toward the gantry, north of the opening
     HQ_AT = (102, 77)                          # (the silo's frame) the flag's pole: 128 from the axis, 37 degrees round, beside the rocket
-    HQ_FOOT, HQ_TOP = 322 + 8, 1408 + 120      # the Resistance flag's markers beside the rocket: over the pit's cover (322) and the gantry (1408)
+    HQ_FOOT, HQ_TOP = 1152 + 8, 1408 + 120     # the Resistance flag's markers beside the rocket: over the pit's floor (SILO_PIT, since 23 November) and the gantry (1408)
     # the rebel territory the gamemode reads from the map round the flag's pole: a box 1400 wide each way and 1800 high
     # from the floor under the marker (the gamemode's reading), so the marker stands on the bottom floor beside the pole's foot
-    REBEL_ZONE = ("lc_zone_rebel_r700_h1800_silo", 322 + 8)
+    REBEL_ZONE = ("lc_zone_rebel_r700_h970_silo", 1152 + 8)     # (its top where it was, 2130 over the piece: from the pit's floor since 23 November)
 
     def silo(self):
         """White Forest's rocket silo (the lifted piece valve_ep2_silo: docs/dev/prefabs.md) just outside the forest's north
@@ -2153,7 +2152,18 @@ class BunkerForest(Forest):
         MS.trim_mouth(pf)               # (clear of the blast door's leaves)
         for i in MS.SKIP:
             pf["solids"][i]["skip"] = True
-        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live or s.get("skip"))
+        pf["solids"][129]["skip"] = True      # (the plate behind Valve's ladder down to level B's balcony: gone with it)
+
+        def under(sol):
+            """Under the top floor's floor, where the silo was cut away (the owner, 23 November: "delete the entire silo
+            EXCEPT the top floor ... we don't have the brush budget"): all but the pit's wall, the shaft's own segments
+            from the pit's floor up (250 to 292 from the axis)."""
+            pts = [c for sd in sol["sides"] for c in (sd.get("corners") or sd["plane"])]
+            if max(p[2] for p in pts) > 1392:
+                return False
+            rs = [math.hypot(p[0], p[1]) for p in pts]
+            return not (min(rs) >= 250 and max(rs) <= 292 and min(p[2] for p in pts) >= self.SILO_PIT - 8)
+        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live or s.get("skip") or under(s))
         drop = {"steam_silo1_1", "tr_laddergate_1", "sound_ladder_steam_1", "sound_ladder_steamloop_1", "sound_ladder_lock_1", "door_silo_lab_outside_1_malfunction_timer",
                 # the ladder's hatch and the clip over it (the owner: "there is no way to open the gate ... can we just remove that grate?")
                 "door_hatch_ladder_1", "pclip_hatch_1",
@@ -2182,8 +2192,8 @@ class BunkerForest(Forest):
             if k.get("targetname", "") in drop or e["classname"] in ("func_areaportal", "env_soundscape") or MS.dropped_prop(e):
                 return False        # (Valve's four soundscapes too: map_silo.py's soundscapes() places the silo's own)
             o = e.get("origin") or ()
-            if len(o) == 3 and MS.Silo.LEVEL_A <= o[2] < MS.Silo.GANTRY and math.hypot(o[0], o[1]) >= 290 and not (-560 <= o[0] <= -380 and abs(o[1]) <= 130):
-                return False        # (in levels A and B's halls, shut off and emptied (Silo.halls_shut); the lift's own column stays)
+            if len(o) == 3 and o[2] < 1392 or "metalladder" in k.get("model", ""):
+                return False        # (under the top floor, cut away on 23 November, and the ladder down from it)
             if k.get("targetname", "") in reserve or any(k.get(r, "") in reserve for r in ("parentname", "attach1", "attach2")):
                 return False        # (the hoist: kept in the piece's reserve, not placed)
             if e["classname"] == "func_button" and tuple(e.get("origin", ())) in lab_pads:
@@ -2251,14 +2261,20 @@ class BunkerForest(Forest):
             if tn == "lift_door_2_b":      # (a mover only the wiring moves, not a door to the gamemode)
                 e["classname"] = "func_button"
                 k.update({"spawnflags": "0", "wait": "-1", "sounds": "0", "health": "0", "dmg": "0", "forceclosed": "0"})      # (no harm: Valve's dmg 10 is gone)
-        extra = self.lift() + [{"classname": "ambient_generic", "origin": [261, 300, 384], "keys": {
-            "targetname": "lab_lever_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100", "pitchstart": "100", "radius": "1250", "spawnflags": "48"}}]
-        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
+        # (no lift since the silo was cut to its top floor, 23 November: lift() is no longer placed)
+        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=[], valve_anchor=pf["anchor"])
         # the rocket, back in the shaft as it stands in Episode Two (the owner, 22 November: "we could use the rocket in that silo
         # after all ... can we please re-insert the rocket into the silo as it exists in EP2?"): valve_ep2_rocket, Valve's own
         # stages, engines, nose and hatch, in the silo's frame. Its engines end 6 over the pit's cover (322).
         rocket = PF.load("valve_ep2_rocket")
-        pf_entities(v, rocket, q, d, "lc_silo_", sv, wv)
+        import map_assets
+
+        def above_pit(e):
+            """(the rocket's parts that reach over the pit's floor: its nose, hatch and third stage; the stages, engines and
+            steam under it are cut away with the silo)"""
+            bb = map_assets.size(e["keys"]["model"]) if e["keys"].get("model") else None
+            return e["origin"][2] + (bb[5] if bb else 0) > self.SILO_PIT
+        pf_entities(v, rocket, q, d, "lc_silo_", sv, wv, keep=above_pit)
         # the Resistance flag's pole (the owner: raised "from the bottom of the silo" with the flag "flush with eye level on the
         # top floor"; 22 November, with the rocket back on the axis: "just move the flagpole between the rocket and the walkways
         # in the silo somewhere for now"): between the rocket (97 from the axis) and the solid ring's hole (159), 128 out, half
@@ -2272,22 +2288,17 @@ class BunkerForest(Forest):
         # from level B's quarters onto the rocket, the lift's shaft shut at levels A and B, the leader's office
         # (with Valve's lever wall moved inside) and bedroom, the bottom level's fence gate, light where rooms had none,
         # the silo's soundscapes, and the leader's way out
+        # the silo cut to its top floor (the owner, 23 November: "delete the entire silo EXCEPT the top floor. The lift has to
+        # be deleted, the moving floor grates where the lift comes up, the resistance leader's office, the escape tunnel,
+        # and the secret escape cave and all of that"): the pit's wall's gap shut and the top floor's two holes floored
+        # (halls_shut), its soundscapes; the office, bedroom, lever, fence gate, lift's shaft, lamps and the leader's way
+        # out (map_silo.py) are no longer placed
         ms = MS.Silo(self, d)
-        ms.pit_cover()
-        ms.ring_rail()
-        ms.shaft_shut(pf)
-        ms.halls_shut(pf)      # (levels A and B's halls shut off and emptied: the owner, 23 November)
-        ms.office()
-        ms.lever_box(pf)
-        ms.bedroom()
-        ms.fence_gate()
-        ms.lights()
+        ms.halls_shut(pf)
         ms.soundscapes()
-        ms.escape()
         self.silo_door()
-        self.notes.append("the silo made playable: %d nodraw faces players now see finished; the pit covered at the bottom level; level B's two doors; "
-                          "the leader's office (Valve's lever, its recess and its box inside) and bedroom; the fence gate swings; one soundscape for the shaft" % finished)
-        for dz in (1408 + 64, 322 + 64):
+        self.notes.append("the silo: its top floor only, over a dark pit %d deep with the rocket's top in it; %d nodraw faces players see finished" % (1408 - self.SILO_PIT, finished))
+        for dz in (1408 + 64,):
             v.point("env_cubemap", (ax, ay + 200, az + dz), {"cubemapsize": "0"}, sv)
         # player clips in the shaft round the rocket: over the solid ring's hole (159), the ring slab's grate's hole (114) and
         # inside the gantry's grates (112 to 159), each a 12-sided column round the axis. At the gantry the walkway up to the
@@ -2296,7 +2307,7 @@ class BunkerForest(Forest):
         # round it; the walkway has its own rails, and no gap beside it a player could fall through.
         cv, clip = self.vis("silo's player clips (the empty shaft)"), "tools/toolsplayerclip"
         wx1, wy1, wx2, wy2 = MS.WALKWAY
-        for r, z1, z2 in ((160, 896, 1088), (112, 1152, 1408), (140, 1408, 1760)):
+        for r, z1, z2 in ((140, 1408, 1760),):      # (the gantry's: the levels under it are cut away)
             pts = [(ax + int(round(r * math.cos(math.radians(15 + 30 * k)))), ay + int(round(r * math.sin(math.radians(15 + 30 * k))))) for k in range(12)]
             polys = [pts]
             if z1 >= 1408:       # (the piece's x is the map's y, its y the map's -x: the walkway is map x ax-wy2..ax-wy1, y ay+wx1..ay+wx2)
@@ -2312,12 +2323,15 @@ class BunkerForest(Forest):
                 v.world.append(v.convex_text(faces, cv))
         # the hull: the piece's box (1088 square, 1856 high) walled in, 64 thick; its lid as high as the corridor's roof
         T, nd, cw, hv = 64, MAT["nodraw"], FMAT["silo_wall"], self.vis("silo's hull (sealed)")
-        x1, y1, z1, x2, y2, z2 = ax - 544, ay - 544, az - 64, ax + 544, ay + 544, az + 1792
+        # (its floor a level under the pit's black floor, so the rocket's third stage, which rises through that floor, stands
+        #  in sealed air: its origin may not be outside the map)
+        x1, y1, z1, x2, y2, z2 = ax - 544, ay - 544, az + self.SILO_PIT - 256, ax + 544, ay + 544, az + 1792
         roof = self.zd + 224
-        v.world_box((x1 - T, y1 - T, z1 - T, x2 + T, y2 + T, z1), nd, top=cw, vis=hv)
+        v.world_box((x1 - T, y1 - T, z1 - T, x2 + T, y2 + T, z1), nd, vis=hv)
+        # the pit's floor: black, so it has no bottom; detail, so the air under it is the map's (no pocket of its own)
+        v.detail([(x1, y1, az + self.SILO_PIT - 16, x2, y2, az + self.SILO_PIT)], nd, top=MAT["black"], vis=hv)
         v.world_box((x1 - T, y1 - T, z2, x2 + T, y2 + T, roof), nd, bottom=cw, vis=hv)
-        for b in MS.split_box((x1 - T, y1, z1, x1, y2, z2), MS.HULL_HOLE):     # (the leader's way out passes it: map_silo.py)
-            v.world_box(b, cw, top=cw, bottom=cw, vis=hv)       # (the squeeze's hole through it: concrete floor and roof too, not nodraw)
+        v.world_box((x1 - T, y1, z1, x1, y2, z2), nd, faces={"east": cw}, vis=hv)
         v.world_box((x2, y1, z1, x2 + T, y2, z2), nd, faces={"west": cw}, vis=hv)
         v.world_box((x1 - T, y2, z1, x2 + T, y2 + T, z2), nd, faces={"south": cw}, vis=hv)
         cx1, cx2, cz = ax - 128, ax + 128, self.zg - 64      # (the corridor's end and its walls fill the south wall's middle)

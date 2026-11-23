@@ -394,7 +394,8 @@ class Silo:
     # 195 degrees (to the lift's landing) with its concrete segment from 135 to 150 (288, 289: world, as Valve's there);
     # level A's the same with its own (1371, 1372: func_detail, as Valve's level A wall is); level A's doorway at 255 to
     # 270 under segment 1340 with the segment below it from 240 to 255 (1339).
-    HALL_FILLS = ((288, (30, 45)), (289, (30, 45)), (1371, (30, 45)), (1372, (30, 45)), (1339, (15,)))
+    HALL_FILLS = ((288, (30, 45)), (289, (30, 45)))      # (level B's gap: the pit's wall since 23 November, when the silo was cut to its top floor)
+    LADDER_HOLE = (-20, -254, -208, 20)      # Valve's hatch hole in the gantry's floor over the ladder to level B (its floor metalfloor010a round it)
 
     def halls_shut(self, pf):
         """Levels A and B's halls shut off from the shaft for good (the owner, 23 November: "I cannot find any reasonable
@@ -437,7 +438,13 @@ class Silo:
         # the gantry's floor in front of the lift is Valve's see-through grate (1490) right over level B's hall by the lift:
         # a slab 1 under it, so the grate looks down on concrete and not into the hall
         v.detail([wbox(self.d, (-376, -95, 1390, -256, 95, 1404))], MAT["nodraw"], top="CONCRETE/CONCRETEFLOOR006A", vis=self.vis)
-        self.f.notes.append("levels A and B's halls shut off from the shaft (%d wall segments): sealed, for the trim to delete" % sum(len(t) for _, t in self.HALL_FILLS))
+        # the silo cut to its top floor (the owner, 23 November): the lift's mouth in the walkway's floor and Valve's ladder
+        # hatch in the gantry's floor are floor now, each in the floor round it
+        hx1, hy1, hx2, hy2 = self.f.LIFT_HOLE
+        v.world.append(v.box_text(wbox(self.d, (hx1, hy1, 1392, hx2, hy2, 1408)), MAT["nodraw"], "METAL/METALHULL003A", MAT["nodraw"], self.vis))
+        lx1, ly1, ly2, lx2 = self.LADDER_HOLE
+        v.detail([wbox(self.d, (lx1, ly1, 1404, lx2, ly2, 1408))], MAT["nodraw"], top="METAL/METALFLOOR010A", vis=self.vis)
+        self.f.notes.append("the silo cut to its top floor: level B's gap in the pit's wall shut (%d segments), the lift's mouth and the ladder's hatch floored" % sum(len(t) for _, t in self.HALL_FILLS))
 
     # -- 4. the leader's office and bedroom -------------------------------------------------------------------------
     def office(self):
@@ -576,14 +583,11 @@ class Silo:
         (SCAPE_SHAFT), from soundscapes that reach each floor; passing from one to another of them changes nothing. The
         leader's office and bedroom have a concrete room's tone (SCAPE_ROOM), heard once you are inside, and the way out
         the mine tunnel's (SCAPE_CAVE). Valve's four are left out (BunkerForest.silo)."""
-        G, A, F = self.GANTRY, self.LEVEL_A, self.FLOOR
+        G = self.GANTRY
         # (none in levels A and B's halls, shut off and gone: halls_shut; the two in the lift's shaft stay for its riders.
         #  The shaft's own at the top, 640 round, had been commented out by a note run on after the first: back.)
         for x, y, z, r, s in ((-420, 0, G + 72, 260, SCAPE_SHAFT),     # (260: short of the bunker corridor's own soundscape at the tunnel)
-                              (0, -200, G + 72, 640, SCAPE_SHAFT),
-                              (-480, 0, A - 120, 120, SCAPE_SHAFT), (-480, 0, A + 128, 120, SCAPE_SHAFT), (-360, 0, F + 72, 420, SCAPE_SHAFT),
-                              (0, -200, F + 72, 520, SCAPE_SHAFT),
-                              (200, 430, F + 64, 200, SCAPE_ROOM), (-200, 400, F + 64, 200, SCAPE_ROOM)):
+                              (0, -200, G + 72, 640, SCAPE_SHAFT)):      # (the top floor's only, since the silo was cut to it, 23 November)
             self.v.point("env_soundscape", self.P(x, y, z), {"soundscape": s, "radius": str(r), "StartDisabled": "0"}, self.f.vis("silo's wiring"))
 
 # ---------------------------------------------------------------------------------------------------------------------
