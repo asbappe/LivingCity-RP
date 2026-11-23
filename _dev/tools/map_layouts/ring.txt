@@ -23,6 +23,20 @@ wall combine
 end 6144 1856 N
 road -4480 1920 -2624 2560 840 replaces 14734 15630
 
+# Beyond the canal's outer wall (map_backdrop.py; the owner, 23 November: "the ruins and rooftops makes sense for
+# most areas; however around the forest bunker and forest cave areas, it should transition from the ruins and
+# rooftops to the mountainous pine forest look from EP2, then blend back to ruins and rooftops elsewhere"): the old
+# city's ruins, Episode Two's pine forest in the rectangles below (blending over 1024 at their edges), and nothing in
+# the places kept for the other pieces (the town, the cave forest, the forest bunker, the first canal).
+backdrop ruins
+backdrop forest 6400 -768 9024 10752
+backdrop forest -11008 1600 -5696 4416
+backdrop forest -6080 8832 -4352 10752
+backdrop clear -1088 9152 5952 15232
+backdrop clear -12992 4416 -5952 16000
+backdrop clear 7872 896 12352 6976
+backdrop clear 3200 1792 8000 5760
+
 # N1: north, from the first canal
 checkpoint
 straight 1344 stairs

@@ -146,6 +146,48 @@ def walk(fl, starts, ladders):
     return seen
 
 
+def biggest(fl, ladders):
+    """The biggest stretch a player can walk round from any one place (all it can reach from there). Every place is
+    walked once: a walk stops where an earlier one went and notes which, and what a place reaches is its own walk and
+    every earlier one it ran into, so a high place that drops into the whole map (a roof, a sky's top: the canal ring's
+    backdrop has many) does not walk the whole map again. Exact, whatever order the places come in."""
+    lad = {}
+    for a, b in ladders:
+        lad.setdefault(a, []).append(b)
+        lad.setdefault(b, []).append(a)
+    part_of, parts, into = {}, [], []
+    for s in sorted(((c, z) for c, zs in fl.room.items() for z, _ in zs), key=lambda st: (-st[1], st[0])):
+        if s in part_of:
+            continue
+        k = len(parts)
+        own, hit, todo = {s}, set(), deque([s])
+        part_of[s] = k
+        while todo:
+            c, z = todo.popleft()
+            for n in list(fl.moves(c, z)) + lad.get((c, z), []):
+                j = part_of.get(n)
+                if j is None:
+                    part_of[n] = k
+                    own.add(n)
+                    todo.append(n)
+                elif j != k:
+                    hit.add(j)
+        parts.append(own)
+        into.append(hit)
+    best, size = (), -1
+    for k in range(len(parts)):
+        reach, stack = {k}, [k]
+        while stack:
+            for j in into[stack.pop()]:
+                if j not in reach:
+                    reach.add(j)
+                    stack.append(j)
+        n = sum(len(parts[i]) for i in reach)
+        if n > size:
+            best, size = reach, n
+    return set().union(*(parts[i] for i in best))
+
+
 def nearest(fl, p, reach=40, up=24, down=96):
     """The floor states (cell, z) a point stands over: within `reach` across, its floor between `down` under and `up` over."""
     out = []
@@ -301,12 +343,7 @@ def check_text(text, limit=12, where=None, start=None):
     if starts:
         seen = walk(fl, starts, ladders)
     else:
-        seen, left = set(), set((c, z) for c, zs in fl.room.items() for z, _ in zs)
-        while left:
-            part = walk(fl, [next(iter(left))], ladders)
-            left -= part
-            if len(part) > len(seen):
-                seen = part
+        seen = biggest(fl, ladders)
     movers = []      # (lifts, platforms, doors that slide: a spot beside one is reached by riding it, which this walk cannot)
     for kv, e in ents:
         if kv.get("classname") in ("func_door", "func_movelinear", "func_tracktrain", "func_train") and "\tsolid\n" in e:

@@ -2081,6 +2081,8 @@ def read_layout(path):
         elif words[0] == "road":                  # ("road X1 Y1 X2 Y2 Z [replaces ID ...]": a road from the street to one of the owner's)
             ids = words[words.index("replaces") + 1:] if "replaces" in words else []
             lay.setdefault("roads", []).append(tuple(int(w) for w in words[1:6]) + (tuple(ids),))
+        elif words[0] == "backdrop":
+            lay.setdefault("backdrop", []).append(words[1:])      # (the scenery beyond the outer wall: map_backdrop.py)
         elif words[0] == "close":
             lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
@@ -2233,6 +2235,9 @@ def build_chain(lay, args):
             map_corridor.spur(b, *road)
         if b.street_wall == "combine":
             map_corridor.combine_wall(b)
+        if lay.get("backdrop"):
+            import map_backdrop
+            map_backdrop.build(b, lay)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))
@@ -2249,6 +2254,8 @@ def finish(b, seed, spawn, args):
     if b.upper:      # (the canal's dressing sees the street as wall; the chain link along the walls' tops stays off it)
         import map_corridor
         canal, walled = map_corridor.canal_view(b), map_corridor.fence_view(b)
+        if getattr(b, "backdrop", None):      # (the scenery beyond the outer wall is the wall's own top to the dressing)
+            canal, walled = b.backdrop.views(canal, walled)
     ch = Channel(vmf, canal, F, TRIM, b.vis)
     for axis, at, lo, hi in b.pipes:
         ch.pipes(axis, at, lo, hi, b.taken)
