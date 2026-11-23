@@ -243,6 +243,7 @@ MAT = {
     "black": "tools/toolsblack",
     "mud": "nature/blendmuddirt001a",   # hl2: mud, blending to dirt
     "clip": "tools/toolsplayerclip",
+    "origin": "tools/toolsorigin",
     "portal": "tools/toolsareaportal",
     "trigger": "tools/toolstrigger",
     "fence": "metal/metalfence007a",    # hl2: chain link
@@ -515,6 +516,7 @@ class Vmf:
         self.props = []     # (classname, place, model, yaw) of every prop, for the checks that keep ways clear
         self.ways = []      # (box, label): spaces players walk through, kept clear of props (keep_way_clear, ways_problems)
         self.nudged = []    # (model, from, to): props moved out of a way or a door's swing as they were placed (clear_spot)
+        self.stairs_as_built = []   # (box, why): flights copied from Valve's maps that Valve built broken on purpose (stairs_as_valve)
         self.shapes = 0     # solids that aren't boxes
         self.shape_boxes = []   # (the box round each of them, for the checks)
         self.portals = []   # the areaportals' boxes, for the checks
@@ -657,6 +659,12 @@ class Vmf:
         22 November: "this should please be a standard instruction for all map edits/creating/modules/etc"."""
         self.ways.append((tuple(box), label))
 
+    def stairs_as_valve(self, box, why):
+        """A flight of stairs lifted from one of Valve's maps that Valve itself built broken (ending in the air where the
+        stairs collapsed, a foot hanging over the floor): the stair check leaves a flight starting in this box alone.
+        Only for Valve's own (the same check on Valve's map finds the same fault); never for a flight of ours."""
+        self.stairs_as_built.append((tuple(box), why))
+
     def clear_spot(self, model, pos, yaw):
         """Where a prop may stand: pos, or if its real box there enters a way kept clear or a hinged door's swing, the
         nearest spot up to 96 away that does not, going no further into the brushes than it was. None: no such spot."""
@@ -728,6 +736,15 @@ class Vmf:
             s += self.box_text(b, mat, top or mat, mat, vis, faces=fc, axes=ax)
             self.boxes.append((b, False))
             got.append(b)
+        if cls.startswith("trigger_") and len(got) > 1:
+            # (a trigger of several boxes gets an origin brush low in its biggest box, which is air in a room: Hammer gives a
+            #  brush entity without one an origin at the middle of all its boxes, which can fall in the void between them,
+            #  and the compiler then calls the map leaked; the owner's edit of 22 November: "Entity trigger_multiple
+            #  (10240.00 5536.00 -496.00) leaked!", lc_bunker_inside, 33 boxes over the bunker and the silo)
+            big = max(got, key=lambda g: (g[3] - g[0]) * (g[4] - g[1]) * (g[5] - g[2]))
+            cx, cy = round((big[0] + big[3]) / 2.0), round((big[1] + big[4]) / 2.0)
+            cz = round(min(big[2] + 16, (big[2] + big[5]) / 2.0))
+            s += self.box_text((cx - 4, cy - 4, cz - 4, cx + 4, cy + 4, cz + 4), MAT["origin"], MAT["origin"], MAT["origin"], vis)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
         mats = [m.lower() for m in ([sides] if isinstance(sides, str) else []) + [x[1] for x in boxes if len(x) == 2 and isinstance(x[1], str)]]
@@ -1533,7 +1550,7 @@ def main():
         problems.append(p)
     import map_stairs                   # (the owner's walk, 22 November: "WE NEED A CHECK to see if stairs go into walls or geometry")
     import map_walk                     # (and: "MAKE A CHECK TO CHECK FOR PLAYER ROOM TO WALK")
-    for p in map_stairs.check_text(text) + map_walk.check_text(text):
+    for p in map_stairs.check_text(text, as_built=vmf.stairs_as_built) + map_walk.check_text(text):
         print("  PROBLEM: " + p)
         problems.append(p)
     with open(out, "w") as f:

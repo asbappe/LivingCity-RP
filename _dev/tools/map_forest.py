@@ -2101,6 +2101,7 @@ class BunkerForest(Forest):
     LIFT_BUILT = 1152            # the car's floor where Valve built it (level B): its parts are placed there and it goes to its top stop at the start
     LIFT_HOLE = (-544, -72, -416, 72)   # the shaft's mouth in the walkway's floor (Valve's grates and middle strut over it are left out: map_silo.SKIP)
     GRATE_SPEED, GRATE_AFTER = 48, 4.5  # the walkway's two sliding grates: units a second; seconds after the car leaves the top before they close
+    LIFT_CALL_TOP = (-384, 86)          # the walkway's call button: on its end frame's face toward the gantry, north of the opening
     HQ_AT = (102, 77)                          # (the silo's frame) the flag's pole: 128 from the axis, 37 degrees round, beside the rocket
     HQ_FOOT, HQ_TOP = 322 + 8, 1408 + 120      # the Resistance flag's markers beside the rocket: over the pit's cover (322) and the gantry (1408)
     # the rebel territory the gamemode reads from the map round the flag's pole: a box 1400 wide each way and 1800 high
@@ -2255,6 +2256,7 @@ class BunkerForest(Forest):
         # the silo's soundscapes, and the leader's way out
         ms = MS.Silo(self, d)
         ms.pit_cover()
+        ms.ring_rail()
         ms.level_b_doors()
         ms.ring_dress()
         ms.office()
@@ -2403,8 +2405,12 @@ class BunkerForest(Forest):
                 go += [("OnTrigger", "lift_hole_clear", "Test", "", 0.5)] if k == top else [("OnTrigger", branch, "Test", "", 2)]
                 relay(name, go)
             if k == top:
-                # the walkway's call button, on its north wall beside the hole, facing across it
-                button("lift_button_%d" % k, (-470, 112, z + 40), 270, (-471, 106, z + 39, -461, 113, z + 61), [("OnPressed", "lift_call_%d" % k, "Trigger", "", 0)])
+                # the walkway's call button: on the face of the walkway's end frame toward the gantry, north of the opening,
+                # pressed from the gantry's bridge, never from the grates (the owner, 22 November: "hitting the call button
+                # on the top floor doesn't work because the floor bridge has to open first"; a press from the grates waited
+                # for them to be clear, so it never came) and far from the silo door's keypad
+                bx_, by_ = self.LIFT_CALL_TOP
+                button("lift_button_%d" % k, (bx_, by_, z + 40), 0, (bx_ - 1, by_ - 1, z + 39, bx_ + 6, by_ + 9, z + 61), [("OnPressed", "lift_call_%d" % k, "Trigger", "", 0)])
             else:
                 # the floor's gate: two leaves of sliding grating across the landing (72 each), 40 aside into the jambs to open
                 for y1, y2, way in ((0, 72, 90), (-72, 0, 270)):
@@ -2449,15 +2455,18 @@ class BunkerForest(Forest):
             brush=(hx1 - 2, hy1 - 2, zt, hx1, hy2 + 2, zt + 128, "tools/toolsplayerclip"),
             more=[(hx2, hy1 - 2, zt, hx2 + 2, hy2 + 2, zt + 128, "tools/toolsplayerclip"), (hx1, hy2, zt, hx2, hy2 + 2, zt + 128, "tools/toolsplayerclip"),
                   (hx1, hy1 - 2, zt, hx2, hy1, zt + 128, "tools/toolsplayerclip")])
-        # the grates, made where they rest open (in the walkway's floor each side, 1 under its top, so no face of theirs lies
-        # in a face of the floor's); PressIn slides each 72 over the hole, PressOut back
-        for ya, yb, way in ((hy2, hy2 + 72, 270), (hy1 - 72, hy1, 90)):
-            g = box(hx1, ya, zt - 3, hx2, yb, zt - 1, "metal/metalhull003a")
+        # the grates, made where they rest open: each 74 across and 130 long, in the walkway's floor each side, 1 under its
+        # top, 2 of it standing out of the floor's side into the hole and 1 into the floor at each end; PressIn slides each
+        # 70 over the hole (shut, they meet in the middle and reach 2 under the floor's sides), PressOut back. So no face of
+        # theirs lies in a face of the floor's, open or shut (the owner, 22 November: "the little auto bridge on the first
+        # floor is flickering through the sidewalls of the floor, can they just stick out a hair?")
+        for ya, yb, way in ((hy2 - 2, hy2 + 72, 270), (hy1 - 72, hy1 + 2, 90)):
+            g = box(hx1 - 1, ya, zt - 3, hx2 + 1, yb, zt - 1, "metal/metalhull003a")
             for side in g:
                 if side["plane"][0][2] == side["plane"][1][2] == side["plane"][2][2]:
                     side["material"] = "METAL/METALGRATE014A"
             out.append({"classname": "func_button", "origin": [(hx1 + hx2) / 2.0, (ya + yb) / 2.0, zt - 2], "out": [], "brushes": [g],
-                        "keys": {"targetname": "lift_grates", "movedir": "0 %d 0" % way, "speed": str(self.GRATE_SPEED), "lip": "0", "wait": "-1", "spawnflags": "0",
+                        "keys": {"targetname": "lift_grates", "movedir": "0 %d 0" % way, "speed": str(self.GRATE_SPEED), "lip": "4", "wait": "-1", "spawnflags": "0",
                                  "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"}})
         ent("ambient_generic", {"targetname": "lift_grates_sound", "message": "doors/gate_move1.wav", "health": "8", "pitch": "100", "pitchstart": "100",
                                 "radius": "900", "spawnflags": "48"}, at=((hx1 + hx2) / 2.0, 0, zt + 16))
@@ -3066,6 +3075,13 @@ class CaveForest(Forest):
             if e["classname"] in ("light", "light_spot"):
                 e["keys"]["spawnflags"] = "0"
         pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit)
+        # two flights of the shaft's metal stairs are broken in Valve's own map (its stair check finds the same): the top
+        # one stops in mid air where the stairs above collapsed, the bottom one hangs over the floor (its fallen catwalk,
+        # a func_physbox, is left out); kept as Valve built them
+        for (x1, y1, z1, x2, y2, z2), why in (((640, -1300, -4810, 744, -1230, -4730), "the shaft's top flight, ending where the stairs collapsed"),
+                                              ((30, -730, -5010, 98, -630, -4930), "the shaft's bottom flight, hanging over the floor")):
+            c1, c2 = self.room_pt(x1, y1, z1), self.room_pt(x2, y2, z2)
+            v.stairs_as_valve(self.w(min(c1[0], c2[0]), min(c1[1], c2[1]), c1[2]) + self.w(max(c1[0], c2[0]), max(c1[1], c2[1]), c2[2]), why)
         # the landing's doorway at the top of the shaft, walled up in its own brick (the door and the passage beyond it left out)
         a = self.room_pt(888, -1280, -3648)      # (the doorway in the landing's plaster wall, 8 thick: filled flush with both its faces, its frame left round it)
         b = self.room_pt(896, -1232, -3540)

@@ -33,31 +33,36 @@ class Block:
 
 
 def read(path):
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        return parse(f)
+
+
+def parse(lines):
+    """A VMF's blocks from its lines (a file, or a piece of one split into lines)."""
     root = Block("root")
     stack, pending = [root], None
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        for line in f:
-            s = line.strip()
-            if not s:
-                continue
-            if "&i" in s:   # (some of Valve's files have the digit 1 saved as "&i": pitch "&i00", fademindist "-&i")
-                s = s.replace("&i", "1")
-            c = s[0]
-            if c == '"':
-                m = KV.match(s)
-                if m:
-                    stack[-1].rows.append((m.group(1), m.group(2)))
-                    stack[-1].kv.setdefault(m.group(1), m.group(2))
-            elif c == "{":
-                b = Block(pending or "?")
-                stack[-1].kids.append(b)
-                stack.append(b)
-                pending = None
-            elif c == "}":
-                if len(stack) > 1:
-                    stack.pop()
-            elif not s.startswith("//"):
-                pending = s
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+        if "&i" in s:   # (some of Valve's files have the digit 1 saved as "&i": pitch "&i00", fademindist "-&i")
+            s = s.replace("&i", "1")
+        c = s[0]
+        if c == '"':
+            m = KV.match(s)
+            if m:
+                stack[-1].rows.append((m.group(1), m.group(2)))
+                stack[-1].kv.setdefault(m.group(1), m.group(2))
+        elif c == "{":
+            b = Block(pending or "?")
+            stack[-1].kids.append(b)
+            stack.append(b)
+            pending = None
+        elif c == "}":
+            if len(stack) > 1:
+                stack.pop()
+        elif not s.startswith("//"):
+            pending = s
     return root
 
 
