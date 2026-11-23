@@ -3851,3 +3851,21 @@ A canal layout fitted into the map carries its street (a road and a railway on o
 - **Checked by:** map_build.py chain --against every neighbouring piece: nothing runs into anything; the walk check reaches every train's button from the spawn.
 - **Tags:** canal, streets
 
+### A model drawn on one side only is doubled back to back where both sides are seen (`owner-one-sided-models-doubled`)
+
+Some of Valve's models are drawn on the side the player was meant to see and blank on the other (Silo 2's door leaves, missile_doors.mdl: the underside only), and the blank side shows as nodraw. Where both sides of such a model can be seen (a door between two places), stand a mirrored copy back to back with it: each moved off the middle by its own half thickness, the copy turned half round its length, so the drawn sides face out and the blank ones meet in the middle; the copy lit from its own side (its own lightingorigin), the solid mover as thick as the pair, the shove at the close reaching past it.
+
+- **Why:** The owner, 23 November, of the bunker's entrance leaves: "the blast doors at the bunker entrance are \"nodraw\" on the outside? can we get the prop mirrored so it's double thick and the nodraw surfaces are facing each other in the middle of the bunker door sandwhiches?"
+- **How:** BunkerForest.door (map_forest.py): FLAT_HALF_T, the outer leaves lc_bunker_outer_leaf_*, lc_bunker_door_lighting_out.
+- **Checked by:** None by machine: a person looks at both sides of a door made of a Valve model.
+- **Tags:** owner, doors, props
+
+### Sliding leaves run in a frame and go into a dark slot, never through concrete (`owner-sliding-leaves-run-in-a-frame`)
+
+A door leaf that slides into a wall runs in a steel frame round the doorway (a post up each jamb either side of the leaf, a channel across the top and along the floor, each with a black strip where the leaf runs), and the jamb where it goes into the wall is black (tools/toolsblack) from floor to lintel, so it slides into a dark slot. Keep the black jamb band world where an areaportal meets it; the frame detail, its pieces never flush with each other.
+
+- **Why:** The owner, 23 November: "can we also build a frame/rails to go around the edges of the bunker doors? They are supposed to be on a rail/frame, and also for where they go into the wall as well, can we get that frame/rail with a black brush so it looks like they go into a dark space in the wall rather than just slipping into and through concrete?"
+- **How:** BunkerForest.door (map_forest.py): the jambs in three bands, FMAT leaf_frame (metal/metalwall085a).
+- **Checked by:** map_build's flush LOOK for the frame's pieces.
+- **Tags:** owner, doors, geometry
+
