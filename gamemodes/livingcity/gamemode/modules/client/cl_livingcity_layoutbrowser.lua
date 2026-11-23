@@ -39,9 +39,9 @@ local USES = {
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn" } },
     -- (the landing zone and the suppression device are the Combine's: they were only under arriving and under her last stand)
     { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "locker_cp", "console", "sspawn", "powerbank", "turret",
-        "forcefield", "barricade_low", "barricade", "barricade_tall", "mounted_gun", "dataterm", "masterterm", "zone_combine", "sterm", "lz", "suppressor", "door_cp", "loudspeaker", "screen_big", "screen_mid", "monitor_hang", "camera" } },
+        "forcefield", "barricade_low", "barricade", "barricade_tall", "mounted_gun", "dataterm", "masterterm", "zone_combine", "sterm", "lz", "suppressor", "door_cp", "loudspeaker", "screen_big", "screen_mid", "screen_station", "monitor_hang", "camera" } }, -- (the station screen beside its sizes: the owner, 23 November, couldn't find it)
     -- (everything of hers in one folder: her studio and office door were under Civil Protection)
-    { title = "The Administrator", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "adminapc", "adminheli", "execwall", "studio", "door_office", "zone_combine" } },
+    { title = "The Administrator", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "adminapc", "adminheli", "execwall", "studio", "door_office", "zone_combine", "screen_station" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "colonel", "rlookout", "rebelboard", "fundtv", "interrochair", "rebelcage", "locker_rebel", "bunk", "workbench", "dealer", "still", "cardtable", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom", "supplyroad", "supplycanal" } }, -- (no locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)

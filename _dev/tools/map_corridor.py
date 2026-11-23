@@ -1029,21 +1029,9 @@ def combine_core(b, shed_front):
     b.combine_core = core
 
 
-def combine_wall(b, seed=1):
-    """The Combine wall along its core: each straight stretch (5 squares or more) a row of wall_chain's runs 512 to 1024
-    long, laid straight, their battered ribbed faces to the street, a pier with its lamp over every joint and at both
-    ends (map_combine.py's perimeter, combine/chain.py). What a stretch leaves short stays plain metal."""
-    import random as _r
-    from combine.chain import pier, run
-    from combine.geom import Frame as CF
-    from combine.piece import Piece, Sink
-    from combine.scene import put
-    core = getattr(b, "combine_core", set())
-    if not core:
-        return
-    r = _r.Random("wall %s %d" % (b.name, seed))
-    sink = Sink()
-    street = set(b.deck)
+def wall_stretches(core, street):
+    """The Combine wall's straight stretches along its core: (axis, row, first square, past the last, the street's side
+    (-1 below, 1 above)) for every line of 5 squares or more with the street beside it."""
     segs = []
     for axis in ("x", "y"):
         lines = {}
@@ -1064,12 +1052,167 @@ def combine_wall(b, seed=1):
                         segs.append((axis, row, start, prev + 1, -1 if lo >= hi else 1))
                 if k is not None:
                     start = prev = k
-    for axis, row, a, c, side in segs:
-        L = (c - a) * CELL
-        if axis == "x":      # (the street to the south (side -1) or north; the wall's face on the core's street side)
-            o, d = ((a * CELL, row * CELL), (1, 0)) if side < 0 else ((c * CELL, (row + 1) * CELL), (-1, 0))
-        else:
-            o, d = ((row * CELL, c * CELL), (0, -1)) if side < 0 else (((row + 1) * CELL, a * CELL), (0, 1))
+    return segs
+
+
+def stretch_frame(axis, row, a, c, side):
+    """A stretch's frame: its start on the core's street face, the way it runs (the street on its right, so its face
+    looks to (d[1], -d[0])) and its length."""
+    L = (c - a) * CELL
+    if axis == "x":      # (the street to the south (side -1) or north; the wall's face on the core's street side)
+        o, d = ((a * CELL, row * CELL), (1, 0)) if side < 0 else ((c * CELL, (row + 1) * CELL), (-1, 0))
+    else:
+        o, d = ((row * CELL, c * CELL), (0, -1)) if side < 0 else (((row + 1) * CELL, a * CELL), (0, 1))
+    return o, d, L
+
+
+def wall_runs(span, r):
+    """Lengths from the kit (512 to 1024 in steps of 128) adding up to span (a multiple of 128, at least 512)."""
+    out, left = [], span
+    while left:
+        ks = [k for k in (512, 640, 768, 896, 1024) if k == left or (k < left and left - k >= 512)]
+        k = r.choice(ks)
+        out.append(k)
+        left -= k
+    return out
+
+
+def combine_wall(b, seed=1):
+    """The Combine wall along its core, from the Propper++ kit (map_propkit.py; the owner, 23 November, of the brush
+    wall vbsp could not take: "we need it to not be nodrawn but to be deleted/non existent"): each straight stretch (5
+    squares or more) a row of the kit's runs 512 to 1024 long, their battered ribbed faces to the street, the kit's pier
+    over every joint and flush with every free end, its lamp beside it (map_combine.py's perimeter, combine/chain.py, as
+    the brush wall was); where two stretches turn round the outside of a corner the corner pier, and where they meet in
+    an inside corner their runs simply meet. All of them prop_statics that never fade, cast shadows and have no
+    collision: a player clip along each stretch's foot and round each pier keeps players at the wall's front. The core
+    (world) seals as before. A layout's "wall combine brushes" builds the brush wall instead (combine_wall_brushes)."""
+    import math
+    import random as _r
+    import map_propkit as PK
+    from combine.scene import lamp
+    if getattr(b, "wall_brushes", False):
+        return combine_wall_brushes(b, seed)
+    core = getattr(b, "combine_core", set())
+    if not core:
+        return
+    kit = PK.load()
+    W, P = kit["wall"], kit["pieces"]
+    pier = P[W["pier"]]
+    half = max(-pier["box"][0], pier["box"][3])      # (the pier's half width: an end pier stands this far in from the end)
+    r = _r.Random("wall kit %s %d" % (b.name, seed))
+    v, vis = b.vmf, b.vis + ": the Combine wall"
+    keys = {"skin": "0", "solid": "0", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
+    counts = {"runs": 0, "piers": 0, "corners": 0, "lamps": 0, "clips": 0, "plain": 0}
+
+    def put(name, pos, yaw, turn=True):
+        piece = P[name]
+        at = PK.place(pos, yaw)
+        v.point("prop_static", pos, dict(keys, model=PK.model(name), angles="0 %d 0" % yaw), vis)
+        for box in piece["clip"]:
+            w = PK.place_box(pos, yaw, box)
+            if w[0] < w[3] and w[1] < w[4]:
+                v.world_box(w, MAT["clip"], top=MAT["clip"], bottom=MAT["clip"], vis=vis + "'s player clip", seals=False)
+                counts["clips"] += 1
+        for x, y, z, look, pitch in piece["lamps"]:
+            lamp(v, at(x, y, z), (look + yaw + (r.choice((-30, -15, 15, 30)) if turn else 0)) % 360, pitch, vis)
+            counts["lamps"] += 1
+        for x, y, z, colour in piece["lights"]:
+            v.point("light", at(x, y, z), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_lightscaleHDR": "1"}, vis)
+
+    st = []
+    for seg in wall_stretches(core, set(b.deck)):
+        o, d, L = stretch_frame(*seg)
+        st.append({"o": o, "d": d, "f": (d[1], -d[0]), "L": L, "ends": ["free", "free"]})
+
+    def end(s, e):
+        """A stretch's end e (0 its start, 1 its end): its point on the street face, the way into the wall, the square."""
+        u = 0 if e == 0 else s["L"]
+        pt = (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u)
+        t = s["d"] if e == 0 else (-s["d"][0], -s["d"][1])
+        return pt, t, ((pt[0] + 32 * t[0] - 32 * s["f"][0]) // CELL, (pt[1] + 32 * t[1] - 32 * s["f"][1]) // CELL)
+    corners = []
+    for i, s1 in enumerate(st):      # (corners: two stretches at right angles whose end squares touch)
+        for s2 in st[i + 1:]:
+            if s1["d"][0] * s2["d"][0] + s1["d"][1] * s2["d"][1]:
+                continue
+            for e1 in (0, 1):
+                for e2 in (0, 1):
+                    p1, t1, c1 = end(s1, e1)
+                    p2, t2, c2 = end(s2, e2)
+                    if max(abs(c1[0] - c2[0]), abs(c1[1] - c2[1])) > 1:
+                        continue
+                    if s1["f"][0] * t2[0] + s1["f"][1] * t2[1] >= 0:      # (the other wall stands before this one's face: an inside corner)
+                        s1["ends"][e1] = s2["ends"][e2] = "inside"
+                    elif p1 == p2:                                        # (round the outside: both faces end at one corner)
+                        s1["ends"][e1] = s2["ends"][e2] = "corner"
+                        corners.append((p1, s1["f"], s2["f"]))
+    for s in st:
+        a = half if s["ends"][0] == "free" else 0
+        z = s["L"] - (half if s["ends"][1] == "free" else 0)
+        if z - a < 512:
+            counts["plain"] += 1      # (too short for a run: the core stays plain metal)
+            continue
+        lengths = wall_runs((z - a) // 128 * 128, r)
+        extra = (z - a) % 128
+        gaps = [0] * (len(lengths) + 1)      # (before each run, and after the last: a pier covers each)
+        if extra:
+            if s["ends"][0] == "free":
+                gaps[0] = extra
+            elif s["ends"][1] == "free":
+                gaps[-1] = extra
+            elif len(lengths) > 1:
+                gaps[r.randint(1, len(lengths) - 1)] = extra
+            elif s["ends"][0] == "corner":
+                gaps[0] = extra
+            elif s["ends"][1] == "corner":
+                gaps[-1] = extra
+            else:
+                gaps[0], gaps[-1] = extra // 2, extra - extra // 2
+        yaw = int(round(math.degrees(math.atan2(s["d"][1], s["d"][0])))) % 360
+        u, runs = a, []
+        for k, g in zip(lengths, gaps):
+            u += g
+            runs.append((u, k))
+            u += k
+        for u, k in runs:
+            put(r.choice(W["runs"][str(k)]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
+            counts["runs"] += 1
+        us = [(runs[n][0] + runs[n][1] + runs[n + 1][0]) // 2 for n in range(len(runs) - 1)]
+        us = ([half] if s["ends"][0] == "free" else []) + us + ([s["L"] - half] if s["ends"][1] == "free" else [])
+        for u in us:
+            put(W["pier"], (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
+            counts["piers"] += 1
+    for pt, fa, fb in corners:      # (the corner pier's fronts look to -y and -x of its own: turned so they meet the two faces)
+        for f1, f2 in ((fa, fb), (fb, fa)):
+            yaw = int(round(math.degrees(math.atan2(f1[0], -f1[1])))) % 360
+            c, sn = int(round(math.cos(math.radians(yaw)))), int(round(math.sin(math.radians(yaw))))
+            if (-c, -sn) == tuple(f2):
+                put(W["corner"], (pt[0], pt[1], STREET), yaw)
+                counts["corners"] += 1
+                break
+    b.notes.append("the Combine wall between the city and the street, from the Propper++ kit (map_propkit.py): %d stretches, %d runs, %d piers, "
+                   "%d corner piers, %d lamps, %d player clips%s" % (len(st), counts["runs"], counts["piers"], counts["corners"], counts["lamps"],
+                                                                     counts["clips"], ", %d too short (plain)" % counts["plain"] if counts["plain"] else ""))
+
+
+def combine_wall_brushes(b, seed=1):
+    """The Combine wall as brushes (the way it was built until the kit: "wall combine brushes" in a layout): each straight
+    stretch (5 squares or more) a row of wall_chain's runs 512 to 1024 long, laid straight, their battered ribbed faces
+    to the street, a pier with its lamp over every joint and at both ends (map_combine.py's perimeter, combine/chain.py).
+    What a stretch leaves short stays plain metal."""
+    import random as _r
+    from combine.chain import pier, run
+    from combine.geom import Frame as CF
+    from combine.piece import Piece, Sink
+    from combine.scene import put
+    core = getattr(b, "combine_core", set())
+    if not core:
+        return
+    r = _r.Random("wall %s %d" % (b.name, seed))
+    sink = Sink()
+    segs = wall_stretches(core, set(b.deck))
+    for seg in segs:
+        o, d, L = stretch_frame(*seg)
         u, runs_ = 0, []
         while L - u >= 320:
             k = min(r.choice((512, 640, 768, 896, 1024)), L - u)
@@ -1084,7 +1227,7 @@ def combine_wall(b, seed=1):
             if n == len(runs_) - 1:
                 pier(p, k, WALL_H, r, T, Le, Pl, lamp=True)
     put(b.vmf, sink, b.vis + ": the Combine wall")
-    b.notes.append("the Combine wall between the city and the street: %d stretches, %d runs, %d lamps" % (len(segs), sum(1 for _ in sink.solids) and len(segs), len(sink.lamps)))
+    b.notes.append("the Combine wall between the city and the street (brushes): %d stretches, %d lamps" % (len(segs), len(sink.lamps)))
 
 
 # ---------------------------------------------------------------------------------------------------------------------

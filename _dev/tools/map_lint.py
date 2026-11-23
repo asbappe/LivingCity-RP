@@ -471,6 +471,8 @@ def check(path, views=None, only=None, air=None):
         import bisect
         things = [bx for _, bx in solid_props]
         for e in ents:
+            if e.get("model", "").lower().startswith("models/lc/kit/") and prop_box(e):      # (the Propper++ kit's models: seen, though not solid)
+                things.append(prop_box(e))
             if e.get("classname") in ("infodecal", "info_overlay", "env_sprite") and "origin" in e:
                 o = origin(e)
                 things.append((o[0] - 8, o[1] - 8, o[2] - 8, o[0] + 8, o[1] + 8, o[2] + 8))

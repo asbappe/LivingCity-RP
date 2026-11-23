@@ -31,14 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
+- 23 November (later): **stimulant** now holds off exhaustion and grogginess (not only lights out). **The
+  Administrator's stand-ins** (address, studio, collapse, questioning) are `citizentype` 4, else ERROR. **Her address:**
+  F1 > What now? > Show me the way marks it; out cold, carried in the black; no crowding warnings in the crowd.
+  **The station screen** is Valve's six layers of dev/dev_combinemonitor_3 (lc_screen.lua); **vending cans** roll out.
 - 23 November (this chat): **EP2's Combine autogun lifted and built out** (`valve_ep2_cannon`; test map
   map_cannon_test.py, not compiled yet). **Nova Prospekt's vortigaunt torture cell** lifted (`valve_prison_vort_torture`).
   **map_setpieces.py** ranks set pieces in all 105 shipped maps; picks for the owner: docs/dev/valve-setpieces.md.
 - 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
   beside the next victim). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
-- 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt), fitted to c18_lc.vmf: road and railway
-  between city and canal all the way round, four trains out of tunnels over rail bridges. Test map map_ring_walk.py.
-  Not compiled yet. Outward: city, Combine wall, road, railway, canal, ruins, then EP2 pine forest (map_backdrop.py).
+- 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt, fitted to c18_lc.vmf; test map
+  map_ring_walk.py, not compiled yet): city, Combine wall, road, railway, canal, ruins, EP2 pine forest (map_backdrop.py).
 - The owner's map (c18_lc.vmf) and Valve's VMF zip (HL2Leak-VMFs-master.zip) are on their Drive: the Drive connector
   finds them by name; curl from drive.usercontent.google.com with the file's id.
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).

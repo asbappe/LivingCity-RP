@@ -198,6 +198,7 @@ local function Her(pos, yaw)
     if mdl == "" or (util.IsValidModel and not util.IsValidModel(mdl)) then mdl = "models/mossman.mdl" end
     local her = ents.Create("npc_citizen")
     if not IsValid(her) then return nil end
+    if her.SetKeyValue then her:SetKeyValue("citizentype", "4") end -- (unique: else the game turns "models/mossman.mdl" into models/Humans/Group01/mossman.mdl, an ERROR)
     her:SetModel(mdl)
     her:SetPos(pos + Vector(0, 0, 4))
     her:SetAngles(Angle(0, yaw or 0, 0))

@@ -563,6 +563,7 @@ local function SpawnHer(pos)
     if mdl == "" or (util.IsValidModel and not util.IsValidModel(mdl)) then mdl = "models/mossman.mdl" end
     local npc = ents.Create("npc_citizen")
     if not IsValid(npc) then return nil end
+    if npc.SetKeyValue then npc:SetKeyValue("citizentype", "4") end -- (unique: else the game turns "models/mossman.mdl" into models/Humans/Group01/mossman.mdl, an ERROR)
     npc:SetModel(mdl)
     npc:SetPos(pos + Vector(0, 0, 4))
     npc:SetKeyValue("additionalequipment", "weapon_ar2")

@@ -163,6 +163,11 @@ local PLACES = {
         if c then return c, LC.BlockName(n) end
         return nil, n and "Your block isn't on the map." or "You have no room yet."
     end,
+    speech = function(ply) -- (the Administrator's address, while the city gathers: sv_livingcity_speech.lua)
+        local s = LC.SpeechSession and LC.SpeechSession()
+        if s and s.crowd then return s.crowd.pos, "The Administrator's address" end
+        return nil, "There's no address right now."
+    end,
     lab = function(ply)
         local e = NearestEnt(ply:GetPos(), { "lc_workbench" })
         if IsValid(e) then return e:GetPos(), "The lab" end

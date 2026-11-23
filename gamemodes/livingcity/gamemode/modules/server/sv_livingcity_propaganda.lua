@@ -359,6 +359,7 @@ local function SpawnBreen(pt)
     if mdl == "" or (util.IsValidModel and not util.IsValidModel(mdl)) then mdl = "models/mossman.mdl" end
     local npc = ents.Create("npc_citizen")
     if IsValid(npc) then
+        if npc.SetKeyValue then npc:SetKeyValue("citizentype", "4") end -- (unique: else the game turns "models/mossman.mdl" into models/Humans/Group01/mossman.mdl, an ERROR)
         npc:SetModel(mdl)
     else
         npc = ents.Create("npc_breen")

@@ -241,7 +241,6 @@ function LC.SpeechPlaces(from)
     if not stand then return nil end
     return stand, crowd
 end
-local function Where(pos) return LC.DescribePlace and LC.DescribePlace(pos) or "the speech stand" end
 
 -- The i-th place in the crowd: rows of six facing the stand (cols: wider rows, for a whole city of them).
 local function SpotFor(c, st, i, cols)
@@ -271,6 +270,7 @@ local function MustAttend(p)
     if LC.ExerciseEligible then return LC.ExerciseEligible(p) end
     return p:GetNW2String("lcf_faction", "") == "citizen"
 end
+function LC.SpeechMustAttend(p) return S ~= nil and MustAttend(p) end -- (F1 > What now?: sv_livingcity_nextstep.lua)
 
 -- The podium, and (the city's own address) her, behind it.
 local function Dress()
@@ -291,6 +291,7 @@ local function Dress()
         if mdl == "" or (util.IsValidModel and not util.IsValidModel(mdl)) then mdl = "models/mossman.mdl" end
         local her = ents.Create("npc_citizen")
         if IsValid(her) then
+            if her.SetKeyValue then her:SetKeyValue("citizentype", "4") end -- (unique: else the game turns "models/mossman.mdl" into models/Humans/Group01/mossman.mdl, an ERROR)
             her:SetModel(mdl)
             her:SetPos(S.stand.pos + Vector(0, 0, 4))
             her:SetAngles(Angle(0, yaw, 0))
@@ -572,10 +573,9 @@ function LC.CallSpeech(by, text)
     -- the call: Overwatch's custom voice for a player's speech, her own for the city's
     local voice = S.by and "overwatch" or "administrator"
     if LC.CustomAnnounce then LC.Try(LC.CustomAnnounce, voice, "speech_soon", nil, true) end
-    local where = Where(crowd.pos)
     for _, p in ipairs(player.GetAll()) do
         if MustAttend(p) then
-            Tell(p, "The Administrator's address", "All citizens report to " .. where .. " now. Attendance is mandatory.", 12)
+            Tell(p, "The Administrator's address", "Attendance is mandatory. F1 > What now? > Show me the way.", 12)
         end
     end
     Gather()
@@ -672,18 +672,25 @@ function LC.EndSpeech()
     S = nil
 end
 
--- Out cold, then they come to in the crowd.
+-- Out cold, then they come to in the crowd. Carried there while the screen is black (the owner, 23
+-- November: "I saw myself get teleported ... can we have that happen DURING THE BLACK?!"): the black
+-- fades back in over its last second and a half (cl_livingcity_kick.lua), so the move is a second in.
+local KO_SECS, CARRY_AT = 6, 1
 local function BlackOut(p)
     local spot = S and LC.SpeechSpot((S.spots or 0) + 1 + (S.ko or 0))
     S.ko = (S.ko or 0) + 1
     if LC.KnockOut then
-        LC.KnockOut(p, 6, 3, { "Out cold", "The stick again, and again. Everything goes black." })
+        LC.KnockOut(p, KO_SECS, 3, { "Out cold", "The stick again, and again. Everything goes black." })
     end
-    timer.Simple(5.5, function()
+    timer.Simple(CARRY_AT, function()
         if not (IsValid(p) and p:Alive() and spot) then return end
         p:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(spot)) or spot)
         if S and p.SetEyeAngles then p:SetEyeAngles(Angle(0, (S.stand.pos - spot):Angle().y, 0)) end
-        Tell(p, "You come to", "Standing in the crowd in front of the stand, held up by the people either side of you. Your head is pounding.", 8)
+    end)
+    timer.Simple(KO_SECS, function()
+        if IsValid(p) and p:Alive() and spot then
+            Tell(p, "You come to", "Standing in the crowd in front of the stand, held up by the people either side of you. Your head is pounding.", 8)
+        end
     end)
 end
 LC.SpeechBlackOut = BlackOut
@@ -726,7 +733,7 @@ local function Hunt(now)
                         S.warned[p] = true
                         if LC.Face then LC.Face(npc, p:GetPos()) end
                         npc:EmitSound("npc/metropolice/vo/firstwarningmove.wav", 78)
-                        Tell(p, "Civil Protection", "The Administrator is addressing the city. Report to " .. Where(S.crowd.pos) .. ". Now.", 8)
+                        Tell(p, "Civil Protection", "The Administrator is addressing the city. Move. (F1 > What now? > Show me the way.)", 8)
                         p.lcSpeechNext = now + 12
                         S.chaser[p] = npc -- (and keeps an eye on them: still not moving when the time's up, the stick)
                     elseif npc:GetPos():DistToSqr(p:GetPos()) < 120 * 120 then

@@ -155,7 +155,8 @@ def dress_keys(model, x, y, keys):
     return k
 
 
-WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight", "missile_doors", "freightelevatorbutton", "control_lever", "trappropeller_lever")     # (arches over the way, their middle open; lamps hung overhead; Silo 2's leaves, the bunker door's, which slide out of the way and stand rolled upright and scaled, past what this box can turn)
+WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight", "missile_doors", "freightelevatorbutton", "control_lever", "trappropeller_lever",
+              "models/lc/kit/lc_cwall")     # (arches over the way, their middle open; lamps hung overhead; Silo 2's leaves, the bunker door's, which slide out of the way and stand rolled upright and scaled, past what this box can turn; the Combine wall's models, map_corridor.combine_wall, standing on its core where its brushes stood, a player clip their collision)
 
 
 def prop_box(model, pos, yaw):
