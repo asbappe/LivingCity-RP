@@ -76,11 +76,13 @@ def main():
     ap.add_argument("--cell", type=int, default=8)
     ap.add_argument("--list", action="store_true", help="print every face made nodraw")
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
+    ap.add_argument("--brushes", action="store_true", help="also delete the brushes nobody can see that do not seal the map")
     a = ap.parse_args()
     C = float(a.cell)
     root = mv.read(a.vmf)
 
     brushes, faces, disps, seeds, things = [], [], [], [], []      # (planes, bbox) solid; (side id, mat, poly, normal) candidates
+    every = []      # (solid id, "world" or "detail", bbox, sides, opaque, planes): every brush that could go (--brushes)
     for top in root.kids:
         if top.name == "world":
             owner, sols = "world", [k for k in top.kids if k.name == "solid"]
@@ -116,6 +118,7 @@ def main():
                         disps.append(mv.displaced(verts, d[0], (0, 0, 0)))
                 continue      # (a displaced brush is no wall to the compiler, nor its faces ours to change)
             box = [min(p[i] for p in pts) for i in range(3)] + [max(p[i] for p in pts) for i in range(3)]
+            every.append((sol.kv.get("id"), owner, box, len(sides), opaque(mats), pl))
             if opaque(mats):
                 brushes.append((pl, box))
             for k, s in enumerate(sides):
@@ -135,16 +138,19 @@ def main():
     def idx(p):
         return np.floor((np.asarray(p) - lo) / C).astype(int)
 
-    for pl, box in brushes:
+    def mark(grid, pl, box):
         i0, i1 = np.maximum(idx(box[:3]), 0), np.minimum(idx(box[3:]) + 1, n)
         if (i1 <= i0).any():
-            continue
+            return
         g = [lo[q] + (np.arange(i0[q], i1[q]) + 0.5) * C for q in range(3)]
         X, Y, Z = np.meshgrid(g[0], g[1], g[2], indexing="ij")
         inside = np.ones(X.shape, dtype=bool)
         for nn, d in pl:
             inside &= (nn[0] * X + nn[1] * Y + nn[2] * Z - d) <= 0.01
-        solid[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] |= inside
+        grid[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] |= inside
+
+    for pl, box in brushes:
+        mark(solid, pl, box)
     for quads in disps:      # a skin: every cube it passes through is shut (sampled finer than a cube)
         for quad, _c, _s in quads:
             q = np.array(quad)
@@ -166,7 +172,7 @@ def main():
     if not reached.any():
         sys.exit("every player start is inside something solid")
 
-    def fill(axis):
+    def fill(reached, air, axis):
         A = np.moveaxis(air, axis, -1).reshape(-1, n[axis])
         R = np.moveaxis(reached, axis, -1).reshape(-1, n[axis])
         start = A.copy()
@@ -177,16 +183,20 @@ def main():
         out = A & has[rid]
         return np.moveaxis(out.reshape(np.moveaxis(air, axis, -1).shape), -1, axis)
 
-    total, rounds = int(reached.sum()), 0
-    while True:
-        for axis in (0, 1, 2):
-            reached = fill(axis)
-        rounds += 1
-        now = int(reached.sum())
-        if now == total:
-            break
-        total = now
-    print("flood: %d rounds, %.1f M cubes of air seen of %.1f M open" % (rounds, total / 1e6, air.sum() / 1e6))
+    def flood(reached, air):
+        """Every cube of `air` joined to `reached` (cubes sharing a face), by filling whole runs along each axis in
+        turn until nothing more joins."""
+        total = int(reached.sum())
+        while True:
+            for axis in (0, 1, 2):
+                reached = fill(reached, air, axis)
+            now = int(reached.sum())
+            if now == total:
+                return reached
+            total = now
+
+    reached = flood(reached, air)
+    print("flood: %.1f M cubes of air seen of %.1f M open" % (reached.sum() / 1e6, air.sum() / 1e6))
 
     # the check: every light and placed thing should stand in air the flood saw (or inside something, where some
     # dressing sits); one in unseen air means a place people use that the flood missed, so nothing is changed
@@ -241,6 +251,61 @@ def main():
     if a.list:
         for sid, mat in sorted(hidden.items(), key=lambda x: int(x[0])):
             print("  side %s  %s" % (sid, mat))
+    gone = []
+    if a.brushes:
+        # the seal: world brushes alone (detail, displacements, clips and see-through brushes do not seal), and the void
+        # outside it flooded in from the grid's edge; a world brush near that void is part of the seal and stays
+        wall = np.zeros(n, dtype=bool)
+        for sid, owner, box, ns, opq, pl in every:
+            if owner == "world" and opq:
+                mark(wall, pl, box)
+        out_air = ~wall
+        void = np.zeros(n, dtype=bool)
+        void[0, :, :] = void[-1, :, :] = True
+        void[:, 0, :] = void[:, -1, :] = True
+        void[:, :, 0] = void[:, :, -1] = True
+        void &= out_air
+        rounds = 0
+        while True:      # (round by round, to say where the void first meets air someone can see: a hole in the seal as cubes see it)
+            before = int(void.sum())
+            for axis in (0, 1, 2):
+                void = fill(void, out_air, axis)
+            rounds += 1
+            meet = void & reached
+            if meet.any():
+                pts = np.argwhere(meet)[:12]
+                print("LEAK (as cubes see it), round %d: the void meets seen air at %s" % (rounds, ", ".join(
+                    "(%d %d %d)" % tuple(lo + (q + 0.5) * C) for q in pts)))
+                break
+            if int(void.sum()) == before:
+                break
+        void = flood(void, out_air)
+        print("the void outside the seal: %.1f M cubes" % (void.sum() / 1e6))
+        m = int(round(16 / C))      # (16 of margin round every brush)
+        pocket = out_air & ~void & ~reached      # (air inside the seal nobody sees: sealed pockets, the ground under the terrain)
+        kinds = {}
+        for sid, owner, box, ns, opq, pl in every:
+            i0 = np.maximum(idx(box[:3]) - m, 0)
+            i1 = np.minimum(idx(box[3:]) + 1 + m, n)
+            sl = (slice(i0[0], i1[0]), slice(i0[1], i1[1]), slice(i0[2], i1[2]))
+            k = "seen" if reached[sl].any() else "seal" if void[sl].any() else "pocket" if pocket[sl].any() else "buried"
+            k = owner + " " + k
+            kinds.setdefault(k, [0, 0])
+            kinds[k][0] += 1
+            kinds[k][1] += ns
+        for k, (cnt, ns) in sorted(kinds.items()):
+            print("  %-14s %5d brushes, %6d sides" % (k, cnt, ns))
+        for sid, owner, box, ns, opq, pl in every:
+            i0 = np.maximum(idx(box[:3]) - m, 0)
+            i1 = np.minimum(idx(box[3:]) + 1 + m, n)
+            sl = (slice(i0[0], i1[0]), slice(i0[1], i1[1]), slice(i0[2], i1[2]))
+            if reached[sl].any():
+                continue      # (near air someone can see into)
+            if owner == "world" and void[sl].any():
+                continue      # (part of the seal against the void)
+            gone.append((sid, owner, ns))
+        print("%d of %d brushes nobody can see and the seal does not need (%d world, %d detail): %d brush sides" % (
+            len(gone), len(every), sum(1 for g in gone if g[1] == "world"), sum(1 for g in gone if g[1] == "detail"), sum(g[2] for g in gone)))
     if not a.out:
         return
     if lost and not a.force:
@@ -256,6 +321,30 @@ def main():
         return m.group(0)
     # each side: its id, then (planes, vertices_plus) up to its material line
     text = re.sub(r'(\tside\r?\n\t*\{\r?\n\t*"id" "(\d+)")(.*?"material" "[^"]*")', swap, text, flags=re.S)
+    if gone:
+        eol = "\r\n" if "\r\n" in text[:4000] else "\n"
+        ids = set(g[0] for g in gone)
+        cut = [0]
+
+        def drop(m):
+            if m.group("id") in ids:
+                cut[0] += 1
+                return ""
+            return m.group(0)
+        # a brush: from its "solid" line (one tab in) to its closing brace at the same depth, with the line end after it
+        pat = r'\tsolid%s\t\{%s\t\t"id" "(?P<id>\d+)"%s.*?%s\t\}%s' % (eol, eol, eol, eol, eol)
+        text = re.sub(pat, drop, text, flags=re.S)
+        # a func_detail left with no brush goes too
+        ent = r'(?m)^entity%s\{%s(?:(?!^\}).)*?"classname" "func_detail"(?:(?!^\}).)*?^\}%s' % (eol, eol, eol)
+        empty = [0]
+
+        def lone(m):
+            if "\tsolid" + eol not in m.group(0):
+                empty[0] += 1
+                return ""
+            return m.group(0)
+        text = re.sub(ent, lone, text, flags=re.S)
+        print("%d brushes deleted, %d func_detail left empty and deleted" % (cut[0], empty[0]))
     open(a.out, "w", encoding="utf-8", errors="surrogateescape", newline="").write(text)
     print("written %s: %d faces made nodraw" % (a.out, done[0]))
 

@@ -412,7 +412,7 @@ def corner_box(allv):
     return tuple(math.floor(min(p[k] for p in allv) + 1e-6) for k in range(3)) + tuple(math.ceil(max(p[k] for p in allv) - 1e-6) for k in range(3))
 
 
-def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outside=False, keep=None):
+def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outside=False, keep=None, world=False, portals=False):
     """Put the prefab's anchor at (u, v, z) in the module's frame, turned `turn` quarter turns (anticlockwise seen from
     above) on top of the frame's own turning. Its brushes go in as one func_detail; its props, lights and decals as they
     were (moved and turned with it). `name` may be a piece already loaded (a dict).
@@ -424,7 +424,13 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outs
     piece never seals, so they are the builder's to place. Outputs and keys naming what the piece does not hold are
     dropped (Valve's story outside it), or kept as they are with keep_outside=True (to wire the copy to things of the
     builder's own of those names). `!player` becomes `!activator` (one player of many is not 'the player'), and every
-    output may fire again, as Vmf.wires writes them. keep(e) says which wiring entities go in instead (e: the piece's own entry)."""
+    output may fire again, as Vmf.wires writes them. keep(e) says which wiring entities go in instead (e: the piece's own entry).
+    An ai_relationship naming `!player` names the class `player` instead (every player, not the first to join).
+    world=True: the brushes that were the source's world brushes go into the world (they seal and cut the map up for
+    visibility, as in the source; the piece's areaportals need them), the rest stay one func_detail. portals=True: the
+    piece's own areaportals (`func_areaportal`, `func_areaportalwindow` in its wiring) go in too: only where the builder
+    has sealed the piece's areas, or the compile fails. A piece's `nav` (its own path nodes, and node links between them,
+    named as the piece's other entities) goes in with its wiring, each node given the build's next node id."""
     pf = name if isinstance(name, dict) else load(name)
     name = pf["name"]
     fr = m.fr
@@ -436,7 +442,8 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outs
     d = (ox, oy, oz)
     vmf = m.b.vmf
     logic = props and wiring and bool(pf.get("wiring") or pf.get("route") or any(p.get("connections") for p in pf["points"]))
-    wires = [w for w in pf.get("wiring", []) if (keep(w) if keep else not unwired(w["classname"]))] if logic else []
+    aps = ("func_areaportal", "func_areaportalwindow") if portals else ()
+    wires = [w for w in pf.get("wiring", []) if (keep(w) if keep else not unwired(w["classname"]) or w["classname"] in aps)] if logic else []
     live = set(w["keys"].get("targetname") for w in wires) - {None, ""}
     placed = set(id(w) for w in wires)
     full = pf.get("wiring", [])
@@ -448,8 +455,11 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outs
                       or (sol.get("wired") is None and sol.get("live") in live)):
             continue      # (its moving brush goes in live, with the wiring)
         s_text, allv = solid_text(vmf, sol["sides"], q, d, vis or m.dv, t)
-        text += s_text
-        written += 1
+        if world and sol.get("from") == "worldspawn":
+            vmf.world.append(s_text)      # (a world brush, as the source had it)
+        else:
+            text += s_text
+            written += 1
         if allv:
             vmf.boxes.append((corner_box(allv), False))
     text += vmf.editor(vis or m.dv, "0 180 0") + "}\n"
@@ -474,8 +484,32 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outs
             fade_small(p["classname"], keys)
             vmf.point(p["classname"], tuple(pos), keys, m.pv if p["classname"].startswith("prop") else m.lv)
         return pf
-    place_logic(m, pf, list(pf["points"]) + wires, q, d, tag, keep_outside)
+    place_logic(m, pf, list(pf["points"]) + wires + nav_entities(m, pf), q, d, tag, keep_outside)
     return pf
+
+
+def nav_entities(m, pf):
+    """A piece's own path nodes (`nav`: {"nodes": [[x, y, z]...], "links": [{"from": i, "to": j, "keys": {...}}]}) as
+    wiring entries, each node with the build's next node id and each link naming the two nodes' ids (Valve's
+    info_node_link joins nodes by id, so the ids are only known as the piece is placed)."""
+    nav = pf.get("nav")
+    if not nav:
+        return []
+    b = getattr(m, "b", m)
+    ids, out = [], []
+    for p in nav.get("nodes", []):
+        nid = getattr(b, "node_id", None)
+        if nid is None:
+            nid = b.node_id = 1
+        ids.append(nid)
+        b.node_id = nid + 1
+        out.append({"classname": "info_node", "origin": list(p), "keys": {"nodeid": str(nid)}, "connections": []})
+    for k in nav.get("links", []):
+        a, c = nav["nodes"][k["from"]], nav["nodes"][k["to"]]
+        keys = dict(k.get("keys", {}))
+        keys.update({"StartNode": str(ids[k["from"]]), "EndNode": str(ids[k["to"]])})
+        out.append({"classname": "info_node_link", "origin": [(a[i] + c[i]) / 2.0 for i in range(3)], "keys": keys, "connections": []})
+    return out
 
 
 def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
@@ -506,7 +540,9 @@ def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
                     keys[k] = val      # (never a name, but kept: a prop placed with its logic lost its model until 23 November)
                 continue
             r = ren(val) if val and not val.startswith("!") else None
-            if r:
+            if cls == "ai_relationship" and lk in ("target", "subject") and val.lower() == "!player":
+                keys[k] = "player"      # (Valve's !player is only the first player to join a server: every player)
+            elif r:
                 keys[k] = r
             elif val and not val.startswith("!") and lk != "targetname" and (lk in NAME_KEYS or re.match(r"template\d\d$", lk)):
                 if keep_outside:
@@ -639,6 +675,21 @@ def check():
     place(m2, json.loads(json.dumps(pf)), 0, 0, 0, 0, wiring=False)
     t2 = b2.vmf.text()
     want(t2.count("METAL/METALDOOR001A") == 6 and '"func_door"' not in t2 and "trigger_once" not in t2, "wiring=False places the slab and no logic")
+    b3 = Build("prefab_check3", 784, 500)      # (23 November: every player, world brushes, portals and nodes, for the Combine autogun)
+    m3 = Mod(b3, Frame(0, 0, 0, 64), "prefab")
+    more = json.loads(json.dumps(pf))
+    more["wiring"].append({"classname": "ai_relationship", "origin": [0, 0, 0], "keys": {"subject": "gate_finder", "target": "!player", "disposition": "1"}, "connections": []})
+    more["wiring"].append({"classname": "func_areaportalwindow", "keys": {"targetname": "apw", "target": "gate"}, "connections": [], "brushes": [more["wiring"][0]["brushes"][0]]})
+    more["nav"] = {"nodes": [[0, -64, 16], [0, 64, 16]], "links": [{"from": 0, "to": 1, "keys": {"targetname": "gate_link", "initialstate": "0"}}]}
+    more["wiring"][0]["connections"].append(["OnFullyOpen", "gate_link,TurnOn,,0,-1"])
+    tag3 = place(m3, more, 0, 0, 0, 0, world=True, portals=True)["placed_as"]
+    t3 = b3.vmf.text()
+    want('"target" "player"' in t3 and "!player" not in t3, "an ai_relationship's !player names every player")
+    want(t3.count('"classname" "func_areaportalwindow"') == 1, "portals=True places the piece's areaportals")
+    want('"nodeid" "500"' in t3 and '"nodeid" "501"' in t3 and '"StartNode" "500"' in t3 and '"EndNode" "501"' in t3 and b3.node_id == 502,
+         "the piece's nodes take the build's ids and its link names them")
+    want('"gate_link%s\x1bTurnOn' % tag3 in t3, "the piece's node link is named as its own")
+    want("CONCRETE/CONCRETEFLOOR001A" in t3.split('"classname" "worldspawn"')[1].split("\nentity\n")[0], "world=True puts the source's world brushes in the world")
     for f in faults:
         print("  FAULT: " + f)
     print("CHECK %s" % ("PASS" if not faults else "FAIL (%d)" % len(faults)))

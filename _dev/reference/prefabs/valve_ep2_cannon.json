@@ -4804,6 +4804,287 @@
 {
 "plane": [
 [
+52.0,
+-48.0,
+116.0
+],
+[
+-52.0,
+-48.0,
+116.0
+],
+[
+-52.0,
+0.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+0.0,
+116.0
+],
+[
+-52.0,
+0.0,
+116.0
+],
+[
+-52.0,
+-48.0,
+116.0
+],
+[
+52.0,
+-48.0,
+116.0
+]
+],
+"material": "TOOLS/TOOLSPLAYERCLIP",
+"uaxis": "[1 0 0 -3784] 0.25",
+"vaxis": "[0 1 0 -30240] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+52.0,
+0.0,
+-4.0
+],
+[
+52.0,
+0.0,
+116.0
+],
+[
+-52.0,
+0.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+-52.0,
+0.0,
+-4.0
+],
+[
+-52.0,
+0.0,
+116.0
+],
+[
+52.0,
+0.0,
+116.0
+],
+[
+52.0,
+0.0,
+-4.0
+]
+],
+"material": "TOOLS/TOOLSPLAYERCLIP",
+"uaxis": "[-1 0 0 4347.0889] 0.22",
+"vaxis": "[0 0 -1 -263.6522] 0.23",
+"lightmapscale": "8"
+},
+{
+"plane": [
+[
+-52.0,
+-48.0,
+-4.0
+],
+[
+-52.0,
+-48.0,
+116.0
+],
+[
+52.0,
+-48.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+-48.0,
+-4.0
+],
+[
+52.0,
+-48.0,
+116.0
+],
+[
+-52.0,
+-48.0,
+116.0
+],
+[
+-52.0,
+-48.0,
+-4.0
+]
+],
+"material": "TOOLS/TOOLSPLAYERCLIP",
+"uaxis": "[-1 0 0 4246.0034] 0.2225",
+"vaxis": "[0 0 -1 -273.0673] 0.2344",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-52.0,
+0.0,
+-4.0
+],
+[
+-52.0,
+0.0,
+116.0
+],
+[
+-52.0,
+-48.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+-52.0,
+-48.0,
+116.0
+],
+[
+-52.0,
+0.0,
+116.0
+],
+[
+-52.0,
+0.0,
+-4.0
+],
+[
+-52.0,
+-48.0,
+-4.0
+]
+],
+"material": "TOOLS/TOOLSPLAYERCLIP",
+"uaxis": "[0 1 0 -30240] 0.25",
+"vaxis": "[0 0 -1 -266.102] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+52.0,
+-48.0,
+-4.0
+],
+[
+52.0,
+-48.0,
+116.0
+],
+[
+52.0,
+0.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+-48.0,
+-4.0
+],
+[
+52.0,
+0.0,
+-4.0
+],
+[
+52.0,
+0.0,
+116.0
+],
+[
+52.0,
+-48.0,
+116.0
+]
+],
+"material": "TOOLS/TOOLSPLAYERCLIP",
+"uaxis": "[0 1 0 -30240] 0.25",
+"vaxis": "[0 0 -1 -266.102] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+52.0,
+0.0,
+-4.0
+],
+[
+-52.0,
+0.0,
+-4.0
+],
+[
+-52.0,
+-48.0,
+-4.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+-48.0,
+-4.0
+],
+[
+-52.0,
+-48.0,
+-4.0
+],
+[
+-52.0,
+0.0,
+-4.0
+],
+[
+52.0,
+0.0,
+-4.0
+]
+],
+"material": "TOOLS/TOOLSPLAYERCLIP",
+"uaxis": "[0 1 0 -30224] 0.25",
+"vaxis": "[-1 0 0 3776] 0.25",
+"lightmapscale": "64"
+}
+]
+},
+{
+"from": "worldspawn",
+"sides": [
+{
+"plane": [
+[
 -64.0,
 -3.9899999999997817,
 116.0
@@ -14915,7 +15196,7 @@
 "button_trigger,Lock,,0,-1"
 ],
 [
-"OnEndTouch",
+"OnEndTouchAll",
 "button_trigger,Unlock,,0,-1"
 ]
 ],
@@ -17617,11 +17898,11 @@
 "apwindow.cannon,SetFadeStartDistance,100,0,-1"
 ],
 [
-"OnEndTouch",
+"OnEndTouchAll",
 "apwindow.cannon,SetFadeStartDistance,50,0,-1"
 ],
 [
-"OnEndTouch",
+"OnEndTouchAll",
 "apwindow.cannon,SetFadeEndDistance,100,0,-1"
 ],
 [
@@ -17633,7 +17914,7 @@
 "relat.cannon.center,ApplyRelationship,,0,-1"
 ],
 [
-"OnEndTouch",
+"OnEndTouchAll",
 "relat.cannon.center,RevertRelationship,,0,-1"
 ]
 ],
@@ -18269,434 +18550,7 @@
 "targetname": "soundscape.turret"
 },
 "connections": []
-}
-],
-"outside": [
-{
-"name": "portal.cannon",
-"found": [
-{
-"classname": "func_areaportalwindow",
-"origin": [
--764,
--7503,
-124
-]
-}
-],
-"named_by": [
-"breakable.gun OnBreak > portal.cannon,SetFadeEndDistance,600,0,-1",
-"breakable.gun OnBreak > portal.cannon,SetFadeStartDistance,300,0,-1"
-]
 },
-{
-"name": "sched.garage.soldiers",
-"found": [
-{
-"classname": "aiscripted_schedule",
-"origin": [
--845,
--6951,
-81
-]
-}
-],
-"named_by": [
-"breakable.gun OnBreak > sched.garage.soldiers,Kill,,0,-1"
-]
-},
-{
-"name": "enemyfinder.rooftop",
-"found": [
-{
-"classname": "npc_enemyfinder",
-"origin": [
--747,
--7343,
-231
-]
-}
-],
-"named_by": [
-"breakable.gun OnBreak > enemyfinder.rooftop,Kill,,0,-1"
-]
-},
-{
-"name": "zombie_spawner",
-"found": [
-{
-"classname": "npc_template_maker",
-"origin": [
--1267,
--9879,
-89
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > zombie_spawner,Disable,,0,-1",
-"trigger_multiple OnTrigger > zombie_spawner,SetMaxLiveChildren,1,0,1"
-]
-},
-{
-"name": "filter.enemy.zombie",
-"found": [
-{
-"classname": "filter_enemy",
-"origin": [
-438,
--9464,
-89
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > filter.enemy.zombie,Kill,,0,-1"
-]
-},
-{
-"name": "trigger.player.exits.garage",
-"found": [
-{
-"classname": "trigger_once",
-"origin": [
--620,
--7601,
-248
-]
-},
-{
-"classname": "trigger_multiple",
-"origin": [
--936,
--7735,
-126
-]
-},
-{
-"classname": "trigger_once",
-"origin": [
--750,
--7502,
-124
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > trigger.player.exits.garage,Enable,,0,-1"
-]
-},
-{
-"name": "autosave",
-"found": [
-{
-"classname": "logic_autosave",
-"origin": [
--1064,
--9883,
-89
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > autosave,SaveDangerous,10,5,-1"
-]
-},
-{
-"name": "turret_2",
-"found": [
-{
-"classname": "npc_turret_floor",
-"origin": [
--228,
--8688,
-67
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > turret_2,DepleteAmmo,,0,-1"
-]
-},
-{
-"name": "link.cannon",
-"found": [
-{
-"classname": "info_node_link",
-"origin": [
--811,
--7456,
-77
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > link.cannon,TurnOn,,0,-1"
-]
-},
-{
-"name": "combine_set_3_template",
-"found": [
-{
-"classname": "point_template",
-"origin": [
--772,
--7655,
-72
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > combine_set_3_template,Kill,,0,-1"
-]
-},
-{
-"name": "combine_set_2_template",
-"found": [
-{
-"classname": "point_template",
-"origin": [
-152,
--8528,
-76
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > combine_set_2_template,Kill,,0,-1"
-]
-},
-{
-"name": "assault.soldiers.postcannon.1",
-"found": [
-{
-"classname": "ai_goal_assault",
-"origin": [
--691,
--7287,
-124
-]
-}
-],
-"named_by": [
-"relay.power.off OnTrigger > assault.soldiers.postcannon.1,Activate,,0,-1"
-]
-},
-{
-"name": "relay.player.exits.garage",
-"found": [
-{
-"classname": "logic_relay",
-"origin": [
--901,
--7632,
-205
-]
-}
-],
-"named_by": [
-"relay.shortcut.kill.cannon OnTrigger > relay.player.exits.garage,Trigger,,0.2,-1"
-]
-},
-{
-"name": "npc_zombie",
-"found": [],
-"named_by": [
-"ai_relationship key target",
-"relat.cannon.center key target"
-]
-},
-{
-"name": "npc_zombie_torso",
-"found": [],
-"named_by": [
-"ai_relationship key target",
-"relat.cannon.center key target"
-]
-},
-{
-"name": "npc_headcrab",
-"found": [],
-"named_by": [
-"ai_relationship key target",
-"relat.cannon.center key target"
-]
-},
-{
-"name": "npc_crow",
-"found": [],
-"named_by": [
-"ai_relationship key target"
-]
-},
-{
-"name": "crow1",
-"found": [],
-"named_by": [
-"ai_relationship key target"
-]
-},
-{
-"name": "zombie_torso_spawner",
-"found": [
-{
-"classname": "npc_template_maker",
-"origin": [
--1235,
--9879,
-89
-]
-}
-],
-"named_by": [
-"trigger_multiple OnTrigger > zombie_torso_spawner,Kill,,0,1"
-]
-},
-{
-"name": "ptemplate.last.soldier",
-"found": [
-{
-"classname": "point_template",
-"origin": [
--1065,
--6724,
-81
-]
-}
-],
-"named_by": [
-"trigger_multiple OnTrigger > ptemplate.last.soldier,ForceSpawn,,0,1"
-]
-},
-{
-"name": "apwindow.cannon",
-"found": [
-{
-"classname": "func_areaportalwindow",
-"origin": [
--948,
--7562,
-131
-]
-}
-],
-"named_by": [
-"trigger_multiple OnStartTouch > apwindow.cannon,SetFadeEndDistance,200,0,-1",
-"trigger_multiple OnStartTouch > apwindow.cannon,SetFadeStartDistance,100,0,-1",
-"trigger_multiple OnEndTouch > apwindow.cannon,SetFadeStartDistance,50,0,-1",
-"trigger_multiple OnEndTouch > apwindow.cannon,SetFadeEndDistance,100,0,-1"
-]
-},
-{
-"name": "bullseye.combine.windows",
-"found": [
-{
-"classname": "npc_bullseye",
-"origin": [
--742,
--7302,
-296
-]
-},
-{
-"classname": "npc_bullseye",
-"origin": [
--899,
--7302,
-295
-]
-},
-{
-"classname": "npc_bullseye",
-"origin": [
--586,
--7302,
-298
-]
-}
-],
-"named_by": [
-"trigger_multiple OnTrigger > bullseye.combine.windows,Kill,,0,1"
-]
-}
-],
-"fired_from_outside": [
-{
-"name": "",
-"classname": "trigger_multiple",
-"origin": [
--1251,
--9442,
-77
-],
-"outputs": [
-[
-"OnEndTouch",
-"cannon_*,EnableHarrass,,0,-1"
-]
-]
-},
-{
-"name": "",
-"classname": "trigger_multiple",
-"origin": [
--1251,
--9490,
-77
-],
-"outputs": [
-[
-"OnEndTouch",
-"cannon_*,DisableHarrass,,0,-1"
-]
-]
-},
-{
-"name": "",
-"classname": "trigger_once",
-"origin": [
-752,
--9084,
-90
-],
-"outputs": [
-[
-"OnTrigger",
-"cannon_*,DisableHarrass,,0,-1"
-]
-]
-},
-{
-"name": "",
-"classname": "trigger_multiple",
-"origin": [
-248,
--8476,
-138
-],
-"outputs": [
-[
-"OnStartTouch",
-"cannon_*,DisableHarrass,,0,-1"
-],
-[
-"OnEndTouch",
-"cannon_*,EnableHarrass,,0,-1"
-],
-[
-"OnStartTouch",
-"relat.cannon.center,ApplyRelationship,,0,-1"
-],
-[
-"OnEndTouch",
-"relat.cannon.center,RevertRelationship,,0,-1"
-]
-]
-}
-],
-"extras": {
-"what": "Not placed by place(): what in Valve's map steers the cannon from outside the bay, kept for a builder to copy by hand. The two areaportal windows (portal.cannon, apwindow.cannon: the breakable's outputs widen portal.cannon's fade when the wall is blown) and the AI node link link.cannon (turned on with the power, so NPCs path through the blown wall) need our own map's areas and nodes. Valve's show: ai_relationship pairs that make the cannon shoot one target on cue (rank 9999 or 99 over its other hates, applied by a trigger or a template's OnEntitySpawned) at npc_bullseyes on a crate, a van, a burning headcrab and a zombie torso, and the triggers that cue them. The harass zones: trigger_multiples that send cannon_* EnableHarrass or DisableHarrass as the player walks in and out of cover. Their other outputs are Valve's story.",
-"entities": [
 {
 "classname": "func_areaportalwindow",
 "keys": {
@@ -19281,6 +19135,1138 @@
 ]
 ]
 },
+{
+"classname": "func_clip_vphysics",
+"keys": {},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+52.0,
+0.0,
+52.0
+],
+[
+52.0,
+0.0,
+72.0
+],
+[
+-52.0,
+0.0,
+72.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+0.0,
+52.0
+],
+[
+-52.0,
+0.0,
+52.0
+],
+[
+-52.0,
+0.0,
+72.0
+],
+[
+52.0,
+0.0,
+72.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[-1 0 0 4347.0889] 0.22",
+"vaxis": "[0 0 -1 -276.1739] 0.23",
+"lightmapscale": "8"
+},
+{
+"plane": [
+[
+-52.0,
+-44.0,
+52.0
+],
+[
+-52.0,
+-44.0,
+72.0
+],
+[
+52.0,
+-44.0,
+72.0
+]
+],
+"verts": [],
+"corners": [
+[
+-52.0,
+-44.0,
+72.0
+],
+[
+-52.0,
+-44.0,
+52.0
+],
+[
+52.0,
+-44.0,
+52.0
+],
+[
+52.0,
+-44.0,
+72.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[-1 0 0 4246.0034] 0.2225",
+"vaxis": "[0 0 -1 -290.1333] 0.2344",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-52.0,
+0.0,
+52.0
+],
+[
+-52.0,
+0.0,
+72.0
+],
+[
+-52.0,
+-44.0,
+72.0
+]
+],
+"verts": [],
+"corners": [
+[
+-52.0,
+0.0,
+72.0
+],
+[
+-52.0,
+0.0,
+52.0
+],
+[
+-52.0,
+-44.0,
+52.0
+],
+[
+-52.0,
+-44.0,
+72.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -30240] 0.25",
+"vaxis": "[0 0 -1 -234.102] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+52.0,
+-44.0,
+52.0
+],
+[
+52.0,
+-44.0,
+72.0
+],
+[
+52.0,
+0.0,
+72.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+-44.0,
+72.0
+],
+[
+52.0,
+-44.0,
+52.0
+],
+[
+52.0,
+0.0,
+52.0
+],
+[
+52.0,
+0.0,
+72.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -30240] 0.25",
+"vaxis": "[0 0 -1 -234.102] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+52.0,
+0.0,
+52.0
+],
+[
+-52.0,
+0.0,
+52.0
+],
+[
+-52.0,
+-44.0,
+52.0
+]
+],
+"verts": [],
+"corners": [
+[
+-52.0,
+-44.0,
+52.0
+],
+[
+-52.0,
+0.0,
+52.0
+],
+[
+52.0,
+0.0,
+52.0
+],
+[
+52.0,
+-44.0,
+52.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -30224] 0.25",
+"vaxis": "[-1 0 0 3776] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+52.0,
+-44.0,
+72.0
+],
+[
+-52.0,
+-44.0,
+72.0
+],
+[
+-52.0,
+0.0,
+72.0
+]
+],
+"verts": [],
+"corners": [
+[
+52.0,
+-44.0,
+72.0
+],
+[
+52.0,
+0.0,
+72.0
+],
+[
+-52.0,
+0.0,
+72.0
+],
+[
+-52.0,
+-44.0,
+72.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 -3792] 0.25",
+"vaxis": "[0 -1 0 30240] 0.25",
+"lightmapscale": "16"
+}
+]
+]
+},
+{
+"classname": "trigger_multiple",
+"keys": {
+"targetname": "trigger.cannon.safe",
+"spawnflags": "1",
+"wait": "1"
+},
+"connections": [
+[
+"OnStartTouch",
+"cannon_*,DisableHarrass,,0,-1"
+],
+[
+"OnEndTouchAll",
+"cannon_*,EnableHarrass,,0,-1"
+]
+],
+"origin": [
+61.0,
+57.0,
+58.0
+],
+"brushes": [
+[
+{
+"plane": [
+[
+-60.0,
+114.0,
+116.0
+],
+[
+182.0,
+114.0,
+116.0
+],
+[
+182.0,
+0.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+-60.0,
+0.0,
+116.0
+],
+[
+-60.0,
+114.0,
+116.0
+],
+[
+182.0,
+114.0,
+116.0
+],
+[
+182.0,
+0.0,
+116.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 0] 0.25",
+"vaxis": "[0 -1 0 0] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-60.0,
+0.0,
+0.0
+],
+[
+182.0,
+0.0,
+0.0
+],
+[
+182.0,
+114.0,
+0.0
+]
+],
+"verts": [],
+"corners": [
+[
+-60.0,
+0.0,
+0.0
+],
+[
+182.0,
+0.0,
+0.0
+],
+[
+182.0,
+114.0,
+0.0
+],
+[
+-60.0,
+114.0,
+0.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 0] 0.25",
+"vaxis": "[0 -1 0 0] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-60.0,
+114.0,
+116.0
+],
+[
+-60.0,
+0.0,
+116.0
+],
+[
+-60.0,
+0.0,
+0.0
+]
+],
+"verts": [],
+"corners": [
+[
+-60.0,
+0.0,
+0.0
+],
+[
+-60.0,
+0.0,
+116.0
+],
+[
+-60.0,
+114.0,
+116.0
+],
+[
+-60.0,
+114.0,
+0.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[0 1 0 0] 0.25",
+"vaxis": "[0 0 -1 0] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+182.0,
+114.0,
+0.0
+],
+[
+182.0,
+0.0,
+0.0
+],
+[
+182.0,
+0.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+182.0,
+0.0,
+0.0
+],
+[
+182.0,
+114.0,
+0.0
+],
+[
+182.0,
+114.0,
+116.0
+],
+[
+182.0,
+0.0,
+116.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[0 1 0 0] 0.25",
+"vaxis": "[0 0 -1 0] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+182.0,
+114.0,
+116.0
+],
+[
+-60.0,
+114.0,
+116.0
+],
+[
+-60.0,
+114.0,
+0.0
+]
+],
+"verts": [],
+"corners": [
+[
+-60.0,
+114.0,
+0.0
+],
+[
+182.0,
+114.0,
+0.0
+],
+[
+182.0,
+114.0,
+116.0
+],
+[
+-60.0,
+114.0,
+116.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 0] 0.25",
+"vaxis": "[0 0 -1 0] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+182.0,
+0.0,
+0.0
+],
+[
+-60.0,
+0.0,
+0.0
+],
+[
+-60.0,
+0.0,
+116.0
+]
+],
+"verts": [],
+"corners": [
+[
+-60.0,
+0.0,
+0.0
+],
+[
+-60.0,
+0.0,
+116.0
+],
+[
+182.0,
+0.0,
+116.0
+],
+[
+182.0,
+0.0,
+0.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 0] 0.25",
+"vaxis": "[0 0 -1 0] 0.25",
+"lightmapscale": "16"
+}
+]
+]
+},
+{
+"classname": "logic_relay",
+"origin": [
+0.0,
+-420.0,
+48.0
+],
+"keys": {
+"targetname": "relay.cannon.show",
+"spawnflags": "0"
+},
+"connections": [
+[
+"OnTrigger",
+"ptemplate.cannon.show,ForceSpawn,,0,-1"
+],
+[
+"OnTrigger",
+"prop.cannon.show.crate,Break,,8,-1"
+],
+[
+"OnTrigger",
+"bullseye.cannon.show,Kill,,8,-1"
+],
+[
+"OnTrigger",
+"relat.cannon.show,RevertRelationship,,8,-1"
+]
+]
+},
+{
+"classname": "point_template",
+"origin": [
+0.0,
+-440.0,
+48.0
+],
+"keys": {
+"targetname": "ptemplate.cannon.show",
+"spawnflags": "2",
+"Template01": "prop.cannon.show.crate",
+"Template02": "bullseye.cannon.show"
+},
+"connections": [
+[
+"OnEntitySpawned",
+"relat.cannon.show,ApplyRelationship,,0.1,-1"
+]
+]
+},
+{
+"classname": "prop_physics",
+"origin": [
+0.0,
+-480.0,
+20.0
+],
+"keys": {
+"targetname": "prop.cannon.show.crate",
+"model": "models/props_junk/wood_crate001a.mdl",
+"angles": "0 90 0",
+"spawnflags": "74",
+"physdamagescale": "0.1",
+"fademindist": "2600",
+"fademaxdist": "3000"
+},
+"connections": [
+[
+"OnBreak",
+"bullseye.cannon.show,Kill,,1,-1"
+],
+[
+"OnBreak",
+"relat.cannon.show,RevertRelationship,,1,-1"
+]
+]
+},
+{
+"classname": "npc_bullseye",
+"origin": [
+0.0,
+-480.0,
+22.0
+],
+"keys": {
+"targetname": "bullseye.cannon.show",
+"health": "35",
+"minangle": "360",
+"spawnflags": "196608"
+},
+"connections": []
+},
+{
+"classname": "ai_relationship",
+"origin": [
+-16.0,
+-420.0,
+48.0
+],
+"keys": {
+"targetname": "relat.cannon.show",
+"subject": "combine_cannon",
+"target": "bullseye.cannon.show",
+"disposition": "1",
+"rank": "9999"
+},
+"connections": []
+},
+{
+"classname": "ai_relationship",
+"origin": [
+16.0,
+-420.0,
+48.0
+],
+"keys": {
+"targetname": "relat.cannon.show",
+"subject": "combine_cannon_player",
+"target": "bullseye.cannon.show",
+"disposition": "1",
+"rank": "9999"
+},
+"connections": []
+}
+],
+"nav": {
+"nodes": [
+[
+-30,
+60,
+16
+],
+[
+60,
+60,
+16
+],
+[
+150,
+64,
+16
+],
+[
+230,
+64,
+16
+],
+[
+360,
+30,
+16
+],
+[
+400,
+-80,
+16
+]
+],
+"links": [
+{
+"from": 2,
+"to": 3,
+"keys": {
+"targetname": "link.cannon",
+"linktype": "1",
+"initialstate": "0"
+}
+}
+]
+},
+"outside": [
+{
+"name": "sched.garage.soldiers",
+"found": [
+{
+"classname": "aiscripted_schedule",
+"origin": [
+-845,
+-6951,
+81
+]
+}
+],
+"named_by": [
+"breakable.gun OnBreak > sched.garage.soldiers,Kill,,0,-1"
+]
+},
+{
+"name": "enemyfinder.rooftop",
+"found": [
+{
+"classname": "npc_enemyfinder",
+"origin": [
+-747,
+-7343,
+231
+]
+}
+],
+"named_by": [
+"breakable.gun OnBreak > enemyfinder.rooftop,Kill,,0,-1"
+]
+},
+{
+"name": "zombie_spawner",
+"found": [
+{
+"classname": "npc_template_maker",
+"origin": [
+-1267,
+-9879,
+89
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > zombie_spawner,Disable,,0,-1",
+"trigger_multiple OnTrigger > zombie_spawner,SetMaxLiveChildren,1,0,1"
+]
+},
+{
+"name": "filter.enemy.zombie",
+"found": [
+{
+"classname": "filter_enemy",
+"origin": [
+438,
+-9464,
+89
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > filter.enemy.zombie,Kill,,0,-1"
+]
+},
+{
+"name": "trigger.player.exits.garage",
+"found": [
+{
+"classname": "trigger_once",
+"origin": [
+-620,
+-7601,
+248
+]
+},
+{
+"classname": "trigger_multiple",
+"origin": [
+-936,
+-7735,
+126
+]
+},
+{
+"classname": "trigger_once",
+"origin": [
+-750,
+-7502,
+124
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > trigger.player.exits.garage,Enable,,0,-1"
+]
+},
+{
+"name": "autosave",
+"found": [
+{
+"classname": "logic_autosave",
+"origin": [
+-1064,
+-9883,
+89
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > autosave,SaveDangerous,10,5,-1"
+]
+},
+{
+"name": "turret_2",
+"found": [
+{
+"classname": "npc_turret_floor",
+"origin": [
+-228,
+-8688,
+67
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > turret_2,DepleteAmmo,,0,-1"
+]
+},
+{
+"name": "combine_set_3_template",
+"found": [
+{
+"classname": "point_template",
+"origin": [
+-772,
+-7655,
+72
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > combine_set_3_template,Kill,,0,-1"
+]
+},
+{
+"name": "combine_set_2_template",
+"found": [
+{
+"classname": "point_template",
+"origin": [
+152,
+-8528,
+76
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > combine_set_2_template,Kill,,0,-1"
+]
+},
+{
+"name": "assault.soldiers.postcannon.1",
+"found": [
+{
+"classname": "ai_goal_assault",
+"origin": [
+-691,
+-7287,
+124
+]
+}
+],
+"named_by": [
+"relay.power.off OnTrigger > assault.soldiers.postcannon.1,Activate,,0,-1"
+]
+},
+{
+"name": "relay.player.exits.garage",
+"found": [
+{
+"classname": "logic_relay",
+"origin": [
+-901,
+-7632,
+205
+]
+}
+],
+"named_by": [
+"relay.shortcut.kill.cannon OnTrigger > relay.player.exits.garage,Trigger,,0.2,-1"
+]
+},
+{
+"name": "npc_zombie",
+"found": [],
+"named_by": [
+"ai_relationship key target",
+"relat.cannon.center key target"
+]
+},
+{
+"name": "npc_zombie_torso",
+"found": [],
+"named_by": [
+"ai_relationship key target",
+"relat.cannon.center key target"
+]
+},
+{
+"name": "npc_headcrab",
+"found": [],
+"named_by": [
+"ai_relationship key target",
+"relat.cannon.center key target"
+]
+},
+{
+"name": "npc_crow",
+"found": [],
+"named_by": [
+"ai_relationship key target"
+]
+},
+{
+"name": "crow1",
+"found": [],
+"named_by": [
+"ai_relationship key target"
+]
+},
+{
+"name": "zombie_torso_spawner",
+"found": [
+{
+"classname": "npc_template_maker",
+"origin": [
+-1235,
+-9879,
+89
+]
+}
+],
+"named_by": [
+"trigger_multiple OnTrigger > zombie_torso_spawner,Kill,,0,1"
+]
+},
+{
+"name": "ptemplate.last.soldier",
+"found": [
+{
+"classname": "point_template",
+"origin": [
+-1065,
+-6724,
+81
+]
+}
+],
+"named_by": [
+"trigger_multiple OnTrigger > ptemplate.last.soldier,ForceSpawn,,0,1"
+]
+},
+{
+"name": "bullseye.combine.windows",
+"found": [
+{
+"classname": "npc_bullseye",
+"origin": [
+-742,
+-7302,
+296
+]
+},
+{
+"classname": "npc_bullseye",
+"origin": [
+-899,
+-7302,
+295
+]
+},
+{
+"classname": "npc_bullseye",
+"origin": [
+-586,
+-7302,
+298
+]
+}
+],
+"named_by": [
+"trigger_multiple OnTrigger > bullseye.combine.windows,Kill,,0,1"
+]
+}
+],
+"fired_from_outside": [
+{
+"name": "",
+"classname": "trigger_multiple",
+"origin": [
+-1251,
+-9442,
+77
+],
+"outputs": [
+[
+"OnEndTouch",
+"cannon_*,EnableHarrass,,0,-1"
+]
+]
+},
+{
+"name": "",
+"classname": "trigger_multiple",
+"origin": [
+-1251,
+-9490,
+77
+],
+"outputs": [
+[
+"OnEndTouch",
+"cannon_*,DisableHarrass,,0,-1"
+]
+]
+},
+{
+"name": "",
+"classname": "trigger_once",
+"origin": [
+752,
+-9084,
+90
+],
+"outputs": [
+[
+"OnTrigger",
+"cannon_*,DisableHarrass,,0,-1"
+]
+]
+},
+{
+"name": "",
+"classname": "trigger_multiple",
+"origin": [
+248,
+-8476,
+138
+],
+"outputs": [
+[
+"OnStartTouch",
+"cannon_*,DisableHarrass,,0,-1"
+],
+[
+"OnEndTouch",
+"cannon_*,EnableHarrass,,0,-1"
+],
+[
+"OnStartTouch",
+"relat.cannon.center,ApplyRelationship,,0,-1"
+],
+[
+"OnEndTouch",
+"relat.cannon.center,RevertRelationship,,0,-1"
+]
+]
+}
+],
+"extras": {
+"what": "Not placed by place(): Valve's own versions of what steers the cannon from outside the bay, kept as they were (the piece carries its own: `nav`, the show kit, the safe zone). Valve's AI node link link.cannon (by node ids of Valve's map; turned on with the power, so NPCs path through the blown wall). Valve's show: ai_relationship pairs that make the cannon shoot one target on cue (rank 9999 or 99 over its other hates, applied by a trigger or a template's OnEntitySpawned) at npc_bullseyes on a crate, a van, a burning headcrab and a zombie torso, and the triggers that cue them. The harass zones: trigger_multiples that send cannon_* EnableHarrass or DisableHarrass as the player walks in and out of cover. Their other outputs are Valve's story.",
+"entities": [
 {
 "classname": "info_node_link",
 "origin": [
