@@ -175,6 +175,38 @@ local THUNDER = { "ambient/atmosphere/thunder1.wav", "ambient/atmosphere/thunder
 
 -- (made once here, not every frame)
 local V_0_0_4000 = Vector(0, 0, 4000)
+
+-- Under cover, or just under something? (the owner, 23 November: "if I walk under a walkway ... 1000 units long but
+-- like 16 units wide, the rain stops entirely ... we need a way to determine the mass of brushes overhead"). Straight
+-- up first: open sky, it rains. Something there: how much of the sky round about it hides, sampled in two rings
+-- (about 2 and 5 metres out, from where you can reach without going through a wall). A walkway, a sign or scaffolding
+-- hides little of it, and the rain keeps falling round you; a bridge or a ceiling hides most of it, and it stops at
+-- once, with no slow fade as you walk indoors. outdoors, overhead (something just above you), share hidden.
+local RING = {}
+for i = 0, 7 do local a = math.rad(i * 45 + 22.5) RING[#RING + 1] = { math.cos(a), math.sin(a) } end
+local COVER_SHARE = 0.5
+local function Roof(from)
+    local tr = util.TraceLine({ start = from, endpos = from + V_0_0_4000, mask = MASK_SOLID_BRUSHONLY })
+    return tr.Hit and not tr.HitSky
+end
+function LC_CL.RainCover(eye)
+    if not Roof(eye) then return true, false, 0 end
+    local hid, n = 0, 0
+    for _, r in ipairs({ 96, 220 }) do
+        for _, d in ipairs(RING) do
+            local want = Vector(eye.x + d[1] * r, eye.y + d[2] * r, eye.z)
+            local side = util.TraceLine({ start = eye, endpos = want, mask = MASK_SOLID_BRUSHONLY })
+            local at = (side.Hit and side.HitPos) and (eye + (side.HitPos - eye) * math.max(0, side.Fraction - 0.05)) or want
+            n = n + 1
+            if side.Hit and side.Fraction < 0.35 then hid = hid + 1 -- (a wall right there: walls round you are a room)
+            elseif Roof(at) then hid = hid + 1 end
+        end
+    end
+    local share = hid / n
+    return share < COVER_SHARE, true, share
+end
+local overhead = false
+
 hook.Add("Think", "LivingCityRain", function()
     local ply = LocalPlayer()
     if not IsValid(ply) then return end
@@ -182,8 +214,7 @@ hook.Add("Think", "LivingCityRain", function()
     local raining = (w == "rain" or w == "storm") and cvEffects:GetBool()
     if CurTime() > nextRoof then
         nextRoof = CurTime() + 0.5
-        local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + V_0_0_4000, mask = MASK_SOLID_BRUSHONLY })
-        outdoors = not tr.Hit or tr.HitSky == true
+        outdoors, overhead = LC_CL.RainCover(ply:EyePos())
     end
     outFog = math.Approach(outFog, (outdoors and raining) and 1 or 0, FrameTime() * 0.6) -- (about two seconds in or out)
     -- the sound of it
@@ -224,6 +255,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
     -- and each one is a draw of its own (about half of them, every frame it rains)
     local cam, fwd = EyePos(), EyeAngles():Forward()
     local cx, cy, cz, fx, fy, fz = cam.x, cam.y, cam.z, fwd.x, fwd.y, fwd.z
+    local hole = overhead and 2304 or -1 -- (under a walkway: none falls on you, within 48 units)
     for i = 1, n do
         local d = drops[i]
         if not d then d = {} drops[i] = d end
@@ -233,7 +265,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityRain", function(depth, sky
         end
         local tz = oz + d.z - (now - d.born) * d.speed
         local x, y = ox + d.x, oy + d.y
-        if (x - cx) * fx + (y - cy) * fy + (tz - 8 - cz) * fz > -24 then
+        if (x - cx) * fx + (y - cy) * fy + (tz - 8 - cz) * fz > -24 and d.x * d.x + d.y * d.y > hole then
             RAIN_TOP.x, RAIN_TOP.y, RAIN_TOP.z = x, y, tz
             RAIN_BOT.x, RAIN_BOT.y, RAIN_BOT.z = x - 2, y - 1, tz - 17
             render.DrawBeam(RAIN_TOP, RAIN_BOT, 0.3, 0, 1, RAIN_COL)

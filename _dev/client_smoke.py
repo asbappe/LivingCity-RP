@@ -4067,6 +4067,36 @@ do
     if ahead < 400 or ahead > 800 then return "rain: looking ahead, about half the streaks should be drawn" end
     if up < 1000 then return "rain: looking up, nearly every streak is in view and drawn" end
     if down > 100 then return "rain: looking at your feet, the streaks above you shouldn't be drawn" end
+    -- under a narrow walkway it still rains round you; under a bridge or a ceiling it doesn't (the owner, 23 November)
+    local tlWas = util.TraceLine
+    local function World(roofed, wallAt)
+        util.TraceLine = function(t)
+            local st, en = t.start, t.endpos
+            if en.z > st.z + 100 then
+                if roofed(st.x, st.y) then return { Hit = true, HitSky = false, HitPos = Vector(st.x, st.y, st.z + 100), Fraction = 0.03 } end
+                return { Hit = true, HitSky = true, HitPos = Vector(st.x, st.y, st.z + 4000), Fraction = 1 }
+            end
+            if wallAt and math.abs(en.x - st.x) > wallAt then
+                local f = wallAt / math.abs(en.x - st.x)
+                return { Hit = true, Fraction = f, HitPos = st + (en - st) * f }
+            end
+            return { Hit = false, Fraction = 1, HitPos = en }
+        end
+    end
+    local eye = Vector(0, 0, 64)
+    World(function(x) return math.abs(x) < 8 end)
+    local o1, h1 = LC_CL.RainCover(eye)
+    World(function(x, y) return math.abs(x) < 300 end)
+    local o2 = LC_CL.RainCover(eye)
+    World(function() return true end, 150)
+    local o3 = LC_CL.RainCover(eye)
+    World(function() return false end)
+    local o4, h4 = LC_CL.RainCover(eye)
+    util.TraceLine = tlWas
+    if not (o1 and h1) then return "rain: under a narrow walkway it should still rain round you" end
+    if o2 then return "rain: under a wide bridge it shouldn't rain" end
+    if o3 then return "rain: indoors it shouldn't rain" end
+    if not o4 or h4 then return "rain: under open sky it rains" end
 end
 -- the Endings menu: asks the server, opens on the ending playing, every tab built; a bone tuned on a
 -- dancer, lit up in the world; the stand-in; the shared settings; the list of changes
