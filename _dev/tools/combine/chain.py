@@ -26,8 +26,11 @@ def lean_units(fr, H):
     return min((d for d in range(4, 129) if H % d == 0), key=lambda d: abs(d * fr.L - H * math.tan(math.radians(4.5))))
 
 
-def run(p, k, H, r):
-    """One straight run, u from 0 to k: the battered slab (jointed where its staircases end), its plinth, ribs, plates."""
+def run(p, k, H, r, inner=True):
+    """One straight run, u from 0 to k: the battered slab (jointed where its staircases end), its plinth, ribs, plates.
+    inner=False: nothing on the inner face (its plinth, stack, ribs, tabs, the head leaning over it): for a wall whose
+    inner face nobody can see (the street's wall, its back against the city's edge: the owner, 23 November, "98% of it
+    doesn't need a backwall")."""
     q, mm = p.fr.n, p.mm
     T, Le, Pl = q(64), lean_units(p.fr, H), q(48)
     step = H // Le
@@ -58,7 +61,8 @@ def run(p, k, H, r):
     for a, b in zip(cuts, cuts[1:]):
         p.add(ext([(-T, 0), (Le, 0), (0, H), (-T, H)], 0, a, b, mm))
         p.mids["u"].add((a + b) / 2.0)
-    p.add(ext([(-T - Pl, 0), (-T, 0), (-T, 128), (-T - Pl, 128)], 0, 0, k, mm))
+    if inner:
+        p.add(ext([(-T - Pl, 0), (-T, 0), (-T, 128), (-T - Pl, 128)], 0, 0, k, mm))
     p.mids["z"] |= {H / 2.0, 64.0}
     d, w = q(r.choice((8, 8, 48))), q(32)
     for x in rib_run(ra, rb - w, w, r, None, q(256), (q(16), q(160))):
@@ -78,14 +82,17 @@ def run(p, k, H, r):
     # the inner head leans over (looks down: half of Valve's leaning faces do), in two leans
     hm = k * r.choice((35, 45, 60)) // 100
     for h0, h1 in ((q(16), hm), (hm, k - q(16))):
-        p.add(ext([(-T, H - 128), (-T, H), (-T - q(r.choice(LEANS)), H)], 0, h0, h1, mm))
-    p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 40)
-    p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 88)
+        lean = q(r.choice(LEANS))
+        if inner:
+            p.add(ext([(-T, H - 128), (-T, H), (-T - lean, H)], 0, h0, h1, mm))
+    if inner:
+        p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 40)
+        p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 88)
     rt = TP.own(r, "run", k)
     if rt.random() < 0.65:                     # fins on the head of two runs in three (Valve's broken skyline)
         a = max(q(144), k * rt.choice((1, 2, 3)) // 8)          # (clear of the piers at both ends)
         TP.fins(p, a, min(k - q(144), a + k * rt.choice((3, 4)) // 8), -T, 0, H, r)
-    if s0 is not None:
+    if s0 is not None and inner:
         o0, o1 = (s1 + q(48), k - q(48)) if s0 < k // 2 else (q(48), s0 - q(48))
         p.stack(("v", -T, -1), s0, s1, 160, H - 128, r.randint(3, 4), light=False)
         p.ribs(("v", -T, -1), o0, o1, 192, H - 192, 32, 8, "pair", 256)
