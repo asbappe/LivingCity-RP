@@ -1,0 +1,135 @@
+{
+"name": "valve_canal_guard_camera",
+"note": "A Combine ceiling camera that calls guards each time it spots a player: Valve's npc_combine_camera from d1_canals_07 (its keys as there), wired by us to an alarm and a maker that sends two Civil Protection officers, re-arming after 30 s",
+"from": "d1_canals_07.vmf (the camera; the wiring is ours)",
+"box": [
+-64,
+-64,
+-128,
+320,
+64,
+16
+],
+"anchor": [
+0,
+0,
+0
+],
+"size": [
+384,
+128,
+144
+],
+"solids": [],
+"points": [],
+"wiring": [
+{
+"classname": "npc_combine_camera",
+"origin": [
+0,
+0,
+0
+],
+"keys": {
+"targetname": "camera.guard",
+"angles": "0 0 0",
+"innerradius": "576",
+"outerradius": "832",
+"spawnflags": "0"
+},
+"connections": [
+[
+"OnFoundPlayer",
+"relay.camera.guard.alarm,Trigger,,0,-1"
+]
+]
+},
+{
+"classname": "logic_relay",
+"origin": [
+0,
+32,
+-16
+],
+"keys": {
+"targetname": "relay.camera.guard.alarm",
+"spawnflags": "0"
+},
+"connections": [
+[
+"OnTrigger",
+"relay.camera.guard.alarm,Disable,,0,-1"
+],
+[
+"OnTrigger",
+"sound.camera.guard.alarm,PlaySound,,0,-1"
+],
+[
+"OnTrigger",
+"maker.camera.guard,Spawn,,0.5,-1"
+],
+[
+"OnTrigger",
+"maker.camera.guard,Spawn,,1.5,-1"
+],
+[
+"OnTrigger",
+"sound.camera.guard.alarm,StopSound,,6,-1"
+],
+[
+"OnTrigger",
+"relay.camera.guard.alarm,Enable,,30,-1"
+]
+]
+},
+{
+"classname": "ambient_generic",
+"origin": [
+0,
+0,
+-16
+],
+"keys": {
+"targetname": "sound.camera.guard.alarm",
+"message": "ambient/alarms/apc_alarm_loop1.wav",
+"health": "8",
+"radius": "1250",
+"pitch": "100",
+"pitchstart": "100",
+"spawnflags": "16"
+},
+"connections": []
+},
+{
+"classname": "npc_maker",
+"origin": [
+256,
+0,
+-120
+],
+"keys": {
+"targetname": "maker.camera.guard",
+"angles": "0 180 0",
+"NPCType": "npc_metropolice",
+"additionalequipment": "weapon_stunstick",
+"NPCSquadname": "squad.camera.guard",
+"NPCTargetname": "guard.camera",
+"MaxNPCCount": "1",
+"SpawnFrequency": "-1",
+"MaxLiveChildren": "2",
+"spawnflags": "48",
+"StartDisabled": "1"
+},
+"connections": []
+}
+],
+"outside": [],
+"fired_from_outside": [],
+"trigger": [
+{
+"name": "relay.camera.guard.alarm",
+"input": "Trigger",
+"what": "raise the alarm (as if the camera saw someone)"
+}
+]
+}

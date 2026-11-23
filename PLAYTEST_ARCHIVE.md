@@ -30,11 +30,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 ## Needs the real server
 
-- [ ] **Files to bring back:** `data/livingcity/minds/` after a few hours, `data/livingcity/chronicle/` after a week, and a play study folder (`data/livingcity/study/` on your PC, after Stop and save). Does play feel heavier with the study on? [needs the real server: files only you can copy]
-- [ ] **Guns over a restart:** draw a bought pistol and SMG, restart the server, rejoin: both are in your pockets to draw again. [needs the real server: a real restart]
-- [ ] **Uneven sides:** with many Resistance players to few Combine: more patrols, a reaction squad about 15 seconds after a kill, a dropship squad at a checkpoint attack, the "Combine are desperate" notice; a rebel who reconnects within 7 minutes is still a rebel. [needs the real server: many real players or bots]
-- [ ] **With a second player:** cuffing them brings up the list at the left; resisting arrest is felt, not a bar; a player in the chair gets three answers on the number keys; each sees the Colonel their own way; a second admin gets the "Report from NAME" card. [needs the real server: two players at once]
-- [ ] **Her last stand on your layout:** re-place any transformer placed before 10 November (numbered 1, 2, 3); with several Resistance players on, does the server hold up with many manhacks? [needs the real server: your layout and real load]
 
 ## Added since the cut
 - [ ] **Arriving (a new character, citizen):** walk out of the station. Do the cards and tips come one at a time, each readable, never piled up? [needs a person: pacing of the first minutes]
@@ -102,3 +97,8 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Canal ring trains:** wait for a train (every 70 to 240 s): it should come out of its tunnel in the ruins, cross its rail bridge, run along the tracks, slow, stop and back in. If one crawls or stops early, set its velocitytype to 0. [needs a person: untested in game]
 - [ ] **Combine autogun test map (lc_cannon_test.vmf):** compile and play: do the guns track and fire with their blue bolts, does the red button blow the crate apart, do the side guns cut down the zombies, and does a grenade in the opened generator blow it up, kill the guns and open the wall with Valve's explosion and sound? [needs a person: effects, sounds and feel]
 - [ ] **Canal ring, thinned:** walk the street: one railway sleeper a square now (were two), a post every 256 on the kerb rail and the edge's chain link, every 512 on the fence along the walls' tops. Still look right? And no holes where faces went nodraw (a see-through face, the void showing). [needs a person: how it looks in the game]
+- [ ] **Silo, middle levels shut (23 Nov):** ride the lift bottom to top (the shaft should look unbroken past levels A and B), look down through the top floor's grate in front of the lift (concrete under it), and look at the balconies round the rocket from the top and bottom. [needs a person: how it looks]
+- [ ] **Her address, out cold:** skip it and get beaten out: are you moved to the crowd unseen (while black), with no unit there telling you to back up? Does her stand-in look like Dr. Mossman (not an ERROR)? [needs a person: how it looks]
+- [ ] **The train station screen:** place "Street: Breencast screen, the train station's": does it look like Valve's at the station (the Combine monitor's scanlines and glow, layered), dim blue with nobody on air, her face when she is? [needs a person: how it looks]
+- [ ] **Vending cans:** buy a can from an editor vending machine and from one built into the map: does it roll gently out of the chute, never flung? [needs a person: how it moves in the real physics]
+- [ ] **Valve pieces gallery (lc_valve_gallery.vmf):** compile and walk it: press each piece's buttons and judge the effects, sounds and moving parts (the shell, the mortar, the blasts, the dropship and rappel, the pods, the crane, the lift, the traps, the hospital rooms). [needs a person: effects, sounds and feel]

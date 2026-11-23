@@ -58,7 +58,10 @@ NAME_KEYS = ("parentname", "target", "altpath", "lightingorigin", "lightingorigi
              "filtername", "damagefilter", "laddername", "lightningstart", "lightningend", "measuretarget", "sourceentityname", "m_iszentity",
              "spawntarget", "landmark", "entitytemplate", "template", "controlpoint1", "point_template", "target_entity", "glowproxy")
 NOT_NAMES = ("classname", "model", "message", "texture", "origin", "id")
-SPOT_KEYS = ("point0", "point1", "springaxis", "hingeaxis", "slideaxis")      # (keys that hold a place in the source map, not a name: kept as there)
+SPOT_KEYS = ("point0", "point1", "springaxis", "hingeaxis", "slideaxis",       # (keys that hold a place in the source map, not a name: kept as there)
+             "attachpoint", "position2", "lowerleft", "lowerright", "upperleft", "upperright")      # (a length or pulley constraint's ends, a glass pane's corners)
+NODE_CLASSES = ("info_node", "info_node_hint", "info_node_air", "info_node_air_hint", "info_node_climb")
+SPOT_BY_CLASS = {"phys_motor": ("axis",), "phys_torque": ("axis",), "point_angularvelocitysensor": ("axis",), "phys_ragdollmagnet": ("axis",)}      # ("axis" is a place only on these)
 TURN_AXES = {"func_door_rotating": (64, 128), "func_rot_button": (64, 128), "momentary_rot_button": (64, 128), "func_rotating": (4, 8)}
 
 
@@ -462,6 +465,26 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outs
     logic = props and wiring and bool(pf.get("wiring") or pf.get("route") or any(p.get("connections") for p in pf["points"]))
     aps = ("func_areaportal", "func_areaportalwindow") if portals else ()
     wires = [w for w in pf.get("wiring", []) if (keep(w) if keep else not unwired(w["classname"]) or w["classname"] in aps)] if logic else []
+    # An areaportal window left out leaves its fade brush (the black pane it shows when far) standing for good: out too.
+    shades = set(w["keys"].get("target", "").lower() for w in pf.get("wiring", []) if w["classname"] == "func_areaportalwindow" and id(w) not in set(map(id, wires)))
+    wires = [w for w in wires if w["keys"].get("targetname", "").lower() not in shades - {""}]
+    # A piece's own nodes and hints (a queue's places, say) go in with the build's next node ids, its node links renumbered.
+    if logic:
+        b, renum, mine = getattr(m, "b", m), {}, []
+        for w in pf.get("wiring", []):
+            if w["classname"] in NODE_CLASSES:
+                nid = getattr(b, "node_id", None) or 1
+                b.node_id = nid + 1
+                e = json.loads(json.dumps(w))
+                renum[str(e["keys"].get("nodeid", ""))] = str(nid)
+                e["keys"]["nodeid"] = str(nid)
+                mine.append(e)
+        for w in pf.get("wiring", []):
+            if w["classname"] == "info_node_link" and str(w["keys"].get("StartNode")) in renum and str(w["keys"].get("EndNode")) in renum:
+                e = json.loads(json.dumps(w))
+                e["keys"]["StartNode"], e["keys"]["EndNode"] = renum[str(w["keys"]["StartNode"])], renum[str(w["keys"]["EndNode"])]
+                mine.append(e)
+        wires = [w for w in wires if w["classname"] not in NODE_CLASSES + ("info_node_link",)] + mine
     live = set(w["keys"].get("targetname") for w in wires) - {None, ""}
     placed = set(id(w) for w in wires)
     full = pf.get("wiring", [])
@@ -562,10 +585,12 @@ def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
                 keys[k] = "player"      # (Valve's !player is only the first player to join a server: every player)
             elif r:
                 keys[k] = r
+            elif val and val.endswith("*") and resolves(val, set(names)):
+                keys[k] = val      # (a wildcard over the piece's own names: each copy's names still start the same)
             elif val and not val.startswith("!") and lk != "targetname" and (lk in NAME_KEYS or re.match(r"template\d\d$", lk)):
                 if keep_outside:
                     keys[k] = val      # (it names something outside the piece)
-            elif lk in SPOT_KEYS and val:
+            elif (lk in SPOT_KEYS or lk in SPOT_BY_CLASS.get(cls, ())) and val:
                 p = nums(val)
                 keys[k] = " ".join(fmt(round(c, 2)) for c in [a + b for a, b in zip(rot([p[i] - anchor[i] for i in range(3)], q), d)])
             else:
@@ -577,6 +602,14 @@ def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
                 outs.append((o, "!activator" if tgt.lower() == "!player" else tgt, inp, val, delay))
                 continue
             hits = resolves(tgt, set(names))
+            first = val.split(" ")[0] if val else ""
+            if first.lower() in names and inp.lower() != "addoutput":      # (an input whose value names one of the piece's things: SetParent, ForceNPCToActBusy...)
+                val = names[first.lower()] + tag + val[len(first):]
+            if inp.lower() == "addoutput" and " " in val and ":" in val:      # (an output added at run time names its target in its text)
+                head, body = val.split(" ", 1)
+                aim, _, more = body.partition(":")
+                if aim.lower() in names:
+                    val = "%s %s%s:%s" % (head, names[aim.lower()], tag, more)
             if hits:
                 outs += [(o, names[h] + tag, inp, val, delay) for h in hits]
             elif keep_outside:
@@ -712,6 +745,34 @@ def check():
     want('"nodeid" "500"' in t3 and '"nodeid" "501"' in t3 and '"StartNode" "500"' in t3 and '"EndNode" "501"' in t3 and b3.node_id == 502,
          "the piece's nodes take the build's ids and its link names them")
     want('"gate_link%s\x1bTurnOn' % tag3 in t3, "the piece's node link is named as its own")
+    b5 = Build("prefab_check5", 784, 600)      # (23 November: places, wildcards, run-time outputs, fade panes)
+    m5 = Mod(b5, Frame(0, 0, 0, 64), "prefab")
+    five = json.loads(json.dumps(pf))
+    five["wiring"] += [
+        {"classname": "phys_lengthconstraint", "origin": [0, 0, 0], "keys": {"attach2": "gate", "attachpoint": "266 138 10"}, "connections": []},
+        {"classname": "phys_motor", "origin": [0, 0, 0], "keys": {"attach1": "gate", "axis": "256 128 100"}, "connections": []},
+        {"classname": "filter_activator_name", "origin": [0, 0, 0], "keys": {"targetname": "only_gates", "filtername": "gate*"}, "connections": []},
+        {"classname": "logic_relay", "origin": [0, 0, 0], "keys": {"targetname": "add_relay"}, "connections": [["OnTrigger", "trig_gate,AddOutput,OnStartTouch snd_gate:PlaySound::0:-1,0,-1"]]},
+        {"classname": "func_areaportalwindow", "keys": {"targetname": "apw2", "target": "pane"}, "connections": [], "brushes": [five["wiring"][0]["brushes"][0]]},
+        {"classname": "func_brush", "keys": {"targetname": "pane"}, "connections": [], "brushes": [five["wiring"][0]["brushes"][0]]}]
+    tag5 = place(m5, five, 1000, 0, 0, 1)["placed_as"]
+    t5 = b5.vmf.text()
+    want('"attachpoint" "990 10 10"' in t5 and '"axis" "1000 0 100"' in t5, "constraint ends and motor axes move and turn with the piece")
+    want('"filtername" "gate*"' in t5, "a wildcard key over the piece's names is kept")
+    want("OnStartTouch snd_gate%s:PlaySound" % tag5 in t5, "a run-time output names the copy's own target")
+    want('"targetname" "pane%s"' % tag5 not in t5, "an areaportal window's fade pane stays out with it")
+    b6 = Build("prefab_check6", 784, 700)
+    m6 = Mod(b6, Frame(0, 0, 0, 64), "prefab")
+    six = json.loads(json.dumps(pf))
+    six["wiring"] += [{"classname": "info_node_hint", "origin": [0, 0, 16], "keys": {"targetname": "spot1", "nodeid": "42", "hinttype": "0"}, "connections": []},
+                      {"classname": "info_node", "origin": [64, 0, 16], "keys": {"nodeid": "43"}, "connections": []},
+                      {"classname": "info_node_link", "origin": [32, 0, 16], "keys": {"StartNode": "42", "EndNode": "43"}, "connections": []},
+                      {"classname": "logic_relay", "origin": [0, 0, 0], "keys": {"targetname": "go"}, "connections": [["OnTrigger", "lamp_gate,SetParent,spot1,0,-1"]]}]
+    tag6 = place(m6, six, 0, 0, 0, 0)["placed_as"]
+    t6 = b6.vmf.text()
+    want('"nodeid" "700"' in t6 and '"nodeid" "701"' in t6 and '"StartNode" "700"' in t6 and '"EndNode" "701"' in t6 and '"targetname" "spot1%s"' % tag6 in t6,
+         "a piece's own nodes and hints take the build's ids, its links follow")
+    want("SetParent\x1bspot1%s" % tag6 in t6, "an input's value naming the piece's thing names the copy's")
     want("CONCRETE/CONCRETEFLOOR001A" in t3.split('"classname" "worldspawn"')[1].split("\nentity\n")[0], "world=True puts the source's world brushes in the world")
     for f in faults:
         print("  FAULT: " + f)

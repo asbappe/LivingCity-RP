@@ -81,18 +81,22 @@ def main():
     ap.add_argument("--list", action="store_true", help="print every face made nodraw")
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
     ap.add_argument("--brushes", action="store_true", help="also delete the brushes nobody can see that do not seal the map")
+    ap.add_argument("--route", nargs=3, type=float, metavar=("X", "Y", "Z"), help="print the way the seen air takes from the player start to this point")
     a = ap.parse_args()
     C = float(a.cell)
     root = mv.read(a.vmf)
 
     brushes, faces, disps, seeds, things = [], [], [], [], []      # (planes, bbox) solid; (side id, mat, poly, normal) candidates
     every = []      # (solid id, "world" or "detail", bbox, sides, opaque, planes): every brush that could go (--brushes)
+    every_point = []      # (class, name, origin): every point entity (--brushes checks none stands out in the void)
     for top in root.kids:
         if top.name == "world":
             owner, sols = "world", [k for k in top.kids if k.name == "solid"]
         elif top.name == "entity":
             cls = top.kv.get("classname", "")
             o = mv.nums(top.kv.get("origin", ""))
+            if len(o) == 3 and not [k for k in top.kids if k.name == "solid"]:
+                every_point.append((cls, top.kv.get("targetname", "") or top.kv.get("model", ""), o))
             if cls.startswith("info_player") and len(o) == 3:
                 seeds.append((o[0], o[1], o[2] + 36))
             elif len(o) == 3 and cls.startswith(("light", "prop_", "npc_", "item_", "env_sprite", "point_spotlight")):
@@ -208,6 +212,37 @@ def main():
     reached = flood(reached, air)
     print("flood: %.1f M cubes of air seen of %.1f M open" % (reached.sum() / 1e6, air.sum() / 1e6))
 
+    if a.route:      # (how does the air get there? a shortest way, cube by cube, through the seen air)
+        goal = tuple(idx(a.route))
+        if not reached[goal]:
+            print("route: %s is not in seen air" % (a.route,))
+        else:
+            dist = np.full(n, -1, dtype=np.int32)
+            start = [tuple(idx(sd)) for sd in seeds if reached[tuple(idx(sd))]][0]
+            dist[start] = 0
+            front, step = np.array([start]), 0
+            offs = np.array([(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)])
+            while dist[goal] < 0 and len(front):
+                nb = (front[:, None, :] + offs[None, :, :]).reshape(-1, 3)
+                ok = ((nb >= 0) & (nb < n)).all(axis=1)
+                nb = nb[ok]
+                nb = nb[reached[nb[:, 0], nb[:, 1], nb[:, 2]] & (dist[nb[:, 0], nb[:, 1], nb[:, 2]] < 0)]
+                nb = np.unique(nb, axis=0)
+                step += 1
+                dist[nb[:, 0], nb[:, 1], nb[:, 2]] = step
+                front = nb
+            path, cur = [goal], np.array(goal)
+            while dist[tuple(cur)] > 0:
+                for o in offs:
+                    q = cur + o
+                    if (q >= 0).all() and (q < n).all() and dist[tuple(q)] == dist[tuple(cur)] - 1:
+                        cur = q
+                        break
+                path.append(tuple(cur))
+            path.reverse()
+            print("route: %d cubes from the start; every 8th:" % len(path))
+            for q in path[::8] + [path[-1]]:
+                print("   (%d %d %d)" % tuple(lo + (np.array(q) + 0.5) * C))
     # the check: every light and placed thing should stand in air the flood saw (or inside something, where some
     # dressing sits); one in unseen air means a place people use that the flood missed, so nothing is changed
     lost = []
@@ -294,6 +329,10 @@ def main():
                 break
         void = flood(void, out_air)
         print("the void outside the seal: %.1f M cubes" % (void.sum() / 1e6))
+        for cls, name, o in every_point:      # (a thing out in the void: the compiler stops on a leak)
+            i = idx(o)
+            if (i >= 0).all() and (i < n).all() and void[tuple(i)]:
+                print("  LEAK: %s %s at %s stands outside the sealed map" % (cls, name, [round(c) for c in o]))
         m = int(round(16 / C))      # (16 of margin round every brush)
         pocket = out_air & ~void & ~reached      # (air inside the seal nobody sees: sealed pockets, the ground under the terrain)
         kinds = {}

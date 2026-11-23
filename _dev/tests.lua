@@ -1352,6 +1352,13 @@ _run(1)
 local can
 for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "water" then can = e end end
 ok(IsValid(can) and LC.Credits(buyer) == cb - 2, "a can of Breen's water drops out, for 2 credits")
+do -- (rolls out of the chute, not thrown: the owner, 23 November, "in HL2 they just slightly roll down the chute")
+    local v = IsValid(can) and can:GetPhysicsObject() and IsValid(can:GetPhysicsObject()) and can:GetPhysicsObject().GetVelocity and can:GetPhysicsObject():GetVelocity()
+    local rolled = LC.VendingCanOut(vend, vend:GetPos(), vend:GetForward(), 14, vend:GetPos() + vend:GetForward() * 30)
+    local rv = IsValid(rolled) and IsValid(rolled:GetPhysicsObject()) and rolled:GetPhysicsObject().GetVelocity and rolled:GetPhysicsObject():GetVelocity()
+    ok(IsValid(rolled) and (not rv or (rv:Length() <= 30 and math.abs(rv.z) < 1)), "the can rolls gently out of the chute, not thrown out", rv and tostring(rv))
+    if IsValid(rolled) then rolled:Remove() end
+end
 LC.RemovePoint(vp)
 _run(1)
 ok(not IsValid(vend), "removing the point removes the machine")
@@ -13436,6 +13443,9 @@ local told = false
 for _, l in ipairs(skip.chat or {}) do if string.find(l, "Attendance is mandatory", 1, true) then told = true end end
 ok(told or true, "(every citizen is told: by notice)")
 ok(not LC.AtSpeech(skip) and LC.AtSpeech(good), "being there counts within the crowd's radius")
+local stepA = LC.NextStep(skip)
+ok(stepA and stepA.key == "speech" and stepA.way == "speech" and (LC.NextStep(good) or {}).key ~= "speech" and LC.WaypointTo(skip, "speech") and skip.lcWaypoint and skip.lcWaypoint.pos == S.crowd.pos,
+    "F1 > What now? > Show me the way marks the address for whoever isn't there yet (the owner, 23 November)", stepA and stepA.key)
 _run(4)
 ok(not S.warned[skip], "early in the muster, nobody is chased yet")
 _run(3)
@@ -13453,6 +13463,26 @@ bystander:Spawn()
 LC.CopProvoked(bystander, { role = "cop", state = "idle" }, skip, CurTime() + 100)
 ok(skip.lcBump ~= nil and skip.lcBump.n == 1, "another unit still tells them to move back")
 skip.lcBump = nil
+local inCrowd = ents.Create("npc_metropolice")
+inCrowd:SetPos(good:GetPos() + Vector(30, 0, 0))
+inCrowd:Spawn()
+good.lcBump = nil
+LC.CopProvoked(inCrowd, { role = "cop", state = "idle" }, good, CurTime() + 100)
+ok(good.lcBump == nil, "nobody standing in the crowd is taken for crowding a unit there (the owner, 23 November)")
+inCrowd:Remove()
+-- out cold: carried to the crowd while the screen is still black, not after it fades back in (the owner, 23 November)
+do
+    local ko = newPlayer and newPlayer("KOCarry") or nil
+    if ko then
+        ko:SetPos(crowd.pos + Vector(3000, 0, 0))
+        LC.SpeechBlackOut(ko)
+        _run(1.2)
+        local black = ko:GetNW2Float("lc_ko_until", 0) - CurTime()
+        ok(ko:GetPos():DistToSqr(crowd.pos) < 800 * 800 and black > 1.5, "out cold, they're carried to the crowd while the screen is fully black", black)
+        _run(5)
+        ko:Remove()
+    end
+end
 bystander:Remove()
 _run(14)
 ok(L.morale == m0 + 6 and S.spoken, "the muster over: she speaks (morale up as before)")
@@ -13524,6 +13554,7 @@ do
     end
 end
 ok(LC.CallSpeech(nil, nil) and IsValid(LC.SpeechSession().her) and #(LC.SpeechSession().pieces or {}) >= 3, "she stands at the podium herself, with her speech")
+ok((LC.SpeechSession().her.kv or {}).citizentype == "4", "she keeps her own model (a unique citizen: else the game makes it models/Humans/Group01/mossman.mdl, an ERROR; the owner, 23 November)")
 do
     local S2 = LC.SpeechSession()
     _run(12) -- (the muster)
@@ -23056,7 +23087,17 @@ ok(LC.Drunk(p) == 3, "too much: you throw up, and sober up some")
 LC.SetDrunk(p, 0)
 -- a stimulant: wide awake, no sleep, no dreams; a second hurts; then the crash
 LC.GiveItem(p, "stimulant", 2)
+local awakeS = p.lcAwakeSince
+p.lcAwakeSince = CurTime() - 100000 -- (up far too long: exhausted by their own clock, not lights out)
+p:SetNW2Float("lc_groggy_until", CurTime() + 100)
+LC.RestTick(CurTime())
+local tiredBefore = p:GetNW2Bool("lc_tired", false)
 LC.ItemUse(p, "stimulant")
+LC.RestTick(CurTime())
+ok(tiredBefore and not p:GetNW2Bool("lc_tired", false) and LC.TiredDue(p) >= p:GetNW2Float("lc_wired_until", 0) - 1 and p:GetNW2Float("lc_groggy_until", 0) == 0,
+    "exhausted after a day awake, a stimulant opens your eyes for as long as it lasts (the owner, 23 November)")
+p.lcAwakeSince = awakeS
+LC.RestTick(CurTime())
 local okS, whyS = LC.SleepIn(p, nil)
 ok(LC.Wired(p) and not okS and string.find(tostring(whyS), "wired", 1, true), "a stimulant: you can't fall asleep", whyS)
 local hp = p:Health()

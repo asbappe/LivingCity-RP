@@ -10,9 +10,10 @@ silo is placed turned a quarter, so the piece's +x is the map's north and its +y
 
 What the silo's floors are (heights over the anchor): the pit (covered at the bottom level by a grate, pit_cover); the
 bottom level, 320 (the shaft's floor round the flag's pole, a ring hall round the shaft, the leader's office behind the
-lab door and his bedroom beside it); the solid ring, 576 to 896; level A, 896 (a ring hall, the lift's middle stop);
-the ring slab; level B, 1152 (the lift's top stop: a hall by the lift and, through two doors, the rest of the ring:
-the quarters); the gantry, 1408 (where the corridor from the bunker comes in; the ladder down to level B).
+lab door and his bedroom beside it); the solid ring, 576 to 896; level A, 896 (a ring hall); the ring slab; level B,
+1152 (a hall by the lift and, through two doors, the rest of the ring: the quarters); the gantry, 1408 (where the
+corridor from the bunker comes in; the ladder down to level B). The lift stops only at the bottom level and the
+gantry's walkway; its shaft is shut at levels A and B (Silo.shaft_shut).
 """
 import math
 
@@ -30,7 +31,7 @@ def lit_from(vmf, name, pos, vis):
 # a nodraw face of the piece that players can now see gets a real face: the levels' ring halls (Valve left the far half
 # of level A, most of level B and the bottom level's outer faces bare) and the gantry's tunnel. (r1, r2, z1, z2) round
 # the shaft's axis, or a box; a face is finished when the point 6 in front of its middle lies in one.
-FINISH_RINGS = ((240, 780, 316, 580), (240, 780, 890, 1094), (240, 780, 1146, 1350))
+FINISH_RINGS = ((240, 780, 316, 580),)      # (the bottom level's ring hall; levels A and B are shut off and their halls gone: Silo.halls_shut)
 FINISH_BOXES = ((-544, -130, 1400, -250, 130, 1570),)
 RING_RAIL = (162, 168)     # level A's rail round the pit's mouth: from, to, out from the axis (Silo.ring_rail)
 FINISH_MAT = {"floor": "CONCRETE/CONCRETEWALL036A", "ceiling": "CONCRETE/CONCRETEWALL073A", "wall": "CONCRETE/CONCRETEWALL010A"}
@@ -49,20 +50,29 @@ LEVER_FROM, LEVER_TO = (280, 222, 374), (261, 288, 374)      # Valve's lever, an
 # that looks across the ring slab and its rail to the rocket (the five columns rising through level B stand at 307, 7
 # and 67, 14.5 degrees past each; clear of Valve's ladder at 270, the racks against the shaft's side of the wall from
 # 324 to 350 and the frames by the rocket from 73 to 99)
-SHAFT_WINDOWS = (246, 258, 270)
+# the lift's shaft shut at levels A and B (the owner, 23 November: "I cannot find any reasonable use for the mid levels of
+# the silo; only the top and bottom floors. Can we stretch the parts of the lift shaft that have fencing/pipes and can't
+# be "seen through" to the silo and just stretch/copy/mirror them to fill any visible gaps between the top and bottom
+# floor and program the lift to only go to the top and bottom floors?"): the lift passes both without stopping
+# (BunkerForest.LIFT_STOPS), so their landings' fixed gates, bars and frames (1034 to 1045) and Valve's fence panels
+# either side of the shaft at level B (988 to 997) are left out, and Silo.shaft_shut fills what a rider saw out through
+# them with copies of the shaft's solid stretch under level A: Valve's recessed metal panel on the landing's side
+# (SHAFT_PANEL, with the pipes and the wire fence before it) and the shaft's plain side walls (SHAFT_SIDES, by the side
+# they stand on)
+SHAFT_SHUT = set(range(988, 998)) | set(range(1034, 1046))
+SHAFT_PANEL, SHAFT_SIDES = 45, ((1, 165), (-1, 163))
 # the piece's brushes left out: the fake door at level B's south end (131; its north twin is the func_brush
 # brush_fake_cit_door_1, dropped with the wiring), the bottom level's outer wall behind the bedroom (577), rebuilt
 # round the secret door, the lever wall's parts (placed again in the office), and the two six-sided posts at the gantry
 # tunnel's mouth (1287, 1288): Valve's hinge posts for its blast door as Valve hung it there; the door is turned round
 # now and brings its own posts at its hinges (BunkerForest.silo_door), and its leaves swung through these (the owner,
 # 22 November: "the silo doors clip through two round/octagon-ish columns when closing")
-SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604} | set(SHAFT_WINDOWS)
+SKIP = {131, 577, 1287, 1288} | set(LEVER_BRUSHES) | set(range(1213, 1219)) | {1597, 1598, 1604} | SHAFT_SHUT
 # and over the lift's shaft in the walkway (the gantry level's tunnel): Valve's floor there, its two grates and the hull
 # strips round them (1213 to 1218), the strut down its middle and the rails beside it (1604, 1597, 1598): the car comes
 # up into the walkway now, and the walkway's own sliding grates cover the hole when it is gone (BunkerForest.lift; the
 # owner, 22 November: "the massive brush/strut in the middle of the walkway will have to be removed but that's ok")
-# and the three segments of level B's shaft wall cut for the shuttered windows (SHAFT_WINDOWS: placed again in four
-# pieces round each opening by Silo.shaft_windows)
+# and the lift's landings and fences at levels A and B (SHAFT_SHUT: the shaft is shut there by Silo.shaft_shut)
 # and the tunnel mouth's two narrow jambs (1564, 1566), Valve's too for its door as it hung: the leaves now swing into
 # the tunnel through their lower part (the last 15 degrees), so they start over the leaves' height, 160 over the floor
 MOUTH_JAMBS, MOUTH_JAMB_FROM = (1564, 1566), 1568
@@ -156,74 +166,6 @@ def side_plane(pts):
     distance from the origin along it)."""
     n = _unit(_cross([pts[0][k] - pts[1][k] for k in range(3)], [pts[2][k] - pts[1][k] for k in range(3)]))
     return n, _dot(n, pts[0])
-
-
-def face_axes(n, scale=0.25):
-    """A face's texture axes laid along it, as convex_text lays them (level one way, down the slope the other)."""
-    import map_prefab as PF
-    if abs(n[2]) > 0.99:
-        u, w = (1.0, 0.0, 0.0), (0.0, -1.0, 0.0)
-    else:
-        hl = math.hypot(n[0], n[1])
-        u = (-n[1] / hl, n[0] / hl, 0.0)
-        w = _cross(n, u)
-        w = [-c for c in w] if w[2] > 0 else w
-    return tuple("[%s %s %s 0] %s" % (PF.fmt(round(a[0], 4)), PF.fmt(round(a[1], 4)), PF.fmt(round(a[2], 4)), PF.fmt(scale)) for a in (u, w))
-
-
-def planes_solid(planes):
-    """A convex brush given by its planes as the sides of a lifted piece (for map_forest.pf_solid): planes is [(outward
-    normal, distance, side), ...], each side with its three points, material and texture (a lifted piece's own, or a
-    new one's). Each side's corners are where its plane lies inside all the others (clockwise seen from outside); a
-    plane that keeps nothing of the brush is left out."""
-    out = []
-    for i, (n, d, sd) in enumerate(planes):
-        u = _unit(_cross(n, (0.0, 0.0, 1.0)) if abs(n[2]) < 0.9 else _cross(n, (1.0, 0.0, 0.0)))
-        w = _cross(n, u)
-        c = [n[k] * d for k in range(3)]
-        poly = [[c[k] + 65536.0 * (a * u[k] + b * w[k]) for k in range(3)] for a, b in ((1, 1), (-1, 1), (-1, -1), (1, -1))]
-        for j, (m, e, _) in enumerate(planes):
-            if j == i or not poly:
-                continue
-            nxt = []
-            for k in range(len(poly)):
-                p, q = poly[k], poly[(k + 1) % len(poly)]
-                fp, fq = _dot(m, p) - e, _dot(m, q) - e
-                if fp <= 1e-7:
-                    nxt.append(p)
-                if (fp < -1e-7 and fq > 1e-7) or (fp > 1e-7 and fq < -1e-7):
-                    nxt.append([p[a] + (q[a] - p[a]) * fp / (fp - fq) for a in range(3)])
-            poly = nxt
-        pts = []
-        for p in poly[::-1]:         # (anticlockwise seen from outside as made: turned clockwise)
-            p = [round(x) if abs(x - round(x)) < 1e-6 else x for x in p]
-            if not pts or max(abs(p[a] - pts[-1][a]) for a in range(3)) > 1e-3:
-                pts.append(p)
-        if len(pts) > 1 and max(abs(pts[0][a] - pts[-1][a]) for a in range(3)) <= 1e-3:
-            pts.pop()
-        if len(pts) < 3:
-            continue
-        out.append(dict(sd, verts=pts, corners=pts))
-    return out
-
-
-def faces_solid(faces, look):
-    """A convex brush given by its faces' corners as the sides of a lifted piece (for map_forest.pf_solid): each face
-    turned clockwise seen from outside, its three points its first, a third and two thirds round; look(normal) gives
-    its material and texture axes."""
-    allv = [p for f in faces for p in f]
-    mid = [sum(p[k] for p in allv) / len(allv) for k in range(3)]
-    out = []
-    for f in faces:
-        fc = [sum(p[k] for p in f) / len(f) for k in range(3)]
-        n = _cross([f[0][k] - f[1][k] for k in range(3)], [f[2][k] - f[1][k] for k in range(3)])
-        if _dot(n, [fc[k] - mid[k] for k in range(3)]) < 0:
-            f = f[::-1]
-        n = side_plane(f[:3])[0]
-        mat, ua, va = look(n)
-        k = len(f)
-        out.append({"plane": [f[0], f[k // 3], f[2 * k // 3]], "verts": list(f), "corners": list(f), "material": mat, "uaxis": ua, "vaxis": va, "lightmapscale": "16"})
-    return out
 
 
 def W(d, p):
@@ -387,164 +329,122 @@ class Silo:
     # the ladder? there isn't even enough room to walk between the railings and the control panel").
 
     # -- 3. the floors ----------------------------------------------------------------------------------------------
-    def level_b_doors(self):
-        """Level B's two fake doors (a slab painted as a door at each end of the hall by the lift) become working doors
-        into the rest of the ring: Episode Two's silo door as every other in the bunker (SILO_DOOR), carried by an unseen
-        func_door on the doorway's slant, sliding 64 toward the shaft into the wall. Valve's keypads beside them stay.
-        The model's lever and handle are on its own +x side, so it slides toward its -x (as Valve's lab door does): the
-        model faces the other way from the slide, and the handle stays in the doorway (the owner, 22 November: "the
-        doors open the wrong direction for the model (the lever/handle portion are stuck in the wall)"). Valve's doorway
-        is 97 clear between its frame's posts and the model's leaf 96.4 wide, so light showed down both edges (the owner:
-        "a slight crack of open/light between the door and the doorframe"): the model is drawn 3 per cent larger (99.3
-        wide, 1.1 into each post; 128 high, inside the frame's head)."""
-        f, v = self.f, self.v
-        for k, (a, b, yaw) in enumerate((((-320, -331), (-250, -263), 45), ((-250, 263), (-320, 331), 315))):
-            name = "lc_silo_levelb_door_%d" % (k + 1)
-            ux, uy = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
-            nx, ny = -uy * 2, ux * 2
-            leaf = [(int(round(a[0] - nx)), int(round(a[1] - ny))), (int(round(b[0] - nx)), int(round(b[1] - ny))),
-                    (int(round(b[0] + nx)), int(round(b[1] + ny))), (int(round(a[0] + nx)), int(round(a[1] + ny)))]
-            leaf = leaf if (leaf[1][0] - leaf[0][0]) * (leaf[2][1] - leaf[0][1]) - (leaf[1][1] - leaf[0][1]) * (leaf[2][0] - leaf[0][0]) > 0 else leaf[::-1]
-            slide = yaw      # (toward the shaft: the doorway's inner end)
-            brush_ent(v, "func_door", dict(f.SILO_DOOR, **{
-                "targetname": name, "movedir": "0 %d 0" % wyaw(slide), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1",
-                "loopmovesound": "0", "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
-                "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}),
-                [prism(self.d, leaf, 1152, 1276, MAT["nodraw"])], self.vis,
-                connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
-            mx, my = (a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0
-            v.point("prop_dynamic_override", self.P(mx, my, 1152), {
-                "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(yaw + 180), "parentname": name, "skin": "0",
-                "lightingorigin": lit_from(v, name + "_lighting", self.P(mx, my, 1164), self.vis),
-                "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
-                "rendercolor": "255 255 255", "modelscale": "1.03", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
-                "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
 
-    # how far the outer wall is from the shaft's axis on each level, every 15 degrees from +x (measured in the piece)
-    WALL_A = dict(zip(range(0, 360, 15), (504, 506, 510, 510, 510, 506, 504, 506, 510, 510, 510, 390, 546, 390, 510, 510, 416, 374, 362, 374, 416, 510, 510, 506)))
-    WALL_B = dict(zip(range(0, 360, 15), (504, 506, 510, 510, 510, 506, 504, 506, 300, 300, 510, 390, 546, 390, 510, 300, 300, 506, 506, 506, 510, 510, 510, 506)))
+    def shaft_shut(self, pf):
+        """The lift's shaft at levels A and B, which the lift passes without stopping (SHAFT_SHUT), shut with the shaft's
+        own parts from its solid stretch between the bottom level and level A, stretched to fit, so that from the car the
+        shaft runs on unbroken from the bottom level to the walkway. On the landing's side, between the pillars and from
+        the floor's slab to the slab over it (level A 896 to 1088, level B 1152 to 1392, under the gantry's): Valve's
+        recessed metal panel (SHAFT_PANEL: citadel_metalwall060a, 28 behind the pillars' faces; its back the hall's
+        concrete; its ends in the pillars, its top and foot on the slabs, nodraw), and before it Valve's three runs of
+        pipes and its wire fence, as under level A. Either side of the shaft, in the gap between the outer wall's slant
+        and the pillar by the landing (x -512 to -440: open at level A, Valve's fence panels at level B, open over level
+        B up to the gantry's slab): the shaft's plain side wall (SHAFT_SIDES: ep2_concretewall01b on the shaft's face;
+        01c on the band under the gantry's slab, as the pillars beside it have), 16 thick, its faces against other
+        brushes nodraw. World brushes, as Valve's are: 8 where 22 were."""
+        from map_forest import pf_solid
+        v = self.v
 
-    def ring_dress(self):
-        """Light and things for the ring halls Valve left bare: level A's far half (from 285 round to 75 degrees, the
-        side away from the lift) becomes the base's work hall (a bench, a desk with a console, shelves, crates, drums),
-        level B behind its doors the quarters (four bunks, each with a locker and a footlocker), each lit by Episode Two's
-        tube lamps on the outer wall (props_silo/wall_light, a light at each) in White Forest's colours."""
-        cold, warm = "224 254 248", "253 230 159"
-
-        def at(ang, r):
-            a = math.radians(ang)
-            return r * math.cos(a), r * math.sin(a)
-        za, zb = self.LEVEL_A, self.LEVEL_B
-        for ang in (300, 345, 30, 75):
-            r = self.WALL_A[ang]
-            self.prop("props_silo/wall_light", *(at(ang, r - 2) + (za + 120, ang + 180, "f")))
-            self.light(*(at(ang, r - 40) + (za + 130, warm, 90)))
-        r = self.WALL_A
-        self.prop("props_wasteland/kitchen_shelf001a", *(at(285, r[285] - 18) + (za, 285 + 90, "d")))
-        self.prop("props_silo/silo_workspace1", *(at(330, r[330] - 24) + (za, 330 - 90, "s")))
-        self.prop("props_wasteland/controlroom_desk001a", *(at(15, r[15] - 24) + (za + 17, 15 + 180, "d")))
-        self.prop("props_silo/desk_console1", *(at(15, r[15] - 24) + (za + 34, 15 + 180, "s")))
-        self.prop("props_wasteland/controlroom_chair001a", *(at(15, r[15] - 70) + (za + 20, 15 + 180, "d")))
-        self.prop("props_forest/shelves", *(at(0, r[0] - 2) + (za + 64, 0 + 90, "s")))
-        for k, (ang, dz) in enumerate(((45, 20), (52, 20), (48, 60))):
-            self.prop("props_junk/wood_crate001a", *(at(ang, r[45] - 26) + (za + dz, ang + 7 * k, "d")))
-        self.prop("props_wasteland/kitchen_shelf001a", *(at(60, r[60] - 18) + (za, 60 + 90, "d")))
-        for ang in (68, 71):
-            self.prop("props_silo/barrelwarning", *(at(ang, r[ang // 15 * 15] - 50) + (za, ang, "d")))
-        r = self.WALL_B
-        for ang in (270, 315, 0, 45, 90):
-            self.prop("props_silo/wall_light", *(at(ang, r[ang] - 2) + (zb + 120, ang + 180, "f")))
-            self.light(*(at(ang, r[ang] - 40) + (zb + 130, cold if ang in (270, 90) else warm, 80)))
-        for ang in (285, 330, 15, 60):
-            self.prop("props_forest/bunkbed", *(at(ang, r[ang] - 30) + (zb, ang, "s")))
-            self.prop("props_lab/lockers", *(at(ang + 12, r[ang] - 14) + (zb, ang + 12 + 180, "s")))
-            self.prop("props_forest/footlocker01_closed", *(at(ang, r[ang] - 76) + (zb + 12, ang, "s")))
-        self.prop("props_wasteland/kitchen_shelf002a", *(at(100, r[105] - 18) + (zb, 100 + 180, "d")))
-        self.prop("props_wasteland/kitchen_shelf002a", *(at(255, r[255] - 18) + (zb, 255 + 180, "d")))
-        self.f.notes.append("the silo's ring halls: level A's far half the work hall, level B behind its two doors the quarters (4 bunks), lit by 9 tube lamps")
-
-    def shaft_windows(self, pf):
-        """Three of Valve's shuttered windows (BunkerForest.shutter_window, the one beside the bunker's room doors) in the
-        shaft's wall between level B's quarters and the shaft, looking out on the rocket (SHAFT_WINDOWS; the owner, 23
-        November: "can you add 3 of those shutter windows ... in the wall between the new area you built and the
-        rocket?"). Each wall segment is curved Valve's way (a brush of its own, its faces off the grid), so the window is
-        laid square to the segment's face in the quarters, in its middle: the segment is placed again as the four world
-        brushes round the opening (31 wide, 86 high, 18 over the floor), Valve's own faces kept and the silo's concrete
-        (010a) on the new ones; in the opening, at shutter_window's depths from the slatted face and heights from the
-        floor, the frame of hull steel (metaltruss008a on its sides' backs) and the 14 slats as func_detail, the glass a
-        func_breakable nothing breaks (WINDOW_GLASS). The slats are on the quarters' side, as Valve's are on the hall's
-        side of the lab door."""
-        from map_forest import pf_solid, pf_brush_entity
-        import map_prefab as PF
-        f, v, z0, hw = self.f, self.v, self.LEVEL_B, 15.5
-        det = ""
-        for i in SHAFT_WINDOWS:
+        def stretched(i, box, faces=None):
+            """Valve's brush i moved and stretched onto box (a straight scale along each axis), its faces' textures left
+            where they lie in the world, so each pattern runs on as on the brush it was copied from. faces: {outward
+            normal: material} to change."""
             sides = pf["solids"][i]["sides"]
-            valve = [side_plane(sd["plane"]) + (sd,) for sd in sides]
-            outer = top = bottom = None
-            for n, d, sd in valve:
-                fc = [sum(p[k] for p in sd["corners"]) / len(sd["corners"]) for k in range(3)]
-                if _dot(n, _unit([fc[0], fc[1], 0.0])) > 0.95:
-                    outer = (n, sd)
-                top = sd if n[2] > 0.99 else top
-                bottom = sd if n[2] < -0.99 else bottom
-            if not (outer and top and bottom and len(sides) == 6):
-                raise ValueError("solid %d of the silo is not a segment of level B's shaft wall" % i)
-            # the window's own frame: w along the wall from the middle of the face in the quarters, dep into the wall from
-            # that face (toward the shaft), h over the floor
-            s = [-outer[0][0], -outer[0][1], 0.0]
-            t = [s[1], -s[0], 0.0]
-            foot = [p for p in outer[1]["corners"] if abs(p[2] - z0) < 0.01]
-            O = [(foot[0][0] + foot[1][0]) / 2.0, (foot[0][1] + foot[1][1]) / 2.0, float(z0)]
+            pts = [p for sd in sides for p in (sd.get("verts") or sd.get("corners") or sd["plane"])]
+            lo, hi = [min(p[k] for p in pts) for k in range(3)], [max(p[k] for p in pts) for k in range(3)]
 
-            def L(w, dep, h):
-                return [O[0] + w * t[0] + dep * s[0], O[1] + w * t[1] + dep * s[1], z0 + h]
+            def f(p):
+                return [box[k] + (p[k] - lo[k]) * (box[k + 3] - box[k]) / float(hi[k] - lo[k]) for k in range(3)]
+            out = []
+            for sd in sides:
+                n = tuple(int(round(c)) for c in side_plane(sd["plane"])[0])
+                s = dict(sd, plane=[f(p) for p in sd["plane"]], verts=[f(p) for p in sd.get("verts") or []], corners=[f(p) for p in sd.get("corners") or []])
+                s["material"] = (faces or {}).get(n, s["material"])
+                out.append(s)
+            return out
 
-            def new(pts, out, ax):
-                """A cut through the segment: its plane through pts (the same three points for every piece it bounds, so
-                that the pieces meet in one plane), facing `out`."""
-                pts = [[round(c, 4) for c in p] for p in pts]
-                pts = pts if _dot(side_plane(pts)[0], out) > 0 else pts[::-1]
-                return side_plane(pts) + ({"plane": pts, "material": FINISH_MAT["wall"], "uaxis": ax[0], "vaxis": ax[1], "lightmapscale": "16"},)
-            reveal = ("[%s %s 0 0] 0.25" % (PF.fmt(round(s[0], 4)), PF.fmt(round(s[1], 4))), outer[1]["vaxis"])
-            mt, up, down = [-c for c in t], (0.0, 0.0, 1.0), (0.0, 0.0, -1.0)
-            side_l, side_r = [L(-hw, 0, 0), L(-hw, 0, 128), L(-hw, 32, 0)], [L(hw, 0, 0), L(hw, 0, 128), L(hw, 32, 0)]
-            sill, head = [L(-hw, 0, 18), L(hw, 0, 18), L(0, 32, 18)], [L(-hw, 0, 104), L(hw, 0, 104), L(0, 32, 104)]
-            for cut in ([new(side_l, t, reveal)], [new(side_r, mt, reveal)],
-                        [new(side_l, mt, reveal), new(side_r, t, reveal), new(sill, up, (top["uaxis"], top["vaxis"]))],
-                        [new(side_l, mt, reveal), new(side_r, t, reveal), new(head, down, (bottom["uaxis"], bottom["vaxis"]))]):
-                v.world.append(pf_solid(v, planes_solid(valve + cut), 1, self.d, self.vis)[0])
+        def put(sides):
+            v.world.append(pf_solid(v, sides, 1, self.d, self.vis)[0])
+        nd = MAT["nodraw"].upper()
+        for z1, z2 in ((self.LEVEL_A, 1088), (self.LEVEL_B, 1392)):
+            put(stretched(SHAFT_PANEL, (-388, -80, z1, -384, 80, z2), {(0, 1, 0): nd, (0, -1, 0): nd, (0, 0, 1): nd, (0, 0, -1): nd}))
+        for way, i in SHAFT_SIDES:
+            y1, y2 = (96, 112) if way > 0 else (-112, -96)
+            for z1, z2 in ((self.LEVEL_A, 1088), (self.LEVEL_B, 1280), (1280, 1344)):
+                hide = {(1, 0, 0): nd, (-1, 0, 0): nd, (0, 0, 1): nd, (0, 0, -1): nd}
+                if z1 == 1280:
+                    hide[(0, -way, 0)] = "CONCRETE/EP2_CONCRETEWALL01C"
+                put(stretched(i, (-512, y1, z1, -440, y2, z2), hide))
+        # Valve's pipes before the panel (three runs, 3 out from it, a 128 length and a 64 or 128 more, end to end from
+        # the floor's slab up; at level B the last 16 in the gantry's slab, as Valve's go into the lintel under level A)
+        # and its wire fence (14 out from the pillars' faces: one standing on level A's slab, two one over the other at
+        # level B, as under level A)
+        for z1, lengths, fences in ((self.LEVEL_A, (128, 64), (956,)), (self.LEVEL_B, (128, 128), (1212, 1332))):
+            for y, pitch in ((20, -90), (1, 90), (-47, 90)):
+                z = z1
+                for n in lengths:
+                    self.prop("props_pipes/pipeset02d_%d_001a" % n, -391, y, z + n // 2, 90, pitch=pitch)
+                    z += n
+            for zf in fences:
+                self.prop("props_wasteland/interior_fence003b", -414, 0, zf, 180, extra={"disableshadows": "1"})
+        self.f.notes.append("the lift's shaft shut at levels A and B (it passes them): Valve's panel, pipes and fence on the landing's side, its plain wall at the sides")
 
-            def prism(prof, w1, w2):
-                """The faces of a prism over prof ([(dep, h)], round it) from w1 to w2."""
-                a, b = [L(w1, dp, h) for dp, h in prof], [L(w2, dp, h) for dp, h in prof]
-                return [a, b[::-1]] + [[a[k], a[(k + 1) % len(a)], b[(k + 1) % len(a)], b[k]] for k in range(len(a))]
+    # the openings from the balconies round the rocket into levels A and B's halls, each shut with the shaft's own wall
+    # segment beside it turned on round the shaft's axis: (Valve's brush, the turns in degrees). Level B's gap from 165 to
+    # 195 degrees (to the lift's landing) with its concrete segment from 135 to 150 (288, 289: world, as Valve's there);
+    # level A's the same with its own (1371, 1372: func_detail, as Valve's level A wall is); level A's doorway at 255 to
+    # 270 under segment 1340 with the segment below it from 240 to 255 (1339).
+    HALL_FILLS = ((288, (30, 45)), (289, (30, 45)))      # (level B's gap: the pit's wall since 23 November, when the silo was cut to its top floor)
+    LADDER_HOLE = (-20, -254, -208, 20)      # Valve's hatch hole in the gantry's floor over the ladder to level B (its floor metalfloor010a round it)
 
-            def box(w1, w2, d1, d2, h1, h2):
-                return prism(((d1, h1), (d2, h1), (d2, h2), (d1, h2)), w1, w2)
+    def halls_shut(self, pf):
+        """Levels A and B's halls shut off from the shaft for good (the owner, 23 November: "I cannot find any reasonable
+        use for the mid levels of the silo; only the top and bottom floors", and yes to walling their halls off and
+        deleting them, to save brush sides): the lift passes them (shaft_shut), and the openings from the balconies round
+        the rocket into the halls are shut with the shaft's own wall (HALL_FILLS), so the halls are sealed pockets nobody
+        reaches or sees. Their dressing, doors, windows, lamps and sound are gone; their brushes are left for
+        map_hidden_faces.py --brushes to delete (the build does it with --trim). The balconies, their rails and the
+        ladder from the gantry to level B's balcony stay, as seen from the top and bottom floors."""
+        import re
+        import map_prefab as PF
+        from map_forest import pf_solid
+        v = self.v
 
-            def across(scale):
-                return "[%s %s 0 0] %s" % (PF.fmt(round(t[0], 4)), PF.fmt(round(t[1], 4)), scale)
-            # the frame: sill, sides, head (the sides' faces against the opening's sides and their backs metaltruss008a)
-            for w1, w2, d1, d2, h1, h2, way in ((-hw, hw, 10, 12, 18, 20, 0), (-hw, 2 - hw, 6, 12, 20, 104, -1), (hw - 2, hw, 6, 12, 20, 104, 1),
-                                                (2 - hw, hw - 2, 10, 12, 102, 104, 0)):
-                def look(n, way=way):
-                    if way and (_dot(n, t) * way > 0.99 or _dot(n, s) > 0.99):
-                        return (f.FRAME_BACK.upper(),) + face_axes(n)
-                    if abs(_dot(n, s)) > 0.99:
-                        return f.HULL.upper(), across("0.0938"), "[0 0 -1 0] 0.3359"
-                    return (f.HULL.upper(),) + face_axes(n)
-                det += pf_solid(v, faces_solid(box(w1, w2, d1, d2, h1, h2), look), 1, self.d, self.vis)[0]
-            # the glass
-            pf_brush_entity(v, "func_breakable", dict(f.WINDOW_GLASS), [faces_solid(box(2 - hw, hw - 2, 10, 12, 20, 102), lambda n: (
-                (f.GLASS.upper(), across("0.15"), "[0 0 -1 0] 0.15") if abs(_dot(n, s)) > 0.99 else (f.GLASS.upper(),) + face_axes(n)))], 1, self.d, self.vis)
-            # the slats, each a plate tilted up toward the glass
-            for q in range(14):
-                h = 23 + 6 * q
-                det += pf_solid(v, faces_solid(prism(((3, h), (10, h + 2), (10, h + 3), (3, h + 1)), 2 - hw, hw - 2), lambda n: (f.SLAT.upper(),) + face_axes(n)),
-                                1, self.d, self.vis)[0]
-        v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
-        f.notes.append("level B's quarters: %d of Valve's shuttered windows in the shaft's wall, looking out on the rocket" % len(SHAFT_WINDOWS))
+        def turned(i, deg):
+            c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+
+            def r(p):
+                return [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]]
+            out = []
+            for sd in pf["solids"][i]["sides"]:
+                d = dict(sd, plane=[r(p) for p in sd["plane"]], verts=[r(p) for p in sd.get("verts") or []], corners=[r(p) for p in sd.get("corners") or []])
+                for key in ("uaxis", "vaxis"):      # (the texture turns with it: a point's place along a turned axis is as before)
+                    m = re.match(r"\[\s*([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+)\s+([-\d.e]+)\s*\]\s*([-\d.e]+)", sd[key])
+                    x, y, z, sh, sc = (float(g) for g in m.groups())
+                    x2, y2, _ = r([x, y, z])
+                    d[key] = "[%s %s %s %s] %s" % (PF.fmt(x2), PF.fmt(y2), PF.fmt(z), PF.fmt(sh), PF.fmt(sc))
+                out.append(d)
+            return out
+        det = ""
+        for i, turns in self.HALL_FILLS:
+            for deg in turns:
+                text = pf_solid(v, turned(i, deg), 1, self.d, self.vis)[0]
+                if pf["solids"][i]["from"] == "worldspawn":
+                    v.world.append(text)
+                else:
+                    det += text
+        if det:
+            v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
+        # the gantry's floor in front of the lift is Valve's see-through grate (1490) right over level B's hall by the lift:
+        # a slab 1 under it, so the grate looks down on concrete and not into the hall
+        v.detail([wbox(self.d, (-376, -95, 1390, -256, 95, 1404))], MAT["nodraw"], top="CONCRETE/CONCRETEFLOOR006A", vis=self.vis)
+        # the silo cut to its top floor (the owner, 23 November): the lift's mouth in the walkway's floor and Valve's ladder
+        # hatch in the gantry's floor are floor now, each in the floor round it
+        hx1, hy1, hx2, hy2 = self.f.LIFT_HOLE
+        v.world.append(v.box_text(wbox(self.d, (hx1, hy1, 1392, hx2, hy2, 1408)), MAT["nodraw"], "METAL/METALHULL003A", MAT["nodraw"], self.vis))
+        lx1, ly1, ly2, lx2 = self.LADDER_HOLE
+        v.detail([wbox(self.d, (lx1, ly1, 1404, lx2, ly2, 1408))], MAT["nodraw"], top="METAL/METALFLOOR010A", vis=self.vis)
+        self.f.notes.append("the silo cut to its top floor: level B's gap in the pit's wall shut (%d segments), the lift's mouth and the ladder's hatch floored" % sum(len(t) for _, t in self.HALL_FILLS))
 
     # -- 4. the leader's office and bedroom -------------------------------------------------------------------------
     def office(self):
@@ -667,17 +567,11 @@ class Silo:
 
     def lights(self):
         """Light for the silo's rooms that had none: the bottom level's ring hall west of the bedroom (a hanging tube lamp
-        as the office's) and level A's near half, round the lift (Episode Two's tube lamps on the outer wall, as on the
-        far half). The bedroom's lamp is in bedroom()."""
+        as the office's). The bedroom's lamp is in bedroom(). (Level A's lamps went with its hall: halls_shut.)"""
         warm = "253 230 159"
         z = self.FLOOR
         self.prop("props_wasteland/prison_flourescentlight001a", -400, 200, z + 156, 63, "f")
         self.light(-400, 200, z + 116, warm, 60)
-        za = self.LEVEL_A
-        for ang in (120, 225):
-            r, a = self.WALL_A[ang], math.radians(ang)
-            self.prop("props_silo/wall_light", (r - 2) * math.cos(a), (r - 2) * math.sin(a), za + 120, ang + 180, "f")
-            self.light((r - 40) * math.cos(a), (r - 40) * math.sin(a), za + 130, warm, 90)
 
     def soundscapes(self):
         """The silo's sound (the owner, 22 November: "the soundscape in the silo is subtly clicking and cutting in and
@@ -689,12 +583,11 @@ class Silo:
         (SCAPE_SHAFT), from soundscapes that reach each floor; passing from one to another of them changes nothing. The
         leader's office and bedroom have a concrete room's tone (SCAPE_ROOM), heard once you are inside, and the way out
         the mine tunnel's (SCAPE_CAVE). Valve's four are left out (BunkerForest.silo)."""
-        G, B, A, F = self.GANTRY, self.LEVEL_B, self.LEVEL_A, self.FLOOR
-        for x, y, z, r, s in ((-420, 0, G + 72, 260, SCAPE_SHAFT),     # (260: short of the bunker corridor's own soundscape at the tunnel) (0, -200, G + 72, 640, SCAPE_SHAFT), (-380, 0, B + 72, 380, SCAPE_SHAFT),
-                              (380, 0, B + 72, 420, SCAPE_SHAFT), (-380, 0, A + 72, 380, SCAPE_SHAFT), (380, 0, A + 72, 420, SCAPE_SHAFT),
-                              (-480, 0, A - 120, 120, SCAPE_SHAFT), (-480, 0, A + 128, 120, SCAPE_SHAFT), (-360, 0, F + 72, 420, SCAPE_SHAFT),
-                              (0, -200, F + 72, 520, SCAPE_SHAFT),
-                              (200, 430, F + 64, 200, SCAPE_ROOM), (-200, 400, F + 64, 200, SCAPE_ROOM)):
+        G = self.GANTRY
+        # (none in levels A and B's halls, shut off and gone: halls_shut; the two in the lift's shaft stay for its riders.
+        #  The shaft's own at the top, 640 round, had been commented out by a note run on after the first: back.)
+        for x, y, z, r, s in ((-420, 0, G + 72, 260, SCAPE_SHAFT),     # (260: short of the bunker corridor's own soundscape at the tunnel)
+                              (0, -200, G + 72, 640, SCAPE_SHAFT)):      # (the top floor's only, since the silo was cut to it, 23 November)
             self.v.point("env_soundscape", self.P(x, y, z), {"soundscape": s, "radius": str(r), "StartDisabled": "0"}, self.f.vis("silo's wiring"))
 
 # ---------------------------------------------------------------------------------------------------------------------
