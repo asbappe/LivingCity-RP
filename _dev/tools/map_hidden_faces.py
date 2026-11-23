@@ -9,7 +9,9 @@ a fence, a grate, water or a tool brush you can see through), or if a displaceme
 and cave rock are walls to the eye, though not to the compiler). The open air players can reach or see into is flooded
 from the player starts. A face of the world or of func_detail with a drawn material is kept if the air just in front of
 it (2, 6 and 12 out, over the whole face) touches that flood anywhere; else nobody can see it and it becomes nodraw.
-Displaced faces, faces of moving or breakable brushes and tool faces are never touched.
+Sky faces are judged as the rest (since 23 November: the canal ring's sky boxes were 11,000 faces nobody sees; nodraw
+seals as the sky does). Displaced faces, faces of moving or breakable brushes and other tool faces are never touched.
+The flood goes in slabs, in place: the canal ring's test map (a grid of 3.6 billion cubes of 8) takes about 8 GB.
 
 Safe by design: anything the flood can slip into counts as seen (a wall thinner than a cube may let it through, which
 only keeps more faces). Only the material lines of the faces it names change; every other byte of the file stays.
@@ -47,8 +49,10 @@ def opaque(mats):
 
 
 def drawn(mat):
+    """A face the compiler draws: anything but a tool texture, and the sky (a sky face nobody sees costs a face all the
+    same; nodraw seals as it does)."""
     m = mat.lower()
-    return not m.startswith("tools/")
+    return not m.startswith("tools/") or m in ("tools/toolsskybox", "tools/toolsskybox2d")
 
 
 def planes_of(sides):
@@ -157,7 +161,8 @@ def main():
             ok = ((I >= 0) & (I < n)).all(axis=1)
             I = I[ok]
             solid[I[:, 0], I[:, 1], I[:, 2]] = True
-    air = ~solid
+    air = np.logical_not(solid, out=solid)      # (in place: the canal ring's grid is gigabytes)
+    del solid
     reached = np.zeros(n, dtype=bool)
     for sd in seeds:
         i = idx(sd)
@@ -167,15 +172,20 @@ def main():
         sys.exit("every player start is inside something solid")
 
     def fill(axis):
-        A = np.moveaxis(air, axis, -1).reshape(-1, n[axis])
-        R = np.moveaxis(reached, axis, -1).reshape(-1, n[axis])
-        start = A.copy()
-        start[:, 1:] &= ~A[:, :-1]
-        rid = np.cumsum(start, axis=None, dtype=np.int32).reshape(A.shape)
-        has = np.zeros(int(rid[-1, -1]) + 2, dtype=bool)
-        has[rid[R & A]] = True
-        out = A & has[rid]
-        return np.moveaxis(out.reshape(np.moveaxis(air, axis, -1).shape), -1, axis)
+        """Along one axis, every run of air holding a seen cube is seen; done in slabs, in place (the same answer as at
+        once, in a fraction of the memory: a slab's rows are independent)."""
+        Av, Rv = np.moveaxis(air, axis, -1), np.moveaxis(reached, axis, -1)
+        step = max(1, int(32e6 // max(1, Av[0].size)))
+        for k0 in range(0, Av.shape[0], step):
+            A = Av[k0:k0 + step].reshape(-1, n[axis])
+            R = Rv[k0:k0 + step].reshape(-1, n[axis])
+            start = A.copy()
+            start[:, 1:] &= ~A[:, :-1]
+            rid = np.cumsum(start, axis=None, dtype=np.int64).reshape(A.shape)
+            has = np.zeros(int(rid[-1, -1]) + 2, dtype=bool)
+            has[rid[R & A]] = True
+            Rv[k0:k0 + step] = (A & has[rid]).reshape(Rv[k0:k0 + step].shape)
+        return reached
 
     total, rounds = int(reached.sum()), 0
     while True:
@@ -204,6 +214,9 @@ def main():
     hidden = {}
     for sid, mat, poly, nrm in faces:
         P = np.array(poly)
+        if np.cross(P, np.roll(P, -1, axis=0)).sum(axis=0) @ nrm < 0:
+            P = P[::-1]      # (anticlockwise round its normal, for the test below: Hammer++'s corners run clockwise, and with
+                             #  them every point inside a face was dropped, so only its middle and corners were judged)
         c = P.mean(axis=0)
         e1 = P[1] - P[0]
         e1 = e1 / (np.linalg.norm(e1) or 1)

@@ -812,6 +812,26 @@ class Vmf:
 # A piece of map drawn on squares
 # ---------------------------------------------------------------------------
 
+def join_squares(cells):
+    """A set of squares as the biggest rectangles (x1, y1, x2, y2): fewest brushes. Each grows along x, then along y."""
+    left = set(cells)
+    out = []
+    for (i, j) in sorted(cells):
+        if (i, j) not in left:
+            continue
+        w = 1
+        while (i + w, j) in left:
+            w += 1
+        h = 1
+        while all((i + k, j + h) in left for k in range(w)):
+            h += 1
+        for a in range(w):
+            for b in range(h):
+                left.discard((i + a, j + b))
+        out.append((i * CELL, j * CELL, (i + w) * CELL, (j + h) * CELL))
+    return out
+
+
 class Plan:
     """Squares seen from above, in the piece's own coordinates (x east, y north, from its origin).
     A square is ("open", floor z, floor material) under the sky, ("low", floor z, floor material,
@@ -830,6 +850,7 @@ class Plan:
         self.walled = False
         self.cells = {}
         self.keep_out = [] # (x1, y1, x2, y2): what's already there or belongs to another piece, never built on
+        self.skies = {}    # (z1, z2, sides, top, bottom) -> squares: the sky over them, laid as the fewest boxes (sky_box, flush_sky)
 
     def paint(self, rect, spec):
         x1, y1, x2, y2 = rect
@@ -877,6 +898,21 @@ class Plan:
             out.append((i * CELL, j * CELL, (i + w) * CELL, (j + h) * CELL, spec))
         return out
 
+    def sky_box(self, x1, y1, z1, x2, y2, z2, sides, top=None, bottom=None):
+        """A box of sky over these squares (the piece's own coordinates). Kept until flush_sky, which joins every square
+        with the same box into the biggest rectangles: the same air closed by far fewer brushes (the owner's compile of the
+        ring, 23 November, ran out of faces; a sky box over every rectangle of floor was 2,300 brushes of it)."""
+        cells = self.skies.setdefault((z1, z2, sides, top, bottom), set())
+        for i in range(x1 // CELL, x2 // CELL):
+            for j in range(y1 // CELL, y2 // CELL):
+                cells.add((i, j))
+
+    def flush_sky(self, vmf):
+        for (z1, z2, sides, top, bottom), cells in sorted(self.skies.items(), key=lambda kv: (kv[0][0], kv[0][1], str(kv[0][2:]))):
+            for x1, y1, x2, y2 in join_squares(cells):
+                vmf.world_box(self.box(x1, y1, z1, x2, y2, z2), sides, top=top, bottom=bottom, vis=self.vis)
+        self.skies = {}
+
     def world(self, x, y, z):
         return (self.origin[0] + x, self.origin[1] + y, z)
 
@@ -914,11 +950,11 @@ class Plan:
             vmf.world_box(self.box(x1, y1, self.base, x2, y2, floor), self.floor_side, top=floor_mat, vis=self.vis)
             if spec[0] == "open":
                 lid = spec[3] if len(spec) > 3 and spec[3] else self.sky      # (a square with a sky of its own, higher: a church's yard)
-                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
+                self.sky_box(x1, y1, lid, x2, y2, max(self.top, lid + 16), MAT["sky"], MAT["sky"], MAT["sky"])
             elif spec[0] == "cellar":      # (a room under a floor that is open to the sky: a church's basement, a tunnel under a yard)
                 ceil, upper, upper_mat, lid = spec[3], spec[4], spec[5], spec[6]
                 vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
-                vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
+                self.sky_box(x1, y1, lid, x2, y2, max(self.top, lid + 16), MAT["sky"], MAT["sky"], MAT["sky"])
             else:
                 first = True
                 for a, b, mat in self.bands(spec[3]):
@@ -947,19 +983,9 @@ class Plan:
                     n = (c[0] + di, c[1] + dj)
                     if n in self.cells and self.lid_top(self.cells[n]) < top:
                         need[n] = max(need.get(n, 0), top)
-        rows = {}
         for (i, j), top in need.items():
-            rows.setdefault((j, top, self.lid_top(self.cells[(i, j)])), []).append(i)
-        for (j, top, low), cols in sorted(rows.items()):
-            cols.sort()
-            start = prev = cols[0]
-            for i in cols[1:] + [None]:
-                if i is not None and i == prev + 1:
-                    prev = i
-                    continue
-                vmf.world_box(self.box(start * CELL, j * CELL, low, (prev + 1) * CELL, (j + 1) * CELL, top), MAT["sky"], MAT["sky"], MAT["sky"], vis=self.vis)
-                if i is not None:
-                    start = prev = i
+            self.sky_box(i * CELL, j * CELL, self.lid_top(self.cells[(i, j)]), (i + 1) * CELL, (j + 1) * CELL, top, MAT["sky"], MAT["sky"], MAT["sky"])
+        self.flush_sky(vmf)      # (every sky box of the plan, joined: Plan.sky_box)
 
 
 def prism(profile, axis, a, b, mat, end_mat=None):
@@ -1215,6 +1241,9 @@ useless = []
 # The canal at the road's end
 # ---------------------------------------------------------------------------
 
+FENCE_POST = 512      # a post every 512 along the walls' tops, and one at each end (were every 256: 504 brushes round the ring)
+
+
 def fence(vmf, plan, high, vis, top=None):
     """Chain link along the top of every wall that looks onto a canal (the owner: "put fencing along the boundary at the
     top of the canal walls"): a sheet standing 2 out from the wall's face, from the concrete's top up, with a rail and
@@ -1252,7 +1281,10 @@ def fence(vmf, plan, high, vis, top=None):
                     lo, hi = (lo, hi - 1) if side > 0 else (lo + 1, hi)
                 bars.append(along(axis, start, b, lo, hi, at + high - 4 - dz, at + high - dz))
                 w = 3 if axis == "y" else 2
-                for p in range(start, b + 1, 256):
+                posts = list(range(start, b + 1, FENCE_POST))
+                if b - posts[-1] > 64:
+                    posts.append(b)       # (and one at the run's end)
+                for p in posts:
                     bars.append(along(axis, max(start, p - w), min(b, p + w), lo, hi, at + dz, at + high - 4 - dz))      # (and 1 higher at the foot)
             start = prev = a
     nd = MAT["nodraw"]
@@ -1703,6 +1735,10 @@ def main():
     with open(out, "w") as f:
         f.write(text)
     print("  written: " + out)
+    import os
+    import map_budget                   # (what it spends of the compiler's limits: the owner's compile of the ring ran out of faces, 23 November)
+    if os.path.isfile(out):
+        print("  " + map_budget.line(map_budget.count(out)))
     line, look = node_report(vmf, out[3:-4].replace("_test", "") if out.startswith("lc_") else out)
     if line:
         print("  " + line)
