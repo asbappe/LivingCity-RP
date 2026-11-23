@@ -56,6 +56,7 @@ FMAT = {
     "wf_foot": "concrete/concretewall_bunker05b",
     "wf_upper": "concrete/concretewall_bunker05a",
     "wf_floor": "concrete/concretefloor_bunker02a",
+    "leaf_frame": "metal/metalwall085a",          # ep2: the steel of Silo 2's door leaves (Valve's own brushes under them), the bunker door's frame
     "wf_ceiling": "concrete/concreteceiling_bunker01a",
     "wf_trim": "metal/metalwall061f",
     "silo_wall": "concrete/concretewall010a",
@@ -1801,6 +1802,7 @@ class BunkerForest(Forest):
     FLAT_SCALE = 0.654  # Silo 2's leaves drawn at this size: 136 along the wall each, 216 high, 19 thick
     FLAT_PROUD = 8      # open, each leaf's edge stands this far out from the jamb (the owner, 22 November: flush, "they are flickering with the walls")
     FLAT_IN = 16        # the doorway's wall brought in this far each side, so each shut leaf overlaps it 24 (the owner: "leaks between their outer edge and the walls")
+    FLAT_HALF_T = 10    # a leaf's drawn side to its blank back, at FLAT_SCALE (Valve's 14 and 15.1 either side of its middle): each leaf a pair, back to back
 
     def shove(self, name, parts, vis):
         """The shove at a door's close, where nothing kills (shove(), at the top of this file)."""
@@ -1834,11 +1836,18 @@ class BunkerForest(Forest):
         # edge and the walls ... so please just shorten the width of the opening a bit"): each leaf, 136 along the wall with
         # its outer edge where it was (8 past the doorway's squares), now overlaps the wall 24 when shut; the jambs world, laid
         # as the walls round them (the forest's side plain, the room's side banded from its floor, the reveal banded too)
+        # Each jamb in three bands across the wall: the forest's side, the slot the leaves slide into, the room's side. The
+        # slot's face black from floor to lintel (the owner, 23 November: "where they go into the wall ... a black brush so it
+        # looks like they go into a dark space in the wall rather than just slipping into and through concrete"); world, so
+        # the doorway's areaportal still meets world at its sides.
+        s1, s2 = 32 - self.FLAT_HALF_T - 1, 32 + self.FLAT_HALF_T + 1        # (the slot: 11 to 53 across the 64 of wall)
         for a, b, reveal in ((d1, u1, "east"), (u2, d2, "west")):
             for z1, z2 in ((zp, zp + WF_BAND), (zp + WF_BAND, top)):
-                wf_box(v, B(a, 0, z1, b, 64, z2), {"south": wf_face("south", zp - 1024, z1, z2), "north": wf_face("north", zp, z1, z2),
-                                                    reveal: wf_face(reveal, zp, z1, z2)}, self.vis("structures"))
+                wf_box(v, B(a, 0, z1, b, s1, z2), {"south": wf_face("south", zp - 1024, z1, z2), reveal: wf_face(reveal, zp, z1, z2)}, self.vis("structures"))
+                wf_box(v, B(a, s2, z1, b, 64, z2), {"north": wf_face("north", zp, z1, z2), reveal: wf_face(reveal, zp, z1, z2)}, self.vis("structures"))
+            v.world_box(B(a, s1, zp, b, s2, top), MAT["black"], MAT["black"], MAT["black"], vis=self.vis("structures"))
         lit = MS.lit_from(v, "lc_bunker_door_lighting", W(mid, 96, zp + 108), dv)     # (inside, in front of the doorway, at the leaves' middle height)
+        lit_out = MS.lit_from(v, "lc_bunker_door_lighting_out", W(mid, -32, zp + 108), dv)     # (the same outside, for the outer leaves)
         model = [p for p in pf["points"] if p["keys"].get("model", "").endswith("missile_doors.mdl")][0]["keys"]
         e0, e1 = W(0, 0, 0), W(1, 0, 0)
         east = int(round(math.degrees(math.atan2(e1[1] - e0[1], e1[0] - e0[0])))) % 360       # (the bunker's +u in the map)
@@ -1847,13 +1856,20 @@ class BunkerForest(Forest):
             yaw = (east + (0 if way > 0 else 180)) % 360        # (the model's own +x away from the middle: its meeting edge is its -x, as in Valve's)
             v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % yaw, "speed": str(self.FLAT_SPEED), "lip": str(lip), "wait": "-1", "spawnflags": "0",
                                            "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
-                           [B(a, 24, zp, b, 40, top)], MAT["nodraw"], dv)
+                           [B(a, 32 - self.FLAT_HALF_T - 2, zp, b, 32 + self.FLAT_HALF_T + 2, top)], MAT["nodraw"], dv)     # (as thick as the pair of leaves)
             keys = {k: model[k] for k in ("model", "skin", "MinAnimTime", "MaxAnimTime", "RandomAnimation", "SetBodyGroup", "PerformanceMode", "pressuredelay",
                                           "ExplodeDamage", "ExplodeRadius") if k in model}
             keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1", "lightingorigin": lit,
                          "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "modelscale": str(sc), "StartDisabled": "0", "renderamt": "255",
                          "rendercolor": "255 255 255"})
-            v.point("prop_dynamic", W((a + b) // 2 if way > 0 else (a + b) // 2, 32, zp + int(round(164.8 * sc))), keys, dv)
+            # Valve's leaf is drawn on one side only (the side seen from inside Silo 2): its other side shows as nodraw (the
+            # owner, 23 November: "the blast doors at the bunker entrance are "nodraw" on the outside ... can we get the prop
+            # mirrored so it's double thick and the nodraw surfaces are facing each other in the middle"). So each leaf is a
+            # pair, back to back on the doorway's middle (32): this one inside, its drawn side to the bunker, and its mirror
+            # (turned half round its length) outside, its drawn side to the forest, lit from outside.
+            v.point("prop_dynamic", W((a + b) // 2, 32 + self.FLAT_HALF_T, zp + int(round(164.8 * sc))), keys, dv)
+            back = dict(keys, targetname="lc_bunker_outer_leaf_" + tag, angles="0 %d %d" % (yaw, roll + 180), lightingorigin=lit_out)
+            v.point("prop_dynamic", W((a + b) // 2, 32 - self.FLAT_HALF_T, zp + int(round(164.8 * sc))), back, dv)
         v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
         # an areaportal across the doorway, in the leaves' plane, shut with them, so the bunker is not drawn from outside
         # nor the forest from inside (a shut door is only drawn from both sides if it is on both sides of its areaportal)
@@ -1863,10 +1879,21 @@ class BunkerForest(Forest):
         # a floor plate 1 thick over the doorway's whole floor, across the areaportal's plane (a detail face belongs to every
         # leaf it touches, so it is drawn from both sides of the shut portal: with it, no gap shows at the leaves' foot)
         v.detail([B(u1, 0, zp, u2, 64, zp + 1)], FMAT["wf_floor"], vis=self.vis("structures"))
-        v.keep_way_clear(B(u1, -48, zp + 4, u2, 20, zp + 110), "the bunker's doorway (outside the leaves)")     # (the leaves' own plane is theirs)
-        v.keep_way_clear(B(u1, 44, zp + 4, u2, 112, zp + 110), "the bunker's doorway (inside the leaves)")
-        # the shove at the close: outside the leaves pushing out, inside pushing in (harder)
-        self.shove("lc_bunker_shove", [(B(u1, 0, zp, u2, 32, zp + 160), (east + 270) % 360, 200), (B(u1, 32, zp, u2, 64, zp + 160), (east + 90) % 360, 300)], dv)
+        # the leaves' steel frame (the owner, 23 November: "build a frame/rails to go around the edges of the bunker doors?
+        # They are supposed to be on a rail/frame"): a post up each jamb either side of its slot, standing 4 into the
+        # doorway; a channel across the top and one along the floor (lips 7 wide either side of the leaves, 8 deep at the top,
+        # 3 high on the floor, stepped over), each with a black strip between its lips where the leaves run
+        fr = FMAT["leaf_frame"]
+        for c1, c2 in ((s1 - 7, s1), (s2, s2 + 7)):
+            v.detail([B(u1, c1, zp + 1, u1 + 4, c2, top), B(u2 - 4, c1, zp + 1, u2, c2, top),      # (the posts)
+                      B(u1 + 4, c1, top - 8, u2 - 4, c2, top), B(u1 + 4, c1, zp + 1, u2 - 4, c2, zp + 4)], fr, vis=dv)   # (the lips between them: never flush with a post)
+        v.detail([B(u1, s1, top - 1, u2, s2, top), B(u1, s1, zp + 1, u2, s2, zp + 2)], MAT["black"], vis=dv)
+        ht = self.FLAT_HALF_T
+        v.keep_way_clear(B(u1, -48, zp + 4, u2, 32 - ht - 4, zp + 110), "the bunker's doorway (outside the leaves)")     # (the leaves' own plane is theirs)
+        v.keep_way_clear(B(u1, 32 + ht + 4, zp + 4, u2, 112, zp + 110), "the bunker's doorway (inside the leaves)")
+        # the shove at the close: outside the leaves pushing out, inside pushing in (harder); each reaching 8 past the doorway,
+        # as the pair of leaves is twice as thick as one
+        self.shove("lc_bunker_shove", [(B(u1, -8, zp, u2, 32, zp + 160), (east + 270) % 360, 200), (B(u1, 32, zp, u2, 72, zp + 160), (east + 90) % 360, 300)], dv)
 
         def sound(name, message, at, loops=False):
             # (spawnflags: 16 starts silent, 32 says "not looped". A sound that loops must NOT have 32: with it the entity
@@ -2251,7 +2278,8 @@ class BunkerForest(Forest):
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_FOOT], q, d)), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_TOP], q, d)), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
-        # the playable silo (map_silo.py): the pit covered, level B's doors, the ring halls dressed, the leader's office
+        # the playable silo (map_silo.py): the pit covered, level B's doors, the ring halls dressed, the shuttered windows
+        # from level B's quarters onto the rocket, the leader's office
         # (with Valve's lever wall moved inside) and bedroom, the bottom level's fence gate, light where rooms had none,
         # the silo's soundscapes, and the leader's way out
         ms = MS.Silo(self, d)
@@ -2259,6 +2287,7 @@ class BunkerForest(Forest):
         ms.ring_rail()
         ms.level_b_doors()
         ms.ring_dress()
+        ms.shaft_windows(pf)
         ms.office()
         ms.lever_box(pf)
         ms.bedroom()

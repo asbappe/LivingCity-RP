@@ -43,7 +43,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - The owner's map (c18_lc.vmf) and Valve's VMF zip are on their Drive: curl from drive.usercontent.google.com.
 - Also 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
-- Map chat: bunker and silo fixed to the owner's list (TODO.md); no prop in a way players walk, every build (CLAUDE.md);
-  the cave's back rebuilt from Valve's maps: Ravenholm's big room (for the office), the emergency door, EP2's holdout
-  and lift, ep2_outland_03's antlion tunnels, the extract. Latest: silo pit rail, grates, call button (untested in game);
-  stair check reads displaced rock, skips Valve's broken flights (vmf.stairs_as_valve). docs/dev/map-building.md.
+- Map chat: bunker, silo and the cave's back (Valve's rooms) to the owner's lists (TODO.md, map-building.md). 23 Nov:
+  entrance leaves doubled in a steel frame, 3 windows on silo level B. The owner edits the bunker VMF in Hammer:
+  apply each generator change to THEIR latest file (diff two builds, swap only what changed), never resend ours.
