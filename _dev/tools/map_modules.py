@@ -2083,6 +2083,8 @@ def read_layout(path):
             lay.setdefault("roads", []).append(tuple(int(w) for w in words[1:6]) + (tuple(ids),))
         elif words[0] == "backdrop":
             lay.setdefault("backdrop", []).append(words[1:])      # (the scenery beyond the outer wall: map_backdrop.py)
+        elif words[0] == "round":
+            lay["round"] = words[1].lower()       # ("round east": the road round the first canal's east side, map_corridor.ROUND)
         elif words[0] == "close":
             lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
@@ -2230,7 +2232,11 @@ def build_chain(lay, args):
             b.labels.append(fr.pt(length // 2, 0) + (tag,))
         x, y = Frame(x, y, rot, length).pt(length, shift)
     if upper:
+        if lay.get("round") == "east":
+            map_corridor.round_gaps(b)       # (where the bridge round the first canal lands on the street: no parapet there)
         map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
+        if lay.get("round") == "east":
+            map_corridor.round_east(b)       # (the road round the first canal's east side: the ring's share)
         for road in lay.get("roads", []):
             map_corridor.spur(b, *road)
         if b.street_wall == "combine":
@@ -2406,19 +2412,20 @@ def dish_plan(b, ch, flat, bump=None, floor=DISH_FLOOR):
         b.notes.append("the canal's floor is dished on %d squares: %d deep at most" % (len(low), max(sag.values()) if sag else 0))
 
 
-def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=(), rim=784):
+def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=(), rim=784, view=None):
     """The canal modules' dressing for a piece built by itself, outside a chain (the ring, the first canal; the owner,
     21 November: "yes please"): what stands on its floor first, then the banks, lip, ribs and Valve's outfalls (pipes:
     [(axis, where along, wall, wall), ...] across it), the dished floor (its concrete lowered only to F - 48: these
     pieces' bottoms are at F - 64), the plan built, the caged lamps and the outfalls' rings, the mud, and loose things
     and floor stains brought down onto it. Coordinates are the map's (the plan's origin 0 0). Gives the Channel (for
-    its path nodes) and the stand-in for a module chain's Build that the dressing was given."""
+    its path nodes) and the stand-in for a module chain's Build that the dressing was given. view: the plan as the
+    dressing should see it, if not as it is (a road beside the canal is wall to it: map_corridor.View)."""
     import types
     b = types.SimpleNamespace(vmf=vmf, name=name, vis=vis, taken=taken, no_mud=list(mud_skip), lifted=set(), notes=[], plan=plan,
                               rim=rim, props=[], upright=[], no_bank=list(no_bank))
     standing = standing_things(b)
     plan.walls()
-    ch = Channel(vmf, plan, F, TRIM, vis)
+    ch = Channel(vmf, view or plan, F, TRIM, vis)
     for axis, at, a, z in pipes:
         ch.pipes(axis, at, a, z, taken)
     ch.dress(list(no_bank), taken, outfalls=True, avoid=standing["props"])
