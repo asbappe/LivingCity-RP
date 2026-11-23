@@ -3869,3 +3869,12 @@ A door leaf that slides into a wall runs in a steel frame round the doorway (a p
 - **Checked by:** map_build's flush LOOK for the frame's pieces.
 - **Tags:** owner, doors, geometry
 
+### A face nobody can ever see is nodraw (`owner-hidden-faces-nodraw`)
+
+Every brush face that faces the void, a sealed pocket nobody can reach or see into, or another brush pressed against it is nodraw, not a texture: Valve's lifted pieces bring many (their outsides, where their rock was), and so do faces buried against each other. Run map_hidden_faces.py on a finished map (or the owner's own file) and send the result; never nodraw a face by guess.
+
+- **Why:** The owner, 23 November: "I can see in hammer++ there are TONS of surfaces that need nodraw, surfaces/walls that are exposed to the void, facing other surfaces with no chance of ever being visible".
+- **How:** _dev/tools/map_hidden_faces.py IN OUT: flood from the player starts through air (opaque world/func_detail and displacement skins shut it), nodraw each drawn face whose front never meets it; LOST lines name lights or things in air it never saw.
+- **Checked by:** map_hidden_faces.py prints how many faces it would change; 0 on a clean map.
+- **Tags:** owner, geometry, lighting
+
