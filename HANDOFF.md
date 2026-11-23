@@ -31,9 +31,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 23 November (this chat): **EP2's Combine autogun lifted** as `valve_ep2_cannon` (ep2_outland_09): the turret bay,
-  three guns and their finders, the generator's grenade intake, the blow-up and the blown wall; not placed yet
-  (docs/dev/prefabs.md, "the Combine autogun"; TODO.md). Fixed map_prefab: props placed with logic lost their model.
+- 23 November (this chat): **EP2's Combine autogun lifted and built out** as `valve_ep2_cannon` (ep2_outland_09):
+  bay, guns, finders (every player), generator intake, blow-up, clips, areaportals, nodes, safe zone, demonstration
+  fire. Test map: map_cannon_test.py (lc_cannon_test.vmf), not compiled yet; real-map spot waits on the owner.
 - 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
   beside the next victim). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
 - 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt), fitted to c18_lc.vmf: road and railway

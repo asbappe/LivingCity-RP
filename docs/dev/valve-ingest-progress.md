@@ -126,7 +126,9 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
 - **The Combine autogun (the owner, 23 November: "pull out the entire combine autocannon entity/logic/effects/AI/etc,
   including the brushes, destruction open, etc."):** lifted as `valve_ep2_cannon` (**done 23 November**: ep2_outland_09,
   the turret bay with its three guns, finders, generator, grenade intake, blow-up and blown wall; `docs/dev/prefabs.md`,
-  "Pieces with their wiring (the Combine autogun)").
+  "Pieces with their wiring (the Combine autogun)"). **Built out the same day** ("can we build all of these out now?"):
+  every player its target, clips, areaportals, its own path nodes and link, a safe zone, demonstration fire, and a test
+  map, `map_cannon_test.py`.
 
 - **The silo made playable (the owner, 21 November):** every floor usable (Valve's silo hides whole floors behind
   nodraw: only its top and bottom were meant to be walked), the lift serving them all, and a Resistance Leader's office
