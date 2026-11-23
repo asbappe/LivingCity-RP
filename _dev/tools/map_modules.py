@@ -2503,7 +2503,7 @@ def dress_canal_walls(b, ch, avoid=()):
         c = (p // CELL, line // CELL - (1 if side > 0 else 0)) if axis == "x" else (line // CELL - (1 if side > 0 else 0), p // CELL)
         spec = ch.cells.get(c)
         return spec[1] if spec and spec[0] == "solid" and len(spec) > 1 else b.rim
-    for (axis, line, side, a, b2) in ([] if b.upper else made.get("walls", [])):      # (beside a street no caged lamps: they hung on the far wall nobody reaches, lighting nothing, the owner, 23 November; the street's lamps and the Combine wall's light the canal)
+    for (axis, line, side, a, b2) in ([] if getattr(b, "upper", None) else made.get("walls", [])):      # (beside a street no caged lamps: they hung on the far wall nobody reaches, lighting nothing, the owner, 23 November; the street's lamps and the Combine wall's light the canal)
         off = 0 if side > 0 else LAMP_STEP // 2
         p = a + 160 + (off - (a + 160)) % LAMP_STEP
         while p <= b2 - 160:
