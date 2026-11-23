@@ -11,7 +11,8 @@
 # part; the owner's west road meets the street by a road climbing to it ("road": it replaces their brushes 14734 and
 # 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there.
 # Between the city and the street stands a Combine wall ("wall combine"; the owner, 23 November: "City > combine wall >
-# road > railroad > canal > wall/scenery"), made by map_combine's recipe along the street's whole far side.
+# road > railroad > canal > wall/scenery"), made by map_combine's recipe along the street's whole far side, as the
+# Propper++ kit's models (map_propkit.py, _dev/propkit/; "wall combine brushes" would build it as brushes).
 # The trains (the owner, 23 November: they "come from out of view ... through a tunnel or something with a black void
 # that the player can't pass through and cross over top the canal via a bridge"): "left back" on a turn carries the
 # track of the run after it straight back past the corner, through the square where the two streets cross, over a
@@ -33,7 +34,8 @@ road -4480 1920 -2624 2560 840 replaces 14734 15630
 # Beyond the canal's outer wall (map_backdrop.py; the owner, 23 November: "the ruins and rooftops makes sense for
 # most areas; however around the forest bunker and forest cave areas, it should transition from the ruins and
 # rooftops to the mountainous pine forest look from EP2, then blend back to ruins and rooftops elsewhere"): the old
-# city's ruins, Episode Two's pine forest in the rectangles below (blending over 1024 at their edges), and nothing in
+# city's ruins (the Propper++ kit's models; a line "backdrop brushes" would build them as brushes), Episode Two's pine
+# forest in the rectangles below (blending over 1024 at their edges), and nothing in
 # the places kept for the other pieces (the town, the cave forest, the forest bunker, the first canal).
 backdrop ruins
 backdrop forest 6400 -768 9024 10752

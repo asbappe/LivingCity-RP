@@ -2118,6 +2118,7 @@ def read_layout(path):
             lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
         elif words[0] == "wall":
             lay["wall"] = words[1].lower()        # ("wall combine": a Combine wall between the city and the street)
+            lay["wall_brushes"] = "brushes" in [w.lower() for w in words[2:]]     # ("wall combine brushes": as brushes, not the kit's models)
         elif words[0] == "cars":
             lay["cars"] = int(words[1])           # (how many cars the trains pull behind the engine)
         elif words[0] == "road":                  # ("road X1 Y1 X2 Y2 Z [replaces ID ...]": a road from the street to one of the owner's)
@@ -2169,6 +2170,7 @@ def group_sheds(elems):
 def build_chain(lay, args):
     upper = lay.get("upper")
     b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper, lay.get("wall"))
+    b.wall_brushes = lay.get("wall_brushes", False)      # (map_corridor.combine_wall: the kit's models unless the layout says brushes)
     b.test = bool(args.test)
     elems, shed_n = [], 0
     if upper:

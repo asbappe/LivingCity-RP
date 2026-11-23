@@ -13,7 +13,9 @@ github.com/Pinsplash/ValveQCs (the decompiled build file of every model) and git
 small build file for each model it has not met before; what it learns is kept in asset_facts.json beside this
 file, so later runs need no network for models already known.
 
-Sounds are NOT checked (there is no list of them).
+Sounds are NOT checked (there is no list of them). Our own models (models/lc/kit/..., the Propper++ kit that
+map_propkit.py writes into _dev/propkit/) are not Valve's: they exist only once the owner has compiled them in
+Hammer++, so they are named as ours, with their sizes from the kit's kit.json, and only one the kit does not have fails.
 """
 
 import argparse
@@ -30,6 +32,26 @@ GAMES = ("hl2", "episodic", "lostcoast", "ep2", "hl2mp")     # what Garry's Mod 
 # to find material on disk", 22 November): the lists say hl2, the game does not. Add to it from any compile log.
 NOT_IN_GMOD = {"nature/blendsandmud001a", "nature/blendrubbleash001a"}
 REPOS = {"ValveQCs": "https://github.com/Pinsplash/ValveQCs", "ValveVMTs": "https://github.com/Pinsplash/ValveVMTs"}
+KIT = os.path.normpath(os.path.join(HERE, "..", "propkit"))      # (our own models: map_propkit.py's Propper++ kit)
+KIT_MODELS = "models/lc/kit/"
+_kit = None
+
+
+def kit_piece(model):
+    """One of our own models (the Propper++ kit): its entry in the kit's kit.json ({} if the kit has no such piece), or
+    None for any other model."""
+    global _kit
+    model = model.lower().replace("\\", "/")
+    if not model.startswith(KIT_MODELS):
+        return None
+    if _kit is None:
+        try:
+            with open(os.path.join(KIT, "kit.json")) as f:
+                _kit = json.load(f)["pieces"]
+        except (OSError, ValueError, KeyError):
+            _kit = {}
+    name = model[len(KIT_MODELS):]
+    return _kit.get(name[:-4] if name.endswith(".mdl") else name) or {}
 
 
 def lists(folder, offline):
@@ -130,6 +152,9 @@ def size(model):
     Read from asset_facts.json; a model not met before is looked up if the lists are here (the folder "dl")."""
     global _known, _lists
     model = model.lower().replace("\\", "/")
+    piece = kit_piece(model)
+    if piece is not None:      # (ours: its box from the kit, x along the piece, y to its back, z up from its foot)
+        return piece.get("box")
     if _known is None:
         _known = json.load(open(FACTS)) if os.path.exists(FACTS) else {}
     fact = _known.get(model)
@@ -144,6 +169,8 @@ def size(model):
 
 def is_static(model):
     """Was this model built to be a prop_static? True, False, or None if it is not known."""
+    if kit_piece(model) is not None:
+        return True      # (the kit's models are made for prop_static, with no collision)
     size(model)
     fact = (_known or {}).get(model.lower().replace("\\", "/")) or {}
     if fact.get("v") != 2 and fact.get("physics"):
@@ -154,6 +181,8 @@ def is_static(model):
 def is_physics_prop(model):
     """Does this model carry prop_data (a physics prop)? Standing still it must be a prop_dynamic_override, never a
     prop_static (the compiler deletes it) and never a plain prop_dynamic (the game removes or warns of it)."""
+    if kit_piece(model) is not None:
+        return False
     size(model)
     fact = (_known or {}).get(model.lower().replace("\\", "/")) or {}
     return bool(fact.get("prop_data", fact.get("physics")))
@@ -174,9 +203,17 @@ def main():
         for k, v in ms.items():
             models.setdefault(k, set()).update(v)
         materials |= mats
-    problems, notes = [], []
+    problems, notes, ours = [], [], []
     for model in sorted(models):
         classes = models[model]
+        piece = kit_piece(model)
+        if piece is not None:
+            name = model[len(KIT_MODELS):-4]
+            if not piece or not os.path.exists(os.path.join(KIT, name + ".vmf")):
+                problems.append("%s is not in the Propper++ kit (_dev/propkit/: run map_propkit.py)" % model)
+            else:
+                ours.append(name)
+            continue
         if got:
             fact = facts_of(model, got["ValveQCs"], known, args.offline)
         else:
@@ -215,6 +252,11 @@ def main():
     else:
         notes.append("materials not checked (no lists here)")
     save(known)
+    if ours:      # (said even with --quiet: the map shows error models until these are compiled)
+        notes.append("%d of the models are ours, the Propper++ kit (_dev/propkit/: %s): they exist only once the owner has compiled "
+                     "them in Hammer++ (models/lc/kit/), until then the game shows an error model there" % (len(ours), ", ".join(ours)))
+        if args.quiet:
+            print("  note: " + notes[-1])
     if not args.quiet:
         print("%d models, %d materials in %d file(s)" % (len(models), len(materials), len(args.vmf)))
         for n in notes:
