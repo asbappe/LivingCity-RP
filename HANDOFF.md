@@ -31,19 +31,19 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 23 November (later): **stimulant** now holds off exhaustion and grogginess (not only lights out). **The
-  Administrator's stand-ins** (address, studio, collapse, questioning) are `citizentype` 4, else ERROR. **Her address:**
-  F1 > What now? > Show me the way marks it; out cold, carried in the black; no crowding warnings in the crowd.
-  **The station screen** is Valve's six layers of dev/dev_combinemonitor_3 (lc_screen.lua); **vending cans** roll out.
+- 23 November (late): **units fight again** (a leftover `os.getenv` in LC.ChaseWay crashed every chase since 21 Nov;
+  run_tests.py now fails on Lua Garry's Mod lacks). **Overwatch answers raids** (LC.RaidOverwatch: soldiers within 1500
+  join, a squad of 4 at 25 s). **Flying dreams** no longer pinned under a short zone's top (LC.DreamTop: 400+ only); plane
+  yaw 90 (snapshot update awaits the owner's OK). **Sleepers' copy** works without SetupBones; bed points fit the mattress.
+  **Eyelids** yield to dreams/endings/menus. Registration one line; arrival search waits for hands up; R no fists;
+  Housing bed tally; character camera fits the model; rain samples cover (LC_CL.RainCover). PLAYTEST_ARCHIVE is at 95.
+- 23 November (earlier): stimulant holds off exhaustion; Administrator stand-ins `citizentype` 4; address F1 way and
+  carried in the black; station screen in Valve's monitor material; vending cans roll.
 - 23 November (this chat): **EP2's Combine autogun lifted and built out** (`valve_ep2_cannon`; test map
   map_cannon_test.py, not compiled yet). **Nova Prospekt's vortigaunt torture cell** lifted (`valve_prison_vort_torture`).
   **map_setpieces.py** ranks set pieces in all 105 shipped maps; picks for the owner: docs/dev/valve-setpieces.md.
-- 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
-  beside the next victim). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
 - 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt, fitted to c18_lc.vmf; test map
   map_ring_walk.py, not compiled yet): city, Combine wall, road, railway, canal, ruins, EP2 pine forest (map_backdrop.py).
-- The owner's map (c18_lc.vmf) and Valve's VMF zip (HL2Leak-VMFs-master.zip) are on their Drive: the Drive connector
-  finds them by name; curl from drive.usercontent.google.com with the file's id.
-- Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
+- c18_lc.vmf and HL2Leak-VMFs-master.zip are on the owner's Drive (connector finds them; curl drive.usercontent by id).
 - Map chat: bunker, silo and the cave's back to the owner's lists (TODO.md, map-building.md). The owner edits the
   bunker VMF in Hammer: apply each generator change to THEIR latest file (diff two builds), never resend ours.
