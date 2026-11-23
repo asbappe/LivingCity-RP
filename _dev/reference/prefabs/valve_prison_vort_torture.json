@@ -16170,5 +16170,12 @@
 ]
 ]
 }
+],
+"trigger": [
+{
+"name": "plug_pull",
+"input": "Trigger",
+"what": "pull the plug"
+}
 ]
 }
