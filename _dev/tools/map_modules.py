@@ -2298,6 +2298,8 @@ def finish(b, seed, spawn, args):
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)
     link_gates(b)
+    from map_build import drop_useless_portals
+    b.notes += drop_useless_portals(vmf, list(b.stoppers))      # (an areaportal the street or the backdrop left parting nothing: vbsp refuses one)
     problems, air = check(vmf, seed, list(b.stoppers))      # (a way meant to open onto the owner's map, as roadend's road: stopped up for the check)
     problems = b.problems + problems
     look_at_props(b)

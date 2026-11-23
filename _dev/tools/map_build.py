@@ -1125,7 +1125,90 @@ def check(vmf, seed, stoppers):
                         bad.append("open past its %s edge" % ("xyz"[a] + ("-" if d < 0 else "+")))
             if bad:
                 problems.append("the areaportal at (%d %d %d) would not work: %s" % (mid[0], mid[1], mid[2], ", ".join(bad)))
+        problems += portal_areas(vmf, stoppers)
     return problems, len(seen)
+
+
+def portal_areas(vmf, stoppers):
+    """Every areaportal must part two places: with all of them shut, the air on its two faces must not meet some other
+    way (the owner's compile, 23 November: vbsp stopped on "areaportal brush doesn't touch two areas" when the street
+    opened the far side of the arcade's shop doorway). One labelling of the air, shared by all the portals."""
+    ports = list(vmf.portals)
+    if not ports:
+        return []
+    solid = [b for b, seals in vmf.boxes if seals] + list(stoppers) + ports
+    axes = []
+    for a in range(3):
+        cuts = sorted(set([b[a] for b in solid] + [b[a + 3] for b in solid]))
+        axes.append([cuts[0] - 64] + cuts + [cuts[-1] + 64])
+    n = [len(ax) - 1 for ax in axes]
+    full = set()
+    for b in solid:
+        r = [(bisect.bisect_left(axes[a], b[a]), bisect.bisect_left(axes[a], b[a + 3])) for a in range(3)]
+        for i in range(*r[0]):
+            for j in range(*r[1]):
+                for k in range(*r[2]):
+                    full.add((i, j, k))
+    label, problems = {}, []
+
+    def fill(start, lab):
+        label[start] = lab
+        todo = [start]
+        while todo:
+            c = todo.pop()
+            for a in range(3):
+                for d in (-1, 1):
+                    m = list(c)
+                    m[a] += d
+                    if not 0 <= m[a] < n[a]:
+                        continue
+                    m = tuple(m)
+                    if m not in label and m not in full:
+                        label[m] = lab
+                        todo.append(m)
+    for box in ports:
+        size = [box[a + 3] - box[a] for a in range(3)]
+        thin = size.index(min(size))
+        mid = [(box[a] + box[a + 3]) / 2.0 for a in range(3)]
+        sides = []
+        for d in (-6, 6):
+            pt = list(mid)
+            pt[thin] = (box[thin] if d < 0 else box[thin + 3]) + d
+            c = tuple(bisect.bisect_right(axes[a], pt[a]) - 1 for a in range(3))
+            sides.append(None if c in full else c)
+        if None in sides:
+            continue          # (the edge check above says so)
+        for c in sides:
+            if c not in label:
+                fill(c, len(problems) * 0 + len(label) + 1)
+        if label[sides[0]] == label[sides[1]]:
+            problems.append("the areaportal at (%d %d %d) parts nothing: with every areaportal shut, the air on its two faces still meets another way (vbsp stops: 'areaportal brush doesn't touch two areas')" % tuple(mid))
+            useless.append(box)
+    return problems
+
+
+def drop_useless_portals(vmf, stoppers):
+    """Take out every areaportal that parts nothing (portal_areas): it only ever saved drawing, and vbsp will not compile
+    one. Returns notes saying which went. Run before the checks (a chain's finish does)."""
+    notes = []
+    for _ in range(4):                     # (taking one out can leave another parting nothing)
+        useless.clear()
+        portal_areas(vmf, stoppers)
+        if not useless:
+            break
+        for box in list(useless):
+            for k, (pi, pb) in enumerate(vmf.portal_ents):
+                if pb == box:
+                    vmf.ents[pi] = ""
+                    vmf.portal_ents.pop(k)
+                    break
+            if box in vmf.portals:
+                vmf.portals.remove(box)
+            notes.append("an areaportal at (%d %d %d) taken out: it parted nothing (the street or the backdrop opened a way round it)" % tuple((box[a] + box[a + 3]) // 2 for a in range(3)))
+    return notes
+
+
+useless = []
 
 
 # ---------------------------------------------------------------------------

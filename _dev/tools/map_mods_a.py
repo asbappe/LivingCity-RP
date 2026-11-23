@@ -626,33 +626,40 @@ def m_quay(m, opt):
     edge = [(320, 448), (512, 672), (704, 832), (896, 960)]
     m.det([(a, 256, TRIM, c, 268, TRIM + 40) for a, c in edge], MAT["canal_wall"])
     m.det([(a - (0 if a == 320 else 2), 254, TRIM + 40, c + (0 if c == 960 else 2), 270, TRIM + 44) for a, c in edge], MAT["beam"])
-    # the street doorway's frame, standing proud of the back wall
-    m.det([(556, 496, TRIM, 576, 512, TRIM + 128), (704, 496, TRIM, 724, 512, TRIM + 128), (548, 492, TRIM + 127, 732, 512, TRIM + 152)], MAT["beam"])
+    # the street doorway's frame, standing proud of the back wall (none beside the chain's street: the quay is the
+    # street's own edge there, the railway runs over its back half, and its things stand on the far pavement)
+    if not on_street:
+        m.det([(556, 496, TRIM, 576, 512, TRIM + 128), (704, 496, TRIM, 724, 512, TRIM + 128), (548, 492, TRIM + 127, 732, 512, TRIM + 152)], MAT["beam"])
+    import map_corridor
+    far = map_corridor.front_line(b) - 120 if on_street else 0      # (the pavement before the street's far frontage)
     # two of the city's street lamps, their arms over the quay (the arm reaches along the model's left)
     for u in (392, 816):
         m.static(P + "props_c17/lamppost03a_on.mdl", u, 286, 0, TRIM)
         m.light(u, 386, TRIM + 400, "255 214 170 300")
         m.blocked(u - 24, 262, u + 24, 310)
     # posts before the street doorway, cleats for mooring on the edge
-    for u in (560, 640, 720):
-        m.static(P + "props_trainstation/trainstation_post001.mdl", u, 440, 0, TRIM)
+    if not on_street:
+        for u in (560, 640, 720):
+            m.static(P + "props_trainstation/trainstation_post001.mdl", u, 440, 0, TRIM)
     for u in (548, 760):
         m.static(P + "props_docks/dock01_cleat01a.mdl", u, 290, 0, TRIM)
-    put(m, P + "props_junk/trashdumpster02.mdl", 424, 440, 0, z=TRIM)
-    put(m, P + "props_trainstation/benchoutdoor01a.mdl", 800, 494, 270, z=TRIM)
-    put(m, P + "props_trainstation/payphone001a.mdl", 752, 500, 270, z=TRIM)
+    put(m, P + "props_junk/trashdumpster02.mdl", 424, far or 440, 0, z=TRIM + (8 if far else 0))
+    put(m, P + "props_trainstation/benchoutdoor01a.mdl", 800, (far + 6) if far else 494, 270, z=TRIM + (8 if far else 0))
+    put(m, P + "props_trainstation/payphone001a.mdl", 752, (far + 12) if far else 500, 270, z=TRIM + (8 if far else 0))
     put(m, P + "props_c17/oildrum001.mdl", 936, 300, 0, z=TRIM)
-    put(m, P + "props_c17/oildrum001.mdl", 936, 332, 0, z=TRIM)
-    m.loose(P + "props_junk/wood_crate001a.mdl", 928, 380, 20, z=TRIM)
+    if not far:
+        put(m, P + "props_c17/oildrum001.mdl", 936, 332, 0, z=TRIM)
+        m.loose(P + "props_junk/wood_crate001a.mdl", 928, 380, 20, z=TRIM)
     m.loose(P + "props_junk/wood_crate002a.mdl", 600, 300, 90, z=TRIM)
     m.loose(P + "props_junk/wood_pallet001a.mdl", 668, 300, 30, z=TRIM)
     put(m, P + "props_canal/boat001a.mdl", 690, 70, 12)
     m.rope([(760, 290, TRIM + 14), (752, 250, TRIM + 44), (720, 96, F + 40)], slack=70)
     m.blocked(580, 0, 800, 128)
-    m.lane(480, 330, TRIM)
-    m.lane(640, 380, TRIM)
-    m.lane(640, 490, TRIM)
-    m.lane(864, 330, TRIM)
+    m.lane(480, 290 if far else 330, TRIM)
+    if not far:
+        m.lane(640, 380, TRIM)
+        m.lane(640, 490, TRIM)
+    m.lane(864, 290 if far else 330, TRIM)
     # --- the footbridge: a plank deck on two girders, two trestles, a rail each side ---
     m.det([(832, -256, TRIM - 6, 896, 256, TRIM)], WOODTRIM, top=MM["wood"])
     m.det([(836, -256, TRIM - 24, 842, 256, TRIM - 6), (886, -256, TRIM - 24, 892, 256, TRIM - 6)], MAT["bars"])
@@ -1075,6 +1082,8 @@ def m_arcade(m, opt):
     m.shapes([prism([(620, roof + 8), (916, roof + 8), (768, roof + 64)], "y", -256, 256, tin)])
     # barred shop fronts closing the walk's two ends: the city's storefront bars in a wooden frame, dark behind
     for s in (1, -1):
+        if s == m.street_side():      # (the street runs along this bank: the walk meets it, no shop there)
+            continue
         v1, v2 = (248, 256) if s > 0 else (-256, -248)
         m.det([(664, v1, deck, 681, v2, deck + 105), (743, v1, deck, 793, v2, deck + 105), (855, v1, deck, 872, v2, deck + 105), (664, v1, deck + 105, 872, v2, deck + 113)],
               WOODTRIM)
