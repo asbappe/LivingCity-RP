@@ -8,7 +8,8 @@ and judged in one compile.
     python3 map_valve_gallery.py NAME NAME ...      only those pieces
 
 Each piece stands with its anchor's height at the yard's level, in a hole cut in the yard to its own footprint, so its
-floors and pits stay as they are (the hole's bottom is under the lowest piece). Its brushes go in as detail and its
+floors and pits stay as they are (the hole's bottom is under the lowest piece); a piece with no brushes (a camera, a
+dropship's route) is raised until its lowest thing stands just over the yard, with no hole. Its brushes go in as detail and its
 areaportals stay out: the gallery is one open yard, sealed by its own hull round everything placed. Buttons go left to
 right in the order of the piece's "trigger" list; the spawn is behind every piece. The checks: sealed with every entity inside, assets (map_assets.py).
 Pieces that need their surroundings (a street to drive on, sky to fly through) are only as complete as their box.
@@ -83,8 +84,11 @@ def build(out, names):
         if cx and cx + sx > ROW:
             cx, cy, row_depth = 0, cy + row_depth + GAP * 2, 0
         u, v = cx - rb[0], cy + GAP - rb[1]
-        tag = map_prefab.place(m, pf, int(round(u)), int(round(v)), 0, 0)["placed_as"]
-        holes.append((cx, cy + GAP, cx + sx, cy + GAP + sy))
+        ents = [e for e in pf.get("wiring", []) + pf.get("points", []) if "origin" in e]
+        z = 0 if pf["solids"] or not ents else 8 - min(e["origin"][2] for e in ents)      # (no brushes: its lowest thing just over the yard)
+        tag = map_prefab.place(m, pf, int(round(u)), int(round(v)), int(round(z)), 0)["placed_as"]
+        if pf["solids"]:
+            holes.append((cx, cy + GAP, cx + sx, cy + GAP + sy))
         for k, t in enumerate(pf.get("trigger", [])):
             x, y = cx + 32 + 48 * k, cy + GAP - 160
             vmf.world_box((x, y, 0, x + 16, y + 16, 64), "concrete/concretewall036a", vis=vis)
