@@ -34,6 +34,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 23 November (later): **stimulant** now holds off exhaustion and grogginess (not only lights out). **The
   Administrator's stand-ins** (address, studio, collapse, questioning) are `citizentype` 4, else ERROR. **Her address:**
   F1 > What now? > Show me the way marks it; out cold, carried in the black; no crowding warnings in the crowd.
+  **The station screen** is Valve's six layers of dev/dev_combinemonitor_3 (lc_screen.lua); **vending cans** roll out.
 - 23 November (this chat): **EP2's Combine autogun lifted and built out** (`valve_ep2_cannon`; test map
   map_cannon_test.py, not compiled yet). **Nova Prospekt's vortigaunt torture cell** lifted (`valve_prison_vort_torture`).
   **map_setpieces.py** ranks set pieces in all 105 shipped maps; picks for the owner: docs/dev/valve-setpieces.md.

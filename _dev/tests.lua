@@ -1352,6 +1352,13 @@ _run(1)
 local can
 for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "water" then can = e end end
 ok(IsValid(can) and LC.Credits(buyer) == cb - 2, "a can of Breen's water drops out, for 2 credits")
+do -- (rolls out of the chute, not thrown: the owner, 23 November, "in HL2 they just slightly roll down the chute")
+    local v = IsValid(can) and can:GetPhysicsObject() and IsValid(can:GetPhysicsObject()) and can:GetPhysicsObject().GetVelocity and can:GetPhysicsObject():GetVelocity()
+    local rolled = LC.VendingCanOut(vend, vend:GetPos(), vend:GetForward(), 14, vend:GetPos() + vend:GetForward() * 30)
+    local rv = IsValid(rolled) and IsValid(rolled:GetPhysicsObject()) and rolled:GetPhysicsObject().GetVelocity and rolled:GetPhysicsObject():GetVelocity()
+    ok(IsValid(rolled) and (not rv or (rv:Length() <= 30 and math.abs(rv.z) < 1)), "the can rolls gently out of the chute, not thrown out", rv and tostring(rv))
+    if IsValid(rolled) then rolled:Remove() end
+end
 LC.RemovePoint(vp)
 _run(1)
 ok(not IsValid(vend), "removing the point removes the machine")

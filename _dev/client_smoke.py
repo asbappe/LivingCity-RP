@@ -2519,21 +2519,46 @@ return bad
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "Combine monitors (client): " + str(err)
-# the train station's giant screen (lc_screen, kind screen_station: Valve's curved strips): it shows the scanner's
-# picture of an official broadcast only (the Administrator, the Director of Propaganda), never a pirate's, else dark
+# the train station's giant screen (lc_screen, kind screen_station: Valve's curved strips): six sheets 1 unit apart
+# in Valve's own Combine monitor material (dev/dev_combinemonitor_3, its back dev/dev_combinemonitor_b), its scanlines
+# scrolling (the owner, 23 November: "it's just a curved black brush"). It shows the scanner's picture of an
+# official broadcast only (the Administrator, the Director of Propaganda), never a pirate's; else the Combine's glow.
 L.globals()._SRC = open(os.path.join(ENTDIR, "lc_screen.lua")).read()
 err = L.execute(r"""
-local entWas, picWas, setWas = ENT, LC_CL.LiveCamPicture, render.SetMaterial
+local was = { ENT = ENT, pic = LC_CL.LiveCamPicture, set = render.SetMaterial, mat = Material, cm = CreateMaterial, grt = GetRenderTarget, mx = Matrix }
+local asked, made = {}, {}
+local SCAN, CAMRT = { "scanlines", __tex = true }, { "_rt_Camera", __tex = true }
+local realType = type
+type = function(v) if realType(v) == "table" and rawget(v, "__tex") then return "ITexture" end return realType(v) end -- (as the game names a texture)
+Material = function(path)
+    asked[path] = true
+    local kv = { ["$basetexture"] = CAMRT, ["$texture2"] = SCAN, ["$flags"] = 128, ["$alpha"] = 0.8 }
+    return { path = path, IsError = function() return false end, GetShader = function() return "UnlitTwoTexture" end,
+        GetKeyValues = function() return kv end, GetTexture = function(_, k) return kv[k] end }
+end
+CreateMaterial = function(name, shader)
+    local m = { name = name, shader = shader, t = {}, set = {} }
+    m.SetTexture = function(self, k, v) self.t[k] = v end
+    m.GetTexture = function(self, k) return self.t[k] end
+    for _, f in ipairs({ "SetInt", "SetFloat", "SetVector", "SetMatrix", "SetString" }) do m[f] = function(self, k, v) self.set[k] = v end end
+    m.Recompute = function() end
+    made[name] = m
+    return m
+end
+GetRenderTarget = function(name) return { GetName = function() return name end, rt = name } end
+Matrix = function() return { Translate = function() end } end
 ENT = {}
 local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_screen"))() end)
 local def = ENT
-ENT = entWas
-if not okL then return "load: " .. tostring(errL) end
+ENT = was.ENT
 local bad
-local PIC = { name = "the scanner's picture" }
-local used
-render.SetMaterial = function(m) if m == PIC then used = true end end
+local PICTEX = { "the scanner's picture", __tex = true }
+local PIC = { GetTexture = function() return PICTEX end }
+local lastMat
+render.SetMaterial = function(m) lastMat = lastMat or m end
+local function Front() return made.lc_station_front end
 local ok, e = pcall(function()
+    if not okL then bad = "load: " .. tostring(errL) return end
     local s = ents.Create("lc_screen")
     s.Draw, s.Think, s.DrawModel = def.Draw, def.Think, function() end
     s.GetWorldTransformMatrix = s.GetWorldTransformMatrix or function() return Matrix() end
@@ -2543,24 +2568,34 @@ local ok, e = pcall(function()
     s:Think()
     local m0 = _calls["mesh.Begin"] or 0
     LC_CL.LiveCamPicture = function() return nil end
+    lastMat = nil
     s:Draw()
-    if (_calls["mesh.Begin"] or 0) < m0 + 2 then bad = "the strips and their back weren't drawn" return end
-    if used then bad = "a picture with nobody on air" return end
+    local f = Front()
+    if not (asked["dev/dev_combinemonitor_3"] and asked["dev/dev_combinemonitor_b"] and f and made.lc_station_back) then bad = "not Valve's Combine monitor materials" return end
+    if (_calls["mesh.Begin"] or 0) < m0 + 7 then bad = "not six sheets and a back: " .. ((_calls["mesh.Begin"] or 0) - m0) return end
+    if lastMat ~= f then bad = "the sheets aren't in Valve's material" return end
+    if f.t["$texture2"] ~= SCAN or not f.set["$texture2transform"] then bad = "Valve's scanlines aren't there, or don't scroll" return end
+    if f.t["$basetexture"] == PICTEX or f.t["$basetexture"] == CAMRT or not f.t["$basetexture"] then bad = "nobody on air, and not the Combine's glow" return end
     LC_CL.LiveCamPicture = function() return PIC, 1, 288 / 512 end
     SetGlobal2Bool("lc_live_pirate", false)
     s:Draw()
-    if not used then bad = "the Administrator's or the Director's picture isn't shown" return end
-    used = false
+    if f.t["$basetexture"] ~= PICTEX then bad = "the Administrator's or the Director's picture isn't shown" return end
     SetGlobal2Bool("lc_live_pirate", true)
     s:Draw()
-    if used then bad = "a pirate's picture is shown" return end
+    if f.t["$basetexture"] == PICTEX then bad = "a pirate's picture is shown" return end
     SetGlobal2Bool("lc_live_pirate", false)
-    s:SetNW2Bool("lc_nopower", true)
+    s:SetPos(_me:GetPos() + Vector(5000, 0, 200))
+    lastMat = nil
     s:Draw()
-    if used then bad = "a picture with the power out" return end
+    if lastMat ~= f or f.t["$basetexture"] == PICTEX then bad = "from afar it should glow, without the picture" return end
+    s:SetPos(_me:GetPos() + Vector(300, 0, 200))
+    s:SetNW2Bool("lc_nopower", true)
+    lastMat = nil
+    s:Draw()
+    if lastMat == f then bad = "glowing with the power out" return end
     s:Remove()
 end)
-LC_CL.LiveCamPicture, render.SetMaterial = picWas, setWas
+LC_CL.LiveCamPicture, render.SetMaterial, Material, CreateMaterial, GetRenderTarget, Matrix, type = was.pic, was.set, was.mat, was.cm, was.grt, was.mx, realType
 SetGlobal2Bool("lc_live_pirate", false)
 if not ok then return "error: " .. tostring(e) end
 return bad
