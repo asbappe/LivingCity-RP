@@ -593,16 +593,19 @@ def m_quay(m, opt):
     b = m.b
     steel = HULL
     m.open(0, -256, 1024, 256)
+    on_street = m.street_side() == 1      # (the chain's street runs along this bank: the quay is part of it, no street end)
     m.open(320, 256, 960, 512, floor=TRIM, mat=MAT["quay_floor"])
-    m.low(576, 512, 704, 640, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
+    if not on_street:
+        m.low(576, 512, 704, 640, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
     m.low(832, -320, 896, -256, TRIM + 112, floor=TRIM)
     m.low(768, -448, 960, -320, TRIM + 128, floor=TRIM)
-    m.side(320, 256, 960, 640)
+    m.side(320, 256, 960, 512 if on_street else 640)
     m.side(768, -448, 960, -256)
-    m.world((576, 576, TRIM, 704, 640, TRIM + 128), MAT["black"], vis="%s: the quay's street end (delete to join a street)" % b.vis)
-    b.plan.keep_out.append(m.fr.rect(512, 640, 768, 704))
-    m.blocked(576, 512, 704, 640)
-    m.target("lc_quay_street", 640, 544, TRIM + 8, 270)
+    if not on_street:
+        m.world((576, 576, TRIM, 704, 640, TRIM + 128), MAT["black"], vis="%s: the quay's street end (delete to join a street)" % b.vis)
+        b.plan.keep_out.append(m.fr.rect(512, 640, 768, 704))
+        m.blocked(576, 512, 704, 640)
+    m.target("lc_quay_street", 640, 544 if not on_street else 448, TRIM + 8, 270)
     # --- the stairs along the wall, their landing, the rail ---
     m.no_bank(0, 248, 512, 264)
     run = m.steps(64, 192, 256, F, TRIM, "u", 1)

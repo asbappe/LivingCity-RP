@@ -33,11 +33,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 - 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
   beside the next victim, six branches each). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
-- 22 November (this chat): **the canal ring round City 18** (ring_north.txt, ring_south.txt; replaces lc_ring.vmf),
-  fitted to c18_lc.vmf and checked against every piece. The owner walked it once: their faults are fixed and every
-  build now runs a stair check (map_stairs.py) and a walk check (map_walk.py). **A road and railway run along its
-  outside bank** (four trains; the town 704 north and the cave forest 576 west so their branches pass under it);
-  the rail bridge an overpass; the street stops short of the halves' corner (TODO). Test map: map_ring_walk.py.
+- 22 and 23 November (this chat): **the canal ring round City 18**, one piece (map_layouts/ring.txt), fitted to
+  c18_lc.vmf and checked against every piece. **The road and railway run between the city and the canal** (the owner,
+  23 November), four trains, a road climbing to the owner's west road; four runs moved out to make room, the town and
+  cave forest with them. Every build runs a stair and a walk check. Test map: map_ring_walk.py. Not compiled yet.
+- The Combine perimeter wall template: `python3 _dev/tools/map_combine.py perimeter` (not placed in a map yet).
 - Ravenholm's church is behind the crypt (map_mods_f.church); its names wait for the gamemode (TODO.md, the church).
 - The owner's map (c18_lc.vmf) and Valve's VMF zip are on their Drive: curl from drive.usercontent.google.com.
 - Also 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).

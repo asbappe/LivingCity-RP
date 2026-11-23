@@ -1,0 +1,94 @@
+# The canal ring round City 18, as one piece: from the first canal's north gate (x 5888..6400 at y 5696) north,
+# west along the north, south down the west, west along the top of the south part, and round the south and up the
+# east side to the gate in the first canal's south wall (x 5888..6400 at y 1856).
+#
+# The road and the railway run between the city and the canal (the owner, 23 November: "if we have a road between
+# the city and the canal then ... the canal will be a physical deterrent and divider between the road and the 'rest
+# of the world' ... I think we need to have the road AND the railway between the city and the canals"): "upper left"
+# all the way round, so every module's side rooms are on the outside. To make room for the road the north run lies
+# 960 farther out than the first ring's, the west run 960, the south part's west side 768 and its east side 960.
+# The town (north) and the cave forest (west) moved out with them. The west run comes straight down to the south
+# part; the owner's west road meets the street by a road climbing to it ("road": it replaces their brushes 14734 and
+# 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there.
+# Checked with
+#   python3 map_build.py chain --layout map_layouts/ring.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf lc_town.vmf lc_forest_cave.vmf
+
+start 6144 5696
+heading N
+rim 968
+upper left
+end 6144 1856 N
+road -4480 1920 -2624 2560 840 replaces 14734 15630
+
+# N1: north, from the first canal
+checkpoint
+straight 1344 stairs
+left
+# N2 and N3: west along the north (the town's branch in the middle: nothing with side rooms within 1536 west of it,
+# the town's south end is there); a train between the two sheds, east of the rail bridge
+depot flip
+armory flip shed
+substation shed
+thumper
+straight 576 stairs
+tee flip
+lock
+morgue flip shed2
+floodroom flip shed2
+railbridge
+straight 1088
+left
+# N4 and N5: south down the west (the cave forest's branch in the middle; its wall stands along the outside bank, so
+# nothing here has side rooms)
+straight 3200 stairs
+tee flip
+pipes
+straight 1408
+right
+# S1: west
+drain
+overflow flip
+stash flip
+straight 128
+left
+# S2: south
+boathouse flip
+straight 1024 shed
+shanty flip shed
+camp flip
+vort flip
+sludge flip
+barge shed
+underpass shed
+straight 640 stairs
+left
+# S3: east
+tunnel 2048
+crypt flip shed
+shell shed
+tram
+widen
+lockgate flip
+narrow
+cistern shed
+wreck shed
+basin
+collapse flip
+ash flip
+straight 192
+left
+# S4: north
+execwall flip
+lift flip
+pumphouse flip
+quay
+arcade shed
+aqueduct shed
+chimney
+swingbridge
+relay shed
+straight 64 shed
+breach shed
+left nostreet
+straight 448 nostreet
+right nostreet

@@ -2075,6 +2075,9 @@ def read_layout(path):
             lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
         elif words[0] == "cars":
             lay["cars"] = int(words[1])           # (how many cars the trains pull behind the engine)
+        elif words[0] == "road":                  # ("road X1 Y1 X2 Y2 Z [replaces ID ...]": a road from the street to one of the owner's)
+            ids = words[words.index("replaces") + 1:] if "replaces" in words else []
+            lay.setdefault("roads", []).append(tuple(int(w) for w in words[1:6]) + (tuple(ids),))
         elif words[0] == "close":
             lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
@@ -2223,6 +2226,8 @@ def build_chain(lay, args):
         x, y = Frame(x, y, rot, length).pt(length, shift)
     if upper:
         map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
+        for road in lay.get("roads", []):
+            map_corridor.spur(b, *road)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))

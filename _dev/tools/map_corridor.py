@@ -233,6 +233,23 @@ def lay(b, elems, side, cars):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     plan.front.add((i, j))
 
+    # --- the junctions: at a turn toward the street's side the two runs' streets cross in a square; nothing that runs
+    # along one street (its rail between tracks and road, its frontage, its lamps) is carried across the other there ---
+    junction = set()
+    for k, e in enumerate(elems):
+        if e["kind"] not in ("left", "right") or (e["kind"] == "left") != (s > 0):
+            continue
+        a = elems[k - 1] if k > 0 else None
+        z = elems[k + 1] if k + 1 < len(elems) else None
+        if not a or not z or a["kind"] != "leg" or z["kind"] != "leg":
+            continue
+        ra = a["frame"].rect(max(0, a["length"] - FRONT - 64), s * (EDGE + 64), a["length"], s * (FRONT + 64))      # (from beyond the parapet: the canal's edges keep theirs)
+        rz = z["frame"].rect(0, s * (EDGE + 64), min(z["length"], FRONT + 64), s * (FRONT + 64))
+        x1, y1, x2, y2 = max(ra[0], rz[0]), max(ra[1], rz[1]), min(ra[2], rz[2]), min(ra[3], rz[3])
+        for i in range(x1 // CELL, x2 // CELL):
+            for j in range(y1 // CELL, y2 // CELL):
+                junction.add((i, j))
+
     # --- what stands on it ---
     rnd = random.Random(len(elems) * 31 + 7)
     for n, e in enumerate(elems):
@@ -249,11 +266,15 @@ def lay(b, elems, side, cars):
             x, y = fr.pt(u, s * a)
             return (x // CELL, y // CELL) in b.deck
 
+        def in_junction(u, a):
+            x, y = fr.pt(u, s * a)
+            return (x // CELL, y // CELL) in junction
+
         def runs(a, skip=()):
             """Stretches of u where the square at distance a is street (and u is in none of the skipped stretches)."""
             out, start = [], None
             for u in range(0, L + 1, CELL):
-                ok = u < L and is_deck(u + 32, a) and not any(k1 <= u < k2 for k1, k2 in skip)
+                ok = u < L and is_deck(u + 32, a) and not in_junction(u + 32, a) and not any(k1 <= u < k2 for k1, k2 in skip)
                 if ok and start is None:
                     start = u
                 elif not ok and start is not None:
@@ -319,7 +340,8 @@ def lay(b, elems, side, cars):
             m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, c, 128)] + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"], vis=dv)
         if not e.get("lifted"):
             # the outer pavement, street lamps, and the frontage: a plinth, piers, blind windows, now and then a barred doorway
-            for a, c in runs(FRONT - 32):
+            open_front = [(u, u + CELL) for u in range(0, L, CELL) if is_deck(u + 32, FRONT + 32)]      # (the frontage opens there: another street, a road off it)
+            for a, c in runs(FRONT - 32, open_front):
                 v1, v2 = sv(960, FRONT)
                 m.det([(a, v1, STREET, c, v2, STREET + 8)], walk, vis=dv)
                 p1, p2 = sv(FRONT - 8, FRONT)
@@ -339,7 +361,7 @@ def lay(b, elems, side, cars):
                         m.decal("decals/decalposter014a" if rnd.random() < 0.5 else "decals/decal_posters005a", u + 44, s * (FRONT - 1), STREET + 110)
                 m.det([(a, p1, FTOP - 24, c, p2, FTOP)], MAT["beam"], vis=dv)
             for u in range(256, L - 64, 768):
-                if is_deck(u, FRONT - 32):
+                if is_deck(u, FRONT - 32) and not in_junction(u, FRONT - 32) and not is_deck(u, FRONT + 32):
                     m.static("models/props_c17/lamppost03a_on.mdl", u, s * 978, 270 if s > 0 else 90, z=STREET + 8)
                     m.light(u, s * 880, STREET + 400, "255 214 160 220")
             if L >= 1024 and rnd.random() < 0.5 and is_deck(L // 2, 800):
@@ -451,3 +473,47 @@ def train(b, n, a, z, s, cars):
     run = abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])
     b.notes.append("train %d: an engine and %d cars (%d long) from the shed in %s to the shed in %s, %d of track, about %d seconds a pass, at random every 70 to 240 seconds" % (
         n, cars, TL, a["tag"], z["tag"], run, run // 700))
+
+
+def spur(b, x1, y1, x2, y2, z_end, ids=()):
+    """A road from the street's frontage (x1, at the street's height) east to x2, where it meets a road of the owner's at
+    z_end: built for the canal ring's join to the owner's west road (the owner, 23 November: the road and the railway
+    between the city and the canal; their west road ends at brush 14734, x -2624..-2608, y 1920..2560, z 840). Squares
+    stepping up a little at a time under one smooth slope of road, building fronts either side, and where the owner's
+    brush was the road carried on to theirs, a wall each side and a lid (as roadend did); stopped up for the seal check."""
+    from map_build import prism
+    from map_modules import BASE, MM, Frame, Mod
+    plan, cells = b.plan, b.plan.cells
+    m = Mod(b, Frame(0, 0, 0, max(1, x2 - x1)), "the road to the owner's")
+    n = (x2 - x1) // CELL
+    for k in range(n):
+        z = STREET + (z_end - STREET) * k // n           # (each square's floor under the slope's height at its near edge)
+        for j in range(y1 // CELL, y2 // CELL):
+            cells[(x1 // CELL + k, j)] = ("open", z, MM["road"])
+            b.owner[(x1 // CELL + k, j)] = "the road to the owner's"
+    for k in range(-1, n + 1):                           # (building fronts along both sides, brick to the frontage's top)
+        for j in (y1 // CELL - 1, y2 // CELL):
+            plan.front.add((x1 // CELL + k, j))
+    b.vmf.detail_shapes([prism([(x2, STREET - 8), (x2, z_end), (x1, STREET), (x1, STREET - 8)], "y", y1, y2, MM["road"])], b.vis + ": the street")
+    # where the owner's brush was: the road carried on to theirs, a wall each side, a lid, the sky their road sees
+    cw, sky = MAT["canal_wall"], MAT["sky"]
+    m.world((x2, y1, BASE, x2 + 16, y2, z_end), cw, top=MM["road"])
+    m.world((x2, y1 - 64, BASE, x2 + 16, y1, b.sky + 16), cw)
+    m.world((x2, y2, BASE, x2 + 16, y2 + 64, b.sky + 16), cw)
+    m.world((x2, y1, b.sky, x2 + 16, y2, b.sky + 16), sky)
+    m.portal(x2 + 6, y1, z_end, x2 + 8, y2, b.sky)      # (in the end's own walls: floor, sides and lid all world)
+    b.plan.keep_out.append((x2, y1 - 64, x2 + 4096, y2 + 64))
+    b.stoppers.append((x2 + 16, y1 - 64, BASE, x2 + 80, y2 + 64, b.sky + 16))
+    b.allow.append((x2 - 64, y1 - 128, BASE, x2 + 128, y2 + 128, b.sky + 64))
+    b.replaces |= set(ids)
+    if b.test:
+        m.world((x2 + 16, y1 - 64, BASE, x2 + 80, y2 + 64, b.sky + 16), sky, vis=b.vis + ": for testing alone (never in the real map)")
+    # lamps along its south side, path nodes up its middle
+    for x in range(x1 + 256, x2 - 128, 512):
+        z = STREET + (z_end - STREET) * (x - x1) // (x2 - x1)
+        m.static("models/props_c17/lamppost03a_on.mdl", x, y1 + 40, 90, z)
+        m.light(x, y1 + 80, z + 300, "255 214 170 250")
+    for x in range(x1 + 64, x2, 256):
+        m.lane(x, (y1 + y2) // 2, STREET + (z_end - STREET) * (x - x1) // (x2 - x1))
+    b.notes.append("the road to the owner's: from the street at (%d %d) up to their road at (%d %d), z %d to %d" % (x1, (y1 + y2) // 2, x2, (y1 + y2) // 2, STREET, z_end))
+
