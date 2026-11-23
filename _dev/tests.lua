@@ -13436,6 +13436,9 @@ local told = false
 for _, l in ipairs(skip.chat or {}) do if string.find(l, "Attendance is mandatory", 1, true) then told = true end end
 ok(told or true, "(every citizen is told: by notice)")
 ok(not LC.AtSpeech(skip) and LC.AtSpeech(good), "being there counts within the crowd's radius")
+local stepA = LC.NextStep(skip)
+ok(stepA and stepA.key == "speech" and stepA.way == "speech" and (LC.NextStep(good) or {}).key ~= "speech" and LC.WaypointTo(skip, "speech") and skip.lcWaypoint and skip.lcWaypoint.pos == S.crowd.pos,
+    "F1 > What now? > Show me the way marks the address for whoever isn't there yet (the owner, 23 November)", stepA and stepA.key)
 _run(4)
 ok(not S.warned[skip], "early in the muster, nobody is chased yet")
 _run(3)
@@ -13453,6 +13456,26 @@ bystander:Spawn()
 LC.CopProvoked(bystander, { role = "cop", state = "idle" }, skip, CurTime() + 100)
 ok(skip.lcBump ~= nil and skip.lcBump.n == 1, "another unit still tells them to move back")
 skip.lcBump = nil
+local inCrowd = ents.Create("npc_metropolice")
+inCrowd:SetPos(good:GetPos() + Vector(30, 0, 0))
+inCrowd:Spawn()
+good.lcBump = nil
+LC.CopProvoked(inCrowd, { role = "cop", state = "idle" }, good, CurTime() + 100)
+ok(good.lcBump == nil, "nobody standing in the crowd is taken for crowding a unit there (the owner, 23 November)")
+inCrowd:Remove()
+-- out cold: carried to the crowd while the screen is still black, not after it fades back in (the owner, 23 November)
+do
+    local ko = newPlayer and newPlayer("KOCarry") or nil
+    if ko then
+        ko:SetPos(crowd.pos + Vector(3000, 0, 0))
+        LC.SpeechBlackOut(ko)
+        _run(1.2)
+        local black = ko:GetNW2Float("lc_ko_until", 0) - CurTime()
+        ok(ko:GetPos():DistToSqr(crowd.pos) < 800 * 800 and black > 1.5, "out cold, they're carried to the crowd while the screen is fully black", black)
+        _run(5)
+        ko:Remove()
+    end
+end
 bystander:Remove()
 _run(14)
 ok(L.morale == m0 + 6 and S.spoken, "the muster over: she speaks (morale up as before)")
@@ -13524,6 +13547,7 @@ do
     end
 end
 ok(LC.CallSpeech(nil, nil) and IsValid(LC.SpeechSession().her) and #(LC.SpeechSession().pieces or {}) >= 3, "she stands at the podium herself, with her speech")
+ok((LC.SpeechSession().her.kv or {}).citizentype == "4", "she keeps her own model (a unique citizen: else the game makes it models/Humans/Group01/mossman.mdl, an ERROR; the owner, 23 November)")
 do
     local S2 = LC.SpeechSession()
     _run(12) -- (the muster)
