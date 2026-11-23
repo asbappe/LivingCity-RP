@@ -42,7 +42,7 @@ SCAPES = {"tunnel": "prison.general_dripping_tunnel", "watery": "prison.watery_h
           "square": "d1_trainstation.TerminalSquare", "rooftop": "d1_town.Rooftop"}
 # Decals Half-Life 2 has (checked in Valve's lists), by what they show: m.grime picks one.
 GRIME = {"stain": ["decals/decalstain%03da" % n for n in (1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)],
-         "drain": ["decals/decalconcretedrain00%da" % n for n in (1, 2, 3)],
+         "drain": ["decals/decalstain%03da" % n for n in (2, 5, 9, 12)],      # (blotches: decalconcretedrain lies on its side on a wall and has a pipe drawn in it, the owner, 23 November)
          "trash": ["decals/trashdecal0%da" % n for n in (1, 2, 3, 4, 5)],
          "crack": ["decals/plaster%03da" % n for n in (1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)],
          "poster": ["decals/decal_posterbreen", "decals/decalposter002a", "decals/decalposter002b", "decals/decalposter003a", "decals/decalposter004a",
@@ -594,12 +594,20 @@ class Mod:
         self.blocked(u1 - 16, v1 - 16, u2 + 16, v2 + 16)
         self.taken(u1 - 12, v1 - 24, z, u2 + 12, v2 + 24, z + high + 6)
 
-    def bridge(self, a, b, lo, hi, far_pier=True):
+    def bridge(self, a, b, lo, hi, far_pier=True, gaps=()):
         """A street carried over the canal at the trim's height (the ring's road_bridge, in the module's own coordinates).
-        far_pier False: no pier wall near the high-v wall (the deck rests on the wall there)."""
+        far_pier False: no pier wall near the high-v wall (the deck rests on the wall there). gaps: openings in its side
+        walls, (u of the side, a or b; v1, v2), where a ladder comes up."""
         self.det([(a, lo, TRIM - 40, b, hi, TRIM + 8)], MAT["beam"], top=MAT["quay_floor"])
-        self.det([(a, lo, TRIM + 8, a + 16, hi, TRIM + 56), (b - 16, lo, TRIM + 8, b, hi, TRIM + 56),
-                  (a + 48, lo + 112, F, b - 48, lo + 144, TRIM - 72)] + ([(a + 48, hi - 144, F, b - 48, hi - 112, TRIM - 72)] if far_pier else []), MAT["canal_wall"])
+        sides = []
+        for u1 in (a, b - 16):
+            cuts = sorted((g1, g2) for side, g1, g2 in gaps if side in (u1, u1 + 16))
+            p = lo
+            for g1, g2 in cuts + [(hi, hi)]:
+                if g1 > p:
+                    sides.append((u1, p, TRIM + 8, u1 + 16, g1, TRIM + 56))
+                p = max(p, g2)
+        self.det(sides + [(a + 48, lo + 112, F, b - 48, lo + 144, TRIM - 72)] + ([(a + 48, hi - 144, F, b - 48, hi - 112, TRIM - 72)] if far_pier else []), MAT["canal_wall"])
         self.det([(u, lo, TRIM - 72, u + 24, hi, TRIM - 40) for u in range(a + 40, b - 40, 96)], MAT["bars"])
         self.taken(a, lo, F, b, hi, TRIM + 56)
         self.blocked(a + 32, lo + 96, b - 32, lo + 160)
@@ -865,6 +873,8 @@ def m_drain(m, opt):
     the lambda by the head of the stair (the Resistance's way down, as Half-Life 2 marks its routes).
     Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
     far end railed), the bank stopping either side of it in slopes: the drain's keepers' way along the canal.
+    Under a street along its bank (the canal ring) the chamber's roof is the street's deck, at 640, and the lamps' rods
+    are 16 shorter, so none comes up through the road.
     Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
     on it), lc_drain_junction (the chamber), lc_drain_cache (the case at the bottom of the sump: a place the game can
     fill).
@@ -878,9 +888,11 @@ def m_drain(m, opt):
     from map_mods_c import centred, handrail, pipe_run, pour, round_arch
     b = m.b
     m.open(0, -256, 1024, 256)
+    import map_corridor
+    roof = min(F + 256, map_corridor.STREET - 16) if m.street_side() == 1 else F + 256      # (under a street the chamber's roof is the street's deck)
     m.low(384, 256, 640, 768, F + 192)                       # the mouth and its pipe
-    m.low(256, 768, 768, 1280, F + 256)                      # the junction chamber...
-    m.low(384, 896, 640, 1152, F + 256, floor=F - 64)        # ...and the sump in its middle
+    m.low(256, 768, 768, 1280, roof)                         # the junction chamber...
+    m.low(384, 896, 640, 1152, roof, floor=F - 64)           # ...and the sump in its middle
     m.low(384, 1280, 640, 1536, SEWER + 240, floor=SEWER)    # down to the sewers
     CH = SEWER - 40                                          # the sewer channel's floor; its water's top 2 under the walks
     m.low(384, 1536, 448, 1664, SEWER + 240, floor=SEWER)    # the walks either side of the channel...
@@ -917,8 +929,8 @@ def m_drain(m, opt):
     m.grime("trash", 736, 800, F + 1, 5)
     m.grime("stain", 720, 1280, F + 170, 6)
     m.grime("lambda", 330, 1280, F + 84, 7)                  # (beside the head of the stair: the way down)
-    m.lamp(512, 840, F + 214, "190 210 170 70", hang=34)
-    m.lamp(512, 1216, F + 214, "190 210 170 40", hang=34)
+    m.lamp(512, 840, F + 214, "190 210 170 70", hang=roof - F - 222)      # (their rods up to the roof)
+    m.lamp(512, 1216, F + 214, "190 210 170 40", hang=roof - F - 222)
     m.target("lc_drain_junction", 512, 832, F + 8, 90)
     m.soundscape(SCAPES["tunnel"], 512, 1024, F, radius=640)
     run = m.steps(1280 + 12 * 13, 384, 640, SEWER, F - 8, "v", -1)   # 13 steps, tops z 392 down to 296
@@ -1086,7 +1098,9 @@ def m_shanty(m, opt):
     street; a string of bulbs on a cable from an old dock pole to the bridge's deck and on to a second pole; washing on a
     line from the card room's roof post to a pole; a boat pulled up; a cork notice board on two poles; posters on and in
     the card room, the lambda on the bridge's pier, trash and puddles on the basin's floor. In front of the card room the
-    basin's floor is left clear for the Resistance's flag.
+    basin's floor is left clear for the Resistance's flag. Where the chain's street runs along the bank the bridge starts
+    from (the canal ring, 23 November) the bridge is the street's way in: the street's parapet opens there, and an iron
+    ladder comes down the bridge's side (a gap in its side wall, a post under its edge) to the boardwalk by the card room.
     Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
     screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
     lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
@@ -1101,7 +1115,19 @@ def m_shanty(m, opt):
     m.open(0, -256, 1536, 256)
     m.open(256, 256, 1280, 640)
     m.no_bank(256, 400, 1280, 648)
-    m.bridge(640, 896, -256, 640, far_pier=False)
+    on_street = m.street_side() == -1      # (the chain's street runs along the bank the bridge starts from)
+    m.bridge(640, 896, -256, 640, far_pier=False, gaps=[(640, 536, 584)] if on_street else ())
+    if on_street:
+        # beside the street the bridge is the street's way into the shanty town (the owner, 23 November, of bridges that
+        # lead nowhere: "this is a pointless bridge"): the street's parapet opens where the bridge starts, and a ladder
+        # comes down its side to the boardwalk by the card room, on a post under the deck's edge
+        m.b.edge_gaps.append(m.fr.rect(640, -284, 896, -236))
+        m.det([(640, 540, F + 8, 656, 580, TRIM - 40)], MAT["canal_wall"])
+        m.ladder(636, 560, F + 8, TRIM + 8, 180)
+        m.blocked(592, 536, 656, 584)
+        m.lane(600, 560, F + 8)
+        m.lane(700, 560, TRIM + 8)
+        m.lane(768, -200, TRIM + 8)
     # the boardwalk the shacks stand on, and its kerb
     m.det([(264, 400, F, 632, 632, F + 8), (904, 400, F, 1272, 632, F + 8)], wood)
     m.det([(264, 388, F, 632, 400, F + 5), (904, 388, F, 1272, 400, F + 5)], beam)
@@ -1326,8 +1352,9 @@ def m_relay(m, opt):
     logbook by it, a chair, a cot (a bed frame), a shelf of car batteries, the canals' map pinned on the back wall, a
     poster beside it. Beside it the mast: one of the city's tall utility poles (utilitypole01a, about 230 over the
     canal's walls) with two small dishes on it, an aerial on the shack's roof, guy wires to the quay and the wall, a red
-    lamp at its tip (shielded from above), a long-wire aerial from the tip across the canal to the far wall and the feed
-    from the shack up to the pole. A diesel generator (generatortrailer01) hums behind the shack under a lean-to, its
+    lamp at its tip (shielded from above), a long-wire aerial from the tip across the canal to the far wall (beside a
+    street on the far bank, which has no wall top, downstream to its own wall) and the feed from the shack up to the
+    pole. A diesel generator (generatortrailer01) hums behind the shack under a lean-to, its
     exhaust pipe up through the lean-to's roof; fuel drums beside it.
     Named for the game: lc_relay_radio (the set, a prop_dynamic), lc_relay_hum (the generator's sound: StopSound),
     lc_relay_lamp (the red lamp's glow: HideSprite, ShowSprite), lc_relay_mast (the mast's foot), lc_relay_seat.
@@ -1388,7 +1415,10 @@ def m_relay(m, opt):
     m.static("models/props_rooftop/antenna04a.mdl", 520, -232, 0, z=top + 118)             # an aerial on the shack's roof
     for (gu, gv, gz) in ((330, -16, top + 4), (824, -16, top + 4), (824, -256, top + 220)):
         m.rope([(672, -176, tip - 40), (gu, gv, gz)], slack=10, width=1)
-    m.rope([(672, -176, tip), (700, 256, b.rim - 24)], slack=60, width=1)                   # the long-wire aerial, across to the far wall (into it, under its top)
+    if m.street_side() == 1:      # (the street along the far bank: no wall top there, so the aerial runs downstream to the quay's own wall)
+        m.rope([(672, -176, tip), (1000, -256, b.rim - 24)], slack=60, width=1)
+    else:
+        m.rope([(672, -176, tip), (700, 256, b.rim - 24)], slack=60, width=1)               # the long-wire aerial, across to the far wall (into it, under its top)
     m.rope([(540, -106, top + 98), (667, -171, top + 300)], slack=30, width=1)              # the shack's feed, up to the pole
     m.target("lc_relay_mast", 672, -100, top + 8, 90)
     # the generator under a lean-to against the wall, its exhaust up through the roof, and its fuel
@@ -1873,7 +1903,10 @@ def m_checkpoint(m, opt):
     guard's platform 128 high (the banks are its ramps) with one of the Combine's booths (combine_booth_short01a), a
     console, a monitor and a health charger on the wall; stairs from it (their lowest steps open at the side, climbed
     from the platform beside them) to a walk along the wall's top behind the Combine's railing, a parapet before it,
-    two Combine floodlights on its ends for the searchlights. Under the walk on
+    two Combine floodlights on its ends for the searchlights. Beside a street along the platform's bank (the canal ring,
+    23 November) the street's parapet opens where the stairs pass the street's height, so the Combine step off the
+    street onto them (up to the walk, down to the platform), and the two wall lights over the platform hang under the
+    street's edge. Under the walk on
     the right bank, a chain link holding pen with a sliding gate, the police line on its wall.
     Named for the game: lc_checkpoint_field (a func_brush: Disable opens it, Enable shuts it), lc_checkpoint_hum (its
     sound: StopSound, PlaySound), lc_checkpoint_light and lc_checkpoint_light_b (the searchlights: LightOff, LightOn),
@@ -1946,8 +1979,17 @@ def m_checkpoint(m, opt):
     m.static("models/props_combine/combine_interface001.mdl", 898, 172, 180, z=pz)       # (facing the stairs' foot, clear of the way on)
     m.static("models/props_combine/combine_intmonitor001.mdl", 920, 246, 270, z=pz)
     m.point("item_healthcharger", 1080, 255, pz + 48, {"angles": "0 %d 0" % m.fr.yaw(270)})
-    combine_lamp(m, 760, 256, pz + 150, 270)
-    combine_lamp(m, 1040, 256, pz + 150, 270)
+    street = m.street_side() == 1        # (the chain's street runs along the platform's bank, at z 656 over it)
+    lamp_z = pz + 70 if street else pz + 150      # (beside a street the wall ends at the street's height: the lamps under it)
+    combine_lamp(m, 760, 256, lamp_z, 270)
+    combine_lamp(m, 1040, 256, lamp_z, 270)
+    if street:
+        # the Combine come from the street (the owner, 23 November: "no way for the combine to actually get onto their
+        # checkpoint through the fence between them and the traintracks"): the street's parapet opens beside the stairs
+        # where their steps pass the street's height (u 576 to 704: steps of 720 down to 640), so a guard steps off the
+        # street onto them, up to the walk or down to the platform
+        b.edge_gaps.append(m.fr.rect(576, 236, 704, 284))
+        m.lane(640, 288, TRIM)
     m.blocked(576, 176, 880, 256)
     # the holding pen, under the walk on the right bank
     panel_fence(m, (704, -128), (800, -128), F)
@@ -2083,6 +2125,8 @@ def read_layout(path):
             lay.setdefault("roads", []).append(tuple(int(w) for w in words[1:6]) + (tuple(ids),))
         elif words[0] == "backdrop":
             lay.setdefault("backdrop", []).append(words[1:])      # (the scenery beyond the outer wall: map_backdrop.py)
+        elif words[0] == "round":
+            lay["round"] = words[1].lower()       # ("round east": the road round the first canal's east side, map_corridor.ROUND)
         elif words[0] == "close":
             lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
@@ -2145,8 +2189,8 @@ def build_chain(lay, args):
             size = width      # (a turn as wide as the canal: 512 square, or 1024 in the wide canal)
             fr = Frame(x, y, rot, size)
             m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt + (["wide"] if size > CANAL_W else []))
-            if "nostreet" not in opt:
-                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
+            if "nostreet" not in opt:      # ("over", "back": a run's track carried on over the canal at this corner, map_corridor.rail_runs)
+                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name), "rail": [w for w in opt if w in ("over", "back")]})
             else:
                 elems.append({"kind": "gap", "tag": "%d %s turn" % (n, name)})
             shed_n = 0
@@ -2230,7 +2274,11 @@ def build_chain(lay, args):
             b.labels.append(fr.pt(length // 2, 0) + (tag,))
         x, y = Frame(x, y, rot, length).pt(length, shift)
     if upper:
+        if lay.get("round") == "east":
+            map_corridor.round_gaps(b)       # (where the bridge round the first canal lands on the street: no parapet there)
         map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
+        if lay.get("round") == "east":
+            map_corridor.round_east(b)       # (the road round the first canal's east side: the ring's share)
         for road in lay.get("roads", []):
             map_corridor.spur(b, *road)
         if b.street_wall == "combine":
@@ -2238,6 +2286,7 @@ def build_chain(lay, args):
         if lay.get("backdrop"):
             import map_backdrop
             map_backdrop.build(b, lay)
+        map_corridor.hide_trains(b)      # (the solid the trains wait in beyond their tunnels, once the backdrop has laid its ground)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))
@@ -2259,6 +2308,7 @@ def finish(b, seed, spawn, args):
     ch = Channel(vmf, canal, F, TRIM, b.vis)
     for axis, at, lo, hi in b.pipes:
         ch.pipes(axis, at, lo, hi, b.taken)
+    ch.wall_top = b.rim      # (the outer walls' real top: the outfalls go high in them when there is room)
     ch.dress(b.no_bank, b.taken, outfalls=True, upright=b.upright, avoid=standing["props"])
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
     dish_plan(b, ch, standing["flat"], bump)
@@ -2298,6 +2348,8 @@ def finish(b, seed, spawn, args):
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)
     link_gates(b)
+    from map_build import drop_useless_portals
+    b.notes += drop_useless_portals(vmf, list(b.stoppers))      # (an areaportal the street or the backdrop left parting nothing: vbsp refuses one)
     problems, air = check(vmf, seed, list(b.stoppers))      # (a way meant to open onto the owner's map, as roadend's road: stopped up for the check)
     problems = b.problems + problems
     look_at_props(b)
@@ -2404,19 +2456,20 @@ def dish_plan(b, ch, flat, bump=None, floor=DISH_FLOOR):
         b.notes.append("the canal's floor is dished on %d squares: %d deep at most" % (len(low), max(sag.values()) if sag else 0))
 
 
-def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=(), rim=784):
+def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=(), rim=784, view=None):
     """The canal modules' dressing for a piece built by itself, outside a chain (the ring, the first canal; the owner,
     21 November: "yes please"): what stands on its floor first, then the banks, lip, ribs and Valve's outfalls (pipes:
     [(axis, where along, wall, wall), ...] across it), the dished floor (its concrete lowered only to F - 48: these
     pieces' bottoms are at F - 64), the plan built, the caged lamps and the outfalls' rings, the mud, and loose things
     and floor stains brought down onto it. Coordinates are the map's (the plan's origin 0 0). Gives the Channel (for
-    its path nodes) and the stand-in for a module chain's Build that the dressing was given."""
+    its path nodes) and the stand-in for a module chain's Build that the dressing was given. view: the plan as the
+    dressing should see it, if not as it is (a road beside the canal is wall to it: map_corridor.View)."""
     import types
     b = types.SimpleNamespace(vmf=vmf, name=name, vis=vis, taken=taken, no_mud=list(mud_skip), lifted=set(), notes=[], plan=plan,
                               rim=rim, props=[], upright=[], no_bank=list(no_bank))
     standing = standing_things(b)
     plan.walls()
-    ch = Channel(vmf, plan, F, TRIM, vis)
+    ch = Channel(vmf, view or plan, F, TRIM, vis)
     for axis, at, a, z in pipes:
         ch.pipes(axis, at, a, z, taken)
     ch.dress(list(no_bank), taken, outfalls=True, avoid=standing["props"])
@@ -2500,7 +2553,7 @@ def dress_canal_walls(b, ch, avoid=()):
         c = (p // CELL, line // CELL - (1 if side > 0 else 0)) if axis == "x" else (line // CELL - (1 if side > 0 else 0), p // CELL)
         spec = ch.cells.get(c)
         return spec[1] if spec and spec[0] == "solid" and len(spec) > 1 else b.rim
-    for (axis, line, side, a, b2) in made.get("walls", []):
+    for (axis, line, side, a, b2) in ([] if getattr(b, "upper", None) else made.get("walls", [])):      # (beside a street no caged lamps: they hung on the far wall nobody reaches, lighting nothing, the owner, 23 November; the street's lamps and the Combine wall's light the canal)
         off = 0 if side > 0 else LAMP_STEP // 2
         p = a + 160 + (off - (a + 160)) % LAMP_STEP
         while p <= b2 - 160:
@@ -2520,23 +2573,25 @@ def dress_canal_walls(b, ch, avoid=()):
                     b.vmf.point("light", (lx, ly, F + LAMP_Z - 10), {"_light": "255 214 170 70", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"},
                                 b.vis + ": canal lamps")
             p += LAMP_STEP
+    holes = [(o[0], o[1], o[2], o[3]) for o in made.get("outfalls", [])] + [(o[0], o[1], o[2], o[3]) for o in made.get("stubs", [])]
     for k, (axis, line, side, at) in enumerate(made.get("ribs", [])):
         if rnd.random() < 0.18:
-            wx, wy = (at + 120, line) if axis == "x" else (line, at + 120)
-            b.vmf.point("infodecal", (wx, wy, F + 200 + rnd.randrange(0, 120)), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")
+            g = at + 120
+            if any(h[0] == axis and h[1] == line and h[2] == side and abs(h[3] - g) < 224 for h in holes):
+                continue      # (never across a culvert or a drain: the owner, 23 November, "the graffiti on the side is cut off by the culvert")
+            wx, wy = (g, line) if axis == "x" else (line, g)
+            b.vmf.point("infodecal", (wx, wy, F + 192), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")      # (in the band between the bank's top and the trim)
     for (axis, line, side, at, z, kind) in made.get("outfalls", []):
         x, y = at_wall(axis, line, side, at, 7)      # (its back flush with the wall, as Valve's)
         b.vmf.point("prop_static", (x, y, z), {"model": "models/props_canal/canal_cap001.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "6",
                                                "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls")
-        if kind == "bank":      # (the stain runs down the bank's slope from under the ring)
-            wx, wy = at_wall(axis, line, side, at, 24)
-            b.vmf.point("infodecal", (wx, wy, F + BANK - 24), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
-        else:                   # (on the wall between Valve's lip and the hole)
-            wx, wy = at_wall(axis, line, side, at, 0)
-            b.vmf.point("infodecal", (wx, wy, z - 72), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        # a stain on the wall's own face under the ring, between it and the trim's band (a blotch: the drain streaks
+        # came out lying on their sides, the owner, 23 November)
+        wx, wy = at_wall(axis, line, side, at, 0)
+        b.vmf.point("infodecal", (wx, wy, z - 100), {"texture": rnd.choice(GRIME["stain"])}, b.vis + ": canal grime")
     for (axis, line, side, at, z) in made.get("stubs", []):
         wx, wy = (at, line) if axis == "x" else (line, at)
-        b.vmf.point("infodecal", (wx, wy, z - 44), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        b.vmf.point("infodecal", (wx, wy, z - 40), {"texture": rnd.choice(GRIME["stain"])}, b.vis + ": canal grime")
 
 
 # Cover NPCs fight from (Valve, lesson valve-cover-hints): a cover hint behind each piece of low cover, on both sides of

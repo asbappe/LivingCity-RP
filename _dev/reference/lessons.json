@@ -4065,6 +4065,34 @@
    "why": "The owner, 23 November: \"I can see in hammer++ there are TONS of surfaces that need nodraw, surfaces/walls that are exposed to the void, facing other surfaces with no chance of ever being visible\".",
    "how": "_dev/tools/map_hidden_faces.py IN OUT: flood from the player starts through air (opaque world/func_detail and displacement skins shut it), nodraw each drawn face whose front never meets it; LOST lines name lights or things in air it never saw.",
    "check": "map_hidden_faces.py prints how many faces it would change; 0 on a clean map."
+  },
+  {
+   "id": "owner-trains-from-out-of-view",
+   "tags": [
+    "owner",
+    "canal",
+    "streets",
+    "logic"
+   ],
+   "title": "A train comes from out of sight and leaves the same way; a track never just stops",
+   "rule": "No box on the street for a train to wait in: a train comes out of a dark tunnel beyond the canal (black a little way in, which nobody passes), crosses on a bridge onto the tracks and goes back the same way, waiting unseen in solid ground. A train is one rigid func_tracktrain and cannot bend round a curve, so it comes in only where a run's track can run straight on past a corner. Every other track end is a buffer stop short of any square where two streets cross: no track ends against a fence or a canal, and none stubs across another road.",
+   "why": "The owner, 23 November, of the brick sheds the trains came out of: \"it's just a box where the train comes out for some reason ... Can we maybe instead have them either come from out of view (like the far side with the ruins/dead trees) through a tunnel or something with a black void that the player can't pass through and cross over top the canal via a bridge and then go onto the train tracks? They should also exit in the same fashion.\" And of the tracks at a corner (5792 8448 708): \"here the train tracks just awkwardly cross and end at the fence/canal? what on earth?\"",
+   "how": "map_corridor.rail_runs: \"left back\" or \"left over\" on a turn line of a street chain carries a run's track straight on past the corner over the next canal into a tunnel (crossing_squares, crossing_build, hide_trains, tunnel_train); every other end gets buffer_stop. first_in_way finds what stands over the rails, and the train stops short of it.",
+   "check": "map_build.py chain (a PROBLEM if a tunnel's canal, its mouth or its hidden train runs into anything, or a train has no room); review"
+  },
+  {
+   "id": "owner-street-meets-modules",
+   "tags": [
+    "owner",
+    "streets",
+    "combine",
+    "geometry"
+   ],
+   "title": "Beside a street, a module's ways at the street's height meet it, and every bridge leads somewhere",
+   "rule": "Where a street runs along a module's bank (Mod.street_side()), every walk, deck, landing, stair head or gantry of the module at or near the street's height by the canal's edge meets the street: open the street's parapet and chain link there (m.b.edge_gaps.append(world rect), a rect over the edge line 256 to 320 out, squares of 64 along the canal), or turn the module so it does (a lift rises to the street's bank). Nothing of the module stands on the railway (320 to 512 out) or the road (576 to 960) or hangs on a wall over the canal's edge above the street's height (the wall ends at 656 there): lamps, cameras, insulators and aerial ends go under the street's edge or onto the module's own wall; furniture goes to the far pavement. A bridge across the canal leads somewhere a player can go (the street, a store, a way down into the canal, a lookout or a control house that is itself the place): the far bank is the edge of the world, so a bridge to a door nobody can open there is pointless; give it a reason or take it out.",
+   "why": "The owner, 23 November, walking the canal ring with its new street: \"a combine checkpoint but there is no way for the combine to actually get onto their checkpoint through the fence between them and the traintracks\"; \"an archway ... that just has a railing running next/through it blocking it\"; \"this is a pointless bridge, literally there's no reason for this bridge ... I'm sure there are tons more of these?\"",
+   "how": "Gaps since 23 November: the checkpoint's stairs, the lock's gantry, the quay's landing, ladder and footbridge, the arcade's walk, the aqueduct's walk and trough, the shanty's bridge (a ladder down into the shanty town), the lift (it turns itself so it rises to the street), the swing bridge (no door on its far landing), the lock gate's parked leaf. A shed over a module closes its street side with the shed's brick wall: keep sheds off modules whose ways meet the street.",
+   "check": "map_build.py chain prints no PROBLEM; the walk check (map_walk.py) only proves a place is reached from somewhere, so for a module beside a street also walk from the street on floors at 600 or higher and see its high places reached (a scratch run of map_walk's Floors with the low floors taken out)."
   }
  ]
 }

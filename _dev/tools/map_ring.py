@@ -190,44 +190,48 @@ class Channel:
         builts = [bx for bx, _ in self.vmf.boxes] + list(getattr(self.vmf, "shape_boxes", []))      # (what the modules built before the dressing)
         for (axis, line, side, a, b) in banks:
             sloping.setdefault((axis, line, side), []).append((a, b))
+        top = getattr(self, "wall_top", None) or self.rim_z      # (how high the canal's outer walls really stand: a chain's rim)
         for (axis, line, side, a, b) in trims:
             spans = sloping.get((axis, line, side), [])
             across = "y" if axis == "x" else "x"
-            for at in range(a + 256, b - 128, 512):      # (the ribs' places)
-                if (at // 512 + (side > 0)) % 2 == 0:
-                    continue      # (every other rib; the walls facing each other take turns)
-                r = _r.Random(at * 7919 + line * 104729 + side * 13).random()
-                for d in (-192, 192) if r < 0.65 else (-192,) if r < 0.8 else (192,) if r < 0.9 else ():
-                    p = at + d
-                    if p - 96 < a + 16 or p + 96 > b - 16:
+            ribs = list(range(a + 256, b - 128, 512))
+            for k, at in enumerate(ribs[:-1]):
+                # (the owner, 23 November: "there are too many culverts in the walls of the canal, way too many", "the
+                # concrete support pillars ... just get cut off by the culvert", "if they were building culverts to a
+                # canal, they wouldn't dig them as deep as possible", "the culvert is like 1 inch below the street":
+                # one in every fourth gap between ribs, midway between them; on a wall that rises well above the trim,
+                # high up in it, clear of the trim's band; under a street, only a storm drain's small mouth)
+                r = _r.Random(at * 7919 + line * 104729 + side * 13)
+                if (k + (side > 0) * 2) % 4 or r.random() < 0.25:
+                    continue
+                p = at + 256
+                if p - 112 < a + 16 or p + 112 > b - 16:
+                    continue
+                bx, by = (p, line - side * 32) if axis == "x" else (line - side * 32, p)
+                behind = self.cells.get((int(bx) // 64, int(by) // 64))
+                under_street = behind is not None and behind[0] == "solid" and len(behind) == 2      # (map_corridor.canal_view: the street's squares)
+                if under_street or top < self.rim_z + 224:
+                    z = fz + 176      # (a storm drain's mouth: above the bank's top, well under the trim)
+                    stub = along(axis, p - 24, p + 24, min(line, line + side * 40), max(line, line + side * 40), z - 24, z + 24)
+                    if not fits(stub, more=avoid) or not fits(stub, gap=4, more=builts):
                         continue
-                    if any(s <= p - 96 and p + 96 <= e for s, e in spans):
-                        kind, z = "bank", fz + BANK + 78      # (its ring's foot on the bank's top edge, 1 over it)
-                    elif not any(p - 112 < e and p + 112 > s for s, e in spans):
-                        kind, z = "wall", fz + 140
-                    else:
-                        continue      # (where a bank ends)
-                    ring = along(axis, p - 80, p + 80, min(line, line + side * 22), max(line, line + side * 22), z - 80, z + 80)
-                    lip = along(axis, p - 96, p + 96, min(line, line + side * 32), max(line, line + side * 32), fz, z - 64)
-                    if not fits(ring, more=avoid) or (kind == "wall" and not fits(lip, gap=8, more=avoid)):
-                        continue
-                    if kind == "wall" and not fits(lip, gap=4, more=builts):
-                        continue      # (a module's own brush there: no outfall, rather than two faces in one plane)
-                    taken.append(ring)
-                    shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
-                    # a grate over the hole, inside Valve's ring (the owner, 22 November: "put a grate over every outpipe/
-                    # drainage pipe on the sidewalls"): a thin sheet of grating 2 in front of the dark, detail (see-through
-                    # on a world brush would stop it sealing)
-                    shapes.append(prism(octagon(p, z, 64), across, min(line + side * 3, line + side * 5), max(line + side * 3, line + side * 5), GRATE))
-                    if kind == "wall":      # (Valve's lip: up to 16 under the hole at the wall, falling 32 to its front)
-                        top = z - 80
-                        shapes.append(prism([(line, fz), (line + side * 32, fz), (line + side * 32, top - 32), (line, top)], axis, p - 96, p + 96, c))
-                        lo2, hi2 = min(line, line + side * 32), max(line, line + side * 32)
-                        self.made.setdefault("bank_rects", []).append((p - 96, lo2, p + 96, hi2) if axis == "x" else (lo2, p - 96, hi2, p + 96))
-                        taken.append(lip)
-                    placed.append((axis, line, side, p, z, kind))
-                    self.made.setdefault("outfalls", []).append((axis, line, side, p, z, kind))
+                    taken.append(stub)
+                    self.made.setdefault("stubs", []).append((axis, line, side, p, z))
+                    shapes.append(prism(octagon(p, z, 24), across, min(line, line + side * 40), max(line, line + side * 40), MAT["bars"], MAT["black"]))
                     self.stats["stubs"] += 1
+                    continue
+                z = self.rim_z + 136              # (high in the wall over the trim's band: its ring 40 over the band, well under the top)
+                ring = along(axis, p - 80, p + 80, min(line, line + side * 22), max(line, line + side * 22), z - 80, z + 80)
+                if not fits(ring, more=avoid) or not fits(ring, gap=4, more=builts):
+                    continue
+                taken.append(ring)
+                shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
+                # a grate over the hole, inside Valve's ring (the owner, 22 November: "put a grate over every outpipe/
+                # drainage pipe on the sidewalls"): a thin sheet of grating 2 in front of the dark, detail
+                shapes.append(prism(octagon(p, z, 64), across, min(line + side * 3, line + side * 5), max(line + side * 3, line + side * 5), GRATE))
+                placed.append((axis, line, side, p, z, "high"))
+                self.made.setdefault("outfalls", []).append((axis, line, side, p, z, "high"))
+                self.stats["stubs"] += 1
         return placed
 
     def pipes(self, axis, at, a, b, taken):

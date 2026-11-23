@@ -575,7 +575,9 @@ def m_lock(m, opt):
     plate to the waist inside: a slit each way down the canal, a button under each slit's end for the gate on that side
     with a lever panel beside it and two lamps over it (green while that gate is open, red while it is shut), the
     canals' own map on the wall, switch boxes, a desk with a monitor and a chair, a fluorescent tube. On the left wall at
-    the gantry's end a street doorway that is never used: planked over, boards nailed across. The right half of the gantry
+    the gantry's end a street doorway that is never used: planked over, boards nailed across; where the chain's street
+    runs along the left bank (the canal ring, 23 November) there is no doorway: the gantry is at the street's height and
+    meets it, the street's parapet open from the upper flight's head across the gantry. The right half of the gantry
     holds the hydraulic pack (a pipe cluster and a generator) and cannot be reached; its two pipes run under the
     gantry along the right wall to the gates.
 
@@ -685,13 +687,19 @@ def m_lock(m, opt):
     m.taken(g1, -256, deck - 112, g2, 256, deck + 130)
     handrail(m, (g1 + 2, -256), (g1 + 2, 192), deck)
     handrail(m, (g2 - 2, -256), (g2 - 2, 256), deck)
-    # the street doorway on the left wall, never used: planked over, boards nailed across (never a door that looks
-    # openable where nobody can go: the owner, 20 November)
-    from map_town import board
-    m.det([(785, 252, deck, 847, 256, deck + 112)], "wood/woodwall006a")
-    m.det([(777, 239, deck, 785, 256, deck + 112), (847, 239, deck, 855, 256, deck + 112), (777, 239, deck + 112, 855, 256, deck + 120)], MAT["beam"])   # (1 proud of the trim)
-    for z, roll in ((deck + 36, 80), (deck + 76, 101)):
-        board(m, 816, 248, z, 270, roll)
+    if m.street_side() == 1:
+        # the chain's street runs along the left bank at the gantry's own height: the gantry meets it (the street's
+        # parapet opens from the upper flight's head across the gantry), so whoever holds the house comes off the street
+        b.edge_gaps.append(m.fr.rect(704, 236, 896, 284))
+        m.lane(800, 288, deck)
+    else:
+        # the street doorway on the left wall, never used: planked over, boards nailed across (never a door that looks
+        # openable where nobody can go: the owner, 20 November)
+        from map_town import board
+        m.det([(785, 252, deck, 847, 256, deck + 112)], "wood/woodwall006a")
+        m.det([(777, 239, deck, 785, 256, deck + 112), (847, 239, deck, 855, 256, deck + 112), (777, 239, deck + 112, 855, 256, deck + 120)], MAT["beam"])   # (1 proud of the trim)
+        for z, roll in ((deck + 36, 80), (deck + 76, 101)):
+            board(m, 816, 248, z, 270, roll)
 
     # the control house
     h1, h2, w1, w2, hz = 736, 896, -112, 112, deck + 112
@@ -733,8 +741,9 @@ def m_lock(m, opt):
     m.taken(448, -256, deck - 100, 1152, -236, deck - 60)
     # light: a caged lamp on the wall over the pier, a dome light under the gantry's slab
     m.lamp(816, 0, deck - 24, "255 220 170 90")
-    m.static("models/props_c17/light_cagelight02_on.mdl", 512, 255, 270, z=F + 250)
-    m.light(512, 240, F + 256, "255 220 170 120")
+    lz = F + 200 if m.street_side() == 1 else F + 250      # (beside a street the wall ends at its height: the lamp under it)
+    m.static("models/props_c17/light_cagelight02_on.mdl", 512, 255, 270, z=lz)
+    m.light(512, 240, lz + 6, "255 220 170 120")
     m.static("models/props_c17/oildrum001.mdl", 464, 240, 0, z=F + 128)
     m.loose("models/props_junk/wood_crate001a.mdl", 980, -90, 20)
     for k, u in enumerate((480, 600, 1000, 1100)):                 # the tide line: dark stains along both walls, over the banks
@@ -950,7 +959,8 @@ def m_pumphouse(m, opt):
     cable to them from the turbine. Behind the doorway's line a turbine pit (192 square, 96 deep, ankle
     deep in water, steps down into it, the city's handrail round it, hazard stripes round its edge, the turbine's
     casing standing in it), numbers on the walls by the machines. The main leaves through the
-    front wall, runs along the canal wall and crosses the canal overhead on a pipe bridge nobody can reach. A steel
+    front wall, runs along the canal wall and crosses the canal overhead on a pipe bridge nobody can reach (where the
+    chain's street runs along the far bank, at 608, under the street's edge, so it goes on under the street). A steel
     gallery runs round the hall 144 up behind the handrail: its stairs climb along the left wall toward the front wall
     (a steel plate along their open side, room at their foot) onto a landing in the corner left of the door; over the
     door a bay 64 deeper holds the control desk against the front wall, 64 clear behind it: a monitor, a lamp, and the
@@ -1073,16 +1083,19 @@ def m_pumphouse(m, opt):
     m.static("models/props_lab/powerbox02b.mdl", 336, 740, 0, z=F + 70)
     m.rope([(342, 700, F + 104), (630, 736, F + 40)], slack=60, width=2)
 
-    # outside: the main along the canal wall, then across on the pipe bridge (its middle at pu)
+    # outside: the main along the canal wall, then across on the pipe bridge (its middle at pu). Where the chain's street
+    # runs along the far bank, the main crosses under the street's edge (its plate and pipe 640 or lower) and goes on
+    # under the street, never up through its parapet
     pu = cx + 384
-    m.det([(wu - 32, 239, hz - 32, wu + 32, 256, hz + 32), (pu - 32, -256, hz - 32, pu + 32, -239, hz + 32)], STEEL)     # (1 proud of the trim)
-    pipe_run(m, (wu, 220), (pu, 220), hz, "32d")              # (clear of the trim line on the wall: it rests on it)
-    m.static("models/props_c17/pipe_cap005.mdl", wu, 220, 180, z=hz - 19)    # (its start, at the plate where it leaves the hall, capped)
-    pipe_run(m, (pu, -256), (pu, 256), hz, "32d")
-    m.det([(pu - 40, -256, hz - 48, pu - 32, 256, hz - 32), (pu + 32, -256, hz - 48, pu + 40, 256, hz - 32)], STEEL)
-    m.det([(pu - 40, v, hz - 32, pu + 40, v + 6, hz - 26) for v in range(-232, 240, 96)], PIPE)
-    m.taken(wu - 40, 200, hz - 56, pu + 48, 256, hz + 40)
-    m.taken(pu - 48, -256, hz - 56, pu + 48, -200, hz + 40)
+    oz = TRIM - 48 if m.street_side() == -1 else hz
+    m.det([(wu - 32, 239, oz - 32, wu + 32, 256, oz + 32), (pu - 32, -256, oz - 32, pu + 32, -239, oz + 32)], STEEL)     # (1 proud of the trim)
+    pipe_run(m, (wu, 220), (pu, 220), oz, "32d")              # (clear of the trim line on the wall: it rests on it)
+    m.static("models/props_c17/pipe_cap005.mdl", wu, 220, 180, z=oz - 19)    # (its start, at the plate where it leaves the hall, capped)
+    pipe_run(m, (pu, -256), (pu, 256), oz, "32d")
+    m.det([(pu - 40, -256, oz - 48, pu - 32, 256, oz - 32), (pu + 32, -256, oz - 48, pu + 40, 256, oz - 32)], STEEL)
+    m.det([(pu - 40, v, oz - 32, pu + 40, v + 6, oz - 26) for v in range(-232, 240, 96)], PIPE)
+    m.taken(wu - 40, 200, oz - 56, pu + 48, 256, oz + 40)
+    m.taken(pu - 48, -256, oz - 56, pu + 48, -200, oz + 40)
 
     # the control desk against the front wall in the bay over the door (64 clear behind it): a monitor, the lamp, the
     # button on its top facing whoever stands at it
@@ -1664,7 +1677,8 @@ def m_swingbridge(m, opt):
     720 or lower and a street along the outside bank passes over it) that turns on a round pier in the middle of the
     canal. As the map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it
     lies along the canal and joins nothing. Each landing is a roofed alcove 192 long and 96 high with a street doorway
-    that is never used (planked over, boards nailed across), a green lamp that shows while the bridge is across and a red one while it is turned
+    that is never used (planked over, boards nailed across; none on the far landing beside a street, where the bridge
+    is the street's way down into the canal: across, then down the far landing's stairs), a green lamp that shows while the bridge is across and a red one while it is turned
     away (and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge
     that drops while the bridge is away, the city's handrail each side of the bridge's end and along the landing's open
     edge, and against its back wall the canal's winch with the button over it that turns the bridge (a press rings a
@@ -1773,14 +1787,17 @@ def m_swingbridge(m, opt):
         handrail(m, (cu + 32, s * 238), (cu + 64, s * 238), deck)
         handrail(m, (min(U(384), U(448)), s * 258), (max(U(384), U(448)), s * 258), deck)
         # the street door on the back wall (Nova Prospekt's heavy door between jambs, shut for good: not the city's
-        # door, which opens), the lamp
-        f1, f2 = sorted((s * 304, s * 320))
-        p1, p2 = sorted((s * 316, s * 320))
-        du = U(432)
-        m.det([(du - 39, f1, deck, du - 31, f2, deck + 96), (du + 31, f1, deck, du + 39, f2, deck + 96)], MAT["beam"])
-        m.det([(du - 31, p1, deck, du + 31, p2, deck + 96)], "wood/woodwall006a")     # (planked over, never used)
-        for z, roll in ((deck + 34, 82), (deck + 72, 99)):
-            board(m, du, s * 312, z, Y(270), roll)
+        # door, which opens), the lamp. Beside a street the other bank is the edge of the world, and a bridge from the
+        # street to a door nobody can open is pointless (the owner, 23 November): no door there, the landing is the
+        # bridge's way down into the canal
+        if not street:
+            f1, f2 = sorted((s * 304, s * 320))
+            p1, p2 = sorted((s * 316, s * 320))
+            du = U(432)
+            m.det([(du - 39, f1, deck, du - 31, f2, deck + 96), (du + 31, f1, deck, du + 39, f2, deck + 96)], MAT["beam"])
+            m.det([(du - 31, p1, deck, du + 31, p2, deck + 96)], "wood/woodwall006a")     # (planked over, never used)
+            for z, roll in ((deck + 34, 82), (deck + 72, 99)):
+                board(m, du, s * 312, z, Y(270), roll)
         cage_lamp(m, U(556), s * 320, deck + 60, Y(270), "255 220 170 45")
         m.static("models/props_trainstation/light_signal002a.mdl", U(336), s * 214, Y(270), z=deck + 10)    # the signal on the wall beside it
         m.taken(*B(286, 200, deck, 386, 256, deck + 140))

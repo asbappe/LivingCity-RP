@@ -31,18 +31,16 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
+- 23 November (this chat): **EP2's Combine autogun lifted and built out** as `valve_ep2_cannon` (ep2_outland_09):
+  bay, guns, finders (every player), generator intake, blow-up, clips, areaportals, nodes, safe zone, demonstration
+  fire. Test map: map_cannon_test.py (lc_cannon_test.vmf), not compiled yet; real-map spot waits on the owner.
 - 22 November: **Standup hangs everyone from oak_tree01** (`OakBranch` in sv_livingcity_endings.lua; oaks planted
-  beside the next victim, six branches each). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
-- 22 and 23 November (this chat): **the canal ring round City 18**, one piece (map_layouts/ring.txt), fitted to
-  c18_lc.vmf and checked against every piece. **The road and railway run between the city and the canal** (the owner,
-  23 November), four trains, a road climbing to the owner's west road; four runs moved out to make room, the town and
-  cave forest with them. Every build runs a stair and a walk check. Test map: map_ring_walk.py. Not compiled yet.
-- From the city out: the owner's city, a Combine wall (`wall combine`), the road, the railway, the canal, then ruins and
-  rooftops beyond the far wall, turning to EP2 pine forest by the two forests (`backdrop`, map_backdrop.py).
-- Ravenholm's church is behind the crypt (map_mods_f.church); its names wait for the gamemode (TODO.md, the church).
-- The owner's map (c18_lc.vmf) and Valve's VMF zip are on their Drive: curl from drive.usercontent.google.com.
-- Also 22 November: the HQ's later stages, supply lines, advisor screens, the forest cave HQ (git log, TODO.md).
+  beside the next victim). Rope spot guessed: lc_ending_standup_branch_out/_up (owner OK'd, in the snapshot).
+- 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt), fitted to c18_lc.vmf: road and railway
+  between city and canal all the way round, four trains out of tunnels over rail bridges. Test map map_ring_walk.py.
+  Not compiled yet. Outward: city, Combine wall, road, railway, canal, ruins, then EP2 pine forest (map_backdrop.py).
+- The owner's map (c18_lc.vmf) and Valve's VMF zip (HL2Leak-VMFs-master.zip) are on their Drive: the Drive connector
+  finds them by name; curl from drive.usercontent.google.com with the file's id.
 - Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
-- Map chat: bunker, silo and the cave's back (Valve's rooms) to the owner's lists (TODO.md, map-building.md). 23 Nov:
-  entrance leaves doubled in a steel frame, 3 windows on silo level B. The owner edits the bunker VMF in Hammer:
-  apply each generator change to THEIR latest file (diff two builds, swap only what changed), never resend ours.
+- Map chat: bunker, silo and the cave's back to the owner's lists (TODO.md, map-building.md). The owner edits the
+  bunker VMF in Hammer: apply each generator change to THEIR latest file (diff two builds), never resend ours.
