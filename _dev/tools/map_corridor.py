@@ -1079,7 +1079,7 @@ def combine_wall(b, seed=1):
             runs_.append((Piece(fr, (k, 0), WALL_H, r, sink), k))
             u += k
         for n, (p, k) in enumerate(runs_):
-            T, Le, Pl = run(p, k, WALL_H, r)
+            T, Le, Pl = run(p, k, WALL_H, r, inner=False)      # (its back against the city's edge: nothing built there)
             pier(p, 0, WALL_H, r, T, Le, Pl, lamp=n % 2 == 0)
             if n == len(runs_) - 1:
                 pier(p, k, WALL_H, r, T, Le, Pl, lamp=True)
