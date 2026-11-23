@@ -72,6 +72,5 @@ end
 
 hook.Add("LivingCityRegistered", "LivingCityPamphlet", function(ply)
     if not cvPamphlet:GetBool() or not IsValid(ply) or not LC.GiveItem or LC.HasItem(ply, "pamphlet") then return end
-    LC.GiveItem(ply, "pamphlet", 1)
-    ply:ChatPrint("[Civil Intake] You are handed a Civil Orientation pamphlet. Read it (it's in your pockets).")
+    LC.GiveItem(ply, "pamphlet", 1) -- (into their pockets, quietly: the owner, 23 November, too many lines at registration)
 end)

@@ -177,7 +177,7 @@ local PLACES = {
 LC.WaypointPlaces = PLACES
 
 -- Point them at a place by kind. True, or false and why not.
-function LC.WaypointTo(ply, what)
+function LC.WaypointTo(ply, what, quiet) -- (quiet: no "it's marked" notice, the caller's own line says so)
     local find = PLACES[tostring(what or "")]
     if not IsValid(ply) or not find then return false end
     if what == "lab" and ply:GetNW2String("lcf_faction", "") ~= "resistance" then return false end
@@ -189,7 +189,7 @@ function LC.WaypointTo(ply, what)
     LC.SetWaypoint(ply, pos, label, what == "home" and 260 or 170)
     -- a block's middle can be in mid air or between wings: being inside the block is arriving
     if what == "home" and ply.lcWaypoint then ply.lcWaypoint.block = LC.PlayerBlock and LC.PlayerBlock(ply) end
-    LC.Notice(ply, "info", "Waypoint", label .. ": it's marked on your screen.")
+    if not quiet then LC.Notice(ply, "info", "Waypoint", label .. ": it's marked on your screen.") end
     return true
 end
 

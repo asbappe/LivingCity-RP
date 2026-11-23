@@ -10484,6 +10484,11 @@ new.chat = {}
 Later(9)
 ok(not LC.IntakePending(new) and has(new.chat, "Registration complete"), "after a few seconds you're on the register", new.chat[1])
 ok(has(new.chat, "Housing Allocation"), "and told where to ask for a room")
+do
+    local n = 0
+    for _, l in ipairs(new.chat) do if string.find(l, "[Civil Intake]", 1, true) then n = n + 1 end end
+    ok(n == 1, "in one line, not four (the owner, 23 November)", table.concat(new.chat, " | "))
+end
 LC.IntakeFlags(new)
 ok(not new:GetNW2Bool("lc_unreg", true) and new:GetNW2Bool("lc_unhoused", false), "your screen points there next")
 new.chat = {}
@@ -10535,7 +10540,7 @@ third.lcIntakeSince = CurTime() - 11 * 60
 ok(LC.IntakeStopped(third, nil) == true and LC.PlayerIsWanted(third), "but not forever: failure to register")
 if LC.ClearWanted then LC.ClearWanted(third) end
 hook.Run("LivingCityReleased", third)
-ok(not LC.IntakePending(third) and has(third.chat, "processed while in custody"), "someone arrested first is processed in custody")
+ok(not LC.IntakePending(third) and has(third.chat, "Processed in custody"), "someone arrested first is processed in custody")
 
 -- a death starts it all again
 new.alive = false

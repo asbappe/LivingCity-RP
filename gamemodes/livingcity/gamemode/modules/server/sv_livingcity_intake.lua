@@ -226,29 +226,20 @@ function LC.RegisterPerson(ply, how)
     LC.IssueDocuments(ply)
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
     local cid = ply:GetNW2String("lc_cid", "")
-    if how == "custody" then
-        ply:ChatPrint(string.format("[Civil Intake] You were processed while in custody: %s, citizen %s. Your papers are in your pockets (F3). Ration cards come from work: each Union shift you finish earns one.", name, cid))
-    else
-        ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers are in your pockets (F3): keep them on you. Ration cards come from work: each Union shift you finish earns one.", name, cid))
-    end
+    -- One line, the next step marked on screen (the owner, 23 November: four lines of it, "I'm the hecking owner and
+    -- I don't want to even try to read this. goodness gracious get rid of all this"). Papers, ration cards and the
+    -- pamphlet speak for themselves in your pockets (F3); housing comes after work, on F1 > What now?.
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
-    -- a Labor Assignment terminal in this city: work first, then a room (sv_livingcity_labor.lua)
-    local labor = LC.AwaitingLabor and LC.AwaitingLabor(ply)
-    if labor then
-        ply:ChatPrint("[Civil Intake] Next, go to Labor Assignment to be given your Union work. It's marked on your screen.")
-        if LC.WaypointTo then LC.WaypointTo(ply, "labor") end
-    end
-    if LC.AwaitingHousing(ply) and HasDesk("housing") then
-        if labor then
-            ply:ChatPrint("[Civil Intake] Then Housing Allocation gives you a room: it only houses citizens with a work assignment.")
-        else
-            ply:ChatPrint("[Civil Intake] Next, go to Housing Allocation to get a room. It's marked on your screen.")
-            if LC.WaypointTo then LC.WaypointTo(ply, "housing") end
-            if LC.Hint then LC.Hint(ply, "intake_housing") end
-        end
-    elseif n then
-        ply:ChatPrint("[Civil Intake] You already have a room: " .. LC.BlockName(n) .. ". Ask at Housing Allocation if you want to know more.")
-    elseif LC.AssignBlock then
+    local labor = LC.AwaitingLabor and LC.AwaitingLabor(ply) -- (a Labor Assignment terminal here: work first, then a room)
+    local housingDesk = LC.AwaitingHousing(ply) and HasDesk("housing") -- (a room later, from Housing Allocation)
+    local housing = not labor and housingDesk
+    local nextStep = labor and " Next: Labor Assignment (marked)." or (housing and " Next: Housing Allocation (marked)." or "")
+    ply:ChatPrint(string.format(how == "custody" and "[Civil Intake] Processed in custody: %s, #%s.%s" or "[Civil Intake] Registration complete: %s, #%s.%s", name, cid, nextStep))
+    if labor and LC.WaypointTo then LC.WaypointTo(ply, "labor", true) end
+    if housing then
+        if LC.WaypointTo then LC.WaypointTo(ply, "housing", true) end
+        if LC.Hint then LC.Hint(ply, "intake_housing") end
+    elseif not housingDesk and not n and LC.AssignBlock then
         n = LC.AssignBlock(ply, false, true) -- (no housing desk here: a room comes with the papers)
         if n then
             ply:SetPData("lc_housed_how", "papers")
