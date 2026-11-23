@@ -12,6 +12,13 @@
 # 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there.
 # Between the city and the street stands a Combine wall ("wall combine"; the owner, 23 November: "City > combine wall >
 # road > railroad > canal > wall/scenery"), made by map_combine's recipe along the street's whole far side.
+# The trains (the owner, 23 November: they "come from out of view ... through a tunnel or something with a black void
+# that the player can't pass through and cross over top the canal via a bridge"): "left back" on a turn carries the
+# track of the run after it straight back past the corner, through the square where the two streets cross, over a
+# bridge across the canal of the run before it and into a tunnel in that canal's outer wall; "left over" carries the
+# run before's track on over the next one's canal. A train waits unseen beyond the tunnel's black end, comes out,
+# runs along its run and backs in again (with a tunnel at both ends of a run it would run through). Every other track
+# end is a buffer stop short of the crossing square (map_corridor.rail_runs).
 # Checked with
 #   python3 map_build.py chain --layout map_layouts/ring.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf lc_town.vmf lc_forest_cave.vmf
 
@@ -40,21 +47,21 @@ backdrop clear 3200 1792 8000 5760
 # N1: north, from the first canal
 checkpoint
 straight 1344 stairs
-left
+left back       # the north run's train: out of a tunnel east of this run's canal, over a bridge onto its tracks
 # N2 and N3: west along the north (the town's branch in the middle: nothing with side rooms within 1536 west of it,
-# the town's south end is there); a train between the two sheds, east of the rail bridge
+# the town's south end is there); the train comes out at the corner and stops short of the rail bridge
 depot flip
-armory flip shed
-substation shed
+armory flip
+substation
 thumper
 straight 576 stairs
 tee flip
 lock
-morgue flip shed2
-floodroom flip shed2
+morgue flip
+floodroom flip
 railbridge
 straight 1088
-left
+left back       # the west run's train: out of a tunnel north of the north run's canal
 # N4 and N5: south down the west (the cave forest's branch in the middle; its wall stands along the outside bank, so
 # nothing here has side rooms)
 straight 3200 stairs
@@ -67,45 +74,45 @@ drain
 overflow flip
 stash flip
 straight 128
-left
+left            # (no train: the boathouse's rooms and the stash's wall stand where either tunnel would go)
 # S2: south
 boathouse flip
-straight 1024 shed
-shanty flip shed
+straight 1024
+shanty flip
 camp flip
 vort flip
 sludge flip
-barge shed
-underpass shed
+barge
+underpass
 straight 640 stairs
-left
+left back       # the south run's train: out of a tunnel west of the west side's canal
 # S3: east
 tunnel 2048
-crypt flip shed
-shell shed
+crypt flip
+shell
 tram
 widen
 lockgate flip
 narrow
-cistern shed
-wreck shed
+cistern
+wreck
 basin
 collapse flip
 ash flip
 straight 192
-left
+left back       # the east side's train: out of a tunnel south of the south run's canal (east: the firing wall's recess)
 # S4: north
 execwall flip
 lift flip
 pumphouse flip
 quay
-arcade shed
-aqueduct shed
+arcade
+aqueduct
 chimney
 swingbridge
-relay shed
-straight 64 shed
-breach shed
+relay
+straight 64
+breach
 left nostreet
 straight 448 nostreet
 right nostreet

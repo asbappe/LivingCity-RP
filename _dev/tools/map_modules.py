@@ -1388,7 +1388,8 @@ def m_relay(m, opt):
     m.static("models/props_rooftop/antenna04a.mdl", 520, -232, 0, z=top + 118)             # an aerial on the shack's roof
     for (gu, gv, gz) in ((330, -16, top + 4), (824, -16, top + 4), (824, -256, top + 220)):
         m.rope([(672, -176, tip - 40), (gu, gv, gz)], slack=10, width=1)
-    m.rope([(672, -176, tip), (700, 256, b.rim - 24)], slack=60, width=1)                   # the long-wire aerial, across to the far wall (into it, under its top)
+    far = (700, 256, b.rim - 24) if m.street_side() != 1 else (990, -256, b.rim - 24)      # (the street on the far bank: its wall's top is the street's, and the trains pass)
+    m.rope([(672, -176, tip), far], slack=60, width=1)                   # the long-wire aerial, across to the far wall (into it, under its top)
     m.rope([(540, -106, top + 98), (667, -171, top + 300)], slack=30, width=1)              # the shack's feed, up to the pole
     m.target("lc_relay_mast", 672, -100, top + 8, 90)
     # the generator under a lean-to against the wall, its exhaust up through the roof, and its fuel
@@ -2145,8 +2146,8 @@ def build_chain(lay, args):
             size = width      # (a turn as wide as the canal: 512 square, or 1024 in the wide canal)
             fr = Frame(x, y, rot, size)
             m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt + (["wide"] if size > CANAL_W else []))
-            if "nostreet" not in opt:
-                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
+            if "nostreet" not in opt:      # ("over", "back": a run's track carried on over the canal at this corner, map_corridor.rail_runs)
+                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name), "rail": [w for w in opt if w in ("over", "back")]})
             else:
                 elems.append({"kind": "gap", "tag": "%d %s turn" % (n, name)})
             shed_n = 0
@@ -2238,6 +2239,7 @@ def build_chain(lay, args):
         if lay.get("backdrop"):
             import map_backdrop
             map_backdrop.build(b, lay)
+        map_corridor.hide_trains(b)      # (the solid the trains wait in beyond their tunnels, once the backdrop has laid its ground)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))

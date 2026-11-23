@@ -26,10 +26,15 @@ becomes the road (512 wide in both), its left wall the frontage, and everything 
 the real canal passes below as a plain stretch, with stairs up from it and a plank crossing over the
 tracks. Nothing in the module's own code changes.
 
-The train: every straight run that has two "shed" lines gets one. A shed is a stretch whose tracks
-are roofed over (a brick shed the length of the train); the train waits out of sight in one, runs to
-the other at random intervals behind its horn, and is put back unseen. It is Half-Life 2's own Combine
-train (an engine and cars, as models riding an unseen brush), it is solid, and it kills what it hits.
+The trains: Half-Life 2's own Combine train (an engine and cars, as models riding an unseen brush),
+solid, killing what it hits, sent at random intervals behind its horn. Where a turn toward the street
+is marked "over" or "back" (rail_runs), a run's track is carried straight on through the square where
+the two streets cross, over a bridge across the other run's canal and into a tunnel in its outer wall:
+black a little way in, and beyond that solid ground where the train waits unseen. It comes out, runs
+along the run and backs into its tunnel (or, with a tunnel at each end, goes into the other and is put
+back unseen). Every other track end is a buffer stop short of the crossing square. The older way, still
+used by the street test layouts: a straight run with two "shed" lines, a brick shed over the tracks at
+each, the train running from one to the other.
 """
 
 import random
@@ -51,6 +56,11 @@ STREET_MODULES = {"relay": "up flip", "substation": "up flip", "market": "up", "
                   "plaza": "up", "flats": "up"}
 ENGINE, CAR = "models/props_combine/combinetrain01a.mdl", "models/props_combine/combine_train02a.mdl"
 ENGINE_LEN, CAR_LEN, GAP = 640, 628, 16
+TUN = 256               # how far a train's tunnel runs into the ground beyond the canal's outer wall before its black end
+DECK_UNDER = STREET - 48    # the underside of a train's bridge (its cross girders): what stairs under it must clear by 72
+SPEED = 700             # the trains' speed, and the slower one they come to a stop at
+STOP_SPEED = 120
+STRIPE = "dev/dev_hazzardstripe01a"      # (as the owner's map paints its edges)
 
 
 class CorridorPlan(Plan):
@@ -189,6 +199,7 @@ def lay(b, elems, side, cars):
     if leg:
         legs.append(leg)
     need = train_len(cars) + 96      # (the back wall's 64, and 16 clear at each end: the train waits against the closed end)
+    plan_runs = rail_runs(b, elems, s, cars)      # (where each run's track ends, and how: its tunnels' squares painted, their bridges noted)
 
     # --- the squares ---
     for e in elems:
@@ -251,9 +262,15 @@ def lay(b, elems, side, cars):
         ra = a["frame"].rect(max(0, a["length"] - FR - 64), s * (EDGE + 64), a["length"], s * (FR + 64))      # (from beyond the parapet: the canal's edges keep theirs)
         rz = z["frame"].rect(0, s * (EDGE + 64), min(z["length"], FR + 64), s * (FR + 64))
         x1, y1, x2, y2 = max(ra[0], rz[0]), max(ra[1], rz[1]), min(ra[2], rz[2]), min(ra[3], rz[3])
+        crossing = "rail_span" in a and "rail_span" in z      # (both runs' tracks end short of it, or one is carried across: all road)
         for i in range(x1 // CELL, x2 // CELL):
             for j in range(y1 // CELL, y2 // CELL):
                 junction.add((i, j))
+                spec = cells.get((i, j))
+                if crossing and spec and spec[0] == "open" and spec[1] == STREET:
+                    cells[(i, j)] = spec[:2] + (road,) + spec[3:]
+                elif crossing and spec and spec[0] == "under":
+                    cells[(i, j)] = spec[:4] + (road,)
 
     if getattr(b, "street_wall", None) == "combine":
         combine_core(b, shed_front)
@@ -291,24 +308,31 @@ def lay(b, elems, side, cars):
             return out
         stairs = []
         if e.get("stairs") and not e.get("shed"):
-            # stairs from the canal's floor up its wall to the street, and planks across the tracks at their head
-            u0 = max(64, min(L - 512, L // 2 - 256) // 64 * 64)
+            # stairs from the canal's floor up its wall to the street, and planks across the tracks at their head (u0: their
+            # foot; d: the way they climb, the other way or elsewhere on the stretch where a train's bridge crosses over)
+            u0, d = stair_spot(b, fr, L)
             v1, v2 = sv(192, 256)
-            m.steps(u0, v1, v2, F, STREET, "u", 1)
-            m.det([(u0 - 48, v1, F, u0, v2, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])      # (an apron at their foot: the mud kept level there)
-            m.no_bank(u0 - 8, s * 256 - 8, u0 + 392, s * 256 + 8)
-            m.blocked(u0, v1, u0 + 392, v2)
-            m.taken(u0, v1, F, u0 + 384, v2, STREET)
-            top = (u0 + 384, u0 + 448)
-            stairs.append((top[0] - 64, top[1]))      # (the parapet stops a square short: its top steps step off sideways onto the street)
-            m.det([(top[0], sv(TRACK, ROAD_IN)[0], STREET, top[1], sv(TRACK, ROAD_IN)[1], STREET + 9)], MM["wood"], vis=dv)
-            m.lane(u0 - 24, s * 224, F)
-            m.lane(u0 + 190, s * 224, F + 128)
+            m.steps(u0, v1, v2, F, STREET, "u", d)
+            a1, a2 = sorted((u0, u0 - d * 48))
+            m.det([(a1, v1, F, a2, v2, F + 2)], MAT["canal_wall"], top=MAT["quay_floor"])      # (an apron at their foot: the mud kept level there)
+            n1, n2 = sorted((u0 - d * 8, u0 + d * 392))
+            m.no_bank(n1, s * 256 - 8, n2, s * 256 + 8)
+            k1, k2 = sorted((u0, u0 + d * 392))
+            m.blocked(k1, v1, k2, v2)
+            t1, t2 = sorted((u0, u0 + d * 384))
+            m.taken(t1, v1, F, t2, v2, STREET)
+            top = tuple(sorted((u0 + d * 384, u0 + d * 448)))
+            stairs.append((top[0] - 64, top[1]) if d > 0 else (top[0], top[1] + 64))      # (the parapet stops a square short: its top steps step off sideways onto the street)
+            over = e.get("rail_span") is None or e["rail_span"][0] <= top[0] and top[1] <= e["rail_span"][1]      # (no planks where the track has ended short)
+            if over:
+                m.det([(top[0], sv(TRACK, ROAD_IN)[0], STREET, top[1], sv(TRACK, ROAD_IN)[1], STREET + 9)], MM["wood"], vis=dv)
+            m.lane(u0 - d * 24, s * 224, F)
+            m.lane(u0 + d * 190, s * 224, F + 128)
             m.lane(top[0] + 32, s * 288, STREET)
-            m.lane(top[0] + 32, s * RAIL_V, STREET + 9)
+            m.lane(top[0] + 32, s * RAIL_V, STREET + (9 if over else 0))
             m.lane(top[0] + 32, s * 544, STREET)
             e["crossing"] = top
-            m.view(u0 - 60, s * 150, F, 20 if s > 0 else 340, -16, "the stairs up to the street")
+            m.view(u0 - d * 60, s * 150, F, (20 if s > 0 else 340) if d > 0 else (160 if s > 0 else 200), -16, "the stairs up to the street")
         # the canal's edge: a low parapet, chain link on it (not where a bridge meets the street: b.edge_gaps)
         for u in range(0, L, CELL):
             px, py = fr.pt(u + 32, s * (EDGE + 6))
@@ -318,14 +342,17 @@ def lay(b, elems, side, cars):
             v1, v2 = sv(EDGE, EDGE + 12)
             m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"], vis=dv)
             chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72)
-        # the tracks: sleepers and two rails wherever there is ballast, in the open and in the sheds
+        # the tracks: sleepers and two rails wherever there is ballast, in the open and in the sheds; on a run whose ends
+        # rail_runs planned, only between those ends, and across the square where two streets cross the rails alone
+        # (laid in its road)
         ties, rails = [], []
         start = None
+        span = e.get("rail_span")
         for u in range(0, L + 1, CELL):
             x, y = fr.pt(u + 32, s * RAIL_V)
             c = (x // CELL, y // CELL)
-            ok = u < L and (c in b.deck or c in b.sheds or c in b.viaduct)
-            if ok:
+            ok = u < L and (c in b.deck or c in b.sheds or c in b.viaduct) and (span is None or span[0] <= u <= span[1] - CELL)
+            if ok and not (span is not None and c in junction):
                 v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
                 ties.append((u + 10, v1, STREET, u + 22, v2, STREET + 3))
                 ties.append((u + 42, v1, STREET, u + 54, v2, STREET + 3))
@@ -413,6 +440,8 @@ def lay(b, elems, side, cars):
             b.vmf.detail(piers, MAT["canal_wall"], vis=b.vis + ": the street")
         b.notes.append("the street crosses %d squares of lower open ground on a viaduct" % len(slabs))
     # --- the trains ---
+    for r in plan_runs:      # (the planned runs: buffer stops, bridges and tunnels, and a train where a tunnel is)
+        rail_ends(b, r, s, cars, junction)
     for k, leg in enumerate(legs):
         sheds = [e for e in leg if e.get("shed")]
         if len(sheds) != 2:
@@ -486,6 +515,445 @@ def train(b, n, a, z, s, cars):
     run = abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])
     b.notes.append("train %d: an engine and %d cars (%d long) from the shed in %s to the shed in %s, %d of track, about %d seconds a pass, at random every 70 to 240 seconds" % (
         n, cars, TL, a["tag"], z["tag"], run, run // 700))
+
+
+def inside_turn(e, s):
+    """A turn toward the street's side (the two runs' streets cross in a square there), or not."""
+    return bool(e) and e["kind"] in ("left", "right") and (e["kind"] == "left") == (s > 0)
+
+
+def back_frame(R):
+    """A run's frame turned round: u from its far end back, v to the other side (so a track end at the run's far end
+    is built as one at its start)."""
+    from map_modules import Frame
+    x, y = R.pt(R.length, 0)
+    return Frame(x, y, R.rot + 2, R.length)
+
+
+def in_frame(fr, x, y):
+    """The (u, v) of a point of the map in a frame neither flipped nor moved over."""
+    return {0: (x - fr.x, y - fr.y), 1: (y - fr.y, fr.x - x), 2: (fr.x - x, fr.y - y), 3: (fr.y - y, x - fr.x)}[fr.rot]
+
+
+def hide_len(cars):
+    """How far the solid a train waits in reaches beyond its tunnel's black end: the train, and room each side."""
+    return (train_len(cars) + 192 + 63) // 64 * 64
+
+
+def squares(r):
+    for i in range(r[0] // CELL, -(-r[2] // CELL)):
+        for j in range(r[1] // CELL, -(-r[3] // CELL)):
+            yield (i, j)
+
+
+def rail_runs(b, elems, s, cars):
+    """The street's straight runs and how each one's track ends (the owner, 23 November, of the trains' sheds: "it's
+    just a box where the train comes out for some reason ... Can we maybe instead have them either come from out of view
+    (like the far side with the ruins/dead trees) through a tunnel or something with a black void that the player can't
+    pass through and cross over top the canal via a bridge and then go onto the train tracks? They should also exit in
+    the same fashion"; and of the tracks at a corner: "here the train tracks just awkwardly cross and end at the
+    fence/canal? what on earth?").
+
+    A run is the legs between two turns or gaps. Its track ends one of three ways:
+      tunnel    at a turn toward the street marked for it in the layout: "left back" (the run after the turn carries its
+                track back, straight on past the corner) or "left over" (the run before carries its track on). The track
+                crosses the square where the two streets meet (a level crossing), a bridge over the other run's canal
+                (crossing_build) and goes into a tunnel in that canal's outer wall, black a little way in; beyond, the
+                train waits unseen in solid ground (hide_trains). A train is rigid and cannot bend round a curve, so this
+                is how it comes and goes. Both words at one corner would cross two tracks in its square: refused.
+      junction  at any other turn toward the street: a buffer stop a square short of the crossing square, so no track
+                runs across the other road or ends against the canal's fence.
+      open      at a turn away from the street (the road goes round its outside), a gap or the chain's end: a buffer
+                stop a square from the end.
+    A run with sheds keeps its tracks and train as they were (the street test layouts). Every leg of a planned run gets
+    "rail_span": the stretch of its own u the track covers."""
+    from map_modules import Frame
+    FR = front_line(b)
+    b.rail_bridges, b.rail_hides = [], []
+    for k, e in enumerate(elems):
+        if e["kind"] in ("left", "right"):
+            e["junction"] = inside_turn(e, s) and 0 < k < len(elems) - 1 and elems[k - 1]["kind"] == "leg" and elems[k + 1]["kind"] == "leg"
+            rail = e.get("rail", [])
+            if rail and not e["junction"]:
+                b.problems.append("%s: \"over\" and \"back\" (a train's tunnel) go only on a turn toward the street's side with the street on both runs" % e["tag"])
+            if "over" in rail and "back" in rail:
+                b.problems.append("%s: \"over\" and \"back\" at one corner would cross the two tracks in its square: keep one" % e["tag"])
+    runs, cur, before = [], [], None
+    for e in elems + [None]:
+        if e is not None and e["kind"] == "leg":
+            cur.append(e)
+            continue
+        if cur:
+            runs.append({"legs": cur, "before": before, "after": e})
+        cur, before = [], e
+    for n, r in enumerate(runs):
+        legs = r["legs"]
+        f0 = legs[0]["frame"]
+        L = sum(e["length"] for e in legs)
+        R = Frame(f0.x, f0.y, f0.rot, L)
+        r.update(n=n + 1, L=L, frame=R, tag="%s to %s" % (legs[0]["tag"], legs[-1]["tag"]), tunnels=[], ends=None)
+        if any(e.get("shed") for e in legs):
+            continue
+        ends = []
+        for which, t in (("start", r["before"]), ("end", r["after"])):
+            if not (t and t.get("junction")):
+                ends.append("open")
+                continue
+            if ("back" if which == "start" else "over") not in t.get("rail", ()):
+                ends.append("junction")
+                continue
+            Q, sq = (R, s) if which == "start" else (back_frame(R), -s)
+            tag = "the train's tunnel at the %s" % t["tag"]
+            if crossing_squares(b, Q, sq, tag, cars):
+                r["tunnels"].append((which, Q, sq, tag))
+                ends.append("tunnel")
+            else:
+                ends.append("junction")
+        ua = {"tunnel": -(512 + TUN), "junction": FR + 128, "open": 64}[ends[0]]
+        ub = {"tunnel": L + 512 + TUN, "junction": L - FR - 128, "open": L - 64}[ends[1]]
+        if ub - ua < 256:
+            b.notes.append("the run %s is too short for a track between its ends" % r["tag"])
+            ua = ub = 0
+        r.update(ends=ends, ua=ua, ub=ub)
+        o = 0
+        for e in legs:
+            e["rail_span"] = (ua - o, ub - o)
+            o += e["length"]
+    return runs
+
+
+def crossing_squares(b, Q, sq, tag, cars):
+    """Before the street is laid (rail_runs): see that the canal a train's bridge crosses is plain open canal with
+    nothing of a module's on its walls there, and that nothing stands where the tunnel and the hidden train go; then
+    paint the tunnel's squares and note the bridge (for the parapet's gap and the stairs: stair_spot). Q: the run's
+    frame with the track carried on to u < 0 (the canal it crosses is u -512..0, its outer wall at u -512); sq: the
+    street's side in Q. Gives whether it can be built."""
+    from map_modules import F, MM, Mod
+    from map_backdrop import GROUND
+    lo, hi = sorted((sq * (RAIL_V - 160), sq * (RAIL_V + 160)))
+    wall = -(512 + TUN)
+    if b.rim < STREET + 312:
+        b.problems.append("%s: the canal's walls (rim %d) are too low for a train's tunnel through them (it needs %d)" % (tag, b.rim, STREET + 312))
+        return False
+    for c in squares(Q.rect(-512, lo, 0, hi)):
+        spec = b.plan.cells.get(c)
+        if spec is None or spec[0] != "open" or spec[1] != F:
+            b.problems.append("%s: the canal its bridge crosses is not plain open canal at (%d %d) (%s)" % (tag, c[0] * CELL, c[1] * CELL, b.owner.get(c, "nothing")))
+            return False
+    box = Q.box(-512, sq * (RAIL_V - 220), DECK_UNDER - 16, 0, sq * (RAIL_V + 220), b.rim + 16)
+    for t in b.taken:
+        if t[0] < box[3] and t[3] > box[0] and t[1] < box[4] and t[4] > box[1] and t[2] < box[5] and t[5] > box[2]:
+            b.problems.append("%s: its bridge or its tunnel's mouth runs into something of a module's on the canal's walls at (%d %d %d)" % (tag, t[0], t[1], t[2]))
+            return False
+    for c in squares(Q.rect(wall - hide_len(cars), lo - 64, -512, hi + 64)):      # (the tunnel, the hidden train, a square round them)
+        spec = b.plan.cells.get(c)
+        if spec is not None and not (spec[0] == "solid" or (spec[0] == "open" and spec[1] >= STREET + 304)):
+            b.problems.append("%s: the tunnel or the train hidden beyond it runs into %s at (%d %d)" % (tag, b.owner.get(c, "something"), c[0] * CELL, c[1] * CELL))
+            return False
+    m = Mod(b, Q, tag)
+    # (a room under ground at the rim: the backdrop puts its own sky over it; its roof 8 thick, the train 290 high)
+    m.cellar(wall, lo, -512, hi, STREET, b.rim - 8, b.rim, mat=MM["gravel"], upper_mat=GROUND)
+    b.rail_bridges.append((Q.rect(-512, lo, 0, hi), DECK_UNDER))
+    e1, e2 = sorted((sq * (RAIL_V - 150), sq * (RAIL_V + 150)))
+    b.edge_gaps.append(Q.rect(-8, e1, 24, e2))      # (the crossed run's parapet stops at the bridge's girders)
+    b.rail_hides.append((Q, sq, tag, hide_len(cars)))
+    return True
+
+
+def stair_spot(b, fr, L):
+    """Where a stretch's stairs up to the street stand (the foot's u, and 1 if they climb along u, -1 if back): the
+    middle as ever, unless a train's bridge crosses over the canal there (rail_runs); then the other way, or elsewhere
+    on the stretch, so their top is clear of it and every tread has 72 of headroom under it."""
+    from map_modules import F
+    u0 = max(64, min(L - 512, L // 2 - 256) // 64 * 64)
+    bridges = []
+    for rect, under in getattr(b, "rail_bridges", []):
+        r = fr.rect(0, -256, L, 256)
+        if rect[0] < r[2] and rect[2] > r[0] and rect[1] < r[3] and rect[3] > r[1]:
+            us = [in_frame(fr, rect[0], rect[1])[0], in_frame(fr, rect[2], rect[3])[0]]
+            bridges.append((min(us), max(us), under))
+    if not bridges:
+        return u0, 1
+
+    def fits(foot, d):
+        lo, hi = sorted((foot - d * 48, foot + d * 448))
+        if lo < 0 or hi > L:
+            return False
+        land = sorted((foot + d * 384, foot + d * 448))
+        for b1, b2, under in bridges:
+            if land[0] < b2 + 16 and land[1] > b1 - 16:
+                return False
+            for u in range(max(lo, b1 - 16), min(hi, b2 + 16) + 1, 8):
+                along = (u - foot) * d
+                if 0 <= along <= 384 and F + along * 2 // 3 + 72 > under:
+                    return False
+        return True
+    tries = [(u0, 1)] + [(f, -1) for f in range(L - 64, 383, -64)] + [(f, 1) for f in range(64, L - 447, 64)]
+    for foot, d in tries:
+        if fits(foot, d):
+            return foot, d
+    b.problems.append("stairs up to the street at (%d %d): no room for them clear of the train's bridge over the canal there" % fr.pt(u0, 0))
+    return u0, 1
+
+
+def first_in_way(b, Q, sq, u1, u2):
+    """The first thing (a brush, a shape, a prop) standing in a train's way over its rails between u1 and u2 in Q:
+    (its u, its box), or None."""
+    import map_assets
+    lo, hi = sorted((sq * (RAIL_V - 76), sq * (RAIL_V + 76)))
+    r = Q.rect(u1, lo, u2, hi)
+    z1, z2 = STREET + 12, STREET + 298
+    boxes = [bx for bx, _ in b.vmf.boxes] + list(b.vmf.shape_boxes)
+    for cls, place, model, yaw in getattr(b.vmf, "props", []):      # (a prop standing on the line: a lamp's arm high over it is no matter)
+        sz = map_assets.size(model)
+        if sz and r[0] - 24 < place[0] < r[2] + 24 and r[1] - 24 < place[1] < r[3] + 24:
+            boxes.append((place[0] - 24, place[1] - 24, place[2] + sz[2], place[0] + 24, place[1] + 24, place[2] + sz[5]))
+    best = None
+    for bx in boxes:
+        if bx[0] < r[2] and bx[3] > r[0] and bx[1] < r[3] and bx[4] > r[1] and bx[2] < z2 and bx[5] > z1:
+            u = max(u1, min(in_frame(Q, bx[0], bx[1])[0], in_frame(Q, bx[3], bx[4])[0]))
+            if best is None or u < best[0]:
+                best = (u, tuple(int(q) for q in bx[:6]))
+    return best
+
+
+def rail_ends(b, r, s, cars, junction):
+    """A planned run's track ends (rail_runs): a buffer stop at each end that has no tunnel; at each tunnel the bridge,
+    the tunnel's mouth and the rails into it; and the run's train where it has a tunnel."""
+    if not r.get("ends") or r["ub"] <= r["ua"]:
+        return
+    R = r["frame"]
+    for which, kind in zip(("start", "end"), r["ends"]):
+        if kind != "tunnel":
+            buffer_stop(b, R, s, r["ua"] if which == "start" else r["ub"], -1 if which == "start" else 1, "the track's end on %s" % r["tag"])
+    for which, Q, sq, tag in r["tunnels"]:
+        crossing_build(b, Q, sq, tag)
+    if len(r["tunnels"]) == 2:
+        tunnel_train(b, r["n"], R, s, r["L"] + 512 + TUN, cars, r, junction, through=True)
+    elif r["tunnels"]:
+        which, Q, sq, tag = r["tunnels"][0]
+        tunnel_train(b, r["n"], Q, sq, r["ub"] if which == "start" else r["L"] - r["ua"], cars, r, junction)
+
+
+def buffer_stop(b, fr, sq, u, d, tag):
+    """A track's end in the open: a concrete block across the ballast, a hazard stripe along its face, a steel buffer
+    where each rail meets it, and Half-Life 2's track lamp on it, lit red (steady: the owner wants no flicker). u: where
+    the rails end; d: 1 when the block stands beyond u (the run's far end), -1 before it (its start)."""
+    from map_modules import MM, Mod
+    m = Mod(b, fr, tag)
+    dv = b.vis + ": the street"
+
+    def sv(a, c):
+        return tuple(sorted((sq * a, sq * c)))
+    face = u + d * 16                                  # (the block's face toward the rails: the buffers fill the 16 to it)
+    u1, u2 = sorted((face, face + d * 48))
+    v1, v2 = sv(TRACK + 16, ROAD_IN - 16)
+    m.det([(u1, v1, STREET, u2, v2, STREET + 64)], MAT["canal_wall"], vis=dv)
+    f1, f2 = sorted((face, face - d * 1))
+    m.det([(f1, v1, STREET + 34, f2, v2, STREET + 54)], STRIPE, vis=dv)
+    pads = []
+    for g in (-38, 38):
+        p1, p2 = sv(RAIL_V + g - 10, RAIL_V + g + 10)
+        b1, b2 = sorted((face - d * 1, face - d * 16))
+        pads.append((b1, p1, STREET + 22, b2, p2, STREET + 42))
+    m.det(pads, MM["steel"], vis=dv)
+    cu = (u1 + u2) // 2
+    m.static("models/props_trainstation/tracklight01.mdl", cu, sq * RAIL_V, 180 if d > 0 else 0, z=STREET + 64 + 23)
+    m.glow(cu - d * 8, sq * RAIL_V, STREET + 64 + 32, "255 40 30", 0.2)
+    m.light(cu - d * 40, sq * RAIL_V, STREET + 110, "255 50 40 18")
+
+
+def crossing_build(b, Q, sq, tag):
+    """A train's bridge and tunnel (crossing_squares painted the tunnel), in Q (the canal crossed is u -512..0): a
+    through plate girder bridge at the street's height (its two girders the railings, their outer faces on the
+    tunnel's sides, cross girders under its deck, ballast, sleepers and rails on it), the tunnel's mouth framed by two
+    pilasters in the canal's outer wall with a railway signal head beside it and its number and a danger sign
+    stencilled on, ribs inside, and its black end TUN in, which nobody passes; the rails run on to it."""
+    from map_modules import F, MM, Mod
+    m = Mod(b, Q, tag)
+    dv = b.vis + ": the trains' bridges and tunnels"
+    steel = MM["steel"]
+    wall = -(512 + TUN)
+    ceil = b.rim - 8
+
+    def sv(a, c):
+        return tuple(sorted((sq * a, sq * c)))
+    lo, hi = sv(RAIL_V - 160, RAIL_V + 160)
+    d1, d2 = sv(RAIL_V - 144, RAIL_V + 144)
+    m.det([(-512, d1, STREET - 24, 0, d2, STREET)], MAT["beam"], top=MM["gravel"], vis=dv)
+    m.det([(u, d1, DECK_UNDER, u + 12, d2, STREET - 24) for u in range(-470, -12, 96)], steel, vis=dv)
+    girders, stiff = [], []
+    for g in (-1, 1):
+        w1, w2 = sv(RAIL_V + g * 144, RAIL_V + g * 160)
+        f1, f2 = sv(RAIL_V + g * 138, RAIL_V + g * 160)
+        girders += [(-512, w1, DECK_UNDER + 4, 0, w2, STREET + 64), (-512, f1, STREET + 64, 0, f2, STREET + 70), (-512, f1, DECK_UNDER, 0, f2, DECK_UNDER + 4)]
+        o1, o2 = sv(RAIL_V + g * 140, RAIL_V + g * 144)
+        stiff += [(u, o1, STREET, u + 6, o2, STREET + 64) for u in range(-483, -8, 64)]
+    m.det(girders, steel, vis=dv)
+    m.det(stiff, MAT["bars"], vis=dv)
+    # the rails, on the bridge and into the tunnel to its black end
+    ties, rails = [], []
+    t1, t2 = sv(RAIL_V - 68, RAIL_V + 68)
+    for u in range(wall + 64, 0, 64):
+        ties += [(u + 10, t1, STREET, u + 22, t2, STREET + 3), (u + 42, t1, STREET, u + 54, t2, STREET + 3)]
+    m.det(ties, MM["beam_wood"], vis=dv)
+    for g in (-40, 37):
+        r1, r2 = sv(RAIL_V + g, RAIL_V + g + 3)
+        rails.append((wall + 8, r1, STREET + 3, 0, r2, STREET + 9))
+    m.det(rails, MAT["bars"], vis=dv)
+    # the tunnel: its black end, ribs on its walls, the mouth's pilasters (2 into the wall, the trim's ends hide in them)
+    m.det([(wall, lo, STREET, wall + 8, hi, ceil)], MAT["black"], vis=dv)
+    ribs = []
+    for u in (-512 - 96, -512 - 192):
+        a1, a2 = sv(RAIL_V - 160, RAIL_V - 152)
+        c1, c2 = sv(RAIL_V + 152, RAIL_V + 160)
+        ribs += [(u, a1, STREET, u + 16, a2, ceil), (u, c1, STREET, u + 16, c2, ceil)]
+    m.det(ribs, MAT["beam"], vis=dv)
+    p1, p2 = sv(RAIL_V - 184, RAIL_V - 160)
+    q1, q2 = sv(RAIL_V + 160, RAIL_V + 184)
+    m.det([(-514, p1, DECK_UNDER - 40, -496, p2, b.rim), (-514, q1, DECK_UNDER - 40, -496, q2, b.rim)], MAT["beam"], vis=dv)
+    m.taken(-514, sq * (RAIL_V - 200), F, 0, sq * (RAIL_V + 200), b.rim + 16)
+    m.no_bank(-8, lo, 8, hi)      # (no lip along the street's wall under the bridge's end: it would stand up across the rails)
+    # the signal head beside the mouth, on the wall (lit by nothing: the trains run without one), the mouth's marks
+    side = sq * (RAIL_V + 250)
+    m.static("models/props_trainstation/light_signal002a.mdl", -512 + 42, side, 0, z=STREET + 120)
+    m.taken(-512, side - 40, STREET + 56, -428, side + 40, STREET + 184)
+    m.grime("number", -512, sq * (RAIL_V - 230), STREET + 170, 7)
+    m.grime("danger", -512, sq * (RAIL_V - 230), STREET + 60, 8)
+    m.view(-40, sq * (RAIL_V + 30), STREET + 64, 180, 2, "the train's bridge into its tunnel")
+
+
+
+def tunnel_train(b, n, Q, sq, u_far, cars, r, junction, through=False):
+    """A run's train (rail_runs): Half-Life 2's Combine engine and cars as models riding an unseen solid brush, waiting
+    in the solid beyond its tunnel's black end (its nose 64 behind it). Sent at random every 70 to 240 seconds
+    (lc_train_N_timer; lc_train_N_run: Trigger sends one now) behind its horn, it comes out over the bridge and runs
+    along the run at SPEED, slowing to a stop short of the first thing in its way (a buffer stop, a bridge over the
+    street), then backs into its tunnel and stops in the solid again. With a tunnel at each end (through): it runs
+    into the other one and is put back unseen, as the sheds' trains are. A trigger_hurt rides on it while it runs: it
+    kills what it hits. In --test files a button on the Combine wall beside the road sends one.
+
+    How it runs (from memory, unchecked: Hammer's func_tracktrain and path_track): fixed orientation (spawnflag 16),
+    so it is built facing the way it comes out. velocitytype 1 (linear blend) between the path_tracks' speeds: p1
+    where it waits and p_slow at SPEED, p2 where it stops at STOP_SPEED; p2 is the path's end, where a train stops by
+    itself (its OnPass then sounds the horn and sends StartBackward), p1 the other end (its OnPass turns the hurt
+    off). Every path_track has a speed other than 0: with 0, StartBackward is known to jam or run the wrong way. If it
+    crawls or stops early, set velocitytype 0 (it then stops dead at p2)."""
+    from map_modules import Mod
+    import map_assets
+    vmf = b.vmf
+    tv = b.vis + ": train %d" % n
+    name = "lc_train_%d" % n
+    TL = train_len(cars)
+    half = TL // 2
+    wall = -(512 + TUN)
+    v = sq * RAIL_V
+    u1 = wall - 64 - half
+    if through:
+        hit = first_in_way(b, Q, sq, wall + 8, u_far - 8)
+        if hit:
+            b.problems.append("train %d: something stands in its way at (%d %d %d): it could not pass through" % ((n,) + hit[1][:3]))
+        u2 = u_far + 64 + half
+        stop = None
+    else:
+        hit = first_in_way(b, Q, sq, wall + 8, u_far + 64)
+        stop = (hit[0] if hit else u_far) - 96
+        u2 = stop - half
+        if u2 - u1 < TL + 512:
+            b.problems.append("train %d: the first thing in its way (at (%d %d %d)) leaves it no room to come out of its tunnel" % ((n,) + (hit[1][:3] if hit else (0, 0, 0))))
+            return
+    body = Q.box(u1 - half, v - 70, STREET + 12, u1 + half, v + 70, STREET + 290)
+    vmf.brush_entity("func_tracktrain", {
+        "targetname": name, "target": name + "_p1", "origin": "%d %d %d" % Q.at(u1, v, STREET + 9), "orientationtype": "0",
+        "velocitytype": "0" if through else "1", "startspeed": str(SPEED), "speed": "0", "height": "0", "wheels": "50", "bank": "0", "dmg": "10000",
+        "spawnflags": "530", "volume": "10", "MoveSound": "ambient/machines/razor_train_wheels_loop1.wav", "MoveSoundMinPitch": "60", "MoveSoundMaxPitch": "200",
+        "MoveSoundMinTime": "0", "MoveSoundMaxTime": "0", "ManualSpeedChanges": "0", "ManualAccelSpeed": "0", "ManualDecelSpeed": "0", "rendermode": "10",
+        "renderamt": "0", "rendercolor": "255 255 255", "disableshadows": "1"}, [body], "tools/toolsinvisible", tv)
+    b.names.append((name, "func_tracktrain", "train %d" % n))
+    grow = Q.box(u1 - half - 40, v - 80, STREET + 10, u1 + half + 40, v + 80, STREET + 280)
+    vmf.brush_entity("trigger_hurt", {"targetname": name + "_hurt", "parentname": name, "StartDisabled": "1", "spawnflags": "3", "damage": "100000", "damagecap": "100000",
+                                      "damagetype": "1", "damagemodel": "0", "nodmgforce": "0"}, [grow], MAT["trigger"], tv)
+    m = Mod(b, Q, "train %d" % n)
+    keys = {"parentname": name, "solid": "0", "disableshadows": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
+            "rendercolor": "255 255 255"}
+    front = u1 + half
+    eb = map_assets.size(ENGINE) or [-371, -70, 0, 269, 70, 289]
+    was = len(b.props)
+    m.prop("prop_dynamic", ENGINE, front - int(eb[3]), v, 0, STREET + 9, dict(keys, targetname=name + "_engine"), tv)
+    back = front - ENGINE_LEN
+    for k in range(cars):
+        m.prop("prop_dynamic", CAR, back - GAP - CAR_LEN // 2 - k * (CAR_LEN + GAP), v, 90, STREET + 9, dict(keys, targetname="%s_car_%d" % (name, k + 1)), tv)
+    del b.props[was:]      # (they wait inside the solid on purpose: not props standing in a wall, for look_at_props)
+    track = {"spawnflags": "0", "orientationtype": "0", "radius": "0"}
+    if through:
+        vmf.point("path_track", Q.at(u1, v, STREET + 9), dict(track, targetname=name + "_p1", target=name + "_p2", spawnflags="16", speed="0"), tv)
+        vmf.point("path_track", Q.at(u2, v, STREET + 9), dict(track, targetname=name + "_p2", target=name + "_p1", speed="0"), tv,
+                  connections=[("OnPass", name, "Stop", "", 0), ("OnPass", name + "_hurt", "Disable", "", 0.1)])
+    else:
+        slow = u2 - 640 if u2 - 640 > u1 + 256 else None
+        vmf.point("path_track", Q.at(u1, v, STREET + 9), dict(track, targetname=name + "_p1", target=name + ("_slow" if slow else "_p2"), speed=str(SPEED)), tv,
+                  connections=[("OnPass", name + "_hurt", "Disable", "", 0)])
+        if slow:
+            vmf.point("path_track", Q.at(slow, v, STREET + 9), dict(track, targetname=name + "_slow", target=name + "_p2", speed=str(SPEED)), tv)
+            b.names.append((name + "_slow", "path_track", "train %d" % n))
+        vmf.point("path_track", Q.at(u2, v, STREET + 9), dict(track, targetname=name + "_p2", speed=str(STOP_SPEED)), tv,
+                  connections=[("OnPass", name + "_horn", "PlaySound", "", 3), ("OnPass", name, "StartBackward", "", 5)])
+    mouth = Q.at(-512 - 32, v, STREET + 200)
+    vmf.point("ambient_generic", mouth, {"targetname": name + "_horn", "message": "ambient/alarms/razortrain_horn1.wav", "health": "10", "pitch": "100",
+                                         "pitchstart": "100", "radius": "6000", "spawnflags": "48", "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0",
+                                         "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0", "preset": "0", "spindown": "0", "spinup": "0",
+                                         "volstart": "0"}, tv)
+    vmf.point("logic_relay", (mouth[0], mouth[1], mouth[2] + 16), {"targetname": name + "_run", "StartDisabled": "0", "spawnflags": "0"}, tv,
+              connections=[("OnTrigger", name + "_horn", "PlaySound", "", 0), ("OnTrigger", name + "_hurt", "Enable", "", 2.5), ("OnTrigger", name, "StartForward", "", 3)])
+    vmf.point("logic_timer", (mouth[0], mouth[1], mouth[2] + 32), {"targetname": name + "_timer", "UseRandomTime": "1", "LowerRandomBound": "70",
+                                                                   "UpperRandomBound": "240", "RefireTime": "120", "StartDisabled": "0", "spawnflags": "0"}, tv,
+              connections=[("OnTimer", name + "_run", "Trigger", "", 0)])
+    for nm, cls in ((name + "_run", "logic_relay"), (name + "_timer", "logic_timer"), (name + "_hurt", "trigger_hurt"), (name + "_horn", "ambient_generic"),
+                    (name + "_p1", "path_track"), (name + "_p2", "path_track")):
+        b.names.append((nm, cls, "train %d" % n))
+    # the test button: on the Combine wall (or the frontage) facing the road, the first place past the crossing square
+    FR = front_line(b)
+    fr_ = FR - (72 if getattr(b, "street_wall", None) == "combine" else 0)
+    fv1, fv2 = sorted((sq * (fr_ - 8), sq * fr_))
+
+    def sq_of(u, a):
+        x, y = Q.pt(u, sq * a)
+        return (x // CELL, y // CELL)
+    for u in range(FR + 128, int(u2 + half), 64):
+        if sq_of(u + 32, FR - 32) in b.deck and sq_of(u + 32, FR - 32) not in junction and sq_of(u + 32, FR + 32) not in b.deck:
+            m.test_button((u + 24, fv1, STREET + 44, u + 40, fv2, STREET + 60), [("OnIn", name + "_run", "Trigger"), ("OnOut", name + "_run", "Trigger")])
+            break
+    m.view(FR + 400, sq * 760, STREET, 180, 2, "on the road, toward train %d's bridge and tunnel" % n)
+    if through:
+        how = "runs into the tunnel at the far end and is put back"
+    elif hit and hit[0] < u_far:
+        how = "stops at (%d %d), short of what stands over its rails at (%d %d %d), and backs into its tunnel" % (Q.pt(stop, v) + hit[1][:3])
+    else:
+        how = "stops at (%d %d), short of the buffer stop at the run's end, and backs into its tunnel" % Q.pt(stop, v)
+    b.notes.append("train %d: an engine and %d cars (%d long) out of the tunnel at (%d %d), over the bridge and along %s; it %s; about %d seconds out, at random every 70 to 240 seconds" % (
+        n, cars, TL, Q.pt(-512, v)[0], Q.pt(-512, v)[1], r["tag"], how, ((u_far if through else stop) + 512) // SPEED + 1))
+
+
+def hide_trains(b):
+    """The solid each train waits in beyond its tunnel's black end (rail_runs): where the backdrop has laid its ground
+    (solid up to the rim) or a wall of the plan's stands, that is enough; everywhere else a block of world, outside the
+    plan if need be (the train's path_tracks must be in sealed air or in a brush, or the compiler leaks). Runs once the
+    backdrop is down (map_modules.build_chain)."""
+    from map_backdrop import rects
+    for Q, sq, tag, length in getattr(b, "rail_hides", []):
+        lo, hi = sorted((sq * (RAIL_V - 160), sq * (RAIL_V + 160)))
+        wall = -(512 + TUN)
+        free = set()
+        for c in squares(Q.rect(wall - length, lo, wall, hi)):
+            spec = b.plan.cells.get(c)
+            if spec is None:
+                free.add(c)
+            elif not (spec[0] == "solid" or (spec[0] == "open" and spec[1] >= STREET + 304)):
+                b.problems.append("%s: the train hidden beyond it runs into %s at (%d %d)" % (tag, b.owner.get(c, "something"), c[0] * CELL, c[1] * CELL))
+        for x1, y1, x2, y2 in rects(free):
+            b.vmf.world_box((x1, y1, STREET - 32, x2, y2, max(b.rim, STREET + 312)), MAT["nodraw"], vis=b.vis + ": where the trains wait, unseen")
+        if free:
+            b.notes.append("%s: %d squares of solid laid where nothing was, for the train to wait in" % (tag, len(free)))
 
 
 def spur(b, x1, y1, x2, y2, z_end, ids=()):
