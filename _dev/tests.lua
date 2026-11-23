@@ -23056,7 +23056,17 @@ ok(LC.Drunk(p) == 3, "too much: you throw up, and sober up some")
 LC.SetDrunk(p, 0)
 -- a stimulant: wide awake, no sleep, no dreams; a second hurts; then the crash
 LC.GiveItem(p, "stimulant", 2)
+local awakeS = p.lcAwakeSince
+p.lcAwakeSince = CurTime() - 100000 -- (up far too long: exhausted by their own clock, not lights out)
+p:SetNW2Float("lc_groggy_until", CurTime() + 100)
+LC.RestTick(CurTime())
+local tiredBefore = p:GetNW2Bool("lc_tired", false)
 LC.ItemUse(p, "stimulant")
+LC.RestTick(CurTime())
+ok(tiredBefore and not p:GetNW2Bool("lc_tired", false) and LC.TiredDue(p) >= p:GetNW2Float("lc_wired_until", 0) - 1 and p:GetNW2Float("lc_groggy_until", 0) == 0,
+    "exhausted after a day awake, a stimulant opens your eyes for as long as it lasts (the owner, 23 November)")
+p.lcAwakeSince = awakeS
+LC.RestTick(CurTime())
 local okS, whyS = LC.SleepIn(p, nil)
 ok(LC.Wired(p) and not okS and string.find(tostring(whyS), "wired", 1, true), "a stimulant: you can't fall asleep", whyS)
 local hp = p:Health()

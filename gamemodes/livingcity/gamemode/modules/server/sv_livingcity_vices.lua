@@ -138,6 +138,7 @@ local function Stim(p, it)
     local untilT = math.max(p:GetNW2Float("lc_wired_until", 0), now) + WIRED_SECS
     p:SetNW2Float("lc_wired_until", math.min(untilT, now + WIRED_SECS * 1.5))
     p:SetNW2Float("lc_crash_until", 0)
+    p:SetNW2Float("lc_groggy_until", 0) -- (woken early and groggy: not any more)
     p.lcCrashPending = true
     if LC.Feed then LC.Feed(p, 0, -8) end
     Calm(p)

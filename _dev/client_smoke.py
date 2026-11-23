@@ -5065,6 +5065,9 @@ local ok, e = pcall(function()
     _me.nw.lc_tired = true
     if not LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "tired: no eyelids" end
     for _, h in pairs(hook.t.HUDPaintBackground or {}) do h() end
+    _me.nw.lc_wired_until = CurTime() + 60
+    if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "tired but on a stimulant, and the eyelids still close (the owner, 23 November)" end
+    _me.nw.lc_wired_until = 0
     _me.nw.lc_tired = false
     if LC_CL.DrawEyelids(_me, 7 * 0.9) then bad[#bad + 1] = "not tired, and the eyelids close" end
     -- Civil Protection in action: their own music
