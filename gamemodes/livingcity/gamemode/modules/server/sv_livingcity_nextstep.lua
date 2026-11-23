@@ -184,6 +184,10 @@ function LC.NextStep(ply)
     if LC.IsDowned and LC.IsDowned(ply) then
         return { key = "down", text = "Hold on", why = "You're down and bleeding out. Someone can press E on you to help.", urgent = true }
     end
+    -- the Administrator's address: everyone called goes (the owner, 23 November: the popup points here)
+    if LC.SpeechMustAttend and LC.SpeechMustAttend(ply) and not (LC.AtSpeech and LC.AtSpeech(ply)) then
+        return { key = "speech", text = "Go to the Administrator's address", why = "Attendance is mandatory.", way = "speech" }
+    end
     -- a toilet, a wash, clean clothes (sv_livingcity_hygiene.lua); a bed (sv_livingcity_rest.lua)
     local hy = LC.HygieneStep and LC.HygieneStep(ply)
     if hy then return hy end

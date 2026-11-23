@@ -1097,6 +1097,25 @@ local function FrontSlot(ent, up, out)
     local mins, maxs = ent:OBBMins(), ent:OBBMaxs()
     return ent:LocalToWorld(Vector(maxs.x + (out or 8), 0, mins.z + up))
 end
+-- A vending machine's can: out of the chute just clear of its front, rolling a little, as in Half-Life 2 (the owner,
+-- 23 November: Dr. Breen's cans "SHOOT out ... in HL2 they just slightly roll down the chute"). They were thrown at 70
+-- forward and 30 up, and a can started inside the machine is flung out by the physics: its front is found by a trace.
+local CAN_ROLL = 22
+local function CanOut(machine, pos, fwd, up, guess, jitter)
+    local at = guess
+    if util and util.TraceLine then
+        local h = Vector(0, 0, up)
+        local tr = util.TraceLine({ start = pos + fwd * 48 + h, endpos = pos + h, mask = MASK_SOLID_BRUSHONLY,
+            filter = function(e) return e == machine or not (IsValid(e) and (e:IsPlayer() or e:IsNPC() or e:GetClass() == "lc_item")) end })
+        if tr and tr.Hit and not tr.StartSolid and tr.HitPos then at = tr.HitPos + fwd * 4 end
+    end
+    local vel = fwd * CAN_ROLL
+    if jitter then vel = vel + Vector(math.Rand(-6, 6), math.Rand(-6, 6), 0) end
+    local ang = fwd:Angle()
+    ang.r = 90 -- (on its side, across the chute: it rolls)
+    return LC.SpawnWorldItem("water", at, ang, vel)
+end
+LC.VendingCanOut = CanOut
 local FIXTURE_CLASS = {
     vending = "lc_vending", dispenser = "lc_dispenser", terminal = "lc_terminal", stove = "lc_stove", fire = "lc_fire",
     dealer = "lc_dealer", locker = "lc_locker", locker_rebel = "lc_locker", locker_cp = "lc_locker", screen = "lc_screen", cpfeed = "lc_newsfeed", rebelboard = "lc_newsfeed", interrochair = "lc_interrochair", evidlocker = "lc_evidencelocker", rebelcage = "lc_rebelcage", lawboard = "lc_lawboard", jobboard = "lc_jobboard", infodesk = "lc_infoclerk", civposter = "lc_civposter", console = "lc_console",
@@ -1200,7 +1219,7 @@ function LC.UseVending(ply, ent)
     timer.Simple(0.6, function()
         if not IsValid(ent) then return end
         -- out of the slot at the bottom, about a foot off the ground, rolling gently forward
-        LC.SpawnWorldItem("water", FrontSlot(ent, 14, 6), nil, ent:GetForward() * 70 + Vector(0, 0, 30))
+        CanOut(ent, ent:GetPos(), ent:GetForward(), 14 + ent:OBBMins().z, FrontSlot(ent, 14, 6))
         ent:EmitSound("physics/metal/soda_can_impact_hard1.wav", 65)
     end)
     return true
@@ -1246,7 +1265,7 @@ function LC.UseStaticVending(ply, fx)
     ply:EmitSound("buttons/button4.wav", 65)
     timer.Simple(0.6, function()
         local fwd = fx.ang:Forward()
-        LC.SpawnWorldItem("water", fx.pos + fwd * 26 + Vector(0, 0, 14), nil, fwd * 70 + Vector(0, 0, 30))
+        CanOut(nil, fx.pos, fwd, 14, fx.pos + fwd * 26 + Vector(0, 0, 14))
     end)
     return true
 end
@@ -1374,7 +1393,7 @@ function LC.HackMachine(ply, ent)
                         local mins, maxs = ent:OBBMins(), ent:OBBMaxs()
                         LC.SpawnWorldItem("ration", FrontSlot(ent, (maxs.z - mins.z) * 0.3, 6), nil, ent:GetForward() * 40 + VectorRand() * 15)
                     else
-                        LC.SpawnWorldItem("water", FrontSlot(ent, 14, 6), nil, ent:GetForward() * 70 + Vector(0, 0, 30) + VectorRand() * 20)
+                        CanOut(ent, ent:GetPos(), ent:GetForward(), 14 + ent:OBBMins().z, FrontSlot(ent, 14, 6), true)
                         ent:EmitSound("physics/metal/soda_can_impact_hard1.wav", 65)
                     end
                 end)

@@ -41,7 +41,6 @@ local STATION = {
     { -35.4, -3.9, 0.9, 93.4, 322.0 }, { -49.5, -7.8, 1.8, 89.6, 323.0 }, { -63.7, -13.5, 3.2, 83.8, 324.3 },
     { -77.9, -19.3, 4.6, 78.0, 325.7 }, { -92.0, -27.1, 6.4, 70.2, 327.5 },
 }
-local STATION_THICK = 6
 local STATION_MINS, STATION_MAXS = Vector(-34, -93, -1), Vector(98, 93, 328)
 ENT.StationStrips = STATION
 
@@ -99,9 +98,58 @@ if CLIENT then
     -- The station screen shows one thing only (the owner, 21 November): the scanner's picture of the Administrator or
     -- the Director of Propaganda on air (cl_livingcity_livecam.lua), cut to its tall shape round their face, as Valve's
     -- shows Breen. No written broadcasts, no pirates: otherwise its glass is dark.
-    local BACK = Material("models/props_combine/metal_combinebridge001")
+    -- Valve's look (the owner, 23 November: "it's just a curved black brush ... where is the effect of the combine
+    -- hologram screen?"). Valve's jumbotron (d1_trainstation_01) is six func_monitor sheets 1 unit apart, each faced
+    -- with dev/dev_combinemonitor_3 in front (the Combine monitor: a camera's picture under its scanlines) and
+    -- dev/dev_combinemonitor_b behind, its edges nodraw. Garry's Mod has both materials: each is copied here as it is,
+    -- fed our picture instead of Valve's camera (_rt_Camera), and its second texture scrolled as Valve's proxy would.
+    -- With nobody on air the sheets glow the Combine's dim blue under the scanlines; dark only with the power out.
     local OFF = Material("tools/toolsblack")
+    local LAYERS, LAYER_GAP = 6, 1
     local CROP = (184 / 321) / (16 / 9) -- (how much of the 16:9 picture's width the tall screen shows)
+    local function CopyOf(name, src)
+        local m = Material(src)
+        if not m or m:IsError() or not CreateMaterial then return nil end
+        local c = CreateMaterial(name, (string.gsub(m:GetShader() or "UnlitTwoTexture", "_[Dd][Xx]%d+$", "")), {})
+        if not c then return nil end
+        for k, v in pairs(m:GetKeyValues() or {}) do
+            local t = type(v)
+            if t == "ITexture" then c:SetTexture(k, v)
+            elseif t == "number" then if math.floor(v) == v then c:SetInt(k, v) else c:SetFloat(k, v) end
+            elseif t == "Vector" then c:SetVector(k, v)
+            elseif t == "VMatrix" then c:SetMatrix(k, v)
+            elseif t == "string" then c:SetString(k, v) end
+        end
+        if c.Recompute then c:Recompute() end
+        return c
+    end
+    local mats -- { front, back, idle texture, refilled at }
+    local function Mats()
+        if mats ~= nil then return mats or nil end
+        mats = false
+        local front, back = CopyOf("lc_station_front", "dev/dev_combinemonitor_3"), CopyOf("lc_station_back", "dev/dev_combinemonitor_b")
+        local idle = GetRenderTarget and GetRenderTarget("lc_station_idle", 16, 16)
+        if not front or not idle then return nil end
+        mats = { front = front, back = back or front, idle = idle, filled = 0 }
+        return mats
+    end
+    local IDLE = Color(10, 34, 46) -- (the Combine's blue, dim: six sheets of it add up)
+    local function Feed(m, pic)
+        local now = CurTime()
+        if not pic and now >= m.filled then -- (a render target can be lost with the window: filled again now and then)
+            render.PushRenderTarget(m.idle)
+            render.Clear(IDLE.r, IDLE.g, IDLE.b, 255, true, true)
+            render.PopRenderTarget()
+            m.filled = now + 5
+        end
+        local tex = pic and pic:GetTexture("$basetexture") or m.idle
+        local scroll = Matrix and Matrix()
+        if scroll then scroll:Translate(Vector(0, (now * 0.12) % 1, 0)) end
+        for _, mat in ipairs({ m.front, m.back }) do
+            mat:SetTexture("$basetexture", tex)
+            if scroll and mat:GetTexture("$texture2") then mat:SetMatrix("$texture2transform", scroll) end
+        end
+    end
     local function OfficialPicture()
         if GetGlobal2Bool("lc_live_pirate", false) or not LC_CL or not LC_CL.LiveCamPicture then return nil end
         return LC_CL.LiveCamPicture()
@@ -114,37 +162,38 @@ if CLIENT then
             mesh.AdvanceVertex()
         end
     end
-    local function DrawStation(self, live)
+    -- One sheet, dx toward the viewer (0 the front, -5 the back), facing them (or, back = true, away from them).
+    local function Sheet(dx, back, u0, umax, v1)
         local n = #STATION - 1
-        local fwd = Vector(1, 0, 0)
-        cam.PushModelMatrix(self:GetWorldTransformMatrix())
-        -- the glass: the official picture when there is one, else dark
-        local pic, umax, vmax
-        if live then pic, umax, vmax = OfficialPicture() end
-        render.SetMaterial(pic or OFF)
-        local u0, v1 = (umax or 1) * (0.5 - CROP / 2), vmax or 1
+        local fwd = Vector(back and -1 or 1, 0, 0)
         mesh.Begin(MATERIAL_QUADS, n)
         for i = 1, n do
             local a, b = STATION[i], STATION[i + 1]
-            local ua, ub = u0 + (umax or 1) * CROP * (92 - a[1]) / 184, u0 + (umax or 1) * CROP * (92 - b[1]) / 184
-            Quad(Vector(a[4], a[1], a[5]), Vector(b[4], b[1], b[5]), Vector(b[2], b[1], b[3]), Vector(a[2], a[1], a[3]), fwd, ua, ub, 0, v1)
+            local ua, ub = u0 + umax * CROP * (92 - a[1]) / 184, u0 + umax * CROP * (92 - b[1]) / 184
+            local ta, tb, fa, fb = Vector(a[4] + dx, a[1], a[5]), Vector(b[4] + dx, b[1], b[5]), Vector(a[2] + dx, a[1], a[3]), Vector(b[2] + dx, b[1], b[3])
+            if back then Quad(tb, ta, fa, fb, fwd, ub, ua, 0, v1) else Quad(ta, tb, fb, fa, fwd, ua, ub, 0, v1) end
         end
         mesh.End()
-        -- its back, top, foot and ends
-        local t = STATION_THICK
-        render.SetMaterial(BACK)
-        mesh.Begin(MATERIAL_QUADS, n * 3 + 2)
-        for i = 1, n do
-            local a, b = STATION[i], STATION[i + 1]
-            Quad(Vector(b[4] - t, b[1], b[5]), Vector(a[4] - t, a[1], a[5]), Vector(a[2] - t, a[1], a[3]), Vector(b[2] - t, b[1], b[3]), -fwd, 0, 1, 0, 1)
-            Quad(Vector(a[4] - t, a[1], a[5]), Vector(b[4] - t, b[1], b[5]), Vector(b[4], b[1], b[5]), Vector(a[4], a[1], a[5]), Vector(0, 0, 1), 0, 1, 0, 0.05)
-            Quad(Vector(a[2], a[1], a[3]), Vector(b[2], b[1], b[3]), Vector(b[2] - t, b[1], b[3]), Vector(a[2] - t, a[1], a[3]), Vector(0, 0, -1), 0, 1, 0, 0.05)
+    end
+    local function DrawStation(self, live, near)
+        cam.PushModelMatrix(self:GetWorldTransformMatrix())
+        local m = live and Mats()
+        if not m then
+            -- the power out (or Valve's material missing): a dead, dark screen
+            render.SetMaterial(OFF)
+            Sheet(0, false, 0, 1, 1)
+            Sheet(-(LAYERS - 1) * LAYER_GAP, true, 0, 1, 1)
+        else
+            local pic, umax, vmax
+            if near then pic, umax, vmax = OfficialPicture() end -- (from afar, the glow alone)
+            Feed(m, pic)
+            umax, vmax = umax or 1, vmax or 1
+            local u0 = umax * (0.5 - CROP / 2)
+            render.SetMaterial(m.front)
+            for i = LAYERS - 1, 0, -1 do Sheet(-i * LAYER_GAP, false, u0, umax, vmax) end -- (back to front)
+            render.SetMaterial(m.back)
+            Sheet(-(LAYERS - 1) * LAYER_GAP, true, u0, umax, vmax)
         end
-        for _, c in ipairs({ { STATION[1], 1 }, { STATION[#STATION], -1 } }) do
-            local a, sgn = c[1], c[2]
-            Quad(Vector(a[4] - t, a[1], a[5]), Vector(a[4], a[1], a[5]), Vector(a[2], a[1], a[3]), Vector(a[2] - t, a[1], a[3]), Vector(0, sgn, 0), 0, 0.05, 0, 1)
-        end
-        mesh.End()
         cam.PopModelMatrix()
     end
 
@@ -158,7 +207,7 @@ if CLIENT then
     function ENT:Draw()
         if self:GetNW2String("lc_screen_kind", "screen") == "screen_station" then
             local near = LocalPlayer():GetPos():DistToSqr(self:GetPos()) < 3500 * 3500
-            DrawStation(self, near and not self:GetNW2Bool("lc_nopower", false))
+            DrawStation(self, not self:GetNW2Bool("lc_nopower", false), near)
             return
         end
         self:DrawModel()

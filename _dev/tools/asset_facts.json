@@ -10833,6 +10833,24 @@
 "static": true,
 "v": 2
 },
+"models/props_citizen_tech/firetrap_gashose01a.mdl": {
+"bbox": [
+-186.3,
+-9.8,
+-0.8,
+200.2,
+3.9,
+5.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_citizen_tech/firetrap_gashose01c.mdl": {
 "bbox": [
 -53.7,
@@ -14923,6 +14941,42 @@
 "static": false,
 "v": 2
 },
+"models/props_debris/concrete_chunk01b.mdl": {
+"bbox": [
+-28.9,
+-27.3,
+-4.9,
+31.1,
+31.3,
+5.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_debris/concrete_chunk01c.mdl": {
+"bbox": [
+-29.5,
+-30.6,
+-5.8,
+29.2,
+30.6,
+6.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_debris/concrete_chunk02a.mdl": {
 "bbox": [
 -19.2,
@@ -14931,6 +14985,24 @@
 19.2,
 13.9,
 4.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_debris/concrete_chunk02b.mdl": {
+"bbox": [
+-28.9,
+-27.3,
+-4.9,
+31.1,
+31.3,
+5.1
 ],
 "built_static": true,
 "collides": true,
@@ -16231,6 +16303,24 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/wall001a_base.mdl": {
+"bbox": [
+-8.3,
+-64.0,
+-64.0,
+8.3,
+64.0,
+64.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/walldestroyed01a.mdl": {
 "bbox": [
 -6.3,
@@ -16365,6 +16455,24 @@
 240.8,
 222.5,
 67.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed09c.mdl": {
+"bbox": [
+-77.3,
+-108.7,
+-115.2,
+95.0,
+98.5,
+116.8
 ],
 "built_static": true,
 "collides": true,
@@ -36909,6 +37017,10 @@
 "static": true,
 "v": 2
 },
+"models/props_wasteland/winch01b.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_wasteland/wood_fence01a.mdl": {
 "bbox": [
 -64.6,
@@ -37983,6 +38095,24 @@
 "built_static": false,
 "collides": true,
 "game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/vortigaunt_slave.mdl": {
+"bbox": [
+-15.0,
+-15.0,
+0.0,
+15.0,
+15.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "ragdoll": true,

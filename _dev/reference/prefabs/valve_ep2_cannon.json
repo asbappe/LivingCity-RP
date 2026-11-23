@@ -23234,5 +23234,17 @@
 ]
 }
 ]
+},
+"trigger": [
+{
+"name": "relay.cannon.show",
+"input": "Trigger",
+"what": "demonstration fire"
+},
+{
+"name": "relay.shortcut.kill.cannon",
+"input": "Trigger",
+"what": "kill it outright"
 }
+]
 }

@@ -97,7 +97,10 @@ LC.TiredWarnSecs = { WARN1, WARN2 }
 function LC.TiredDue(ply)
     local due = LC.TiredDueOwn(ply)
     local bed = LC.BedtimeDue and LC.BedtimeDue(ply)
-    if bed and bed < due then return bed end
+    if bed and bed < due then due = bed end
+    -- on a stimulant your eyes stay open while it lasts, however long you've been up (the owner,
+    -- 23 November: "took a stimulant shot and my stinking eyes keep closing regardless")
+    if LC.Wired and LC.Wired(ply) then due = math.max(due, ply:GetNW2Float("lc_wired_until", 0)) end
     return due
 end
 function LC.TiredDueOwn(ply)
@@ -408,7 +411,8 @@ function LC.RestTick(now)
             if ply:GetNW2Bool("lc_drowsy", false) ~= drowsy then ply:SetNW2Bool("lc_drowsy", drowsy) end
             if tired ~= was then
                 ply:SetNW2Bool("lc_tired", tired)
-                if tired then Notice(ply, "warn", "Exhausted", "You need sleep. Your eyes keep closing, you can't run, and you're weaker. Find a bed (F1 > What now? > Places).", 9) end
+                local crash = ply.lcCrashPending or (LC.Crashing and LC.Crashing(ply)) -- (coming off a stimulant: its own notice)
+                if tired and not crash then Notice(ply, "warn", "Exhausted", "You need sleep. Your eyes keep closing, you can't run, and you're weaker. Find a bed (F1 > What now? > Places).", 9) end
             end
             TiredHealth(ply, tired)
         end
