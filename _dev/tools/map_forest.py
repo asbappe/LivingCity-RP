@@ -1690,15 +1690,8 @@ class BunkerForest(Forest):
         # the glass
         glass_ax = ("[%s 0] 0.15" % wv, "[0 0 -1 0] 0.15")
         v.brush_entity("func_breakable", dict(self.WINDOW_GLASS), [(box(2, 29, 10, 12, 20, 102), {}, {n: glass_ax for n in dn})], self.GLASS, vis)
-        # the slats, each a plate tilted up toward the glass
-        for q in range(14):
-            h = 23 + 6 * q
-            prof = ((3, h), (10, h + 2), (10, h + 3), (3, h + 1))
-            ends = [[P(f + s * dd, e + r * t, z + hh) for dd, hh in prof] for t in (2, 29)]
-            sh = [(ends[0], self.SLAT), (ends[1][::-1], self.SLAT)]
-            for p in range(4):
-                sh.append(([ends[0][p], ends[0][(p + 1) % 4], ends[1][(p + 1) % 4], ends[1][p]], self.SLAT))
-            shapes.append(sh)
+        # (Valve's 14 slats on the hall's side are left out: the owner, 23 November, "just get rid of the slats on every
+        #  window and leave the window itself", to save brush sides)
 
     # White Forest's surround for its silo doors, copied from ep2_outland_11 (prop_door_silo_1 and the lab door, read 22
     # November; the owner: the old frames were an "awful texture choice and it's repeating and looks like a game from
@@ -1756,43 +1749,34 @@ class BunkerForest(Forest):
             if side and side == window:
                 faces[side], axes[side] = wf_face(side, z - 1024, z, z + 128)
             pieces.append((box(d1, d2, wa, wb, za, z + 128), faces, axes))
-        # Valve's lining: jambs, head and sill in three lengths, the door's track in the middle
+        # Valve's lining: jambs, head and sill, each one length through the wall, and a gusset in each top corner along it
+        # (Valve's is in three lengths, the door's own track in the middle: the owner, 23 November, one length a side, to
+        # save brush sides: 62 a doorway instead of 110)
         a, b = w1 + 12, w2 - 12           # the opening in the wall, 104
-        for da, db, part in ((d1, m - 5, "front"), (m - 5, m + 5, "track"), (m + 5, d2, "back")):
-            inner = self.TRACK if part == "track" else self.TRUSS
-            outer = {"front": front, "back": back}.get(part)
-            edge = da if part != "back" else db
+        truss_up = (axis("d", -(d1 + od) / 0.16, 0.16), axis("z", z / 0.16, 0.16))
 
-            def lined(faces, axes, name, mat, ax):
-                faces[name], axes[name] = mat, ax
-            truss_up = (axis("d", -(da + od) / 0.16, 0.16), axis("z", z / 0.16, 0.16))
-            for wa, wb, face in ((a, a + 4, hi), (b - 4, b, lo)):      # the jambs, floor to head
-                faces, axes = {}, {}
-                lined(faces, axes, face, inner, truss_up)
-                if outer:
-                    lined(faces, axes, outer, self.PIPE, (axis("w", 166 - 4 * (wa + ow), 0.25), axis("z", 4 * z, 0.25)))
-                pieces.append((box(da, db, wa, wb, z - 4, z + 124), faces, axes))
-            faces, axes = {"bottom": inner}, {"bottom": (axis("d", -(da + od) / 0.16, 0.16), axis("w", -(a + 4 + ow) / 0.16, 0.16))}
-            if outer:
-                lined(faces, axes, outer, self.PIPE, (axis("z", 166 + 4 * (z + 124), 0.25), axis("w", 0, 0.25)))
-            pieces.append((box(da, db, a + 4, b - 4, z + 120, z + 124), faces, axes))      # the head
-            faces, axes = {"top": self.HULL}, {}
-            if outer:
-                lined(faces, axes, outer, self.PIPE, (axis("z", 166 + 4 * z, 0.25), axis("w", 0, 0.25)))
-            pieces.append((box(da, db, a + 4, b - 4, z - 4, z), faces, axes))           # the sill, its top flush with the floor
-            if part == "track":
-                continue
-            for wc, sgn in ((a + 4, 1), (b - 4, -1)):          # a gusset 4 by 4 in each top corner
-                tri = [(wc, z + 120), (wc + 4 * sgn, z + 120), (wc, z + 116)]
-                ends = []
-                for d in (da, db):
-                    ends.append([P(d, w, h) for w, h in tri])
-                sh = [(ends[0], self.PIPE if edge == da and outer else MAT["nodraw"]), (ends[1][::-1], self.PIPE if edge == db and outer else MAT["nodraw"])]
-                for q in range(3):
-                    r = (q + 1) % 3
-                    quad = [ends[0][q], ends[0][r], ends[1][r], ends[1][q]]
-                    sh.append((quad, self.TRUSS if q == 1 else MAT["nodraw"]))      # (the slope, from the head's corner to the jamb's, faces the opening)
-                shapes.append(sh)
+        def ends(faces, axes, ax):
+            for name in (front, back):
+                faces[name], axes[name] = self.PIPE, ax
+        for wa, wb, face in ((a, a + 4, hi), (b - 4, b, lo)):      # the jambs, floor to head
+            faces, axes = {face: self.TRUSS}, {face: truss_up}
+            ends(faces, axes, (axis("w", 166 - 4 * (wa + ow), 0.25), axis("z", 4 * z, 0.25)))
+            pieces.append((box(d1, d2, wa, wb, z - 4, z + 124), faces, axes))
+        faces, axes = {"bottom": self.TRUSS}, {"bottom": (axis("d", -(d1 + od) / 0.16, 0.16), axis("w", -(a + 4 + ow) / 0.16, 0.16))}
+        ends(faces, axes, (axis("z", 166 + 4 * (z + 124), 0.25), axis("w", 0, 0.25)))
+        pieces.append((box(d1, d2, a + 4, b - 4, z + 120, z + 124), faces, axes))      # the head
+        faces, axes = {"top": self.HULL}, {}
+        ends(faces, axes, (axis("z", 166 + 4 * z, 0.25), axis("w", 0, 0.25)))
+        pieces.append((box(d1, d2, a + 4, b - 4, z - 4, z), faces, axes))           # the sill, its top flush with the floor
+        for wc, sgn in ((a + 4, 1), (b - 4, -1)):          # a gusset 4 by 4 in each top corner
+            tri = [(wc, z + 120), (wc + 4 * sgn, z + 120), (wc, z + 116)]
+            tips = [[P(d, w, h) for w, h in tri] for d in (d1, d2)]
+            sh = [(tips[0], self.PIPE), (tips[1][::-1], self.PIPE)]
+            for q in range(3):
+                r = (q + 1) % 3
+                quad = [tips[0][q], tips[0][r], tips[1][r], tips[1][q]]
+                sh.append((quad, self.TRUSS if q == 1 else MAT["nodraw"]))      # (the slope, from the head's corner to the jamb's, faces the opening)
+            shapes.append(sh)
 
     DOOR_SPEED = 6      # the silo's blast door's leaves, degrees a second: Valve's own (60 degrees in 10 s)
     BLAST_AT = 596      # the silo's blast door's plane, this far from the silo's axis toward the bunker: 32 further out than Valve's (564), so that
