@@ -77,6 +77,7 @@ def main():
     ap.add_argument("--list", action="store_true", help="print every face made nodraw")
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
     ap.add_argument("--brushes", action="store_true", help="also delete the brushes nobody can see that do not seal the map")
+    ap.add_argument("--route", nargs=3, type=float, metavar=("X", "Y", "Z"), help="print the way the seen air takes from the player start to this point")
     a = ap.parse_args()
     C = float(a.cell)
     root = mv.read(a.vmf)
@@ -198,6 +199,37 @@ def main():
     reached = flood(reached, air)
     print("flood: %.1f M cubes of air seen of %.1f M open" % (reached.sum() / 1e6, air.sum() / 1e6))
 
+    if a.route:      # (how does the air get there? a shortest way, cube by cube, through the seen air)
+        goal = tuple(idx(a.route))
+        if not reached[goal]:
+            print("route: %s is not in seen air" % (a.route,))
+        else:
+            dist = np.full(n, -1, dtype=np.int32)
+            start = [tuple(idx(sd)) for sd in seeds if reached[tuple(idx(sd))]][0]
+            dist[start] = 0
+            front, step = np.array([start]), 0
+            offs = np.array([(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)])
+            while dist[goal] < 0 and len(front):
+                nb = (front[:, None, :] + offs[None, :, :]).reshape(-1, 3)
+                ok = ((nb >= 0) & (nb < n)).all(axis=1)
+                nb = nb[ok]
+                nb = nb[reached[nb[:, 0], nb[:, 1], nb[:, 2]] & (dist[nb[:, 0], nb[:, 1], nb[:, 2]] < 0)]
+                nb = np.unique(nb, axis=0)
+                step += 1
+                dist[nb[:, 0], nb[:, 1], nb[:, 2]] = step
+                front = nb
+            path, cur = [goal], np.array(goal)
+            while dist[tuple(cur)] > 0:
+                for o in offs:
+                    q = cur + o
+                    if (q >= 0).all() and (q < n).all() and dist[tuple(q)] == dist[tuple(cur)] - 1:
+                        cur = q
+                        break
+                path.append(tuple(cur))
+            path.reverse()
+            print("route: %d cubes from the start; every 8th:" % len(path))
+            for q in path[::8] + [path[-1]]:
+                print("   (%d %d %d)" % tuple(lo + (np.array(q) + 0.5) * C))
     # the check: every light and placed thing should stand in air the flood saw (or inside something, where some
     # dressing sits); one in unseen air means a place people use that the flood missed, so nothing is changed
     lost = []

@@ -2181,6 +2181,9 @@ class BunkerForest(Forest):
             k = e["keys"]
             if k.get("targetname", "") in drop or e["classname"] in ("func_areaportal", "env_soundscape") or MS.dropped_prop(e):
                 return False        # (Valve's four soundscapes too: map_silo.py's soundscapes() places the silo's own)
+            o = e.get("origin") or ()
+            if len(o) == 3 and MS.Silo.LEVEL_A <= o[2] < MS.Silo.GANTRY and math.hypot(o[0], o[1]) >= 290 and not (-560 <= o[0] <= -380 and abs(o[1]) <= 130):
+                return False        # (in levels A and B's halls, shut off and emptied (Silo.halls_shut); the lift's own column stays)
             if k.get("targetname", "") in reserve or any(k.get(r, "") in reserve for r in ("parentname", "attach1", "attach2")):
                 return False        # (the hoist: kept in the piece's reserve, not placed)
             if e["classname"] == "func_button" and tuple(e.get("origin", ())) in lab_pads:
@@ -2272,10 +2275,8 @@ class BunkerForest(Forest):
         ms = MS.Silo(self, d)
         ms.pit_cover()
         ms.ring_rail()
-        ms.level_b_doors()
-        ms.ring_dress()
-        ms.shaft_windows(pf)
         ms.shaft_shut(pf)
+        ms.halls_shut(pf)      # (levels A and B's halls shut off and emptied: the owner, 23 November)
         ms.office()
         ms.lever_box(pf)
         ms.bedroom()
