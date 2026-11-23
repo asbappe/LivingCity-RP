@@ -2278,7 +2278,8 @@ class BunkerForest(Forest):
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_FOOT], q, d)), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
         v.point("info_target", tuple(pf_point([hx, hy, self.HQ_TOP], q, d)), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
-        # the playable silo (map_silo.py): the pit covered, level B's doors, the ring halls dressed, the leader's office
+        # the playable silo (map_silo.py): the pit covered, level B's doors, the ring halls dressed, the shuttered windows
+        # from level B's quarters onto the rocket, the leader's office
         # (with Valve's lever wall moved inside) and bedroom, the bottom level's fence gate, light where rooms had none,
         # the silo's soundscapes, and the leader's way out
         ms = MS.Silo(self, d)
@@ -2286,6 +2287,7 @@ class BunkerForest(Forest):
         ms.ring_rail()
         ms.level_b_doors()
         ms.ring_dress()
+        ms.shaft_windows(pf)
         ms.office()
         ms.lever_box(pf)
         ms.bedroom()
