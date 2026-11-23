@@ -412,53 +412,53 @@ Folder: `resistance/`. Fighters, lookouts, the quartermaster and the medic speak
 
 ## Overwatch's announcements
 
-Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice as his existing recordings.
+Folder: `overwatch/`. Overwatch: the same voice as his existing recordings. **Every line needs these tags in front, or the voice doesn't sound right:** `[intimidating, overly enunciating, robotic, very slow]` (the owner, 23 November).
 
 | Done | File | When | Paste |
 |---|---|---|---|
-| [x] | `rations1` | A ration distribution starts | [cold, clinical, flat dispatcher] Attention, residents: ration distribution is now in progress. Report to your assigned distribution point. |
-| [x] | `sweep1` | An inspection sweep starts | [cold, clinical, flat dispatcher] Attention, residents: inspection sweep in progress. Remain where you are and present your identification. |
-| [x] | `curfew1` | Curfew starts | [cold, clinical, flat dispatcher] Attention, residents: curfew is now in effect. Return to your residence block immediately. |
-| [x] | `lockdown1` | A lockdown starts | [cold, clinical, flat dispatcher] Attention, all residents: the city is now in lockdown. Remain indoors. Civil Protection is authorized to use force. |
-| [x] | `raid1` | A raid on a block starts | [cold, clinical, flat dispatcher] Attention, residents: a block inspection is under way. Do not interfere with Civil Protection. |
-| [x] | `supply1` | A supply convoy arrives | [cold, clinical, flat dispatcher] Attention, residents: supply convoy in transit. Clear the route. |
-| [x] | `ended1` | An event is over | [cold, clinical, flat dispatcher] Attention, residents: sociostabilization restored. Resume assigned duties. |
-| [x] | `rations_soon1` | Two minutes before a ration distribution | [cold, clinical, flat dispatcher] Attention, residents: ration distribution begins in two minutes. |
-| [x] | `curfew_soon1` | Two minutes before curfew | [cold, clinical, flat dispatcher] Attention, residents: curfew begins in two minutes. Proceed to your residence block. |
-| [x] | `socio_green1` | Sociostability goes green | [cold, clinical, flat dispatcher] Sociostability nominal. Resume normal activity. |
-| [x] | `socio_yellow1` | Sociostability goes yellow | [cold, clinical, flat dispatcher] Sociostability marginal. Expect increased inspections. Keep your papers ready. |
-| [x] | `socio_red1` | Sociostability goes red | [cold, clinical, flat dispatcher] Judgment waiver in effect. Civil Protection may act at their discretion. Remain indoors. |
-| [ ] | `socio_black1` | The city collapses to BLACK (also every 5 minutes while it lasts): open rebellion, the curfew and the shelling, in one | [cold, clinical, flat dispatcher] Attention all residents: sociostability has collapsed. Martial law is in effect. Mandatory curfew. Suppression fire authorized on all exposed sectors. |
-| [x] | `dawn1` | Dawn | [cold, clinical, flat dispatcher] Attention, residents: a new work cycle begins. Report to your assignments. |
-| [x] | `day1` | Midday | [cold, clinical, flat dispatcher] Attention, residents: productivity quotas remain in effect. |
-| [x] | `dusk1` | Dusk | [cold, clinical, flat dispatcher] Attention, residents: the work cycle is ending. Prepare for curfew. |
-| [x] | `night1` | Night | [cold, clinical, flat dispatcher] Attention, residents: night cycle. Movement outside residence blocks is restricted. |
-| [x] | `outbreak1` | Infected break out into the streets | [cold, clinical, flat dispatcher] Alert: biotic contamination in the city. Avoid the affected area. Containment teams are responding. |
-| [x] | `blackout1` | A district loses power | [cold, clinical, flat dispatcher] Alert: power failure in your district. Remain calm. Maintenance has been dispatched. |
-| [x] | `power_restored1` | Power comes back | [cold, clinical, flat dispatcher] Power restored. Resume normal activity. |
-| [x] | `skirmish_raid1` | Overwatch answers a fight with the Resistance | [cold, clinical, flat dispatcher] Overwatch response team deployed. Residents, clear the area. |
-| [x] | `skirmish_sweep1` | Overwatch sweeps into rebel ground | [cold, clinical, flat dispatcher] Overwatch sweep under way in an anticivil sector. Residents, remain clear. |
-| [x] | `response1` | A response squad is sent | [cold, clinical, flat dispatcher] Protection response team dispatched. Do not interfere. |
-| [x] | `breakout1` | Prisoners break out | [cold, clinical, flat dispatcher] Alert: unauthorized departure from detention. All residents, report sightings to Civil Protection. |
-| [x] | `overwatch_drop1` | Overwatch soldiers are dropped in | [cold, clinical, flat dispatcher] Overwatch deployment in progress. Residents, clear the landing zone. |
-| [x] | `block_raided1` | A housing block is raided | [cold, clinical, flat dispatcher] Housing block inspection in progress. Remain in your unit. |
-| [x] | `territory_grew1` | The Resistance gains ground | [cold, clinical, flat dispatcher] Alert: anticivil activity expanding. Avoid unregistered areas. |
-| [x] | `train_arrival1` | A train arrives | [cold, clinical, flat dispatcher] Attention: new arrivals at the platform. Proceed to Civil Intake. |
-| [x] | `welcome1` | Someone joins the server (just for them) | [cold, clinical, flat dispatcher] Attention, new resident: report to Civil Intake for registration. |
-| [x] | `ambient1` | General city announcements now and then (also her addresses, with lc_breen_broadcasts 1) | [cold, clinical, flat dispatcher] Attention, residents: inaction is conspiracy. Report suspicious behavior. |
-| [ ] | `jog1` | The morning jog | [cold, clinical, flat dispatcher] Attention, residents: morning exercise. Assemble for the run. |
-| [ ] | `drill1` | The morning drill | [cold, clinical, flat dispatcher] Attention, residents: morning drill. Assemble in the yard. |
-| [ ] | `parade1` | The morning parade | [cold, clinical, flat dispatcher] Attention, residents: assemble for the parade. |
-| [ ] | `black_stand1` | Her last stand begins | [cold, clinical, flat dispatcher] Overwatch acknowledges incursion at the Nexus. All units, converge and protect the Administrator. |
-| [ ] | `black_fallen1` | She's dead (always Overwatch's: she can't announce her own death) | [cold, clinical, flat dispatcher] Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus. |
-| [ ] | `black_crushed1` | The uprising is crushed (time ran out) | [cold, clinical, flat dispatcher] Incursion contained. Sociostability restoring. Remain indoors. |
-| [ ] | `suppressor_down1` | The suppression device is destroyed | [cold, clinical, flat dispatcher] Alert: Nexus suppression device offline. All units, contain and repair. |
-| [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [cold, clinical, flat dispatcher] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
-| [ ] | `attempt1` | An attempt on her life at her address, three to five minutes after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
-| [ ] | `hunt1` | A hunt for whoever tried to kill her begins: Dispatch to the units, heard on their radios only, in sound only (never the PA, no words on screen); give it the unit lines' radio sound | [cold, clinical, flat dispatcher] All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive. |
-| [ ] | `shelled1` | Headcrab canisters come down on a district the Resistance hold (as they come in) | [cold, clinical, flat dispatcher] Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters. |
-| [ ] | `execution1` | A public execution at the wall is called, two minutes ahead (the name is on screen, never in the recording) | [cold, clinical, flat dispatcher] Attention: a public execution of an enemy of the city will take place at the wall. Citizens, attend. |
-| [ ] | `rebel_killing1` | The Combine learn the Resistance killed someone (a body found, or witnesses); the name is on screen, never in the recording | [cold, clinical, flat dispatcher] Attention: anticivil elements have murdered a citizen. Report all knowledge of their whereabouts. |
+| [x] | `rations1` | A ration distribution starts | [intimidating, overly enunciating, robotic, very slow] Attention, residents: ration distribution is now in progress. Report to your assigned distribution point. |
+| [x] | `sweep1` | An inspection sweep starts | [intimidating, overly enunciating, robotic, very slow] Attention, residents: inspection sweep in progress. Remain where you are and present your identification. |
+| [x] | `curfew1` | Curfew starts | [intimidating, overly enunciating, robotic, very slow] Attention, residents: curfew is now in effect. Return to your residence block immediately. |
+| [x] | `lockdown1` | A lockdown starts | [intimidating, overly enunciating, robotic, very slow] Attention, all residents: the city is now in lockdown. Remain indoors. Civil Protection is authorized to use force. |
+| [x] | `raid1` | A raid on a block starts | [intimidating, overly enunciating, robotic, very slow] Attention, residents: a block inspection is under way. Do not interfere with Civil Protection. |
+| [x] | `supply1` | A supply convoy arrives | [intimidating, overly enunciating, robotic, very slow] Attention, residents: supply convoy in transit. Clear the route. |
+| [x] | `ended1` | An event is over | [intimidating, overly enunciating, robotic, very slow] Attention, residents: sociostabilization restored. Resume assigned duties. |
+| [x] | `rations_soon1` | Two minutes before a ration distribution | [intimidating, overly enunciating, robotic, very slow] Attention, residents: ration distribution begins in two minutes. |
+| [x] | `curfew_soon1` | Two minutes before curfew | [intimidating, overly enunciating, robotic, very slow] Attention, residents: curfew begins in two minutes. Proceed to your residence block. |
+| [x] | `socio_green1` | Sociostability goes green | [intimidating, overly enunciating, robotic, very slow] Sociostability nominal. Resume normal activity. |
+| [x] | `socio_yellow1` | Sociostability goes yellow | [intimidating, overly enunciating, robotic, very slow] Sociostability marginal. Expect increased inspections. Keep your papers ready. |
+| [x] | `socio_red1` | Sociostability goes red | [intimidating, overly enunciating, robotic, very slow] Judgment waiver in effect. Civil Protection may act at their discretion. Remain indoors. |
+| [ ] | `socio_black1` | The city collapses to BLACK (also every 5 minutes while it lasts): open rebellion, the curfew and the shelling, in one | [intimidating, overly enunciating, robotic, very slow] Attention all residents: sociostability has collapsed. Martial law is in effect. Mandatory curfew. Suppression fire authorized on all exposed sectors. |
+| [x] | `dawn1` | Dawn | [intimidating, overly enunciating, robotic, very slow] Attention, residents: a new work cycle begins. Report to your assignments. |
+| [x] | `day1` | Midday | [intimidating, overly enunciating, robotic, very slow] Attention, residents: productivity quotas remain in effect. |
+| [x] | `dusk1` | Dusk | [intimidating, overly enunciating, robotic, very slow] Attention, residents: the work cycle is ending. Prepare for curfew. |
+| [x] | `night1` | Night | [intimidating, overly enunciating, robotic, very slow] Attention, residents: night cycle. Movement outside residence blocks is restricted. |
+| [x] | `outbreak1` | Infected break out into the streets | [intimidating, overly enunciating, robotic, very slow] Alert: biotic contamination in the city. Avoid the affected area. Containment teams are responding. |
+| [x] | `blackout1` | A district loses power | [intimidating, overly enunciating, robotic, very slow] Alert: power failure in your district. Remain calm. Maintenance has been dispatched. |
+| [x] | `power_restored1` | Power comes back | [intimidating, overly enunciating, robotic, very slow] Power restored. Resume normal activity. |
+| [x] | `skirmish_raid1` | Overwatch answers a fight with the Resistance | [intimidating, overly enunciating, robotic, very slow] Overwatch response team deployed. Residents, clear the area. |
+| [x] | `skirmish_sweep1` | Overwatch sweeps into rebel ground | [intimidating, overly enunciating, robotic, very slow] Overwatch sweep under way in an anticivil sector. Residents, remain clear. |
+| [x] | `response1` | A response squad is sent | [intimidating, overly enunciating, robotic, very slow] Protection response team dispatched. Do not interfere. |
+| [x] | `breakout1` | Prisoners break out | [intimidating, overly enunciating, robotic, very slow] Alert: unauthorized departure from detention. All residents, report sightings to Civil Protection. |
+| [x] | `overwatch_drop1` | Overwatch soldiers are dropped in | [intimidating, overly enunciating, robotic, very slow] Overwatch deployment in progress. Residents, clear the landing zone. |
+| [x] | `block_raided1` | A housing block is raided | [intimidating, overly enunciating, robotic, very slow] Housing block inspection in progress. Remain in your unit. |
+| [x] | `territory_grew1` | The Resistance gains ground | [intimidating, overly enunciating, robotic, very slow] Alert: anticivil activity expanding. Avoid unregistered areas. |
+| [x] | `train_arrival1` | A train arrives | [intimidating, overly enunciating, robotic, very slow] Attention: new arrivals at the platform. Proceed to Civil Intake. |
+| [x] | `welcome1` | Someone joins the server (just for them) | [intimidating, overly enunciating, robotic, very slow] Attention, new resident: report to Civil Intake for registration. |
+| [x] | `ambient1` | General city announcements now and then (also her addresses, with lc_breen_broadcasts 1) | [intimidating, overly enunciating, robotic, very slow] Attention, residents: inaction is conspiracy. Report suspicious behavior. |
+| [ ] | `jog1` | The morning jog | [intimidating, overly enunciating, robotic, very slow] Attention, residents: morning exercise. Assemble for the run. |
+| [ ] | `drill1` | The morning drill | [intimidating, overly enunciating, robotic, very slow] Attention, residents: morning drill. Assemble in the yard. |
+| [ ] | `parade1` | The morning parade | [intimidating, overly enunciating, robotic, very slow] Attention, residents: assemble for the parade. |
+| [ ] | `black_stand1` | Her last stand begins | [intimidating, overly enunciating, robotic, very slow] Overwatch acknowledges incursion at the Nexus. All units, converge and protect the Administrator. |
+| [ ] | `black_fallen1` | She's dead (always Overwatch's: she can't announce her own death) | [intimidating, overly enunciating, robotic, very slow] Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus. |
+| [ ] | `black_crushed1` | The uprising is crushed (time ran out) | [intimidating, overly enunciating, robotic, very slow] Incursion contained. Sociostability restoring. Remain indoors. |
+| [ ] | `suppressor_down1` | The suppression device is destroyed | [intimidating, overly enunciating, robotic, very slow] Alert: Nexus suppression device offline. All units, contain and repair. |
+| [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [intimidating, overly enunciating, robotic, very slow] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
+| [ ] | `attempt1` | An attempt on her life at her address, three to five minutes after it (hers with nobody playing her, Overwatch's with a player in the post) | [intimidating, overly enunciating, robotic, very slow] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
+| [ ] | `hunt1` | A hunt for whoever tried to kill her begins: Dispatch to the units, heard on their radios only, in sound only (never the PA, no words on screen); give it the unit lines' radio sound | [intimidating, overly enunciating, robotic, very slow] All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive. |
+| [ ] | `shelled1` | Headcrab canisters come down on a district the Resistance hold (as they come in) | [intimidating, overly enunciating, robotic, very slow] Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters. |
+| [ ] | `execution1` | A public execution at the wall is called, two minutes ahead (the name is on screen, never in the recording) | [intimidating, overly enunciating, robotic, very slow] Attention: a public execution of an enemy of the city will take place at the wall. Citizens, attend. |
+| [ ] | `rebel_killing1` | The Combine learn the Resistance killed someone (a body found, or witnesses); the name is on screen, never in the recording | [intimidating, overly enunciating, robotic, very slow] Attention: anticivil elements have murdered a citizen. Report all knowledge of their whereabouts. |
 
 ## The radio
 
