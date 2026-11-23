@@ -813,7 +813,7 @@ def m_railbridge(m, opt):
     street = m.street_side()
     # where each tunnel's mouth is: in the canal's wall, or on a street's bank behind the street (an overpass carries
     # the line over the road and tracks: the owner, 22 November, "cant you just make an overpass?")
-    T0 = {s: (map_corridor.FRONT if s == street else 256) for s in (1, -1)}
+    T0 = {s: (map_corridor.front_line(b) if s == street else 256) for s in (1, -1)}
     FAR = {s: T0[s] + 1024 for s in (1, -1)}
     m.open(0, -256, L, 256)
     from map_mods_c import cage_lamp

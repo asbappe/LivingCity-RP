@@ -37,6 +37,8 @@ import random
 from map_build import CELL, MAT, Plan
 
 STREET = 656            # the street's height: the city's own roads, and the trim line on the canal's walls
+WALL_H = 512            # the Combine wall between the city and the street ("wall combine"): its height over the street
+CORE = "metal/citadel_metalwall077a"     # its sealing core (seen only where its detail leaves a gap)
 EDGE, TRACK, ROAD_IN, ROAD_OUT, FRONT = 256, 320, 512, 576, 1024     # distances from the canal's middle (see above); the roadway ends at 960
 LIFT_V, LIFT_Z = 768, 256                                            # how far a lifted module is moved out, and up
 FTOP = STREET + 384     # the top of the frontage's wall and of the sheds
@@ -87,7 +89,7 @@ class CorridorPlan(Plan):
                     vmf.world_box(self.box(x1, y1, self.base, x2, y2, top), cw, vis=self.vis)
                 vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, vis=self.vis)
                 continue
-            vmf.world_box(self.box(x1, y1, self.base, x2, y2, spec[1]), self.floor_side, top=spec[2], vis=self.vis)
+            vmf.world_box(self.box(x1, y1, self.base, x2, y2, spec[1]), CORE if spec[2] == CORE else self.floor_side, top=spec[2], vis=self.vis)
             if kind == "open":
                 lid = spec[3] if len(spec) > 3 and spec[3] else self.sky      # (a square with a sky of its own, higher: a church's yard)
                 vmf.world_box(self.box(x1, y1, lid, x2, y2, max(self.top, lid + 16)), sky, sky, sky, vis=self.vis)
@@ -102,7 +104,7 @@ class CorridorPlan(Plan):
                 top = spec[4]
                 if top > spec[3]:
                     vmf.world_box(self.box(x1, y1, spec[3], x2, y2, top), brick if spec[5] and spec[3] >= STREET else cw, top=cw, bottom=self.ceiling, vis=self.vis)
-                vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, bottom=None if top > spec[3] else self.ceiling, vis=self.vis)
+                vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, bottom=None if top > spec[3] else (sky if spec[2] == CORE else self.ceiling), vis=self.vis)
         self.raise_sky(vmf)      # (higher skies of their own closed in on every side, as Plan's)
 
 
@@ -149,6 +151,8 @@ def lay(b, elems, side, cars):
     s = 1 if side == "left" else -1
     plan, cells = b.plan, b.plan.cells
     road, walk, gravel = MM["road"], MM["walk"], MM["gravel"]
+    FR = front_line(b)          # (where the frontage stands: FRONT, or 64 farther out behind a Combine wall's foot)
+    shed_front = set()     # (the sheds' own brick walls: never the Combine wall)
 
     def band(fr, u1, a, u2, c, mat, tag):
         """Squares from a to c out from the canal's middle, on the street's side: make them street."""
@@ -210,25 +214,26 @@ def lay(b, elems, side, cars):
                 for i in range(r[0] // CELL, r[2] // CELL):
                     for j in range(r[1] // CELL, r[3] // CELL):
                         plan.front.add((i, j))
-                band(fr, 0, ROAD_OUT, L, FRONT, road, e["tag"])
+                        shed_front.add((i, j))
+                band(fr, 0, ROAD_OUT, L, FR, road, e["tag"])
             else:
                 band(fr, 0, EDGE, L, TRACK, walk, e["tag"])
                 band(fr, 0, TRACK, L, ROAD_IN, gravel, e["tag"])
-                band(fr, 0, ROAD_IN, L, FRONT, road, e["tag"])
-            r = fr.rect(0, s * FRONT, L, s * (FRONT + (1600 if e.get("lifted") else 64)))
+                band(fr, 0, ROAD_IN, L, FR, road, e["tag"])
+            r = fr.rect(0, s * FR, L, s * (FR + (1600 if e.get("lifted") else 64)))
             for i in range(r[0] // CELL, r[2] // CELL):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     plan.front.add((i, j))
         elif e["kind"] in ("left", "right") and (e["kind"] == "right") == (s > 0):      # (a turn away from the street's side: the street goes round the outside of it)
-            band(fr, 0, EDGE, 256 + FRONT, FRONT, road, e["tag"])
-            r = fr.rect(512, s * -256, 256 + FRONT, s * 256)
+            band(fr, 0, EDGE, 256 + FR, FR, road, e["tag"])
+            r = fr.rect(512, s * -256, 256 + FR, s * 256)
             for i in range(r[0] // CELL, r[2] // CELL):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     if (i, j) not in cells:
                         cells[(i, j)] = ("open", STREET, road)
                         b.owner[(i, j)] = "the street"
                         b.deck.add((i, j))
-            r = fr.rect(-64, s * -320, 256 + FRONT + 64, s * (FRONT + 64))
+            r = fr.rect(-64, s * -320, 256 + FR + 64, s * (FR + 64))
             for i in range(r[0] // CELL, r[2] // CELL):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     plan.front.add((i, j))
@@ -243,12 +248,15 @@ def lay(b, elems, side, cars):
         z = elems[k + 1] if k + 1 < len(elems) else None
         if not a or not z or a["kind"] != "leg" or z["kind"] != "leg":
             continue
-        ra = a["frame"].rect(max(0, a["length"] - FRONT - 64), s * (EDGE + 64), a["length"], s * (FRONT + 64))      # (from beyond the parapet: the canal's edges keep theirs)
-        rz = z["frame"].rect(0, s * (EDGE + 64), min(z["length"], FRONT + 64), s * (FRONT + 64))
+        ra = a["frame"].rect(max(0, a["length"] - FR - 64), s * (EDGE + 64), a["length"], s * (FR + 64))      # (from beyond the parapet: the canal's edges keep theirs)
+        rz = z["frame"].rect(0, s * (EDGE + 64), min(z["length"], FR + 64), s * (FR + 64))
         x1, y1, x2, y2 = max(ra[0], rz[0]), max(ra[1], rz[1]), min(ra[2], rz[2]), min(ra[3], rz[3])
         for i in range(x1 // CELL, x2 // CELL):
             for j in range(y1 // CELL, y2 // CELL):
                 junction.add((i, j))
+
+    if getattr(b, "street_wall", None) == "combine":
+        combine_core(b, shed_front)
 
     # --- what stands on it ---
     rnd = random.Random(len(elems) * 31 + 7)
@@ -338,7 +346,11 @@ def lay(b, elems, side, cars):
         for a, c in runs(ROAD_IN + 32, stairs):
             v1, v2 = sv(ROAD_IN + 2, ROAD_IN + 6)
             m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, c, 128)] + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"], vis=dv)
-        if not e.get("lifted"):
+        if not e.get("lifted") and getattr(b, "street_wall", None) == "combine":
+            for a, c in runs(FR - 32):          # (the outer pavement up to the Combine wall's foot; the wall itself: combine_wall)
+                v1, v2 = sv(960, FR)
+                m.det([(a, v1, STREET, c, v2, STREET + 8)], walk, vis=dv)
+        elif not e.get("lifted"):
             # the outer pavement, street lamps, and the frontage: a plinth, piers, blind windows, now and then a barred doorway
             open_front = [(u, u + CELL) for u in range(0, L, CELL) if is_deck(u + 32, FRONT + 32)]      # (the frontage opens there: another street, a road off it)
             for a, c in runs(FRONT - 32, open_front):
@@ -466,7 +478,8 @@ def train(b, n, a, z, s, cars):
     for nm, cls in ((name + "_run", "logic_relay"), (name + "_timer", "logic_timer"), (name + "_hurt", "trigger_hurt"), (name + "_horn", "ambient_generic")):
         b.names.append((nm, cls, "train %d" % n))
     v1, v2 = (s * 262, s * 270) if s > 0 else (s * 270, s * 262)
-    fv1, fv2 = sorted((s * (FRONT - 8), s * FRONT))      # (on the frontage's wall, facing the road: a walker stands on the pavement to press it)
+    fr_ = front_line(b) - (72 if getattr(b, "street_wall", None) == "combine" else 0)      # (before a Combine wall's battered foot)
+    fv1, fv2 = sorted((s * (fr_ - 8), s * fr_))      # (on the frontage's wall, facing the road: a walker stands on the pavement to press it)
     m.test_button((a["length"] + 40, fv1, STREET + 44, a["length"] + 56, fv2, STREET + 60), [("OnIn", name + "_run", "Trigger"), ("OnOut", name + "_run", "Trigger")])
     m.view(a["length"] + 500, -s * 120, 400, 180, -22, "from the canal, toward the shed")
     m.view(a["length"] + 420, s * 760, STREET, 180, 0, "on the road, toward the shed")
@@ -516,4 +529,92 @@ def spur(b, x1, y1, x2, y2, z_end, ids=()):
     for x in range(x1 + 64, x2, 256):
         m.lane(x, (y1 + y2) // 2, STREET + (z_end - STREET) * (x - x1) // (x2 - x1))
     b.notes.append("the road to the owner's: from the street at (%d %d) up to their road at (%d %d), z %d to %d" % (x1, (y1 + y2) // 2, x2, (y1 + y2) // 2, STREET, z_end))
+
+
+def front_line(b):
+    """How far from the canal's middle the frontage stands: FRONT, or behind a Combine wall 64 farther (its battered foot
+    and ribs stand on the pavement before it)."""
+    return FRONT + (64 if getattr(b, "street_wall", None) == "combine" else 0)
+
+
+def combine_core(b, shed_front):
+    """The Combine wall's core (the owner, 23 November: "it makes more sense to have the combine wall between the city
+    and the road/railroad ... City > combine wall > road > railroad > canal"): every empty square beside the street on
+    its far side (its frontage, round its corners, across its ends) becomes a sealing core WALL_H high less 8, with air
+    over it up to the sky so the wall's piers, head and fins stand clear; combine_wall dresses it."""
+    cells = b.plan.cells
+    street = set(b.deck)
+    keep = b.plan.keep_out
+
+    def kept(c, pad=0):
+        x, y = c[0] * CELL + 32, c[1] * CELL + 32
+        return any(r[0] - pad <= x < r[2] + pad and r[1] - pad <= y < r[3] + pad for r in keep)
+    core = set()
+    for (i, j) in street:
+        for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            c = (i + di, j + dj)
+            if c not in cells and c not in shed_front and c not in core and not kept(c, CELL):
+                core.add(c)      # (never in, nor beside, a place kept for another piece: the plain wall stays there)
+    for c in core:
+        cells[c] = ("low", STREET + WALL_H - 8, CORE, b.sky)
+        b.owner[c] = "the Combine wall"
+    b.combine_core = core
+
+
+def combine_wall(b, seed=1):
+    """The Combine wall along its core: each straight stretch (5 squares or more) a row of wall_chain's runs 512 to 1024
+    long, laid straight, their battered ribbed faces to the street, a pier with its lamp over every joint and at both
+    ends (map_combine.py's perimeter, combine/chain.py). What a stretch leaves short stays plain metal."""
+    import random as _r
+    from combine.chain import pier, run
+    from combine.geom import Frame as CF
+    from combine.piece import Piece, Sink
+    from combine.scene import put
+    core = getattr(b, "combine_core", set())
+    if not core:
+        return
+    r = _r.Random("wall %s %d" % (b.name, seed))
+    sink = Sink()
+    street = set(b.deck)
+    segs = []
+    for axis in ("x", "y"):
+        lines = {}
+        for (i, j) in core:
+            lines.setdefault(j if axis == "x" else i, []).append(i if axis == "x" else j)
+        for row, ks in lines.items():
+            ks.sort()
+            start = prev = ks[0]
+            for k in ks[1:] + [None]:
+                if k is not None and k == prev + 1:
+                    prev = k
+                    continue
+                if prev - start + 1 >= 5:
+                    cellsof = [((t, row) if axis == "x" else (row, t)) for t in range(start, prev + 1)]
+                    lo = sum(1 for (i, j) in cellsof if ((i, j - 1) if axis == "x" else (i - 1, j)) in street)
+                    hi = sum(1 for (i, j) in cellsof if ((i, j + 1) if axis == "x" else (i + 1, j)) in street)
+                    if lo or hi:
+                        segs.append((axis, row, start, prev + 1, -1 if lo >= hi else 1))
+                if k is not None:
+                    start = prev = k
+    for axis, row, a, c, side in segs:
+        L = (c - a) * CELL
+        if axis == "x":      # (the street to the south (side -1) or north; the wall's face on the core's street side)
+            o, d = ((a * CELL, row * CELL), (1, 0)) if side < 0 else ((c * CELL, (row + 1) * CELL), (-1, 0))
+        else:
+            o, d = ((row * CELL, c * CELL), (0, -1)) if side < 0 else (((row + 1) * CELL, a * CELL), (0, 1))
+        u, runs_ = 0, []
+        while L - u >= 320:
+            k = min(r.choice((512, 640, 768, 896, 1024)), L - u)
+            if L - u - k < 320:
+                k = L - u
+            fr = CF((o[0] + d[0] * u, o[1] + d[1] * u, STREET), d)
+            runs_.append((Piece(fr, (k, 0), WALL_H, r, sink), k))
+            u += k
+        for n, (p, k) in enumerate(runs_):
+            T, Le, Pl = run(p, k, WALL_H, r)
+            pier(p, 0, WALL_H, r, T, Le, Pl, lamp=n % 2 == 0)
+            if n == len(runs_) - 1:
+                pier(p, k, WALL_H, r, T, Le, Pl, lamp=True)
+    put(b.vmf, sink, b.vis + ": the Combine wall")
+    b.notes.append("the Combine wall between the city and the street: %d stretches, %d runs, %d lamps" % (len(segs), sum(1 for _ in sink.solids) and len(segs), len(sink.lamps)))
 

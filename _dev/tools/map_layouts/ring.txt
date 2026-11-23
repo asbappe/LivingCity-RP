@@ -10,6 +10,8 @@
 # The town (north) and the cave forest (west) moved out with them. The west run comes straight down to the south
 # part; the owner's west road meets the street by a road climbing to it ("road": it replaces their brushes 14734 and
 # 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there.
+# Between the city and the street stands a Combine wall ("wall combine"; the owner, 23 November: "City > combine wall >
+# road > railroad > canal > wall/scenery"), made by map_combine's recipe along the street's whole far side.
 # Checked with
 #   python3 map_build.py chain --layout map_layouts/ring.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf lc_town.vmf lc_forest_cave.vmf
 
@@ -17,6 +19,7 @@ start 6144 5696
 heading N
 rim 968
 upper left
+wall combine
 end 6144 1856 N
 road -4480 1920 -2624 2560 840 replaces 14734 15630
 
