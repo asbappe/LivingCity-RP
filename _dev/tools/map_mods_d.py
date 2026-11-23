@@ -92,8 +92,8 @@ def m_substation(m, opt):
     and 01a posts, the owner's field between them), and at the steps' head a sliding gate (a chain link panel in a
     short run of Nova Prospekt's fence) players open by hand. Inside, a yard: three of the city's own substation
     transformers (substation_transformer01c) back against the wall, a danger sign over each, cables from them up to an
-    arm on the wall and across the canal to an insulator on the far wall's top, a steel switch cabinet
-    (controlroom_storagecloset001a) with the fuse panel on its front and the Combine's meter box beside it, a caged
+    arm on the wall and across the canal to an insulator on the far wall's top (where a street runs along the far bank,
+    which has no wall top, to one on the yard's own wall's top), a steel switch cabinet (controlroom_storagecloset001a) with the fuse panel on its front and the Combine's meter box beside it, a caged
     warning lamp on the wall over it, two of the Combine's lights on the wall, danger signs on the quay's face, a steady
     hum. The cabinet's panel is a func_breakable (40 health): breaking it fires the relay lc_substation_cut, which stops
     the hum, puts out the lamps (the warning lamp and the Combine's lights), throws sparks from the panel and from each
@@ -141,8 +141,12 @@ def m_substation(m, opt):
         m.grime("danger", u, -256, top + 176, k)
         m.spark(u, -218, top + 156, name="lc_substation_spark_t%d" % (k + 1))
     m.rope([(400, -204, arm_z - 4), (780, -204, arm_z - 4)], slack=12, width=1)
-    m.rope([(580, -204, arm_z), (600, 250, b.rim - 16)], slack=70, width=1)                 # the feed, across the canal
-    m.static("models/props_c17/utilityconnecter006.mdl", 600, 254, 90, z=b.rim - 20)        # (an insulator on the far wall, under its top)
+    if m.street_side() == 1:      # (a street along the far bank: no wall top there to take it, so the feed comes in over the yard's own wall)
+        m.rope([(580, -204, arm_z), (600, -250, b.rim - 16)], slack=20, width=1)
+        m.static("models/props_c17/utilityconnecter006.mdl", 600, -254, 270, z=b.rim - 20)
+    else:
+        m.rope([(580, -204, arm_z), (600, 250, b.rim - 16)], slack=70, width=1)             # the feed, across the canal
+        m.static("models/props_c17/utilityconnecter006.mdl", 600, 254, 90, z=b.rim - 20)    # (an insulator on the far wall, under its top)
     # the switch cabinet, its panel, the lamp
     m.static("models/props_wasteland/controlroom_storagecloset001a.mdl", 320, -238, 90, z=top)
     m.static("models/props_combine/combine_interface002.mdl", 372, -228, 90, z=top)

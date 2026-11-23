@@ -193,6 +193,8 @@ def m_lockgate(m, opt):
     that turns while the gates move (the alarm recipe: a func_rotating with two red spotlights in a cage lamp).
     For people on foot, the way round: in the right wall a doorway upstream of the gates, a passage 128 wide inside the
     wall, lit, past the gates, and a doorway back into the canal beyond the recesses (its own areaportal, always open).
+    Beside a street (the canal ring) the leaf on the street's bank, open, stands 300 over the street at its canal edge,
+    its recess reaching under the street's edge: the street's parapet is left out there (it would run through the leaf).
     The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut); the Combine, or rebels
     laying an ambush, shut them at the booth (the owner, 21 November). Nothing kills (the owner, 22 November: "considering
     how dying in the gamemode means a new character, yes just shove, not kill"; until then a leaf killed whatever it met):
@@ -220,6 +222,9 @@ def m_lockgate(m, opt):
         m.unpaint(G - 64, min(s * H, s * WHALF), G, max(s * H, s * WHALF))      # (the pier out to the hinge: it stopped at 448 and left a gap each side, the owner saw)
         m.open(G, min(s * WHALF, s * (WHALF + 64)), G + 448, max(s * WHALF, s * (WHALF + 64)))
     m.upright(-64, -WHALF - 448, L + 64, WHALF + 448)          # (every wall upright, as the wide canal's)
+    ss = m.street_side()
+    if ss:      # (beside a street the open leaf on its bank stands up out of its recess past the street's canal edge: no parapet or chain link there, through the leaf)
+        m.b.edge_gaps.append(m.fr.rect(G, min(ss * (WHALF - 20), ss * (WHALF + 28)), G + 448, max(ss * (WHALF - 20), ss * (WHALF + 28))))
     for s in (1, -1):                                           # (no lip or rib on the piers, where the leaves stand)
         m.no_bank(G - 72, min(s * (H - 8), s * (WHALF + 72)), G + 8, max(s * (H - 8), s * (WHALF + 72)))
         m.taken(G - 80, min(s * (H - 18), s * (WHALF + 68)), F, G + 470, max(s * (H - 18), s * (WHALF + 68)), F + 600)
