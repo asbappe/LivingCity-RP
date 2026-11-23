@@ -42,5 +42,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 22 and 23 November: the canal ring round City 18 (map_layouts/ring.txt; test map map_ring_walk.py, not compiled yet).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
-- Map chat: bunker, silo and the cave's back to the owner's lists (TODO.md, map-building.md). The owner edits the
-  bunker VMF in Hammer: apply each generator change to THEIR latest file (diff two builds), never resend ours.
+- Map chat: bunker, silo, cave back (map-building.md). 23 Nov, for brush sides: silo levels A, B shut and emptied, lift
+  2 stops, 1-length door surrounds, no slats, map_hidden_faces.py (nodraw, --brushes). The owner edits the bunker VMF:
+  apply each generator change to THEIR latest file (diff two builds), then trim; never resend ours.
