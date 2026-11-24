@@ -1226,7 +1226,11 @@ def drop_useless_portals(vmf, stoppers):
         for box in list(useless):
             for k, (pi, pb) in enumerate(vmf.portal_ents):
                 if pb == box:
+                    name = re.search(r'"targetname" "([^"]+)"', vmf.ents[pi])
                     vmf.ents[pi] = ""
+                    if name:                   # (and the doors' outputs to it: nothing left to open)
+                        drop = re.compile(r'\n[ \t]*"[^"]+" "%s[,\x1b][^"]*"' % re.escape(name.group(1)))
+                        vmf.ents = [drop.sub("", e) if e else e for e in vmf.ents]
                     vmf.portal_ents.pop(k)
                     break
             if box in vmf.portals:
