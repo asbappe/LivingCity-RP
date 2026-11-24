@@ -46,7 +46,7 @@ def main():
     ap.add_argument("--against", nargs="+", help="the owner's VMF (and any other piece's): check the ring against them first")
     ap.add_argument("--out", default="lc_ring_walk.vmf")
     ap.add_argument("--cell", type=int, default=8, help="map_hidden_faces.py's cube (8: finer finds more; 16 takes an eighth of the memory)")
-    ap.add_argument("--quick", action="store_true", help="skip the nodraw pass (about 40 minutes): the ring alone is under vbsp's face limit without it")
+    ap.add_argument("--quick", action="store_true", help="skip the nodraw pass (about 40 minutes): only to look the map over; vbsp needs the pass (its vertex limit)")
     args = ap.parse_args()
     py = sys.executable
     plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"])]
@@ -72,6 +72,10 @@ def main():
     print("checking the finished file:")
     run([py, "map_walk.py", args.out], show=("problems", "  "))
     run([py, "map_stairs.py", args.out], show=("flights", "  "))
+    fin = map_budget.count(os.path.join(HERE, args.out))
+    for key in ("faces", "verts"):
+        if map_budget.over(fin, key):
+            print("  OVER vbsp's limit on %s: it will not compile" % key)
     print("written: %s (compile it alone: a spawn on the first canal's quay, the owner's sun)" % args.out)
 
 

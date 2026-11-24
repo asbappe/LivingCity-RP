@@ -352,9 +352,11 @@ def disp_text(p, spec, t, record=None):
 
 # Valve's building craft (docs/dev/valve-craft-notes.md, 22 maps; the owner said go ahead, 21 November), done to every
 # face our builder lays as the file is written (faces copied exactly from a map of the owner's or Valve's are left be):
-#   lightmapscale  8 on stairs, rails, ladders and bars (Valve: 3 to 10% of faces, on stairs, rails, trims); 64 on a face
-#                  more than 1024 from every path node (far from play), and on a displacement more than 256 from one;
-#                  32 on other displacements; 16 for the rest
+#   lightmapscale  8 on stairs, rails, ladders and bars no longer than 256 (Valve: 3 to 10% of faces, on stairs, rails,
+#                  trims); 64 on a face more than 1024 from every path node (far from play), and on a displacement more
+#                  than 256 from one; 32 on other displacements and on a strip 16 or less across and over 496 long (a
+#                  pipe, a rail: vbsp cuts a face every 31 luxels, and every cut adds vertices, which have a limit of
+#                  65,536: the owner's compile, 24 November, stopped at 70,769); 16 for the rest
 #   texture scale  0.5 on the canal's concrete walls (Valve's canal concrete: 0.5 on 53 to 90% of it), not 0.25
 #   seams          a wall's texture starts at its foot: every upright face is shifted so a texture's edge lies where
 #                  the stack of faces of its material in its plane stands (Valve: 54 to 56% on a seam; ours, chance)
@@ -431,12 +433,15 @@ def craft(text, nodes, boxes=()):
         mat, lo, hi = f["mat"], f["lo"], f["hi"]
         seen = not mat.startswith(("tools/", "dev/"))
         area = max((hi[0] - lo[0]) * (hi[1] - lo[1]), (hi[0] - lo[0]) * (hi[2] - lo[2]), (hi[1] - lo[1]) * (hi[2] - lo[2]))
+        dims = sorted(hi[k] - lo[k] for k in range(3))
         if seen and f["disp"]:
             f["lms"] = 64 if far(f, 256) else 32
-        elif seen and any(k in mat for k in LMS_FINE) and area <= 128 * 256:
+        elif seen and any(k in mat for k in LMS_FINE) and area <= 128 * 256 and dims[2] <= 256:
             f["lms"] = 8
         elif seen and far(f, 1024):
             f["lms"] = 64
+        elif seen and dims[1] <= 16 and dims[2] > 496:
+            f["lms"] = 32
         (ua, us, uscale), (va, vs_, vscale) = _axis(f["u"]), _axis(f["v"])
         if seen and mat in SCALE_HALF and abs(f["n"][2]) < 0.9 and uscale == 0.25 and vscale == 0.25:
             uscale = vscale = 0.5

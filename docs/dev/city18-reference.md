@@ -3905,3 +3905,12 @@ A small piece must stay small in the compiler's count. Windows on the ground flo
 - **Checked by:** map_budget.py FILE.vmf --line on the build and on map_hidden_faces.py's output: the town's share is 7,000 faces and 18,000 sides (docs/dev/map-building.md, the budget).
 - **Tags:** facades, interiors, geometry, performance, owner
 
+### A map has two face limits: faces and unique vertices (`owner-compile-vertex-limit`)
+
+Before a map goes to the owner, map_budget.py must show both drawn faces and the vertex estimate under 65,536 (vbsp's MAX_MAP_FACES and MAX_MAP_VERTS). Vertices run out first on long runs: vbsp cuts every face each 31 luxels for its lightmap, and each cut adds corners. Keep lightmapscale 8 for short stairs, rails and bars only (256 or less); a strip 16 or less across and over 496 long (a pipe, a rail) gets 32. The ring's test map needs the nodraw pass (map_hidden_faces.py) to compile; --quick is for looking only.
+
+- **Why:** The owner's compile of the ring's test map, 24 November, stopped in vbsp on "Too many unique verts, 70769/65536 (map has too much brush geometry)" with its faces at 45,044 of 65,536: only faces had been checked. The canal's long pipes were at lightmapscale 8 (the stairs rule passed them on area), cut every 248 units.
+- **How:** map_build.py craft(): LMS_FINE only when the face's longest side is 256 or less, thin long strips 32. map_budget.py counts vertices from each brush's planes (no vertices_plus needed): corners of drawn faces and displacements' bases, plus 60% of the lightmap cut corners (calibrated on that compile: estimate 72,214 against vbsp's 70,769).
+- **Checked by:** map_build.py and map_ring_walk.py print "vertices about N of 65,536" (NEAR over 58,000, OVER past the limit); map_ring_walk.py says when the finished file is over either limit.
+- **Tags:** owner, geometry, lighting
+
