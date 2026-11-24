@@ -34,7 +34,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 24 November (late): **the ring cut down after the owner's walk** (its test map names each module on screen: `name_sign`).
   Off the ring: 7 saved as prefabs (`lc_mod_*`, docs/dev/prefabs.md), lift/arcade/chimney/floodroom deleted, shell off. Edge
   fence, bars over blocked openings and the stash valve are props; six-sided outfalls; no kerb rail. Ring piece alone:
-  31,115 faces, about 48,000 vertices before nodraw. Rework list (underpass, pipes, vort, camp+shanty, drain, relay): TODO.md.
+  31,115 faces, about 48,000 vertices before nodraw. Reworked the same day: underpass (open bridge deck), vort, relay and shanty (camp's tents in it), pipes (scaled props:
+  unchecked in game); trainless runs have no track. Left: drain (TODO.md).
 - 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"), kept on the shelf:
   map_town.py, town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed that morning to
   6,783 faces). ring.txt: its branch is `straight 512`, nothing else moved, ruins on its ground. Rest without the ring

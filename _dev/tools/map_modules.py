@@ -1088,9 +1088,8 @@ def m_overflow(m, opt):
 
 def m_shanty(m, opt):
     """4. The shantytown under a street bridge. The canal widens into a basin on its left; a boardwalk runs along the
-    basin's back, with three shacks on it built from pieces (map_mods_c.shack: corner posts, walls of mismatched sheets
-    of wood, tin, steel hull and a salvaged door, uneven tops, tin roofs sloping to the front and overhanging on posts of
-    their own, a window each, boarded or of cracked glass): a card room (a table, two chairs, a radio on the table, the
+    basin's back, with three shacks on it (map_mods_c.shack: a sheet of wood, tin or steel hull a wall, a tin roof sloping to
+    the front, one with a window of cracked glass): a card room (a table, two chairs, a radio on the table, the
     canals' own map on the back wall, a lantern), a trader's stall open at the front (a long table for its counter,
     shelves on its back wall with jars and cans, a painted board over it, a cart and crates outside) and a bunk room
     (two bed frames, mattresses on them, a crate with a lantern between them). Under the street between them, a fire drum
@@ -1098,7 +1097,8 @@ def m_shanty(m, opt):
     street; a string of bulbs on a cable from an old dock pole to the bridge's deck and on to a second pole; washing on a
     line from the card room's roof post to a pole; a boat pulled up; a cork notice board on two poles; posters on and in
     the card room, the lambda on the bridge's pier, trash and puddles on the basin's floor. In front of the card room the
-    basin's floor is left clear for the Resistance's flag. Where the chain's street runs along the bank the bridge starts
+    basin's floor is left clear for the Resistance's flag; east of the bridge three ridge tents stand on the basin's
+    floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _3, where someone sleeps). Where the chain's street runs along the bank the bridge starts
     from (the canal ring, 23 November) the bridge is the street's way in: the street's parapet opens there, and an iron
     ladder comes down the bridge's side (a gap in its side wall, a post under its edge) to the boardwalk by the card room.
     Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
@@ -1213,6 +1213,17 @@ def m_shanty(m, opt):
         m.det([(cu - w // 2, cv - 1, cz - h, cu + w // 2, cv + 1, cz - 1)], mat)
     # the Resistance's flag, when a territory covers the shanty town: the open floor in front of the card room
     m.target("lc_hq_setup_shanty", 480, 330, F, 90)
+    # the camp's tents, folded into the shanty town (the owner, 24 November: the camp and the shanty "re-engineered and
+    # combined into one", the "shanty under bridge with camps tents folded in"): three ridge tents on the basin's floor
+    # east of the bridge, before the stall and the bunk room, their open ends to the canal; a mattress in the first
+    from map_mods_a import tent
+    from map_mods_b import mattress
+    beds = [tent(m, u, v, F, L, W, H, "v", "lo", cloth, "props/carpetfloor001a", 14)
+            for (u, v, L, W, H, cloth) in ((928, 272, 104, 96, 80, "props/tarpaperroof002a"), (1052, 276, 100, 88, 72, "props/carpetfloor006a"),
+                                           (1168, 270, 108, 92, 76, "plaster/plasterwall009d"))]
+    mattress(m, beds[0][0], beds[0][1], 90, F + 2)
+    for k, (bu, bv) in enumerate(beds):
+        m.target("lc_shanty_tent_%d" % (k + 1), bu, bv, F + 8)
     # a boat pulled up, a notice board on two poles, what is left lying
     m.static("models/props_canal/boat001a.mdl", 1360, 60, 15)
     m.blocked(1240, -40, 1480, 160)

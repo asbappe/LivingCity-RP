@@ -6,7 +6,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 |---|---|---|---|---|
 | `drain` | 1024 | 1. the storm drain junction, down to the city's sewers (left) | `lc_drain_cache`, `lc_drain_grate`, `lc_drain_junction` | `map_modules.py` |
 | `overflow` | 1024 | 2. the overflow toward Ravenholm, behind a sluice plate (left) | `lc_overflow_drop`, `lc_overflow_far`, `lc_overflow_lever`, `lc_overflow_lift`, `lc_overflow_moan`, `lc_overflow_sluice` | `map_modules.py` |
-| `shanty` | 1536 | 4. the shantytown under a street bridge (left) | `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup` | `map_modules.py` |
+| `shanty` | 1536 | 4. the shantytown under a street bridge (left) | `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3` | `map_modules.py` |
 | `vort` | 1024 | 6. the vortigaunt culvert (left) | `lc_vort_fire`, `lc_vort_npc`, `lc_vort_seat_1`, `lc_vort_seat_2`, `lc_vort_seat_3` | `map_modules.py` |
 | `relay` | 1024 | 7. Cubbage's relay shack and mast, on a pier (right) | `lc_relay_hum`, `lc_relay_lamp`, `lc_relay_mast`, `lc_relay_radio`, `lc_relay_seat` | `map_modules.py` |
 | `checkpoint` | 1280 | 8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight | `lc_checkpoint_field`, `lc_checkpoint_hum`, `lc_checkpoint_light`, `lc_checkpoint_light_b`, `lc_checkpoint_pen`, `lc_checkpoint_pen_spot`, `lc_checkpoint_post`, `lc_checkpoint_queue` | `map_modules.py` |
@@ -115,9 +115,8 @@ chain's material (cable/chain.vmt) on a rope; which way winch02 and the Ravenhol
 ### `shanty`
 
 4. The shantytown under a street bridge. The canal widens into a basin on its left; a boardwalk runs along the
-basin's back, with three shacks on it built from pieces (map_mods_c.shack: corner posts, walls of mismatched sheets
-of wood, tin, steel hull and a salvaged door, uneven tops, tin roofs sloping to the front and overhanging on posts of
-their own, a window each, boarded or of cracked glass): a card room (a table, two chairs, a radio on the table, the
+basin's back, with three shacks on it (map_mods_c.shack: a sheet of wood, tin or steel hull a wall, a tin roof sloping to
+the front, one with a window of cracked glass): a card room (a table, two chairs, a radio on the table, the
 canals' own map on the back wall, a lantern), a trader's stall open at the front (a long table for its counter,
 shelves on its back wall with jars and cans, a painted board over it, a cart and crates outside) and a bunk room
 (two bed frames, mattresses on them, a crate with a lantern between them). Under the street between them, a fire drum
@@ -125,7 +124,8 @@ with seats round it and a stove with its chimney pipe. A plank fence against the
 street; a string of bulbs on a cable from an old dock pole to the bridge's deck and on to a second pole; washing on a
 line from the card room's roof post to a pole; a boat pulled up; a cork notice board on two poles; posters on and in
 the card room, the lambda on the bridge's pier, trash and puddles on the basin's floor. In front of the card room the
-basin's floor is left clear for the Resistance's flag. Where the chain's street runs along the bank the bridge starts
+basin's floor is left clear for the Resistance's flag; east of the bridge three ridge tents stand on the basin's
+floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _3, where someone sleeps). Where the chain's street runs along the bank the bridge starts
 from (the canal ring, 23 November) the bridge is the street's way in: the street's parapet opens there, and an iron
 ladder comes down the bridge's side (a gap in its side wall, a post under its edge) to the boardwalk by the card room.
 Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
@@ -516,8 +516,8 @@ water material); the culverts beyond the bars are short (192) and end dark: wher
 
 ### `pipes`
 
-The pipes. A tangle of the city's service mains fills a stretch of the canal: steel pipes 87 across (solid,
-eight-sided, in the owner's own pipe steel), a flange every 128, every end shut by a bolted plate, stencilled
+The pipes. A tangle of the city's service mains fills a stretch of the canal: steel pipes 87 across (the game's own
+steel pipe model, scaled up 2.25 times: props, not brushes, since 24 November), every end shut by a bolted plate, stencilled
 numbers on their sides.
 On the floor: one main lies across the whole floor at u 480 with 54 under it, and the fat main along the left side
 has 66 under it: everyone on the floor ducks once. Past it two mains on the floor (86 high, too high to hop) make a
@@ -536,7 +536,9 @@ cover from end to end, and the plank is a firing step over all of it
 (lc_pipes_top). It hums like a pump room (d1_canals.waterpuzzleroom).
 Named for the game: lc_pipes_top (an info_target on the main's plank), lc_pipes_leak (an env_steam: TurnOn,
 TurnOff, Toggle; it starts on), lc_pipes_valve (a valve wheel, momentary_rot_button: hold E to turn it; Valve's wiring, the owner said go ahead).
-Left as brushes: the mains, their flanges and end plates (no pipe model of the game is 87 across), the saddles and
+Unchecked: whether Garry's Mod's compiler scales a prop_static (the keys modelscale and uniformscale are both set: if
+neither works the mains show 38 across; an unseen wall keeps players out of their full size either way).
+Left as brushes: the mains' end plates, the saddles and
 posts they rest on, the platform's deck and posts, the stair's treads and stringers, the bridge's grating and
 girders, the planks.
 Unchecked: the sound ambient/gas/steam_loop1.wav; that 54 and 66 of headroom pass a crouched player easily; that

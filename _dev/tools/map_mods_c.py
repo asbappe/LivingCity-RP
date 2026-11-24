@@ -473,27 +473,23 @@ POSTS = "wood/woodfloor006b"
 
 
 def shack(m, u1, v1, u2, v2, z, seed, high=112, door=56, window="boards", open_front=False, roof="metal/metalroof008a", front="lo"):
-    """A shack whose front is its low-v side, standing on z: a post at each corner, walls of sheets 6 thick, each sheet
-    of its own material, some 2 proud of the next, their tops uneven under a tin roof that slopes down to the front and
-    overhangs it by 24 on two posts of its own; a doorway 'door' wide a third of the way along the front, and a window
-    two thirds along it, 40 by 32 (window: "boards" nailed across, "glass" cracked, or None). open_front: no front wall
+    """A shack whose front is its low-v side, standing on z: walls 6 thick, one sheet each, under a tin roof that slopes down to the front and
+    overhangs it by 8; a doorway 'door' wide a third of the way along the front, and a window
+    two thirds along it, 40 by 32 (window: "glass" cracked, or None; "boards" is no window now). open_front: no front wall
     (a stall). front "hi": the same shack facing the high-v side. Returns the doorway's middle (u)."""
     import random
     rnd = random.Random(seed)
+    if window == "boards":      # (no boarded window any more: the hole took four brushes and the boards two; the owner, 24 November, "the little boards on the window")
+        window = None
     zf, zb = z + high, z + high + 14               # the roof's line over the front and the back walls
 
     def top(v):
         return zf + (zb - zf) * (v - v1) // (v2 - v1)
 
     def sheets(a, b):
-        out, p = [], a
-        while b - p > 0:
-            w = min(b - p, rnd.choice((32, 40, 48, 56, 64)))
-            if b - p - w < 24:
-                w = b - p
-            out.append((p, p + w, rnd.choice(SHEETS), rnd.choice((0, 0, 2)), rnd.choice((0, 0, 3, 6))))
-            p += w
-        return out
+        # (one sheet a wall, flush and level: the walls were a patchwork of narrow sheets, some proud, their tops
+        # uneven, four or five brushes a wall; the owner, 24 November, of the relay's shack: "tons of pointless geometry")
+        return [(a, b, rnd.choice(SHEETS), 0, 0)]
     shapes, boxes = [], []
     for su in ((u1, u1 + 6), (u2 - 6, u2)):        # the side walls: sheets along v, their tops on the roof's slope
         for a, b, mat, proud, drop in sheets(v1 + 6, v2 - 6):
@@ -523,12 +519,10 @@ def shack(m, u1, v1, u2, v2, z, seed, high=112, door=56, window="boards", open_f
             boxes += [((wm - 24, v1 - 3, z + 54, wm + 24, v1 - 1, z + 60), "wood/woodfloor006b"), ((wm - 22, v1 - 3, z + 68, wm + 22, v1 - 1, z + 73), "wood/woodwall006a")]
         elif window == "glass":
             boxes.append(((wm - 20, v1 + 2, z + 48, wm + 20, v1 + 3, z + 80), "glass/glasswindowbreak070a"))
-    boxes += [((u1 - 1, v1 - 1, z, u1 + 6, v1 + 6, zf + 2), POSTS), ((u2 - 6, v1 - 1, z, u2 + 1, v1 + 6, zf + 2), POSTS),
-              ((u1 - 1, v2 - 6, z, u1 + 6, v2 + 1, zb), POSTS), ((u2 - 6, v2 - 6, z, u2 + 1, v2 + 1, zb), POSTS)]
-    boxes += [((u1 - 10, v1 - 26, z, u1 - 6, v1 - 22, zf - 1), POSTS), ((u2 + 6, v1 - 26, z, u2 + 10, v1 - 22, zf - 1), POSTS)]   # the overhang's posts
-    # the roof: one sheet of tin, sloping to the front, overhanging 24 there and 12 at the sides
-    rf, rb = v1 - 24, v2 + 8
-    zr1 = zf - (zb - zf) * 24 // (v2 - v1) - 1
+    # (no corner posts and no posts under the overhang: the owner, 24 November, "supports for porch, etc"; the roof overhangs 8, which needs none)
+    # the roof: one sheet of tin, sloping to the front, overhanging 8 there and 12 at the sides
+    rf, rb = v1 - 8, v2 + 8
+    zr1 = zf - (zb - zf) * 8 // (v2 - v1) - 1
     zr2 = zb + (zb - zf) * 8 // (v2 - v1) + 1
     shapes.append(prism([(rf, zr1), (rb, zr2), (rb, zr2 + 3), (rf, zr1 + 3)], "x", u1 - 12, u2 + 12, roof))
     if front == "hi":          # (built facing low v, then turned over onto the high-v side: v becomes v1 + v2 - v)

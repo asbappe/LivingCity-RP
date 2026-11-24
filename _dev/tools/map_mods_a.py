@@ -1688,8 +1688,8 @@ def m_aqueduct(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_pipes(m, opt):
-    """The pipes. A tangle of the city's service mains fills a stretch of the canal: steel pipes 87 across (solid,
-    eight-sided, in the owner's own pipe steel), a flange every 128, every end shut by a bolted plate, stencilled
+    """The pipes. A tangle of the city's service mains fills a stretch of the canal: steel pipes 87 across (the game's own
+    steel pipe model, scaled up 2.25 times: props, not brushes, since 24 November), every end shut by a bolted plate, stencilled
     numbers on their sides.
     On the floor: one main lies across the whole floor at u 480 with 54 under it, and the fat main along the left side
     has 66 under it: everyone on the floor ducks once. Past it two mains on the floor (86 high, too high to hop) make a
@@ -1708,7 +1708,9 @@ def m_pipes(m, opt):
     (lc_pipes_top). It hums like a pump room (d1_canals.waterpuzzleroom).
     Named for the game: lc_pipes_top (an info_target on the main's plank), lc_pipes_leak (an env_steam: TurnOn,
     TurnOff, Toggle; it starts on), lc_pipes_valve (a valve wheel, momentary_rot_button: hold E to turn it; Valve's wiring, the owner said go ahead).
-    Left as brushes: the mains, their flanges and end plates (no pipe model of the game is 87 across), the saddles and
+    Unchecked: whether Garry's Mod's compiler scales a prop_static (the keys modelscale and uniformscale are both set: if
+    neither works the mains show 38 across; an unseen wall keeps players out of their full size either way).
+    Left as brushes: the mains' end plates, the saddles and
     posts they rest on, the platform's deck and posts, the stair's treads and stringers, the bridge's grating and
     girders, the planks.
     Unchecked: the sound ambient/gas/steam_loop1.wav; that 54 and 66 of headroom pass a crouched player easily; that
@@ -1722,22 +1724,40 @@ def m_pipes(m, opt):
     m.open(0, -256, 1280, 256)
     plates = []
 
-    def run(axis, at, z, a, n, kinds=None):
-        """A steel main 87 across (an eight-sided pipe of brushes, as long as n of the old sections, 113 each) along
-        axis ("u" or "v") at `at` across it, its middle z, from a: a flange every 128 and a stencilled number."""
+    PIPE, SCALE, STEP = M_ + "props_pipes/pipeset32d_128_001a.mdl", 2.25, 288      # (the game's fattest steel pipe, 38 across and 129 long: 87 across and 290 long at 2.25)
+
+    def run(axis, at, z, a, n, free="both"):
+        """A steel main 87 across along axis ("u" or "v") at `at` across it, its middle z, from a, about as long as n of
+        the old sections (113 each): the game's own steel pipe as props, scaled up (the owner, 24 November: recreate the
+        pipes "with props and not brushes ... can you scale the prop pipes to be larger"), one every 288, with an unseen
+        wall for players round it in case the game does not scale a prop's own solid. free: the end that must stand
+        exactly where it is ("lo": a; "hi": the far end; "both"): a piece is 288 long, so the other end runs on (into
+        the wall, or under what stands there), or the last piece overlaps the one before. Returns where it really ends."""
         b_ = int(round(a + 112.6 * n))
-        ax = "x" if axis == "u" else "y"
-        plates.append(prism(octagon(at, z, 42), ax, a, b_, main))
-        for f in range(a + 64, b_ - 32, 128):
-            plates.append(prism(octagon(at, z, 46), ax, f, f + 6, MAT["bars"]))
+        count = max(1, -(-(b_ - a) // STEP))
+        if free == "hi":
+            starts = [max(b_ - STEP * (k + 1), a - STEP // 2 + 16) for k in range(count)]      # (a piece's middle stays this side of the wall the run starts in)
+        elif free == "lo" or b_ - a < STEP:
+            starts = [a + STEP * k for k in range(count)]
+        else:
+            starts = [a + STEP * k for k in range((b_ - a) // STEP)] + ([b_ - STEP] if (b_ - a) % STEP else [])
+        lo, hi = min(starts), max(starts) + STEP
+        for st in starts:
+            c = st + STEP // 2
+            pu, pv = (c, at) if axis == "u" else (at, c)
+            m.point("prop_static", pu, pv, z, {"model": PIPE, "angles": "0 %d 0" % m.fr.yaw(0 if axis == "u" else 90), "skin": "0", "solid": "6",
+                                               "modelscale": str(SCALE), "uniformscale": str(SCALE), "disableshadows": "0", "screenspacefade": "0",
+                                               "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
+        m.world((lo, at - 43, z - 43, hi, at + 43, z + 43) if axis == "u" else (at - 43, lo, z - 43, at + 43, hi, z + 43), MAT["clip"], seals=False)
         mid = (a + b_) // 2 + 20
         m.grime("number", mid if axis == "u" else at - 42, at - 42 if axis == "u" else mid, z, a)
-        return b_
+        return hi if free != "hi" else b_
 
     def plate(axis, at, z, e, way):
-        """A bolted steel plate shutting a section's end at e (way: which side of e it lies, +1 or -1)."""
+        """A bolted steel plate shutting a main's end at e (way: which side of e it lies, +1 or -1): six-sided."""
+        from map_build import hexagon
         a, c = (e, e + 4) if way > 0 else (e - 4, e)
-        plates.append(prism(octagon(at, z, 46), "x" if axis == "u" else "y", a, c, steel))
+        plates.append(prism(hexagon(at, z, 50), "x" if axis == "u" else "y", a, c, steel))
     # --- the over route: steps, the valve platform, the main with its plank, the bridge, the second pipe, the ramp ---
     treads = []
     for i in range(10):
@@ -1768,7 +1788,7 @@ def m_pipes(m, opt):
     for u in (833, 879):
         for c in (-64, 64):
             m.static(M_ + "props_c17/handrail04_long.mdl", u, c, 0, top)
-    e = run("u", -136, F + 108, 831, 1, "b")                                       # the second fat pipe
+    e = run("u", -136, F + 108, 831, 1, "lo")                                       # the second fat pipe
     plate("u", -136, F + 108, 831, -1)
     plate("u", -136, F + 108, e, 1)
     m.det([(832, -152, top, 944, -120, top + 4)], wood)
@@ -1778,13 +1798,13 @@ def m_pipes(m, opt):
     m.det([(1080, -150, F, 1088, -122, F + 76), (1140, -150, F, 1148, -122, F + 40)], WOODTRIM)
     m.target("lc_pipes_top", 660, 126, top + 12, 0)
     # --- on the floor: the pipe to duck under, the chicane's two ---
-    e = run("v", 480, F + 96, -256, 3)
+    e = run("v", 480, F + 96, -256, 3, "hi")
     plate("v", 480, F + 96, e, 1)
     m.det([(460, -200, F, 500, -176, F + 54)], MAT["beam"])
-    e = run("v", 640, F + 44, -30, 1, "c")
+    e = run("v", 640, F + 44, -30, 1, "lo")
     plate("v", 640, F + 44, -30, -1)
     plate("v", 640, F + 44, e, 1)
-    e = run("v", 760, F + 44, -256, 2, "da")
+    e = run("v", 760, F + 44, -256, 2, "hi")
     plate("v", 760, F + 44, e, 1)
     m.shapes(plates)
     # --- overhead and up the walls ---
