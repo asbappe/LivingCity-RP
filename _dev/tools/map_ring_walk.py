@@ -46,6 +46,7 @@ def main():
     ap.add_argument("--against", nargs="+", help="the owner's VMF (and any other piece's): check the ring against them first")
     ap.add_argument("--out", default="lc_ring_walk.vmf")
     ap.add_argument("--cell", type=int, default=8, help="map_hidden_faces.py's cube (8: finer finds more; 16 takes an eighth of the memory)")
+    ap.add_argument("--quick", action="store_true", help="skip the nodraw pass (about 40 minutes): the ring alone is under vbsp's face limit without it")
     args = ap.parse_args()
     py = sys.executable
     plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"])]
@@ -64,7 +65,8 @@ def main():
     import map_budget
     print("  joined: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("finishing it:")
-    run([py, "map_hidden_faces.py", args.out, args.out, "--cell", str(args.cell)], show=("can never be seen", "LOST", "written", "not written"))
+    if not args.quick:
+        run([py, "map_hidden_faces.py", args.out, args.out, "--cell", str(args.cell)], show=("can never be seen", "LOST", "written", "not written"))
     run([py, "map_slim.py", args.out], show=("MB",))
     print("  finished: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("checking the finished file:")
