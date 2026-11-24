@@ -852,6 +852,28 @@ class Plan:
         self.cells = {}
         self.keep_out = [] # (x1, y1, x2, y2): what's already there or belongs to another piece, never built on
         self.skies = {}    # (z1, z2, sides, top, bottom) -> squares: the sky over them, laid as the fewest boxes (sky_box, flush_sky)
+        self.wall_paint = {}   # solid square -> {face: (material, z1, z2)}: its faces painted as the rooms they look into (paint_wall)
+
+    paints = False         # (a plan that paints its rooms' walls on the walls themselves: the town's, map_town.TownPlan)
+
+    def paint_wall(self, solid, room, mat, z1, z2):
+        """Paint the face of the solid square `solid` that looks into the room's square `room` (next to it) with mat, for
+        the room's floor to its ceiling (z1, z2), instead of a skin of brushes in front of it (the town, 24 November: its
+        rooms' skins were 726 brushes and 2,700 faces). Only for a plan whose `paints` is set; it builds them with its
+        walls (paint_faces)."""
+        face = {(1, 0): "east", (-1, 0): "west", (0, 1): "north", (0, -1): "south"}[(room[0] - solid[0], room[1] - solid[1])]
+        got = self.wall_paint.setdefault(tuple(solid), {})
+        old = got.get(face)
+        if old and old[0] == mat:
+            z1, z2 = min(z1, old[1]), max(z2, old[2])
+        got[face] = (mat, z1, z2, tuple(room))
+
+    def paint_faces(self, x1, y1, z1, z2):
+        """The painted faces of a rectangle of solid squares (all its squares are painted alike: rectangles), for a brush
+        of it from z1 to z2: {face: material} for world_box, or None."""
+        got = self.wall_paint.get((x1 // CELL, y1 // CELL))
+        out = dict((f, p[0]) for f, p in (got or {}).items() if p[1] < z2 and z1 < p[2])
+        return out or None
 
     def paint(self, rect, spec):
         x1, y1, x2, y2 = rect
@@ -882,6 +904,9 @@ class Plan:
     def rectangles(self):
         """Squares that are alike, joined into the biggest rectangles (fewest brushes)."""
         left = dict(self.cells)
+        for c, got in self.wall_paint.items():      # (a square painted differently is never joined with its neighbours)
+            if c in left:
+                left[c] = left[c] + (("painted",) + tuple(sorted((f, p[0]) for f, p in got.items())),)
         out = []
         for (i, j) in sorted(left):
             if (i, j) not in left:
@@ -896,6 +921,8 @@ class Plan:
             for a in range(w):
                 for b in range(h):
                     del left[(i + a, j + b)]
+            if self.wall_paint and spec and isinstance(spec[-1], tuple) and spec[-1][:1] == ("painted",):
+                spec = spec[:-1]
             out.append((i * CELL, j * CELL, (i + w) * CELL, (j + h) * CELL, spec))
         return out
 
@@ -1226,7 +1253,11 @@ def drop_useless_portals(vmf, stoppers):
         for box in list(useless):
             for k, (pi, pb) in enumerate(vmf.portal_ents):
                 if pb == box:
+                    name = re.search(r'"targetname" "([^"]+)"', vmf.ents[pi])
                     vmf.ents[pi] = ""
+                    if name:                   # (and the doors' outputs to it: nothing left to open)
+                        drop = re.compile(r'\n[ \t]*"[^"]+" "%s[,\x1b][^"]*"' % re.escape(name.group(1)))
+                        vmf.ents = [drop.sub("", e) if e else e for e in vmf.ents]
                     vmf.portal_ents.pop(k)
                     break
             if box in vmf.portals:

@@ -31,16 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 23 November (lip sync): **mouths move with the recordings.** `_dev/tools/lipsync_bake.py FOLDER` (owner's PC, needs
-  ffmpeg) writes Faceposer's phoneme track (VDAT) into every face's recording, making .mp3s into 22 kHz .wavs beside them;
-  the game then lip syncs them like HL2's own. Until then the server works the jaw from the file's loudness
-  (sv_livingcity_lipsync.lua). A .wav beats an .mp3 of the same name (`LC.PreferWav`). The client jaw is gone.
-  New lines: `--update-lines`, `--update-dict CMUDICT` (pip cmudict). Not seen on the real server yet.
-- 23 November (earlier): stimulant holds off exhaustion; the Administrator's stand-ins are `citizentype` 4; the station
-  screen (lc_screen.lua); vending cans roll out. Valve set pieces: 27 in the gallery (map_valve_gallery.py), not compiled.
-- 22 and 23 November: Standup hangs everyone from oak_tree01. The canal ring (map_ring_walk.py): Combine wall and ruins a
-  Propper++ kit the owner compiles (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces (TODO).
+- 24 November (town budget): **the Resistance's town slimmed** from 4,350 brushes, 26,401 sides, 12,836 faces (after
+  nodraw) to 2,601, 15,811, 6,783 (its share 7,000 and 18,000). Ground-floor windows recessed, upper ones flat on the wall
+  (the owner's call); rooms' walls painted on the walls (Plan.paint_wall, only plans with `paints`: the town's); fewer
+  front pieces, no lintels, one cornice step. Ring and other pieces build byte-identical. docs/dev/map-building.md, town.
+  Rest without the ring now ~50,900 faces. Town walk check: 6 spots unreachable (pit corners, plaza rostrum,
+  lc_hq_setup_plaza, two doors), there before this; not fixed yet.
+- 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`, owner's PC, needs ffmpeg; until
+  then the server works the jaw from loudness). A .wav beats an .mp3 (`LC.PreferWav`). Not seen on the real server yet.
+- 22 and 23 November: the canal ring (map_ring_walk.py): Combine wall and ruins a Propper++ kit the owner compiles
+  (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces with the ring (TODO). Valve set pieces: 27 in the gallery.
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
-- Map chat: the silo cut to its top floor over a black pit; map_hidden_faces.py (nodraw, --brushes). Bunker VMF 6,877
-  sides. The owner edits it in Hammer: apply generator changes to THEIR latest file (diff two builds), then trim.
+- Map chat: map_hidden_faces.py (nodraw, --brushes). The owner edits the bunker in Hammer: apply generator changes to
+  THEIR latest file (diff two builds), then trim.

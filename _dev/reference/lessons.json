@@ -4093,6 +4093,21 @@
    "why": "The owner, 23 November, walking the canal ring with its new street: \"a combine checkpoint but there is no way for the combine to actually get onto their checkpoint through the fence between them and the traintracks\"; \"an archway ... that just has a railing running next/through it blocking it\"; \"this is a pointless bridge, literally there's no reason for this bridge ... I'm sure there are tons more of these?\"",
    "how": "Gaps since 23 November: the checkpoint's stairs, the lock's gantry, the quay's landing, ladder and footbridge, the arcade's walk, the aqueduct's walk and trough, the shanty's bridge (a ladder down into the shanty town), the lift (it turns itself so it rises to the street), the swing bridge (no door on its far landing), the lock gate's parked leaf. A shed over a module closes its street side with the shed's brick wall: keep sheds off modules whose ways meet the street.",
    "check": "map_build.py chain prints no PROBLEM; the walk check (map_walk.py) only proves a place is reached from somewhere, so for a module beside a street also walk from the street on floors at 600 or higher and see its high places reached (a scratch run of map_walk's Floors with the low floors taken out)."
+  },
+  {
+   "id": "owner-few-faces-per-thing",
+   "tags": [
+    "facades",
+    "interiors",
+    "geometry",
+    "performance",
+    "owner"
+   ],
+   "title": "Spend faces where eyes are: recessed at eye level, flat higher up, no second wall inside a wall",
+   "rule": "A small piece must stay small in the compiler's count. Windows on the ground floor sit recessed in the wall on a sill; windows above it lie flat on the wall's face with no sill and their thin edges nodraw. Never line a room with a skin of brushes in front of its walls: paint the walls themselves (Plan.paint_wall). A trim at one height along a row (plinth, string course) is one run, not a piece per house; one cornice step, no lintels. A sheet or mark 1 thick shows only its broad faces (seen_faces). Measure a piece with map_budget.py after the nodraw pass, by source, before sending it.",
+   "why": "\"12k brushes is ludicrous considering how simple and small it is\"; then \"for the windows, keep those that are at eye level or bottom floor recessed, but any higher can be flat\" (24 November). The town was 12,836 drawn faces: about 30 a window, and 2,700 in skins on its rooms' walls.",
+   "how": "map_town.facade and band (fewest boxes round holes), glass_pane(edge=nodraw), Plan.paint_wall and TownPlan.painted, map_mods_b.seen_faces and candle(block=True). The town went to 6,783 faces and 15,811 sides.",
+   "check": "map_budget.py FILE.vmf --line on the build and on map_hidden_faces.py's output: the town's share is 7,000 faces and 18,000 sides (docs/dev/map-building.md, the budget)."
   }
  ]
 }

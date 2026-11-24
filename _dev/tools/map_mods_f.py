@@ -122,9 +122,9 @@ def church(m, cz, ceil, tunnel_u):
     hanging oil lamps and candles, light through the boarded windows. The front doors under the tower are boarded and
     never open; a side door (the city's own, that opens) lets out into the graveyard: gravestones scattered and turned,
     never in rows (Valve's), two dead trees, a stone wall round it. The tower stands at the west end through the roof
-    over the porch (its ladder up to the belfry went: it climbed into Valve's roof and the belfry's own floor and pent
-    roof, a pocket nobody reaches, as map_hidden_faces.py's flood found on 23 November; a lookout up there wants Valve's
-    roof cut round the tower first). The way in is from the canal: the crypt's old stair at
+    over the porch; inside it a ladder climbs through a hatch to a plank loft under the nave's flat ceiling, with a slit
+    in the west wall to look out over the yard (the belfry itself is a sealed pocket under Valve's roof and its own floor
+    and pent roof: nobody reaches it). The way in is from the canal: the crypt's old stair at
     `tunnel_u` runs on as a tunnel under the yard into the church's basement (the Resistance's stores: crates, bedding,
     a radio; no cells, the owner said), and a stair climbs from the basement into the nave.
     Named for the game: lc_church_altar (an info_target before the iconostasis), lc_church_grigori (where Father Grigori
@@ -156,16 +156,24 @@ def church(m, cz, ceil, tunnel_u):
     def wall(a1, b1, a2, b2, gaps, along):
         """A wall from (a1, b1) to (a2, b2) (one of them t thick), G up to WT, with gaps (lo, hi, z_lo, z_hi) along it."""
         lo_a, hi_a = (a1, a2) if along == "u" else (b1, b2)
-        cuts = sorted(gaps)
-        boxes, p = [], lo_a
-        for g0, g1, z0, z1 in cuts:
-            if g0 > p:
-                boxes.append((p, G, g0, WT))
-            boxes.append((g0, G, g1, z0))
-            boxes.append((g0, z1, g1, WT))
-            p = g1
-        if p < hi_a:
-            boxes.append((p, G, hi_a, WT))
+        # (cut at every opening's edges, so openings may stack in one column: the front doors and the loft's slit over
+        # them; each slice's solid heights are what its openings leave, and slices alike are joined again)
+        edges = sorted({lo_a, hi_a} | {g for g0, g1, _, _ in gaps for g in (g0, g1) if lo_a < g < hi_a})
+        slices = []
+        for c0, c1 in zip(edges, edges[1:]):
+            holes = sorted((z0, z1) for g0, g1, z0, z1 in gaps if g0 <= c0 and c1 <= g1)
+            solid, z = [], G
+            for z0, z1 in holes:
+                if z0 > z:
+                    solid.append((z, z0))
+                z = max(z, z1)
+            if z < WT:
+                solid.append((z, WT))
+            if slices and slices[-1][2] == solid and slices[-1][1] == c0:
+                slices[-1] = (slices[-1][0], c1, solid)
+            else:
+                slices.append((c0, c1, solid))
+        boxes = [(c0, z0, c1, z1) for c0, c1, solid in slices for z0, z1 in solid]
         out = []
         for c0, z0, c1, z1 in boxes:
             if z1 > z0 and c1 > c0:
@@ -176,7 +184,8 @@ def church(m, cz, ceil, tunnel_u):
     wall(u1, v1, u2, v1 + t, [(a, c, wz0, wz1) for a, c in wins], "u")                                        # the front (the crypt's side)
     wall(u1, v2 - t, u2, v2, [(a, c, wz0, wz1) for a, c in wins if a != 448] + [(352, 416, NF - 16, NF + 128)], "u")   # the back: the side door
     wall(u2 - t, v1 + t, u2, v2 - t, [(mid - 24, mid + 24, wz0 + 32, wz1 + 32)], "v")                              # the east end, a window over the altar
-    wall(u1, v1 + t, u1 + t, v2 - t, [(mid - 48, mid + 48, NF - 16, NF + 160)], "v")                              # the west end: the front doors
+    LZ = NF + 256                                                                                                 # the tower's loft (928: under the flat ceiling at 1024)
+    wall(u1, v1 + t, u1 + t, v2 - t, [(mid - 48, mid + 48, NF - 16, NF + 160), (mid - 20, mid + 20, LZ + 24, LZ + 80)], "v")   # the west end: the front doors, and the loft's lookout slit over them
     m.det([(u1 - 8, v1 - 8, G - 8, u2 + 8, v1, G + 48), (u1 - 8, v2, G - 8, u2 + 8, v2 + 8, G + 48),           # the plinth, proud of the walls: a band round
            (u1 - 8, v1, G - 8, u1, v2, G + 48), (u2, v1, G - 8, u2 + 8, v2, G + 48)], PLINTH)                     # them outside (it was a slab over the whole floor)
     m.det([(u1 - 4, v1 - 4, WT - 24, u2 + 4, v2 + 4, WT - 8)], "plaster/plasterwall029d")                        # a band under the eaves
@@ -206,6 +215,14 @@ def church(m, cz, ceil, tunnel_u):
     m.det([(tu1 + t, tv1, NF, tu2 - t, tv1 + t, WT), (tu1 + t, tv2 - t, NF, tu2 - t, tv2, WT)], PLASTER_IN)     # the porch's side walls
     m.det([(tu1 - 4, tv1 - 4, TT - 24, tu2 + 4, tv2 + 4, TT - 8)], "plaster/plasterwall029d")
     m.det([(tu1 + t, tv1 + t, TT - 16, tu2 - t - 48, tv2 - t, TT)], NAVE_FLOOR)                                  # the belfry's floor (under Valve's)
+    # a loft inside the tower over the porch, under the nave's flat ceiling, its ladder up through a hatch at the east
+    # side and a slit in the west wall to look out over the yard (the owner, 24 November: "can't you put a ladder ...
+    # in its place?"; the old ladder climbed past the ceiling into Valve's roof, a pocket nobody could get out into)
+    m.det([(tu1 + t, tv1 + t, LZ - 8, tu2 - t - 48, tv2 - t, LZ)], NAVE_FLOOR)
+    m.det([(tu1 + t, tv1 + t, LZ - 24, tu2 - t - 48, tv1 + t + 8, LZ - 8), (tu1 + t, tv2 - t - 8, LZ - 24, tu2 - t - 48, tv2 - t, LZ - 8)], CROSS)   # (its two beams)
+    m.ladder(tu2 - t - 16, mid, NF, LZ, 180)
+    m.lane((tu1 + tu2) // 2 - 24, mid, LZ)
+    m.view(tu1 + 40, mid, LZ, 180, 0, "from the tower's loft, out over the yard")
     place(m, "valve_raven_belfry_a", (tu1 + tu2) // 2, mid, TT, 0)
     place(m, "valve_raven_roof_a", (u1 + u2) // 2, mid, WT, 0)
     m.lane((tu1 + tu2) // 2, mid, NF)
