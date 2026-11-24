@@ -1654,8 +1654,14 @@ WAY_TEX = 0.5                  # (its long walls laid as Valve's far walls, so t
 PANEL = (676, 756, 48)         # the bedroom's secret panel (the piece's frame): x from, to along the hull's west wall; its height
 EXIT = (8192, 8256, 400, 512)  # the hidden door in the wing wall's inner face: x from, to; z from, to
 EXIT_FACE, EXIT_BACK = 4672, 4736    # the wing wall's inner face (looking at the way in from the culvert) and its back
-EXIT_MOVE = (-76, 90, 0)       # it lifts up and a little back into the wall, so its face never lies in the wall's plane (no flicker)
-EXIT_LIP, EXIT_SPEED, EXIT_TIME = -16, 40, 3.5     # (it moves 138: 3.4 s)
+# It sinks straight down into the wall's foot, under the gate's floor and the tunnel's (the owner, 24 November: "I can't
+# move out of the tunnel into the open area, something is invisible and preventing me from moving out through the open
+# doorway"). It used to lift up and 33 back into the tunnel: its back swept into the tunnel's top as it rose, and a mover
+# carries whoever it touches with its whole move, so the one who pressed the button beside it was lifted into the
+# tunnel's roof and the door stuck part open. Sunk, its face lies in the wall's plane only out of sight (no flicker),
+# its top 8 under the doorway's floor, and nothing stands where it goes.
+EXIT_MOVE = (90, 0, 0)
+EXIT_LIP, EXIT_SPEED, EXIT_TIME = -10, 40, 3.5     # (it moves 120: 3 s)
 EXIT_STOP = (WAY_X[0], EXIT_BACK, WAY_HIGH, WAY_X[1], EXIT_BACK + 16, WAY_HIGH + WAY_H)    # the tunnel stopped at the door (the bunker's flood)
 WAY_LAMPS = (("w", 8930), ("w", 8480), ("s", 6560), ("s", 6110), ("s", 5660), ("s", 5180), ("s", 4840))    # cage lamps: which run, where along it
 
@@ -1691,7 +1697,7 @@ def way_boxes():
             ((x1 - T, y2, L - T, WAY_HULL, y2 + T, L + H + T), {"south": m["wall"]}),
             ((x2 + T, y1 - T, L - T, WAY_HULL, y1, L + H + T), {"north": m["wall"]}),
             ((x1 - T, WAY_END, L - T, x1, y2 + T, Z + H + T), {"east": m["wall"]}),             # the run south's walls, the whole way
-            ((x2, WAY_END, L - T, x2 + T, y1, Z + H + T), {"west": m["wall"]}),
+            ((x2, WAY_END, L - T, x2 + T, y1, Z + H + T), {"west": m["wall"], "north": m["wall"]}),       # (its end shows in the corner)
             ((x1 - T, WAY_END, Z - T, x2 + T, lo, Z), {"top": m["floor"]}),                      # the level run to the door: floor, roof
             ((x1 - T, WAY_END, Z + H, x2 + T, lo, Z + H + T), {"bottom": m["roof"]}),
             # (what shuts in the ramp's box: under it, over it, and over the corner where it starts)
