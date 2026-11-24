@@ -44680,6 +44680,29 @@ function Nov24_BarnacleLiftTests() -- (the owner, 22 November: barnacles "just d
 end
 Nov24_BarnacleLiftTests()
 
+function Nov24_PumphouseWaterTests() -- (the owner, 24 November: "the pumphouse nearest a rebel zone allows or cuts that zone's water")
+    section("24 November: the pumphouse nearest a rebel territory is its water")
+    local T0 = Vector(-158000, -158000, 0)
+    local z = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(-500, -500, -16), maxs = T0 + Vector(500, 500, 192) })
+    local near = ents.Create("func_rotating") near:SetPos(T0 + Vector(2000, 0, 0)) near:SetName("lc_pump_wheel") near:Spawn()
+    local far = ents.Create("func_rotating") far:SetPos(T0 + Vector(9000, 0, 0)) far:SetName("lc_pump_wheel") far:Spawn()
+    local p = newPlayer("Thirsty", "resistance", nil, 200)
+    p:SetPos(T0)
+    ok(LC.WaterCut(T0) == false, "the pumps running: water")
+    hook.Run("AcceptInput", far, "Stop", p, p)
+    ok(LC.WaterCut(T0) == false, "a pumphouse further off stopped: still water")
+    hook.Run("AcceptInput", near, "Stop", p, p)
+    ok(LC.WaterCut(T0) == true and LC.NearSink(p) == false, "the nearest one stopped: no water on that rebel ground, and no bottle filled")
+    ok(LC.WaterCut(T0 + Vector(0, 3000, 0)) == false, "off rebel ground the taps still run")
+    hook.Run("AcceptInput", near, "Start", p, p)
+    ok(LC.WaterCut(T0) == false, "started again: water again")
+    hook.Run("AcceptInput", near, "Stop", p, p)
+    hook.Run("PostCleanupMap")
+    ok(LC.WaterCut(T0) == false, "the map cleaned up starts its pumps again")
+    LC.RemoveZone(z) near:Remove() far:Remove() p:Remove()
+end
+Nov24_PumphouseWaterTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
