@@ -1123,6 +1123,12 @@ class BunkerForest(Forest):
         for rect, spec in self.DEEP:
             deep.paint(rect, room if spec == "room" else door)
         deep.walls()
+        # (every doorway square has its door, and every door its doorway: a door left behind when the plan moves leaves a
+        #  gaping hole where its frame should be)
+        doors = set(d for lv, d, _, _, _ in self.ROOM_DOORS if lv == 1)
+        ways = set(rect for rect, spec in self.DEEP if spec == "door")
+        for d in sorted(doors ^ ways):
+            self.problems.append("the deep level's doorway %s has %s" % (d, "no door (ROOM_DOORS)" if d in ways else "a door but no doorway (DEEP)"))
         low = WFPlan(origin, zg - 64, zd + 224, **look)
         low.keep_out += [(-100000, -100000, 100000, 1088), (-100000, 1600, 100000, 100000)]
         low.paint((-704, 1088, -576, 1472), ("low", zg, fm, zd + 160))      # the stairs (their steps are detail: a landing, then 15 steps ending at 1472)
@@ -1563,8 +1569,10 @@ class BunkerForest(Forest):
     # the doors between rooms: (which level, the doorway's squares, the way through it, the side its keypad is NOT on (+1:
     # east or north; the keypad goes on a face with wall beside the doorway), which way the leaf slides into the wall (-1:
     # south or west)): the bunk room's (its keypad on the bunks' side: the hall is no wider than the doorway there), the
-    # plant room's at the far end of the big room, and the big room's north door, to the silo.
-    ROOM_DOORS = ((0, (896, 640, 960, 768), "x", -1, -1), (1, (-832, 576, -768, 704), "x", -1, -1), (1, (-704, 832, -576, 896), "y", 1, -1))
+    # plant room's at the far end of the walkway west (its keypad inside the plant room, as it was), and the walkway's north
+    # door, to the silo. Each on its doorway square in DEEP (the owner, 24 November: "the red plant room's door has been
+    # moved over and left a gaping hole in the wall": the two deep doors still stood where the big room's plan had them).
+    ROOM_DOORS = ((0, (896, 640, 960, 768), "x", -1, -1), (1, (-768, 640, -704, 768), "x", 1, -1), (1, (-704, 768, -576, 832), "y", 1, -1))
 
     # Episode Two's own small silo door, the lab door at the silo's bottom (door_silo_lab_outside_1, the owner: "has
     # CORRECT opening/closing animations and opens at the right speed"): every silo_door01 door copies it. Its func_door:
@@ -1662,6 +1670,9 @@ class BunkerForest(Forest):
             sq = (cell[0] // CELL, cell[1] // CELL)
             if plan.cells.get(sq) != ("solid",) or any(plan.looks_at((x // CELL, y // CELL)) != ("room", z) for x, y in beside):
                 self.window_skips.append((k + 1, "the wall on its closing side has a room on one side only"))
+                continue
+            if any(lv == level and d[0] <= x < d[2] and d[1] <= y < d[3] for x, y in beside for lv, d, _, _, _ in self.ROOM_DOORS):
+                self.window_skips.append((k + 1, "the wall on its closing side looks into another doorway"))
                 continue
             plan.windows[sq] = (z, z + WF_BAND)
             self.windows[k] = (cell, r, z)
