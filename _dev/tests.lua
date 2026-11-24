@@ -44800,6 +44800,33 @@ function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumper
 end
 Nov24_ThumperAntlionTests()
 
+function Nov24_CutLineTests() -- (the owner, 20 November: a wrecked line causes "a problem with supplies ... the combine need to go out and repair it")
+    section("24 November: a train line cut by a bomb costs the city its supplies until it is repaired")
+    _setcvar("lc_ledger", 1)
+    local s = LC.Ledger()
+    local was = { supply = s.supply, combine = s.combine, resistance = s.resistance, news = #s.news }
+    local wreckedWas = LC.TracksWrecked
+    s.supply, s.combine, s.resistance = 50, 50, 50
+    local cut = false
+    LC.TracksWrecked = function() return cut end
+    LC.LedgerTracksTick()
+    ok(s.supply == 50, "the lines whole: nothing lost")
+    cut = true
+    hook.Run("LivingCityTracksWrecked", "lc_train_test", Vector(), nil)
+    ok(s.supply == 46 and s.resistance == 52 and s.combine == 49, "cut: the load is lost at once", s.supply)
+    ok(string.find(s.news[#s.news] or "", "train line", 1, true) ~= nil, "and the bulletin says so")
+    LC.LedgerTracksTick() LC.LedgerTracksTick()
+    ok(s.supply == 44, "left wrecked: the stores keep running down", s.supply)
+    cut = false
+    hook.Run("LivingCityTracksRepaired", "lc_train_test", nil)
+    LC.LedgerTracksTick()
+    ok(s.supply == 44 and s.combine == 50, "repaired: it stops", s.supply)
+    LC.TracksWrecked = wreckedWas
+    s.supply, s.combine, s.resistance = was.supply, was.combine, was.resistance
+    while #s.news > was.news do table.remove(s.news) end
+end
+Nov24_CutLineTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
