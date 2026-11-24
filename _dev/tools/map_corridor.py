@@ -1090,7 +1090,7 @@ def combine_wall(b, seed=1):
     """The Combine wall along its core, from the Propper++ kit (map_propkit.py; the owner, 23 November, of the brush
     wall vbsp could not take: "we need it to not be nodrawn but to be deleted/non existent"): each straight stretch (5
     squares or more) a row of the kit's runs 512 to 1024 long, their battered ribbed faces to the street, the kit's pier
-    over every joint and flush with every free end, its lamp beside it (map_combine.py's perimeter, combine/chain.py, as
+    over every joint and flush with every free end (one of four, by chance), its lamp beside it (map_combine.py's perimeter, combine/chain.py, as
     the brush wall was); where two stretches turn round the outside of a corner the corner pier, and where they meet in
     an inside corner their runs simply meet. All of them prop_statics that never fade, cast shadows and have no
     collision: a player clip along each stretch's foot and round each pier keeps players at the wall's front. The core
@@ -1106,8 +1106,7 @@ def combine_wall(b, seed=1):
         return
     kit = PK.load()
     W, P = kit["wall"], kit["pieces"]
-    pier = P[W["pier"]]
-    half = max(-pier["box"][0], pier["box"][3])      # (the pier's half width: an end pier stands this far in from the end)
+    half = max(max(-P[n]["box"][0], P[n]["box"][3]) for n in W["piers"])   # (the widest pier's half width: an end pier stands this far in)
     r = _r.Random("wall kit %s %d" % (b.name, seed))
     v, vis = b.vmf, b.vis + ": the Combine wall"
     keys = {"skin": "0", "solid": "0", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
@@ -1189,7 +1188,7 @@ def combine_wall(b, seed=1):
         us = [(runs[n][0] + runs[n][1] + runs[n + 1][0]) // 2 for n in range(len(runs) - 1)]
         us = ([half] if s["ends"][0] == "free" else []) + us + ([s["L"] - half] if s["ends"][1] == "free" else [])
         for u in us:
-            put(W["pier"], (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
+            put(r.choice(W["piers"]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
             counts["piers"] += 1
     for pt, fa, fb in corners:      # (the corner pier's fronts look to -y and -x of its own: turned so they meet the two faces)
         for f1, f2 in ((fa, fb), (fb, fa)):

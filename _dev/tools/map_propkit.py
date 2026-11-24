@@ -9,7 +9,7 @@ keep. So the two heaviest parts are a kit of models, each made from its own smal
 the ring places them as prop_statics:
 
   - the Combine wall between the city and the street (map_corridor.combine_wall): runs of every length the ring lays
-    (512 to 1024 in steps of 128) in two looks each, the pier over every joint and flush with every free end, and the
+    (512 to 1024 in steps of 128) in three looks each, four piers (one picked for each joint and free end), and the
     corner pier where the wall turns round the outside of a corner;
   - the ruins beyond the canal (map_backdrop.py): blocks with parapets, houses with tiled roofs and chimneys, burnt
     shells, collapsed blocks and broken walls, in a handful of sizes each.
@@ -55,7 +55,8 @@ MODELS = "models/lc/kit/"
 NODRAW = "tools/toolsnodraw"
 LOW_TOP = 256         # a top lower than this over the street is seen from it (the foot band); higher ones are not
 RUN_LENGTHS = (512, 640, 768, 896, 1024)
-LOOKS = ("a", "b")
+LOOKS = ("a", "b", "c")
+PIER_LOOKS = ("a", "b", "c", "d")     # (the owner, 24 November: one pier at every joint looked "way too orderly")
 CLIP_REACH = 128      # the wall's player clip stands as far out as anything of a piece lower than this (a player's reach)
 
 
@@ -241,28 +242,35 @@ def wall_run(k, look, keep_tops=False):
     r = random.Random("lc kit combine wall run %d %s" % (k, look))
     sink = Sink()
     p = Piece(CF((0, 0, 0), (1, 0)), (k, 0), H, r, sink)
-    run(p, k, H, r, inner=False)       # (its back against the city's edge: nothing built there)
+    run(p, k, H, r, inner=False, vary=True)      # (its back against the city's edge: nothing built there)
     solids, drawn, hidden = cut_faces(sink.solids, wall_rule(k=k, keep_tops=keep_tops))
     return {"kind": "wall run", "length": k, "look": look, "solids": solids, "drawn": drawn, "nodraw": hidden,
             "clip": [[0, reach(sink.solids, 1, 0, k), 0, k, 0, H]], "lamps": [], "lights": [[int(c) for c in pos] + [col] for pos, col in sink.lights]}
 
 
-def wall_pier(keep_tops=False):
+def wall_pier(look="a", keep_tops=False):
     """The pier over a joint (centred on it) or flush with a free end: pier() with its back on the core's back face (T 32,
-    no inner plinth), so it never stands out behind the core and its back is never seen."""
+    no inner plinth), so it never stands out behind the core and its back is never seen. Four looks, none with a light
+    panel (the owner, 24 November: "why are there big white blocks on the combine wall? I don't recall ever seeing
+    something like that in HL2"): a stack of plates low and tall (a), high (b), short in the middle (d), or a plain
+    front with trim bands (c), each at heights of its own."""
     import map_corridor
     from combine.chain import lean_units, pier
     from combine.geom import Frame as CF
     from combine.piece import Piece, Sink
     H = map_corridor.WALL_H
-    r = random.Random("lc kit combine wall pier")
+    r = random.Random("lc kit combine wall pier %s" % look)
     sink = Sink()
     p = Piece(CF((0, 0, 0), (1, 0)), (256, 0), H, r, sink)
-    pier(p, 0, H, r, 32, lean_units(p.fr, H), 0, lamp=True)
+    front = {"a": ("stack", r.choice((48, 64, 96)), r.choice((320, 352, 384))),
+             "b": ("stack", r.choice((192, 224, 256)), 448),
+             "c": ("bands", [(r.choice((96, 128, 160)), r.choice((16, 24, 32))), (r.choice((320, 352, 384)), 16)]),
+             "d": ("stack", r.choice((128, 160)), r.choice((352, 384)))}[look]
+    pier(p, 0, H, r, 32, lean_units(p.fr, H), 0, lamp=True, front=front)
     solids, drawn, hidden = cut_faces(sink.solids, wall_rule(keep_tops=keep_tops))
     lo, hi = bbox(sink.solids)[0], bbox(sink.solids)[3]
     lamps = [[int(round(c)) for c in pos] + [270, pitch] for pos, _yaw, pitch in sink.lamps]
-    return {"kind": "wall pier", "solids": solids, "drawn": drawn, "nodraw": hidden, "clip": [[lo, reach(sink.solids, 1, lo, hi), 0, hi, 0, H]],
+    return {"kind": "wall pier", "look": look, "solids": solids, "drawn": drawn, "nodraw": hidden, "clip": [[lo, reach(sink.solids, 1, lo, hi), 0, hi, 0, H]],
             "lamps": lamps, "lights": [[int(c) for c in pos] + [col] for pos, col in sink.lights]}
 
 
@@ -288,7 +296,7 @@ def wall_corner(keep_tops=False):
     p1.add(loft(rect(-S, -S, S, S), [(-S - ln, -S), (S, -S), (S, S + ln), (-S - ln, S + ln)], Hp - 128, Hp, p1.mm))
     lv = r.randint(3, 4)
     for p in (p1, p2):
-        p.stack(("v", S, 1), -S + e0, S - e1, r.choice((64, 128)), Hp - 256, lv)
+        p.stack(("v", S, 1), -S + e0, S - e1, r.choice((64, 128)), Hp - 256, lv, light=False)
     kind = TP.pick(r, kinds=(("steps", 2), ("flat", 1), ("ridge", 1)))
     TP.crown(p1, kind, -S - ln, S, -S, S + ln, Hp, r, across="u", ribs=False)
     lamps = [[int(round(c)) for c in p1.w((S - 40, S + 1, H - 96))] + [270, 30],
@@ -411,7 +419,8 @@ def pieces(keep_tops=False):
     for k in RUN_LENGTHS:
         for look in LOOKS:
             out["lc_cwall_%d_%s" % (k, look)] = wall_run(k, look, keep_tops)
-    out["lc_cwall_pier"] = wall_pier(keep_tops)
+    for look in PIER_LOOKS:
+        out["lc_cwall_pier_%s" % look] = wall_pier(look, keep_tops)
     out["lc_cwall_corner"] = wall_corner(keep_tops)
     for name, kind, w, d, h in RUINS:
         out[name] = ruin_piece(name, kind, w, d, h, keep_tops)
@@ -448,7 +457,7 @@ def write(folder, keep_tops=False, quiet=False):
     os.makedirs(folder, exist_ok=True)
     ps = pieces(keep_tops)
     problems = []
-    manifest = {"models": MODELS, "keep_tops": keep_tops, "wall": {"runs": {}, "pier": "lc_cwall_pier", "corner": "lc_cwall_corner"},
+    manifest = {"models": MODELS, "keep_tops": keep_tops, "wall": {"runs": {}, "piers": ["lc_cwall_pier_%s" % k for k in PIER_LOOKS], "corner": "lc_cwall_corner"},
                 "ruins": {}, "pieces": {}}
     for name, p in ps.items():
         text = vmf_text(name, p)
@@ -582,6 +591,12 @@ def read_solids(text, classes=None):
         for s in re.split(r'\n\t+solid\n', blk)[1:]:
             faces = [([tuple(float(c) for c in v.split()) for v in re.findall(r'"v" "([^"]+)"', vs)], mat.lower())
                      for vs, mat in re.findall(r'vertices_plus\n\t*\{\n((?:\t*"v" "[^"]+"\n)+)\t*\}\n\t*"material" "([^"]+)"', s)]
+            if not faces:          # (a finished file has no vertices_plus, map_slim.py: the corners from the planes)
+                import map_budget
+                sides = re.findall(r'"plane" "([^"]+)"\n(?:\t*"[^"]+" "[^"]*"\n)*?\t*"material" "([^"]+)"', s)
+                planes = [map_budget.plane3(pl) for pl, _ in sides]
+                if all(pl is not None for pl in planes):
+                    faces = [(poly, mat.lower()) for poly, (_, mat) in ((map_budget.face_poly(planes, k), sd) for k, sd in enumerate(sides)) if poly]
             if faces:
                 out.append((faces, cls))
     return out

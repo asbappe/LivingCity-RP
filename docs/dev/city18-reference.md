@@ -3941,3 +3941,12 @@ Anything repeated along the canal or the street (bars over a blocked opening, a 
 - **Checked by:** map_budget.py's line on every build (faces, vertices: NEAR and OVER); grep -c canal_bars002 and props_c17/fence0 in the built VMF.
 - **Tags:** props, geometry, owner, streets
 
+### The Combine wall: no white light panels, and no detail repeated at one height (`owner-combine-wall-not-orderly`)
+
+No lights/white004 panels on the Combine wall's kit (they read as flat white blocks, nothing HL2 has). A detail the kit repeats along the wall must not stand at the same height or on the same side every time: several piers picked by chance, each run's staircase of panels starting and ending at heights of its own.
+
+- **Why:** The owner, 24 November: "why are there big white blocks on the combine wall? I don't recall ever seeing something like that in HL2 anywhere ... most of the sections have squares on top of squares on the sidewall, and they are all at an equal height off the ground, despite being different modules, and always on the right side of the wall section. this all needs to be randomized as it looks way too orderly unlike combine architecture".
+- **How:** map_propkit.py: PIER_LOOKS a to d (combine/chain.py pier(front=...): stacks low, high or short with no light panel, or trim bands), LOOKS a to c, run(vary=True); the corner's stacks light=False. map_corridor.combine_wall picks a pier for each joint by chance.
+- **Checked by:** map_propkit.py --check (the kit matches the code, rays from where players stand); grep the kit for white004: none.
+- **Tags:** owner, combine, lighting
+
