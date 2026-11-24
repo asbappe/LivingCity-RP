@@ -538,8 +538,49 @@ def cctv(f, F, lr):
     for i in range(len(v.ents)):
         if "lc_launch_cctv" in v.ents[i]:
             v.ents[i] = v.ents[i].replace("lc_launch_cctv", CCTV_NAME)
+    for where, wall, facing, along, z, frame in cctv_walls(f):
+        screen(v, wall, facing, along, z, frame, f.vis("bunker's camera"))
     f.notes.append("the bunker's camera (%s): Episode Two's security camera on the bunker's front at (%d %d %d), looking down the path; shown on the "
-                   "launch room's two big screens" % (CCTV_NAME, ex, ey, ezz))
+                   "launch room's two big screens, and on a screen in %s" % (CCTV_NAME, ex, ey, ezz, " and one in ".join(w[0] for w in cctv_walls(f))))
+
+
+# More screens of the bunker's camera (the owner, 24 November: "where are the monitors showing the CCTV footage of the
+# entrance in the resistance leader's office? and can we get them also in the little control room too below/before the
+# missile launch control room? the ones inside the missile launch control room work nicely"): made as the launch room's
+# that work, a func_monitor whose face is dev/dev_tvmonitor1a (the camera's picture, its 256 by 256 stretched to the face
+# exactly), here on a wall in a metal frame 4 deep and 4 round it. Each: (where, the wall's face, the way the screen
+# faces, its span along the wall, its bottom and top, the frame's metal).
+def cctv_walls(f):
+    import map_silo as MS
+    tx, ty, _ = TECH_AT
+    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] - 16, SILO[0] + 56), (f.zg + 52, f.zg + 96), "metal/metalwall085a"),
+            ("the control room", ty + 496, "south", (tx + 378, tx + 458), (FLOOR_LOW + 102, FLOOR_LOW + 144), "metal/metalwall074a")]
+
+
+def screen(v, wall, facing, along, z, frame, vis):
+    """A CCTV screen on the face of a wall (at `wall`, facing "south", "north", "east" or "west"): the frame (detail) and
+    the func_monitor showing the bunker's camera, its picture laid exactly over its face, upright and not mirrored."""
+    (a1, a2), (z1, z2) = along, z
+    out = {"south": -1, "west": -1, "north": 1, "east": 1}[facing]
+    ns = facing in ("south", "north")
+
+    def slab(d1, d2, b1, b2, h1, h2):
+        """d: out from the wall; b: along it; h: height."""
+        y1, y2 = sorted((wall + out * d1, wall + out * d2))
+        return (b1, y1, h1, b2, y2, h2) if ns else (y1, b1, h1, y2, b2, h2)
+    v.detail([slab(0, 4, a1 - 4, a2 + 4, z1 - 4, z2 + 4)], frame, vis=vis)
+    w, h = a2 - a1, z2 - z1
+    # u to the right of whoever looks at it, v down; the picture's left edge and top at the texture's 0
+    right = {"south": (1, 0), "north": (-1, 0), "west": (0, -1), "east": (0, 1)}[facing]
+    left = a1 if sum(right) > 0 else a2
+    us, vs = w / 256.0, h / 256.0
+    u = "[%d %d 0 %g] %g" % (right[0], right[1], round(-(sum(right) * left) / us % 256, 4), round(us, 4))
+    vv = "[0 0 -1 %g] %g" % (round(z2 / vs % 256, 4), round(vs, 4))
+    box = slab(4, 6, a1, a2, z1, z2)
+    v.brush_entity("func_monitor", {"target": CCTV_NAME, "StartDisabled": "0", "spawnflags": "2", "disableshadows": "1", "disablereceiveshadows": "0",
+                                    "Solidity": "0", "solidbsp": "0", "InputFilter": "0", "invert_exclusion": "0", "renderamt": "255", "rendercolor": "255 255 255",
+                                    "renderfx": "0", "rendermode": "0", "origin": "%g %g %g" % tuple((box[k] + box[k + 3]) / 2.0 for k in range(3))},
+                   [(box, {facing: "DEV/DEV_TVMONITOR1A"}, {facing: (u, vv)})], MAT["nodraw"], vis)
 
 
 def box_planes(b):
