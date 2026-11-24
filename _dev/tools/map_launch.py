@@ -14,6 +14,8 @@ Two of Valve's rooms, lifted as they are and joined (docs/dev/prefabs.md):
 
 Everything is in the map's own coordinates. BunkerForest (map_forest.py) calls build() from bunker()."""
 
+import math
+
 import map_prefab as PF
 from map_build import MAT, Plan
 
@@ -417,6 +419,20 @@ def launch(f, F, lr):
             e["out"] = [o for o in e["out"] if o[1] not in ("birds", "logic_start_redlight")] + [
                 ("OnTrigger", "!self", "Disable", "", 0.1), ("OnTrigger", "button_launch", "Lock", "", 0)]
     names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"])
+    # the red button's cover (the owner, 24 November: "I can't press the launch button cause Dr Kleiner opens the cover for
+    # the button in EP2 and I guess pressing E on it doesn't work?"): Valve's button starts locked under its cover and only
+    # Kleiner's scene opened it (button.red's "open", its sound, the button unlocked 1.5 s later). Here E on the cover does
+    # that: an unseen button over the red button (8 round it, clear of the console's other button), gone once used.
+    btn = [e for e in lr.get("wiring", []) + lr["points"] if e["keys"].get("targetname") == "button_launch" and e.get("brushes")][0]
+    pts = [F.pf_point(c, LR_TURN, LR_AT) for b in btn["brushes"] for sd in b for c in (sd.get("verts") or sd.get("corners") or sd["plane"])]
+    cover = tuple(math.floor(min(p[k] for p in pts)) - 8 for k in range(3)) + tuple(math.ceil(max(p[k] for p in pts)) + 8 for k in range(3))
+    name = "lc_launch_button_cover"
+    v.brush_entity("func_button", {"targetname": name, "spawnflags": "1025", "wait": "-1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "0",
+                                   "health": "0", "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255"},
+                   [cover], MAT["nodraw"], wv,
+                   connections=[("OnPressed", "lc_launch_button.red", "SetAnimation", "open", 0),
+                                ("OnPressed", "lc_launch_sound.button.rocket_launch_open", "PlaySound", "", 0),
+                                ("OnPressed", "lc_launch_button_launch", "Unlock", "", 1.5), ("OnPressed", "!self", "Kill", "", 0.1)])
     # its relay named plainly, for the ending to hook into
     old = "lc_launch_relay_launch"
     for i in range(len(v.ents)):
