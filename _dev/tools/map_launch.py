@@ -368,8 +368,16 @@ def launch(f, F, lr):
         cls = e["classname"]
         if cls.startswith("prop_"):
             cls = "prop_dynamic_override"
-            k.update({"solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "StartDisabled": "0", "spawnflags": "0"})
+            k.update({"solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "StartDisabled": "0", "spawnflags": "0",
+                      "lightingorigin": "rocket_lighting"})
         extra.append({"classname": cls, "origin": [e["origin"][0], e["origin"][1], e["origin"][2] + dz], "keys": k, "ours": True})
+    # the rocket's light (the owner, 24 November: "the rocket is not visible in the silo when I walk in there. where is the
+    # nose cone part?"): Valve's rocket was static props, lit all over when the map is compiled; on the train they are
+    # moving models, each lit from its own origin, and the nose's (305 under the gantry's floor, the rest lower) is in the
+    # dark pit, so the whole rocket was drawn black in a black shaft. They take their light from an unseen point 96 over
+    # the gantry on the shaft's axis, among the silo's lamps, that rides up with them (and is under the sky at the top).
+    extra.append({"classname": "info_target", "origin": [0, 0, f.zg + 96 - LR_AT[2]], "ours": True,
+                  "keys": {"targetname": "rocket_lighting", "parentname": "train_rocket", "spawnflags": "1"}})
     extra.append({"classname": "logic_auto", "origin": [-4, -1908, FLOOR_HIGH + 120 - LR_AT[2]], "keys": {"spawnflags": "1"}, "ours": True,      # (in the launch room)
                   "out": [("OnMapSpawn", "relay.countdown.init", "Trigger", "", 1)]})
     foot = ROCKET_FOOT - LR_AT[2]
