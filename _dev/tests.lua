@@ -44759,6 +44759,47 @@ function Nov24_BaseVehicleTests() -- (the owner, 20 November: "each base has one
 end
 Nov24_BaseVehicleTests()
 
+function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumpers keep them off ... which a saboteur can switch off")
+    section("24 November: antlions dig up at a stopped thumper's burrow")
+    local A = LC.Antlions
+    local T0 = Vector(-162000, -162000, 0)
+    local th = ents.Create("prop_thumper") th:SetPos(T0) th:SetName("lc_thumper_head") th:Spawn()
+    local burrow = ents.Create("info_target") burrow:SetPos(T0 + Vector(400, 0, 0)) burrow:SetName("lc_thumper_burrow") burrow:Spawn()
+    local p = newPlayer("Saboteur", "resistance", nil, 200)
+    p:SetPos(T0 + Vector(300, 300, 0))
+    local function Out() local n = 0 for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then n = n + 1 end end return n end
+    hook.Run("AcceptInput", th, "Enable", th, th)
+    _run(40)
+    ok(Out() == 0, "the thumper running: no antlions")
+    hook.Run("AcceptInput", th, "Disable", p, p)
+    _run(10)
+    ok(Out() == 0, "stopped: not at once")
+    _run(30)
+    ok(Out() == 2, "then they dig up at its burrow, two at a time", Out())
+    local near = true
+    for e in pairs(A.out) do if e:GetPos():Distance(burrow:GetPos()) > 60 then near = false end end
+    ok(near, "at the burrow's mouth")
+    for e in pairs(A.out) do e:SetHealth(0) end
+    _run(20)
+    ok(Out() == 2, "killed: the next two come", Out())
+    for e in pairs(A.out) do e:SetHealth(0) end
+    A.stopped[th].pool, A.stopped[th].regenAt = 0, CurTime() + 25
+    _run(10)
+    ok(Out() == 0, "the pool empty: a breather", Out())
+    _run(60)
+    ok(Out() >= 1, "lingering brings more", Out())
+    hook.Run("AcceptInput", th, "Enable", p, p)
+    local left = {}
+    for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then left[#left + 1] = e e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
+    _run(30)
+    ok(#left >= 1 and IsValid(left[1]), "started again: those out are left to the thumper for a minute")
+    _run(40)
+    ok(Out() == 0 and not IsValid(left[1]), "then they dig themselves away, and no more come", Out())
+    th:Remove() burrow:Remove() p:Remove()
+    A.stopped, A.out, A.startedAt = {}, {}, nil
+end
+Nov24_ThumperAntlionTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
