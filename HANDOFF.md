@@ -31,6 +31,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
+- 24 November (late): **the ring's walk map names its modules**: in `--test` chains every module and turn shows its name and
+  layout line on screen while you stand in it (`name_sign`, map_modules.py; never in the real map). The owner is choosing
+  modules to cut: what each adds over plain canal was measured in that chat (cistern, chimney, crypt the heaviest).
 - 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"), kept on the shelf:
   map_town.py, town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed that morning to
   6,783 faces). ring.txt: its branch is `straight 512`, nothing else moved, ruins on its ground. Rest without the ring
