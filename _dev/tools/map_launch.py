@@ -31,6 +31,18 @@ LR_BOX = (11432, 6056, 304, 11904, 6600, 784)
 STAIR_AT = (12096, 5632)
 FLOOR_LOW, FLOOR_HIGH = 104, 424
 HULL = 64
+# The launch pad (valve_ep2_launch_outside, placed as the launch room): its own sky over the box OUT (from the room's
+# window to the silo and past it, between the forest's north wall and the line the ring keeps clear, y 6976), as high
+# as the rocket's climb needs (SKY). Valve's ground round the silo (a bowl down to 138, through our silo's top floor) is
+# left out: a flat pad at the collar's top (PAD) instead; Valve's ground in front of the window kept (TILE26).
+OUT = (9168, 5440, 11432, 6976)
+SKY = 4224
+TILE26 = (10792, 5480, 11304, 5992)
+PAD = 337
+SILO = (9792, 6304)
+SQUARE = 416            # (the collar's square round the silo's axis: the pad stops there, the collar's apron and sectors fill it)
+SILO_HULL = (9184, 5696, 10400, 6976)       # (where the pad is the silo's lid: from its top floor's ceiling, 200)
+LOW_GAP = (9600, 5440, 9984, 5696)          # (the corridor's stairs down to the silo pass under here: the pad is thin over them)
 
 
 def tech_box():
@@ -184,8 +196,9 @@ def build(f, F):
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=lambda e: e["classname"].startswith(("prop_", "light", "env_sprite", "infodecal"))
                   and not e["keys"].get("parentname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"])
     x1, y1, z1, x2, y2, z2 = LR_BOX
-    shell(v, LR_BOX, [("east", (sy + 448, LR_BOX[2] - HULL, sy + 576, FLOOR_HIGH + 128))], hv)
+    shell(v, LR_BOX, [("east", (sy + 448, LR_BOX[2] - HULL, sy + 576, FLOOR_HIGH + 128))], hv, skip=("west",))     # (its window opens on the pad)
     air.append(LR_BOX)
+    air += outside(f, F, lr)
     places.append(((x1 + x2) / 2.0, (y1 + y2) / 2.0, FLOOR_HIGH + 64, "launch room"))
     f.launch_piece = lr
     # --- their sound: Half-Life 2's own (Valve's ep2_silo ones may not be loaded in Garry's Mod), as the bunker's rooms ---
@@ -195,6 +208,129 @@ def build(f, F):
                                     (((x1 + x2) / 2.0, (y1 + y2) / 2.0, FLOOR_HIGH + 64), "prison.control_room_simple", 220)):
         v.point("env_soundscape", (int(x), int(y), int(z)), {"soundscape": name, "radius": str(radius), "StartDisabled": "0"}, sv)
     return air, places
+
+
+def cut(rect, hole):
+    """rect minus hole, as up to four rectangles (x1, y1, x2, y2)."""
+    x1, y1, x2, y2 = rect
+    a1, b1, a2, b2 = max(hole[0], x1), max(hole[1], y1), min(hole[2], x2), min(hole[3], y2)
+    if a1 >= a2 or b1 >= b2:
+        return [rect]
+    out = [(x1, y1, x2, b1), (x1, b2, x2, y2), (x1, b1, a1, b2), (a2, b1, x2, b2)]
+    return [r for r in out if r[0] < r[2] and r[1] < r[3]]
+
+
+def split(rects, area):
+    """Each rectangle cut along area: [(rectangle, inside area?)]."""
+    out = []
+    for r in rects:
+        a1, b1, a2, b2 = max(area[0], r[0]), max(area[1], r[1]), min(area[2], r[2]), min(area[3], r[3])
+        if a1 < a2 and b1 < b2:
+            out.append(((a1, b1, a2, b2), True))
+        out += [(q, False) for q in cut(r, area)]
+    return out
+
+
+def prism(poly, z1, z2, side, top, bottom, sides=None):
+    """A convex prism over the polygon poly (in order round it), its faces' materials: each side's own from sides (by
+    its first corner's index) or side."""
+    faces = [([(x, y, z2) for x, y in poly], top), ([(x, y, z1) for x, y in reversed(poly)], bottom)]
+    for k in range(len(poly)):
+        (xa, ya), (xb, yb) = poly[k], poly[(k + 1) % len(poly)]
+        faces.append(([(xa, ya, z1), (xb, yb, z1), (xb, yb, z2), (xa, ya, z2)], (sides or {}).get(k, side)))
+    return faces
+
+
+def ray_square(ax, ay, ang, half):
+    """Where a ray from (ax, ay) at angle ang (degrees) leaves the square of half-side half round (ax, ay)."""
+    import math
+    c, s_ = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+    t = min(half / abs(c) if abs(c) > 1e-9 else 1e9, half / abs(s_) if abs(s_) > 1e-9 else 1e9)
+    return (ax + c * t, ay + s_ * t)
+
+
+def outside(f, F, lr):
+    """The launch pad as Episode Two's launch room sees it (valve_ep2_launch_outside): Valve's fences, walls, steps,
+    lights, debris and the silo's collar, and the room's front round its window; a flat pad for Valve's ground round
+    the silo; the collar's apron and the join to our silo's top (its ring carried up to the collar, the silo's lid gone);
+    the hatch over the mouth; a sky of its own. Returns its air (for the bunker door's failsafe)."""
+    import math
+    v = f.vmf
+    vis, sv = f.vis("launch pad (Valve's ep2_outland_12a)"), f.vis("launch pad's sky (sealed)")
+    pf = PF.load("valve_ep2_launch_outside")
+
+    def sig(sol):
+        return tuple(sorted(tuple(round(c, 1) for p in sd["plane"] for c in p) for sd in sol["sides"]))
+    in_room = set(sig(sol) for sol in lr["solids"])      # (the room's front, lifted with both pieces: placed once, with the room)
+
+    def mbox(sol):
+        pts = [F.pf_point(c, LR_TURN, LR_AT) for sd in sol["sides"] for c in (sd.get("corners") or sd["plane"])]
+        return [min(p[k] for p in pts) for k in range(3)] + [max(p[k] for p in pts) for k in range(3)]
+    tiles_out = set()
+    for i, sol in enumerate(pf["solids"]):
+        if any(sd.get("disp") for sd in sol["sides"]):
+            b = mbox(sol)
+            if not ((b[0] >= TILE26[0] - 2 and b[4] <= TILE26[3] + 2) or b[2] > 400):
+                tiles_out.add(i)        # (Valve's ground round the silo, a bowl through its top floor: the pad instead)
+    index = dict((id(sol), i) for i, sol in enumerate(pf["solids"]))
+    F.pf_solids(v, pf, LR_TURN, LR_AT, vis, world=True, skip=lambda sol: sig(sol) in in_room or index[id(sol)] in tiles_out)
+    # Valve's props: those that stood on the ground left out are set on the pad as high over it as they stood over Valve's
+    # ground (the room's own, lifted with both pieces, are placed with the room; Valve's tower is left out, as asked)
+    ground = []
+    for i in tiles_out:
+        ground += [F.pf_point(q, LR_TURN, LR_AT) for _, q in F.pf_disp_points({"solids": [pf["solids"][i]]})]
+
+    def keep(e):
+        if not e["classname"].startswith(("prop_", "light", "env_sprite", "infodecal")) or "brushes" in e:
+            return False
+        q = F.pf_point(e["origin"], LR_TURN, LR_AT)
+        return q[0] < OUT[2] - 4 and "silo_tower" not in e["keys"].get("model", "")
+
+    def edit(e):
+        loose(e)
+        q = F.pf_point(e["origin"], LR_TURN, LR_AT)
+        if ground and q[2] < PAD + 80 and not (TILE26[0] <= q[0] <= TILE26[2] and TILE26[1] <= q[1] <= TILE26[3]):
+            g = min(ground, key=lambda c: (c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2)
+            if (g[0] - q[0]) ** 2 + (g[1] - q[1]) ** 2 < 96 ** 2:
+                e["origin"] = [e["origin"][0], e["origin"][1], e["origin"][2] + PAD - g[2]]
+    F.pf_entities(v, pf, LR_TURN, LR_AT, "lc_pad_", vis, vis, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+    # the pad: flat at the collar's top; over the silo's hull from its top floor's ceiling (200, where Valve's silo had its
+    # lid); over the corridor's stairs down to the silo only from their roof (328)
+    nd, grass, lid = MAT["nodraw"], "nature/blendgrassdirt01", "concrete/concretewall010a"
+    ax, ay = SILO
+    rects = [OUT]
+    for hole in (TILE26, (ax - SQUARE, ay - SQUARE, ax + SQUARE, ay + SQUARE)):
+        rects = [r for q in rects for r in cut(q, hole)]
+    for r, over_hull in split(rects, SILO_HULL):
+        for q, over_stairs in split([r], LOW_GAP):
+            v.world_box((q[0], q[1], 328 if over_stairs and not over_hull else 200, q[2], q[3], PAD), nd, top=grass, bottom=lid, vis=vis)
+    v.world_box(TILE26[:2] + (200,) + TILE26[2:] + (288,), nd, vis=sv)     # (under Valve's ground kept there: a displaced face seals nothing)
+    # the collar's square: our silo's ring (128 to 384 from the axis, up to 200) carried up to the collar (288), out to
+    # the square, in 24 pieces as the ring's; round the collar (384) its apron, flush with the collar's top
+    ring, apron = "concrete/concretewall073a", "concrete/concretefloor006a"
+    for k in range(24):
+        a1, a2 = 15 * k, 15 * (k + 1)
+        for r_in, z1, z2, inner in ((128, 200, 288, ring), (384, 288, PAD, nd)):
+            pin = [(ax + r_in * math.cos(math.radians(a)), ay + r_in * math.sin(math.radians(a))) for a in (a1, a2)]
+            pout = [ray_square(ax, ay, a, SQUARE) for a in (a1, a2)]
+            poly = [(int(round(x)), int(round(y))) for x, y in (pin[0], pout[0], pout[1], pin[1])]      # (on the grid, as Valve's ring's corners)
+            v.world.append(v.convex_text(prism(poly, z1, z2, nd, apron, lid, sides={3: inner}), vis))
+    # the hatch over the mouth, as Valve has it (it opens before the rocket rises: launch())
+    F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, vis, keep=lambda e: e["keys"].get("targetname") == "door.silo", valve_anchor=lr["anchor"])
+    # its sky: walls round OUT (the room's face left open: its window), a lid over the rocket's climb
+    sky = MAT["sky"]
+    x1, y1, x2, y2 = OUT
+    T = HULL
+    walls = [(x1 - T, y1 - T, 200, x1, y2 + T, SKY), (x1, y1 - T, 328, x2, y1, SKY), (x1, y2, 328, x2, y2 + T, SKY)]
+    for (ya, za, yb, zb) in ((y1 - T, 200, LR_BOX[1], SKY), (LR_BOX[4], 200, y2 + T, SKY), (LR_BOX[1], 200, LR_BOX[4], LR_BOX[2]), (LR_BOX[1], LR_BOX[5], LR_BOX[4], SKY)):
+        walls.append((x2, ya, za, x2 + T, yb, zb))
+    for b in walls:
+        v.world_box(b, sky, sky, sky, vis=sv)
+    v.world_box((x1 - T, y1 - T, SKY, x2 + T, y2 + T, SKY + 16), sky, sky, sky, vis=sv)
+    # the window's player clip, as Valve's (nobody climbs out onto the pad), and the clerestory's over it
+    for b in ((11429, 6088, 408, 11460, 6536, 624), (11456, 6208, 624, 11472, 6416, 688)):
+        v.world_box(b, "tools/toolsplayerclip", top="tools/toolsplayerclip", bottom="tools/toolsplayerclip", vis=f.vis("launch room's window clip"), seals=False)
+    return [(x1, y1, PAD, x2, y2, SKY), TILE26[:2] + (288,) + TILE26[2:] + (PAD,), (ax - SQUARE, ay - SQUARE, 200, ax + SQUARE, ay + SQUARE, PAD)]
 
 
 def lit_rooms(f):

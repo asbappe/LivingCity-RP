@@ -28,6 +28,7 @@ import sys
 import random
 import re
 
+import map_launch as ML
 import map_prefab as PF
 import map_silo as MS
 from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, dress_keys, stand_z, standing_prop, test_extras
@@ -1270,7 +1271,6 @@ class BunkerForest(Forest):
         v.detail([B(-704, 1112 + 24 * k, zg, -576, 1136 + 24 * k, zd - 16 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
         v.detail([B(-704, 1088, zg, -576, 1112, zd)], wall, vis=vis, top=wall)      # (the stairs' top landing, level with the corridor)
         # the control complex up by the silo (map_launch.py): White Forest's control room and Episode Two's launch room
-        import map_launch as ML
         self.complex_air, complex_places = ML.build(self, sys.modules[__name__])
         self.door()
         self.room_doors()
@@ -1982,9 +1982,9 @@ class BunkerForest(Forest):
         opens it again, with a klaxon and a steady red light; shut from inside, the outside one is locked until it is opened
         from inside or the silo empties. Each leaf is a
         func_rot_button used as a mover, so none of it is a door to the gamemode. Nothing kills: in the last moments of the
-        close a shove (shove()) pushes whoever is in the doorway out of it. Its own areaportal, lc_silo_blast_portal, in the
-        leaves' swing, shuts with it: the bunker's areaportal still parts the bunker from the forest, this one the silo
-        from the bunker, the secret panel's the silo from the way out."""
+        close a shove (shove()) pushes whoever is in the doorway out of it. It had its own areaportal until 24 November;
+        since the silo opens on the launch pad (map_launch.py) the bunker's areaportal parts the bunker from the forest
+        and the secret panel's the silo from the way out."""
         v = self.vmf
         sx, sy, sz = self.silo_at
         zg = self.zg
@@ -2018,9 +2018,9 @@ class BunkerForest(Forest):
                     "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, lock["brushes"], q, dl, dv, origin=pf_point(lock["origin"], q, dl))
         v.point("logic_auto", (sx, dy - 136, zg + 150), {"spawnflags": "1"}, dv,
                 connections=[("OnMapSpawn", "lc_silo_blast_lock", "PressIn", "", 0.4), ("OnMapSpawn", "lc_silo_blast_leaf*", "PressIn", "", 0.5)])
-        portal = (sx - half, dy - 1, zg, sx + half, dy + 1, top)
-        v.portals.append(portal)
-        v.brush_entity("func_areaportal", {"targetname": "lc_silo_blast_portal", "StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
+        # (no areaportal of its own since 24 November: the silo opens on the launch pad, and the pad on the launch room's
+        #  window, so the air on the door's two sides meets another way and vbsp would stop: 'areaportal brush doesn't
+        #  touch two areas')
         v.detail([(sx - half, dy - 36, zg, sx + half, dy + 36, zg + 1)], FMAT["wf_floor"], vis=vis)       # (ending short of the lift's shaft)
         v.keep_way_clear((sx - 64, dy - 104, zg + 4, sx + 64, sy - 552, zg + 110), "the silo's door")
         self.shove("lc_silo_blast_shove", [((sx - 40, dy - 60, zg, sx + 40, dy - 34, zg + 160), 270, 200),
@@ -2052,12 +2052,12 @@ class BunkerForest(Forest):
                  ("OnTrigger", "lc_silo_blast_shove", "Enable", "", end - 0.6), ("OnTrigger", "lc_silo_blast_shove", "Disable", "", end + 0.3),
                  ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_slam", "PlaySound", "", end),
                  ("OnTrigger", "lc_silo_blast_groan", "PlaySound", "", end + 0.1), ("OnTrigger", "lc_silo_blast_shake", "StartShake", "", end),
-                 ("OnTrigger", "lc_silo_blast_lock", "PressOut", "", end), ("OnTrigger", "lc_silo_blast_portal", "Close", "", end + 0.2),
+                 ("OnTrigger", "lc_silo_blast_lock", "PressOut", "", end),
                  ("OnTrigger", "lc_silo_blast_close_inside", "Disable", "", 0),
                  ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 2.5), ("OnTrigger", "lc_silo_blast_open", "Enable", "", end + 2)]
         unshut = [("OnTrigger", "lc_silo_blast_open", "Disable", "", 0), ("OnTrigger", "lc_silo_blast_light", "TurnOn", "", 0),
                   ("OnTrigger", "lc_silo_blast_groan", "PlaySound", "", 0), ("OnTrigger", "lc_silo_blast_lock", "PressIn", "", 0),
-                  ("OnTrigger", "lc_silo_blast_start", "PlaySound", "", 0), ("OnTrigger", "lc_silo_blast_portal", "Open", "", 0.9),
+                  ("OnTrigger", "lc_silo_blast_start", "PlaySound", "", 0),
                   ("OnTrigger", "lc_silo_blast_leaf*", "PressIn", "", 1), ("OnTrigger", "lc_silo_blast_move", "PlaySound", "", 1),
                   ("OnTrigger", "lc_silo_blast_move", "StopSound", "", end), ("OnTrigger", "lc_silo_blast_stop", "PlaySound", "", end),
                   ("OnTrigger", "lc_silo_blast_light", "TurnOff", "", end + 1), ("OnTrigger", "lc_silo_blast_close", "Enable", "", end + 2),
@@ -2181,6 +2181,7 @@ class BunkerForest(Forest):
         for i in MS.SKIP:
             pf["solids"][i]["skip"] = True
         pf["solids"][129]["skip"] = True      # (the plate behind Valve's ladder down to level B's balcony: gone with it)
+        pf["solids"][210]["skip"] = True      # (the silo's lid: since 24 November the shaft is open to the sky, the launch pad over it: map_launch.py)
         for i in MS.DOORWAY_SEGS + MS.DOORWAY_CONE:
             pf["solids"][i]["skip"] = True    # (the shaft's wall opened for the way to the leader's office: Silo.vestibule)
 
@@ -2401,7 +2402,7 @@ class BunkerForest(Forest):
         v.world_box((x1 - T, y1 - T, z1 - T, x2 + T, yn + T, z1), nd, vis=hv)
         # the pit's floor: black, so it has no bottom; detail, so the air under it is the map's (no pocket of its own)
         v.detail([(x1, y1, az + self.SILO_PIT - 16, x2, yn, az + self.SILO_PIT)], nd, top=MAT["black"], vis=hv)       # (under the office's too)
-        v.world_box((x1 - T, y1 - T, z2, x2 + T, yn + T, roof), nd, bottom=cw, vis=hv)
+        v.world_box((x1 - T, ML.OUT[3], z2, x2 + T, yn + T, roof), nd, bottom=cw, vis=hv)       # (south of that the launch pad is its lid: map_launch.py)
         # its west wall, the bedroom's: cut round the hole the leader's way out leaves by (behind the secret panel), its
         # sides the hull's concrete, over it the tunnel's end wall (map_silo.py's WAY_*)
         wl, ww = MS.WAY_LOW, MS.WAY_MATS["wall"]
