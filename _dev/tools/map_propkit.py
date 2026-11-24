@@ -591,6 +591,12 @@ def read_solids(text, classes=None):
         for s in re.split(r'\n\t+solid\n', blk)[1:]:
             faces = [([tuple(float(c) for c in v.split()) for v in re.findall(r'"v" "([^"]+)"', vs)], mat.lower())
                      for vs, mat in re.findall(r'vertices_plus\n\t*\{\n((?:\t*"v" "[^"]+"\n)+)\t*\}\n\t*"material" "([^"]+)"', s)]
+            if not faces:          # (a finished file has no vertices_plus, map_slim.py: the corners from the planes)
+                import map_budget
+                sides = re.findall(r'"plane" "([^"]+)"\n(?:\t*"[^"]+" "[^"]*"\n)*?\t*"material" "([^"]+)"', s)
+                planes = [map_budget.plane3(pl) for pl, _ in sides]
+                if all(pl is not None for pl in planes):
+                    faces = [(poly, mat.lower()) for poly, (_, mat) in ((map_budget.face_poly(planes, k), sd) for k, sd in enumerate(sides)) if poly]
             if faces:
                 out.append((faces, cls))
     return out
