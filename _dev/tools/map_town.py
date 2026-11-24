@@ -240,10 +240,45 @@ def town_plan(b, walk):
                 if spec[0] == "solid" and any((c[0] + di, c[1] + dj) not in self.cells for di in (-1, 0, 1) for dj in (-1, 0, 1)):
                     self.cells[c] = spec + ("edge",)
 
+        paints = True       # (its rooms' walls are painted on the walls themselves: Plan.paint_wall)
+
+        def sunk_beside(self, x1, y1, x2, y2):
+            """Is a square beside this rectangle floored under the street (a sunken yard, the landing's basin)? Then a
+            house's part under the street shows there, in the canal's concrete; elsewhere nobody sees it."""
+            i1, j1, i2, j2 = x1 // CELL, y1 // CELL, x2 // CELL, y2 // CELL
+            ring = [(i, j) for i in range(i1, i2) for j in (j1 - 1, j2)] + [(i, j) for j in range(j1, j2) for i in (i1 - 1, i2)]
+            return any(sp and sp[0] != "solid" and sp[1] < mc.STREET for sp in (self.cells.get(c) for c in ring))
+
+        def painted(self, vmf, x1, y1, x2, y2, top, z1, z2):
+            """The faces of this rectangle of solid squares painted as the rooms they look into, for its brush from z1 to
+            z2. A room whose own roof is lower than the house beside it would show the paint above its roof: that face
+            keeps its brick and the room gets a skin there instead, one brush 2 thick."""
+            faces = self.paint_faces(x1, y1, z1, z2)
+            if not faces:
+                return None
+            squares = [(i, j) for i in range(x1 // CELL, x2 // CELL) for j in range(y1 // CELL, y2 // CELL)]
+            for face in list(faces):
+                got = [(c, self.wall_paint[c][face]) for c in squares if face in self.wall_paint.get(c, {})]
+                rooms = [self.cells.get(p[3]) for _, p in got]
+                if all(sp and sp[0] == "low" and len(sp) > 4 and sp[4] >= top for sp in rooms):
+                    continue
+                faces.pop(face)
+                for c, (mat, za, zb, room) in got:
+                    self.skin(vmf, c, face, mat, za, zb)
+            return faces or None
+
+        def skin(self, vmf, c, face, mat, za, zb):
+            x, y = c[0] * CELL, c[1] * CELL
+            box = {"east": (x + CELL, y, x + CELL + 2, y + CELL), "west": (x - 2, y, x, y + CELL),
+                   "north": (x, y + CELL, x + CELL, y + CELL + 2), "south": (x, y - 2, x + CELL, y)}[face]
+            vmf.detail([self.box(box[0], box[1], za, box[2], box[3], zb)], mat, vis=self.vis)
+
         def build(self, vmf):
             """As the street's plan builds, but over a house's roof the sky starts at the lid: chimneys, aerials and
             pitched roofs stand in the air above the roofs (the module review: a skyline of flat steps). Only the
-            outermost wall carries the sky on its top, so the map stays sealed."""
+            outermost wall carries the sky on its top, so the map stays sealed. A house is one brush from the bottom up
+            where nothing under the street can see its lower part, its sky joins the street's (Plan.sky_box), and its
+            walls are painted where they face a room (the town's slimming, 24 November)."""
             self.walls()
             cw, sky, brick = MAT["canal_wall"], MAT["sky"], "brick/brickwall045d"
             STREET = mc.STREET
@@ -251,15 +286,17 @@ def town_plan(b, walk):
                 if spec[0] != "solid":
                     continue
                 top, front, edge = spec[1], spec[2], len(spec) > 3
-                if front and top > STREET:
+                if front and top > STREET and self.sunk_beside(x1, y1, x2, y2):
                     vmf.world_box(self.box(x1, y1, self.base, x2, y2, STREET), cw, vis=self.vis)
-                    vmf.world_box(self.box(x1, y1, STREET, x2, y2, top), brick, top=self.roof_mat, vis=self.vis)
+                    vmf.world_box(self.box(x1, y1, STREET, x2, y2, top), brick, top=self.roof_mat, vis=self.vis,
+                                  faces=self.painted(vmf, x1, y1, x2, y2, top, STREET, top))
                 else:
-                    vmf.world_box(self.box(x1, y1, self.base, x2, y2, top), cw, top=self.roof_mat, vis=self.vis)
+                    vmf.world_box(self.box(x1, y1, self.base, x2, y2, top), brick if front and top > STREET else cw, top=self.roof_mat,
+                                  vis=self.vis, faces=self.painted(vmf, x1, y1, x2, y2, top, self.base, top))
                 if edge or top >= self.sky:
-                    vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, vis=self.vis)
+                    self.sky_box(x1, y1, top, x2, y2, self.top, sky)
                 else:
-                    vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
+                    self.sky_box(x1, y1, self.sky, x2, y2, self.top, sky, sky, sky)
             keep = self.cells
             self.cells = dict((c, sp) for c, sp in keep.items() if sp[0] != "solid")
             self.walled = True
@@ -301,8 +338,9 @@ def lay_street(b, m, L):
         m.shapes([prism([(s * 160, F - 8), (s * 96, F - 4), (s * 96, F - 8)], "x", 0, L, R["strip"])])
 
 
-def glass_pane(m, u1, u2, z1, z2, kind, v=255):
-    """A window's glass, a sheet 1 thick standing on v, the owner's glass laid exactly as theirs is (GLASS)."""
+def glass_pane(m, u1, u2, z1, z2, kind, v=255, edge=None):
+    """A window's glass, a sheet 1 thick standing on v, the owner's glass laid exactly as theirs is (GLASS). edge: what its
+    four thin edges are made of (nodraw for a pane laid on a wall's face, whose edges nobody needs)."""
     mat, wide, high, su, sv, pu, pv = GLASS[kind]
     x1, y1, a, x2, y2, c = m.fr.box(u1, v, z1, u2, v + 1, z2)
     vs = "[0 0 -1 %.3f] %g" % ((pv + c / sv) % 4096, sv)
@@ -310,7 +348,7 @@ def glass_pane(m, u1, u2, z1, z2, kind, v=255):
         us, names = "[0 1 0 %.3f] %g" % ((pu - y1 / su) % 4096, su), ("east", "west")
     else:
         us, names = "[1 0 0 %.3f] %g" % ((pu - x1 / su) % 4096, su), ("north", "south")
-    m.b.vmf.brush_entity("func_detail", {}, [((x1, y1, a, x2, y2, c), dict((n, mat) for n in names), dict((n, (us, vs)) for n in names))], R["frame"], m.dv)
+    m.b.vmf.brush_entity("func_detail", {}, [((x1, y1, a, x2, y2, c), dict((n, mat) for n in names), dict((n, (us, vs)) for n in names))], edge or R["frame"], m.dv)
 
 
 def roof_prop(m, model, u, v, z, yaw=0):
@@ -322,10 +360,26 @@ def roof_prop(m, model, u, v, z, yaw=0):
 
 def lining(m, u1, v1, u2, v2, floor, ceil, low="plaster/plasterwall047b", high="plaster/plasterwall042c", rail=None, thick=2):
     """A room's walls lined as the owner's flats are: plaster in two tones split by a dado rail at 40, a skirting at the
-    floor. Only where the room's edge meets a wall (never across a doorway): the plan says which squares are open."""
+    floor. Only where the room's edge meets a wall (never across a doorway): the plan says which squares are open.
+    In the town (a plan that paints) the walls themselves take `high`, one tone and no rail: the skins were 2,000 faces."""
     cells = m.b.plan.cells
     rail = rail or R["frame"]
     boxes_low, boxes_high, boxes_rail = [], [], []
+    if getattr(m.b.plan, "paints", False):      # (the town: one tone painted on the walls themselves, no skin: Plan.paint_wall)
+        def sq(u, v):
+            x, y = m.fr.pt(u, v)
+            return (int(x) // CELL, int(y) // CELL)
+        for u in range(u1, u2, CELL):
+            for v, d in ((v1, -1), (v2, 1)):
+                c = sq(u + 32, v + d * 32)
+                if c not in cells or cells[c][0] == "solid":
+                    m.b.plan.paint_wall(c, sq(u + 32, v - d * 32), high, floor + m.fr.dz, ceil + m.fr.dz)
+        for v in range(v1, v2, CELL):
+            for u, d in ((u1, -1), (u2, 1)):
+                c = sq(u + d * 32, v + 32)
+                if c not in cells or cells[c][0] == "solid":
+                    m.b.plan.paint_wall(c, sq(u - d * 32, v + 32), high, floor + m.fr.dz, ceil + m.fr.dz)
+        return
     for u in range(u1, u2, CELL):
         for v, d in ((v1, -1), (v2, 1)):
             x, y = m.fr.pt(u + 32, v + d * 32)
@@ -412,7 +466,7 @@ def facade(b, fr, L, rnd, tag, first=0):
             break
         cuts.append(c)
     cuts.append(L)
-    lots, state, lot_holes = [], {}, []
+    lots, state, lot_holes, doors = [], {}, [], []
     for i in range(len(cuts) - 1):
         high = rnd.choice([h for h in HEIGHTS if not lots or h != lots[-1][2]])
         lots.append((cuts[i], cuts[i + 1], high, STYLES[(first + i * 3 + rnd.randrange(2)) % len(STYLES)]))
@@ -420,6 +474,9 @@ def facade(b, fr, L, rnd, tag, first=0):
         b.plan.fill.append(fr.rect(cuts[i], 320, cuts[i + 1], 320 + 640))
 
     def band(a, c, z1, z2, out, mat, holes=()):
+        """A slab of the front from z1 to z2 standing `out` proud of the wall, round its windows and doors (holes), in the
+        fewest boxes: cut at every hole's sill and head, and each piece joined with the one under it where they are as
+        wide (the town's slimming, 24 November: a hole used to cost three boxes, whatever was round it)."""
         k = a // CELL
         while k < c // CELL:
             lo = None if cols[k] is None else max(cols[k], z1)
@@ -427,17 +484,23 @@ def facade(b, fr, L, rnd, tag, first=0):
             while j < c // CELL and (None if cols[j] is None else max(cols[j], z1)) == lo:
                 j += 1
             if lo is not None and lo < z2:
-                boxes, at = [], k * CELL
-                for h1, h2, s, t in sorted(h for h in holes if k * CELL <= h[0] and h[1] <= j * CELL):
-                    if h1 > at:
-                        boxes.append((at, lo, h1, z2))
-                    if s > lo:
-                        boxes.append((h1, lo, h2, s))
-                    if t < z2:
-                        boxes.append((h1, t, h2, z2))
-                    at = h2
-                if at < j * CELL:
-                    boxes.append((at, lo, j * CELL, z2))
+                u0, u9 = k * CELL, j * CELL
+                hs = [h for h in holes if u0 <= h[0] and h[1] <= u9]
+                zs = sorted(set([lo, z2] + [min(z2, max(lo, h[q])) for h in hs for q in (2, 3)]))
+                boxes, rising = [], {}           # (rising: each span still going up, and where it began)
+                for za, zb in zip(zs, zs[1:]):
+                    spans, at = [], u0
+                    for h1, h2 in sorted((h[0], h[1]) for h in hs if h[2] < zb and h[3] > za):
+                        if h1 > at:
+                            spans.append((at, h1))
+                        at = max(at, h2)
+                    if at < u9:
+                        spans.append((at, u9))
+                    for sp in [sp for sp in rising if sp not in spans]:
+                        boxes.append((sp[0], rising.pop(sp), sp[1], za))
+                    for sp in spans:
+                        rising.setdefault(sp, za)
+                boxes += [(sp[0], z, sp[1], zs[-1]) for sp, z in rising.items()]
                 m.det([(u1, 256 - out, F + za, u2, 256, F + zb) for u1, za, u2, zb in boxes], mat)
             k = j
 
@@ -483,16 +546,10 @@ def facade(b, fr, L, rnd, tag, first=0):
             up_holes.append([(u - ww // 2, u + ww // 2, s, s + wh) for u in mids if clear(u - 40, u + 40, s - 8, s + wh + 8)])
             for h in up_holes[-1]:
                 glass[h] = kind
-        band(a, c, 0, 24, 9, R["plinth"], [h for h in low_holes if h[2] == 0])
+        doors += [h for h in low_holes if h[2] == 0]
         band(a, c, 24, 136, 6, ground, low_holes)
-        band(a, c, 136, 152, 10, R["trim"])
-        if len(rows) == 2:
-            band(a, c, 152, 284, 6, upper, up_holes[0])
-            band(a, c, 284, high - 28, 6, upper, up_holes[1])
-        else:
-            band(a, c, 152, high - 28, 6, upper, up_holes[0])
-        band(a, c, high - 28, high - 12, 11, R["trim"])
-        band(a, c, high - 12, high, 16, R["trim"])
+        band(a, c, 152, high - 28, 6, upper)         # (the upper floors' windows lie on it, not in it: the owner, 24 November)
+        band(a, c, high - 28, high, 16, R["trim"])   # (the cornice, one step: was two)
         lot_holes.append(low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []))
         for h1, h2, s, t in low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []):
             if s == 0:      # a doorway nobody uses: planked over and boards nailed across (never the city's door: that one opens)
@@ -501,12 +558,16 @@ def facade(b, fr, L, rnd, tag, first=0):
                 for z in (34, 74):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-4, 5), 248, F + z + rnd.randrange(-5, 6), 270, 90 + rnd.randrange(-12, 13))
                 continue
-            glass_pane(m, h1, h2, F + s, F + t, glass[(h1, h2, s, t)])
-            m.det([(h1 - 5, 244, F + s - 5, h2 + 5, 256, F + s + 1)], R["trim"])                 # the sill (1 into the opening: no face shared with the wall's, which would flicker)
-            m.det([(h1 - 4, 247, F + t - 1, h2 + 4, 256, F + t + 7)], R["trim"])                 # the lintel
+            if s < 136:      # the ground floor's, at eye level: in the wall, on a sill (1 into the opening: no face shared with the wall's)
+                glass_pane(m, h1, h2, F + s, F + t, glass[(h1, h2, s, t)])
+                m.det([(h1 - 5, 244, F + s - 5, h2 + 5, 256, F + s + 1)], R["trim"])
+            else:            # higher up: flat on the wall's face, 1 proud of it, its edges unseen, no sill (the owner, 24 November:
+                glass_pane(m, h1, h2, F + s, F + t, glass[(h1, h2, s, t)], v=249, edge=MAT["nodraw"])      # "any higher can be flat")
             if s < 100 and h2 - h1 < 100 and rnd.random() < 0.2:                                   # a ground floor window boarded up
                 for z in (s + (t - s) // 3, s + 2 * (t - s) // 3):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-6, 7), 248, F + z, 270, 90 + rnd.randrange(-7, 8))
+    band(0, L, 0, 24, 9, R["plinth"], doors)       # (the plinth and the string course are at one height on every house:
+    band(0, L, 136, 152, 10, R["trim"])           #  one run along the whole row, not a piece for each house)
     def roofed(u, v):      # (is there a house's roof here? a module's own squares behind the front have none)
         x, y = fr.pt(u, v)
         spec = b.plan.cells.get((int(x) // CELL, int(y) // CELL))

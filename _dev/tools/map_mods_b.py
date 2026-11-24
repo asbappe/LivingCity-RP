@@ -263,9 +263,23 @@ def swing(m, name, u, v, seat, bar, along="u"):
         m.b.vmf.point("keyframe_rope", m.fr.at(u + d * du, v + d * dv, seat + 4), dict(keys, targetname=low, parentname=name), m.b.vis + ": ropes")
 
 
-def candle(m, u, v, z, high=6, light=True):
-    """A candle stub: an octagon 4 across (no model of one exists), its flame a glow, and a small steady warm light."""
-    m.shapes([vpipe(u, v, 2, z, z + high, PLASTER)])
+def seen_faces(m, *dirs):
+    """{face: nodraw} for every face of a box but those looking along these directions of the module ((du, dv) each):
+    a sheet or a mark 1 thick whose edges nobody sees (the town's slimming, 24 November: each such edge was a face)."""
+    names = []
+    for du, dv in dirs:
+        (x0, y0), (x1, y1) = m.fr.pt(0, 0), m.fr.pt(du, dv)
+        names.append({(1, 0): "east", (-1, 0): "west", (0, 1): "north", (0, -1): "south"}[((x1 > x0) - (x1 < x0), (y1 > y0) - (y1 < y0))])
+    return dict((n, MAT["nodraw"]) for n in ("top", "bottom", "east", "west", "north", "south") if n not in names)
+
+
+def candle(m, u, v, z, high=6, light=True, block=False):
+    """A candle stub: an octagon 4 across (no model of one exists), its flame a glow, and a small steady warm light.
+    block: a block 4 across instead, 5 faces to the octagon's 9 (the memorial's two dozen; the town's slimming)."""
+    if block:
+        m.det([(u - 2, v - 2, z, u + 2, v + 2, z + high)], PLASTER)
+    else:
+        m.shapes([vpipe(u, v, 2, z, z + high, PLASTER)])
     m.glow(u, v, z + high + 3, "255 200 120", 0.08)
     if light:
         m.light(u, v, z + high + 6, "255 170 90 7")
@@ -492,12 +506,17 @@ def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER, rail=Non
     [(u1, v1, u2, v2, ceiling[, floor]), ...] (floors at F unless given): `low` up to `dado` over the floor, `high`
     above it, with a rail of `rail` between when one is given (4 high and 1 proud: the dado line), `high` over a lower
     doorway's head, and a skin of `roof` under each roof. It finds the walls by itself: wherever the square next door
-    is not painted, or is solid; never across a doorway."""
+    is not painted, or is solid; never across a doorway. In the town (a plan that paints: Plan.paint_wall) a wall takes
+    `high` on itself, one tone with no skin, no dado and no rail (its rooms' skins were 730 brushes)."""
     cells, dz = m.b.plan.cells, m.fr.dz
+    paints = getattr(m.b.plan, "paints", False)
+
+    def sq(u, v):
+        x, y = m.fr.pt(u + 32, v + 32)
+        return (int(x) // CELL, int(y) // CELL)
 
     def spec(u, v):
-        x, y = m.fr.pt(u + 32, v + 32)
-        return cells.get((x // CELL, y // CELL))
+        return cells.get(sq(u, v))
     runs = {}
     for room in rooms:
         u1, v1, u2, v2, ceil = room[:5]
@@ -507,6 +526,10 @@ def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER, rail=Non
         edges += [("v", v, u1, 1, (u1 - CELL, v)) for v in range(v1, v2, CELL)] + [("v", v, u2, -1, (u2, v)) for v in range(v1, v2, CELL)]
         for axis, a, line, side, nb in edges:
             n = spec(*nb)
+            if (n is None or n[0] == "solid") and paints:      # (the town: the wall itself takes `high`, one tone, no skin)
+                at = (a, line if side == 1 else line - CELL) if axis == "u" else (line if side == 1 else line - CELL, a)
+                m.b.plan.paint_wall(sq(*nb), sq(*at), high, fl + dz, top + dz)
+                continue
             if n is None or n[0] == "solid":
                 if rail:
                     parts = [(fl, fl + dado, low, 2), (fl + dado, fl + dado + 4, rail, 3), (fl + dado + 4, top, high, 2)]
@@ -724,9 +747,9 @@ def m_memorial(m, opt):
     # a shoe, bottles, tins, pots
     for k, (u, high) in enumerate(((236, 5), (251, 3), (270, 7), (296, 4), (309, 6), (338, 3), (352, 8), (377, 5), (391, 4), (415, 7), (440, 3),
                                    (458, 6), (476, 4), (497, 8), (512, 5), (531, 3))):
-        candle(m, u, 370 + (k * 5) % 7, Z + 24, high, light=False)
+        candle(m, u, 370 + (k * 5) % 7, Z + 24, high, light=False, block=True)
     for u, v, high in ((300, 356, 4), (310, 349, 7), (322, 358, 3), (384, 350, 6), (396, 357, 4), (452, 352, 5), (468, 359, 8), (250, 354, 3)):
-        candle(m, u, v, Z, high, light=False)
+        candle(m, u, v, Z, high, light=False, block=True)
     for u in (290, 400, 500):
         m.light(u, 360, Z + 40, "255 170 90 22")
     put(m, [("props_lab/frame002a", 326, 374, 255), ("props_lab/frame002a", 406, 373, 282), ("props_lab/frame002a", 488, 374, 264),
@@ -887,7 +910,7 @@ def m_pit(m, opt):
         z = F + 82 - 9 * row
         chalk += [(970 + 3 * j, 386, z, 971 + 3 * j, 387, z + 6) for j in range((3, 5, 2, 4)[row])]
         chalk += [(996 + 3 * j, 386, z, 997 + 3 * j, 387, z + 6) for j in range((4, 1, 5, 2)[row])]
-    m.det(chalk, PLASTER)
+    m.det(chalk, PLASTER, faces=seen_faces(m, (0, 1)))      # (only their faces on the board: 1 thick, their edges unseen)
 
     # the corner men, left of the mouth: a bench, a drum of water, a bucket
     m.static("models/props_c17/bench01a.mdl", 276, 428, 0)
@@ -971,17 +994,17 @@ def m_garden(m, opt):
 
     # six raised beds: timber edges, soil, three ridges each
     beds = [(352, v) for v in (360, 472, 584)] + [(736, v) for v in (360, 472, 584)]
-    edges, soil, ridges, stakes = [], [], [], []
+    edges, soil, ridges = [], [], []
     for n, (u, v) in enumerate(beds):
         a, b = u + 192, v + 72
         edges += [(u, v, Z, a, v + 4, Z + 18), (u, b - 4, Z, a, b, Z + 18), (u, v + 4, Z, u + 4, b - 4, Z + 18), (a - 4, v + 4, Z, a, b - 4, Z + 18)]
-        stakes += [(u - 2, v - 2, Z, u + 4, v + 4, Z + 22), (a - 4, v - 2, Z, a + 2, v + 4, Z + 22), (u - 2, b - 4, Z, u + 4, b + 2, Z + 22), (a - 4, b - 4, Z, a + 2, b + 2, Z + 22)]
+        # (no corner stakes: 24 brushes for what the edges already show; the town's slimming, 24 November)
         soil.append((u + 4, v + 4, Z, a - 4, b - 4, Z + 13))
         for row in range(3):
             c = v + 16 + 20 * row
             ridges.append(prism([(c - 7, Z + 13), (c + 7, Z + 13), (c, Z + 17)], "x", u + 6, a - 6, DIRT))
         m.target("lc_garden_bed_%d" % (n + 1), u + 96, v + 36, Z + 18, 270)
-    m.det(edges + stakes, TIMBER)
+    m.det(edges, TIMBER)
     m.det(soil, DIRT)
     m.shapes(ridges)
     rnd = random.Random(8)                               # the planting spots: two on each bed that has no bean poles, none quite in line
@@ -1401,7 +1424,7 @@ def m_press(m, opt):
             if rnd.random() < 0.75 and not (lv == 612 and 250 < u < 350):
                 sheets.append((u, lv, F + 108, u + 12, lv + 1, F + 125))
             u += rnd.choice((18, 22, 30))
-    m.det(sheets, CEILING)
+    m.det(sheets, CEILING, faces=seen_faces(m, (0, 1), (0, -1)))      # (both sides of each sheet; its edges, 1 thick, unseen)
 
     # paper: boxes and bundles on a pallet, more on the floor
     m.static("models/props_junk/wood_pallet001a.mdl", 580, 706, 0)
