@@ -524,7 +524,7 @@ local function ScanReplaced()
     replaced = {}
     local n = 0
     for _, folder in ipairs(LC.VoiceReplaceFolders) do
-        for _, f in ipairs(file.Find("sound/" .. LC.VoiceReplaceRoot .. folder .. "*", "GAME") or {}) do
+        for _, f in ipairs(LC.PreferWav(file.Find("sound/" .. LC.VoiceReplaceRoot .. folder .. "*", "GAME"))) do
             local base, ext = string.match(string.lower(f), "^(.-)%.(%w+)$")
             if base and AUDIO[ext] then
                 local path = LC.VoiceReplaceRoot .. folder .. f
@@ -554,10 +554,11 @@ function LC.VoiceReplacement(path)
 end
 
 -- Mouths that move (the owner, 12 November: "With the new voices, can we get the NPCs' mouths to
--- move?"). The owner's recordings carry no phoneme data, so Source's own lip sync leaves the face
--- still. Whoever says one (anything under sound/livingcity/) is marked talking for as long as it
--- lasts, and every player's game near them works their jaw (cl_livingcity_lipsync.lua). Half-Life
--- 2's own clips are left to the engine, which has their phonemes.
+-- move?"). Whoever says one of the recordings (anything under sound/livingcity/) is marked talking
+-- for as long as it lasts, and their face is worked from it: by the game itself when the recording
+-- carries its phoneme track (_dev/tools/lipsync_bake.py), else by the server, in time with how loud
+-- it is (sv_livingcity_lipsync.lua). Half-Life 2's own clips are left to the engine, which has their
+-- phonemes.
 function LC.MarkTalking(ent, path)
     if not IsValid(ent) or ent:IsPlayer() or type(path) ~= "string" then return false end
     local p = string.lower(path)
@@ -569,6 +570,7 @@ function LC.MarkTalking(ent, path)
     local now = CurTime()
     ent:SetNW2Float("lc_talk_from", now)
     ent:SetNW2Float("lc_talk_until", now + math.min(secs, 30))
+    if LC.LipSyncStart then LC.LipSyncStart(ent, p, math.min(secs, 30)) end
     return true
 end
 
