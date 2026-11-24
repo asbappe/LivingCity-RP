@@ -1104,7 +1104,9 @@ def m_shanty(m, opt):
     Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
     screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
     lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
-    basin's open floor, 64 clear all round, open to the sky).
+    basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r520_h400_shanty (that territory, brought by
+    the map: 520 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
+    on the canal's floor west of the bridge).
     Left as brushes: the boardwalk, the shacks (sheets, posts, roofs: no model is a shack's wall), the board over the
     stall, the washing on the line (no game has a model of clothes on a line), the street bridge.
     Unchecked: ambient/fire/fire_small_loop2.wav, env_smokestack, the cables (move_rope), sprites/light_glow03.vmt;
@@ -1213,6 +1215,14 @@ def m_shanty(m, opt):
         m.det([(cu - w // 2, cv - 1, cz - h, cu + w // 2, cv + 1, cz - 1)], mat)
     # the Resistance's flag, when a territory covers the shanty town: the open floor in front of the card room
     m.target("lc_hq_setup_shanty", 480, 330, F, 90)
+    # the shanty town's own territory, so nobody has to place it by hand (the owner, 20 November: "the shantytown as a
+    # possible base"; 21 November, of placing one by hand: "pointless overhead"): the basin and the canal before it, one
+    # floor deep (the street over the bridge is not in it). And where its airboat lies while the base is here (the
+    # owner, 20 November: "the airboat for the canal's shantytown"): on the canal's floor west of the bridge, clear of
+    # the boardwalk's steps and the walk along the far wall, its nose down the canal.
+    m.target("lc_zone_rebel_r520_h400_shanty", 768, 448, F + 8)
+    m.target("lc_base_vehicle_airboat_shanty", 200, -40, F + 8, 0)
+    m.blocked(100, -110, 300, 30)
     # the camp's tents, folded into the shanty town (the owner, 24 November: the camp and the shanty "re-engineered and
     # combined into one", the "shanty under bridge with camps tents folded in"): three ridge tents on the basin's floor
     # east of the bridge, before the stall and the bunk room, their open ends to the canal; a mattress in the first

@@ -6,7 +6,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 |---|---|---|---|---|
 | `drain` | 1024 | 1. the storm drain junction, down to the city's sewers (left) | `lc_drain_cache`, `lc_drain_grate`, `lc_drain_junction` | `map_modules.py` |
 | `overflow` | 1024 | 2. the overflow toward Ravenholm, behind a sluice plate (left) | `lc_overflow_drop`, `lc_overflow_far`, `lc_overflow_lever`, `lc_overflow_lift`, `lc_overflow_moan`, `lc_overflow_sluice` | `map_modules.py` |
-| `shanty` | 1536 | 4. the shantytown under a street bridge (left) | `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3` | `map_modules.py` |
+| `shanty` | 1536 | 4. the shantytown under a street bridge (left) | `lc_base_vehicle_airboat_shanty`, `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3`, `lc_zone_rebel_r520_h400_shanty` | `map_modules.py` |
 | `vort` | 1024 | 6. the vortigaunt culvert (left) | `lc_vort_fire`, `lc_vort_npc`, `lc_vort_seat_1`, `lc_vort_seat_2`, `lc_vort_seat_3` | `map_modules.py` |
 | `relay` | 1024 | 7. Cubbage's relay shack and mast, on a pier (right) | `lc_relay_hum`, `lc_relay_lamp`, `lc_relay_mast`, `lc_relay_radio`, `lc_relay_seat` | `map_modules.py` |
 | `checkpoint` | 1280 | 8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight | `lc_checkpoint_field`, `lc_checkpoint_hum`, `lc_checkpoint_light`, `lc_checkpoint_light_b`, `lc_checkpoint_pen`, `lc_checkpoint_pen_spot`, `lc_checkpoint_post`, `lc_checkpoint_queue` | `map_modules.py` |
@@ -131,7 +131,9 @@ ladder comes down the bridge's side (a gap in its side wall, a post under its ed
 Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
 screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
 lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
-basin's open floor, 64 clear all round, open to the sky).
+basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r520_h400_shanty (that territory, brought by
+the map: 520 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
+on the canal's floor west of the bridge).
 Left as brushes: the boardwalk, the shacks (sheets, posts, roofs: no model is a shack's wall), the board over the
 stall, the washing on the line (no game has a model of clothes on a line), the street bridge.
 Unchecked: ambient/fire/fire_small_loop2.wav, env_smokestack, the cables (move_rope), sprites/light_glow03.vmt;
