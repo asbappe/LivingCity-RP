@@ -3914,3 +3914,21 @@ Before a map goes to the owner, map_budget.py must show both drawn faces and the
 - **Checked by:** map_build.py and map_ring_walk.py print "vertices about N of 65,536" (NEAR over 58,000, OVER past the limit); map_ring_walk.py says when the finished file is over either limit.
 - **Tags:** owner, geometry, lighting
 
+### Look for holes the way a player sees, not by brush boxes (`owner-no-visible-holes`)
+
+A piece is not done while any face a player can see from where they can stand is nodraw, missing or sky under a roof. Box checks pass while a hull runs through a walkway in nodraw or a sky wall stands in a room.
+
+- **Why:** "there is a void/hole in the wall before the door on the right ... walls missing all over the stairs up to the launch control room" (24 November, walking the bunker after every build check had passed).
+- **How:** python3 _dev/tools/map_hidden_faces.py FILE.vmf --holes (about 10 minutes): every HOLE line is a face to fix. Run it on the owner's file after the nodraw pass too.
+- **Checked by:** map_hidden_faces.py --holes prints no HOLE line
+- **Tags:** geometry, owner
+
+### A hidden door sinks out of the way, never lifts into the space beside it (`owner-doors-never-carry-players`)
+
+A sliding brush door carries whoever touches it along its whole move. Move it away from where the player stands to press its button (down into the wall's foot), not up and back into a tunnel's roof.
+
+- **Why:** "I can't get out of the escape tunnel ... something is invisible and preventing me from moving out through the open doorway" (24 November).
+- **How:** Give the door a move straight down (or sideways into the wall) and check its swept box misses the button's spot.
+- **Checked by:** by eye: the door's move points away from its button
+- **Tags:** doors, owner
+
