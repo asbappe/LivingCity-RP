@@ -194,11 +194,12 @@ def build(f, F):
         p = F.pf_point(e["origin"], LR_TURN, LR_AT)
         return all(LR_BOX[k] <= p[k] <= LR_BOX[k + 3] for k in range(3))
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=lambda e: e["classname"].startswith(("prop_", "light", "env_sprite", "infodecal"))
-                  and not e["keys"].get("parentname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"])
+                  and not e["keys"].get("parentname") and not e["keys"].get("targetname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"])
     x1, y1, z1, x2, y2, z2 = LR_BOX
     shell(v, LR_BOX, [("east", (sy + 448, LR_BOX[2] - HULL, sy + 576, FLOOR_HIGH + 128))], hv, skip=("west",))     # (its window opens on the pad)
     air.append(LR_BOX)
     air += outside(f, F, lr)
+    launch(f, F, lr)
     places.append(((x1 + x2) / 2.0, (y1 + y2) / 2.0, FLOOR_HIGH + 64, "launch room"))
     f.launch_piece = lr
     # --- their sound: Half-Life 2's own (Valve's ep2_silo ones may not be loaded in Garry's Mod), as the bunker's rooms ---
@@ -315,8 +316,6 @@ def outside(f, F, lr):
             pout = [ray_square(ax, ay, a, SQUARE) for a in (a1, a2)]
             poly = [(int(round(x)), int(round(y))) for x, y in (pin[0], pout[0], pout[1], pin[1])]      # (on the grid, as Valve's ring's corners)
             v.world.append(v.convex_text(prism(poly, z1, z2, nd, apron, lid, sides={3: inner}), vis))
-    # the hatch over the mouth, as Valve has it (it opens before the rocket rises: launch())
-    F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, vis, keep=lambda e: e["keys"].get("targetname") == "door.silo", valve_anchor=lr["anchor"])
     # its sky: walls round OUT (the room's face left open: its window), a lid over the rocket's climb
     sky = MAT["sky"]
     x1, y1, x2, y2 = OUT
@@ -331,6 +330,105 @@ def outside(f, F, lr):
     for b in ((11429, 6088, 408, 11460, 6536, 624), (11456, 6208, 624, 11472, 6416, 688)):
         v.world_box(b, "tools/toolsplayerclip", top="tools/toolsplayerclip", bottom="tools/toolsplayerclip", vis=f.vis("launch room's window clip"), seals=False)
     return [(x1, y1, PAD, x2, y2, SKY), TILE26[:2] + (288,) + TILE26[2:] + (PAD,), (ax - SQUARE, ay - SQUARE, 200, ax + SQUARE, ay + SQUARE, PAD)]
+
+
+# The launch (Valve's relay_launch in ep2_outland_12a, as Valve times it): the red button starts it, the countdown panels
+# run 30 seconds, the hatch over the silo opens at 3, the warnings, rumble, debris and the room's shaking build, and at 30
+# the rocket rises on its train out of the shaft past the hatch, Valve's smoke at the hatch as it starts, its engines'
+# flame and the blast up the hatch as its foot nears it, its sound to the whole map; at the top of its climb, out of
+# sight from the window, it is killed (nothing is left in the silo or the sky). One launch a map: the button and the
+# relay lock themselves. Our silo's own rocket (Valve's White Forest rocket, valve_ep2_rocket: its stages, engines, nose
+# and hatch) is the one that rises: on the train, not Valve's distant model of it. The ending hooks into LAUNCH_RELAY.
+LAUNCH_RELAY = "lc_rocket_launch"
+ROCKET_FOOT = -1232                 # the rocket's foot (its engines' bottom) in the silo, and the train's start
+# Valve's path above its start (ptrack_1 3 9 6 7 4), its rocket's top 86 into the hatch at the start; ours starts 169
+# under it, so each comes 255 later; killed (ptrack_8) when its foot is at 2500, its top at 4130, under the sky (SKY)
+PATH = (("ptrack_1", 0), ("ptrack_3", 315), ("ptrack_9", 571), ("ptrack_6", 1451), ("ptrack_7", 1931), ("ptrack_4", 3583), ("ptrack_8", 2500 - ROCKET_FOOT))
+
+
+def launch(f, F, lr):
+    """The launch's wiring (valve_ep2_launch_room's), on our silo's own axis and rocket."""
+    v = f.vmf
+    vis, wv = f.vis("launch (the rocket, the hatch, the countdown)"), f.vis("launch's wiring")
+    rocket = PF.load("valve_ep2_rocket")
+    sx, sy, sz = f.silo_at
+    dz = sz - LR_AT[2]          # (the rocket piece's frame to the launch piece's: both turned alike round the silo's axis)
+    extra = []
+    for e in rocket["points"]:
+        k = dict(e["keys"])
+        if e["classname"] == "env_steam" and k.get("targetname") != "rocket_nose_jet":
+            continue
+        k.update({"targetname": "rocket", "parentname": "train_rocket"})
+        cls = e["classname"]
+        if cls.startswith("prop_"):
+            cls = "prop_dynamic_override"
+            k.update({"solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "StartDisabled": "0", "spawnflags": "0"})
+        extra.append({"classname": cls, "origin": [e["origin"][0], e["origin"][1], e["origin"][2] + dz], "keys": k, "ours": True})
+    extra.append({"classname": "logic_auto", "origin": [-4, -1908, FLOOR_HIGH + 120 - LR_AT[2]], "keys": {"spawnflags": "1"}, "ours": True,      # (in the launch room)
+                  "out": [("OnMapSpawn", "relay.countdown.init", "Trigger", "", 1)]})
+    foot = ROCKET_FOOT - LR_AT[2]
+    path = dict(PATH)
+
+    def keep(e):
+        k, cls = e["keys"], e["classname"]
+        tn = k.get("targetname", "")
+        if e.get("ours"):
+            return True
+        if k.get("model", "").endswith("rocket_low.mdl"):
+            return False        # (Valve's distant model of its rocket: our silo's own rises instead)
+        if cls in ("func_monitor", "logic_auto", "env_microphone", "info_target"):
+            return False        # (the screens: the camera's, cctv(); Valve's start-up and story)
+        if tn in ("door_launchbunker_exit_a", "brush_launchbunker_exit_a") or (tn.startswith("ptrack_") and tn not in path):
+            return False        # (the room's way out stays shut)
+        if cls == "func_button":
+            return tn == "button_launch" or any("hulla" in c[1] for c in e.get("connections", []))
+        if cls.startswith("prop_") or cls in ("light", "light_spot", "env_sprite", "infodecal"):
+            return bool(tn)     # (the room's other props: build())
+        return True
+
+    def edit(e):
+        k, cls = e["keys"], e["classname"]
+        tn = k.get("targetname", "")
+        loose(e)
+        if tn == "train_rocket":        # (our silo's axis, straight up, not turning: the rocket stands as it stands in the silo)
+            e["origin"] = [0, 0, foot]
+            e["brushes"] = [[{"plane": pl, "verts": [], "corners": [], "material": "TOOLS/TOOLSNODRAW", "uaxis": "[1 0 0 0] 0.25", "vaxis": "[0 -1 0 0] 0.25",
+                              "lightmapscale": "16"} for pl in box_planes((-8, -8, foot - 8, 8, 8, foot + 8))]]
+            k.update({"orientationtype": "0", "dmg": "0", "spawnflags": str(int(k.get("spawnflags", "0") or 0) | 8)})     # (8: not solid)
+        if tn.startswith("ptrack_"):
+            e["origin"] = [0, 0, foot + path[tn]]
+            order = [n for n, _ in PATH]
+            i = order.index(tn)
+            k["target"] = order[i + 1] if i + 1 < len(order) else ""
+            if not k["target"]:
+                del k["target"]
+                e["out"] = [o for o in e["out"]] + [("OnPass", "train_rocket", "Kill", "", 0.1)]
+        if tn == "particle_rocket":
+            e["origin"] = [0, 0, foot]
+        if cls == "ambient_generic":
+            k["spawnflags"] = str(int(k.get("spawnflags", "0") or 0) & ~1)
+        if cls == "env_shake":          # (Valve's shook the whole world; here the room)
+            k.update({"spawnflags": str(int(k.get("spawnflags", "0") or 0) & ~1), "radius": "640"})
+        if tn == "relay_launch":        # (one launch a map; the ending hooks in here: LAUNCH_RELAY)
+            e["out"] = [o for o in e["out"] if o[1] not in ("birds", "logic_start_redlight")] + [
+                ("OnTrigger", "!self", "Disable", "", 0.1), ("OnTrigger", "button_launch", "Lock", "", 0)]
+    names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"])
+    # its relay named plainly, for the ending to hook into
+    old = "lc_launch_relay_launch"
+    for i in range(len(v.ents)):
+        if old in v.ents[i]:
+            v.ents[i] = v.ents[i].replace('"%s"' % old, '"%s"' % LAUNCH_RELAY).replace(old + "\x1b", LAUNCH_RELAY + "\x1b")
+    f.notes.append("the launch: the red button (lc_launch_button_launch) or %s runs Valve's launch: countdown, the hatch opening, and at 30 s the "
+                   "silo's rocket rising out of the shaft on lc_launch_train_rocket, killed at z 2500, out of sight; one launch a map" % LAUNCH_RELAY)
+    return names
+
+
+def box_planes(b):
+    """A box's six planes as three corners each, wound as Hammer writes them (each face clockwise seen from outside)."""
+    x1, y1, z1, x2, y2, z2 = b
+    return [[[x1, y2, z2], [x2, y2, z2], [x2, y1, z2]], [[x1, y1, z1], [x2, y1, z1], [x2, y2, z1]],
+            [[x1, y2, z2], [x1, y1, z2], [x1, y1, z1]], [[x2, y2, z1], [x2, y1, z1], [x2, y1, z2]],
+            [[x2, y2, z2], [x1, y2, z2], [x1, y2, z1]], [[x2, y1, z1], [x1, y1, z1], [x1, y1, z2]]]
 
 
 def lit_rooms(f):

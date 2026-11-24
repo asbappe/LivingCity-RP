@@ -2124,7 +2124,7 @@ class BunkerForest(Forest):
         """The silo's whole inside (the hull's inner faces: 1088 square round the shaft's axis, from 64 under the pit floor
         to the collar's top), as one box: everything in it counts as inside the bunker."""
         sx, sy, sz = self.silo_at
-        return (sx - 544, sy - 544, sz + self.SILO_PIT - 256, sx + 544, sy + MS.OFFICE_HULL, sz + 1824)      # (from the hull's floor, under the pit's; the office's too)
+        return (sx - 544, sy - 544, sz + self.HULL_FLOOR, sx + 544, sy + MS.OFFICE_HULL, sz + 1824)      # (from the hull's floor, under the pit's; the office's too)
 
     # the lift's stops: the silo piece's floors with a landing on the lift shaft, bottom to top. A floor becomes a stop by
     # adding its height here (with its landing open in the piece): its path point, gate, call button and wiring are all
@@ -2139,6 +2139,7 @@ class BunkerForest(Forest):
     LIFT_STOPS = (320, 1408)
     LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
     LIFT_BUILT = 1152            # the car's floor where Valve built it (level B): its parts are placed there and it goes to its top stop at the start
+    HULL_FLOOR = 256    # the silo's hull's floor, over the piece's pit floor: under the rocket's engines (its foot 328 up), all of it in sealed air
     SILO_PIT = 1152     # the silo cut to its top floor (the owner, 23 November): the pit's black floor, a level under the top floor's
     LIFT_HOLE = (-544, -72, -416, 72)   # the shaft's mouth in the walkway's floor (Valve's grates and middle strut over it are left out: map_silo.SKIP)
     GRATE_SPEED, GRATE_AFTER = 48, 4.5  # the walkway's two sliding grates: units a second; seconds after the car leaves the top before they close
@@ -2330,15 +2331,8 @@ class BunkerForest(Forest):
         # the rocket, back in the shaft as it stands in Episode Two (the owner, 22 November: "we could use the rocket in that silo
         # after all ... can we please re-insert the rocket into the silo as it exists in EP2?"): valve_ep2_rocket, Valve's own
         # stages, engines, nose and hatch, in the silo's frame. Its engines end 6 over the pit's cover (322).
-        rocket = PF.load("valve_ep2_rocket")
-        import map_assets
-
-        def above_pit(e):
-            """(the rocket's parts that reach over the pit's floor: its nose, hatch and third stage; the stages, engines and
-            steam under it are cut away with the silo)"""
-            bb = map_assets.size(e["keys"]["model"]) if e["keys"].get("model") else None
-            return e["origin"][2] + (bb[5] if bb else 0) > self.SILO_PIT
-        pf_entities(v, rocket, q, d, "lc_silo_", sv, wv, keep=above_pit)
+        # (since 24 November it stands on the launch's train and rises out of the open silo when launched: map_launch.py's
+        #  launch(), all of it, the stages and engines under the pit's floor too)
         # the Resistance flag's pole (the owner: raised "from the bottom of the silo" with the flag "flush with eye level on the
         # top floor"; 22 November, with the rocket back on the axis: "just move the flagpole between the rocket and the walkways
         # in the silo somewhere for now"): between the rocket (97 from the axis) and the solid ring's hole (159), 128 out, half
@@ -2395,7 +2389,7 @@ class BunkerForest(Forest):
         T, nd, cw, hv = 64, MAT["nodraw"], FMAT["silo_wall"], self.vis("silo's hull (sealed)")
         # (its floor a level under the pit's black floor, so the rocket's third stage, which rises through that floor, stands
         #  in sealed air: its origin may not be outside the map)
-        x1, y1, z1, x2, y2, z2 = ax - 544, ay - 544, az + self.SILO_PIT - 256, ax + 544, ay + 544, az + 1792
+        x1, y1, z1, x2, y2, z2 = ax - 544, ay - 544, az + self.HULL_FLOOR, ax + 544, ay + 544, az + 1792
         roof = self.zd + 224
         # (carried out north round the leader's office and bedroom since 24 November: its north wall is their back wall)
         yn = ay + MS.OFFICE_HULL
