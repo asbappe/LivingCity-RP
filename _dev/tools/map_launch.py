@@ -188,7 +188,7 @@ def build(f, F):
     places.append((sx - 64, sy + 512, FLOOR_HIGH + 64, "top of the stair to the launch room"))
     # --- Episode Two's launch room -------------------------------------------------------------------------------------
     lr = PF.load("valve_ep2_launch_room")
-    F.pf_solids(v, lr, LR_TURN, LR_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] and "monitor" not in s["from"] and "door" not in s["from"])
+    F.pf_solids(v, lr, LR_TURN, LR_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] and "door" not in s["from"])      # (its screens are live: cctv())
     # its props, lights and screens as Valve has them (the launch's wiring: launch())
     def in_room(e):
         p = F.pf_point(e["origin"], LR_TURN, LR_AT)
@@ -200,6 +200,7 @@ def build(f, F):
     air.append(LR_BOX)
     air += outside(f, F, lr)
     launch(f, F, lr)
+    cctv(f, F, lr)
     places.append(((x1 + x2) / 2.0, (y1 + y2) / 2.0, FLOOR_HIGH + 64, "launch room"))
     f.launch_piece = lr
     # --- their sound: Half-Life 2's own (Valve's ep2_silo ones may not be loaded in Garry's Mod), as the bunker's rooms ---
@@ -421,6 +422,47 @@ def launch(f, F, lr):
     f.notes.append("the launch: the red button (lc_launch_button_launch) or %s runs Valve's launch: countdown, the hatch opening, and at 30 s the "
                    "silo's rocket rising out of the shaft on lc_launch_train_rocket, killed at z 2500, out of sight; one launch a map" % LAUNCH_RELAY)
     return names
+
+
+# The bunker's camera (the owner, 24 November: "copy the big massive screen ... and use it as CCTV footage of the outside
+# of the bunker? A camera mounted on the front of the bunker looking down the path in the forest would be amazing"; then
+# "our CCTV instead" on the launch room's screens): Episode Two's own security camera (props_silo/camera.mdl, White
+# Forest's) on the east face of the bunker's front by its corner, a point_camera at its lens looking down the path from
+# the door, and the launch room's two big screens (Valve's func_monitors, monitor.controlroom2 and 3, that showed Eli's
+# camera) showing it. On from the start, nothing to press: the engine draws a camera only for a player who has one of
+# its screens in sight (the gamemode draws its own screens to targets of its own, never the engine's camera picture).
+CCTV_NAME = "lc_bunker_cctv"
+CCTV_PROP = (896, 22, 216)          # (the bunker's own frame: on its front block's east face, 22 north of its front; over the door's floor)
+CCTV_EYE = (918, -4, 214, 16, 220)  # (where it looks from, its pitch down and its yaw: down the path from the door)
+CCTV_FOV = 60
+
+
+def cctv(f, F, lr):
+    v = f.vmf
+    bx, by = f.ox + f.B0[0], f.oy + f.B0[1]
+    u, w, z = CCTV_PROP
+    v.point("prop_static", (bx + u, by + w, f.zp + z), {"model": "models/props_silo/camera.mdl", "angles": "0 270 0", "solid": "6", "skin": "0",
+                                                        "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "screenspacefade": "0"},
+            f.vis("bunker's camera"))
+    eu, ew, ez, pitch, yaw = CCTV_EYE
+    ex, ey, ezz = bx + eu, by + ew, f.zp + ez
+    cam = {"classname": "point_camera", "origin": [ey - LR_AT[1], -(ex - LR_AT[0]), ezz - LR_AT[2]], "ours": True,     # (in the launch piece's frame: q 1)
+           "keys": {"targetname": "cctv", "angles": "%d %d 0" % (pitch, (yaw - 90 * LR_TURN) % 360), "FOV": str(CCTV_FOV), "UseScreenAspectRatio": "0",
+                    "fogEnable": "0", "fogColor": "0 0 0", "fogStart": "2048", "fogEnd": "4096", "fogMaxDensity": "1", "spawnflags": "0"}}
+
+    def keep(e):
+        return e.get("ours") or e["keys"].get("targetname") in ("monitor.controlroom2", "monitor.controlroom3")
+
+    def edit(e):
+        if e["classname"] == "func_monitor":
+            e["keys"].update({"target": "cctv", "StartDisabled": "0", "spawnflags": "2", "disableshadows": "1"})
+    F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", f.vis("launch room's screens"), f.vis("bunker's camera"), keep=keep, edit=edit, extra=[cam],
+                  valve_anchor=lr["anchor"])
+    for i in range(len(v.ents)):
+        if "lc_launch_cctv" in v.ents[i]:
+            v.ents[i] = v.ents[i].replace("lc_launch_cctv", CCTV_NAME)
+    f.notes.append("the bunker's camera (%s): Episode Two's security camera on the bunker's front at (%d %d %d), looking down the path; shown on the "
+                   "launch room's two big screens" % (CCTV_NAME, ex, ey, ezz))
 
 
 def box_planes(b):

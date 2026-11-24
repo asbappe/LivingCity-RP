@@ -29177,6 +29177,24 @@
 "static": false,
 "v": 2
 },
+"models/props_silo/camera.mdl": {
+"bbox": [
+-13.2,
+-0.3,
+-14.6,
+19.8,
+40.0,
+8.8
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_silo/chimneycluster01.mdl": {
 "bbox": [
 -61.2,
