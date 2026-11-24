@@ -141,16 +141,14 @@ where on prison_bedframe001b a mattress lies (the mattresses are loose: they fal
 
 6. The vortigaunt culvert: a low side drain in the left wall with the city's pipe along its wall under the roof
 (capped where it starts), turning twice (nobody in the canal can see or shoot into its end); a green glow leaks round
-its first turn to draw people in; a hanging of thin cloth strips on a cord half across its last turn (people brush
-through it); and a dead-end den: damp brick walls, broken through into earth and rock in its back corner; a ring of
-stones round a fire with a pot hung on a tripod, steam rising from it; three old mattresses for mats; shelves on its
+its first turn to draw people in; and a dead-end den: damp brick walls, broken through into earth and rock in its back corner; a ring of
+stones round a fire with a pot in it, steam rising from it; three old mattresses for mats; shelves on its
 wall with jars and a pot; bones and an antlion's shell by the rocks, firewood, a few candles; a seep of water in one
 corner glowing faintly green (the vortessence pool: small green glows over it, a green beam on the wall behind).
 Named for the game: lc_vort_fire, lc_vort_seat_1 to _3 (the mats, facing the fire), lc_vort_npc (where a
 vortigaunt the game makes would stand, facing the fire).
-Left as brushes: the culvert and the den and their linings, the hearth's slab, the tripod's three sticks and its
-rod, the candles (no model of one), and the hanging of strips (Half-Life 2 has no cloth: a func_illusionary of
-carpet, nobody is stopped by it).
+Left as brushes: the culvert and the den and their linings, the hearth's slab, the candles (no model of one: a small
+block each).
 Unchecked: env_fire, env_steam rising, ambient/fire/fire_small_loop2.wav.
 
 ### `relay`
@@ -263,7 +261,7 @@ aimed down and in), func_dustmotes in daylight.
 
 ### `underpass`
 
-13. The barnacle underpass: 1024 of canal under a wide road, unlit. Three piers stand down its middle, chamfered
+13. The barnacle underpass: 1024 of canal under a wide road bridge (a deck on piers under the open sky, a parapet along each edge), dark under it. Three piers stand down its middle, chamfered
 (as City 18's columns are) under wider caps, and a concrete girder crosses the canal on each, the road's deck resting
 on them; the road's drains come down the piers in gutter pipes, puddles under them. Six barnacles hang from the deck
 between them, and under each Half-Life 2's tell: bones and a stain on the floor, two of the dead lying where they
@@ -274,7 +272,7 @@ car, cables hanging, five of the dead in all, one beside a lantern (the city's o
 burns. Graffiti on the piers, a danger sign by the hole.
 Named for the game: lc_underpass_body_1 to _5 (where each body lies: things to search), lc_underpass_dust (the dust
 off the broken edge: SpawnDust; a logic_timer, lc_underpass_dust_timer, works it).
-Left as brushes: the road over it, the piers, their caps and the girders, the fallen slab.
+Left as brushes: the road's deck and parapets, the barred gateway's frame, the piers, their caps and the girders, the fallen slab.
 Unchecked: npc_barnacle (and whether the game minds NPCs it did not make), models/humans/corpse1.mdl and
 charple01, charple03, ambient/atmosphere/tunnel1.wav, env_dustpuff, the cables (move_rope); the rebar is laid on its
 side (pitch 90), centred on its origin; the sign and its pole are loose, laid on their sides, and settle.
