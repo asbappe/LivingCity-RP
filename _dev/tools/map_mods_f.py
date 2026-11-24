@@ -121,8 +121,10 @@ def church(m, cz, ceil, tunnel_u):
     end, the altar behind it under a three-bar cross with its lowest bar slanted, benches along the walls and no pews,
     hanging oil lamps and candles, light through the boarded windows. The front doors under the tower are boarded and
     never open; a side door (the city's own, that opens) lets out into the graveyard: gravestones scattered and turned,
-    never in rows (Valve's), two dead trees, a stone wall round it. The tower stands at the west end through the roof,
-    a ladder inside it up to the belfry's floor: a lookout. The way in is from the canal: the crypt's old stair at
+    never in rows (Valve's), two dead trees, a stone wall round it. The tower stands at the west end through the roof
+    over the porch (its ladder up to the belfry went: it climbed into Valve's roof and the belfry's own floor and pent
+    roof, a pocket nobody reaches, as map_hidden_faces.py's flood found on 23 November; a lookout up there wants Valve's
+    roof cut round the tower first). The way in is from the canal: the crypt's old stair at
     `tunnel_u` runs on as a tunnel under the yard into the church's basement (the Resistance's stores: crates, bedding,
     a radio; no cells, the owner said), and a stair climbs from the basement into the nave.
     Named for the game: lc_church_altar (an info_target before the iconostasis), lc_church_grigori (where Father Grigori
@@ -198,18 +200,15 @@ def church(m, cz, ceil, tunnel_u):
                 continue
             m.static("models/props_debris/wood_board04a.mdl", (a + c) // 2, vv, yaw, wz0 + 40, roll=80)
             m.static("models/props_debris/wood_board04a.mdl", (a + c) // 2, vv, yaw, wz0 + 104, roll=100)
-    # --- the tower: walls up through the roof to Valve's belfry; inside, the porch and a ladder up ---
+    # --- the tower: walls up through the roof to Valve's belfry; inside, the porch ---
     m.det([(tu2 - t, tv1, NF + 160, tu2, tv2, TT)], PLASTER_OUT)                                                 # its east wall, over the arch into the nave
     m.det([(tu1, tv1, WT, tu2 - t, tv1 + t, TT), (tu1, tv2 - t, WT, tu2 - t, tv2, TT), (tu1, tv1 + t, WT, tu1 + t, tv2 - t, TT)], PLASTER_OUT)
     m.det([(tu1 + t, tv1, NF, tu2 - t, tv1 + t, WT), (tu1 + t, tv2 - t, NF, tu2 - t, tv2, WT)], PLASTER_IN)     # the porch's side walls
     m.det([(tu1 - 4, tv1 - 4, TT - 24, tu2 + 4, tv2 + 4, TT - 8)], "plaster/plasterwall029d")
-    m.det([(tu1 + t, tv1 + t, TT - 16, tu2 - t - 48, tv2 - t, TT)], NAVE_FLOOR)                                  # the belfry's floor, the ladder's hole beside it
+    m.det([(tu1 + t, tv1 + t, TT - 16, tu2 - t - 48, tv2 - t, TT)], NAVE_FLOOR)                                  # the belfry's floor (under Valve's)
     place(m, "valve_raven_belfry_a", (tu1 + tu2) // 2, mid, TT, 0)
     place(m, "valve_raven_roof_a", (u1 + u2) // 2, mid, WT, 0)
-    m.ladder(tu2 - t - 16, mid, NF, TT - 8, 180)
     m.lane((tu1 + tu2) // 2, mid, NF)
-    m.lane((tu1 + tu2) // 2 - 24, mid, TT)
-    m.view(tu1 + 60, mid, TT, 0, 10, "from the belfry")
     # --- inside the nave: the iconostasis, the altar and the cross, benches, lamps ---
     sc = 720                                                                                                    # the screen's face
     royal = (mid - 40, mid + 40)

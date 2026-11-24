@@ -31,17 +31,16 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 23 November (later): **stimulant** now holds off exhaustion and grogginess (not only lights out). **The
-  Administrator's stand-ins** (address, studio, collapse, questioning) are `citizentype` 4, else ERROR. **Her address:**
-  F1 > What now? > Show me the way marks it; out cold, carried in the black; no crowding warnings in the crowd.
-  **The station screen** is Valve's six layers of dev/dev_combinemonitor_3 (lc_screen.lua); **vending cans** roll out.
-- 23 November (this chat): **Valve set pieces.** The autogun built out (map_cannon_test.py); map_setpieces.py ranks set
-  pieces in all 105 shipped maps (docs/dev/valve-setpieces.md); 25 more lifted at the owner's yes (prefabs.md, "the set
-  pieces of 23 November"); the **gallery** map_valve_gallery.py holds all 27 with buttons. Nothing compiled yet.
-- 22 November: Standup hangs everyone from oak_tree01 (`OakBranch`; rope spot guessed, owner OK'd, in the snapshot).
-- 22 and 23 November: the canal ring round City 18 (map_layouts/ring.txt; test map map_ring_walk.py, not compiled yet).
+- 23 November (lip sync): **mouths move with the recordings.** `_dev/tools/lipsync_bake.py FOLDER` (owner's PC, needs
+  ffmpeg) writes Faceposer's phoneme track (VDAT) into every face's recording, making .mp3s into 22 kHz .wavs beside them;
+  the game then lip syncs them like HL2's own. Until then the server works the jaw from the file's loudness
+  (sv_livingcity_lipsync.lua). A .wav beats an .mp3 of the same name (`LC.PreferWav`). The client jaw is gone.
+  New lines: `--update-lines`, `--update-dict CMUDICT` (pip cmudict). Not seen on the real server yet.
+- 23 November (earlier): stimulant holds off exhaustion; the Administrator's stand-ins are `citizentype` 4; the station
+  screen (lc_screen.lua); vending cans roll out. Valve set pieces: 27 in the gallery (map_valve_gallery.py), not compiled.
+- 22 and 23 November: Standup hangs everyone from oak_tree01. The canal ring (map_ring_walk.py): Combine wall and ruins a
+  Propper++ kit the owner compiles (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces (TODO).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
-  Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles (TODO.md).
-- Map chat: 23 Nov, for brush sides: the silo cut to its top floor over a black pit (rocket's top kept), no lift, office
-  or way out; 1-length door surrounds, no slats; map_hidden_faces.py (nodraw, --brushes). Bunker VMF 16,786 to 6,877
+  Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
+- Map chat: the silo cut to its top floor over a black pit; map_hidden_faces.py (nodraw, --brushes). Bunker VMF 6,877
   sides. The owner edits it in Hammer: apply generator changes to THEIR latest file (diff two builds), then trim.

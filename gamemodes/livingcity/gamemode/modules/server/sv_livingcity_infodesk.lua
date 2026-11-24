@@ -82,7 +82,7 @@ local AUDIO = { wav = true, mp3 = true, ogg = true }
 local clips
 local function Scan()
     clips = {}
-    for _, n in ipairs(file.Find("sound/" .. LC.InfoDeskVoiceRoot .. "*", "GAME") or {}) do
+    for _, n in ipairs(LC.PreferWav(file.Find("sound/" .. LC.InfoDeskVoiceRoot .. "*", "GAME"))) do
         local base, ext = string.match(string.lower(n), "^(.-)%d*%.(%w+)$")
         if base and AUDIO[ext] then
             clips[base] = clips[base] or {}

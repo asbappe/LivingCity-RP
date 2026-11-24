@@ -314,7 +314,7 @@ end)
 
 local function Say(ply, id)
     local clip
-    local list = file.Find("sound/" .. LC.ColonelVoiceRoot .. id .. "*", "GAME") or {}
+    local list = LC.PreferWav(file.Find("sound/" .. LC.ColonelVoiceRoot .. id .. "*", "GAME"))
     for _, n in ipairs(list) do
         local ext = string.lower(string.match(n, "%.(%w+)$") or "")
         if ext == "wav" or ext == "mp3" or ext == "ogg" then clip = LC.ColonelVoiceRoot .. n break end

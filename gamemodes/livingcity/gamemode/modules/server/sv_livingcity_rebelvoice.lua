@@ -37,7 +37,7 @@ LC.ResistanceLines = {
 local clips -- [id_gender] = { paths }
 function LC.ResistanceRescan()
     clips = {}
-    for _, n in ipairs(file.Find("sound/" .. LC.ResistanceVoiceRoot .. "*", "GAME") or {}) do
+    for _, n in ipairs(LC.PreferWav(file.Find("sound/" .. LC.ResistanceVoiceRoot .. "*", "GAME"))) do
         local base = string.match(string.lower(n), "^(.-)%d*%.[%a%d]+$")
         if base and base ~= "" then
             clips[base] = clips[base] or {}
