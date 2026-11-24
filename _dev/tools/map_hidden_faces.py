@@ -87,7 +87,7 @@ def main():
     ap.add_argument("--cell", type=int, default=8)
     ap.add_argument("--list", action="store_true", help="print every face made nodraw")
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
-    ap.add_argument("--brushes", action="store_true", help="also delete the brushes nobody can see that do not seal the map")
+    ap.add_argument("--brushes", action="store_true", help="also delete the func_detail brushes nobody can see (world brushes always stay: they seal and part areas)")
     ap.add_argument("--route", nargs=3, type=float, metavar=("X", "Y", "Z"), help="print the way the seen air takes from the player start to this point")
     ap.add_argument("--holes", action="store_true", help="print every hole a player can see: a nodraw face, or a sky face under a roof, that seen air meets")
     a = ap.parse_args()
@@ -587,8 +587,11 @@ def main():
             sl = (slice(i0[0], i1[0]), slice(i0[1], i1[1]), slice(i0[2], i1[2]))
             if reached[sl].any():
                 continue      # (near air someone can see into)
-            if owner == "world" and void[sl].any():
-                continue      # (part of the seal against the void)
+            if owner == "world":
+                continue      # (a world brush is kept: it seals the void, and it parts areas where a func_detail wall in
+                              #  front of it does not; the owner's compile, 24 November, "AREAPORTAL LEAKED" at the
+                              #  bunker's door once solid blocks behind the entrance's walls were deleted. Its unseen
+                              #  faces are still made nodraw)
             gone.append((sid, owner, ns))
         print("%d of %d brushes nobody can see and the seal does not need (%d world, %d detail): %d brush sides" % (
             len(gone), len(every), sum(1 for g in gone if g[1] == "world"), sum(1 for g in gone if g[1] == "detail"), sum(g[2] for g in gone)))
