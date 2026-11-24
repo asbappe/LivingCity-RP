@@ -18,6 +18,12 @@ What it counts, as vbsp will (read off the VMF, so a floor under what the compil
                and the world's faces again wherever the BSP divides the world. Detail and the world share one limit.
   displacements, props (prop_static apart), entities (every entity block but the world), overlays, brush models
                (every brush entity but func_detail is a model of its own, func_areaportal too)
+  vertices     an estimate of vbsp's unique vertices (MAX_MAP_VERTS, 65,536: the owner's compile of the ring's test
+               map, 24 November, stopped on "Too many unique verts, 70769/65536" with its faces well under their limit):
+               the corners of every drawn face and of every displacement's base, plus VERT_CUT_SHARE of the corners
+               vbsp adds where it cuts a face every 31 luxels for its lightmap (a face's corners are worked out from
+               its brush's planes, so it needs no vertices_plus). Calibrated on that compile: 50,570 corners and
+               34,045 cut corners against vbsp's 70,769
 
 The limits are Garry's Mod's (its own vbsp, as its changelists raised them: 19 February 2019, 9 June 2021, March 2024):
 faces 65,536 (MAX_MAP_FACES, never raised: world, detail and brush entities share it; the one the ring hit), brush
@@ -40,6 +46,7 @@ LIMITS = {      # Garry's Mod's vbsp and engine (its changelists 2798, 3905 and 
     "overlays": 8192,
     "models": 1024,
     "planes": 65536,
+    "verts": 65536,
 }
 OTHER_SOURCE = {"brushes": 8192, "sides": 65536, "displacements": 2048, "entities": 8192, "overlays": 512}
 
@@ -76,6 +83,69 @@ def axial(n):
         if abs(n[k]) > 0.9999:
             return k * 2 + (0 if n[k] > 0 else 1)
     return None
+
+
+VERT_CUT_SHARE = 0.6     # (of the cut corners counted, vbsp's own count had about 59%: cuts that line up are shared)
+VERT_NEAR = 58000        # (an estimate: warn this far below the limit)
+
+
+def plane3(text):
+    """A side's plane as Hammer writes it (three points) -> (unit normal pointing out of the brush, distance)."""
+    p = [float(v) for v in NUM.findall(text)]
+    if len(p) < 9:
+        return None
+    a, b, c = p[0:3], p[3:6], p[6:9]
+    u = (c[0] - a[0], c[1] - a[1], c[2] - a[2])
+    v = (b[0] - a[0], b[1] - a[1], b[2] - a[2])
+    n = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+    ln = math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])
+    if ln < 1e-9:
+        return None
+    n = (n[0] / ln, n[1] / ln, n[2] / ln)
+    return n, n[0] * a[0] + n[1] * a[1] + n[2] * a[2]
+
+
+def face_poly(planes, k):
+    """The corners of side k of a brush (planes: plane3 of each side): a big square on its plane, cut by the others."""
+    n, d = planes[k]
+    ax = max(range(3), key=lambda i: abs(n[i]))
+    up = (0.0, 0.0, 1.0) if ax != 2 else (1.0, 0.0, 0.0)
+    r = (up[1] * n[2] - up[2] * n[1], up[2] * n[0] - up[0] * n[2], up[0] * n[1] - up[1] * n[0])
+    ln = math.sqrt(sum(x * x for x in r))
+    r = tuple(x / ln for x in r)
+    w = (n[1] * r[2] - n[2] * r[1], n[2] * r[0] - n[0] * r[2], n[0] * r[1] - n[1] * r[0])
+    big = 131072.0
+    poly = [tuple(n[i] * d + big * (a * r[i] + b * w[i]) for i in range(3)) for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+    for j, o in enumerate(planes):
+        if j == k or o is None:
+            continue
+        on, od = o
+        out = []
+        for q in range(len(poly)):
+            p1, p2 = poly[q], poly[(q + 1) % len(poly)]
+            d1 = on[0] * p1[0] + on[1] * p1[1] + on[2] * p1[2] - od
+            d2 = on[0] * p2[0] + on[1] * p2[1] + on[2] * p2[2] - od
+            if d1 <= 0.01:
+                out.append(p1)
+            if (d1 < -0.01 and d2 > 0.01) or (d1 > 0.01 and d2 < -0.01):
+                t = d1 / (d1 - d2)
+                out.append(tuple(p1[i] + t * (p2[i] - p1[i]) for i in range(3)))
+        poly = out
+        if len(poly) < 3:
+            return []
+    return poly
+
+
+def lightmap_cut_corners(poly, uaxis, vaxis, scale, luxels=31):
+    """The corners vbsp adds cutting this face into pieces of at most `luxels` a side: 2 for each cut each way, and one
+    where two cuts cross."""
+    cuts = []
+    for a in (uaxis, vaxis):
+        v = [float(x) for x in NUM.findall(a)[:3]]
+        ln = math.sqrt(sum(x * x for x in v)) or 1.0
+        vals = [sum(v[i] * p[i] for i in range(3)) / ln for p in poly]
+        cuts.append(max(0, math.ceil((max(vals) - min(vals)) / (luxels * scale) - 1e-6) - 1))
+    return 2 * cuts[0] + 2 * cuts[1] + cuts[0] * cuts[1]
 
 
 def parse(path):
@@ -181,14 +251,25 @@ def lightmap_pieces(corners, uaxis, vaxis, scale, luxels=31):
 def count(path, deep=False, by=None, luxels=31):
     solids, ents, visnames = parse(path)
     c = {"file": path, "brushes": 0, "disp_brushes": 0, "sides": 0, "world": 0, "sky": 0, "detail": 0, "detail_sky": 0, "brush_ents": 0,
-         "displacements": 0, "props": 0, "static_props": 0, "entities": 0, "overlays": 0, "models": 0, "planes": 0, "lightmap_cuts": 0}
+         "displacements": 0, "props": 0, "static_props": 0, "entities": 0, "overlays": 0, "models": 0, "planes": 0, "lightmap_cuts": 0, "vert_cuts": 0}
     planes = set()
     groups = {}
+
+    vset = set()
 
     def take(sol, owner, cls):
         sides = sol[2]
         c["brushes"] += 1
         disp = any(s[2] for s in sides)
+        pls = [plane3(s[1]) for s in sides]
+        for k, sd in enumerate(sides):
+            if pls[k] is None or (sd[2] if disp else not drawn(sd[0])):
+                continue
+            poly = face_poly(pls, k)
+            for p in poly:
+                vset.add((round(p[0]), round(p[1]), round(p[2])))
+            if poly and not disp and not is_sky(sd[0]):
+                c["vert_cuts"] += lightmap_cut_corners(poly, sd[3], sd[4], sd[5])
         c["disp_brushes"] += disp
         angled, drawn_here = 0, 0
         for mat, pl, dsp, ua, va, lms, corners in sides:
@@ -240,6 +321,8 @@ def count(path, deep=False, by=None, luxels=31):
         for sol in sols:
             take(sol, "detail" if cls == "func_detail" else "ent", cls)
     c["planes"] = 2 * len(planes)
+    c["vert_corners"] = len(vset)
+    c["verts"] = len(vset) + int(VERT_CUT_SHARE * c["vert_cuts"])
     c["faces"] = c["world"] + c["sky"] + c["detail"] + c["detail_sky"] + c["brush_ents"]
     c["groups"] = groups
     return c
@@ -266,9 +349,10 @@ def line(c):
     """One line, for a build's output."""
     deep = " (+%s lightmap cuts)" % format(c["lightmap_cuts"], ",") if c.get("lightmap_cuts") else ""
     return ("budget: %s brushes, %s sides, faces %s world (+%s sky) + %s detail + %s brush entities = %s of 65,536%s%s, "
-            "%s displacements, %s props, %s entities" % (
+            "vertices about %s of 65,536%s, %s displacements, %s props, %s entities" % (
                 format(c["brushes"], ","), format(c["sides"], ","), format(c["world"], ","), format(c["sky"] + c["detail_sky"], ","),
                 format(c["detail"], ","), format(c["brush_ents"], ","), format(c["faces"], ","), deep, over(c, "faces"),
+                format(c["verts"], ","), over(c, "verts") or (" NEAR" if c["verts"] > VERT_NEAR else ""),
                 format(c["displacements"], ","), format(c["props"], ","), format(c["entities"], ",")))
 
 
@@ -305,6 +389,8 @@ def report(c):
     row("  brush entities", c["brush_ents"])
     if c.get("lightmap_cuts"):
         row("  + lightmap cuts (about)", c["lightmap_cuts"], note="  -> %s" % format(c["faces"] + c["lightmap_cuts"], ","))
+    row("vertices (estimate)", c["verts"], "verts", "  (%s corners + %d%% of %s lightmap cut corners)" % (
+        format(c["vert_corners"], ","), round(VERT_CUT_SHARE * 100), format(c["vert_cuts"], ",")))
     row("displacements", c["displacements"], "displacements")
     row("brush models", c["models"], "models")
     row("entities", c["entities"], "entities", "  (%s props, %s of them prop_static)" % (format(c["props"], ","), format(c["static_props"], ",")))
