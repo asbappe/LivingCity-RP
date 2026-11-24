@@ -43,6 +43,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces with the ring (TODO). Valve set pieces: 27 in the gallery.
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
-- Map chat: silo cut to its top floor + office, bedroom, concrete tunnel to the gate (lift on reserve: lc_silo_lift);
-  map_hidden_faces.py (nodraw, --brushes). The owner edits the bunker in Hammer: apply generator changes to THEIR
-  latest file (diff two builds), then trim. Their bunker VMF: 7,984 brush sides (24 Nov).
+- Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
+  button launches (lc_rocket_launch), CCTV lc_bunker_cctv (map_launch.py). Apply generator changes to the OWNER'S
+  latest VMF (diff two builds), then map_hidden_faces --brushes. Their bunker VMF: 10,453 brush sides (24 Nov).
