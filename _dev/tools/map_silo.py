@@ -2,7 +2,9 @@
 """
 Living City: White Forest's silo made playable (the owner, 21 November: "there are whole floors/areas that are just
 nodraw ... I'd like the whole thing to be usable with a Resistance Leader office in here somewhere"), and the leader's
-way out (the secret door in his bedroom, the cave tunnel and the hidden exit on the forest's rim).
+way out (the secret door in his bedroom, the cave tunnel and the hidden exit on the forest's rim). Since 24 November
+only the top floor is placed, with the office and bedroom lifted onto it (OFFICE_BOX) and a new way out: a concrete
+tunnel to a hidden door in the gate's wing wall (section 6, WAY_*).
 
 BunkerForest.silo (map_forest.py) places the lifted piece valve_ep2_silo and calls these. Everything here is written in
 the piece's own frame (Valve's, the anchor at the shaft's axis on the pit floor) and turned into the map's by W(): the
@@ -125,6 +127,123 @@ def lever_in_sides(sides):
             s["corners"] = [lever_in(p) for p in s["corners"]]
         out.append(s)
     return out
+
+
+# The leader's office and bedroom on the top floor (the owner, 24 November: "can you also lift the resistance leader's
+# office that we had on the bottom floor and place it on the top floor of our new single-story-silo map? it can go in on
+# the other side of the silo on the other side of the rocket"; and "please include lifting the picture that opens the
+# secret door inside the resistance leader's bedroom, and the lever on the inside of his office that locked his door, and
+# please put a mattress on his bed frame"): Valve's lab room behind the lab door at the bottom level (OFFICE_BOX: its
+# walls, floor, ceiling, the lab door's frame and pipes, the machine block, the beams under its ceiling) lifted whole,
+# turned a quarter clockwise and raised to the gantry's floor (office_in), so that its door looks at the rocket from the
+# far side of the shaft from the corridor (the piece's +x, the map's north). Brushes reaching out of the box are cut to
+# it (OFFICE_CUT). The shaft's wall is opened in front of the door (Silo.vestibule) and the hull carried out round the
+# office and its bedroom (OFFICE_HULL, BunkerForest.silo).
+OFFICE_BOX = (0, 256, 288, 544, 544, 576)
+OFFICE_TURN, OFFICE_TO = 3, (288, 138, 1088)          # (x, y) -> (y + 288, 138 - x): the door's middle (x 138) on the +x axis
+OFFICE_CUT = (20, 21, 22, 23, 30, 41, 170, 192, 193, 194)
+OFFICE_PICK = (-10, 250, 286, 550, 550, 600)          # Valve's things that go with it (lamps, pipes, the bench, the door), by where they stand
+OFFICE_HULL = 832                                     # the hull's north wall (the piece's x of its inner face; it was 544)
+# where the rooms are once lifted (the piece's frame): the office (with the alcove where Valve's tank stood), the bedroom
+# (beside it through the office's west doorway, as it was: walled by the office's west wall, a wall of ours by the
+# shaft, and the hull's north and west walls), and the way in from the gantry
+OFFICE_ROOM = (576, -406, 1408, 832, 106, 1664)
+BEDROOM = (576, 138, 1408, OFFICE_HULL, 544, 1600)
+VESTIBULE = (240, -170, 1408, 544, 170, 1568)
+# the doorway through the shaft's wall in front of the lab door: the two low segments either side of +x (Valve's world
+# brushes 257 and 260, 0 to 15 degrees each way, 1408 to 1440) taken out, and the sloped wall over them (345, 346) kept
+# only above the doorway's head (DOORWAY_TOP, the lab door's own head); their neighbours' faces are the doorway's sides
+DOORWAY_SEGS, DOORWAY_CONE, DOORWAY_TOP = (257, 260), (345, 346), 1536
+
+
+def office_in(p):
+    """A point of the bottom level's office where it is on the top floor."""
+    import map_prefab as PF
+    x, y, z = PF.rot(list(p), OFFICE_TURN)
+    return [x + OFFICE_TO[0], y + OFFICE_TO[1], z + OFFICE_TO[2]]
+
+
+def office_in_sides(sides):
+    """A brush's sides moved as office_in moves points (their textures with them)."""
+    import map_prefab as PF
+    out = []
+    for s in sides:
+        s = dict(s, plane=[office_in(p) for p in s["plane"]], verts=[office_in(p) for p in s.get("verts", [])],
+                 uaxis=PF.turn_axis(s["uaxis"], OFFICE_TURN, OFFICE_TO), vaxis=PF.turn_axis(s["vaxis"], OFFICE_TURN, OFFICE_TO))
+        if s.get("corners"):
+            s["corners"] = [office_in(p) for p in s["corners"]]
+        out.append(s)
+    return out
+
+
+def office_yaw(yaw):
+    """A yaw in the bottom level's office as it is on the top floor."""
+    return (yaw - 90 * (4 - OFFICE_TURN)) % 360
+
+
+def turned_axis_flags(flags, turns, ax=64, ay=128):
+    """A rotating mover's axis flags (X axis, Y axis) after it is turned `turns` quarter turns, as pf_entities turns them."""
+    for _ in range(turns % 4):
+        if flags & ax:
+            flags = (flags & ~ax) | ay
+        elif flags & ay:
+            flags = ((flags & ~ay) | ax) ^ 2
+    return flags
+
+
+CAP_AXES = {0: ("[0 1 0 0] 0.25", "[0 0 -1 0] 0.25"), 1: ("[1 0 0 0] 0.25", "[0 0 -1 0] 0.25"), 2: ("[1 0 0 0] 0.25", "[0 -1 0 0] 0.25")}
+
+
+def clip_sides(sides, axis, value, keep_low, cap="TOOLS/TOOLSNODRAW"):
+    """A lifted brush (its sides, each with its corners) cut by the plane where coordinate `axis` is `value`, keeping the
+    low side (keep_low) or the high: each side cut to it and a new side laid on the cut (`cap`, along the world's axes).
+    The brush as it was if it lies wholly on the kept side; None if wholly on the other."""
+    sg = 1 if keep_low else -1
+    allp = [p for s in sides for p in s.get("corners") or []]
+    if all(sg * (p[axis] - value) <= 0.001 for p in allp):
+        return sides
+    if all(sg * (p[axis] - value) >= -0.001 for p in allp):
+        return None
+    out, on = [], []
+    for s in sides:
+        P = s.get("corners") or []
+        new = []
+        for k in range(len(P)):
+            p, q = P[k], P[(k + 1) % len(P)]
+            fp, fq = sg * (p[axis] - value), sg * (q[axis] - value)
+            if fp <= 0.001:
+                new.append(list(p))
+            if (fp < -0.001 and fq > 0.001) or (fp > 0.001 and fq < -0.001):
+                t = fp / (fp - fq)
+                r = [p[i] + (q[i] - p[i]) * t for i in range(3)]
+                r[axis] = float(value)
+                new.append(r)
+        clean = []
+        for p in new:
+            if not clean or max(abs(p[i] - clean[-1][i]) for i in range(3)) > 0.01:
+                clean.append(p)
+        if len(clean) > 1 and max(abs(clean[0][i] - clean[-1][i]) for i in range(3)) <= 0.01:
+            clean.pop()
+        if len(clean) >= 3:
+            out.append(dict(s, corners=clean, verts=[]))
+            on += [p for p in clean if abs(p[axis] - value) < 0.01]
+    uniq = []
+    for p in on:
+        if not any(max(abs(p[i] - u[i]) for i in range(3)) <= 0.01 for u in uniq):
+            uniq.append(p)
+    a, b = [i for i in range(3) if i != axis]
+    cx, cy = sum(p[a] for p in uniq) / len(uniq), sum(p[b] for p in uniq) / len(uniq)
+    uniq.sort(key=lambda p: math.atan2(p[b] - cy, p[a] - cx))
+    nn = [0.0, 0.0, 0.0]      # (Newell's normal, by the right hand; Hammer's three points run the other way round seen from outside)
+    for k in range(len(uniq)):
+        nn = [nn[i] + c for i, c in enumerate(_cross(uniq[k], uniq[(k + 1) % len(uniq)]))]
+    if nn[axis] * sg > 0:
+        uniq.reverse()
+    j = max(range(1, len(uniq) - 1), key=lambda j: sum(c * c for c in _cross([uniq[j][i] - uniq[0][i] for i in range(3)], [uniq[-1][i] - uniq[0][i] for i in range(3)])))
+    u, v = CAP_AXES[axis]
+    out.append({"plane": [list(uniq[0]), list(uniq[j]), list(uniq[-1])], "corners": uniq, "verts": [], "material": cap, "uaxis": u, "vaxis": v,
+                "lightmapscale": "16"})
+    return out if len(out) >= 4 else None
 
 
 def clip_poly(pts, a, b, c):
@@ -281,6 +400,10 @@ class Silo:
         not solid)."""
         m = "models/%s.mdl" % model
         keys = {"model": m, "angles": "%d %d 0" % (pitch, wyaw(yaw)), "solid": "6", "skin": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
+        import map_build
+        fade = map_build.prop_fade(m)
+        if fade:        # (a small thing fades far off, as Valve's do)
+            keys.update({"fademindist": str(fade[0]), "fademaxdist": str(fade[1])})
         if kind in ("s", "f"):
             keys.update({"disableshadows": "1" if kind == "f" else "0", "screenspacefade": "0"})
             if kind == "f":
@@ -446,96 +569,197 @@ class Silo:
         v.detail([wbox(self.d, (lx1, ly1, 1404, lx2, ly2, 1408))], MAT["nodraw"], top="METAL/METALFLOOR010A", vis=self.vis)
         self.f.notes.append("the silo cut to its top floor: level B's gap in the pit's wall shut (%d segments), the lift's mouth and the ladder's hatch floored" % sum(len(t) for _, t in self.HALL_FILLS))
 
-    # -- 4. the leader's office and bedroom -------------------------------------------------------------------------
+    # -- 4. the leader's office and bedroom (on the top floor since 24 November: OFFICE_BOX) --------------------------
+    def oprop(self, model, x, y, z, yaw, kind="s", pitch=0, extra=None):
+        """A prop placed by where it stood in the bottom level's office (office_in)."""
+        p = office_in((x, y, z))
+        self.prop(model, p[0], p[1], p[2], office_yaw(yaw), kind, pitch, extra)
+
+    @staticmethod
+    def obox(b):
+        """A box of the bottom level's office as it is on the top floor (office_in)."""
+        p, q = office_in(b[:3]), office_in(b[3:])
+        return tuple(min(p[k], q[k]) for k in range(3)) + tuple(max(p[k], q[k]) for k in range(3))
+
+    @staticmethod
+    def finish_seen(sides, rooms):
+        """A lifted brush's nodraw faces that look into one of `rooms` (the point 6 in front of a face's middle in one of
+        them) get the silo's finish (FINISH_MAT): what Valve left bare where a room of ours now stands. How many."""
+        pts = [p for s in sides for p in (s.get("corners") or s["plane"])]
+        c = [sum(p[k] for p in pts) / float(len(pts)) for k in range(3)]
+        n = 0
+        for sd in sides:
+            P = sd.get("corners")
+            if sd["material"].upper() != "TOOLS/TOOLSNODRAW" or not P or len(P) < 3:
+                continue
+            nn, _ = side_plane(sd["plane"])
+            fc = [sum(p[k] for p in P) / float(len(P)) for k in range(3)]
+            if sum(nn[k] * (fc[k] - c[k]) for k in range(3)) < 0:
+                nn = [-x for x in nn]
+            q = [fc[k] + 6 * nn[k] for k in range(3)]
+            if any(all(b[k] <= q[k] <= b[k + 3] for k in range(3)) for b in rooms):
+                sd["material"] = FINISH_MAT["floor" if nn[2] > 0.7 else "ceiling" if nn[2] < -0.7 else "wall"]
+                n += 1
+        return n
+
+    def office_room(self, pf):
+        """Valve's lab room lifted onto the top floor (OFFICE_BOX, office_in): every brush of the piece within it (its walls,
+        floor and ceiling, the lab door's frame, pipes and louvred window, the machine block and the alcove where the tank
+        stood, the beams under its ceiling, the west doorway's frame), and those of OFFICE_CUT cut to it; world brushes
+        into the world, the rest one func_detail. Where Valve's room ran on into the hull, walls of ours: the alcove's far
+        side, and a lid over the beams' recess. Returns (brushes, sides) placed."""
+        from map_forest import pf_solid
+        v, d, nd = self.v, self.d, MAT["nodraw"]
+        rooms = (OFFICE_ROOM, BEDROOM, VESTIBULE)
+        det, n, ns = "", 0, 0
+        for i, s in enumerate(pf["solids"]):
+            if "taken shut" in s["from"] or i in LEVER_BRUSHES:
+                continue
+            pts = [c for sd in s["sides"] for c in (sd.get("corners") or sd["plane"])]
+            lo = [min(p[k] for p in pts) for k in range(3)]
+            hi = [max(p[k] for p in pts) for k in range(3)]
+            sides = s["sides"]
+            if i in OFFICE_CUT:
+                for axis in range(3):
+                    for val, low in ((OFFICE_BOX[axis], False), (OFFICE_BOX[axis + 3], True)):
+                        sides = clip_sides(sides, axis, val, low) if sides else None
+                if not sides:
+                    continue
+            elif not all(lo[k] >= OFFICE_PICK[k] and hi[k] <= OFFICE_PICK[k + 3] for k in range(3)):
+                continue
+            sides = office_in_sides(sides)
+            self.finish_seen(sides, rooms)
+            text = pf_solid(v, sides, 1, d, self.vis)[0]
+            n, ns = n + 1, ns + len(sides)
+            if s["from"] == "worldspawn":
+                v.world.append(text)
+            else:
+                det += text
+        if det:
+            v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
+        # the alcove's far side (Valve's hull was there), and the lid over the beams' recess in the ceiling (level A's floor was)
+        cw, ceil = FINISH_MAT["wall"], "CONCRETE/CONCRETECEILING_BUNKER01A"
+        v.world_box(wbox(d, (576, -438, 1376, OFFICE_HULL, -406, 1664)), nd, faces={"west": cw}, vis=self.vis)
+        v.world_box(wbox(d, (544, -438, 1664, OFFICE_HULL, 138, 1680)), nd, bottom=ceil, vis=self.vis)
+        return n + 2, ns + 12
+
+    def vestibule(self, pf):
+        """The way in from the gantry to the office's door (the owner: "on the other side of the silo on the other side of
+        the rocket"): the shaft's wall opened as Valve opened it for its own tunnel on the corridor's side. Its two low
+        segments either side of +x are left out (DOORWAY_SEGS) and the sloped wall over them kept only above the lab
+        door's head (DOORWAY_CONE, cut at DOORWAY_TOP), so the doorway's sides are Valve's own faces of the segments
+        beside it; the gantry's floor runs on out to the door, flush with it (1408), and from the sloped wall's back to
+        the door's wall a wall each side on the line of Valve's faces and a roof. Returns (brushes, sides) placed."""
+        from map_forest import pf_solid
+        v, d, nd = self.v, self.d, MAT["nodraw"]
+        wall, floor = FINISH_MAT["wall"], FINISH_MAT["floor"]
+        n, ns = 0, 0
+        for i in DOORWAY_CONE:
+            sides = clip_sides(pf["solids"][i]["sides"], 2, DOORWAY_TOP, False, cap=wall.upper())
+            v.world.append(pf_solid(v, sides, 1, d, self.vis)[0])
+            n, ns = n + 1, ns + len(sides)
+        G, top = self.GANTRY, 1568
+        shapes = [prism(d, [(256, 0), (556, 0), (556, 166), (274, 91), (247, 66)], G - 16, G, nd, top=floor),
+                  prism(d, [(256, 0), (247, -66), (274, -91), (556, -166), (556, 0)], G - 16, G, nd, top=floor),
+                  prism(d, [(278, 75), (556, 150), (552, 166), (274, 91)], G, top, nd, sides={0: wall}),
+                  prism(d, [(274, -91), (552, -166), (556, -150), (278, -75)], G, top, nd, sides={2: wall})]
+        for faces in shapes:
+            v.world.append(v.convex_text(faces, self.vis))
+            n, ns = n + 1, ns + len(faces)
+        v.world_box(wbox(d, (384, -166, DOORWAY_TOP, 556, 166, top)), nd, bottom=wall, vis=self.vis)
+        # nothing may stand in the way from the gantry to the office's door, through it, or through the bedroom's door
+        for b, label in (((256, -52, G, 540, 52, DOORWAY_TOP), "the way in to the leader's office"), ((580, -52, G, 630, 52, DOORWAY_TOP), "inside the office's door"),
+                         ((628, 60, G, 727, 104, G + 112), "the office's side of the bedroom's door"), ((628, 142, G, 727, 200, G + 112), "the bedroom's side of its door")):
+            v.keep_way_clear(wbox(d, b), label)
+        return n + 1, ns + 6
+
     def office(self):
         """The Resistance leader's office behind the lab door, dressed as the commander's office of the Resistance base
         (the same kit: security monitors, a desk and chair, shelves, servers, a board; Valve's own bench in its corner
-        stays as the lab bench). The big cooling tank Valve had along its east side is left out to make room."""
+        stays as the lab bench). The big cooling tank Valve had along its east side is left out to make room. Placed by
+        where each stood at the bottom level (oprop)."""
         z = self.FLOOR
-        self.prop("props_lab/securitybank", 287, 382, z, 180, "s")              # against the machine block, screens facing the room
-        self.prop("props_wasteland/controlroom_desk001a", 150, 370, z + 17, 90, "d")
-        self.prop("props_wasteland/controlroom_chair001a", 150, 412, z + 20, 270, "d")
-        self.prop("props_lab/servers", 250, 527, z, 270, "s")                   # against the north wall
-        self.prop("props_wasteland/kitchen_shelf002a", 68, 301, z, 90, "d")       # against the south wall, west of the door
-        self.prop("props_lab/corkboard001", 49, 492, z + 82, 0, "s")             # on the west wall over the bench
-        self.prop("props_lab/desklamp01", 128, 362, z + 44, 300, "d")
-        self.prop("props_lab/bindergreen", 172, 358, z + 34, 95, "d")
-        self.light(150, 370, z + 90, "253 230 159", 40)
-
-    BED_WALL = ((-230, 193), (-398, 334))     # the bedroom's new west wall, on the line 140 degrees round from +x
+        self.oprop("props_lab/securitybank", 287, 382, z, 180, "s")              # against the machine block, screens facing the room
+        self.oprop("props_wasteland/controlroom_desk001a", 150, 370, z + 17, 90, "d")
+        self.oprop("props_wasteland/controlroom_chair001a", 150, 412, z + 20, 270, "d")
+        self.oprop("props_lab/servers", 250, 527, z, 270, "s")                   # against the north wall
+        self.oprop("props_wasteland/kitchen_shelf002a", 60, 301, z, 90, "d")       # against the south wall, west of the door (clear of the doorway)
+        self.oprop("props_lab/corkboard001", 49, 492, z + 82, 0, "s")             # on the west wall over the bench
+        self.oprop("props_lab/desklamp01", 128, 362, z + 44, 300, "d")
+        self.oprop("props_lab/bindergreen", 172, 358, z + 34, 95, "d")
+        p = office_in((150, 370, z + 90))
+        self.light(p[0], p[1], p[2], "253 230 159", 40)
 
     def bedroom(self):
         """The leader's bedroom (the owner, 21 November: "expand the resistance leader's office via the static door prop
-        that is there: that could become a working door that opens to ... his bedroom"): the corner of the bottom
-        level's ring hall beyond the office's west doorway, walled off from the rest of the hall by a new wall from the
-        shaft's wall to the outer wall, 140 degrees round. Valve's static door in that doorway is a working one now
-        (SILO_DOOR, Use opens and shuts it). In it: a bed, a footlocker, a floor lamp, a locker and a dresser."""
-        f, v, z = self.f, self.v, self.FLOOR
-        (ax, ay), (bx, by) = self.BED_WALL
-        ln = math.hypot(bx - ax, by - ay)
-        nx, ny = (by - ay) / ln * 16, -(bx - ax) / ln * 16       # (toward the hall, away from the bedroom)
-        nx, ny = -nx, -ny
-        wall = [(ax, ay), (bx, by), (int(round(bx + nx)), int(round(by + ny))), (int(round(ax + nx)), int(round(ay + ny)))]
-        if (wall[1][0] - wall[0][0]) * (wall[2][1] - wall[0][1]) - (wall[1][1] - wall[0][1]) * (wall[2][0] - wall[0][0]) < 0:
-            wall = wall[::-1]
-        self.world(prism(self.d, wall, z - 8, 512, "CONCRETE/CONCRETEWALL010A"))
-        # the door: Valve's static door in the office's west doorway made a working one (it slides north into the wall)
+        that is there: that could become a working door that opens to ... his bedroom"), beside the office through its
+        west doorway as it was (BEDROOM): the office's west wall, a wall of ours toward the shaft, the hull's north and
+        west walls. Valve's static door in that doorway is a working one (SILO_DOOR, Use opens and shuts it). In it, as
+        before: a bed (with a mattress on its frame, the owner, 24 November), a footlocker with the radio on it, a floor
+        lamp, a locker and a dresser with the photo and the mug, a hanging tube lamp, pipes under its ceiling; Kleiner's
+        crooked picture and the secret panel are the way out's (way_out). Returns (brushes, sides) of its own."""
+        f, v, z, d, nd = self.f, self.v, self.GANTRY, self.d, MAT["nodraw"]
+        x1, y1, _, x2, y2, top = BEDROOM
+        v.world_box(wbox(d, (x1, y1, z - 16, x2, y2, z)), nd, top="CONCRETE/CONCRETEFLOOR006A", vis=self.vis)
+        v.world_box(wbox(d, (x1, y1, top, x2, y2, top + 16)), nd, bottom="CONCRETE/CONCRETECEILING_BUNKER01A", vis=self.vis)
+        v.world_box(wbox(d, (544, y1, z, x1, y2, top)), nd, faces={"north": "CONCRETE/EP2_CONCRETEWALL01B", "south": FINISH_MAT["wall"]}, vis=self.vis)
+        # the door: Valve's static door in the office's west doorway made a working one (it slides into the wall)
         name = "lc_silo_bedroom_door"
         v.brush_entity("func_door", dict(f.SILO_DOOR, **{
-            "targetname": name, "movedir": "0 %d 0" % wyaw(90), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0",
-            "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
-            "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}), [wbox(self.d, (14, 340, 324, 18, 439, 448))],
-            MAT["nodraw"], self.vis,
+            "targetname": name, "movedir": "0 %d 0" % wyaw(office_yaw(90)), "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1",
+            "loopmovesound": "0", "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
+            "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0", "vrad_brush_cast_shadows": "1"}),
+            [wbox(d, self.obox((14, 340, 324, 18, 439, 448)))], nd, self.vis,
             connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
-        v.point("prop_dynamic_override", self.P(16, 388, 324), {
-            "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(270), "parentname": name, "skin": "0", "solid": "0",
-            "lightingorigin": lit_from(v, name + "_lighting", self.P(24, 384, 332), self.vis),      # (where Valve lit its static door here from)
+        mp, lp = office_in((16, 388, 324)), office_in((24, 384, 332))
+        v.point("prop_dynamic_override", self.P(*mp), {
+            "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % wyaw(office_yaw(270)), "parentname": name, "skin": "0",
+            "solid": "0", "lightingorigin": lit_from(v, name + "_lighting", self.P(*lp), self.vis),      # (where Valve lit its static door here from)
             "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
             "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
             "ExplodeDamage": "0", "ExplodeRadius": "0"}, self.vis)
-        # the room: the bed along the outer wall, its footlocker at the foot, a floor lamp at its head; the locker and the
-        # dresser against the shaft's wall
-        tx, ty = math.cos(math.radians(37.5)), math.sin(math.radians(37.5))
-        bx0, by0 = -300, 372
-        self.prop("props_c17/furniturebed001a", bx0, by0, z + 19, 37.5, "d")
-        self.prop("props_forest/footlocker01_closed", bx0 + 62 * tx, by0 + 62 * ty, z + 12, 127.5, "s")
-        self.prop("props_lab/citizenradio", bx0 + 62 * tx, by0 + 62 * ty, z + 25, 307.5, "d")
-        self.prop("props_interiors/furniture_lamp01a", -338, 322, z + 34, 0, "d")
-        self.light(-338, 322, z + 70, "253 220 160", 55)
-        for ang, model, depth, zz, kind in ((127.5, "props_lab/lockers", 12, 0, "s"), (112.5, "props_c17/furnituredresser001a", 18, 41, "d")):
-            a = math.radians(ang)
-            self.prop(model, (322 + depth) * math.cos(a), (322 + depth) * math.sin(a), z + zz, ang, kind)
-        a = math.radians(112.5)
-        self.prop("props_lab/frame002a", 345 * math.cos(a) - 12, 345 * math.sin(a) - 4, z + 83, 112.5, "s")
-        self.prop("props_junk/garbage_coffeemug001a", 345 * math.cos(a) + 10, 345 * math.sin(a) + 6, z + 86, 40, "d")
+        # the bed along the north wall, its head by the office's wall with the floor lamp, its footlocker (the radio on it)
+        # at its foot; the locker and the dresser against the wall by the shaft
+        self.prop("props_c17/furniturebed001a", 808, 270, z + 19, 90, "d")
+        # (the mattress, Valve's, on the frame's springs; a ragdoll model, so it stands as a still model, solid as its box,
+        #  turned over as map_mods_b.mattress lays the clinic's: unturned it lies on its back)
+        self.prop("props_c17/furnituremattress001a", 808, 270, z + 19, 90, "d", extra={"solid": "2", "angles": "0 %d 180" % wyaw(90)})
+        self.prop("props_forest/footlocker01_closed", 806, 325, z + 12, 90, "s")
+        self.prop("props_lab/citizenradio", 806, 325, z + 25, 180, "d")
+        self.prop("props_interiors/furniture_lamp01a", 812, 210, z + 34, 0, "d")
+        self.light(812, 210, z + 70, "253 220 160", 55)
+        self.prop("props_lab/lockers", 588, 190, z, 0, "s")
+        self.prop("props_c17/furnituredresser001a", 594, 300, z + 41, 0, "d")
+        self.prop("props_lab/frame002a", 592, 288, z + 83, 0, "s")
+        self.prop("props_junk/garbage_coffeemug001a", 598, 314, z + 86, 40, "d")
         # its ceiling light: a hanging tube lamp as in the office (its light had none), the light just under it
-        self.prop("props_wasteland/prison_flourescentlight001a", -170, 390, z + 156, 30, "f")
-        self.light(-170, 390, z + 116, "253 230 159", 40)
-        # pipes under its ceiling (508), where Valve's two bundles crossed it low (DROP_PROPS): a run of them from the
-        # shaft's wall to the outer wall, 157 over the floor at their lowest (a player stands 72 tall)
-        a = math.radians(120)
-        self.prop("props_pipes/pipeset08d_256_001a", 420 * math.cos(a), 420 * math.sin(a), z + 172, 120, "s")
+        self.prop("props_wasteland/prison_flourescentlight001a", 704, 340, z + 156, 0, "f")
+        self.light(704, 340, z + 116, "253 230 159", 40)
+        # pipes under its ceiling (a player stands 72 tall: they are 158 over the floor at their lowest), along the west wall
+        self.prop("props_pipes/pipeset08d_256_001a", 704, 530, z + 172, 0, "s")
+        return 4, 24
 
     def lever_box(self, pf):
         """Valve's lever wall, moved whole from the hall outside the lab door to the office's side of the wall east of the
-        door (lever_in): the recess's striped lining and the plate at its back, the box with its two lights over it,
-        set in a block of the same concrete standing 12 out from the office's wall, so the recess is a recess; the
-        lever itself and the lights' sprites move with it (BunkerForest.silo). The hole they leave in the hall's wall
-        is filled with its concrete."""
+        door (lever_in), and with the office onto the top floor (office_in): the recess's striped lining and the plate at
+        its back, the box with its two lights over it, set in a block of the same concrete standing 12 out from the
+        office's wall, so the recess is a recess; the lever itself and the lights' sprites move with it (BunkerForest.silo).
+        Returns (brushes, sides)."""
         from map_forest import pf_solid
         v = self.v
-        det = ""
+        det, ns = "", 0
         for i in LEVER_BRUSHES:
-            det += pf_solid(v, lever_in_sides(pf["solids"][i]["sides"]), 1, self.d, self.vis)[0]
+            sides = office_in_sides(lever_in_sides(pf["solids"][i]["sides"]))
+            det += pf_solid(v, sides, 1, self.d, self.vis)[0]
+            ns += len(sides)
         v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
         # the block round the recess (Valve's recess, 24 wide and 33 high, lands at x 249..273, z 362..395)
         x1, x2, z1, z2 = 237, 292, 350, 411       # (to brush 43, which stands out from the wall at x 292)
         hx1, hx2, hz1, hz2 = 249, 273, 362, 395
         cw = "CONCRETE/CONCRETEWALL028A"
-        self.v.detail([wbox(self.d, b) for b in ((x1, 284, z1, hx1, 296, z2), (hx2, 284, z1, x2, 296, z2), (hx1, 284, z1, hx2, 296, hz1),
-                                                 (hx1, 284, hz2, hx2, 296, z2))], cw, vis=self.vis)
-        # the hole in the hall's wall, filled
-        v.world_box(wbox(self.d, LEVER_RECESS), cw, top=cw, bottom=cw, vis=self.vis)
+        self.v.detail([wbox(self.d, self.obox(b)) for b in ((x1, 284, z1, hx1, 296, z2), (hx2, 284, z1, x2, 296, z2), (hx1, 284, z1, hx2, 296, hz1),
+                                                            (hx1, 284, hz2, hx2, 296, z2))], cw, vis=self.vis)
+        return len(LEVER_BRUSHES) + 4, ns + 24
 
     GATE = (-156, -280, 383, 150)      # Valve's static gate in the bottom level's fence (its middle, its height, its yaw)
 
@@ -587,7 +811,8 @@ class Silo:
         # (none in levels A and B's halls, shut off and gone: halls_shut; the two in the lift's shaft stay for its riders.
         #  The shaft's own at the top, 640 round, had been commented out by a note run on after the first: back.)
         for x, y, z, r, s in ((-420, 0, G + 72, 260, SCAPE_SHAFT),     # (260: short of the bunker corridor's own soundscape at the tunnel)
-                              (0, -200, G + 72, 640, SCAPE_SHAFT)):      # (the top floor's only, since the silo was cut to it, 23 November)
+                              (0, -200, G + 72, 640, SCAPE_SHAFT),       # (the top floor's only, since the silo was cut to it, 23 November)
+                              (704, -150, G + 64, 200, SCAPE_ROOM), (704, 340, G + 64, 180, SCAPE_ROOM)):     # (the office and bedroom, 24 November)
             self.v.point("env_soundscape", self.P(x, y, z), {"soundscape": s, "radius": str(r), "StartDisabled": "0"}, self.f.vis("silo's wiring"))
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -1404,6 +1629,249 @@ def _escape(self):
 
 
 Silo.escape = _escape
+
+# ---------------------------------------------------------------------------------------------------------------------
+# 6. The leader's way out since 24 November (the owner: "can you please make a little escape tunnel, nice and simple,
+# that comes out of a secret hidden door as part of the canal entrance to the map? it should be level/flush with the
+# ground and come out the inner side of the canal entrance but be perfectly hidden and not openable with "E", but only
+# opens from the inside with a button"; and "make the tunnel just a concrete cubic tunnel, not the dirt/displacement
+# tunnel or the rocks at the end of the secret exit or anything"). The old way out above (Escape, _escape) is no
+# longer placed. All in the map's frame. The bedroom's secret panel works as before (Kleiner's crooked picture, a button
+# just behind it). Beyond it a plain concrete tunnel 80 wide and 128 high, of boxes (a floor, a roof and two walls a
+# run): west out of the hull at the gantry's floor, round a corner and south up a ramp (18 degrees) to the gate's floor,
+# through the forest's north wall (cut there and built again over and under it) and on under the rim's ground to the
+# back of the gate's north wing wall, where a slab of that wall, in its own concrete and laid as it, is the door.
+# ---------------------------------------------------------------------------------------------------------------------
+WAY_X = (8184, 8264)           # the run south: its inside, x from, to
+WAY_Y = (6980, 7060)           # the run west from the bedroom: its inside, y from, to (in line with the bedroom's panel)
+WAY_HULL = 9184                # the silo hull's outer (west) face, where the run west starts
+WAY_LOW, WAY_HIGH = -152, 400  # its floor by the bedroom (the gantry's) and at the door (the gate's)
+WAY_RAMP = (5312, 6980)        # the ramp: up from WAY_LOW at y 6980 to WAY_HIGH at y 5312 (the forest's north wall's outer face)
+WAY_END = 4736                 # the back of the gate's north wing wall
+WAY_H, WAY_T = 128, 16         # its height inside; its walls', floor's and roof's thickness
+WAY_MATS = {"wall": "concrete/concretewall008a", "floor": "concrete/concretefloor031a", "roof": "concrete/concreteceiling004a"}    # (the owner's own map's: FMAT bunker_*)
+WAY_TEX = 0.5                  # (its long walls laid as Valve's far walls, so the pattern does not repeat a great many times)
+PANEL = (676, 756, 48)         # the bedroom's secret panel (the piece's frame): x from, to along the hull's west wall; its height
+EXIT = (8192, 8256, 400, 512)  # the hidden door in the wing wall's inner face: x from, to; z from, to
+EXIT_FACE, EXIT_BACK = 4672, 4736    # the wing wall's inner face (looking at the way in from the culvert) and its back
+EXIT_MOVE = (-76, 90, 0)       # it lifts up and a little back into the wall, so its face never lies in the wall's plane (no flicker)
+EXIT_LIP, EXIT_SPEED, EXIT_TIME = -16, 40, 3.5     # (it moves 138: 3.4 s)
+EXIT_STOP = (WAY_X[0], EXIT_BACK, WAY_HIGH, WAY_X[1], EXIT_BACK + 16, WAY_HIGH + WAY_H)    # the tunnel stopped at the door (the bunker's flood)
+WAY_LAMPS = (("w", 8930), ("w", 8480), ("s", 6560), ("s", 6110), ("s", 5660), ("s", 5180), ("s", 4840))    # cage lamps: which run, where along it
+
+
+def way_floor(y):
+    """The run south's floor at y (on the ramp, or level at either end of it)."""
+    lo, hi = WAY_RAMP
+    if y >= hi:
+        return float(WAY_LOW)
+    if y <= lo:
+        return float(WAY_HIGH)
+    return WAY_LOW + (hi - y) * float(WAY_HIGH - WAY_LOW) / (hi - lo)
+
+
+def way_inside():
+    """The tunnel's air as boxes (for the bunker door's failsafe): the hole through the hull, the run west, the ramp (its
+    whole box: what it leaves under and over it is shut in), the level run to the door."""
+    x1, x2 = WAY_X
+    y1, y2 = WAY_Y
+    lo, hi = WAY_RAMP
+    return [(WAY_HULL, y1, WAY_LOW, WAY_HULL + 64, y2, WAY_LOW + PANEL[2]), (x1, y1, WAY_LOW, WAY_HULL, y2, WAY_LOW + WAY_H),
+            (x1, lo, WAY_LOW - WAY_T, x2, hi, WAY_HIGH + WAY_H + WAY_T), (x1, WAY_END, WAY_HIGH, x2, lo, WAY_HIGH + WAY_H)]
+
+
+def way_boxes():
+    """The tunnel's boxes: (box, {face: material}), nodraw where none is given."""
+    x1, x2 = WAY_X
+    y1, y2 = WAY_Y
+    lo, hi = WAY_RAMP
+    L, H, T, Z, m = WAY_LOW, WAY_H, WAY_T, WAY_HIGH, WAY_MATS
+    return [((x1 - T, y1, L - T, WAY_HULL, y2, L), {"top": m["floor"]}),                        # the run west: floor, roof, walls
+            ((x1 - T, y1, L + H, WAY_HULL, y2, L + H + T), {"bottom": m["roof"]}),
+            ((x1 - T, y2, L - T, WAY_HULL, y2 + T, L + H + T), {"south": m["wall"]}),
+            ((x2 + T, y1 - T, L - T, WAY_HULL, y1, L + H + T), {"north": m["wall"]}),
+            ((x1 - T, WAY_END, L - T, x1, y2 + T, Z + H + T), {"east": m["wall"]}),             # the run south's walls, the whole way
+            ((x2, WAY_END, L - T, x2 + T, y1, Z + H + T), {"west": m["wall"]}),
+            ((x1 - T, WAY_END, Z - T, x2 + T, lo, Z), {"top": m["floor"]}),                      # the level run to the door: floor, roof
+            ((x1 - T, WAY_END, Z + H, x2 + T, lo, Z + H + T), {"bottom": m["roof"]}),
+            # (what shuts in the ramp's box: under it, over it, and over the corner where it starts)
+            ((x1 - T, lo, L - 2 * T, x2 + T, hi, L - T), {}),
+            ((x1 - T, lo, Z + H + T, x2 + T, hi + T, Z + H + 2 * T), {}),
+            ((x1 - T, hi, L + H + T, x2 + T, hi + T, Z + H + 2 * T), {})]
+
+
+def way_ramp():
+    """The ramp's floor and roof (16 thick, between the walls), as faces for convex_text."""
+    x1, x2 = WAY_X
+    lo, hi = WAY_RAMP
+    L, H, T, Z, nd = WAY_LOW, WAY_H, WAY_T, WAY_HIGH, MAT["nodraw"]
+    out = []
+    for (a, b, mat, up) in ((L, Z, WAY_MATS["floor"], True), (L + H, Z + H, WAY_MATS["roof"], False)):
+        c, e = (a - T, b - T) if up else (a + T, b + T)       # (the other face: under the floor, over the roof)
+        A1, A2, B1, B2 = (x1, hi, a), (x2, hi, a), (x1, lo, b), (x2, lo, b)
+        C1, C2, D1, D2 = (x1, lo, e), (x2, lo, e), (x1, hi, c), (x2, hi, c)
+        out.append([([A1, A2, B2, B1], mat), ([D1, D2, C2, C1], nd), ([A1, D1, D2, A2], nd), ([B1, B2, C2, C1], nd),
+                    ([A1, B1, C1, D1], nd), ([A2, D2, C2, B2], nd)])
+    return out
+
+
+def way_cable():
+    """The lamp cable's points (as the old way out's: one cable/cable.vmt from the panel to the door, along the wall's top
+    corner 6 out from the wall and 8 under the roof, through every lamp's cage, hooked up every 112 or less), each
+    (x, y, z, lamp) with lamp (wall point, its normal) at a lamp."""
+    x1, x2 = WAY_X
+    y1, y2 = WAY_Y
+    lo, hi = WAY_RAMP
+    roof = lambda y: way_floor(y) + WAY_H - 8
+    out = []
+
+    def run(stops, at, lamps):
+        for k, s in enumerate(stops):
+            if k:
+                p0, p1 = at(stops[k - 1]), at(s)
+                m = int(math.ceil(math.dist(p0, p1) / 112.0))
+                for q in range(1, m):
+                    t = stops[k - 1] + (s - stops[k - 1]) * q / float(m)
+                    out.append(at(t) + (None,))
+            if not out or math.dist(out[-1][:3], at(s)) > 0.5:
+                out.append(at(s) + (lamps.get(s),))
+            elif lamps.get(s):
+                out[-1] = out[-1][:3] + (lamps[s],)
+    wl = dict((s, ((s, y2), (0, -1))) for w, s in WAY_LAMPS if w == "w")
+    run(sorted({WAY_HULL - 8, x1 + 6} | set(wl), reverse=True), lambda s: (float(s), float(y2 - 6), float(WAY_LOW + WAY_H - 8)), wl)
+    sl = dict((s, ((x1, s), (1, 0))) for w, s in WAY_LAMPS if w == "s")
+    run(sorted({y2 - 6, hi, lo, WAY_END + 8} | set(sl), reverse=True), lambda s: (float(x1 + 6), float(s), roof(s)), sl)
+    return out
+
+
+def _way_out(self):
+    """6. The leader's way out (WAY_*, EXIT): the bedroom's secret panel, Kleiner's crooked picture that works it and the
+    button behind it, as before; the concrete tunnel with its cage lamps and their cable; the hidden door in the gate's
+    wing wall with its button inside, closing itself 30 s after it opens. Returns (brushes, sides) of its own (the
+    hull's, the forest wall's and the wing wall's cuts are counted where they are made)."""
+    from map_forest import wall_button, WALL
+    f, v, z, d = self.f, self.v, self.GANTRY, self.d
+    nd, vis, lv = MAT["nodraw"], f.vis("the leader's way out (tunnel)"), self.lv
+    hull = "concrete/concretewall010a"      # (the hull's inside: FMAT["silo_wall"])
+    n, ns = 0, 0
+    # -- the secret panel: as before (the owner, 22 November: "can we please also make it so that E doesn't open/close the
+    # door when pressed on it directly?"), a low panel of the bedroom's west wall (the hull's, 80 wide, 48 high, the
+    # wall's own concrete laid as it): a func_button used as a mover, so the gamemode's door rules never touch it, that
+    # sinks into the sill (into the floor, out of the wall's face: no flicker); Kleiner's crooked picture works it, and
+    # the button on the tunnel's side turns the picture, so the two stay in step --
+    px1, px2, ph = PANEL
+    name, pic = "lc_silo_secret_panel", "lc_silo_crooked_picture"
+    v.brush_entity("func_button", {"targetname": name, "movedir": "90 0 0", "speed": "30", "lip": "-4", "wait": "-1", "spawnflags": "32",
+                                   "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
+                   [wbox(d, (px1, 544, z, px2, 548, z + ph))], hull, vis, connections=[("OnPressed", name + "_sound", "PlaySound", "", 0)])
+    v.point("ambient_generic", self.P((px1 + px2) // 2, 520, z + 24), {"targetname": name + "_sound", "message": "doors/doormove2.wav", "health": "8",
+                                                                       "pitch": "80", "pitchstart": "80", "radius": "600", "spawnflags": "48"}, vis)
+    v.point("infodecal", self.P((px1 + px2) // 2, 544, z + 24), {"texture": "decals/lambdaspray_1a", "LowPriority": "0"}, vis)
+    # Kleiner's crooked picture as d1_trainstation_05 has it (props_lab/frame001a, 9 degrees off true, on an unseen
+    # func_door_rotating 2 by 2 by 4 that turns it about its own face), on the wall by the shaft at eye height, near the
+    # panel's corner. Use straightens it and the panel opens; Use again tilts it back and the panel shuts.
+    px, py, facing = 577, 470, 0
+    at = tuple(int(round(c)) for c in self.P(px, py, z + 60))
+    brush_ent(v, "func_door_rotating", {
+        "targetname": pic, "origin": "%d %d %d" % at, "angles": "0 %d 0" % wyaw(facing), "distance": "9", "speed": "100", "wait": "-1", "lip": "0", "dmg": "0",
+        "health": "0", "forceclosed": "0", "spawnflags": str(2 | 8 | 16 | 32 | 64 | 256 | 512), "noise1": "physics/wood/wood_box_impact_soft1.wav",
+        "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
+        [[([(at[0] - 1, at[1] - 1, at[2] - 2), (at[0] + 1, at[1] - 1, at[2] - 2), (at[0] + 1, at[1] + 1, at[2] - 2), (at[0] - 1, at[1] + 1, at[2] - 2)], nd),
+          ([(at[0] - 1, at[1] - 1, at[2] + 2), (at[0] + 1, at[1] - 1, at[2] + 2), (at[0] + 1, at[1] + 1, at[2] + 2), (at[0] - 1, at[1] + 1, at[2] + 2)], nd)]
+         + [([(xa, ya, at[2] - 2), (xb, yb, at[2] - 2), (xb, yb, at[2] + 2), (xa, ya, at[2] + 2)], nd)
+            for (xa, ya), (xb, yb) in (((at[0] - 1, at[1] - 1), (at[0] + 1, at[1] - 1)), ((at[0] + 1, at[1] - 1), (at[0] + 1, at[1] + 1)),
+                                       ((at[0] + 1, at[1] + 1), (at[0] - 1, at[1] + 1)), ((at[0] - 1, at[1] + 1), (at[0] - 1, at[1] - 1)))]],
+        vis, connections=[("OnOpen", name, "PressIn", "", 0), ("OnOpen", name + "_sound", "PlaySound", "", 0),
+                          ("OnClose", name, "PressOut", "", 0), ("OnClose", name + "_sound", "PlaySound", "", 0)])
+    v.point("prop_dynamic", at, {"targetname": pic + "_model", "model": "models/props_lab/frame001a.mdl", "angles": "0 %d 9" % wyaw(facing), "parentname": pic,
+                                 "lightingorigin": lit_from(v, pic + "_lighting", self.P(px + 24, py, z + 60), vis),
+                                 "solid": "0", "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
+                                 "spawnflags": "0"}, vis)
+    # the button on the tunnel's side (the owner: "on the inside just inside beyond the secret door, can we please get a
+    # button to close the door?"): Episode Two's mine lift button on the run's north wall just past the hull; it turns
+    # the picture, which works the panel
+    wall_button(v, (WAY_HULL - 16, WAY_Y[1], WAY_LOW + 40), 270, "lc_silo_secret_button",
+                (WAY_HULL - 26, WAY_Y[1] - 10, WAY_LOW + 36, WAY_HULL - 6, WAY_Y[1], WAY_LOW + 64), vis, [("OnPressed", pic, "Toggle", "", 0)], "2")
+    # an areaportal in the hole through the hull, behind the panel (always open): the way out joins the bunker to the forest
+    # a second way, so without it the main door's areaportal no longer parts two areas (the owner's compile of 22 November)
+    v.areaportal((WAY_HULL + 30, WAY_Y[0], WAY_LOW, WAY_HULL + 32, WAY_Y[1], WAY_LOW + ph), vis, name + "_portal")
+    n, ns = n + 4, ns + 24
+    # -- the tunnel: plain concrete boxes; the ramp's floor and roof two slabs --
+    for b, faces in way_boxes():
+        v.world_box(b, nd, faces=faces, vis=vis, tex=WAY_TEX)
+        n, ns = n + 1, ns + 6
+    for faces in way_ramp():
+        v.world.append(v.convex_text(faces, vis))
+        n, ns = n + 1, ns + len(faces)
+    # the forest's north wall where the tunnel passes (BunkerForest.cuts): sky over its roof as the wall's, shut under its floor
+    x1, x2 = WAY_X
+    wy1, wy2 = f.oy + f.D, f.oy + f.D + WALL
+    if wy2 != WAY_RAMP[0]:
+        f.problems.append("the way out's ramp does not end at the forest's north wall (%d, not %d)" % (WAY_RAMP[0], wy2))
+    sky, shv = MAT["sky"], f.vis("shell (sky, walls, slab)")
+    v.world_box((x1 - WAY_T, wy1, WAY_LOW - 2 * WAY_T, x2 + WAY_T, wy2, WAY_HIGH - WAY_T), nd, vis=shv)
+    v.world_box((x1 - WAY_T, wy1, WAY_HIGH + WAY_H + WAY_T, x2 + WAY_T, wy2, f.lid), sky, sky, sky, vis=shv)
+    # -- its lamps (Valve's cage lamps on the walls just under the roof, each with its light) and their one cable, from the
+    # panel to the door (the owner: lit "as the old one was") --
+    pts = way_cable()
+    for k, (x, y, zc, lamp) in enumerate(pts):
+        keys = {"targetname": "lc_escape_cable_%d" % k, "RopeMaterial": "cable/cable.vmt", "Slack": str(CABLE_SLACK), "Subdiv": "4", "Width": "1",
+                "TextureScale": "1", "MoveSpeed": "64", "NoWind": "1", "Collide": "0", "Barbed": "0", "Breakable": "0", "Dangling": "0", "Type": "0"}
+        if k + 1 < len(pts):
+            keys["NextKey"] = "lc_escape_cable_%d" % (k + 1)
+        if k == 0:
+            keys["PositionInterpolator"] = "2"
+        v.point("move_rope" if k == 0 else "keyframe_rope", (int(round(x)), int(round(y)), int(round(zc))), keys, vis)
+        if lamp:
+            (mx, my), (nx, ny) = lamp
+            v.point("prop_static", (mx, my, int(round(zc))), {
+                "model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 %d 0" % (int(round(math.degrees(math.atan2(ny, nx)))) % 360), "solid": "0",
+                "skin": "0", "disableshadows": "1", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+            v.point("light", (mx + nx * 16, my + ny * 16, int(round(zc - 18))), {"_light": "255 190 120 40", "_lightHDR": "-1 -1 -1 1",
+                                                                                 "_quadratic_attn": "1", "style": "0"}, lv)
+    # its sound: Black Mesa East's underground corridor, as the bunker's corridors (BunkerForest.SCAPES); out at the gate the
+    # canals' (birds and wind) again, as outside the bunker's door
+    for at_, r, s in (((WAY_HULL - 120, (WAY_Y[0] + WAY_Y[1]) // 2, WAY_LOW + 64), 200, "eli_01_lower_corridor_1"),
+                      (((x1 + x2) // 2, 6100, int(way_floor(6100)) + 64), 760, "eli_01_lower_corridor_1"),
+                      (((x1 + x2) // 2, 5000, WAY_HIGH + 64), 300, "eli_01_lower_corridor_1"), (((x1 + x2) // 2, 4560, WAY_HIGH + 64), 100, "canals_canal_nowater")):
+        v.point("env_soundscape", at_, {"soundscape": s, "radius": str(r), "StartDisabled": "0"}, f.vis("silo's wiring"))
+    # -- the hidden door: a slab of the wing wall itself (its own concrete, laid as the wall round it: the same material,
+    # axes and seam, BunkerForest.headwall_cut cuts the wall round it), its foot on the ground (the gate's floor); a
+    # func_button with no Use, touch or damage (E does nothing to it, the gamemode's door rules never touch it), moved only
+    # by the button inside next to it; 30 s after opening it shuts by itself, and in the last moments of its close a shove
+    # pushes whoever stands in its way out of the doorway (shove(): nothing kills) --
+    ex1, ex2, ez1, ez2 = EXIT
+    door, auto = "lc_escape_exit", "lc_escape_exit_autoclose"
+    v.brush_entity("func_button", {"targetname": door, "movedir": "%d %d %d" % EXIT_MOVE, "speed": str(EXIT_SPEED), "lip": str(EXIT_LIP), "wait": "-1",
+                                   "spawnflags": "0", "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
+                                   "disableshadows": "1"},
+                   [(ex1, EXIT_FACE, ez1, ex2, EXIT_BACK, ez2)], MAT["canal_wall"], vis)
+    v.point("ambient_generic", ((ex1 + ex2) // 2, EXIT_BACK + 24, ez1 + 56), {"targetname": door + "_sound", "message": "physics/concrete/rock_scrape_rough_loop1.wav",
+                                                                             "health": "10", "pitch": "90", "pitchstart": "90", "radius": "1200", "spawnflags": "16"}, vis)
+    wall_button(v, (x2, EXIT_BACK + 34, ez1 + 40), 180, door + "_button", (x2 - 10, EXIT_BACK + 24, ez1 + 36, x2, EXIT_BACK + 44, ez1 + 64), vis,
+                [("OnPressed", auto, "CancelPending", "", 0), ("OnPressed", door + "_shove", "Disable", "", 0), ("OnPressed", door, "PressIn", "", 0),
+                 ("OnPressed", door + "_sound", "PlaySound", "", 0), ("OnPressed", door + "_sound", "StopSound", "", EXIT_TIME),
+                 ("OnPressed", auto, "Trigger", "", 0.1)], "2")
+    v.point("logic_relay", ((x1 + x2) // 2, EXIT_BACK + 64, ez1 + 70), {"targetname": auto, "StartDisabled": "0", "spawnflags": "0"}, vis,
+            connections=[("OnTrigger", door, "PressOut", "", 30), ("OnTrigger", door + "_sound", "PlaySound", "", 30),
+                         ("OnTrigger", door + "_sound", "StopSound", "", 30 + EXIT_TIME), ("OnTrigger", door + "_shove", "Enable", "", 30 + EXIT_TIME - 2),
+                         ("OnTrigger", door + "_shove", "Disable", "", 30 + EXIT_TIME + 0.3)])
+    f.shove(door + "_shove", [((ex1, EXIT_FACE - 8, ez1, ex2, EXIT_FACE + 32, ez2), 270, 200), ((ex1, EXIT_FACE + 32, ez1, ex2, EXIT_BACK + 8, ez2), 90, 300)], vis)
+    n, ns = n + 2, ns + 12
+    # nothing may stand in its way: the panel's way through, the tunnel, the door's way out
+    for box, label in (((WAY_HULL, WAY_Y[0], WAY_LOW, WAY_HULL + 80, WAY_Y[1], WAY_LOW + ph), "the bedroom's secret panel"),
+                       ((x1, WAY_Y[0], WAY_LOW, WAY_HULL, WAY_Y[1], WAY_LOW + WAY_H), "the way out's run west"),
+                       ((x1, WAY_END, WAY_HIGH, x2, WAY_RAMP[0], WAY_HIGH + WAY_H), "the way out's run to the door"),
+                       ((ex1, EXIT_FACE - 96, ez1, ex2, EXIT_FACE, ez2), "in front of the way out's door")):
+        v.keep_way_clear(box, label)
+    f.notes.append("the leader's way out: the secret panel in his bedroom (Kleiner's crooked picture), a concrete tunnel 80 by 128 west, then south up a "
+                   "ramp of %d degrees to the gate's floor, %d cage lamps and a cable through them, and a hidden door in the gate's north wing wall "
+                   "opened only by a button inside (it shuts after 30 s)" % (round(math.degrees(math.atan2(WAY_HIGH - WAY_LOW, WAY_RAMP[1] - WAY_RAMP[0]))),
+                                                                              sum(1 for p in pts if p[3])))
+    return n, ns
+
+
+Silo.way_out = _way_out
 
 
 def route_picture(path):
