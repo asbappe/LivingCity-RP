@@ -7,7 +7,9 @@
 # of the world' ... I think we need to have the road AND the railway between the city and the canals"): "upper left"
 # all the way round, so every module's side rooms are on the outside. To make room for the road the north run lies
 # 960 farther out than the first ring's, the west run 960, the south part's west side 768 and its east side 960.
-# The town (north) and the cave forest (west) moved out with them. The west run comes straight down to the south
+# The cave forest (west) moved out with them. (The Resistance's town north of it was taken off the map on 24 November,
+# the owner: "it wastes too many brushes and kind of ruins the concept of a Resistance when they have a town; they need
+# to be more underground": its branch is plain canal now, its ground the backdrop's ruins; the town is kept, map_town.py.) The west run comes straight down to the south
 # part; the owner's west road meets the street by a road climbing to it ("road": it replaces their brushes 14734 and
 # 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there.
 # Between the city and the street stands a Combine wall ("wall combine"; the owner, 23 November: "City > combine wall >
@@ -21,7 +23,7 @@
 # runs along its run and backs in again (with a tunnel at both ends of a run it would run through). Every other track
 # end is a buffer stop short of the crossing square (map_corridor.rail_runs).
 # Checked with
-#   python3 map_build.py chain --layout map_layouts/ring.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf lc_town.vmf lc_forest_cave.vmf
+#   python3 map_build.py chain --layout map_layouts/ring.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf lc_forest_cave.vmf
 
 start 6144 5696
 heading N
@@ -36,12 +38,11 @@ road -4480 1920 -2624 2560 840 replaces 14734 15630
 # rooftops to the mountainous pine forest look from EP2, then blend back to ruins and rooftops elsewhere"): the old
 # city's ruins (the Propper++ kit's models; a line "backdrop brushes" would build them as brushes), Episode Two's pine
 # forest in the rectangles below (blending over 1024 at their edges), and nothing in
-# the places kept for the other pieces (the town, the cave forest, the forest bunker, the first canal).
+# the places kept for the other pieces (the cave forest, the forest bunker, the first canal).
 backdrop ruins
 backdrop forest 6400 -768 9024 10752
 backdrop forest -11008 1600 -5696 4416
 backdrop forest -6080 8832 -4352 10752
-backdrop clear -1088 9152 5952 15232
 backdrop clear -12992 4416 -5952 16000
 backdrop clear 7872 896 12352 6976
 backdrop clear 3200 1792 8000 5760
@@ -50,14 +51,13 @@ backdrop clear 3200 1792 8000 5760
 checkpoint
 straight 1344 stairs
 left back       # the north run's train: out of a tunnel east of this run's canal, over a bridge onto its tracks
-# N2 and N3: west along the north (the town's branch in the middle: nothing with side rooms within 1536 west of it,
-# the town's south end is there); the train comes out at the corner and stops short of the rail bridge
+# N2 and N3: west along the north; the train comes out at the corner and stops short of the rail bridge
 depot flip
 armory flip
 substation
 thumper
 straight 576 stairs
-tee flip
+straight 512      # (was the town's branch, "tee flip", 512 long: everything after it stays where it was)
 lock
 morgue flip
 floodroom flip

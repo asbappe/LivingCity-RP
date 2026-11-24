@@ -31,12 +31,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 24 November (town budget): **the Resistance's town slimmed** from 4,350 brushes, 26,401 sides, 12,836 faces (after
-  nodraw) to 2,601, 15,811, 6,783 (its share 7,000 and 18,000). Ground-floor windows recessed, upper ones flat on the wall
-  (the owner's call); rooms' walls painted on the walls (Plan.paint_wall, only plans with `paints`: the town's); fewer
-  front pieces, no lintels, one cornice step. Ring and other pieces build byte-identical. docs/dev/map-building.md, town.
-  Rest without the ring now ~50,900 faces. Town walk check: 6 spots unreachable (pit corners, plaza rostrum,
-  lc_hq_setup_plaza, two doors), there before this; not fixed yet.
+- 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"). Kept, not used:
+  map_town.py, map_layouts/town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed
+  that morning to 6,783 faces). In ring.txt its branch is `straight 512` (nothing else moved) and the backdrop's ruins
+  fill its ground. The rest without the ring: ~44,200 faces, ~103,300 sides; the town's share (7,000 / 18,000) is free.
+  The walled garden's planting spots (lc_garden_plot_N) are on no map piece now; Plan.paint_wall stays for any plan.
 - 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`, owner's PC, needs ffmpeg; until
   then the server works the jaw from loudness). A .wav beats an .mp3 (`LC.PreferWav`). Not seen on the real server yet.
 - 22 and 23 November: the canal ring (map_ring_walk.py): Combine wall and ruins a Propper++ kit the owner compiles
