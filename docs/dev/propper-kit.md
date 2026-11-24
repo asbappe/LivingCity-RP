@@ -1,6 +1,6 @@
 # Turning the ring's kit into models with Propper++ (step by step)
 
-The canal ring's Combine wall and the ruins beyond the canal are made of a kit of 35 pieces. Each piece is a small VMF
+The canal ring's Combine wall and the ruins beyond the canal are made of a kit of 43 pieces. Each piece is a small VMF
 holding one piece of brushwork. Propper++, which is built into Hammer++, turns each into a model that keeps only the
 faces players can see. The ring then places these models as props, so they cost no brushes and no brush faces in the
 map's compile (the owner's compile stopped on "Too many detail brush faces, max = 65536", 23 November).
@@ -10,7 +10,7 @@ You do this once now, and again only if a piece's design changes. Moving the rin
 ## What you need
 
 - Hammer++ (you already use it). Propper++ is in its Tools menu.
-- The kit: `lc_propkit.zip` (the 35 VMFs). Unzip it anywhere, for example into `~/mapwork/propkit/`.
+- The kit: `lc_propkit.zip` (the 43 VMFs). Unzip it anywhere, for example into `~/mapwork/propkit/`.
 - Garry's Mod's own model compiler, `studiomdl.exe`, which comes with the game: in your install it is at
   `Z:\home\anon\.local\share\Steam\steamapps\common\GarrysMod\bin\studiomdl.exe`
   (that is `~/.local/share/Steam/steamapps/common/GarrysMod/bin/studiomdl.exe` on Linux; use the one in `bin`, not the
@@ -22,7 +22,7 @@ You do this once now, and again only if a piece's design changes. Moving the rin
 2. Set **MDL executable** to the `studiomdl.exe` above (Browse, or paste the `Z:\...` path).
 3. OK.
 
-## For each of the 35 pieces (about a minute each)
+## For each of the 43 pieces (about a minute each)
 
 1. **File > Open** the piece's VMF (for example `lc_cwall_512_a.vmf`). It shows one piece of Combine wall or one ruin.
 2. Press **Ctrl+A** to select everything (it is one entity).
@@ -53,10 +53,14 @@ You do this once now, and again only if a piece's design changes. Moving the rin
    before you do the rest.
 7. Close the piece without saving (nothing in it needs saving) and open the next one.
 
-The pieces: `lc_cwall_512_a`, `lc_cwall_512_b`, `lc_cwall_640_a`, `lc_cwall_640_b`, `lc_cwall_768_a`, `lc_cwall_768_b`,
-`lc_cwall_896_a`, `lc_cwall_896_b`, `lc_cwall_1024_a`, `lc_cwall_1024_b`, `lc_cwall_pier`, `lc_cwall_corner`, and the
-ruins `lc_ruin_block_a` to `_g`, `lc_ruin_house_a` to `_f`, `lc_ruin_shell_a` to `_f`, `lc_ruin_collapsed_a` and `_b`,
-`lc_ruin_wall_a` and `_b` (the kit's `README.md` lists all 35 with their sizes).
+The pieces: the wall's runs `lc_cwall_512_a`, `_b`, `_c`, and the same three looks of `lc_cwall_640`, `lc_cwall_768`,
+`lc_cwall_896` and `lc_cwall_1024`; the piers `lc_cwall_pier_a` to `_d`; `lc_cwall_corner`; and the ruins
+`lc_ruin_block_a` to `_g`, `lc_ruin_house_a` to `_f`, `lc_ruin_shell_a` to `_f`, `lc_ruin_collapsed_a` and `_b`,
+`lc_ruin_wall_a` and `_b` (the kit's `README.md` lists all 43 with their sizes).
+
+**24 November: the wall's 20 pieces changed** (no more white light panels; four piers instead of one; the runs' panels
+at heights of their own, and a third look of each). Compile only those 20 again, from `lc_propkit_wall.zip`, with the
+same settings: the ruins did not change. The old `lc_cwall_pier` model is no longer used and can be deleted.
 
 ## Where the results go
 

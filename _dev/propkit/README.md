@@ -8,18 +8,26 @@ Each VMF here is one model. It holds a single `func_brush` whose origin (0 0 0) 
 
 | File | What | Size (x by y by z) | Faces kept | Pivot |
 |---|---|---|---|---|
-| `lc_cwall_512_a.vmf` | Combine wall run, 512 long, look a | 512 by 141 by 704 | 34 | its start, on the core's street face, at street height |
-| `lc_cwall_512_b.vmf` | Combine wall run, 512 long, look b | 512 by 157 by 512 | 24 | its start, on the core's street face, at street height |
-| `lc_cwall_640_a.vmf` | Combine wall run, 640 long, look a | 640 by 155 by 672 | 43 | its start, on the core's street face, at street height |
-| `lc_cwall_640_b.vmf` | Combine wall run, 640 long, look b | 640 by 163 by 672 | 43 | its start, on the core's street face, at street height |
-| `lc_cwall_768_a.vmf` | Combine wall run, 768 long, look a | 768 by 147 by 512 | 38 | its start, on the core's street face, at street height |
-| `lc_cwall_768_b.vmf` | Combine wall run, 768 long, look b | 768 by 159 by 672 | 54 | its start, on the core's street face, at street height |
-| `lc_cwall_896_a.vmf` | Combine wall run, 896 long, look a | 896 by 155 by 640 | 49 | its start, on the core's street face, at street height |
-| `lc_cwall_896_b.vmf` | Combine wall run, 896 long, look b | 896 by 159 by 512 | 42 | its start, on the core's street face, at street height |
-| `lc_cwall_1024_a.vmf` | Combine wall run, 1024 long, look a | 1024 by 155 by 640 | 48 | its start, on the core's street face, at street height |
-| `lc_cwall_1024_b.vmf` | Combine wall run, 1024 long, look b | 1024 by 157 by 512 | 51 | its start, on the core's street face, at street height |
-| `lc_cwall_pier.vmf` | Combine wall pier (over every joint, flush with every free end) | 192 by 192 by 680 | 41 | its middle, on the core's street face, at street height |
-| `lc_cwall_corner.vmf` | Combine wall corner pier (the wall turning round a corner) | 176 by 184 by 712 | 52 | the corner of the two cores' street faces |
+| `lc_cwall_512_a.vmf` | Combine wall run, 512 long, look a | 512 by 126 by 704 | 27 | its start, on the core's street face, at street height |
+| `lc_cwall_512_b.vmf` | Combine wall run, 512 long, look b | 512 by 132 by 512 | 14 | its start, on the core's street face, at street height |
+| `lc_cwall_512_c.vmf` | Combine wall run, 512 long, look c | 512 by 137 by 736 | 32 | its start, on the core's street face, at street height |
+| `lc_cwall_640_a.vmf` | Combine wall run, 640 long, look a | 640 by 154 by 512 | 36 | its start, on the core's street face, at street height |
+| `lc_cwall_640_b.vmf` | Combine wall run, 640 long, look b | 640 by 154 by 672 | 35 | its start, on the core's street face, at street height |
+| `lc_cwall_640_c.vmf` | Combine wall run, 640 long, look c | 640 by 142 by 640 | 24 | its start, on the core's street face, at street height |
+| `lc_cwall_768_a.vmf` | Combine wall run, 768 long, look a | 768 by 132 by 672 | 31 | its start, on the core's street face, at street height |
+| `lc_cwall_768_b.vmf` | Combine wall run, 768 long, look b | 768 by 140 by 736 | 35 | its start, on the core's street face, at street height |
+| `lc_cwall_768_c.vmf` | Combine wall run, 768 long, look c | 768 by 152 by 640 | 38 | its start, on the core's street face, at street height |
+| `lc_cwall_896_a.vmf` | Combine wall run, 896 long, look a | 896 by 139 by 704 | 46 | its start, on the core's street face, at street height |
+| `lc_cwall_896_b.vmf` | Combine wall run, 896 long, look b | 896 by 139 by 512 | 39 | its start, on the core's street face, at street height |
+| `lc_cwall_896_c.vmf` | Combine wall run, 896 long, look c | 896 by 124 by 512 | 19 | its start, on the core's street face, at street height |
+| `lc_cwall_1024_a.vmf` | Combine wall run, 1024 long, look a | 1024 by 137 by 512 | 40 | its start, on the core's street face, at street height |
+| `lc_cwall_1024_b.vmf` | Combine wall run, 1024 long, look b | 1024 by 125 by 736 | 34 | its start, on the core's street face, at street height |
+| `lc_cwall_1024_c.vmf` | Combine wall run, 1024 long, look c | 1024 by 158 by 640 | 45 | its start, on the core's street face, at street height |
+| `lc_cwall_pier_a.vmf` | Combine wall pier (over every joint, flush with every free end) | 160 by 176 by 700 | 36 | its middle, on the core's street face, at street height |
+| `lc_cwall_pier_b.vmf` | Combine wall pier (over every joint, flush with every free end) | 160 by 176 by 768 | 37 | its middle, on the core's street face, at street height |
+| `lc_cwall_pier_c.vmf` | Combine wall pier (over every joint, flush with every free end) | 192 by 168 by 768 | 47 | its middle, on the core's street face, at street height |
+| `lc_cwall_pier_d.vmf` | Combine wall pier (over every joint, flush with every free end) | 160 by 176 by 680 | 36 | its middle, on the core's street face, at street height |
+| `lc_cwall_corner.vmf` | Combine wall corner pier (the wall turning round a corner) | 176 by 184 by 712 | 56 | the corner of the two cores' street faces |
 | `lc_ruin_block_a.vmf` | ruin: block | 256 by 256 by 408 | 12 | the middle of its footprint, on the ground |
 | `lc_ruin_block_b.vmf` | ruin: block | 384 by 256 by 536 | 13 | the middle of its footprint, on the ground |
 | `lc_ruin_block_c.vmf` | ruin: block | 320 by 320 by 664 | 11 | the middle of its footprint, on the ground |

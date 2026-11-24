@@ -26,11 +26,13 @@ def lean_units(fr, H):
     return min((d for d in range(4, 129) if H % d == 0), key=lambda d: abs(d * fr.L - H * math.tan(math.radians(4.5))))
 
 
-def run(p, k, H, r, inner=True):
+def run(p, k, H, r, inner=True, vary=False):
     """One straight run, u from 0 to k: the battered slab (jointed where its staircases end), its plinth, ribs, plates.
     inner=False: nothing on the inner face (its plinth, stack, ribs, tabs, the head leaning over it): for a wall whose
     inner face nobody can see (the street's wall, its back against the city's edge: the owner, 23 November, "98% of it
-    doesn't need a backwall")."""
+    doesn't need a backwall"). vary: the staircase of panels starts and ends at heights of its own, with 2 to 4 layers,
+    and stands in from the run's ends by its own amounts (the kit's runs stand side by side: the owner, 24 November,
+    "they are all at an equal height off the ground ... this all needs to be randomized")."""
     q, mm = p.fr.n, p.mm
     T, Le, Pl = q(64), lean_units(p.fr, H), q(48)
     step = H // Le
@@ -42,8 +44,14 @@ def run(p, k, H, r, inner=True):
     z0 = max(step, 64 // step * step)
     z1 = z0 + step * max(1, -(-48 // step))
     za, zt = z1 + step * max(1, 32 // step), H * r.choice((7, 8)) // 10 // step * step
+    layers = None
+    if vary:
+        za = z1 + step * r.randint(max(1, 32 // step), max(1, 240 // step))
+        zt = max(za + 3 * step, H * r.choice((55, 65, 75, 85, 92)) // 100 // step * step)
+        layers = r.randint(2, 4)
+        ta, tb = ta + q(r.choice((0, 16, 32, 64))), tb - q(r.choice((0, 16, 48, 96)))
     lays, dd, a0, a1 = [], 0, ta, tb
-    for lay in range(r.randint(3, 4)):
+    for lay in range(layers or r.randint(3, 4)):
         if a1 - a0 < q(96) or zt - za < 2 * step:
             break
         st = q(r.choice((48, 56, 64))) if lay == 0 else q(r.choice(p.steps))
@@ -101,15 +109,24 @@ def run(p, k, H, r, inner=True):
     return T, Le, Pl
 
 
-def pier(p, u0, H, r, T, Le, Pl, lamp=False):
-    """A pier over a joint, centred at u0: a head leaning over the outer side, a stack with its light panel on its front."""
+def pier(p, u0, H, r, T, Le, Pl, lamp=False, front=None):
+    """A pier over a joint, centred at u0: a head leaning over the outer side, a stack with its light panel on its front.
+    front: what its front carries instead, for the kit's piers (the owner, 24 November, of the white panels: "I don't
+    recall ever seeing something like that in HL2 anywhere"): ("stack", from, to) a stack of plates with no light
+    panel between those heights, ("bands", [(height, tall), ...]) trim bands across a plain face."""
     q = p.fr.n
     P, m, Hp = q(r.choice((64, 80, 96))), q(32), H + 128
     v0, v1 = -T - Pl - m, Le + m
     e0, e1 = sorted((q(16), q(48)), key=lambda _: r.random())
     p.mass(rect(u0 - P, v0, u0 + P, v1), 0, Hp - 128, (u0 - P + e0, u0 + P - e1))
     p.course2(v1, v0, Hp - 128, Hp, u0 - P, u0 + P, (q(32), q(40), q(16)))
-    p.stack(("v", v1, 1), u0 - P + e0, u0 + P - e1, r.choice((64, 128)), Hp - 256, r.randint(3, 4))
+    if front is None:
+        p.stack(("v", v1, 1), u0 - P + e0, u0 + P - e1, r.choice((64, 128)), Hp - 256, r.randint(3, 4))
+    elif front[0] == "stack":
+        p.stack(("v", v1, 1), u0 - P + e0, u0 + P - e1, front[1], front[2], r.randint(2, 4), light=False)
+    else:
+        for z, h in front[1]:
+            p.fbox(("v", v1, 1), u0 - P + e0, u0 + P - e1, z, z + h, 0, q(8), TRIM)
     p.tabs(("u", u0 + P, 1), v0 + q(16), v1 - q(16), r.choice((192, 320)))
     kind = TP.pick(r, kinds=(("ridge", 2), ("shed", 2), ("steps", 2), ("flat", 1)))
     p.top = TP.crown(p, kind, u0 - P, u0 + P, v0, v1, Hp, r, across="u", ribs=False)

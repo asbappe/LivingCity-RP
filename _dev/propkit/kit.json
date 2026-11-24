@@ -5,49 +5,13 @@
   "lc_cwall_1024_a": {
    "box": [
     0,
-    -91,
-    0,
-    1024,
-    64,
-    640
-   ],
-   "brushes": 17,
-   "clip": [
-    [
-     0,
-     -80,
-     0,
-     1024,
-     0,
-     512
-    ]
-   ],
-   "drawn": 48,
-   "drawn_box": [
-    0,
-    -91,
-    0,
-    1024,
-    64,
-    640
-   ],
-   "kind": "wall run",
-   "lamps": [],
-   "length": 1024,
-   "lights": [],
-   "look": "a",
-   "nodraw": 54
-  },
-  "lc_cwall_1024_b": {
-   "box": [
-    0,
-    -93,
+    -73,
     0,
     1024,
     64,
     512
    ],
-   "brushes": 18,
+   "brushes": 16,
    "clip": [
     [
      0,
@@ -58,10 +22,10 @@
      512
     ]
    ],
-   "drawn": 51,
+   "drawn": 40,
    "drawn_box": [
     0,
-    -93,
+    -73,
     0,
     1024,
     0,
@@ -71,17 +35,17 @@
    "lamps": [],
    "length": 1024,
    "lights": [],
-   "look": "b",
-   "nodraw": 57
+   "look": "a",
+   "nodraw": 56
   },
-  "lc_cwall_512_a": {
+  "lc_cwall_1024_b": {
    "box": [
     0,
-    -77,
+    -61,
     0,
-    512,
+    1024,
     64,
-    704
+    736
    ],
    "brushes": 14,
    "clip": [
@@ -89,7 +53,7 @@
      0,
      -40,
      0,
-     512,
+     1024,
      0,
      512
     ]
@@ -97,7 +61,79 @@
    "drawn": 34,
    "drawn_box": [
     0,
-    -77,
+    -61,
+    0,
+    1024,
+    64,
+    736
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 1024,
+   "lights": [],
+   "look": "b",
+   "nodraw": 50
+  },
+  "lc_cwall_1024_c": {
+   "box": [
+    0,
+    -94,
+    0,
+    1024,
+    64,
+    640
+   ],
+   "brushes": 17,
+   "clip": [
+    [
+     0,
+     -32,
+     0,
+     1024,
+     0,
+     512
+    ]
+   ],
+   "drawn": 45,
+   "drawn_box": [
+    0,
+    -94,
+    0,
+    1024,
+    64,
+    640
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 1024,
+   "lights": [],
+   "look": "c",
+   "nodraw": 57
+  },
+  "lc_cwall_512_a": {
+   "box": [
+    0,
+    -62,
+    0,
+    512,
+    64,
+    704
+   ],
+   "brushes": 12,
+   "clip": [
+    [
+     0,
+     -40,
+     0,
+     512,
+     0,
+     512
+    ]
+   ],
+   "drawn": 27,
+   "drawn_box": [
+    0,
+    -62,
     0,
     512,
     64,
@@ -108,32 +144,32 @@
    "length": 512,
    "lights": [],
    "look": "a",
-   "nodraw": 50
+   "nodraw": 45
   },
   "lc_cwall_512_b": {
    "box": [
     0,
-    -93,
+    -68,
     0,
     512,
     64,
     512
    ],
-   "brushes": 12,
+   "brushes": 9,
    "clip": [
     [
      0,
-     -36,
+     -40,
      0,
      512,
      0,
      512
     ]
    ],
-   "drawn": 24,
+   "drawn": 14,
    "drawn_box": [
     0,
-    -93,
+    -68,
     0,
     512,
     0,
@@ -144,54 +180,90 @@
    "length": 512,
    "lights": [],
    "look": "b",
-   "nodraw": 48
+   "nodraw": 40
+  },
+  "lc_cwall_512_c": {
+   "box": [
+    0,
+    -73,
+    0,
+    512,
+    64,
+    736
+   ],
+   "brushes": 14,
+   "clip": [
+    [
+     0,
+     -32,
+     0,
+     512,
+     0,
+     512
+    ]
+   ],
+   "drawn": 32,
+   "drawn_box": [
+    0,
+    -73,
+    0,
+    512,
+    64,
+    736
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 512,
+   "lights": [],
+   "look": "c",
+   "nodraw": 52
   },
   "lc_cwall_640_a": {
    "box": [
     0,
-    -91,
+    -90,
     0,
     640,
     64,
-    672
+    512
    ],
-   "brushes": 17,
+   "brushes": 15,
    "clip": [
     [
      0,
-     -40,
+     -36,
      0,
      640,
      0,
      512
     ]
    ],
-   "drawn": 43,
+   "drawn": 36,
    "drawn_box": [
     0,
-    -91,
+    -90,
     0,
     640,
-    64,
-    672
+    0,
+    512
    ],
    "kind": "wall run",
    "lamps": [],
    "length": 640,
    "lights": [],
    "look": "a",
-   "nodraw": 59
+   "nodraw": 54
   },
   "lc_cwall_640_b": {
    "box": [
     0,
-    -99,
+    -90,
     0,
     640,
     64,
     672
    ],
-   "brushes": 17,
+   "brushes": 15,
    "clip": [
     [
      0,
@@ -202,10 +274,10 @@
      512
     ]
    ],
-   "drawn": 43,
+   "drawn": 35,
    "drawn_box": [
     0,
-    -99,
+    -90,
     0,
     640,
     64,
@@ -216,22 +288,130 @@
    "length": 640,
    "lights": [],
    "look": "b",
-   "nodraw": 59
+   "nodraw": 55
+  },
+  "lc_cwall_640_c": {
+   "box": [
+    0,
+    -78,
+    0,
+    640,
+    64,
+    640
+   ],
+   "brushes": 11,
+   "clip": [
+    [
+     0,
+     -32,
+     0,
+     640,
+     0,
+     512
+    ]
+   ],
+   "drawn": 24,
+   "drawn_box": [
+    0,
+    -78,
+    0,
+    640,
+    64,
+    640
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 640,
+   "lights": [],
+   "look": "c",
+   "nodraw": 42
   },
   "lc_cwall_768_a": {
    "box": [
     0,
-    -83,
+    -68,
     0,
     768,
     64,
-    512
+    672
    ],
-   "brushes": 15,
+   "brushes": 13,
    "clip": [
     [
      0,
-     -80,
+     -40,
+     0,
+     768,
+     0,
+     512
+    ]
+   ],
+   "drawn": 31,
+   "drawn_box": [
+    0,
+    -68,
+    0,
+    768,
+    64,
+    672
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 768,
+   "lights": [],
+   "look": "a",
+   "nodraw": 47
+  },
+  "lc_cwall_768_b": {
+   "box": [
+    0,
+    -76,
+    0,
+    768,
+    64,
+    736
+   ],
+   "brushes": 14,
+   "clip": [
+    [
+     0,
+     -40,
+     0,
+     768,
+     0,
+     512
+    ]
+   ],
+   "drawn": 35,
+   "drawn_box": [
+    0,
+    -76,
+    0,
+    768,
+    64,
+    736
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 768,
+   "lights": [],
+   "look": "b",
+   "nodraw": 49
+  },
+  "lc_cwall_768_c": {
+   "box": [
+    0,
+    -88,
+    0,
+    768,
+    64,
+    640
+   ],
+   "brushes": 16,
+   "clip": [
+    [
+     0,
+     -40,
      0,
      768,
      0,
@@ -241,101 +421,65 @@
    "drawn": 38,
    "drawn_box": [
     0,
-    -83,
+    -88,
     0,
     768,
-    0,
-    512
+    64,
+    640
    ],
    "kind": "wall run",
    "lamps": [],
    "length": 768,
    "lights": [],
-   "look": "a",
-   "nodraw": 52
-  },
-  "lc_cwall_768_b": {
-   "box": [
-    0,
-    -95,
-    0,
-    768,
-    64,
-    672
-   ],
-   "brushes": 19,
-   "clip": [
-    [
-     0,
-     -40,
-     0,
-     768,
-     0,
-     512
-    ]
-   ],
-   "drawn": 54,
-   "drawn_box": [
-    0,
-    -95,
-    0,
-    768,
-    64,
-    672
-   ],
-   "kind": "wall run",
-   "lamps": [],
-   "length": 768,
-   "lights": [],
-   "look": "b",
-   "nodraw": 60
+   "look": "c",
+   "nodraw": 58
   },
   "lc_cwall_896_a": {
    "box": [
     0,
-    -91,
+    -75,
     0,
     896,
     64,
-    640
+    704
    ],
    "brushes": 18,
    "clip": [
     [
      0,
-     -80,
+     -40,
      0,
      896,
      0,
      512
     ]
    ],
-   "drawn": 49,
+   "drawn": 46,
    "drawn_box": [
     0,
-    -91,
+    -75,
     0,
     896,
     64,
-    640
+    704
    ],
    "kind": "wall run",
    "lamps": [],
    "length": 896,
    "lights": [],
    "look": "a",
-   "nodraw": 59
+   "nodraw": 62
   },
   "lc_cwall_896_b": {
    "box": [
     0,
-    -95,
+    -75,
     0,
     896,
     64,
     512
    ],
-   "brushes": 17,
+   "brushes": 16,
    "clip": [
     [
      0,
@@ -346,10 +490,10 @@
      512
     ]
    ],
-   "drawn": 42,
+   "drawn": 39,
    "drawn_box": [
     0,
-    -95,
+    -75,
     0,
     896,
     0,
@@ -360,7 +504,43 @@
    "length": 896,
    "lights": [],
    "look": "b",
-   "nodraw": 60
+   "nodraw": 57
+  },
+  "lc_cwall_896_c": {
+   "box": [
+    0,
+    -60,
+    0,
+    896,
+    64,
+    512
+   ],
+   "brushes": 10,
+   "clip": [
+    [
+     0,
+     -40,
+     0,
+     896,
+     0,
+     512
+    ]
+   ],
+   "drawn": 19,
+   "drawn_box": [
+    0,
+    -60,
+    0,
+    896,
+    0,
+    512
+   ],
+   "kind": "wall run",
+   "lamps": [],
+   "length": 896,
+   "lights": [],
+   "look": "c",
+   "nodraw": 41
   },
   "lc_cwall_corner": {
    "box": [
@@ -371,7 +551,7 @@
     64,
     712
    ],
-   "brushes": 17,
+   "brushes": 19,
    "clip": [
     [
      -112,
@@ -390,7 +570,7 @@
      512
     ]
    ],
-   "drawn": 52,
+   "drawn": 56,
    "drawn_box": [
     -112,
     -120,
@@ -416,50 +596,123 @@
      30
     ]
    ],
-   "lights": [
+   "lights": [],
+   "nodraw": 56
+  },
+  "lc_cwall_pier_a": {
+   "box": [
+    -80,
+    -112,
+    0,
+    80,
+    64,
+    700
+   ],
+   "brushes": 18,
+   "clip": [
     [
-     16,
-     -160,
-     256,
-     "147 226 240 220"
-    ],
-    [
-     -152,
-     -16,
-     256,
-     "147 226 240 220"
+     -80,
+     -112,
+     0,
+     80,
+     0,
+     512
     ]
    ],
-   "nodraw": 48
+   "drawn": 36,
+   "drawn_box": [
+    -80,
+    -112,
+    0,
+    80,
+    64,
+    700
+   ],
+   "kind": "wall pier",
+   "lamps": [
+    [
+     -56,
+     -65,
+     416,
+     270,
+     30
+    ]
+   ],
+   "lights": [],
+   "look": "a",
+   "nodraw": 71
   },
-  "lc_cwall_pier": {
+  "lc_cwall_pier_b": {
+   "box": [
+    -80,
+    -112,
+    0,
+    80,
+    64,
+    768
+   ],
+   "brushes": 20,
+   "clip": [
+    [
+     -80,
+     -64,
+     0,
+     80,
+     0,
+     512
+    ]
+   ],
+   "drawn": 37,
+   "drawn_box": [
+    -80,
+    -112,
+    0,
+    80,
+    64,
+    768
+   ],
+   "kind": "wall pier",
+   "lamps": [
+    [
+     -56,
+     -65,
+     416,
+     270,
+     30
+    ]
+   ],
+   "lights": [],
+   "look": "b",
+   "nodraw": 83
+  },
+  "lc_cwall_pier_c": {
    "box": [
     -96,
-    -128,
+    -104,
     0,
     96,
     64,
-    680
+    768
    ],
-   "brushes": 19,
+   "brushes": 21,
    "clip": [
     [
      -96,
-     -128,
+     -64,
      0,
      96,
      0,
      512
     ]
    ],
-   "drawn": 41,
+   "drawn": 47,
    "drawn_box": [
     -96,
-    -128,
+    -104,
     0,
     96,
     64,
-    680
+    768
    ],
    "kind": "wall pier",
    "lamps": [
@@ -471,14 +724,51 @@
      30
     ]
    ],
-   "lights": [
+   "lights": [],
+   "look": "c",
+   "nodraw": 79
+  },
+  "lc_cwall_pier_d": {
+   "box": [
+    -80,
+    -112,
+    0,
+    80,
+    64,
+    680
+   ],
+   "brushes": 18,
+   "clip": [
     [
-     -16,
-     -168,
-     224,
-     "147 226 240 220"
+     -80,
+     -64,
+     0,
+     80,
+     0,
+     512
     ]
    ],
+   "drawn": 36,
+   "drawn_box": [
+    -80,
+    -112,
+    0,
+    80,
+    64,
+    680
+   ],
+   "kind": "wall pier",
+   "lamps": [
+    [
+     -56,
+     -65,
+     416,
+     270,
+     30
+    ]
+   ],
+   "lights": [],
+   "look": "d",
    "nodraw": 71
   },
   "lc_ruin_block_a": {
@@ -1275,27 +1565,37 @@
  },
  "wall": {
   "corner": "lc_cwall_corner",
-  "pier": "lc_cwall_pier",
+  "piers": [
+   "lc_cwall_pier_a",
+   "lc_cwall_pier_b",
+   "lc_cwall_pier_c",
+   "lc_cwall_pier_d"
+  ],
   "runs": {
    "1024": [
     "lc_cwall_1024_a",
-    "lc_cwall_1024_b"
+    "lc_cwall_1024_b",
+    "lc_cwall_1024_c"
    ],
    "512": [
     "lc_cwall_512_a",
-    "lc_cwall_512_b"
+    "lc_cwall_512_b",
+    "lc_cwall_512_c"
    ],
    "640": [
     "lc_cwall_640_a",
-    "lc_cwall_640_b"
+    "lc_cwall_640_b",
+    "lc_cwall_640_c"
    ],
    "768": [
     "lc_cwall_768_a",
-    "lc_cwall_768_b"
+    "lc_cwall_768_b",
+    "lc_cwall_768_c"
    ],
    "896": [
     "lc_cwall_896_a",
-    "lc_cwall_896_b"
+    "lc_cwall_896_b",
+    "lc_cwall_896_c"
    ]
   }
  }
