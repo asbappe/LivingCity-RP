@@ -413,6 +413,7 @@ class Forest:
         self.cuts = {}                    # side: (from, to) along it: a stretch of the shell's wall the piece builds itself (never the gate's side)
         self.rooms = []                   # (Plan, its origin here): rooms the ground must stay out of (under their floors or over their ceilings)
         self.placed = []                  # every solid prop static() and stand() put down, for settle()
+        self.shell_walls = []             # the shell's sky walls as built (shell()), for the check that none stands in a room
 
     def keep_way_clear(self, box, label):
         """A space players must be able to walk through (a doorway, a hole, a gate's approach, a gallery's middle), as a
@@ -528,6 +529,7 @@ class Forest:
             for s1, s2, face in pieces:
                 x1, y1, x2, y2 = frames[name](s1, s2)
                 v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
+                self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.z0 + GATE_HIGH, self.lid), sky, bottom=MAT["ceiling"], vis=vis)
@@ -1139,8 +1141,11 @@ class BunkerForest(Forest):
         # gantry level is the corridor's floor; the forest's north wall is cut where the corridor and its walls pass
         self.silo_at = (origin[0] - 640, origin[1] + 1600 + 544, zg - 1408)
         # (and where the leader's way out passes it, since 24 November: map_silo.py's WAY_X, its walls with it)
+        # (and where the walkway to the complex passes: its run east straddles the forest's edge (y 1024 of the bunker), so the
+        #  wall is cut along all of it, its walls with it, from x 0 to the north leg's east wall. The owner, 24 November:
+        #  "... no wall at all visible and it's all open to the void": the forest's sky wall had stood in its north half.)
         self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512), (MS.WAY_X[0] - MS.WAY_T - self.ox, MS.WAY_X[1] + MS.WAY_T - self.ox),
-                              (self.B0[0] + self.NE_LEG[0] - 64, self.B0[0] + self.NE_LEG[1] + 64)]      # (and where the walkway to the complex passes)
+                              (self.B0[0] + min(r[0] for r, _ in self.DEEP if r[0] >= 0 and r[3] > self.D - self.B0[1]) - 64, self.B0[0] + self.NE_LEG[1] + 64)]
         self.plan, self.deep = plan, deep
         for p in (plan, deep, low):     # (each one's walls may look into the others' rooms where they meet)
             p.others = [q for q in (plan, deep, low) if q is not p]
@@ -1346,9 +1351,29 @@ class BunkerForest(Forest):
             if not any(box[0] < p[0] < box[3] and box[1] < p[1] < box[4] and box[2] < p[2] < box[5] for p in lit):
                 self.problems.append("the bunker's %s has no light" % name)
         # the deep level and the corridor must stay under the ground
-        cover = min(self.natural(bx + (i + 0.5) * CELL, by + (j + 0.5) * CELL) for (i, j) in deep.cells if by + (j + 1) * CELL <= self.D) - top      # (in the forest)
+        # (the ground as it is laid, not as it would be: every corner of every square of the deep level in the forest, walls
+        #  too, by the height of the patch it is in; the owner, 24 November, of the walkway to the complex: "a ground
+        #  texture/displacement stretching over the hallway")
+        cover = 1e9
+        for (i, j) in deep.cells:
+            x, y = bx + i * CELL, by + j * CELL
+            if not (0 <= x and x + CELL <= self.W and 0 <= y and y + CELL <= self.D):
+                continue
+            bias = (x // PATCH * PATCH + PATCH / 2, y // PATCH * PATCH + PATCH / 2)
+            cover = min(cover, min(self.height(x + dx, y + dy, bias) for dx in (0, CELL) for dy in (0, CELL)) - top)
         if cover < 16:
             self.problems.append("the bunker's deep level comes within %d of the ground's surface" % cover)
+        # and nothing of the forest's shell stands in any of the bunker's rooms (its sky wall stood in the north half of the
+        # walkway to the complex where it crosses the forest's edge: "no wall at all visible and it's all open to the void")
+        for p in (plan, deep, low) + ((self.stair_plan,) if getattr(self, "stair_plan", None) else ()):
+            for x1, y1, x2, y2, sp in p.rectangles():
+                if sp[0] == "solid":
+                    continue
+                a = p.box(x1, y1, sp[1], x2, y2, sp[3] if sp[0] == "low" else p.top)
+                for b in self.shell_walls:
+                    if all(a[k] < b[k + 3] and b[k] < a[k + 3] for k in range(3)):
+                        self.problems.append("the forest's shell wall at (%d %d)-(%d %d) stands in the bunker's room at (%d %d)-(%d %d)" % (
+                            b[0], b[1], b[3], b[4], a[0], a[1], a[3], a[4]))
         self.notes.append("the bunker: its door at (%d %d), floor z %d; 15 steps down to the first level (z %d: a hall, the bunk room), 11 more down to the deep level "
                           "(z %d: a walkway west to the plant room and the corridor to the silo, a walkway north and east to the control complex), which is at least %d "
                           "under the ground; %d lamps, each lighting its own pool" % (self.ox + bx + 640, self.oy + by, zp, zl, zd, cover, self.lamps))
