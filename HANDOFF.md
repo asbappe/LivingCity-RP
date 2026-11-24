@@ -39,8 +39,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   Lua GMod lacks); **Overwatch answers raids** (LC.RaidOverwatch); flying dreams free of a short zone's top (LC.DreamTop);
   sleepers lie on beds (no SetupBones); eyelids yield; intake one line, hands up, R no fists; bed tally; rain cover.
 - 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`; LC.PreferWav). Not seen live yet.
-- 22 and 23 November: the canal ring (map_ring_walk.py): Combine wall and ruins a Propper++ kit the owner compiles
-  (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces with the ring (TODO). Valve set pieces: 27 in the gallery.
+- 22 to 24 November: the canal ring (map_ring_walk.py): the owner compiled the Propper++ kit (35 models, models/lc/kit).
+  vbsp also limits unique vertices (65,536): their quick build stopped at 70,769. map_budget.py now estimates them; the
+  ring's test map needs the nodraw pass (36 min): 30,901 faces, ~56,678 vertices. Stitched map still over (TODO).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
 - Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
