@@ -233,7 +233,7 @@ def lay(b, elems, side, cars):
                 band(fr, 0, ROAD_OUT, L, FR, road, e["tag"])
             else:
                 band(fr, 0, EDGE, L, TRACK, walk, e["tag"])
-                band(fr, 0, TRACK, L, ROAD_IN, gravel, e["tag"])
+                band(fr, 0, TRACK, L, ROAD_IN, road if e.get("no_track") else gravel, e["tag"])
                 band(fr, 0, ROAD_IN, L, FR, road, e["tag"])
             r = fr.rect(0, s * FR, L, s * (FR + (1600 if e.get("lifted") else 64)))
             for i in range(r[0] // CELL, r[2] // CELL):
@@ -263,8 +263,8 @@ def lay(b, elems, side, cars):
         z = elems[k + 1] if k + 1 < len(elems) else None
         if not a or not z or a["kind"] != "leg" or z["kind"] != "leg":
             continue
-        ra = a["frame"].rect(max(0, a["length"] - FR - 64), s * (EDGE + 64), a["length"], s * (FR + 64))      # (from beyond the parapet: the canal's edges keep theirs)
-        rz = z["frame"].rect(0, s * (EDGE + 64), min(z["length"], FR + 64), s * (FR + 64))
+        ra = a["frame"].rect(a["length"] - FR - 64, s * (EDGE + 64), a["length"], s * (FR + 64))      # (from beyond the parapet: the canal's edges keep theirs)
+        rz = z["frame"].rect(0, s * (EDGE + 64), FR + 64, s * (FR + 64))      # (the whole square, however short the stretch next to the turn is: a 128 one left both pavements running on across the corner, the owner, 24 November)
         x1, y1, x2, y2 = max(ra[0], rz[0]), max(ra[1], rz[1]), min(ra[2], rz[2]), min(ra[3], rz[3])
         crossing = "rail_span" in a and "rail_span" in z      # (both runs' tracks end short of it, or one is carried across: all road)
         for i in range(x1 // CELL, x2 // CELL):
@@ -370,7 +370,7 @@ def lay(b, elems, side, cars):
             m.det(ties, MM["beam_wood"], vis=dv, faces={"bottom": MAT["nodraw"]})
             m.det(rails, MAT["bars"], vis=dv)
         # between the tracks and the road: the inner pavement and its kerb
-        for a, c in runs(ROAD_IN + 32):
+        for a, c in ([] if e.get("no_track") else runs(ROAD_IN + 32)):
             v1, v2 = sv(ROAD_IN, ROAD_OUT)
             m.det([(a, v1, STREET, c, v2, STREET + 8)], walk, vis=dv)
         # (no rail between the tracks and the road: the owner, 24 November, "remove the hand railing between the railroad and the road/sidewalk")
@@ -615,6 +615,14 @@ def rail_runs(b, elems, s, cars):
         if ub - ua < 256:
             b.notes.append("the run %s is too short for a track between its ends" % r["tag"])
             ua = ub = 0
+        if "tunnel" not in ends:
+            # (a run no train can reach has no track at all: the owner, 24 November, of a length of rails between two
+            # buffer stops and the corner beside it, "two roads end, intersected by redundant sidewalks and train tracks
+            # ending, all of it is rubbish". Its track bed is road, with no kerb between: the road runs to the canal's edge)
+            ua = ub = 0
+            for e in legs:
+                e["no_track"] = True
+            b.notes.append("the run %s has no train's tunnel at either end: no track on it, its road runs to the canal's edge" % r["tag"])
         r.update(ends=ends, ua=ua, ub=ub)
         o = 0
         for e in legs:
