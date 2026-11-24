@@ -9,7 +9,9 @@ a fence, a grate, water or a tool brush you can see through), or if a displaceme
 and cave rock are walls to the eye, though not to the compiler). The open air players can reach or see into is flooded
 from the player starts. A face of the world or of func_detail with a drawn material is kept if the air just in front of
 it (2, 6 and 12 out, over the whole face) touches that flood anywhere; else nobody can see it and it becomes nodraw.
-Displaced faces, faces of moving or breakable brushes and tool faces are never touched.
+Sky faces are judged as the rest (since 23 November: the canal ring's sky boxes were 11,000 faces nobody sees; nodraw
+seals as the sky does). Displaced faces, faces of moving or breakable brushes and other tool faces are never touched.
+The flood goes in slabs, in place: the canal ring's test map (a grid of 3.6 billion cubes of 8) takes about 8 GB.
 
 Safe by design: anything the flood can slip into counts as seen (a wall thinner than a cube may let it through, which
 only keeps more faces). Only the material lines of the faces it names change; every other byte of the file stays.
@@ -47,8 +49,10 @@ def opaque(mats):
 
 
 def drawn(mat):
+    """A face the compiler draws: anything but a tool texture, and the sky (a sky face nobody sees costs a face all the
+    same; nodraw seals as it does)."""
     m = mat.lower()
-    return not m.startswith("tools/")
+    return not m.startswith("tools/") or m in ("tools/toolsskybox", "tools/toolsskybox2d")
 
 
 def planes_of(sides):
@@ -77,18 +81,22 @@ def main():
     ap.add_argument("--list", action="store_true", help="print every face made nodraw")
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
     ap.add_argument("--brushes", action="store_true", help="also delete the brushes nobody can see that do not seal the map")
+    ap.add_argument("--route", nargs=3, type=float, metavar=("X", "Y", "Z"), help="print the way the seen air takes from the player start to this point")
     a = ap.parse_args()
     C = float(a.cell)
     root = mv.read(a.vmf)
 
     brushes, faces, disps, seeds, things = [], [], [], [], []      # (planes, bbox) solid; (side id, mat, poly, normal) candidates
     every = []      # (solid id, "world" or "detail", bbox, sides, opaque, planes): every brush that could go (--brushes)
+    every_point = []      # (class, name, origin): every point entity (--brushes checks none stands out in the void)
     for top in root.kids:
         if top.name == "world":
             owner, sols = "world", [k for k in top.kids if k.name == "solid"]
         elif top.name == "entity":
             cls = top.kv.get("classname", "")
             o = mv.nums(top.kv.get("origin", ""))
+            if len(o) == 3 and not [k for k in top.kids if k.name == "solid"]:
+                every_point.append((cls, top.kv.get("targetname", "") or top.kv.get("model", ""), o))
             if cls.startswith("info_player") and len(o) == 3:
                 seeds.append((o[0], o[1], o[2] + 36))
             elif len(o) == 3 and cls.startswith(("light", "prop_", "npc_", "item_", "env_sprite", "point_spotlight")):
@@ -163,7 +171,8 @@ def main():
             ok = ((I >= 0) & (I < n)).all(axis=1)
             I = I[ok]
             solid[I[:, 0], I[:, 1], I[:, 2]] = True
-    air = ~solid
+    air = np.logical_not(solid, out=solid)      # (in place: the canal ring's grid is gigabytes)
+    del solid
     reached = np.zeros(n, dtype=bool)
     for sd in seeds:
         i = idx(sd)
@@ -173,15 +182,20 @@ def main():
         sys.exit("every player start is inside something solid")
 
     def fill(reached, air, axis):
-        A = np.moveaxis(air, axis, -1).reshape(-1, n[axis])
-        R = np.moveaxis(reached, axis, -1).reshape(-1, n[axis])
-        start = A.copy()
-        start[:, 1:] &= ~A[:, :-1]
-        rid = np.cumsum(start, axis=None, dtype=np.int32).reshape(A.shape)
-        has = np.zeros(int(rid[-1, -1]) + 2, dtype=bool)
-        has[rid[R & A]] = True
-        out = A & has[rid]
-        return np.moveaxis(out.reshape(np.moveaxis(air, axis, -1).shape), -1, axis)
+        """Along one axis, every run of air holding a seen cube is seen; done in slabs, in place (the same answer as at
+        once, in a fraction of the memory: a slab's rows are independent)."""
+        Av, Rv = np.moveaxis(air, axis, -1), np.moveaxis(reached, axis, -1)
+        step = max(1, int(32e6 // max(1, Av[0].size)))
+        for k0 in range(0, Av.shape[0], step):
+            A = Av[k0:k0 + step].reshape(-1, n[axis])
+            R = Rv[k0:k0 + step].reshape(-1, n[axis])
+            start = A.copy()
+            start[:, 1:] &= ~A[:, :-1]
+            rid = np.cumsum(start, axis=None, dtype=np.int64).reshape(A.shape)
+            has = np.zeros(int(rid[-1, -1]) + 2, dtype=bool)
+            has[rid[R & A]] = True
+            Rv[k0:k0 + step] = (A & has[rid]).reshape(Rv[k0:k0 + step].shape)
+        return reached
 
     def flood(reached, air):
         """Every cube of `air` joined to `reached` (cubes sharing a face), by filling whole runs along each axis in
@@ -198,6 +212,37 @@ def main():
     reached = flood(reached, air)
     print("flood: %.1f M cubes of air seen of %.1f M open" % (reached.sum() / 1e6, air.sum() / 1e6))
 
+    if a.route:      # (how does the air get there? a shortest way, cube by cube, through the seen air)
+        goal = tuple(idx(a.route))
+        if not reached[goal]:
+            print("route: %s is not in seen air" % (a.route,))
+        else:
+            dist = np.full(n, -1, dtype=np.int32)
+            start = [tuple(idx(sd)) for sd in seeds if reached[tuple(idx(sd))]][0]
+            dist[start] = 0
+            front, step = np.array([start]), 0
+            offs = np.array([(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)])
+            while dist[goal] < 0 and len(front):
+                nb = (front[:, None, :] + offs[None, :, :]).reshape(-1, 3)
+                ok = ((nb >= 0) & (nb < n)).all(axis=1)
+                nb = nb[ok]
+                nb = nb[reached[nb[:, 0], nb[:, 1], nb[:, 2]] & (dist[nb[:, 0], nb[:, 1], nb[:, 2]] < 0)]
+                nb = np.unique(nb, axis=0)
+                step += 1
+                dist[nb[:, 0], nb[:, 1], nb[:, 2]] = step
+                front = nb
+            path, cur = [goal], np.array(goal)
+            while dist[tuple(cur)] > 0:
+                for o in offs:
+                    q = cur + o
+                    if (q >= 0).all() and (q < n).all() and dist[tuple(q)] == dist[tuple(cur)] - 1:
+                        cur = q
+                        break
+                path.append(tuple(cur))
+            path.reverse()
+            print("route: %d cubes from the start; every 8th:" % len(path))
+            for q in path[::8] + [path[-1]]:
+                print("   (%d %d %d)" % tuple(lo + (np.array(q) + 0.5) * C))
     # the check: every light and placed thing should stand in air the flood saw (or inside something, where some
     # dressing sits); one in unseen air means a place people use that the flood missed, so nothing is changed
     lost = []
@@ -214,6 +259,9 @@ def main():
     hidden = {}
     for sid, mat, poly, nrm in faces:
         P = np.array(poly)
+        if np.cross(P, np.roll(P, -1, axis=0)).sum(axis=0) @ nrm < 0:
+            P = P[::-1]      # (anticlockwise round its normal, for the test below: Hammer++'s corners run clockwise, and with
+                             #  them every point inside a face was dropped, so only its middle and corners were judged)
         c = P.mean(axis=0)
         e1 = P[1] - P[0]
         e1 = e1 / (np.linalg.norm(e1) or 1)
@@ -281,6 +329,10 @@ def main():
                 break
         void = flood(void, out_air)
         print("the void outside the seal: %.1f M cubes" % (void.sum() / 1e6))
+        for cls, name, o in every_point:      # (a thing out in the void: the compiler stops on a leak)
+            i = idx(o)
+            if (i >= 0).all() and (i < n).all() and void[tuple(i)]:
+                print("  LEAK: %s %s at %s stands outside the sealed map" % (cls, name, [round(c) for c in o]))
         m = int(round(16 / C))      # (16 of margin round every brush)
         pocket = out_air & ~void & ~reached      # (air inside the seal nobody sees: sealed pockets, the ground under the terrain)
         kinds = {}

@@ -3896,3 +3896,12 @@ Where a street runs along a module's bank (Mod.street_side()), every walk, deck,
 - **Checked by:** map_build.py chain prints no PROBLEM; the walk check (map_walk.py) only proves a place is reached from somewhere, so for a module beside a street also walk from the street on floors at 600 or higher and see its high places reached (a scratch run of map_walk's Floors with the low floors taken out).
 - **Tags:** owner, streets, combine, geometry
 
+### Spend faces where eyes are: recessed at eye level, flat higher up, no second wall inside a wall (`owner-few-faces-per-thing`)
+
+A small piece must stay small in the compiler's count. Windows on the ground floor sit recessed in the wall on a sill; windows above it lie flat on the wall's face with no sill and their thin edges nodraw. Never line a room with a skin of brushes in front of its walls: paint the walls themselves (Plan.paint_wall). A trim at one height along a row (plinth, string course) is one run, not a piece per house; one cornice step, no lintels. A sheet or mark 1 thick shows only its broad faces (seen_faces). Measure a piece with map_budget.py after the nodraw pass, by source, before sending it.
+
+- **Why:** "12k brushes is ludicrous considering how simple and small it is"; then "for the windows, keep those that are at eye level or bottom floor recessed, but any higher can be flat" (24 November). The town was 12,836 drawn faces: about 30 a window, and 2,700 in skins on its rooms' walls.
+- **How:** map_town.facade and band (fewest boxes round holes), glass_pane(edge=nodraw), Plan.paint_wall and TownPlan.painted, map_mods_b.seen_faces and candle(block=True). The town went to 6,783 faces and 15,811 sides.
+- **Checked by:** map_budget.py FILE.vmf --line on the build and on map_hidden_faces.py's output: the town's share is 7,000 faces and 18,000 sides (docs/dev/map-building.md, the budget).
+- **Tags:** facades, interiors, geometry, performance, owner
+

@@ -5558,66 +5558,10 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
-# mouths that move with the recorded voices (cl_livingcity_lipsync.lua, the owner, 12 November)
+# mouths that move with the recorded voices: the client no longer works the jaw (23 November): the server
+# does (sv_livingcity_lipsync.lua, Nov23_LipSyncTests), or the game itself from the recording's phoneme track.
 err = L.execute(r"""
-local function Face(model, flexes)
-    local e = ents.Create("npc_citizen")
-    e:SetPos(_me:GetPos() + Vector(100, 0, 0))
-    local w = {}
-    e.GetModel = function() return model end
-    e.GetFlexNum = function() return flexes and 40 or 0 end
-    e.GetFlexIDByName = function(_, n) return flexes and flexes[n] or nil end
-    e.GetFlexBounds = function() return 0, 1 end
-    e.GetFlexWeight = function(_, id) return w[id] or 0 end
-    e.SetFlexWeight = function(_, id, v) w[id] = v end
-    e.Health = function() return 100 end
-    return e, w
-end
-local npc, w = Face("models/humans/group01/male_07.mdl", { jaw_drop = 3, right_part = 5, left_part = 6 })
-npc:SetNW2Float("lc_talk_from", CurTime())
-npc:SetNW2Float("lc_talk_until", CurTime() + 2)
-hook.t.EntityNetworkedVarChanged.LivingCityLipSync(npc, "lc_talk_until", 0, CurTime() + 2)
-local opened, shut = 0, 0
-for _ = 1, 30 do
-    _advance(0.05)
-    hook.t.Think.LivingCityLipSync()
-    if (w[3] or 0) > 0.05 then opened = opened + 1 else shut = shut + 1 end
-end
-if opened < 5 then return "lip sync: the jaw never opened while they spoke" end
-if shut < 1 then return "lip sync: the jaw never closed between syllables" end
-if (w[5] or 0) <= 0 and (w[6] or 0) <= 0 then return "lip sync: the lips never parted" end
-_advance(3)
-hook.t.Think.LivingCityLipSync()
-if (w[3] or 0) ~= 0 then return "lip sync: the mouth stayed open after the line" end
-local cop = Face("models/police.mdl", nil)
-cop:SetNW2Float("lc_talk_until", CurTime() + 2)
-hook.t.EntityNetworkedVarChanged.LivingCityLipSync(cop, "lc_talk_until", 0, CurTime() + 2)
-local okT, errT = pcall(hook.t.Think.LivingCityLipSync)
-if not okT then return "lip sync: " .. tostring(errT) end
-if LC.LipSyncFace(cop) ~= false then return "lip sync: a metrocop's mask has no jaw to move" end
--- (14 November: "the NPC's mouth doesn't move with the voice lines") a speaker the hook never told us of is
--- found all the same, and the jaw is set again as the frame is drawn, after the game has smoothed the face back
-local npc2, w2 = Face("models/humans/group01/female_02.mdl", { jaw_drop = 3, right_part = 5, left_part = 6 })
-npc2:SetNW2Float("lc_talk_from", CurTime())
-npc2:SetNW2Float("lc_talk_until", CurTime() + 3)
-local fisWas = ents.FindInSphere
-ents.FindInSphere = function() return { npc2, _me } end
-local draw = hook.t.PreDrawOpaqueRenderables and hook.t.PreDrawOpaqueRenderables.LivingCityLipSync
-if not draw then return "lip sync: the jaw is not set again when the frame is drawn" end
-local heldAtDraw = 0
-for _ = 1, 30 do
-    _advance(0.05)
-    hook.t.Think.LivingCityLipSync()
-    w2[3] = 0 -- (the game smooths the face back to the server's before it draws)
-    draw(false, false)
-    if (w2[3] or 0) > 0.05 then heldAtDraw = heldAtDraw + 1 end
-end
-ents.FindInSphere = fisWas
-if heldAtDraw < 5 then return "lip sync: a speaker nobody announced was not found, or the jaw did not hold at draw time (" .. heldAtDraw .. ")" end
-w2[3] = 0.4
-draw(true, false)
-if w2[3] ~= 0.4 then return "lip sync: worked again for the shadow pass" end
-npc:Remove() cop:Remove() npc2:Remove()
+if hook.t.Think and hook.t.Think.LivingCityLipSync then return "lip sync: the client still works the jaw (the server does now)" end
 return nil
 """)
 if err:

@@ -1,0 +1,1642 @@
+{
+"name": "valve_coast_thumper",
+"note": "d2_coast_12's Combine thumper: the big prop_thumper (combinethumper001a, its own thump sound and dust) on the sand with its ladder up to the deck, the deck's railings, the lights on its crown, and the Combine button on the deck (a use-toggled func_door) with a glow that is green while it thumps and red when turned off",
+"from": "d2_coast_12.vmf",
+"box": [
+4480,
+-11180,
+280,
+4740,
+-10950,
+1010
+],
+"anchor": [
+4600,
+-11087,
+294
+],
+"size": [
+260,
+230,
+730
+],
+"solids": [
+{
+"from": "worldspawn",
+"sides": [
+{
+"plane": [
+[
+40.0,
+63.79999999999927,
+246.0
+],
+[
+47.0,
+63.79999999999927,
+246.0
+],
+[
+47.0,
+41.79999999999927,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+47.0,
+63.79999999999927,
+246.0
+],
+[
+40.0,
+63.79999999999927,
+246.0
+],
+[
+40.0,
+41.79999999999927,
+246.0
+],
+[
+47.0,
+41.79999999999927,
+246.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 18392] 0.25",
+"vaxis": "[0 -1 0 44348] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+40.0,
+41.79999999999927,
+20.0
+],
+[
+47.0,
+41.79999999999927,
+20.0
+],
+[
+47.0,
+63.79999999999927,
+20.0
+]
+],
+"verts": [],
+"corners": [
+[
+40.0,
+41.79999999999927,
+20.0
+],
+[
+40.0,
+63.79999999999927,
+20.0
+],
+[
+47.0,
+63.79999999999927,
+20.0
+],
+[
+47.0,
+41.79999999999927,
+20.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 18392] 0.25",
+"vaxis": "[0 -1 0 44348] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+40.0,
+63.79999999999927,
+246.0
+],
+[
+40.0,
+41.79999999999927,
+246.0
+],
+[
+40.0,
+41.79999999999927,
+20.0
+]
+],
+"verts": [],
+"corners": [
+[
+40.0,
+41.79999999999927,
+20.0
+],
+[
+40.0,
+41.79999999999927,
+246.0
+],
+[
+40.0,
+63.79999999999927,
+246.0
+],
+[
+40.0,
+63.79999999999927,
+20.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -44348] 0.25",
+"vaxis": "[0 0 -1 -1232] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+47.0,
+63.79999999999927,
+20.0
+],
+[
+47.0,
+41.79999999999927,
+20.0
+],
+[
+47.0,
+41.79999999999927,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+47.0,
+63.79999999999927,
+20.0
+],
+[
+47.0,
+63.79999999999927,
+246.0
+],
+[
+47.0,
+41.79999999999927,
+246.0
+],
+[
+47.0,
+41.79999999999927,
+20.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -44348] 0.25",
+"vaxis": "[0 0 -1 -1232] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+47.0,
+63.79999999999927,
+246.0
+],
+[
+40.0,
+63.79999999999927,
+246.0
+],
+[
+40.0,
+63.79999999999927,
+20.0
+]
+],
+"verts": [],
+"corners": [
+[
+40.0,
+63.79999999999927,
+20.0
+],
+[
+40.0,
+63.79999999999927,
+246.0
+],
+[
+47.0,
+63.79999999999927,
+246.0
+],
+[
+47.0,
+63.79999999999927,
+20.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 18392] 0.25",
+"vaxis": "[0 0 -1 -1232] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+47.0,
+41.79999999999927,
+20.0
+],
+[
+40.0,
+41.79999999999927,
+20.0
+],
+[
+40.0,
+41.79999999999927,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+47.0,
+41.79999999999927,
+20.0
+],
+[
+47.0,
+41.79999999999927,
+246.0
+],
+[
+40.0,
+41.79999999999927,
+246.0
+],
+[
+40.0,
+41.79999999999927,
+20.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 18392] 0.25",
+"vaxis": "[0 0 -1 -1232] 0.25",
+"lightmapscale": "16"
+}
+]
+},
+{
+"from": "worldspawn",
+"sides": [
+{
+"plane": [
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-70.0,
+71.0,
+272.0
+],
+[
+-70.0,
+25.0,
+272.0
+]
+],
+"verts": [],
+"corners": [
+[
+-70.0,
+25.0,
+272.0
+],
+[
+-70.0,
+71.0,
+272.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-70.0,
+25.0,
+246.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -11087] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-68.0,
+25.0,
+246.0
+],
+[
+-68.0,
+25.0,
+272.0
+],
+[
+-68.0,
+71.0,
+272.0
+]
+],
+"verts": [],
+"corners": [
+[
+-68.0,
+25.0,
+246.0
+],
+[
+-68.0,
+71.0,
+246.0
+],
+[
+-68.0,
+71.0,
+272.0
+],
+[
+-68.0,
+25.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -11087] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-70.0,
+25.0,
+246.0
+],
+[
+-68.0,
+25.0,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+-68.0,
+25.0,
+246.0
+],
+[
+-70.0,
+25.0,
+246.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-68.0,
+71.0,
+246.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 -1 0 11087] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-68.0,
+71.0,
+272.0
+],
+[
+-68.0,
+25.0,
+272.0
+],
+[
+-70.0,
+25.0,
+272.0
+]
+],
+"verts": [],
+"corners": [
+[
+-68.0,
+71.0,
+272.0
+],
+[
+-70.0,
+71.0,
+272.0
+],
+[
+-70.0,
+25.0,
+272.0
+],
+[
+-68.0,
+25.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 -1 0 11087] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-70.0,
+71.0,
+272.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-68.0,
+71.0,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+-68.0,
+71.0,
+272.0
+],
+[
+-68.0,
+71.0,
+246.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-70.0,
+71.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-68.0,
+25.0,
+272.0
+],
+[
+-68.0,
+25.0,
+246.0
+],
+[
+-70.0,
+25.0,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+-70.0,
+25.0,
+272.0
+],
+[
+-70.0,
+25.0,
+246.0
+],
+[
+-68.0,
+25.0,
+246.0
+],
+[
+-68.0,
+25.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+}
+]
+},
+{
+"from": "worldspawn",
+"sides": [
+{
+"plane": [
+[
+-70.0,
+73.0,
+246.0
+],
+[
+-70.0,
+73.0,
+272.0
+],
+[
+-70.0,
+71.0,
+272.0
+]
+],
+"verts": [],
+"corners": [
+[
+-70.0,
+73.0,
+272.0
+],
+[
+-70.0,
+73.0,
+246.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-70.0,
+71.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -11087] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+40.0,
+71.0,
+246.0
+],
+[
+40.0,
+71.0,
+272.0
+],
+[
+40.0,
+73.0,
+272.0
+]
+],
+"verts": [],
+"corners": [
+[
+40.0,
+71.0,
+272.0
+],
+[
+40.0,
+71.0,
+246.0
+],
+[
+40.0,
+73.0,
+246.0
+],
+[
+40.0,
+73.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[0 1 0 -11087] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-70.0,
+73.0,
+246.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+40.0,
+71.0,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+-70.0,
+71.0,
+246.0
+],
+[
+-70.0,
+73.0,
+246.0
+],
+[
+40.0,
+73.0,
+246.0
+],
+[
+40.0,
+71.0,
+246.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 -1 0 11087] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+40.0,
+73.0,
+272.0
+],
+[
+40.0,
+71.0,
+272.0
+],
+[
+-70.0,
+71.0,
+272.0
+]
+],
+"verts": [],
+"corners": [
+[
+40.0,
+73.0,
+272.0
+],
+[
+-70.0,
+73.0,
+272.0
+],
+[
+-70.0,
+71.0,
+272.0
+],
+[
+40.0,
+71.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 -1 0 11087] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-70.0,
+73.0,
+272.0
+],
+[
+-70.0,
+73.0,
+246.0
+],
+[
+40.0,
+73.0,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+40.0,
+73.0,
+272.0
+],
+[
+40.0,
+73.0,
+246.0
+],
+[
+-70.0,
+73.0,
+246.0
+],
+[
+-70.0,
+73.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+40.0,
+71.0,
+272.0
+],
+[
+40.0,
+71.0,
+246.0
+],
+[
+-70.0,
+71.0,
+246.0
+]
+],
+"verts": [],
+"corners": [
+[
+-70.0,
+71.0,
+272.0
+],
+[
+-70.0,
+71.0,
+246.0
+],
+[
+40.0,
+71.0,
+246.0
+],
+[
+40.0,
+71.0,
+272.0
+]
+],
+"material": "TOOLS/TOOLSCLIP",
+"uaxis": "[1 0 0 4600] 1",
+"vaxis": "[0 0 -1 -292] 1",
+"lightmapscale": "16"
+}
+]
+}
+],
+"points": [
+{
+"classname": "env_sprite",
+"origin": [
+-18.449999999999818,
+33.0,
+295.0
+],
+"keys": {
+"classname": "env_sprite",
+"disablereceiveshadows": "0",
+"framerate": "10.0",
+"GlowProxySize": "2.0",
+"HDRColorScale": ".7",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "sprites/glow01.spr",
+"renderamt": "200",
+"rendercolor": "0 255 0",
+"renderfx": "0",
+"rendermode": "5",
+"scale": "0.1",
+"spawnflags": "1",
+"targetname": "thumper_1_button_sprite"
+}
+},
+{
+"classname": "light_spot",
+"origin": [
+-12.0,
+37.0,
+432.07899999999995
+],
+"keys": {
+"classname": "light_spot",
+"_cone": "20",
+"_constant_attn": "400000",
+"_distance": "0",
+"_exponent": "1",
+"_inner_cone": "10",
+"_light": "147 226 240 2500",
+"_lightHDR": "-1 -1 -1 1",
+"_lightscaleHDR": ".3",
+"_linear_attn": "0",
+"_quadratic_attn": "1",
+"angles": "-60 45 0",
+"pitch": "-60",
+"style": "0"
+}
+},
+{
+"classname": "light_spot",
+"origin": [
+-8.0,
+-33.0,
+432.07899999999995
+],
+"keys": {
+"classname": "light_spot",
+"_cone": "20",
+"_constant_attn": "400000",
+"_distance": "0",
+"_exponent": "1",
+"_inner_cone": "10",
+"_light": "147 226 240 2500",
+"_lightHDR": "-1 -1 -1 1",
+"_lightscaleHDR": ".3",
+"_linear_attn": "0",
+"_quadratic_attn": "1",
+"angles": "-60 -120 0",
+"pitch": "-60",
+"style": "0"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-19.0,
+29.0,
+293.0
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "0 90 0",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/props_combine/CombineButton.mdl",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"solid": "6",
+"spawnflags": "0",
+"targetname": "thumper_1_button_model"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-3.9899999999997817,
+-27.0,
+414.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 60 0",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"model": "models/props_combine/combine_light002a.mdl",
+"solid": "0"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+-19.98999999999978,
+25.0,
+414.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 240 0",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"model": "models/props_combine/combine_light002a.mdl",
+"solid": "0"
+}
+}
+],
+"wiring": [
+{
+"classname": "info_ladder_dismount",
+"origin": [
+64.0,
+117.0,
+0.0
+],
+"keys": {},
+"connections": []
+},
+{
+"classname": "info_ladder_dismount",
+"origin": [
+16.0,
+53.0,
+251.94899999999996
+],
+"keys": {},
+"connections": []
+},
+{
+"classname": "info_ladder_dismount",
+"origin": [
+128.0,
+118.0,
+-2.0
+],
+"keys": {},
+"connections": []
+},
+{
+"classname": "info_ladder_dismount",
+"origin": [
+128.0,
+53.0,
+-2.0
+],
+"keys": {},
+"connections": []
+},
+{
+"classname": "func_door",
+"keys": {
+"disablereceiveshadows": "0",
+"disableshadows": "0",
+"dmg": "0",
+"health": "0",
+"lip": "20",
+"locked_sentence": "0",
+"movedir": "0 0 0",
+"noise2": "Buttons.snd9",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"spawnflags": "289",
+"speed": "100",
+"targetname": "thumper_1_button",
+"unlocked_sentence": "0",
+"wait": "3"
+},
+"connections": [
+[
+"OnClose",
+"thumper_1_button,Unlock,,1,-1"
+],
+[
+"OnClose",
+"thumper_1_button,Lock,,0,-1"
+],
+[
+"OnOpen",
+"thumper_1_button,Lock,,0,-1"
+],
+[
+"OnOpen",
+"thumper_1_button,Unlock,,1,-1"
+],
+[
+"OnOpen",
+"thumper_1_button_sprite,SetScale,0.1,0.3,-1"
+],
+[
+"OnOpen",
+"thumper_1_button_sprite,Color,0 255 0,0.2,-1"
+],
+[
+"OnOpen",
+"thumper_1_button_sprite,SetScale,0.05,0.2,-1"
+],
+[
+"OnOpen",
+"thumper_1,Enable,,0.2,-1"
+],
+[
+"OnOpen",
+"thumper_1_button_model,SetAnimation,togglein,0,-1"
+],
+[
+"OnClose",
+"thumper_1_button_sprite,SetScale,0.05,0.2,-1"
+],
+[
+"OnClose",
+"thumper_1_button_sprite,Color,255 0 0,0.2,-1"
+],
+[
+"OnClose",
+"thumper_1_button_sprite,SetScale,0.1,0.3,-1"
+],
+[
+"OnClose",
+"thumper_1,Disable,,0.2,-1"
+],
+[
+"OnClose",
+"thumper_1_button_model,SetAnimation,toggleout,0,-1"
+],
+[
+"OnOpen",
+"thumper_1_button_sprite2,Color,0 255 0,0.2,-1"
+],
+[
+"OnClose",
+"thumper_1_button_sprite2,Color,255 0 0,0.2,-1"
+]
+],
+"brushes": [
+[
+{
+"plane": [
+[
+-32.0,
+25.0,
+300.0
+],
+[
+-32.0,
+31.0,
+300.0
+],
+[
+-28.0,
+35.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-12.0,
+25.0,
+300.0
+],
+[
+-12.0,
+31.0,
+300.0
+],
+[
+-16.0,
+35.0,
+300.0
+],
+[
+-27.99999999999909,
+35.0,
+300.0
+],
+[
+-32.0,
+31.0,
+300.0
+],
+[
+-32.0,
+25.0,
+300.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 18400] 0.25",
+"vaxis": "[0 -1 0 44348] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-28.0,
+35.0,
+288.0
+],
+[
+-32.0,
+31.0,
+288.0
+],
+[
+-32.0,
+25.0,
+288.0
+]
+],
+"verts": [],
+"corners": [
+[
+-32.0,
+25.0,
+288.0
+],
+[
+-32.0,
+31.0,
+288.0
+],
+[
+-27.99999999999909,
+35.0,
+288.0
+],
+[
+-16.0,
+35.0,
+288.0
+],
+[
+-12.0,
+31.0,
+288.0
+],
+[
+-12.0,
+25.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 18400] 0.25",
+"vaxis": "[0 -1 0 44348] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-16.0,
+35.0,
+288.0
+],
+[
+-16.0,
+35.0,
+300.0
+],
+[
+-28.0,
+35.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-27.99999999999909,
+35.0,
+300.0
+],
+[
+-16.0,
+35.0,
+300.0
+],
+[
+-16.0,
+35.0,
+288.0
+],
+[
+-27.99999999999909,
+35.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 18456.0019] 0.25",
+"vaxis": "[0 0 -1 -1161] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-32.0,
+25.0,
+288.0
+],
+[
+-32.0,
+25.0,
+300.0
+],
+[
+-12.0,
+25.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-12.0,
+25.0,
+300.0
+],
+[
+-32.0,
+25.0,
+300.0
+],
+[
+-32.0,
+25.0,
+288.0
+],
+[
+-12.0,
+25.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 18396.002] 0.25",
+"vaxis": "[0 0 -1 -1152] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-12.0,
+31.0,
+288.0
+],
+[
+-12.0,
+31.0,
+300.0
+],
+[
+-16.0,
+35.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-16.0,
+35.0,
+288.0
+],
+[
+-16.0,
+35.0,
+300.0
+],
+[
+-12.0,
+31.0,
+300.0
+],
+[
+-12.0,
+31.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 -44348] 0.25",
+"vaxis": "[0 0 -1 -1128] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-28.0,
+35.0,
+288.0
+],
+[
+-28.0,
+35.0,
+300.0
+],
+[
+-32.0,
+31.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-32.0,
+31.0,
+300.0
+],
+[
+-27.99999999999909,
+35.0,
+300.0
+],
+[
+-27.99999999999909,
+35.0,
+288.0
+],
+[
+-32.0,
+31.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 -44348] 0.25",
+"vaxis": "[0 0 -1 -1128] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-32.0,
+31.0,
+288.0
+],
+[
+-32.0,
+31.0,
+300.0
+],
+[
+-32.0,
+25.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-32.0,
+25.0,
+288.0
+],
+[
+-32.0,
+25.0,
+300.0
+],
+[
+-32.0,
+31.0,
+300.0
+],
+[
+-32.0,
+31.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 -44348] 0.25",
+"vaxis": "[0 0 -1 -1176] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-12.0,
+25.0,
+288.0
+],
+[
+-12.0,
+25.0,
+300.0
+],
+[
+-12.0,
+31.0,
+300.0
+]
+],
+"verts": [],
+"corners": [
+[
+-12.0,
+31.0,
+288.0
+],
+[
+-12.0,
+31.0,
+300.0
+],
+[
+-12.0,
+25.0,
+300.0
+],
+[
+-12.0,
+25.0,
+288.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 -44348] 0.25",
+"vaxis": "[0 0 -1 -1176] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-22.0,
+30.0,
+294.0
+]
+},
+{
+"classname": "point_spotlight",
+"origin": [
+-8.0,
+-32.0,
+433.001
+],
+"keys": {
+"angles": "60 -120 0",
+"HDRColorScale": ".7",
+"renderamt": "255",
+"rendercolor": "147 226 240",
+"spawnflags": "7",
+"spotlightlength": "768",
+"spotlightwidth": "48"
+},
+"connections": []
+},
+{
+"classname": "point_spotlight",
+"origin": [
+-13.0,
+32.0,
+433.001
+],
+"keys": {
+"angles": "60 45 0",
+"HDRColorScale": ".7",
+"renderamt": "255",
+"rendercolor": "147 226 240",
+"spawnflags": "7",
+"spotlightlength": "768",
+"spotlightwidth": "48"
+},
+"connections": []
+},
+{
+"classname": "prop_thumper",
+"origin": [
+0.0,
+0.2000000000007276,
+-0.05099999999998772
+],
+"keys": {
+"angles": "0 270 0",
+"dustscale": "256",
+"EffectRadius": "1000",
+"model": "models/props_combine/CombineThumper001a.mdl",
+"targetname": "thumper_1"
+},
+"connections": []
+},
+{
+"classname": "func_useableladder",
+"origin": [
+64.0,
+53.0,
+252.0
+],
+"keys": {
+"point0": "4664 -11034 546",
+"point1": "4664 -11034 294"
+},
+"connections": []
+},
+{
+"classname": "env_lightglow",
+"origin": [
+-18.449999999999818,
+35.0,
+295.0
+],
+"keys": {
+"angles": "0 90 0",
+"GlowProxySize": "2.0",
+"HDRColorScale": ".5",
+"HorizontalGlowSize": "5",
+"MaxDist": "500",
+"MinDist": "200",
+"OuterMaxDist": "2500",
+"rendercolor": "0 255 0",
+"spawnflags": "0",
+"targetname": "thumper_1_button_sprite2",
+"VerticalGlowSize": "5"
+},
+"connections": []
+},
+{
+"classname": "logic_auto",
+"origin": [
+-60,
+40,
+300
+],
+"keys": {
+"spawnflags": "1"
+},
+"connections": [
+[
+"OnMapSpawn",
+"thumper_1_button_model,SetAnimation,depressed,0,-1"
+],
+[
+"OnMapSpawn",
+"thumper_1,Disable,,0,-1"
+],
+[
+"OnMapSpawn",
+"thumper_1,Enable,,0.5,-1"
+]
+]
+}
+],
+"outside": [],
+"fired_from_outside": [],
+"trigger": []
+}

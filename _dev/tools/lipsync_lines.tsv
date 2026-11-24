@@ -1,0 +1,555 @@
+# made by python3 _dev/tools/lipsync_bake.py --update-lines from VOICE_SCRIPTS.md: file, words
+livingcity/administrator/attempt_furious1	Citizens, this is your Administrator. A moment ago someone in this city tried to kill me. I am alive. I am unharmed. And I am not going anywhere. Go to your homes and let Civil Protection do its work. I will speak to you all very soon, and I will have a great deal to say.
+livingcity/administrator/black_crushed_stern1	It is over. The city is mine again, and I will remember every one of you.
+livingcity/administrator/black_stand_furious1	So you have come for me. Come, then. You will not reach me.
+livingcity/administrator/drill1	Into the yard, everyone, for our morning exercises. Stretch!
+livingcity/administrator/execution_furious1	An enemy of our city will answer for their crimes at the wall. Come and see that justice is done.
+livingcity/administrator/jog1	Morning, everyone! Shoes on: time for our little jog.
+livingcity/administrator/parade1	Parade time! Chins up, shoulders back, and let's show the city who we are.
+livingcity/administrator/question_hideout_stern1	Where do they meet?
+livingcity/administrator/question_names_stern1	Who sent you?
+livingcity/administrator/question_supplies_stern1	Who armed you?
+livingcity/administrator/question_who_stern1	Who put you up to it?
+livingcity/administrator/question_why_stern1	You tried to kill me. Why?
+livingcity/administrator/rebel_killing_stern1	They took one of our own and murdered them. They call it freedom. Love your neighbour, hate the traitor.
+livingcity/administrator/shelled_stern1	Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters.
+livingcity/administrator/socio_black_furious1	Citizens. The city has been overrun by its own ingratitude. Go indoors and stay there. Anyone in the open will be fired upon from the Nexus. This is not a request.
+livingcity/administrator/speech_attempt_caught_stern1	The traitor has been dealt with. There was no mercy, and there will be none for the next one.
+livingcity/administrator/speech_attempt_enemy_stern1	And who did this? A coward. One of the so-called Resistance, who call themselves your liberators and shoot at a woman giving a speech. That is their courage. That is all they have to offer you.
+livingcity/administrator/speech_attempt_guards_stern1	My guards did not hesitate. They put themselves between me and death, as they do for you every day. Thank them when you pass them. Loudly.
+livingcity/administrator/speech_attempt_hero_stern1	A soldier threw himself on a grenade that was meant for me. He did not hesitate. Ask yourselves whether you would have done the same, and remember him tonight.
+livingcity/administrator/speech_attempt_hunt_stern1	The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it.
+livingcity/administrator/speech_attempt_martyr_stern1	I felt how close it came. I will carry that moment for the rest of my life. And do you know what I thought of? Not myself. I thought of you, and of who would look after you if I were gone.
+livingcity/administrator/speech_attempt_measures_stern1	I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary.
+livingcity/administrator/speech_attempt_open_stern1	Citizens. Look at me. I am still here. Not long ago, on this very spot, someone tried to kill your Administrator.
+livingcity/administrator/speech_attempt_resolve_stern1	They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere.
+livingcity/administrator/speech_attempt_you_stern1	That shot was not meant for me alone. It was aimed at your rations, your homes and your safety. Whoever strikes at me strikes at every one of you.
+livingcity/administrator/speech_calm1	These have been quiet days, days of order and honest work. The Union sees it. I see it.
+livingcity/administrator/speech_close1	Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union.
+livingcity/administrator/speech_ev_arrests_firm1	Civil Protection has been busy. No one taken to the cells was taken at random. They chose disorder, and disorder has a price.
+livingcity/administrator/speech_ev_deaths_firm1	Blood has been spilled in our streets. Every life lost to violence is stolen from all of us. Violence solves nothing. It only invites more.
+livingcity/administrator/speech_ev_defiance_firm1	Voices have been raised at the officers who keep you safe. I understand frustration. I will not tolerate it in the street.
+livingcity/administrator/speech_ev_despair1	Some of you have lost hope. Do not. Hope is not something you are given. It is something you choose, every morning.
+livingcity/administrator/speech_ev_drink1	I hear some of you have found comfort in a bottle. I do not blame you. But a clear head is a loyal head.
+livingcity/administrator/speech_ev_escape_stern1	Some who were held have run from where they belong. They will be found. And whoever hides them will stand beside them when they are.
+livingcity/administrator/speech_ev_heavyhand_firm1	Some of you have seen our officers act firmly. Firmness is a kindness, in the end. It ends trouble before trouble ends you.
+livingcity/administrator/speech_ev_informer_hurt_stern1	Some of you were hurt for helping the city, beaten in the dark by cowards who call themselves liberators. Look at what they do to their own neighbours, and ask who your friends really are.
+livingcity/administrator/speech_ev_informers1	To those of you who came forward and told us what you saw: thank you. You know who you are, and so do I. Your loyalty will not be forgotten.
+livingcity/administrator/speech_ev_kindness1	And I have seen good things too: neighbours sharing their bread, calming each other's nerves. That is the city I am proud of.
+livingcity/administrator/speech_ev_posters_firm1	Someone has been defacing the city's notices. A poster costs the Union very little. Replacing it will cost you your rations.
+livingcity/administrator/speech_ev_sabotage_stern1	Machines have been broken and the city's work undone. Sabotage hurts no one but you. It is your water, your light, your bread.
+livingcity/administrator/speech_ev_taken_stern1	Citizens have been taken, dragged off by the so-called Resistance and questioned like animals. That is the freedom they offer you: a cage, and a chair.
+livingcity/administrator/speech_ev_theft_firm1	There has been stealing, from the city and from each other. A thief steals from everyone standing in this square.
+livingcity/administrator/speech_hunger1	I know the rations have been thin. I feel every empty bowl as if it were my own. Work your shifts, keep your quotas, and the trains will come.
+livingcity/administrator/speech_mood_afraid1	I can see fear in your faces. You have nothing to fear from me. Only from those who would set you against me.
+livingcity/administrator/speech_mood_content1	You look well: rested, fed and calm. Good. Keep it so.
+livingcity/administrator/speech_mood_restless_firm1	There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work.
+livingcity/administrator/speech_morale1	I see tired faces, and I understand. But the lights are on, the streets are swept, and not one of you is alone.
+livingcity/administrator/speech_open1	Citizens. Thank you for coming to hear me. Let us talk about the days behind us.
+livingcity/administrator/speech_order_firm1	Let me be clear, so no one can say they were not told. The rules of this city are not suggestions, and my authority is not in question.
+livingcity/administrator/speech_slogan1	Love your neighbour, hate the traitor.
+livingcity/administrator/speech_soon1	My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone.
+livingcity/administrator/speech_unrest_stern1	There are those among you who whisper of freedom and mean only chaos. Every one of them you shelter is a debt your whole block will pay.
+livingcity/administrator/suppressor_down_furious1	They have silenced the Nexus. It changes nothing.
+livingcity/citizens/advice_bins_female1	You look half-starved. Try the bins. Nobody checks them as often as they should.
+livingcity/citizens/advice_bins_male1	You look half-starved. Try the bins. Nobody checks them as often as they should.
+livingcity/citizens/advice_buy_female1	You look hungry, and you've got credits. The Commissary has food. Go on.
+livingcity/citizens/advice_buy_male1	You look hungry, and you've got credits. The Commissary has food. Go on.
+livingcity/citizens/advice_drink_own_female1	You've something to drink in your coat. Drink it. You look awful.
+livingcity/citizens/advice_drink_own_male1	You've something to drink in your coat. Drink it. You look awful.
+livingcity/citizens/advice_eat_own_female1	You've got food on you, haven't you? Eat it, before someone takes it off you.
+livingcity/citizens/advice_eat_own_male1	You've got food on you, haven't you? Eat it, before someone takes it off you.
+livingcity/citizens/advice_home_female1	You look lost. Your block's that way. Get there before curfew.
+livingcity/citizens/advice_home_male1	You look lost. Your block's that way. Get there before curfew.
+livingcity/citizens/advice_housing_female1	Nowhere to sleep? They hand out rooms. Go and ask, it's not far.
+livingcity/citizens/advice_housing_male1	Nowhere to sleep? They hand out rooms. Go and ask, it's not far.
+livingcity/citizens/advice_intake_female1	You're new, aren't you? Get yourself on the register before anything else. Over that way.
+livingcity/citizens/advice_intake_male1	You're new, aren't you? Get yourself on the register before anything else. Over that way.
+livingcity/citizens/advice_job_female1	No work? The Union doesn't like idle hands. Find a job before they find you.
+livingcity/citizens/advice_job_male1	No work? The Union doesn't like idle hands. Find a job before they find you.
+livingcity/citizens/advice_labor_female1	Registered, but no work? Nobody gets a room without a work assignment. Go and get one.
+livingcity/citizens/advice_labor_male1	Registered, but no work? Nobody gets a room without a work assignment. Go and get one.
+livingcity/citizens/advice_nowhere_female1	Can't help you there, friend. I wish I could.
+livingcity/citizens/advice_nowhere_male1	Can't help you there, friend. I wish I could.
+livingcity/citizens/advice_ration_female1	Your ration's waiting. Don't leave it too long, they notice who doesn't come.
+livingcity/citizens/advice_ration_male1	Your ration's waiting. Don't leave it too long, they notice who doesn't come.
+livingcity/citizens/advice_shift_female1	Short on credits? Get to work. A shift pays.
+livingcity/citizens/advice_shift_male1	Short on credits? Get to work. A shift pays.
+livingcity/citizens/advice_water_female1	You look parched. There's water near here. Drink before you fall down.
+livingcity/citizens/advice_water_male1	You look parched. There's water near here. Drink before you fall down.
+livingcity/citizens/advice_work_female1	Hungry, and no card? Work a shift. It's the only way they give you one.
+livingcity/citizens/advice_work_male1	Hungry, and no card? Work a shift. It's the only way they give you one.
+livingcity/citizens/lead_arrive2_female1	This is it. Good luck.
+livingcity/citizens/lead_arrive2_male1	This is it. Good luck.
+livingcity/citizens/lead_arrive_female1	Here. Don't tell anyone I helped you.
+livingcity/citizens/lead_arrive_male1	Here. Don't tell anyone I helped you.
+livingcity/citizens/lead_cantgo_female1	I can't go there. It's that way, look.
+livingcity/citizens/lead_cantgo_male1	I can't go there. It's that way, look.
+livingcity/citizens/lead_giveup_female1	Fine. It's that way. Find it yourself.
+livingcity/citizens/lead_giveup_male1	Fine. It's that way. Find it yourself.
+livingcity/citizens/lead_start2_female1	Here, let me show you. Follow me.
+livingcity/citizens/lead_start2_male1	Here, let me show you. Follow me.
+livingcity/citizens/lead_start_female1	Come on, I'll show you. Stay close.
+livingcity/citizens/lead_start_male1	Come on, I'll show you. Stay close.
+livingcity/citizens/lead_wait_female1	Keep up! I'm not waiting all day.
+livingcity/citizens/lead_wait_male1	Keep up! I'm not waiting all day.
+livingcity/citizens/say_agree_male1	You're not wrong.
+livingcity/citizens/say_ask_else_male1	You're asking the wrong person.
+livingcity/citizens/say_ask_food_male1	You got anything to eat? Anything?
+livingcity/citizens/say_ask_help_male1	I need help. I've got nobody else to ask.
+livingcity/citizens/say_ask_smoke_male1	You wouldn't have a smoke on you, would you?
+livingcity/citizens/say_break_accuse_male1	That one! That one talks to Civil Protection!
+livingcity/citizens/say_break_accused_male1	That's a lie! I never told them anything!
+livingcity/citizens/say_break_beaten_male1	Stop! Please, I didn't do anything!
+livingcity/citizens/say_break_binge_male1	Leave me alone. Just let me have this.
+livingcity/citizens/say_break_defy_male1	They can't scare all of us forever.
+livingcity/citizens/say_break_despair_male1	I can't. I just can't anymore.
+livingcity/citizens/say_break_inform_male1	Officer. I've got something you'll want to hear.
+livingcity/citizens/say_break_seek_male1	There you are. I've been looking for you.
+livingcity/citizens/say_break_share_male1	Go on, take half. You need it more than I do.
+livingcity/citizens/say_break_steady_male1	Easy. Easy now. We're going to be ok, right?
+livingcity/citizens/say_break_tantrum_male1	I've had enough! Do you hear me? Enough!
+livingcity/citizens/say_bye_cold_male1	We're done here.
+livingcity/citizens/say_bye_plain_male1	I should get going.
+livingcity/citizens/say_bye_warm_male1	Take care of yourself. I mean it.
+livingcity/citizens/say_cant_say_male1	I can't talk about that. You know why.
+livingcity/citizens/say_careful_male1	Careful. The walls have ears.
+livingcity/citizens/say_decline_gift_male1	I can't take that. Keep it.
+livingcity/citizens/say_disagree_male1	Well, I don't see it that way.
+livingcity/citizens/say_dunno_male1	I wouldn't know anything about that.
+livingcity/citizens/say_dunno_scared_male1	I don't know, and I don't want to know.
+livingcity/citizens/say_fear_units_male1	Stay away from the units today. They're in a mood.
+livingcity/citizens/say_greet_cold_male1	What do you want?
+livingcity/citizens/say_greet_guarded_male1	Do I know you?
+livingcity/citizens/say_greet_plain_male1	Hey. Still here, huh? Me too.
+livingcity/citizens/say_greet_unit_male1	No trouble here, officer.
+livingcity/citizens/say_greet_warm_male1	Oh, it's you. Good to see a friendly face.
+livingcity/citizens/say_grief_male1	They took my friend. Just dragged them off.
+livingcity/citizens/say_hate_quiet_male1	One day they'll answer for all of it.
+livingcity/citizens/say_heard_male1	I've heard things. Everyone has.
+livingcity/citizens/say_insulted_male1	Hey. There's no need for that.
+livingcity/citizens/say_later_male1	Not now. Not here.
+livingcity/citizens/say_laugh_male1	Ha. That's the first laugh I've had all week.
+livingcity/citizens/say_loyal_male1	The Administrator knows best. Everyone knows that!
+livingcity/citizens/say_loyal_warn_male1	You shouldn't say things like that. Someone will hear.
+livingcity/citizens/say_maybe_male1	Maybe. I'd have to think about it.
+livingcity/citizens/say_no_hard_male1	No. And don't ask me again.
+livingcity/citizens/say_no_male1	Sorry, but no.
+livingcity/citizens/say_obey_male1	Keep your head down and do what they say. That's how you make it.
+livingcity/citizens/say_offer_male1	Here. Take it. Don't say where you got it.
+livingcity/citizens/say_open_listen_male1	Listen.
+livingcity/citizens/say_open_look_male1	Look.
+livingcity/citizens/say_open_please_male1	Please.
+livingcity/citizens/say_open_quiet_male1	Keep your voice down.
+livingcity/citizens/say_open_well_male1	Well...
+livingcity/citizens/say_open_you_male1	You.
+livingcity/citizens/say_res_deny_male1	I don't know anything about any Resistance.
+livingcity/citizens/say_res_hint_male1	There are people. That's all I'll say.
+livingcity/citizens/say_res_refuse_male1	I've got people to think about. Leave me out of it.
+livingcity/citizens/say_res_respect_male1	Whoever they are, good luck to them.
+livingcity/citizens/say_res_side_male1	If someone needed a door left open, mine would be.
+livingcity/citizens/say_saw_beating_male1	Don't look. Just keep walking.
+livingcity/citizens/say_saw_death_male1	Oh God. Oh God, no.
+livingcity/citizens/say_small_button_male1	I lost a button off my coat. I keep looking down for it.
+livingcity/citizens/say_small_cat_male1	Did you ever have a cat? I think I had a cat once.
+livingcity/citizens/say_small_crust_male1	If you ever find bread with a crust that crunches, tell me.
+livingcity/citizens/say_small_neighbor_male1	My neighbor hums through the wall. Same three notes, every night.
+livingcity/citizens/say_small_pigeon_male1	There's a pigeon on my windowsill. I'm pretty sure it hates me.
+livingcity/citizens/say_small_rain_male1	Looks like rain again. It always looks like rain.
+livingcity/citizens/say_small_shoes_male1	My shoes squeak now. Both of them. Since Tuesday.
+livingcity/citizens/say_small_soup_male1	I had the strangest dream about soup last night.
+livingcity/citizens/say_small_stairs_male1	Lift's broken again. Eight floors. My knees hate me.
+livingcity/citizens/say_small_tiles_male1	I counted the tiles in my hallway. Two hundred and twelve.
+livingcity/citizens/say_small_tune_male1	I can't get that tune from the speakers out of my head.
+livingcity/citizens/say_small_water_male1	The water tastes different this week. Not worse. Just different.
+livingcity/citizens/say_sorry_male1	I'm sorry. I didn't mean anything by it.
+livingcity/citizens/say_state_angry_male1	I've had about all I can take.
+livingcity/citizens/say_state_fine_male1	Getting by. That's all I can do.
+livingcity/citizens/say_state_hopeful_male1	It can't last forever. Nothing ever does.
+livingcity/citizens/say_state_hungry_male1	I haven't had a real meal in days.
+livingcity/citizens/say_state_lonely_male1	It's good to just talk to someone.
+livingcity/citizens/say_state_low_male1	What's the point? Really, what is the point?
+livingcity/citizens/say_state_scared_male1	I'm scared. Aren't you?
+livingcity/citizens/say_state_tired_male1	I'm tired. Just so tired.
+livingcity/citizens/say_thanks_big_male1	You didn't have to do that. Thank you.
+livingcity/citizens/say_thanks_male1	Thank you. I won't forget it.
+livingcity/citizens/say_threatened_male1	I don't want any trouble.
+livingcity/citizens/say_tip_help_male1	If you need something, ask. Quietly.
+livingcity/citizens/say_tip_trouble_male1	There's gonna be trouble tonight. I can feel it.
+livingcity/citizens/say_truth_male1	Honestly? It's as bad as it looks.
+livingcity/citizens/say_units_near_male1	Not with them standing right there.
+livingcity/citizens/say_warn_asked_male1	Someone's been asking about you.
+livingcity/citizens/say_warn_go_male1	You should go. Now.
+livingcity/citizens/say_warn_informer_male1	Watch who you talk to. Not everyone here is a friend.
+livingcity/citizens/say_warn_watched_male1	You're being watched. Don't look now and don't turn around.
+livingcity/citizens/say_yes_male1	Yeah. All right.
+livingcity/citizens/say_yes_warm_male1	For you? Of course.
+livingcity/clerk/closed1	This desk is closed. Come back later.
+livingcity/clerk/cp1	Residents of sufficient Civil Standing may apply to Civil Protection. Applications are made on your work board, under Factions. Civil Protection serves the city. Consider it.
+livingcity/clerk/curfew1	Curfew is announced two minutes in advance. When it begins, return to your housing block and remain there until morning. Residents found outside during curfew will be detained.
+livingcity/clerk/greet1	Citizen Information. State your question.
+livingcity/clerk/greet_curt1	Make it quick. There are others waiting.
+livingcity/clerk/greet_warm1	Good day, citizen. Thank you for your cooperation. How may I help you?
+livingcity/clerk/housing1	Housing Allocation assigns rooms to registered residents with a work assignment. Your room is in your housing block. Sleep there, keep your possessions there, and be there at curfew.
+livingcity/clerk/law1	The city's laws are posted on the law board. Ignorance of the law is not a defence. Comply with Civil Protection. Do not run in their presence. Report anticivil activity.
+livingcity/clerk/noplace1	That facility is not available in this sector.
+livingcity/clerk/papers1	Every resident is registered at Civil Intake and carries identity papers at all times. Present them to any Civil Protection unit on request. Lost papers are replaced at Civil Intake, for a fee.
+livingcity/clerk/rations1	Rations are issued at the ration dispenser. Each ration requires one ration card. Ration cards are issued on completion of a Union shift: one card per shift. No shift, no card. No card, no ration. Your first allocation after arrival is guaranteed.
+livingcity/clerk/route1	The route is marked. Follow it. Next.
+livingcity/clerk/standing1	Civil Standing measures your value to the city. Work, compliance and reporting raise it. Infractions lower it. Below zero, ration privileges are withdrawn. High standing qualifies a resident for Civil Protection.
+livingcity/clerk/wanted1	You have an outstanding warrant. Remain where you are. Civil Protection is aware of you.
+livingcity/clerk/where1	Which location? I will mark the route.
+livingcity/clerk/work1	All residents are assigned labor. Report to Labor Assignment for your assignment. Shifts pay credits and Civil Standing, and each completed shift earns one ration card. Your shifts are listed on your work board.
+livingcity/colonel/ask11	Happening? I'm old. Old men look how they look. Ask me something useful.
+livingcity/colonel/ask21	You're tired, and the light's bad in here. That's all it is. Don't stare, it's rude.
+livingcity/colonel/ask31	You've seen the others don't answer me. I saw it too, a long time ago. I stopped asking why. Leave it alone a while longer.
+livingcity/colonel/ask41	All right. You've earned it. I didn't get out of the first camp. They burned it with us inside, my brother and me both. Nobody here can see me but the ones who keep coming back. I don't know what that makes me. I know I'm still here, and I know you can hear me. That'll have to do for the pair of us.
+livingcity/colonel/debrief_clean1	Clean. Nobody saw you, nobody followed you home. That's how it's done.
+livingcity/colonel/debrief_failed1	We lost that one. Learn why before you try again.
+livingcity/colonel/debrief_messy1	You got it done, and half the city knows your face. Next time, slower.
+livingcity/colonel/debrief_none1	Nothing to report? Then go and do something worth reporting.
+livingcity/colonel/fund_crowbar1	Another fighter just went out with nothing but a crowbar. Every credit at that screen helps.
+livingcity/colonel/fund_empty1	The fund is empty. Our fighters are going out with crowbars. Give what you can at the screen in the camp.
+livingcity/colonel/fund_promises1	I can't arm anyone on promises. If you have credits, the fund needs them.
+livingcity/colonel/fund_rounds1	There's nothing left for rounds. Not a credit. Whatever you can spare, put it in at the screen.
+livingcity/colonel/greet1	Another one. Sit, if you like. Nobody else does.
+livingcity/colonel/greet_back1	You came back. Most don't.
+livingcity/colonel/greet_known1	You've worked it out by now, haven't you. Nobody else can see me. I didn't get out of the first camp. None of us did, not really. But you keep coming, so I keep telling you what I know.
+livingcity/colonel/greet_trust1	The quartermaster won't look at me, you know. Hasn't for years. Sit.
+livingcity/colonel/intel_march1	They're walking one of ours to the cells. Right now. You can still get to them.
+livingcity/colonel/intel_quiet1	Quiet. Too quiet. Rest while you can.
+livingcity/colonel/intel_supply1	Supply drop coming in. Guarded, but not well. Go.
+livingcity/colonel/intel_sweep1	They're coming into our ground. Now. Clear what you can carry and go.
+livingcity/colonel/intel_sympathizer1	That one. They're with us, they just don't know it yet. Ask them to keep watch.
+livingcity/colonel/job_medicine1	Our wounded are in a bad way. Three of the Union's medicines would see them through.
+livingcity/colonel/job_tags1	They took my brother's tags when they took him. They keep things like that on their own ground. I'd like them back.
+livingcity/colonel/job_unit1	One more thing. The unit who lit the first camp. Designation %s. Still walking around.
+livingcity/colonel/job_unit_none1	There's a unit I'd like to see in the ground. When he's back on the streets, I'll tell you his number.
+livingcity/colonel/nothing1	That's not what I need.
+livingcity/colonel/thanks_medicine1	That'll keep them breathing. Good. You think of others. That's rarer than courage.
+livingcity/colonel/thanks_tags1	His. His name, scratched in by hand. Here. He'd want you to have this. It never missed for him.
+livingcity/colonel/thanks_unit1	Is it done? ...It is. I can feel it. Thank you. I don't think I'll need anything else.
+livingcity/colonel/whisper_base1	The master core, the big one from their nexus. Get it to our scientist and let him crack it open. All their screens change.
+livingcity/colonel/whisper_bloom1	Let the weeds take the streets, every crack full, and leave them be. The city starts to dance.
+livingcity/colonel/whisper_fire1	Set fifteen fires burning at once. Then watch what the city does.
+livingcity/colonel/whisper_hard1	Kill the city's lights and keep them dead for a quarter of an hour. Somebody starts a party in the dark, and nobody can stop it.
+livingcity/colonel/whisper_harpies1	When the streets run red fast enough, a dozen dead in a few minutes, something comes down out of the sky. Something with wings.
+livingcity/colonel/whisper_marrow1	When the dead pile up faster than they can be carried off, or the infested hold half the city, the bones get restless.
+livingcity/colonel/whisper_none1	Nothing you haven't heard from me already.
+livingcity/colonel/whisper_plane1	Do the morning drill, five of you or more, and do it perfectly. Not one mistake. Then look up.
+livingcity/colonel/whisper_shalom1	Six people dancing in a ring, in this city. Imagine it. They say the whole city joins in.
+livingcity/colonel/whisper_standup1	Keep the city red for three quarters of an hour straight. The crowd starts wanting a show.
+livingcity/colonel/whisper_water1	There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain.
+livingcity/cubbage/answer_attempt_caught1	They got one of ours. She says there was no mercy. There was no trial either.
+livingcity/cubbage/answer_attempt_enemy1	A coward, she says, from behind a wall of rifles and a sheet of glass.
+livingcity/cubbage/answer_attempt_guards1	Thank her guards loudly, she says. They'll be listening for who doesn't.
+livingcity/cubbage/answer_attempt_hero1	A soldier died for her. He was somebody's son before they took his face. Remember that tonight instead.
+livingcity/cubbage/answer_attempt_hunt1	She's offering bread for a name. Remember who made you hungry enough to think about it.
+livingcity/cubbage/answer_attempt_martyr1	She thought of you in that moment. She thinks of you every time she cuts your rations, too.
+livingcity/cubbage/answer_attempt_measures1	She never wanted checkpoints. She only built them, manned them and kept them.
+livingcity/cubbage/answer_attempt_open1	She's still here, she says. We noticed.
+livingcity/cubbage/answer_attempt_resolve1	She isn't going anywhere, she says. We'll see about that.
+livingcity/cubbage/answer_attempt_you1	A shot at her is a shot at you, is it? Her soldiers' shots at you were never shots at her.
+livingcity/cubbage/answer_calm1	Quiet days, she calls them. Quiet is what she calls it when nobody dares to speak.
+livingcity/cubbage/answer_close1	That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks.
+livingcity/cubbage/answer_ev_arrests1	Not one of them taken at random, she says. Then tell me what crime a man commits by standing in the wrong square.
+livingcity/cubbage/answer_ev_deaths1	She talks about blood in the streets. Ask whose hands it's on. Her units don't carry those batons for show.
+livingcity/cubbage/answer_ev_defiance1	People raised their voices at her officers. Good. Your voice is the first thing they take, and the last thing you should give up.
+livingcity/cubbage/answer_ev_despair1	Hope is a choice, she says. Then choose it. Just don't let her tell you what to hope for.
+livingcity/cubbage/answer_ev_drink1	She doesn't blame you for drinking. Of course she doesn't. A drunk doesn't fight back.
+livingcity/cubbage/answer_ev_escape1	Some of ours walked out of her cells. Good. If one of them knocks at your door, open it.
+livingcity/cubbage/answer_ev_heavyhand1	Firmness, she calls it. You saw what it was. Remember it.
+livingcity/cubbage/answer_ev_informer_hurt1	She calls us cowards. We don't drag families out of bed at night. We deal with the ones who sell their neighbours.
+livingcity/cubbage/answer_ev_informers1	She thanks the ones who whispered to her. We know who you are too. It isn't too late to stop.
+livingcity/cubbage/answer_ev_kindness1	She takes the credit for you sharing your bread. That was you. It's the one thing she can't stamp out, and it frightens her.
+livingcity/cubbage/answer_ev_posters1	She frets about her posters. Paper. She worries about paper while you go hungry.
+livingcity/cubbage/answer_ev_sabotage1	Broken machines hurt only you, she says. They're her machines, and they keep you in line. Let them break.
+livingcity/cubbage/answer_ev_taken1	Yes, we take some of hers, and we ask them questions. She takes all of you, every day, and doesn't bother asking.
+livingcity/cubbage/answer_ev_theft1	Stealing, she says. The only thief in this city sits in an office and takes your bread to pay for her speeches.
+livingcity/cubbage/answer_fund_crowbars1	One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp.
+livingcity/cubbage/answer_fund_empty1	One more thing. Our fund is empty, and our fighters are going out with crowbars. If you have credits, bring them to the camp.
+livingcity/cubbage/answer_fund_nothing1	Before I go. We have almost nothing left to arm anyone with. Whatever you can give, give it at the screen in our camp.
+livingcity/cubbage/answer_fund_promises1	And one last word. I can't arm people with speeches. If you have credits to spare, the fund needs them.
+livingcity/cubbage/answer_hunger1	She feels every empty bowl, does she? Then why is hers never empty?
+livingcity/cubbage/answer_mood_afraid1	You've nothing to fear from her, she says. Tell that to the ones she's taken.
+livingcity/cubbage/answer_mood_content1	Rested, fed and calm, she says. Look around you. Does that look like anyone you know?
+livingcity/cubbage/answer_mood_restless1	She feels your restlessness, she says. Good. Let her feel it.
+livingcity/cubbage/answer_morale1	Tired faces, she says. You're tired because she works you to the bone. Rest isn't her gift. It's yours.
+livingcity/cubbage/answer_open1	You heard her. Now hear me. Colonel Cubbage, and I have a few corrections to make.
+livingcity/cubbage/answer_order1	Her authority is not in question, she says. When someone has to say that out loud, it already is.
+livingcity/cubbage/answer_shelled1	They dropped headcrabs on our own people rather than face us. Remember that the next time she talks about order. Clear them out, and help your neighbours do the same.
+livingcity/cubbage/answer_slogan1	Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city.
+livingcity/cubbage/answer_unrest1	Whispers of freedom mean chaos, she says. We mean freedom. She knows the difference, and it terrifies her.
+livingcity/dreams/voice/adore_hello1	You may look upon me. On your knees, of course.
+livingcity/dreams/voice/battleline_air1	Did you think I would abandon you? Behold my wings!
+livingcity/dreams/voice/battleline_doom1	Sector overrun. Hostiles beyond containment. Requesting immediate air support.
+livingcity/dreams/voice/battleline_giant1	Look at the size of that one! Everyone, fire!
+livingcity/dreams/voice/battleline_held1	The line held! Every one of you is a hero of my city.
+livingcity/dreams/voice/battleline_hello1	My brave citizens! The terrorists are coming. Take up arms beside my soldiers and hold the line!
+livingcity/dreams/voice/battleline_traitor1	You fired on MY soldiers? Manhacks! Deal with this traitor.
+livingcity/dreams/voice/battleline_turned1	A traitor wants to be a rebel? Then be one. Forever.
+livingcity/dreams/voice/boxing_champ1	Your new... champion... of the world!
+livingcity/dreams/voice/boxing_foe11	In the far corner, weighing in at four hundred pounds of pure debeaked fury... Lamarr!
+livingcity/dreams/voice/boxing_foe21	And now, undefeated in forty bouts, dispensing pain at a reasonable price... the Soda Machine!
+livingcity/dreams/voice/boxing_foe31	And your final opponent... he's big, he's bald, he's barely a year old... the Baby!
+livingcity/dreams/voice/boxing_hello1	Ladies and gentlemen, citizens of all ages... welcome... to the Main Event!
+livingcity/dreams/voice/boxing_ko1	It's a knockout!
+livingcity/dreams/voice/bubbles_hello1	Pop! Pop! Pop them all!
+livingcity/dreams/voice/can_again1	Pick. Up. That. Can.
+livingcity/dreams/voice/can_bin1	Thank you. Delicious.
+livingcity/dreams/voice/can_clone1	Pick up that can. Pick up that can. Pick up that can.
+livingcity/dreams/voice/can_full1	No more room. Pick up all the cans.
+livingcity/dreams/voice/can_hello1	Pick up that can.
+livingcity/dreams/voice/can_litter1	That is not the trash can. Nothing is the trash can. Pick up that can.
+livingcity/dreams/voice/can_swap1	Pick up that can.
+livingcity/dreams/voice/can_trash1	Now, put it in the trash can.
+livingcity/dreams/voice/chairs_hello1	Ladies and gentlemen, musical chairs! When the music stops... sit.
+livingcity/dreams/voice/chairs_sit1	SIT!
+livingcity/dreams/voice/cheese_gold1	The golden cheese! The golden cheese!
+livingcity/dreams/voice/cheese_hello1	Cheeeeese. Cheeeeeeeese.
+livingcity/dreams/voice/clocks_hello1	Tick. Tock. Tick. Tock. It's later than you think. It's earlier than you think. It's cheese.
+livingcity/dreams/voice/clocks_won1	Time... stops.
+livingcity/dreams/voice/conga_hello1	Everybody conga! One, two, three, kick!
+livingcity/dreams/voice/dance_hello1	City Seventeen, are you ready to move? Jump on the big beat!
+livingcity/dreams/voice/derby_hello1	Welcome to the Headcrab Derby! Place your bets, place your bets!
+livingcity/dreams/voice/derby_off1	And they're off!
+livingcity/dreams/voice/derby_win11	And it's Lamarr's Cousin by a leg! It only has legs!
+livingcity/dreams/voice/derby_win21	Hooves wins it! Hooves! A headcrab called Hooves!
+livingcity/dreams/voice/derby_win31	Mister Leg takes it! Mister Leg, everybody!
+livingcity/dreams/voice/derby_win41	Breen's Toupee! Breen's Toupee wins the Derby!
+livingcity/dreams/voice/doors_hello1	Six doors. One plays a song. Listen... listen...
+livingcity/dreams/voice/doors_open1	That one. It was always that one.
+livingcity/dreams/voice/duck_clear1	All clear! The Combine protects us. Wasn't that fun?
+livingcity/dreams/voice/duck_hello1	Hi, citizens! I'm Sunny! The nasty terrorists have built a rocket. If they launch it, what do we do? We duck, and cover!
+livingcity/dreams/voice/duck_siren1	Rocket launch! Duck and cover! Crouch beside a table, quick as you can!
+livingcity/dreams/voice/exam_collect1	Pencils down! I shall now collect your papers. Personally.
+livingcity/dreams/voice/exam_eat11	Mmm. A little dry.
+livingcity/dreams/voice/exam_eat21	Delicious. Absolutely delicious.
+livingcity/dreams/voice/exam_eat31	I grade with my mouth. It's the only fair way.
+livingcity/dreams/voice/exam_eat41	Oh, this one has a lot of crossing out. Crunchy.
+livingcity/dreams/voice/exam_end1	Marvellous. All graded. I couldn't eat another bite.
+livingcity/dreams/voice/exam_hello1	Good morning, class. Pencils ready. Oh dear. You did study, didn't you? And... where are your trousers?
+livingcity/dreams/voice/exam_q11	Next question. Take your time. Actually, don't.
+livingcity/dreams/voice/exam_q21	This one will be on the test. This is the test.
+livingcity/dreams/voice/exam_q31	Hmm. I'm not sure I know this one either.
+livingcity/dreams/voice/flowers_hello1	My soldiers are marching home. Show them how much you love them.
+livingcity/dreams/voice/flying_hello1	Go on. You always knew you could. Just... flap.
+livingcity/dreams/voice/guidance_end1	Excellent. I have improved everything here simply by looking at it.
+livingcity/dreams/voice/guidance_hello1	Show me your work. I have so much guidance to give.
+livingcity/dreams/voice/harvest_hello1	Citizens! The harvest is ripe and the quota is waiting. Bring it in!
+livingcity/dreams/voice/harvest_medal1	For glorious labour beyond the plan: the Order of the Golden Sheaf.
+livingcity/dreams/voice/hate_end1	The enemy fades. Love returns. Love me.
+livingcity/dreams/voice/hate_hello1	Citizens! Behold the enemy of the people. Let him hear you!
+livingcity/dreams/voice/horse_grigori11	Back! Back to the pit, foul beast!
+livingcity/dreams/voice/horse_grigori21	It will not die! Why will it not die?!
+livingcity/dreams/voice/horse_grigori31	Eat, my children! Eat, while it stands still!
+livingcity/dreams/voice/horse_grigori41	I have been shooting this horse since the old days. I will shoot it until the end of days!
+livingcity/dreams/voice/horse_grigori51	Hah! Feel the wrath of the Lord, and buckshot!
+livingcity/dreams/voice/horse_grigori61	Hooves and all, children. Hooves and all.
+livingcity/dreams/voice/horse_intro_female1	I'm so hungry... I could eat a horse.
+livingcity/dreams/voice/horse_intro_male1	I'm so hungry... I could eat a horse.
+livingcity/dreams/voice/lamarr_found1	Lamarr! There you are, you naughty girl!
+livingcity/dreams/voice/lamarr_hello1	Lamarr? Lamarr! Oh, where has she got to now? Has anyone seen my headcrab?
+livingcity/dreams/voice/massgames_flip1	FLIP!
+livingcity/dreams/voice/massgames_hello1	Cards ready! Together, you are my portrait.
+livingcity/dreams/voice/melons_hello1	Today's forecast: melons. Heavy melons, with a chance of lead.
+livingcity/dreams/voice/mirror_hello1	Tell me what you see.
+livingcity/dreams/voice/molasses_hello1	Run. Why aren't you running? Run...
+livingcity/dreams/voice/newsreel_end1	And so another happy day draws to a close. Goodnight, my City Seventeen!
+livingcity/dreams/voice/newsreel_hello1	Welcome to my City Seventeen, where every citizen smiles, and every smile is sincere!
+livingcity/dreams/voice/paint_hello1	A blank canvas! Make it yours! Splat!
+livingcity/dreams/voice/photo_cheese1	Say cheese!
+livingcity/dreams/voice/photo_hello1	Hello! Hello! Lovely day for a photograph! Everybody smile!
+livingcity/dreams/voice/potato_hello1	Hot potato! Don't be holding it when the music... I mean the grenade... stops!
+livingcity/dreams/voice/quiz_end1	Well answered. The city is proud of you.
+livingcity/dreams/voice/quiz_hello1	Good evening, citizens. Let us see how well you know your city.
+livingcity/dreams/voice/quiz_q101	What is the most important thing a citizen can be?
+livingcity/dreams/voice/quiz_q11	Who keeps you safe at night?
+livingcity/dreams/voice/quiz_q21	What do we do when an officer speaks to us?
+livingcity/dreams/voice/quiz_q31	Where does your ration come from?
+livingcity/dreams/voice/quiz_q41	What are the people who call themselves the Resistance?
+livingcity/dreams/voice/quiz_q51	Complete the phrase: Compliance is...
+livingcity/dreams/voice/quiz_q61	How would you describe the Administrator?
+livingcity/dreams/voice/quiz_q71	What should you do if you see a rebel?
+livingcity/dreams/voice/quiz_q81	Who is your best friend?
+livingcity/dreams/voice/quiz_q91	What happens to those who disobey?
+livingcity/dreams/voice/quiz_rebel1	Officers. Remove him.
+livingcity/dreams/voice/quiz_resume1	Where were we? Ah, yes.
+livingcity/dreams/voice/ravenholm_defeat1	No... NO! This is MY dream!
+livingcity/dreams/voice/ravenholm_good1	Hah! Back to your rest, poor souls! Not one of these children shall be harmed!
+livingcity/dreams/voice/ravenholm_rise1	RISE, my children! Rise from your graves and FEAST!
+livingcity/dreams/voice/ravenholm_safe1	You see? Only I can keep you safe. Never forget it.
+livingcity/dreams/voice/ravenholm_stop1	Begone, false priest! These citizens are under MY protection.
+livingcity/dreams/voice/ravenholm_vort1	The Vortessence sees through the false light. Behold what is true.
+livingcity/dreams/voice/roses_hello1	Flowers? For me? How predictable. How lovely.
+livingcity/dreams/voice/saviour_safe1	You are safe now, my children. You are always safe with me.
+livingcity/dreams/voice/saviour_soldiers1	Come, my soldiers. Protect them.
+livingcity/dreams/voice/saviour_stop1	STOP!
+livingcity/dreams/voice/scrap_hello1	Every pot, every pan, every bucket. The city needs your scrap!
+livingcity/dreams/voice/sheep_again1	Again... from the beginning...
+livingcity/dreams/voice/sheep_ask1	How many was that? Say it... before you drift off...
+livingcity/dreams/voice/sheep_hello1	Close your eyes... and count the headcrabs. One... two...
+livingcity/dreams/voice/shh_hello1	Shhhh. The baby's sleeping. Don't wake the baby.
+livingcity/dreams/voice/shh_wake1	You woke the baby.
+livingcity/dreams/voice/shift_double1	Double norm! Every blow counts twice!
+livingcity/dreams/voice/shift_hello1	My workers! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait?
+livingcity/dreams/voice/shift_hero1	A new Hero of Labour! Hang their portrait beside mine!
+livingcity/dreams/voice/shift_idle1	I see you standing there. Back to work, citizen!
+livingcity/dreams/voice/simon_end1	Compliance noted. Dismissed.
+livingcity/dreams/voice/simon_hello1	Citizens. You will do as Overwatch says. Only as Overwatch says.
+livingcity/dreams/voice/simon_says_crouch1	Overwatch says: crouch.
+livingcity/dreams/voice/simon_says_freeze1	Overwatch says: freeze.
+livingcity/dreams/voice/simon_says_jump1	Overwatch says: jump.
+livingcity/dreams/voice/simon_says_walk1	Overwatch says: walk.
+livingcity/dreams/voice/simon_trap_crouch1	Crouch.
+livingcity/dreams/voice/simon_trap_jump1	Jump.
+livingcity/dreams/voice/spy_aim1	Aim!
+livingcity/dreams/voice/spy_caught1	Time is up. The traitor is revealed. I thank my vigilant citizens.
+livingcity/dreams/voice/spy_chant_female1	Glory to the Administrator!
+livingcity/dreams/voice/spy_chant_male1	Glory to the Administrator!
+livingcity/dreams/voice/spy_fire1	Fire!
+livingcity/dreams/voice/spy_flat_female1	Glory to the Administrator.
+livingcity/dreams/voice/spy_flat_male1	Glory to the Administrator.
+livingcity/dreams/voice/spy_hello1	Careless talk costs lives, my children. There is a traitor among you. Watch them closely.
+livingcity/dreams/voice/spy_ready1	Ready!
+livingcity/dreams/voice/spy_whisper_female1	The old bridge. After curfew. Don't be late.
+livingcity/dreams/voice/spy_whisper_male1	The old bridge. After curfew. Don't be late.
+livingcity/dreams/voice/tea_down11	Change places! Move down one!
+livingcity/dreams/voice/tea_down21	Change places! Move down two!
+livingcity/dreams/voice/tea_down31	Change places! Move down three!
+livingcity/dreams/voice/tea_hello1	Welcome, welcome! No room! No room! Sit anywhere. No, not there.
+livingcity/dreams/voice/tea_up1	Clean cup! Clean cup! Move up!
+livingcity/dreams/voice/train_closing1	Doors closing! Doors closing!
+livingcity/dreams/voice/train_hello1	Last train! Last train out of City Seventeen! All aboard!
+livingcity/dreams/voice/train_hint1	You're looking right at it. That never works in dreams.
+livingcity/dreams/voice/vortwar_answer11	She says she protects you. Ask who built the walls.
+livingcity/dreams/voice/vortwar_answer21	Her smile is painted on. Look closer.
+livingcity/dreams/voice/vortwar_answer31	We were chained as you are chained. We are free. You can be.
+livingcity/dreams/voice/vortwar_answer41	The dream is hers. The waking is yours.
+livingcity/dreams/voice/vortwar_in1	The Vortessence sees through her false light. Come, stand with us, and see what is true.
+livingcity/dreams/voice/vortwar_loyal1	Begone, false spirits! These citizens are MINE.
+livingcity/dreams/voice/vortwar_shatter1	Her light was never yours. Wake, and see.
+livingcity/dreams/voice/watchers_hello1	They don't move while you watch them. You can't watch them all.
+livingcity/machines/dispenser_blackout1	Power failure. Service unavailable.
+livingcity/machines/dispenser_empty1	Distribution suspended.
+livingcity/machines/dispenser_nocard1	No ration card detected. Report for labor assignment.
+livingcity/machines/dispenser_short1	Supply shortfall. Try again shortly.
+livingcity/machines/dispenser_suspended1	Ration privileges suspended.
+livingcity/machines/dispenser_unregistered1	Identity not found. Report to Civil Intake.
+livingcity/machines/dispenser_wait1	Allocation not yet available. Return later.
+livingcity/machines/dispenser_withheld1	Allocation withheld. Noncompliance is recorded.
+livingcity/machines/vending_blackout1	Power failure. Service unavailable.
+livingcity/machines/vending_credits1	Insufficient credits.
+livingcity/oldtimer/bins1	The bins. Commissary scraps, things people drop. Nobody checks them as often as they should. Here, I'll show you the nearest.
+livingcity/oldtimer/curfew1	When the voice says two minutes, it means one. Be indoors. I've seen what they do to the ones who are late, and so have the walls.
+livingcity/oldtimer/dealer1	There's a man who trades in what you can't buy. Don't tell him I sent you, and don't let a cop see you with him. That way.
+livingcity/oldtimer/fishing1	Fish, if you can find a line. Cook what you catch on a stove or a fire barrel. Raw meat will turn your stomach.
+livingcity/oldtimer/food1	For me? You're a good one. I won't forget it.
+livingcity/oldtimer/greet1	Sit down, sit down. My knees aren't what they were. What do you want to know?
+livingcity/oldtimer/greet_friend1	Ah, you again. Good. Not many come back.
+livingcity/oldtimer/headdown1	Keep your head down, your papers handy, and your mouth shut. The ones who last are the ones nobody remembers.
+livingcity/oldtimer/hint_card1	Some young thug took my ration card in the line. I'm too old to work a shift for another.
+livingcity/oldtimer/hint_cough1	This cough. Twenty years I've had it. The Commissary wants more for its medicine than I see in a month.
+livingcity/oldtimer/hint_hungry1	My legs won't take me to the bins any more. Some days I don't eat at all.
+livingcity/oldtimer/hint_smoke1	What I wouldn't give for a smoke. Even the Union's, and those taste of floor sweepings.
+livingcity/oldtimer/hint_thirsty1	The tap on my floor's been dry a week. Carrying water up those stairs, at my age...
+livingcity/oldtimer/keepsake1	You've done more for me than my own family. Here. My old picks. I won't be needing them, and you might. Doors don't stay locked for people who know how.
+livingcity/oldtimer/keepsake_again1	Sit a while. The city's quieter when there's someone to share it with.
+livingcity/oldtimer/lockpick1	Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit.
+livingcity/oldtimer/nothing1	Kind of you. But nothing I need, not that.
+livingcity/oldtimer/notyet1	Hm. Ask me that when I know you better.
+livingcity/oldtimer/nowhere1	There used to be one. Not in this part of town, not any more.
+livingcity/oldtimer/resistance1	You didn't hear it from me.
+livingcity/oldtimer/running1	Run in front of a cop and you're a suspect. Walk. Even when your heart's going like a train, walk.
+livingcity/oldtimer/scanners1	Scanners. They take your picture. Don't stand under them, don't do anything worth photographing, and if one flashes you, walk, don't run.
+livingcity/oldtimer/stranger1	I don't know you. Ask me something simple.
+livingcity/oldtimer/thanks_card1	A card? You worked for that. I won't forget it. Not ever.
+livingcity/oldtimer/thanks_cough1	Medicine? For me? I'll sleep tonight, for the first time in a long while.
+livingcity/oldtimer/thanks_hungry1	Food. Real food. You don't know what that means to an old man.
+livingcity/oldtimer/thanks_smoke1	Ah. Now that's a kindness. Sit with me while I have it.
+livingcity/oldtimer/thanks_thirsty1	Water. Bless you. I'll make it last.
+livingcity/oldtimer/water1	Sinks, the machines, open water if you're desperate. Boil anything that isn't from a tap, or you'll be coughing for a week.
+livingcity/overwatch/ambient1	Attention, residents: inaction is conspiracy. Report suspicious behavior.
+livingcity/overwatch/attempt1	Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant.
+livingcity/overwatch/black_crushed1	Incursion contained. Sociostability restoring. Remain indoors.
+livingcity/overwatch/black_fallen1	Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus.
+livingcity/overwatch/black_stand1	Overwatch acknowledges incursion at the Nexus. All units, converge and protect the Administrator.
+livingcity/overwatch/blackout1	Alert: power failure in your district. Remain calm. Maintenance has been dispatched.
+livingcity/overwatch/block_raided1	Housing block inspection in progress. Remain in your unit.
+livingcity/overwatch/breakout1	Alert: unauthorized departure from detention. All residents, report sightings to Civil Protection.
+livingcity/overwatch/curfew1	Attention, residents: curfew is now in effect. Return to your residence block immediately.
+livingcity/overwatch/curfew_soon1	Attention, residents: curfew begins in two minutes. Proceed to your residence block.
+livingcity/overwatch/dawn1	Attention, residents: a new work cycle begins. Report to your assignments.
+livingcity/overwatch/day1	Attention, residents: productivity quotas remain in effect.
+livingcity/overwatch/drill1	Attention, residents: morning drill. Assemble in the yard.
+livingcity/overwatch/dusk1	Attention, residents: the work cycle is ending. Prepare for curfew.
+livingcity/overwatch/ended1	Attention, residents: sociostabilization restored. Resume assigned duties.
+livingcity/overwatch/execution1	Attention: a public execution of an enemy of the city will take place at the wall. Citizens, attend.
+livingcity/overwatch/hunt1	All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive.
+livingcity/overwatch/jog1	Attention, residents: morning exercise. Assemble for the run.
+livingcity/overwatch/lockdown1	Attention, all residents: the city is now in lockdown. Remain indoors. Civil Protection is authorized to use force.
+livingcity/overwatch/night1	Attention, residents: night cycle. Movement outside residence blocks is restricted.
+livingcity/overwatch/outbreak1	Alert: biotic contamination in the city. Avoid the affected area. Containment teams are responding.
+livingcity/overwatch/overwatch_drop1	Overwatch deployment in progress. Residents, clear the landing zone.
+livingcity/overwatch/parade1	Attention, residents: assemble for the parade.
+livingcity/overwatch/power_restored1	Power restored. Resume normal activity.
+livingcity/overwatch/raid1	Attention, residents: a block inspection is under way. Do not interfere with Civil Protection.
+livingcity/overwatch/rations1	Attention, residents: ration distribution is now in progress. Report to your assigned distribution point.
+livingcity/overwatch/rations_soon1	Attention, residents: ration distribution begins in two minutes.
+livingcity/overwatch/rebel_killing1	Attention: anticivil elements have murdered a citizen. Report all knowledge of their whereabouts.
+livingcity/overwatch/response1	Protection response team dispatched. Do not interfere.
+livingcity/overwatch/shelled1	Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters.
+livingcity/overwatch/skirmish_raid1	Overwatch response team deployed. Residents, clear the area.
+livingcity/overwatch/skirmish_sweep1	Overwatch sweep under way in an anticivil sector. Residents, remain clear.
+livingcity/overwatch/socio_black1	Attention all residents: sociostability has collapsed. Martial law is in effect. Mandatory curfew. Suppression fire authorized on all exposed sectors.
+livingcity/overwatch/socio_green1	Sociostability nominal. Resume normal activity.
+livingcity/overwatch/socio_red1	Judgment waiver in effect. Civil Protection may act at their discretion. Remain indoors.
+livingcity/overwatch/socio_yellow1	Sociostability marginal. Expect increased inspections. Keep your papers ready.
+livingcity/overwatch/speech_soon1	Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory.
+livingcity/overwatch/supply1	Attention, residents: supply convoy in transit. Clear the route.
+livingcity/overwatch/suppressor_down1	Alert: Nexus suppression device offline. All units, contain and repair.
+livingcity/overwatch/sweep1	Attention, residents: inspection sweep in progress. Remain where you are and present your identification.
+livingcity/overwatch/territory_grew1	Alert: anticivil activity expanding. Avoid unregistered areas.
+livingcity/overwatch/train_arrival1	Attention: new arrivals at the platform. Proceed to Civil Intake.
+livingcity/overwatch/welcome1	Attention, new resident: report to Civil Intake for registration.
+livingcity/radio/freq7_1	This is Frequency 7. They can't jam us all. Stay low, stay alive.
+livingcity/radio/freq7_curfew1	Curfew's coming. Get where you need to be.
+livingcity/radio/freq7_dropship1	Dropship incoming. Find cover.
+livingcity/radio/freq7_fund1	This is Frequency 7. The fund is empty. Our fighters are going out with crowbars. If you have credits, take them to the camp.
+livingcity/radio/freq7_fund2	Frequency 7. We can't arm anyone on promises. Whatever credits you can spare, the fund needs them.
+livingcity/radio/freq7_fund3	This is Frequency 7. There's nothing left for guns or rounds. Give what you can at the screen in the camp.
+livingcity/radio/freq7_fund4	Frequency 7. Some of ours are going out with nothing but a crowbar. Every credit helps. Bring it to the camp.
+livingcity/radio/freq7_incursion1	Combine in our territory. Everyone to your posts.
+livingcity/radio/freq7_lockdown1	Lockdown. Stay put, stay quiet, wait it out.
+livingcity/radio/freq7_raid1	They're raiding a block. If you can get out, get out now.
+livingcity/radio/freq7_supply1	Supply convoy on the move. Anyone feeling brave?
+livingcity/radio/freq7_sweep1	Heads up: a sweep is coming into our ground. Hide what you've got.
+livingcity/radio/union1	This is the Union band. Work hard, sleep well.
+livingcity/resistance/busy_female1	I'm busy. Ask someone else.
+livingcity/resistance/busy_male1	I'm busy. Ask someone else.
+livingcity/resistance/head_back_female1	Right. I'll head back.
+livingcity/resistance/head_back_male1	Right. I'll head back.
+livingcity/resistance/medic_broke_female1	You don't have the credits, friend. Sorry.
+livingcity/resistance/medic_broke_male1	You don't have the credits, friend. Sorry.
+livingcity/resistance/medic_charge_female1	I hate to charge, but these don't grow on trees.
+livingcity/resistance/medic_charge_male1	I hate to charge, but these don't grow on trees.
+livingcity/resistance/medic_fine_female1	You look fine to me. Come back when you're bleeding.
+livingcity/resistance/medic_fine_male1	You look fine to me. Come back when you're bleeding.
+livingcity/resistance/medic_hurt_female1	Hurt? I can patch you up.
+livingcity/resistance/medic_hurt_male1	Hurt? I can patch you up.
+livingcity/resistance/meet_there_female1	We'll meet you there.
+livingcity/resistance/meet_there_male1	We'll meet you there.
+livingcity/resistance/not_earned_female1	Who are you? Get someone who's earned it to ask me.
+livingcity/resistance/not_earned_male1	Who are you? Get someone who's earned it to ask me.
+livingcity/resistance/on_watch_female1	I'm on watch. Find someone else.
+livingcity/resistance/on_watch_male1	I'm on watch. Find someone else.
+livingcity/resistance/parade_female1	Any more and you're a parade.
+livingcity/resistance/parade_male1	Any more and you're a parade.
+livingcity/resistance/qm_chip_female1	Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.
+livingcity/resistance/qm_chip_male1	Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.
+livingcity/resistance/qm_greet_female1	What do you need?
+livingcity/resistance/qm_greet_male1	What do you need?
+livingcity/resistance/qm_stranger_female1	I don't know you. But if you've brought something for the fight, I'll take it.
+livingcity/resistance/qm_stranger_male1	I don't know you. But if you've brought something for the fight, I'll take it.
+livingcity/resistance/saw_you_female1	We saw what you did. You're with us now.
+livingcity/resistance/saw_you_male1	We saw what you did. You're with us now.

@@ -31,19 +31,18 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 23 November (late): **units fight again** (a leftover `os.getenv` in LC.ChaseWay crashed every chase since 21 Nov;
-  run_tests.py now fails on Lua Garry's Mod lacks). **Overwatch answers raids** (LC.RaidOverwatch: soldiers within 1500
-  join, a squad of 4 at 25 s). **Flying dreams** no longer pinned under a short zone's top (LC.DreamTop: 400+ only); plane
-  yaw 90 (snapshot update awaits the owner's OK). **Sleepers' copy** works without SetupBones; bed points fit the mattress.
-  **Eyelids** yield to dreams/endings/menus. Registration one line; arrival search waits for hands up; R no fists;
-  Housing bed tally; character camera fits the model; rain samples cover (LC_CL.RainCover). PLAYTEST_ARCHIVE is at 95.
-- 23 November (earlier): stimulant holds off exhaustion; Administrator stand-ins `citizentype` 4; address F1 way and
-  carried in the black; station screen in Valve's monitor material; vending cans roll.
-- 23 November (this chat): **EP2's Combine autogun lifted and built out** (`valve_ep2_cannon`; test map
-  map_cannon_test.py, not compiled yet). **Nova Prospekt's vortigaunt torture cell** lifted (`valve_prison_vort_torture`).
-  **map_setpieces.py** ranks set pieces in all 105 shipped maps; picks for the owner: docs/dev/valve-setpieces.md.
-- 22 and 23 November: **the canal ring round City 18** (map_layouts/ring.txt, fitted to c18_lc.vmf; test map
-  map_ring_walk.py, not compiled yet): city, Combine wall, road, railway, canal, ruins, EP2 pine forest (map_backdrop.py).
-- c18_lc.vmf and HL2Leak-VMFs-master.zip are on the owner's Drive (connector finds them; curl drive.usercontent by id).
-- Map chat: bunker, silo and the cave's back to the owner's lists (TODO.md, map-building.md). The owner edits the
-  bunker VMF in Hammer: apply each generator change to THEIR latest file (diff two builds), never resend ours.
+- 24 November (town budget): **the Resistance's town slimmed** to 2,601 brushes, 15,811 sides, 6,783 faces (was 4,350,
+  26,401, 12,836); ground-floor windows recessed, upper flat (owner's call); walls painted on (Plan.paint_wall). Rest
+  without the ring ~50,900 faces. Town walk check: 6 spots unreachable (there before), not fixed. docs/dev/map-building.md.
+- 23 November (late, gamemode): **units fight again** (a leftover os.getenv crashed every chase; run_tests.py now fails on
+  Lua GMod lacks); **Overwatch answers raids** (LC.RaidOverwatch); flying dreams free of a short zone's top (LC.DreamTop);
+  sleepers lie on beds (no SetupBones); eyelids yield; intake one line, hands up, R no fists; bed tally; rain cover.
+- 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`, owner's PC, needs ffmpeg; until
+  then the server works the jaw from loudness). A .wav beats an .mp3 (`LC.PreferWav`). Not seen on the real server yet.
+- 22 and 23 November: the canal ring (map_ring_walk.py): Combine wall and ruins a Propper++ kit the owner compiles
+  (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces with the ring (TODO). Valve set pieces: 27 in the gallery.
+- The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
+  Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
+- Map chat: silo cut to its top floor + office, bedroom, concrete tunnel to the gate (lift on reserve: lc_silo_lift);
+  map_hidden_faces.py (nodraw, --brushes). The owner edits the bunker in Hammer: apply generator changes to THEIR
+  latest file (diff two builds), then trim. Their bunker VMF: 7,984 brush sides (24 Nov).

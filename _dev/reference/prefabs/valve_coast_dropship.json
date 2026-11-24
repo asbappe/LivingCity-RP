@@ -1,0 +1,437 @@
+{
+"name": "valve_coast_dropship",
+"note": "A Combine dropship's troop drop (d2_coast_10, the road wave): on cue a maker spawns the dropship far off; it flies a path of tracks in, hovers, sets its soldier crate down on the drop zone, four soldiers run out to four points, and it picks the crate up and flies another path out, where it is removed; it can come again",
+"from": "d2_coast_10.vmf",
+"box": [
+5100,
+-1600,
+900,
+5650,
+-1000,
+1000
+],
+"anchor": [
+5378,
+-1426,
+896
+],
+"size": [
+550,
+600,
+100
+],
+"solids": [],
+"points": [],
+"wiring": [
+{
+"classname": "npc_combine_s",
+"origin": [
+-165.0,
+-751.6599999999999,
+59.60000000000002
+],
+"keys": {
+"additionalequipment": "weapon_smg1",
+"angles": "0 107 0",
+"model": "models/combine_soldier.mdl",
+"NumGrenades": "999999",
+"physdamagescale": "1.0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"spawnflags": "2564",
+"squadname": "soldier_squad",
+"targetname": "road_soldier_1",
+"waitingtorappel": "No"
+},
+"connections": []
+},
+{
+"classname": "npc_combine_s",
+"origin": [
+-97.64999999999964,
+-731.46,
+58.370000000000005
+],
+"keys": {
+"additionalequipment": "weapon_shotgun",
+"angles": "0 107 0",
+"model": "models/combine_soldier.mdl",
+"NumGrenades": "999999",
+"physdamagescale": "1.0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"spawnflags": "2564",
+"squadname": "soldier_squad",
+"targetname": "road_soldier_2",
+"waitingtorappel": "No"
+},
+"connections": []
+},
+{
+"classname": "npc_combine_s",
+"origin": [
+-41.81999999999971,
+-705.06,
+55.889999999999986
+],
+"keys": {
+"additionalequipment": "weapon_ar2",
+"angles": "0 107 0",
+"model": "models/combine_soldier.mdl",
+"NumGrenades": "999999",
+"physdamagescale": "1.0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"spawnflags": "2564",
+"squadname": "soldier_squad",
+"targetname": "road_soldier_3",
+"waitingtorappel": "No"
+},
+"connections": []
+},
+{
+"classname": "npc_combine_s",
+"origin": [
+29.079999999999927,
+-738.02,
+58.129999999999995
+],
+"keys": {
+"additionalequipment": "weapon_smg1",
+"angles": "0 107 0",
+"model": "models/combine_soldier.mdl",
+"NumGrenades": "999999",
+"physdamagescale": "1.0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"spawnflags": "2564",
+"squadname": "soldier_squad",
+"targetname": "road_soldier_4",
+"waitingtorappel": "No"
+},
+"connections": []
+},
+{
+"classname": "info_target",
+"origin": [
+0.21000000000003638,
+-0.4700000000000273,
+28.658000000000015
+],
+"keys": {
+"angles": "0 90 0",
+"targetname": "dropship3_dropzone"
+},
+"connections": []
+},
+{
+"classname": "npc_combinedropship",
+"origin": [
+-5608.797,
+-5814.76,
+157.94000000000005
+],
+"keys": {
+"angles": "0 0 0",
+"CrateType": "1",
+"Dustoff1": "road_dustoff_1",
+"Dustoff2": "road_dustoff_2",
+"Dustoff3": "road_dustoff_3",
+"Dustoff4": "road_dustoff_4",
+"GunRange": "3000",
+"LandTarget": "dropship3_dropzone",
+"NPCTemplate": "road_soldier_1",
+"NPCTemplate2": "road_soldier_2",
+"NPCTemplate3": "road_soldier_3",
+"NPCTemplate4": "road_soldier_4",
+"physdamagescale": "1.0",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"spawnflags": "2052",
+"target": "dropship3_path_4",
+"targetname": "dropship3"
+},
+"connections": [
+[
+"OnFinishedDropoff",
+"dropship3_leave_relay,Trigger,,0,-1"
+],
+[
+"OnCrateShotDownBeforeDropoff",
+"dropship3_leave_relay,Trigger,,0,-1"
+]
+]
+},
+{
+"classname": "npc_template_maker",
+"origin": [
+-5544.797,
+-5942.76,
+248.0
+],
+"keys": {
+"angles": "0 0 0",
+"CriterionDistance": "2",
+"CriterionVisibility": "2",
+"MaxLiveChildren": "1",
+"MaxNPCCount": "1",
+"Radius": "256",
+"spawnflags": "32",
+"SpawnFrequency": "1",
+"StartDisabled": "1",
+"targetname": "dropship3_spawner",
+"TemplateName": "dropship3"
+},
+"connections": []
+},
+{
+"classname": "path_track",
+"origin": [
+-5432.7968,
+-5750.76,
+240.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"target": "dropship3_path_2",
+"targetname": "dropship3_path_1"
+},
+"connections": [
+[
+"OnPass",
+"dropship3,FlyToSpecificTrackViaPath,dropship3_path_4,0,-1"
+]
+]
+},
+{
+"classname": "path_track",
+"origin": [
+-2570.0,
+-5750.0,
+1664.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"target": "dropship3_path_3",
+"targetname": "dropship3_path_2"
+},
+"connections": []
+},
+{
+"classname": "path_track",
+"origin": [
+-354.0,
+-2494.0,
+1152.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"target": "dropship3_path_4",
+"targetname": "dropship3_path_3"
+},
+"connections": []
+},
+{
+"classname": "path_track",
+"origin": [
+-2.0,
+-1454.0,
+832.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"targetname": "dropship3_path_4"
+},
+"connections": [
+[
+"OnPass",
+"dropship3,LandTakeCrate,4,0,-1"
+]
+]
+},
+{
+"classname": "path_track",
+"origin": [
+-2.0,
+-814.0,
+640.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"target": "dropship3_path_6",
+"targetname": "dropship3_path_5"
+},
+"connections": []
+},
+{
+"classname": "path_track",
+"origin": [
+-66.0,
+-1454.0,
+1344.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"target": "dropship3_path_7",
+"targetname": "dropship3_path_6"
+},
+"connections": []
+},
+{
+"classname": "path_track",
+"origin": [
+-2826.0,
+-5750.0,
+1856.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"target": "dropship3_path_8",
+"targetname": "dropship3_path_7"
+},
+"connections": []
+},
+{
+"classname": "path_track",
+"origin": [
+-5688.7970000000005,
+-5654.76,
+0.0
+],
+"keys": {
+"angles": "0 0 0",
+"orientationtype": "0",
+"targetname": "dropship3_path_8"
+},
+"connections": [
+[
+"OnPass",
+"dropship3,Kill,,0,-1"
+]
+]
+},
+{
+"classname": "info_target",
+"origin": [
+-538.0,
+274.0,
+21.164999999999964
+],
+"keys": {
+"angles": "0 0 0",
+"targetname": "road_dustoff_4"
+},
+"connections": []
+},
+{
+"classname": "info_target",
+"origin": [
+-442.0,
+258.0,
+21.164999999999964
+],
+"keys": {
+"angles": "0 0 0",
+"targetname": "road_dustoff_2"
+},
+"connections": []
+},
+{
+"classname": "info_target",
+"origin": [
+326.0,
+482.0,
+21.164999999999964
+],
+"keys": {
+"angles": "0 0 0",
+"targetname": "road_dustoff_3"
+},
+"connections": []
+},
+{
+"classname": "info_target",
+"origin": [
+414.0,
+482.0,
+21.164999999999964
+],
+"keys": {
+"angles": "0 0 0",
+"targetname": "road_dustoff_1"
+},
+"connections": []
+},
+{
+"classname": "logic_relay",
+"origin": [
+-5506.0,
+-5614.0,
+320.0
+],
+"keys": {
+"targetname": "dropship3_leave_relay"
+},
+"connections": [
+[
+"OnTrigger",
+"dropship3,FlyToSpecificTrackViaPath,dropship3_path_8,0,-1"
+],
+[
+"OnTrigger",
+"dropship3,SetGunRange,0,0,-1"
+]
+]
+},
+{
+"classname": "logic_relay",
+"origin": [
+0.0,
+0.0,
+64.0
+],
+"keys": {
+"targetname": "relay_dropship_start",
+"spawnflags": "2"
+},
+"connections": [
+[
+"OnTrigger",
+"dropship3_spawner,Spawn,,0,-1"
+]
+]
+}
+],
+"outside": [],
+"fired_from_outside": [
+{
+"name": "wave_counter_case",
+"classname": "logic_case",
+"origin": [
+5038,
+740,
+1088
+],
+"outputs": [
+[
+"OnCase02",
+"dropship3_spawner,Spawn,,0,-1"
+]
+]
+}
+],
+"trigger": [
+{
+"name": "relay_dropship_start",
+"input": "Trigger",
+"what": "the dropship flies in, lands four soldiers and leaves (again once it is gone)"
+}
+]
+}

@@ -6,55 +6,30 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 ## A new character's first hour
 
-- [ ] **A new face:** forty seconds of black screen, whirring and wet sounds, a clang, a ding. Too long, too short, too gross? [needs a person: feel]
 
 ## Jobs
 
-- [ ] **Housing block inspection:** the trail goes to a door of the block, the door stays shut until you set the charge or kick it in, the furniture stands on the floor inside. [needs a person: the real map's doors and rooms]
-- [ ] **Job board:** place "Fixture: job board" in the city, on rebel ground and on Combine ground. Do the lists show on it, and does E open your jobs? [needs a person: the lists on its glass]
-- [ ] **Job steps that replaced standing about:** Address the citizens, The secret mass (do the three gather?), Leak the schedule, Dead drop, letters at the door; the needle game on Break them out and on a vortigaunt's jobs (is its wording odd for a vortigaunt?). [needs a person: watching them happen, and the wording]
 
 ## Civil Protection
 
-- [ ] **Guns on rebel ground as a unit:** walk into rebel territory: no "LOWER YOUR WEAPON" prompt, and every gun fires, also after !build and after sleeping in their bed. [needs a person: no test yet, try it]
-- [ ] **Backup when you are down:** bleeding out with units of your squad near: does one kneel by you and get you up? Called over the radio from far off, do they come in from out of sight? [needs a person: the kneel and the arrival on the real map]
-- [ ] **Interrogation:** F2 > Interrogate someone in a cell: three questions, baton, Done, the answers written underneath. Readable, and in the way of anything? [needs a person: the list on screen]
-- [ ] **Gas masks and the gas:** in chlorine gas the mask goes on by itself with the visor edge and breathing; people without one cover the mouth, cough and run out. How does the mask sit on a face (`lc_gasmask_fit`)? [needs a person: the mask and the hand over the mouth]
 
 ## The Resistance
 
-- [ ] **The lab scientist:** start something and walk off: does he keep at it, tell you when it is done, and hand it only to you? After a raid, no blood left on him or the bench? [needs a person: blood left behind, by eye]
-- [ ] **A vortigaunt charging your vest:** E on a freed one: it turns, raises its hands, a green beam pulses to your chest for three seconds. Is there a charging animation? [needs a person: the animation and beam]
-- [ ] **The medic:** one in each rebel territory; E on him when hurt. Does he stay put and patch up hurt rebels near him? [needs a person: watching him]
-- [ ] **Operations:** as a Lieutenant, plan one straight from the F4 Operations board. Does the leader get the clipboard, how does it sit in the hand, do its boxes tick? [needs a person: the clipboard by eye]
 
 ## The city and its people
 
 
 ## The Administrator, the collapse and the ending
 
-- [ ] **Speeches:** with a speech crowd point placed, Give a speech: do the NPCs stand in rows facing the stand, does the podium look right? With nobody as Administrator she speaks at midday herself: are the pauses right, and does Colonel Cubbage answer at the camp? [needs a person: the crowd, the podium, the pacing]
-- [ ] **The collapse to BLACK:** editor > The collapse > "collapse to BLACK now": the G-Man in front of you (nobody else sees him), then the curfew; as a rebel under open sky a ring on the ground, the whistle, the blast, one at a time. [needs a person: the scene and the shelling, by eye and ear]
-- [ ] **Her last stand:** the purple bubble, the beam from each transformer, sparks, smoke and blasts as it breaks; manhacks, turrets, mines; the shield panels you can carry; the hums, zaps and clanks. [needs a person: watching the fight]
 
 ## Dreams
 
-- [ ] **The dreams' grounds:** after uploading `livingcity_content.zip` and a FastDL sync, test a few dreams from the editor (Freeze, Citizen; Dance Marathon; The Midnight Rally; Ravenholm): is each picture the right size underfoot, not stretched or tiny, and does the mood still fit? [needs a person: how it looks]
 
 ## Staff tools
 
-- [ ] **Save with the gamemode:** Q > Tools > Miscount > Save with the gamemode: left click a spawned prop, change map: is it back? Saved props glow green only while the tool is out. [needs a person: a real map change]
 
 ## Needs the real server
 
-- [ ] **Pictures:** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync, change map, join from a clean client: the civil posters, the dream posters and the spray can's two new marks show their pictures, sharp enough to read. [needs the real server: uploads and FastDL]
-- [ ] **Recordings:** run `lc_voice_missing` and `lc_hl2_lines` in the server console and bring back the output and `data/livingcity/hl2_lines.txt`. Songs for dreams go in `sound/livingcity/dreams/` as `<codeword>1.mp3`. [needs the real server: its console and files]
-- [ ] **The director, free talk and her voice:** editor panel > "The director and free talk": paste the key, Save, Test. Then say something to a named citizen in chat: do they answer, in a voice right for the city? Compare the debug report's requests with the bill. [needs the real server: your key]
-- [ ] **Files to bring back:** `data/livingcity/minds/` after a few hours, `data/livingcity/chronicle/` after a week, and a play study folder (`data/livingcity/study/` on your PC, after Stop and save). Does play feel heavier with the study on? [needs the real server: files only you can copy]
-- [ ] **Guns over a restart:** draw a bought pistol and SMG, restart the server, rejoin: both are in your pockets to draw again. [needs the real server: a real restart]
-- [ ] **Uneven sides:** with many Resistance players to few Combine: more patrols, a reaction squad about 15 seconds after a kill, a dropship squad at a checkpoint attack, the "Combine are desperate" notice; a rebel who reconnects within 7 minutes is still a rebel. [needs the real server: many real players or bots]
-- [ ] **With a second player:** cuffing them brings up the list at the left; resisting arrest is felt, not a bar; a player in the chair gets three answers on the number keys; each sees the Colonel their own way; a second admin gets the "Report from NAME" card. [needs the real server: two players at once]
-- [ ] **Her last stand on your layout:** re-place any transformer placed before 10 November (numbered 1, 2, 3); with several Resistance players on, does the server hold up with many manhacks? [needs the real server: your layout and real load]
 
 ## Added since the cut
 - [ ] **Arriving (a new character, citizen):** walk out of the station. Do the cards and tips come one at a time, each readable, never piled up? [needs a person: pacing of the first minutes]
@@ -94,7 +69,7 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Record Harvest's billboards:** the RECORD HARVEST picture at each side of the field, facing in. [needs a person: the right way round, not in the way of the crates, a good height]
 - [ ] **The town:** compile `lc_town_test.vmf` and walk the street: does it read as a little abandoned town, do facing houses crowd each other, is the canal landing easy to find, is anything an ERROR or sunk. [needs a person: not seen in the game]
 - [ ] **The headquarters flag:** as the Resistance's leader in rebel territory, F2 > Resistance > Raise the flag here: does the pole stand sensibly, does the Lambda flag (orange on black, waving) look right and read as climbing, does the office appear in a usable ring, can its things be carried and do they come back where left; as a unit, press E at the pole with no rebel near: does it come down. [needs a person: the flag is drawn by the client and has never been seen]
-- [ ] **The town, second pass (lc_town_test):** do the props all show now; the corner of the L; the flats (doors fit their openings, rooms not cramped, upstairs); the swings and roundabout move; the pit's gate swings in its frame; the drums' fires burn at their tops; the landing's steps and cheeks meet the banks. [needs a person: nothing of it has been compiled]
+- [ ] **The town, second pass (lc_town_test):** do the props all show now; the corner of the L; the flats (doors fit their openings, rooms not cramped, upstairs); the swings and roundabout move; the pit's gate swings in its frame; the drums' fires burn at their tops; the landing's steps and cheeks meet the banks; since its slimming (24 November) do the upper windows, flat on the wall, and the rooms' plain painted walls still look right? [needs a person: nothing of it has been compiled]
 - [ ] **IEDs:** make one at the lab; does the Detonator appear, does left click set it where you look, does right click blow it with a proper blast, does a unit's E take one apart; at the pole, does the prompt read well for a Fighter and for a Lieutenant. [needs a person: the weapon's model, the blast and the prompt have never been seen]
 - [ ] **The train station's Breencast screen:** place one (Miscount Editor > Street: Breencast screen, the train station's) and look at it from below while the Administrator or the Director of Propaganda is on air: does it read as Valve's curved screen, with their face filling it, not stretched? [needs a person: how it looks in the game]
 - [ ] **Combine mounted gun:** place one (Miscount Editor > Fixture: Combine barricade with mounted gun), stand behind it and press E: does it unfold, turn smoothly after your view, flash and sound like Half-Life 2's, and do E, a jump and dying let go? With a rebel in front of it and a metrocop near, does he run to it and man it convincingly? [needs a person: how it feels to man and aim, and how the officer looks on it]
@@ -121,9 +96,14 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Canal ring edges:** from the road, look at the Combine wall beside you and across the canal at the ruins and rooftops, and where they turn into pine forest by the cave forest and the forest bunker: does the wall read as the Combine's, do the ruins read as the old city, is the blend into forest natural? [needs a person: how it looks]
 - [ ] **Canal ring trains:** wait for a train (every 70 to 240 s): it should come out of its tunnel in the ruins, cross its rail bridge, run along the tracks, slow, stop and back in. If one crawls or stops early, set its velocitytype to 0. [needs a person: untested in game]
 - [ ] **Combine autogun test map (lc_cannon_test.vmf):** compile and play: do the guns track and fire with their blue bolts, does the red button blow the crate apart, do the side guns cut down the zombies, and does a grenade in the opened generator blow it up, kill the guns and open the wall with Valve's explosion and sound? [needs a person: effects, sounds and feel]
+- [ ] **Canal ring, thinned:** walk the street: one railway sleeper a square now (were two), a post every 256 on the kerb rail and the edge's chain link, every 512 on the fence along the walls' tops. Still look right? And no holes where faces went nodraw (a see-through face, the void showing). [needs a person: how it looks in the game]
+- [ ] **Silo, middle levels shut (23 Nov):** ride the lift bottom to top (the shaft should look unbroken past levels A and B), look down through the top floor's grate in front of the lift (concrete under it), and look at the balconies round the rocket from the top and bottom. [needs a person: how it looks]
 - [ ] **Her address, out cold:** skip it and get beaten out: are you moved to the crowd unseen (while black), with no unit there telling you to back up? Does her stand-in look like Dr. Mossman (not an ERROR)? [needs a person: how it looks]
 - [ ] **The train station screen:** place "Street: Breencast screen, the train station's": does it look like Valve's at the station (the Combine monitor's scanlines and glow, layered), dim blue with nobody on air, her face when she is? [needs a person: how it looks]
 - [ ] **Vending cans:** buy a can from an editor vending machine and from one built into the map: does it roll gently out of the chute, never flung? [needs a person: how it moves in the real physics]
+- [ ] **Valve pieces gallery (lc_valve_gallery.vmf):** compile and walk it: press each piece's buttons and judge the effects, sounds and moving parts (the shell, the mortar, the blasts, the dropship and rappel, the pods, the crane, the lift, the traps, the hospital rooms). [needs a person: effects, sounds and feel]
+- [ ] **Lip sync:** a named citizen saying one of your lines: does the mouth move with the words (after `lipsync_bake.py` and uploading the .wavs), and before that, does the jaw at least open and shut with the voice? [needs a person: only an eye can judge a face]
+- [ ] **Silo office and escape (24 Nov):** on the bed in the leader's bedroom, does the mattress sit on the frame (not floating or sunk)? From the culvert, can the hidden door in the north wing wall be told apart from the wall, shut and opening? [needs a person: how it looks]
 - [ ] **Dreams that fly (numa numa, the fleet):** in the dream zone, does the plane fly nose first, up in the air, never through the floor? [needs a person: how it looks in the owner's zone]
 - [ ] **Rain and sleepers:** rain under a thin walkway keeps falling round you, stops at once under a bridge or indoors? Sleeping citizens lie along their beds, eyes shut, none standing or through a wall? [needs a person: how it looks]
 - [ ] **A raid, answered:** a Resistance raid in the street: do soldiers nearby join it, and an Overwatch squad arrive within half a minute? Character screens: the whole person shown, head clear of the title? [needs a person: how it plays and looks]
