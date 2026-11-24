@@ -39,7 +39,7 @@ a fallen bridge to walk under, a goods wagon, containers, wrecks, a camp.
 
 import random
 
-from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, fence, gate_cap, octagon, prism, road_bridge, stand_z, dress_keys, loose_flags, loose_yaw, test_extras
+from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, fence, gate_cap, hexagon, octagon, prism, road_bridge, stand_z, dress_keys, loose_flags, loose_yaw, test_extras
 from map_forest import noise
 
 BANK = 128
@@ -211,24 +211,18 @@ class Channel:
                 behind = self.cells.get((int(bx) // 64, int(by) // 64))
                 under_street = behind is not None and behind[0] == "solid" and len(behind) == 2      # (map_corridor.canal_view: the street's squares)
                 if under_street or top < self.rim_z + 224:
-                    z = fz + 176      # (a storm drain's mouth: above the bank's top, well under the trim)
-                    stub = along(axis, p - 24, p + 24, min(line, line + side * 40), max(line, line + side * 40), z - 24, z + 24)
-                    if not fits(stub, more=avoid) or not fits(stub, gap=4, more=builts):
-                        continue
-                    taken.append(stub)
-                    self.made.setdefault("stubs", []).append((axis, line, side, p, z))
-                    shapes.append(prism(octagon(p, z, 24), across, min(line, line + side * 40), max(line, line + side * 40), MAT["bars"], MAT["black"]))
-                    self.stats["stubs"] += 1
-                    continue
+                    continue          # (no storm drain's pipe of brushes sticking out of the wall here any more: the owner, 24 November,
+                    #                   "several of the old brush based culverts sticking out of the canal walls in some spots")
                 z = self.rim_z + 136              # (high in the wall over the trim's band: its ring 40 over the band, well under the top)
                 ring = along(axis, p - 80, p + 80, min(line, line + side * 22), max(line, line + side * 22), z - 80, z + 80)
                 if not fits(ring, more=avoid) or not fits(ring, gap=4, more=builts):
                     continue
                 taken.append(ring)
-                shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
+                # (six corners, not eight, the owner, 24 November: 74 to its corners, 64 to its flats, so Valve's ring (77) hides its edge)
+                shapes.append(prism(hexagon(p, z, 74), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
                 # a grate over the hole, inside Valve's ring (the owner, 22 November: "put a grate over every outpipe/
                 # drainage pipe on the sidewalls"): a thin sheet of grating 2 in front of the dark, detail
-                shapes.append(prism(octagon(p, z, 64), across, min(line + side * 3, line + side * 5), max(line + side * 3, line + side * 5), GRATE))
+                shapes.append(prism(hexagon(p, z, 74), across, min(line + side * 3, line + side * 5), max(line + side * 3, line + side * 5), GRATE))
                 placed.append((axis, line, side, p, z, "high"))
                 self.made.setdefault("outfalls", []).append((axis, line, side, p, z, "high"))
                 self.stats["stubs"] += 1

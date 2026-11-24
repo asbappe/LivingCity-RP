@@ -14,9 +14,9 @@ So a layout may say "upper left" (or right): then that bank of the whole chain i
 street's height (z 656, the height of the city's own roads, 256 over the canal's floor), in this order
 going away from the canal:
 
-    256..320    the canal's edge: a low parapet with chain link on it, and where stairs from the canal come up
+    256..320    the canal's edge: a low parapet with chain link panels (props) on it, and where stairs from the canal come up
     320..512    the railway: ballast, sleepers, two rails
-    512..576    a kerb and a rail between the tracks and the road, and the inner pavement
+    512..576    a kerb between the tracks and the road, and the inner pavement
     576..960    the roadway
     960..1024   the outer pavement
     1024..      the frontage: a brick wall of blind windows, or a module lifted up here
@@ -52,7 +52,7 @@ RAIL_V = 416            # the middle of the tracks
 # The modules that belong on the street, not in the canal's bed (the owner: they "would never have been built below the water
 # level in a canal"), and the words to put after each in a layout. "flip": its own things are on its right.
 STREET_MODULES = {"relay": "up flip", "substation": "up flip", "market": "up", "clinic": "up", "cells": "up", "morgue": "up", "depot": "up", "armory": "up",
-                  "press": "up", "still": "up", "garden": "up", "playground": "up", "pumphouse": "up", "chimney": "up flip", "hq": "up", "memorial": "up", "pit": "up",
+                  "press": "up", "still": "up", "garden": "up", "playground": "up", "pumphouse": "up", "hq": "up", "memorial": "up", "pit": "up",
                   "plaza": "up", "flats": "up"}
 ENGINE, CAR = "models/props_combine/combinetrain01a.mdl", "models/props_combine/combine_train02a.mdl"
 ENGINE_LEN, CAR_LEN, GAP = 640, 628, 16
@@ -345,7 +345,7 @@ def lay(b, elems, side, cars):
         for a, c in runs(EDGE + 32, stairs):
             v1, v2 = sv(EDGE, EDGE + 12)
             m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"], vis=dv)
-            chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72, POST)
+            edge_fence(b.vmf, fr, a, c, s * (EDGE + 6), STREET + 40, dv)
         # the tracks: sleepers and two rails wherever there is ballast, in the open and in the sheds; on a run whose ends
         # rail_runs planned, only between those ends, and across the square where two streets cross the rails alone
         # (laid in its road)
@@ -369,13 +369,11 @@ def lay(b, elems, side, cars):
         if ties:
             m.det(ties, MM["beam_wood"], vis=dv, faces={"bottom": MAT["nodraw"]})
             m.det(rails, MAT["bars"], vis=dv)
-        # between the tracks and the road: the inner pavement, a kerb and a rail (open at a crossing)
+        # between the tracks and the road: the inner pavement and its kerb
         for a, c in runs(ROAD_IN + 32):
             v1, v2 = sv(ROAD_IN, ROAD_OUT)
             m.det([(a, v1, STREET, c, v2, STREET + 8)], walk, vis=dv)
-        for a, c in runs(ROAD_IN + 32, stairs):
-            v1, v2 = sv(ROAD_IN + 2, ROAD_IN + 6)
-            m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, max(a + 1, c - 64), POST)] + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"], vis=dv)
+        # (no rail between the tracks and the road: the owner, 24 November, "remove the hand railing between the railroad and the road/sidewalk")
         if not e.get("lifted") and getattr(b, "street_wall", None) == "combine":
             for a, c in runs(FR - 32):          # (the outer pavement up to the Combine wall's foot; the wall itself: combine_wall)
                 v1, v2 = sv(960, FR)
@@ -1278,6 +1276,23 @@ def bank_tops(x_mid):
     return [(x_mid + EDGE, x_mid + TRACK, MM["walk"]), (x_mid + TRACK, x_mid + ROAD_IN, MM["gravel"]), (x_mid + ROAD_IN, x_mid + FRONT + 64, MM["road"])]
 
 
+FENCES = ((256, "models/props_c17/fence03a.mdl"), (128, "models/props_c17/fence01a.mdl"), (64, "models/props_c17/fence01b.mdl"))
+
+
+def edge_fence(vmf, fr, a, c, v, z, vis):
+    """The chain link along the canal's edge from u = a to c, standing on z, as Half-Life 2's own fence panels (the
+    owner, 24 November: "what if we replaced the fence/railing between the railroad and the canal with props?"): the
+    longest panels that fit, 256 then 128 then 64, one prop each where the brush fence took a sheet, a rail and a post
+    every 256. The panels are 109 high (the brush fence was 72), their origin at their middle."""
+    u = a
+    while u < c:
+        n, model = next(((n, mo) for n, mo in FENCES if u + n <= c), FENCES[-1])
+        x, y, zz = fr.at(u + n // 2, v, z + 54)
+        vmf.point("prop_static", (x, y, zz), {"model": model, "angles": "0 %d 0" % ((fr.yaw(0) + 90) % 360), "skin": "0", "solid": "6", "disableshadows": "0",
+                                              "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+        u += n
+
+
 class _Det:
     """Just enough of a module (map_modules.Mod) for chain_link: boxes in a frame, as details."""
 
@@ -1304,7 +1319,7 @@ def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer
     for a, c in edge:
         v1, v2 = sv(EDGE, EDGE + 12)
         m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"])
-        chain_link(m, (a, s * (EDGE + 6)), (c, s * (EDGE + 6)), STREET + 40, 72, POST)
+        edge_fence(vmf, fr, a, c, s * (EDGE + 6), STREET + 40, vis)
     ties, rails = [], []
     for a, c in tracks:
         v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
@@ -1319,10 +1334,7 @@ def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer
     for a, c in pave:
         v1, v2 = sv(ROAD_IN, ROAD_OUT)
         m.det([(a, v1, STREET, c, v2, STREET + 8)], MM["walk"])
-    for a, c in rail:
-        v1, v2 = sv(ROAD_IN + 2, ROAD_IN + 6)
-        m.det([(a, v1, STREET + 40, c, v2, STREET + 44)] + [(u, v1, STREET + 8, u + 4, v2, STREET + 40) for u in range(a, max(a + 1, c - 64), POST)]
-              + [(c - 4, v1, STREET + 8, c, v2, STREET + 40)], MAT["bars"])
+    # (`rail`: no longer built: the owner, 24 November, took the rail between the tracks and the road out)
     for a, c in outer:
         v1, v2 = sv(960, FRONT + 64)
         m.det([(a, v1, STREET, c, v2, STREET + 8)], MM["walk"])

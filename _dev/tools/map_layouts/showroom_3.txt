@@ -1,4 +1,4 @@
-# Test map 3: camp, stash, lock, thumper, swingbridge, floodroom, railbridge, execwall, breach, wreck
+# Test map 3: camp, stash, lock, thumper, swingbridge, railbridge, execwall, breach, wreck
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_3.txt --test
 
@@ -16,7 +16,6 @@ left
 straight 1792
 left
 
-floodroom
 railbridge
 execwall
 breach

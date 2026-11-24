@@ -52,15 +52,15 @@ checkpoint
 straight 1344 stairs
 left back       # the north run's train: out of a tunnel east of this run's canal, over a bridge onto its tracks
 # N2 and N3: west along the north; the train comes out at the corner and stops short of the rail bridge
-depot flip
-armory flip
+straight 1280      # (was "depot flip": taken off the ring, 24 November)
+straight 1024      # (was "armory flip": taken off the ring, 24 November)
 substation
 thumper
 straight 576 stairs
 straight 512      # (was the town's branch, "tee flip", 512 long: everything after it stays where it was)
 lock
-morgue flip
-floodroom flip
+straight 1024      # (was "morgue flip": taken off the ring, 24 November)
+straight 1024      # (was "floodroom flip": taken off the ring, 24 November)
 railbridge
 straight 1088
 left back       # the west run's train: out of a tunnel north of the north run's canal
@@ -78,20 +78,20 @@ stash flip
 straight 128
 left            # (no train: the boathouse's rooms and the stash's wall stand where either tunnel would go)
 # S2: south
-boathouse flip
+straight 1024      # (was "boathouse flip": taken off the ring, 24 November)
 straight 1024
 shanty flip
 camp flip
 vort flip
 sludge flip
-barge
+straight 1280      # (was "barge": taken off the ring, 24 November)
 underpass
 straight 640 stairs
 left back       # the south run's train: out of a tunnel west of the west side's canal
 # S3: east
 tunnel 2048
 crypt flip
-shell
+straight 1024      # (was "shell": taken off the ring, 24 November)
 tram
 widen
 lockgate flip
@@ -104,13 +104,13 @@ ash flip
 straight 192
 left back       # the east side's train: out of a tunnel south of the south run's canal (east: the firing wall's recess)
 # S4: north
-execwall flip
-lift flip
+straight 768      # (was "execwall flip": taken off the ring, 24 November)
+straight 1024      # (was "lift flip": taken off the ring, 24 November)
 pumphouse flip
 quay
-arcade
-aqueduct
-chimney
+straight 1536      # (was "arcade": taken off the ring, 24 November)
+straight 1024      # (was "aqueduct": taken off the ring, 24 November)
+straight 1024      # (was "chimney": taken off the ring, 24 November)
 swingbridge
 relay
 straight 64

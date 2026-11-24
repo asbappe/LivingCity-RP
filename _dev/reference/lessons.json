@@ -4145,6 +4145,20 @@
    "why": "\"I can't get out of the escape tunnel ... something is invisible and preventing me from moving out through the open doorway\" (24 November).",
    "how": "Give the door a move straight down (or sideways into the wall) and check its swept box misses the button's spot.",
    "check": "by eye: the door's move points away from its button"
+  },
+  {
+   "id": "owner-budget-props-over-brushes",
+   "tags": [
+    "props",
+    "geometry",
+    "owner",
+    "streets"
+   ],
+   "title": "Repeated small things eat the compiler's limits: props, and the fewest corners",
+   "rule": "Anything repeated along the canal or the street (bars over a blocked opening, a fence, a railing, a pipe stub, a valve) is a prop, never a brush per bar or post: brushes spend vbsp's faces and vertices (65,536 each), props spend neither. Where a round hole must be a brush, six corners, not eight. Before adding a module to the ring, weigh it: build it alone and compare map_budget.py's line with a plain straight of the same length.",
+   "why": "The owner, 24 November, after the ring hit vbsp's brush face limit and then its vertex limit: \"all the brush grates over any entrance that is blocked in the canals is using up tons of brushes when there are props that can do the same\", \"octagons or some brush wasting shape when they could just be a hexagon and save on vertices and brushes\", \"what if we replaced the fence/railing between the railroad and the canal with props?\", \"the stash valve needs to be replaced with a prop\".",
+   "how": "map_build.barred places props_canal/canal_bars002 panels (bar_props); map_corridor.edge_fence places props_c17 fence panels; map_build.hexagon; map_wiring.wheel for a valve. python3 map_budget.py FILE.vmf --line before and after.",
+   "check": "map_budget.py's line on every build (faces, vertices: NEAR and OVER); grep -c canal_bars002 and props_c17/fence0 in the built VMF."
   }
  ]
 }
