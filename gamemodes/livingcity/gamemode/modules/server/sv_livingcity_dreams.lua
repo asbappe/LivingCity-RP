@@ -175,11 +175,16 @@ function LC.FloodDreamBounds(dream)
     return mins, maxs
 end
 
--- How high things in it may fly (the dream zone's top; no zone, no limit of its own).
+-- How high things in it may fly: the dream zone's top, when it was drawn tall enough to fly in; else no limit of
+-- its own (the map's sky or roof above still holds everything in: sv_livingcity_endings.lua's CeilingAt). A zone
+-- is drawn 192 tall by default, and flying under that kept every plane, ship and bus about 70 off the floor,
+-- ploughing through it (the owner, 23 November: "Every dream with something flying is absolutely broken in the
+-- dream zone ... Are the dreams programmed to fly at the top ceiling and that gets them stuck?").
+LC.DreamFlyRoom = 400
 function LC.DreamTop(dream)
     local z = dream and dream.zone
-    if z and z.box then return z.box.maxs.z end
-    return (dream and dream.pos and dream.pos.z or 0) + 100000
+    if z and z.box and z.box.maxs.z - z.box.mins.z >= LC.DreamFlyRoom then return z.box.maxs.z end
+    return ((z and z.box and z.box.mins.z) or (dream and dream.pos and dream.pos.z) or 0) + 100000
 end
 
 ------------------------------------------------------------------------
@@ -1547,7 +1552,7 @@ function LC.DreamClamp(dream, pos)
     if z and z.box then
         local b = z.box
         x, y = math.Clamp(x, b.mins.x + 8, b.maxs.x - 8), math.Clamp(y, b.mins.y + 8, b.maxs.y - 8)
-        lo, hi = b.mins.z, b.maxs.z - 16
+        lo, hi = b.mins.z, math.min(LC.DreamTop(dream), b.mins.z + 2400) - 16 -- (a short box: up into the air above it too)
     else
         local c, r = z and z.pos or dream.pos, math.max(32, LC.DreamRadius(dream) - 8)
         local dx, dy = x - c.x, y - c.y

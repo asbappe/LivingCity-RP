@@ -10484,6 +10484,11 @@ new.chat = {}
 Later(9)
 ok(not LC.IntakePending(new) and has(new.chat, "Registration complete"), "after a few seconds you're on the register", new.chat[1])
 ok(has(new.chat, "Housing Allocation"), "and told where to ask for a room")
+do
+    local n = 0
+    for _, l in ipairs(new.chat) do if string.find(l, "[Civil Intake]", 1, true) then n = n + 1 end end
+    ok(n == 1, "in one line, not four (the owner, 23 November)", table.concat(new.chat, " | "))
+end
 LC.IntakeFlags(new)
 ok(not new:GetNW2Bool("lc_unreg", true) and new:GetNW2Bool("lc_unhoused", false), "your screen points there next")
 new.chat = {}
@@ -10535,7 +10540,7 @@ third.lcIntakeSince = CurTime() - 11 * 60
 ok(LC.IntakeStopped(third, nil) == true and LC.PlayerIsWanted(third), "but not forever: failure to register")
 if LC.ClearWanted then LC.ClearWanted(third) end
 hook.Run("LivingCityReleased", third)
-ok(not LC.IntakePending(third) and has(third.chat, "processed while in custody"), "someone arrested first is processed in custody")
+ok(not LC.IntakePending(third) and has(third.chat, "Processed in custody"), "someone arrested first is processed in custody")
 
 -- a death starts it all again
 new.alive = false
@@ -10670,6 +10675,13 @@ ok(not LC.PlayerIsWanted(a), "standing next to the unit at the desk is never obs
 net.sent = {}
 _netcall("lc_tut_choice", a, true)
 local st = Payload("lc_tut_state")
+ok(st and st.hands and not st.checking, "first, hands up: the search waits for F1 > Put my hands up (the owner, 23 November)", st and tostring(st.hands))
+Later(3)
+ok(not (Payload("lc_tut_state") or {}).checking, "(and waits as long as they don't)")
+net.sent = {}
+a:SetNW2Bool("lc_handsup", true)
+Later(1)
+st = Payload("lc_tut_state")
 ok(st and st.learn and st.tip and string.find(st.tip, "four spots", 1, true), "the lesson explains each step", st and st.tip)
 ok(st and st.spots and #st.spots == 4 and string.find(st.spots[4].mine or "", "practice", 1, true), "with a practice note to hide, in the boots")
 Later(5)
@@ -10685,6 +10697,7 @@ ok(not LC.PlayerIsWanted(a) and a:GetPData("lc_tut_lesson", "0") == "1", "nothin
 
 -- contraband is taken, with a warning
 local b = newPlayer("TutorSmuggler", "citizen")
+b:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 LC.GiveItem(b, "moonshine", 6)
 b:SetPos(post1.pos + Vector(-50, 0, 0))
@@ -10701,6 +10714,7 @@ ok(not LC.PlayerIsWanted(b) and has(b.chat, "warning"), "with a warning, not a c
 
 -- out of the station unregistered: searched if nobody has, cuffed, walked back to Civil Intake (never to the cells)
 local c = newPlayer("TutorRunaway", "citizen")
+c:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 c.lcTutSearched = true
 local outside = T0 + Vector(6000, 0, 0)
@@ -10722,6 +10736,7 @@ ok(not (LC.Prisoners and LC.Prisoners[c]) and not LC.Marching[c], "and never in 
 
 -- registered but never searched, out of the station: searched there, and let go
 local d = newPlayer("TutorUnsearched", "citizen")
+d:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 LC.RegisterPerson(d, "test")
 d:SetPos(outside + Vector(0, 300, 0))
@@ -10740,6 +10755,7 @@ ok(d.lcTutSearched and not LC.IsTied(d), "searched, and on their way (registered
 -- off
 _setcvar("lc_intake_tutor", 0)
 local e = newPlayer("TutorOff", "citizen")
+e:SetNW2Bool("lc_handsup", true) -- (hands up for the unit: the search waits for it)
 Later(0.3)
 ok(not LC.TutorWants(e), "lc_intake_tutor 0: nobody is searched at the desks")
 _setcvar("lc_intake_tutor", 1)
@@ -15445,6 +15461,21 @@ local hb = ents.Create("lc_bed") hb:SetPos(bz.pos + Vector(60, 0, 0)) hb:Spawn()
 local sleeper, sst = LC.SpawnCitizen(bz.pos + Vector(-60, 0, 0))
 sst.leaveAt = nil
 sleeper.seqs = { Lying_Down = 5 } -- (the offline stand-in's models have no animations unless given some)
+sleeper.SetupBones = false -- (as on a real server: Garry's Mod has SetupBones on players' screens only)
+-- (the stand-in world has no ragdolls: one, and bones the server can't read, for the still copy)
+local ivmWasB, createWasB = util.IsValidModel, ents.Create
+util.IsValidModel = function() return true end
+sleeper.LookupBone = function() return 0 end
+sleeper.GetBonePosition = function() return nil end
+sleeper.CallOnRemove, sleeper.RemoveCallOnRemove = function() end, function() end
+ents.Create = function(cls)
+    local e = createWasB(cls)
+    if cls == "prop_ragdoll" and e then
+        e.GetPhysicsObjectCount = function() return 0 end
+        e.TranslatePhysBoneToBone = function() return 0 end
+    end
+    return e
+end
 local bedtime = LC.Bedtime
 LC.Bedtime = function() return true end
 LC.StartLeaving(sleeper, sst, false, "test")
@@ -15452,6 +15483,30 @@ ok(sst.bedKey ~= nil and LC.NPCStr(sleeper, "lc_doing", "") == "going home to be
 for _ = 1, 40 do _run(0.5) if sst.state == "abed" then break end end
 ok(sst.state == "abed" and IsValid(sleeper) and LC.NPCStr(sleeper, "lc_doing", "") == "asleep", "and lies down on it to sleep (not gone)",
     tostring(sst.state) .. " seq=" .. tostring(sleeper.LookupSequence and sleeper:LookupSequence("Lying_Down")) .. " model=" .. tostring(sleeper:GetModel()))
+util.IsValidModel, ents.Create = ivmWasB, createWasB
+do -- an editor bed point clicked off-centre, facing across the bed: lies along it, in the middle, head at the wall
+    local trWas = util.TraceLine
+    -- a mattress 80 long (y -40 to 40) and 30 wide (x -15 to 15), its top at z 20; a wall at y 60
+    util.TraceLine = function(t)
+        local st, en = t.start, t.endpos
+        if st.z > en.z then
+            if math.abs(st.x) <= 15 and math.abs(st.y) <= 40 then return { Hit = true, HitPos = Vector(st.x, st.y, 20), Fraction = 0.5 } end
+            return { Hit = true, HitPos = Vector(st.x, st.y, 0), Fraction = 0.9 }
+        end
+        if en.y > 60 and st.y < 60 then return { Hit = true, Fraction = (60 - st.y) / (en.y - st.y), HitPos = Vector(st.x, 60, st.z) } end
+        return { Hit = false, Fraction = 1, HitPos = en }
+    end
+    local mid, yaw = LC.BedPointLie(Vector(0, 20, 20), 0)
+    util.TraceLine = trWas
+    ok(math.abs(mid.y) < 9 and math.abs(((yaw - 90 + 180) % 360) - 180) < 1,
+        "an editor bed lies along its mattress, in the middle, head to the wall (the owner, 23 November: sleepers through walls)", tostring(mid) .. " " .. yaw)
+end
+ok(sst.bedL and IsValid(sst.bedL.double) and (sleeper.nodraw == true), "a still copy of them lies on the bed, the real one hidden (the owner, 23 November: one stood on the bed, \"asleep\")", tostring(sst.bedL) .. " double=" .. tostring(sst.bedL and sst.bedL.double) .. " nodraw=" .. tostring(sleeper.nodraw) .. " ss=" .. tostring(sst.bedL and sst.bedL.ss))
+do -- Housing Allocation's tally (the owner, 23 November: "0 living there" while the city's people slept there)
+    local t = LC.BlockBedTally({ [31] = 1 })[31]
+    ok(t and t.beds >= 1 and t.free == math.max(0, t.beds - t.npcs - 1), "a block's beds are counted, and what's free at night once its citizens and players are in them",
+        t and (t.beds .. " beds, " .. t.npcs .. " citizens, " .. t.free .. " free"))
+end
 local other, ost = LC.SpawnCitizen(bz.pos + Vector(-90, 40, 0))
 ost.leaveAt = nil
 ok(LC.FreeBedIn(bz, other) == nil, "one sleeper to a bed")
@@ -16208,6 +16263,9 @@ p:SetNW2String("lc_model", "models/player/test/male_20.mdl")
 LC.SetLook(p, 5, { glasses = 1 })
 ok(p:GetPData("lc_skin", "") == "5" and p:GetNW2Int("lc_skin", 0) == 5, "the chosen face is kept with the person")
 ok(LC.ModelOverrides.outfit(p) == "models/player/test/male_20.mdl", "and they wear the pack's model, not Half-Life 2's", LC.ModelOverrides.outfit(p))
+LC.SetOutfit(admin, "_creator", { { pm = "models/player/test/male_21.mdl", skins = {}, bg = {} }, { pm = "models/player/test/male_20.mdl", skins = { 2, 5 }, bg = { glasses = { 0, 1 } } } })
+local bare = LC.CreatorChoice("models/player/test/male_21.mdl")
+ok(bare and bare.bg == nil and bare.skins == nil, "a look listed with no faces or pieces offers all of its own, not none (the owner, 23 November: the first look had no options)")
 LC.SetOutfit(admin, "_creator", {})
 ok(#LC.CreatorChoices() >= #LCF.CitizenModels, "with nothing set, it's everything installed again")
 local hadPM = player_manager
@@ -16602,6 +16660,18 @@ local sky = LC.EndingSky(Vector(0, 0, 0))
 util.TraceLine = traceWas
 ok(sky.r >= 300 and (sky.centre.x + sky.r < 1000 or sky.centre.x - sky.r > 1000) and math.abs(sky.z - 2780) < 1,
     "whatever flies keeps to open sky: under the map's sky, on the roomiest circle that misses the buildings", math.floor(sky.r) .. " round x " .. math.floor(sky.centre.x) .. " at " .. math.floor(sky.z))
+-- (the owner, 23 November: "Every dream with something flying is absolutely broken in the dream zone") a dream zone drawn
+-- at the editor's default height (192) no longer holds what flies 70 off the floor; a tall one still caps it; the plane's
+-- own body (or any prop) is never taken for a roof; and the numa numa plane flies nose first
+do
+    local short = { zone = { box = LCZ.BoxFromCorners(Vector(-500, -500, 0), Vector(500, 500, 0), 192) } }
+    local tall = { zone = { box = LCZ.BoxFromCorners(Vector(-500, -500, 0), Vector(500, 500, 0), 1800) } }
+    ok(LC.DreamTop(short) > 50000 and LC.DreamTop(tall) == tall.zone.box.maxs.z, "a short dream zone caps nothing that flies; a tall one still does", LC.DreamTop(short))
+    local pr = ents.Create("prop_physics")
+    ok(LC.EndingMapOnly(nil) and not LC.EndingMapOnly(pr), "the air above a flier is measured against the map alone, never a prop (its own body)")
+    pr:Remove()
+    ok(GetConVar("lc_ending_plane_model_yaw"):GetFloat() == 90, "the plane flies nose first (was -90: backwards)")
+end
 -- the landing zone up on a roof, the streets 1500 below: spots are still found
 local tlWas2 = util.TraceLine
 util.TraceLine = function(t)
@@ -23096,6 +23166,14 @@ LC.ItemUse(p, "stimulant")
 LC.RestTick(CurTime())
 ok(tiredBefore and not p:GetNW2Bool("lc_tired", false) and LC.TiredDue(p) >= p:GetNW2Float("lc_wired_until", 0) - 1 and p:GetNW2Float("lc_groggy_until", 0) == 0,
     "exhausted after a day awake, a stimulant opens your eyes for as long as it lasts (the owner, 23 November)")
+p:SetNW2Float("lc_wired_until", 0)
+LC.RestTick(CurTime())
+local tiredAgain = p:GetNW2Bool("lc_tired", false)
+p.lcDreaming = "plane"
+LC.RestTick(CurTime())
+ok(tiredAgain and not p:GetNW2Bool("lc_tired", false), "in a dream nobody is tired: no eyelids, no weakness (the owner, 23 November)")
+p.lcDreaming = nil
+p:SetNW2Float("lc_wired_until", CurTime() + 900)
 p.lcAwakeSince = awakeS
 LC.RestTick(CurTime())
 local okS, whyS = LC.SleepIn(p, nil)
@@ -29010,6 +29088,11 @@ function RebelEventTests()
     _run(20)
     ok(dockAt and dockAt >= sk.arrivedAt and dockNear, "rations are docked \"near a Resistance attack\" only once the fighters are really there", tostring(dockAt) .. " " .. tostring(sk.arrivedAt))
     hook.Remove("LivingCityRationsDocked", "RebelEventTests")
+    -- (the owner, 23 November: "we need an overwatch squad to respond within 20-30 seconds to rebel attacks like that")
+    for _ = 1, 10 do if sk.owSent or sk.done then break end _run(1) end
+    local ow = 0
+    for _, u in ipairs(sk.units) do local st = IsValid(u) and LC.NPCs[u] if st and st.role == "soldier" then ow = ow + 1 end end
+    ok(sk.owSent and ow >= 1 and CurTime() - sk.arrivedAt <= 31, "within half a minute an Overwatch squad comes in to it", ow .. " soldiers, " .. math.floor(CurTime() - sk.arrivedAt) .. " s")
     local sent = {}
     for _, u in ipairs(sk.units) do if IsValid(u) and LC.NPCs[u] and LC.NPCs[u].unmanaged then sent[#sent + 1] = u end end
     sk.ends = CurTime()

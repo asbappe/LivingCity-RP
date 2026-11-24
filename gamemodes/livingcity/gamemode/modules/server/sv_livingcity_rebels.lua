@@ -1683,6 +1683,7 @@ local function RunSkirmish(sk, now)
                 if LC.RaidArrived then LC.RaidArrived(sk, now) end
             end
         end
+        if LC.RaidOverwatch then LC.RaidOverwatch(sk, now) end -- (Overwatch: soldiers near it join, and a squad comes)
         -- units whose raider went down pick the next one
         for _, u in ipairs(sk.units) do
             local st = IsValid(u) and LC.NPCs[u]

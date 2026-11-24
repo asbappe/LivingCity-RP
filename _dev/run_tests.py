@@ -113,6 +113,14 @@ for path in glob.glob(GMROOT_ALL + "/gamemodes/**/*.lua", recursive=True):
     for m in BARE_PCALL.finditer(code):
         line = code.count("\n", 0, m.start()) + 1
         problems.append("%s:%d uses pcall: use LC.Try, so what it swallows is written down" % (os.path.relpath(path, GMROOT_ALL), line))
+# Standard Lua the test runner has and Garry's Mod does not (the owner, 23 November: a leftover os.getenv in the
+# units' chase code crashed every Civil Protection unit and soldier in a fight, 238 errors, while every test passed)
+NOT_IN_GMOD = re.compile(r"(?<![\w.:])(os\.(getenv|execute|remove|rename|tmpname|exit)|io\.\w+|loadfile|dofile|require\s*\(\s*[\"']lfs)\b")
+for path in glob.glob(GMROOT_ALL + "/lua/**/*.lua", recursive=True) + glob.glob(GMROOT_ALL + "/gamemodes/**/*.lua", recursive=True):
+    code = strip_lua(open(path).read())
+    for m in NOT_IN_GMOD.finditer(code):
+        line = code.count("\n", 0, m.start()) + 1
+        problems.append("%s:%d uses %s, which Garry's Mod doesn't have (it errors on the server)" % (os.path.relpath(path, GMROOT_ALL), line, m.group(1)))
 # the house rules as numbers that may fall but not rise (house_rules.py): stand-still job steps,
 # places that put text on a player's screen, console commands no menu names
 import house_rules

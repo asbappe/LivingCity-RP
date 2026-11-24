@@ -46,6 +46,25 @@ local function Wrap(text, font, width)
     return lines
 end
 
+-- The whole person in the picture, head to feet with a little room above (the owner, 23 November: "zoomed in about 2x
+-- too much on the character models", and on the intake screen "their head clips the header"): the camera stands back
+-- by the model's own height. (The lens's height is about 0.75 of its stated angle, the way the engine frames a view.)
+local FIT_FOV, FIT_ROOM = 32, 1.12
+function LC_CL.CreatorFit(preview, ent)
+    if not (IsValid(preview) and IsValid(ent)) then return end
+    local mins, maxs
+    if ent.GetRenderBounds then mins, maxs = ent:GetRenderBounds() end
+    if not (mins and maxs) then mins, maxs = Vector(-16, -16, 0), Vector(16, 16, 72) end
+    local tall = math.Clamp((maxs.z or 72) - (mins.z or 0), 40, 120)
+    local mid = (mins.z or 0) + tall * 0.5
+    local half = math.tan(math.rad(FIT_FOV / 2)) * 0.75
+    local dist = tall * FIT_ROOM * 0.5 / half
+    preview:SetFOV(FIT_FOV)
+    preview:SetCamPos(Vector(dist, 0, mid + tall * 0.03))
+    preview:SetLookAt(Vector(0, 0, mid))
+    return dist
+end
+
 local INTAKE_NOTE = "This is the Civil Intake terminal's registration screen. Enter who you are, then submit it; the terminal processes you while you wait beside it."
 
 net.Receive("lcc_open", function()
@@ -158,7 +177,7 @@ net.Receive("lcc_open", function()
         for _, g in ipairs(istable(groups) and groups or {}) do
             local vals = {}
             if not istable(g) or not isstring(g.name) then g = { name = "", num = 0 } end
-            if istable(look.bg) then vals = look.bg[g.name] or {}
+            if istable(look.bg) and next(look.bg) ~= nil then vals = look.bg[g.name] or {} -- (an empty list: any)
             else for v = 0, (g.num or 1) - 1 do vals[#vals + 1] = v end end
             if #vals > 1 then
                 if not table.HasValue(vals, chosenBG[g.name]) then chosenBG[g.name] = vals[1] end
@@ -173,11 +192,9 @@ net.Receive("lcc_open", function()
             end
         end
         Dress()
+        LC_CL.CreatorFit(preview, ent)
     end
     BuildLook()
-    preview:SetFOV(32)
-    preview:SetCamPos(Vector(75, 0, 42))
-    preview:SetLookAt(Vector(0, 0, 36))
     function preview:LayoutEntity(ent)
         ent:SetAngles(Angle(0, (RealTime() * 25) % 360, 0))
     end

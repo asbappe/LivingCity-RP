@@ -58,6 +58,12 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvAllow   = CreateConVar("lc_event_npc_allowance", "0", FLAGS, "Last resort: NPCs a Resistance raid, operation or sweep may add above lc_npc_budget when no idle NPC can be moved or swapped (taken away when it ends)")
+-- Overwatch answers a raid (the owner, 23 November: "metrocops were sort of responding one by one and getting killed by
+-- the 3 or 4 rebels, and a soldier was walking on the other side of the street to checkpoint duty and did nothing ...
+-- we need an overwatch squad to respond within 20-30 seconds to rebel attacks like that")
+local cvOwSecs  = CreateConVar("lc_raid_overwatch_secs", "25", FLAGS, "Seconds after Resistance raiders reach their target before an Overwatch squad comes in (0: none)")
+local cvOwSize  = CreateConVar("lc_raid_overwatch", "4", FLAGS, "Soldiers in the Overwatch squad that answers a Resistance raid")
+local cvOwNear  = CreateConVar("lc_raid_overwatch_near", "1500", FLAGS, "Soldiers this close to a Resistance raid drop what they're doing and join the fight")
 local cvRaidMax = CreateConVar("lc_market_raid_max", "6", FLAGS, "Most extra fighters the Administrator's Commissary restrictions add to a Resistance raid or operation")
 
 local UP = Vector(0, 0, 50)
@@ -336,6 +342,49 @@ function LC.RaidResponders(sk, now)
     end
     if sent + moved > 0 then LC.Log("info", string.format("Skirmish: %d unit(s) sent to answer the raid, %d swapped in", moved, sent)) end
     return sent + moved
+end
+
+-- Overwatch: every soldier near the fight joins it at once (whatever post he was walking to), and lc_raid_overwatch_secs
+-- after the raiders arrived a squad of lc_raid_overwatch soldiers comes in from out of sight. Each tick of the raid.
+function LC.RaidOverwatch(sk, now)
+    if not sk or sk.done or sk.kind ~= "raid" or not sk.arrivedAt then return 0 end
+    local raiders = LiveRebels(sk)
+    if #raiders == 0 then return 0 end
+    local joined = 0
+    if not sk.owNearAt or now >= sk.owNearAt then
+        sk.owNearAt = now + 3
+        local r2 = cvOwNear:GetFloat() ^ 2
+        for npc, st in pairs(LC.NPCs) do
+            if IsValid(npc) and npc:Health() > 0 and st.role == "soldier" and st.state ~= "hostile" and not st.questLock and not st.test
+                and st.skirmish ~= sk and npc:GetPos():DistToSqr(sk.target) < r2 then
+                OnRaid(sk, npc, st, raiders[(joined % #raiders) + 1], now)
+                joined = joined + 1
+            end
+        end
+    end
+    local secs = cvOwSecs:GetFloat()
+    if sk.owSent or secs <= 0 or now < sk.arrivedAt + secs then return joined end
+    sk.owSent = true
+    local spot = ResponderSpot(sk.target)
+    local sent = 0
+    for i = 1, math.max(0, cvOwSize:GetInt()) do
+        if not spot or not (LC.Spawners and LC.Spawners.soldier) then break end
+        if LC.ManpowerCan and not LC.ManpowerCan("ota") then break end -- (none left in reserve: sv_livingcity_manpower.lua)
+        if not LC.EventSlot(sk, { "cop", "soldier", "citizen" }) then break end
+        local npc, st = LC.Spawners.soldier(spot + Vector(math.random(-60, 60), math.random(-60, 60), 4))
+        if IsValid(npc) and st then
+            st.unmanaged, st.leaveAt, st.routeGroup = true, nil, nil
+            OnRaid(sk, npc, st, raiders[(i - 1) % #raiders + 1], now)
+            sk.stage = sk.stage or spot
+            LC.EventNPCAdd(sk, npc, st)
+            sent = sent + 1
+        end
+    end
+    if sent > 0 then
+        LC.Log("info", string.format("Skirmish: Overwatch squad of %d sent to the raid", sent))
+        hook.Run("LivingCityRaidOverwatch", sk, sent)
+    end
+    return joined + sent
 end
 
 -- The fighters are at the target: the fight is real now. Its clock starts here.

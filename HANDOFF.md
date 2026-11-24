@@ -31,13 +31,14 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"). Kept, not used:
-  map_town.py, map_layouts/town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed
-  that morning to 6,783 faces). In ring.txt its branch is `straight 512` (nothing else moved) and the backdrop's ruins
-  fill its ground. The rest without the ring: ~44,200 faces, ~103,300 sides; the town's share (7,000 / 18,000) is free.
-  The walled garden's planting spots (lc_garden_plot_N) are on no map piece now; Plan.paint_wall stays for any plan.
-- 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`, owner's PC, needs ffmpeg; until
-  then the server works the jaw from loudness). A .wav beats an .mp3 (`LC.PreferWav`). Not seen on the real server yet.
+- 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"), kept on the shelf:
+  map_town.py, town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed that morning to
+  6,783 faces). ring.txt: its branch is `straight 512`, nothing else moved, ruins on its ground. Rest without the ring
+  ~44,200 faces; the town's share is free. Walled garden's plots (lc_garden_plot_N) on no map piece now.
+- 23 November (late, gamemode): **units fight again** (a leftover os.getenv crashed every chase; run_tests.py now fails on
+  Lua GMod lacks); **Overwatch answers raids** (LC.RaidOverwatch); flying dreams free of a short zone's top (LC.DreamTop);
+  sleepers lie on beds (no SetupBones); eyelids yield; intake one line, hands up, R no fists; bed tally; rain cover.
+- 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`; LC.PreferWav). Not seen live yet.
 - 22 and 23 November: the canal ring (map_ring_walk.py): Combine wall and ruins a Propper++ kit the owner compiles
   (docs/dev/propper-kit.md); map_budget.py: still over 65,536 faces with the ring (TODO). Valve set pieces: 27 in the gallery.
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).

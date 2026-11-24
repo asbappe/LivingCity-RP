@@ -14,6 +14,7 @@ longer written; its layout is still built in memory, because the scripts are mad
 The words suggested for the announcements are below (WORDS); the G-Man's clip list is _dev/gman_sounds.md
 (where each comes from in Half-Life 2, and what to splice); the dream lines are read by dream_lines.py.
 """
+OVERWATCH_TAGS = "[intimidating, overly enunciating, robotic, very slow]"
 import os, re, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -198,9 +199,11 @@ def more_scripts(doc, rows=()):
                 return l
         return ""
     # Overwatch's announcements (section 1: the Overwatch file and words of each)
+    # (the owner, 23 November: the custom Overwatch voice needs exactly these ElevenLabs tags, "otherwise the voice
+    # doesn't sound right at all")
     s1 = section(doc, 1)
     out += ["", "## Overwatch's announcements", "",
-            "Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice as his existing recordings.", "",
+            "Folder: `overwatch/`. Overwatch: the same voice as his existing recordings. **Every line needs these tags in front, or the voice doesn't sound right:** `" + OVERWATCH_TAGS + "` (the owner, 23 November).", "",
             "| Done | File | When | Paste |", "|---|---|---|---|"]
     miss = load_missing()
     for l in s1:
@@ -210,7 +213,7 @@ def more_scripts(doc, rows=()):
             if not f:
                 continue
             done = "[x]" if (miss and file_stem(f[0]) not in miss["overwatch/"]) else "[ ]"
-            out.append("| %s | `%s` | %s | [cold, clinical, flat dispatcher] %s |" % (done, f[0], c[3], c[5]))
+            out.append("| %s | `%s` | %s | %s %s |" % (done, f[0], c[3], OVERWATCH_TAGS, c[5]))
     # the radio (section 2)
     s2 = section(doc, 2)
     out += ["", "## The radio", "", intro(s2), "", "| Done | File | When | Paste |", "|---|---|---|---|"]

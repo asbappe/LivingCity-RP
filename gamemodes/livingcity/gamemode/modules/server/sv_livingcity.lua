@@ -2295,7 +2295,6 @@ do
     -- True: he's on his way round (to a ladder, up it, or along a route), and the straight run is left alone.
     -- sees: he has them in sight. ranged: he has a gun out (one who sees them shoots from where he is).
     function LC.ChaseWay(npc, st, e, epos, now, sees, ranged)
-        if os.getenv("LC_TEMP_NOCHASEWAY") then return false end
         local pos = npc:GetPos()
         local dz = math.abs(epos.z - pos.z)
         local running = npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or npc:IsCurrentSchedule(SCHED_FORCED_GO)
