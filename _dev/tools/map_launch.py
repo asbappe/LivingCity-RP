@@ -125,7 +125,10 @@ def build(f, F):
     air, places = [], []
     # --- White Forest's control room -------------------------------------------------------------------------------------
     pf = PF.load("valve_ep2_control_room")
-    F.pf_solids(v, pf, 0, TECH_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"])
+    # (a brush of a live entity, the forest cams' five screens and the silo doors' display, is placed with its entity,
+    #  never also as a static brush: the five screens all drawn at once in one plane were the brush "covering them", the
+    #  owner, 24 November: "the little screens in the lower control room have some sort of brush covering them")
+    F.pf_solids(v, pf, 0, TECH_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live"))
 
     def keep(e):
         k = e["keys"]
