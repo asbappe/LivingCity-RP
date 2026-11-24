@@ -9755,7 +9755,7 @@ inPatch[#inPatch + 1] = LC.SpawnZombie(patch.pos + Vector(0, 0, 4), patch)
 for _, n in ipairs(inPatch) do n:SetHealth(0) end
 for _, n in ipairs(inPatch) do hook.Run("OnNPCKilled", n, killer) end
 _run(1)
-ok(not table.HasValue(LC.Zones, patch) and LC.GrownCount("infest") <= 1, "clear a patch out and it's gone", LC.GrownCount("infest"))
+ok(not table.HasValue(LC.Zones, patch) and LC.GrownCount("infest") <= 1, "clear a patch out and it's gone", LC.GrownCount("infest")) if LC.GrownCount("infest") > 1 then local dbg = {} for _, q in ipairs(LC.Zones) do if q.kind == "infest" then dbg[#dbg + 1] = "ZONE " .. tostring(q.grown) .. " r" .. math.floor(q.r or -1) .. " dT0 " .. math.floor(q.pos:Distance(T0)) .. " dP " .. math.floor(q.pos:Distance(patch.pos)) .. " c" .. tostring(q.contestedUntil) end end for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "zombie" then dbg[#dbg + 1] = tostring(n:GetClass()) .. ":" .. n:Health() .. ":" .. math.floor(n:GetPos():Distance(patch.pos)) .. ":" .. math.floor(n:GetPos():Distance(T0)) end end ok(false, "DBG", tostring(patch.cells ~= nil) .. " r" .. tostring(patch.r) .. " d" .. math.floor(patch.pos:Distance(T0)) .. " inPatch" .. #inPatch .. " hits" .. tostring(LC.TerritoryState[seed] and LC.TerritoryState[seed].hits) .. " fam" .. #fam .. " z:" .. table.concat(dbg, ",")) end
 if LC.GrownCount("infest") == 0 then LC.GrowTerritory(seed) end -- (the fight may have spilled into the other patch too)
 ok(LC.TerritoryState[seed].nextGrow > CurTime() + 300, "and the infestation doesn't grow back straight away")
 -- a run of kills at the source pushes back the outermost patch
@@ -44702,6 +44702,62 @@ function Nov24_PumphouseWaterTests() -- (the owner, 24 November: "the pumphouse 
     LC.RemoveZone(z) near:Remove() far:Remove() p:Remove()
 end
 Nov24_PumphouseWaterTests()
+
+function Nov24_BaseVehicleTests() -- (the owner, 20 November: "each base has one vehicle available when the base is setup there")
+    section("24 November: the live base has one vehicle at the spot placed for it")
+    local V, B = LC.BaseVehicle, LC.Base
+    local T0 = Vector(-160000, -160000, 0)
+    local sWas, liveWas, waterWas = B.S, LC.BaseLive, LC.InWater
+    local zone = { kind = "rebel", pos = T0, r = 500 }
+    local wet = false
+    LC.InWater = function() return wet end
+    B.S = {}
+    LC.BaseLive = function() return B.S.state == "live" and zone or nil end
+    local near = LC.AddPoint(T0 + Vector(800, 0, 0), 90, "basevehicle", 0)
+    local far = LC.AddPoint(T0 + Vector(9000, 0, 0), 0, "basevehicle", 0)
+    V.Tick()
+    ok(not IsValid(V.ent), "no base: no vehicle")
+    B.S = { state = "live", zone = zone, pos = T0 }
+    V.Tick()
+    ok(IsValid(V.ent) and V.ent:GetClass() == "prop_vehicle_jeep" and V.ent:GetPos():Distance(near.pos) < 40, "the base live: a buggy at the spot nearest its flag",
+        IsValid(V.ent) and V.ent:GetClass())
+    local first = V.ent
+    V.Tick()
+    ok(V.ent == first, "one, not one more each time")
+    -- driven off and left: back at its spot after five minutes
+    first:SetPos(T0 + Vector(3000, 0, 0))
+    V.Tick()
+    ok(V.ent == first, "left somewhere: it stays there a while")
+    local driver = newPlayer("BaseDriver", "resistance", nil, 200)
+    first.GetDriver = function() return driver end
+    _run(310)
+    ok(V.ent == first, "someone at the wheel: it is theirs however long")
+    first.GetDriver = function() return nil end
+    _run(310)
+    ok(IsValid(V.ent) and V.ent ~= first and V.ent:GetPos():Distance(near.pos) < 40, "left empty five minutes: back at its spot")
+    -- the base gone: the vehicle goes with it, once nobody sits in it
+    local second = V.ent
+    second.GetDriver = function() return driver end
+    B.S = {}
+    V.Tick()
+    ok(V.ent == second, "the flag down with someone driving: they keep it until they get out")
+    second.GetDriver = function() return nil end
+    V.Tick()
+    ok(not IsValid(V.ent) and not IsValid(second), "empty: gone with the base")
+    -- a spot in water is the airboat's; a base out of reach of every spot has none
+    wet = true
+    B.S = { state = "live", zone = zone, pos = T0 }
+    V.Tick()
+    ok(IsValid(V.ent) and V.ent:GetClass() == "prop_vehicle_airboat", "a spot on water: the airboat", IsValid(V.ent) and V.ent:GetClass())
+    V.Remove()
+    B.S = { state = "live", zone = zone, pos = T0 + Vector(0, 30000, 0) }
+    V.Tick()
+    ok(not IsValid(V.ent), "a base with no spot within reach: none")
+    V.Remove()
+    LC.RemovePoint(near) LC.RemovePoint(far) driver:Remove()
+    B.S, LC.BaseLive, LC.InWater = sWas, liveWas, waterWas
+end
+Nov24_BaseVehicleTests()
 
 ----------------------------------------------------------------------
 section("Stop")

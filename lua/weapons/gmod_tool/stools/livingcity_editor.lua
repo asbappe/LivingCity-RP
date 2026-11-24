@@ -49,6 +49,7 @@ local MODES = {
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: Resistance spawn (rebel players)" },
     { id = "colonel",     label = "Point: Resistance Colonel's spot (the ghost only the Resistance sees stands here, facing you; none: beside the quartermaster)" },
+    { id = "basevehicle", label = "Point: Resistance base vehicle (a buggy here, or an airboat if placed on water, while the base is set up nearest it; it faces the way you face)" },
     { id = "rlookout",    label = "Point: Resistance lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },
     { id = "bunk",        label = "Point: Resistance bunk (a rebel sleeps here now and then; aim at the middle of the bed from its foot or head, so it lies along the bed)" },
     { id = "camera",      label = "Point: Combine camera (what the monitors show: it looks the way you face)" },
