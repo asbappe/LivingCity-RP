@@ -24,6 +24,7 @@ has checked is how any of it LOOKS: this was made without seeing it. docs/dev/ma
 
 import copy
 import math
+import sys
 import random
 import re
 
@@ -1038,8 +1039,23 @@ class BunkerForest(Forest):
     POND = (1500, 1400, 640, 480)   # centre x, y; half its length and width
     ISLE = (1560, 1385, 260)
     B0 = (2368, 3072)               # the bunker's own corner: its door's wall is its south side. (Its x is chosen so the foot of
-                                    # the second stairs, 320 west of it, is on a line between two ground patches: see height().)
+                                    # the second stairs, JOIN east of it, is on a line between two ground patches: see height().)
     DOOR = (512, 768)               # the doorway, in the bunker's own coordinates: 256 wide and 192 high, shut by two sliding leaves
+    JOIN = 192                      # where the second stairs come down into the big room: the first level's plan stops, the deep level's begins
+    # The deep level since 24 November (the owner: "for the bunker itself ... a bigger room would work better than tons of
+    # small pointless rooms; keep the room that is a bedroom with the toilet/sink at the beginning of the bunker, and the
+    # generator room at the end"; then "joined up by the silo please; and it is ok to reorganize the bunker to make this
+    # work; so long as the bedroom/bathroom room and the red plant room remain the same inside then they can be moved
+    # around"): at the foot of the second stairs a walkway west to the plant room (the far end) and the corridor to the
+    # silo, and a walkway north and east under the hill to the control complex up by the silo (map_launch.py). Each is
+    # (the squares, "room" or "door"): the walkway west; the plant room's door and the room; the corridor's door and the
+    # corridor; the walkway to the complex north, east along the hill's foot, north through the forest's wall (NE_LEG).
+    NE_LEG = (1344, 1472)
+    DEEP = (((-704, 640, 192, 768), "room"),
+            ((-768, 640, -704, 768), "door"), ((-1088, 512, -768, 832), "room"),
+            ((-704, 768, -576, 832), "door"), ((-704, 832, -576, 1088), "room"),
+            ((64, 768, 192, 960), "room"), ((64, 960, 1472, 1088), "room"), ((1344, 1088, 1472, 1280), "room"))
+    PLANT = (-928, 672)             # the plant room's middle (its inside as it was, moved with it)
     # thinner (the owner, 22 November: "can we also please thin out the forest and rocks in the forest area? they are way
     # too thick and even the watchtower is useless because you can't see anything from it"): about half the trees (thin()),
     # half the rocks and fallen logs
@@ -1080,41 +1096,31 @@ class BunkerForest(Forest):
         # the part under the mound: its roof is level with the mound's top, and the ground dives under it. Walls in White
         # Forest's two concretes laid from each room's own floor (WFPlan); the front, out of the mound, from the ground at the door
         plan = WFPlan(origin, zd - 64, zp + 272, outside=zp, roof=FMAT["bunker_floor"], **look)
-        plan.keep_out += [(-100000, -100000, 100000, 0), (-100000, 576, -320, 832)]   # in front of the door; where the deep level joins
+        # The plan since 24 November (the owner: "for the bunker itself, can we look at the EP2 white forest rooms and just
+        # copy/paste the layout and concepts? ... a bigger room would work better than tons of small pointless rooms; keep
+        # the room that is a bedroom with the toilet/sink at the beginning of the bunker, and the generator room at the end"):
+        # the door, the room inside it and the first stairs as they were; at their foot a short hall with the bunk room off
+        # its east end and the second stairs down west; at their foot ONE big room, White Forest's control room (BIG), and
+        # off it the plant room at the far end and the corridor to the silo.
+        plan.keep_out += [(-100000, -100000, 100000, 0), (-100000, 576, self.JOIN, 832)]   # in front of the door; where the deep level joins
         plan.paint((512, 0, 768, 64), ("low", zp, fm, zp + 192))      # the doorway: 256 wide, 192 high
         plan.paint((448, 64, 832, 256), ("low", zp, fm, zp + 208))    # the room inside the door (its front wall is what the door's leaves slide into)
         plan.paint((576, 256, 704, 448), ("low", zl, fm, zp + 160))   # the stairs down
-        plan.paint((576, 448, 704, 512), ("low", zl, fm, zl + 160))
-        plan.paint((384, 512, 896, 832), ("low", zl, fm, zl + 160))   # the main room
-        plan.paint((320, 640, 384, 768), ("low", zl, fm, zl + 128))   # (each doorway between rooms is 128 wide: a frame narrows it to the door's 96)
-        plan.paint((64, 576, 320, 832), ("low", zl, fm, zl + 160))    # west: the generator and stores (the way through)
+        plan.paint((576, 448, 704, 640), ("low", zl, fm, zl + 160))   # their foot, and on to the hall
+        plan.paint((512, 640, 896, 832), ("low", zl, fm, zl + 160))   # the hall (each doorway between rooms is 128 wide: a frame narrows it to the door's 96)
         plan.paint((896, 640, 960, 768), ("low", zl, fm, zl + 128))
         plan.paint((960, 576, 1216, 832), ("low", zl, fm, zl + 160))  # east: the bunks (a dead end)
-        plan.paint((0, 640, 64, 768), ("low", zl, fm, zl + 128))      # a door in the generator room's west wall...
-        plan.paint((-320, 640, 0, 768), ("low", zd, fm, zl + 160))    # ...and the second stairs, down and west
+        plan.paint((self.JOIN, 640, 512, 768), ("low", zd, fm, zl + 160))    # west: the second stairs, down to the big room
         plan.walls()
-        # the deep level: wholly under the ground (its top is 72 under the gate's floor), so nothing of it shows outside
+        # the deep level: wholly under the ground, so nothing of it shows outside
         deep = WFPlan(origin, zd - 64, zd + 224, **look)
-        deep.keep_out += [(-320, 576, 100000, 832), (-100000, 1088, 100000, 100000)]
+        # (the walkway to the complex ends at the control room's south wall, 1280 north, past the forest's north wall; the
+        #  corridor to the silo goes on north as the low plan)
+        deep.keep_out += [(self.JOIN, 576, 100000, 832), (-100000, 1088, -448, 100000), (-100000, 1280, 100000, 100000)]
         room = ("low", zd, fm, zd + 160)
         door = ("low", zd, fm, zd + 128)
-        deep.paint((-448, 384, -320, 768), room)       # the foot of the stairs
-        deep.paint((-1216, 384, -448, 512), room)      # the passage west
-        deep.paint((-704, 512, -576, 576), door)
-        deep.paint((-768, 576, -512, 832), room)       # north: the radio room
-        deep.paint((-1088, 512, -960, 576), door)
-        deep.paint((-1152, 576, -896, 832), room)      # north: the armoury
-        deep.paint((-704, 320, -576, 384), door)
-        deep.paint((-768, 64, -512, 320), room)        # south: the sick bay
-        deep.paint((-1088, 320, -960, 384), door)
-        deep.paint((-1152, 64, -896, 320), room)       # south: the stores
-        deep.paint((-1280, 384, -1216, 512), door)
-        deep.paint((-1600, 256, -1280, 576), room)     # the far end: the plant room
-        # the way to the silo (the owner, 21 November: "connect the silo to the bunker so that the silo sits just outside
-        # the existing map area"): a door in the radio room's north wall, a corridor north under the ridge and out through
-        # the forest's north wall (cut there only), then 15 steps of 16 by 24 down to the silo's gantry level
-        deep.paint((-704, 832, -576, 896), door)
-        deep.paint((-704, 896, -576, 1088), room)
+        for rect, spec in self.DEEP:
+            deep.paint(rect, room if spec == "room" else door)
         deep.walls()
         low = WFPlan(origin, zg - 64, zd + 224, **look)
         low.keep_out += [(-100000, -100000, 100000, 1088), (-100000, 1600, 100000, 100000)]
@@ -1126,7 +1132,8 @@ class BunkerForest(Forest):
         # gantry level is the corridor's floor; the forest's north wall is cut where the corridor and its walls pass
         self.silo_at = (origin[0] - 640, origin[1] + 1600 + 544, zg - 1408)
         # (and where the leader's way out passes it, since 24 November: map_silo.py's WAY_X, its walls with it)
-        self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512), (MS.WAY_X[0] - MS.WAY_T - self.ox, MS.WAY_X[1] + MS.WAY_T - self.ox)]
+        self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512), (MS.WAY_X[0] - MS.WAY_T - self.ox, MS.WAY_X[1] + MS.WAY_T - self.ox),
+                              (self.B0[0] + self.NE_LEG[0] - 64, self.B0[0] + self.NE_LEG[1] + 64)]      # (and where the walkway to the complex passes)
         self.plan, self.deep = plan, deep
         for p in (plan, deep, low):     # (each one's walls may look into the others' rooms where they meet)
             p.others = [q for q in (plan, deep, low) if q is not p]
@@ -1137,7 +1144,7 @@ class BunkerForest(Forest):
         self.window_spots()
         self.buildings.append((plan, self.B0, zd - 110))
         self.rooms += [(plan, self.B0), (deep, self.B0)]
-        if (self.B0[0] - 320) % PATCH:
+        if (self.B0[0] + self.JOIN) % PATCH:
             self.problems.append("the foot of the bunker's second stairs is not on a line between two ground patches: the ground would cross the stairwell")
 
     def height(self, x, y, bias=None):
@@ -1146,7 +1153,7 @@ class BunkerForest(Forest):
         # stairs down in the bunker have a ground geometry/brush blocking them"). So the ground is TORN there: along the
         # line at the stairs' foot the patch to the east is under the floor and the patch to the west is the forest's
         # floor above. The slit between them is in the wall that stands on the deep level's roof.
-        jx, by = self.B0[0] - 320, self.B0[1]
+        jx, by = self.B0[0] + self.JOIN, self.B0[1]
         if x == jx and bias is not None and bias[0] > jx and by + 640 <= y <= by + 768:
             return self.zd - 110
         # and TORN along the foot of the gate's north wing wall where the leader's way out comes out through it (map_silo.py's
@@ -1251,14 +1258,20 @@ class BunkerForest(Forest):
         vis, wall = self.vis("structures"), FMAT["wf_floor"]
         # where the two parts meet: the stairwell is higher than the deep level's top, so a wall stands on that top (its
         # face to the stairwell laid from the stairwell's foot, as the walls beside it; its top is the roof's)
-        wf_box(v, B(-384, 576, zd + 224, -320, 832, zp + 272), {"east": wf_face("east", zd, zd + 224, zp + 272)}, vis, top=FMAT["bunker_floor"])
-        # the stairs: 15 steps north down to the first level, 23 west down to the deep one (as the owner walked them), and
-        # the silo's 15 steps of 16 by 24 north and down to its gantry level (lesson stairs-16-24), wall to wall; the risers
-        # in the floor's plain concrete (in the banded wall's they showed a stripe of band on some and not on others)
+        jx, top = self.JOIN, zd + 224
+        wf_box(v, B(jx - 64, 576, top, jx, 832, zp + 272), {"east": wf_face("east", zd, top, zp + 272)}, vis, top=FMAT["bunker_floor"])
+        # the stairs: 15 steps north down to the first level; 11 of 16 by 24 west from a landing down to the deep level (since
+        # 24 November: 23 of 8 by 12 before); and the silo's 15 steps of 16 by 24 north and down to its gantry level (lesson
+        # stairs-16-24), wall to wall; the risers in the floor's plain concrete (in the banded wall's they showed a stripe of
+        # band on some and not on others)
         v.detail([B(576, 256 + 12 * k, zl, 704, 268 + 12 * k, zp - 8 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
-        v.detail([B(-12 * (k + 1), 640, zd, -12 * k, 768, zl - 8 * (k + 1)) for k in range(23)], wall, vis=vis, top=MAT["stairs"])
+        v.detail([B(456 - 24 * (k + 1), 640, zd, 456 - 24 * k, 768, zl - 16 * (k + 1)) for k in range(11)], wall, vis=vis, top=MAT["stairs"])
+        v.detail([B(456, 640, zd, 512, 768, zl)], wall, vis=vis, top=wall)          # (their top landing, level with the hall)
         v.detail([B(-704, 1112 + 24 * k, zg, -576, 1136 + 24 * k, zd - 16 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
         v.detail([B(-704, 1088, zg, -576, 1112, zd)], wall, vis=vis, top=wall)      # (the stairs' top landing, level with the corridor)
+        # the control complex up by the silo (map_launch.py): White Forest's control room and Episode Two's launch room
+        import map_launch as ML
+        self.complex_air, complex_places = ML.build(self, sys.modules[__name__])
         self.door()
         self.room_doors()
         self.silo()
@@ -1268,9 +1281,9 @@ class BunkerForest(Forest):
         for model, x, y, yaw in (("models/props_c17/concrete_barrier001a.mdl", bx + 380, by - 110, 80), ("models/props_c17/concrete_barrier001a.mdl", bx + 920, by - 130, 100),
                                  ("models/props_vehicles/truck001a.mdl", bx + 300, by - 360, 35)):
             self.stand(model, x, y, self.natural(x, y), yaw, "structures", fade=(2800, 3400))
-        self.plan_nodes(plan, self.B0, skip=[(576, 256, 704, 448), (-320, 640, 0, 768)])
-        self.plan_nodes(deep, self.B0, skip=[(-704, 832, -576, 896)])
-        for (u, w, z) in ((640, 296, zp - 32), (640, 364, zp - 72), (640, 420, zp - 116), (-60, 704, zl - 40), (-150, 704, zl - 100), (-240, 704, zl - 160), (-300, 704, zd)):
+        self.plan_nodes(plan, self.B0, skip=[(576, 256, 704, 448), (jx, 640, 512, 768)])
+        self.plan_nodes(deep, self.B0, skip=[(-704, 768, -576, 832), (-768, 640, -704, 768)])
+        for (u, w, z) in ((640, 296, zp - 32), (640, 364, zp - 72), (640, 420, zp - 116), (420, 704, zl - 32), (336, 704, zl - 80), (252, 704, zl - 144), (160, 704, zd)):
             self.node(bx + u, by + w, z)
         # the bunker's rooms must be shut in on every side but the doorway (for the look of it, and for the door's areaportal):
         # with the doorway stopped up, air from inside must not reach the forest. The silo and the way to it are inside.
@@ -1279,10 +1292,14 @@ class BunkerForest(Forest):
         if closed[0] is None or reaches(closed, self.w(self.W / 2, self.D / 2, self.lid - 100)):
             self.problems.append("the bunker's rooms are open to the hill somewhere other than the doorway")
         sx, sy, sz = self.silo_at
-        for u, w, z, what in ((640, 672, zl + 64, "main room"), (-384, 576, zd + 64, "foot of the second stairs"), (-1440, 416, zd + 64, "plant room"), (-640, 192, zd + 64, "sick bay"),
+        for u, w, z, what in ((704, 736, zl + 64, "hall"), (1088, 704, zl + 64, "bunk room"), (-320, 704, zd + 64, "walkway west"), self.PLANT + (zd + 64, "plant room"),
+                              (128, 864, zd + 64, "walkway to the complex"), (1408, 1184, zd + 64, "walkway's end at the control room"),
                               (-640, 1000, zd + 64, "corridor to the silo"), (-640, 1568, zg + 64, "corridor's end at the silo")):
             if not reaches(closed, W(u, w, z)):
                 self.problems.append("the bunker's %s can't be reached from its door" % what)
+        for x, y, z, what in complex_places:
+            if not reaches(closed, (x, y, z)):
+                self.problems.append("the complex's %s can't be reached from the bunker's door" % what)
         for dz, what in ((1408 + 64, "gantry level"),):
             if not reaches(closed, (sx, sy, sz + dz)):
                 self.problems.append("the silo's %s can't be reached from the bunker's door" % what)
@@ -1311,23 +1328,24 @@ class BunkerForest(Forest):
         # every room, stair and corridor has a light of its own (the owner, 22 November: "several rooms in the bunker
         # without any lights")
         lit = [p for c, p in v.points if c in ("light", "light_spot")]
-        for name, (x1, y1, x2, y2), floor in (("room inside the door", (448, 64, 832, 256), zp), ("first stairs", (576, 256, 704, 512), zl), ("main room", (384, 512, 896, 832), zl),
-                                              ("generator room", (64, 576, 320, 832), zl), ("bunk room", (960, 576, 1216, 832), zl), ("second stairs", (-320, 640, 0, 768), zd),
-                                              ("foot of the second stairs", (-448, 384, -320, 768), zd), ("passage", (-1216, 384, -448, 512), zd),
-                                              ("radio room", (-768, 576, -512, 832), zd), ("armoury", (-1152, 576, -896, 832), zd), ("sick bay", (-768, 64, -512, 320), zd),
-                                              ("stores", (-1152, 64, -896, 320), zd), ("plant room", (-1600, 256, -1280, 576), zd), ("corridor to the silo", (-704, 896, -576, 1088), zd),
-                                              ("silo stairs", (-704, 1088, -576, 1472), zg), ("corridor's end", (-768, 1472, -512, 1600), zg)):
-            a, b = W(x1, y1, floor), W(x2, y2, floor + 400)
-            if not any(a[0] < p[0] < b[0] and a[1] < p[1] < b[1] and a[2] < p[2] < b[2] for p in lit):
+        rooms = [("room inside the door", (448, 64, 832, 256), zp), ("first stairs", (576, 256, 704, 512), zl), ("hall", (512, 640, 896, 832), zl),
+                 ("bunk room", (960, 576, 1216, 832), zl), ("second stairs", (jx, 640, 512, 768), zd), ("walkway west", (-704, 640, 192, 768), zd),
+                 ("plant room", (-1088, 512, -768, 832), zd), ("corridor to the silo", (-704, 832, -576, 1088), zd),
+                 ("silo stairs", (-704, 1088, -576, 1472), zg), ("corridor's end", (-768, 1472, -512, 1600), zg)]
+        rooms += [("walkway to the complex (%s)" % n, r, zd) for n, r in (("north", (64, 768, 192, 960)), ("east", (64, 960, 1472, 1088)), ("its end", (1344, 1088, 1472, 1280)))]
+        boxes = [(name, W(x1, y1, floor) + W(x2, y2, floor + 400)) for name, (x1, y1, x2, y2), floor in rooms]
+        boxes += [(name, box) for name, box in ML.lit_rooms(self)]
+        for name, box in boxes:
+            if not any(box[0] < p[0] < box[3] and box[1] < p[1] < box[4] and box[2] < p[2] < box[5] for p in lit):
                 self.problems.append("the bunker's %s has no light" % name)
         # the deep level and the corridor must stay under the ground
-        cover = min(self.natural(bx + (i + 0.5) * CELL, by + (j + 0.5) * CELL) for (i, j) in deep.cells) - (zd + 224)
+        cover = min(self.natural(bx + (i + 0.5) * CELL, by + (j + 0.5) * CELL) for (i, j) in deep.cells if by + (j + 1) * CELL <= self.D) - top      # (in the forest)
         if cover < 16:
             self.problems.append("the bunker's deep level comes within %d of the ground's surface" % cover)
-        self.notes.append("the bunker: its door at (%d %d), floor z %d; 15 steps down to the first level (z %d: main room, bunks, generator room), 23 more down to the deep level "
-                          "(z %d: a passage, radio room, armoury, sick bay, stores, plant room), which is at least %d under the ground; %d lamps, each lighting its own pool" % (
-                              self.ox + bx + 640, self.oy + by, zp, zl, zd, cover, self.lamps))
-        self.notes.append("the silo: its shaft's axis at (%d %d), from z %d to %d, in a sealed hull just north of the forest's wall; reached from the radio room's north door "
+        self.notes.append("the bunker: its door at (%d %d), floor z %d; 15 steps down to the first level (z %d: a hall, the bunk room), 11 more down to the deep level "
+                          "(z %d: a walkway west to the plant room and the corridor to the silo, a walkway north and east to the control complex), which is at least %d "
+                          "under the ground; %d lamps, each lighting its own pool" % (self.ox + bx + 640, self.oy + by, zp, zl, zd, cover, self.lamps))
+        self.notes.append("the silo: its shaft's axis at (%d %d), from z %d to %d, in a sealed hull just north of the forest's wall; reached from the walkway's north door "
                           "by a corridor (z %d) and 15 steps of 16 by 24 down to its gantry level (z %d)" % (sx, sy, sz - 64, sz + 1792, zd, zg))
 
     def dress(self):
@@ -1367,11 +1385,12 @@ class BunkerForest(Forest):
         # room's red caged lamp a spot down into the room (light_cagelight01_on: 280, cone 45, 40 down). (u, w, its
         # ceiling, colour, model): the bunks, the armoury, the stores and the passage's far end were dark until then.
         self.lamps = 0
-        for (u, w, ceil, colour, model) in ((640, 160, zp + 208, cold, "lab"), (544, 672, zl + 160, warm, "lab"), (736, 672, zl + 160, warm, "lab"),
-                                            (192, 704, zl + 160, cold2, "lab"), (1088, 704, zl + 160, warm2, "prison"), (-384, 576, zd + 160, cold, "lab"),
-                                            (-832, 448, zd + 160, cold, "lab"), (-1120, 448, zd + 160, cold, "lab"), (-640, 704, zd + 160, warm2, "lab"),
-                                            (-1024, 704, zd + 160, cold, "lab"), (-640, 192, zd + 160, cold, "lab"), (-1024, 192, zd + 160, cold2, "lab"),
-                                            (-640, 1488, zg + 192, cold, "lab")):
+        # (u, w, its ceiling, colour, model): the room inside the door, the hall, the bunks, the walkways' tubes (cold, as White
+        # Forest's corridors), the corridor's end at the silo
+        lamps = ((640, 160, zp + 208, cold, "lab"), (704, 736, zl + 160, cold2, "lab"), (1088, 704, zl + 160, warm2, "prison"),
+                 (-320, 704, zd + 160, cold, "lab"), (128, 864, zd + 160, cold2, "lab"), (512, 1024, zd + 160, cold, "lab"), (1024, 1024, zd + 160, cold2, "lab"),
+                 (1408, 1184, zd + 160, cold, "lab"), (-640, 1488, zg + 192, cold, "lab"))
+        for (u, w, ceil, colour, model) in lamps:
             at = ceil - 33
             if model == "lab":
                 spot(u, w, at - 41, colour, 900, 60, 30, -90, fifty=64, zero=400)
@@ -1381,8 +1400,7 @@ class BunkerForest(Forest):
                 glow(u, w, at - 41, colour, 12)
             self.lamps += 1
         # (u, w, z, the way it faces: out from its wall, strong or faint)
-        walls = ((-703, 1000, zd + 120, 0, 1), (-577, 1340, zd + 16, 180, 1), (-832, 511, zd + 124, 270, 0), (-832, 385, zd + 124, 90, 0),
-                 (-160, 767, zl + 40, 270, 1), (577, 352, zp + 24, 0, 1))
+        walls = ((-703, 1000, zd + 120, 0, 1), (-577, 1340, zd + 16, 180, 1), (352, 767, zl + 40, 270, 1), (577, 352, zp + 24, 0, 1))
         for (u, w, z, yaw, strong) in walls:
             du, dw = round(math.cos(math.radians(yaw)) * 8), round(math.sin(math.radians(yaw)) * 8)
             if strong:
@@ -1392,12 +1410,12 @@ class BunkerForest(Forest):
                 spot(u + du, w + dw, z, "193 249 255", 80, 70, 30, 0, yaw=yaw)
                 glow(u + du, w + dw, z, "193 249 255", 30)
             self.lamps += 1
-        spot(-1440, 562, zd + 127, "255 64 9", 280, 45, 30, -40, yaw=270)      # the plant room's red caged lamp, and a soft red fill
-        glow(-1440, 564, zd + 129, "255 64 9", 20)
-        glow(-1440, 416, zd + 100, red, 70, fill=True)
+        pu, pw = self.PLANT                    # the plant room's middle (since 24 November at the walkway's west end)
+        spot(pu, pw + 146, zd + 127, "255 64 9", 280, 45, 30, -40, yaw=270)      # the plant room's red caged lamp, and a soft red fill
+        glow(pu, pw + 148, zd + 129, "255 64 9", 20)
+        glow(pu, pw, zd + 100, red, 70, fill=True)
         self.lamps += 1
-        for (u, w, z) in ((640, 672, zl + 72), (-832, 448, zd + 72), (-1440, 416, zd + 72), (640, 160, zp + 72), (-640, 1000, zd + 72), (1088, 704, zl + 72),
-                          (-1024, 704, zd + 72), (-1024, 192, zd + 72)):
+        for (u, w, z) in ((640, 160, zp + 72), (704, 736, zl + 72), (1088, 704, zl + 72), (-320, 704, zd + 72), (768, 1024, zd + 72), (pu, pw, zd + 72), (-640, 1000, zd + 72)):
             v.point("env_cubemap", W(u, w, z), {"cubemapsize": "0"}, vis)
 
         def put(model, u, w, z, yaw, kind="s"):
@@ -1413,54 +1431,31 @@ class BunkerForest(Forest):
             keys.update({"StartDisabled": "0", "spawnflags": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10",
                          "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"})
             v.point("prop_dynamic_override", W(u, w, z), keys, vis)
-        for (u, w, ceil, model) in ((640, 160, zp + 208, "lab"), (544, 672, zl + 160, "lab"), (736, 672, zl + 160, "lab"), (192, 704, zl + 160, "lab"),
-                                    (1088, 704, zl + 160, "prison"), (-384, 576, zd + 160, "lab"), (-832, 448, zd + 160, "lab"), (-1120, 448, zd + 160, "lab"),
-                                    (-640, 704, zd + 160, "lab"), (-1024, 704, zd + 160, "lab"), (-640, 192, zd + 160, "lab"), (-1024, 192, zd + 160, "lab")):
+        self.put = put          # (gallery() and cctv() dress with it too)
+        for (u, w, ceil, colour, model) in lamps:
             put("props_lab/lab_flourescentlight001a" if model == "lab" else "props_wasteland/prison_flourescentlight001a", u, w, ceil - 33, 0, "f")
         for (u, w, z, yaw, strong) in walls:
             put("props_silo/wall_light", u, w, z, yaw, "f")
-        for (u, w, z, yaw) in ((480, 65, zp + 150, 90), (800, 65, zp + 150, 90), (-1440, 575, zd + 140, 270)):
+        for (u, w, z, yaw) in ((480, 65, zp + 150, 90), (800, 65, zp + 150, 90), (pu, pw + 159, zd + 140, 270)):
             put("props_c17/light_cagelight01_on", u, w, z, yaw, "f")
-        for (u, w, z, yaw) in ((-832, 511, zd + 146, 270), (-832, 385, zd + 146, 90), (-577, 1024, zd + 146, 180)):
-            put("props_silo/prodcables256", u, w, z, yaw)
+        for (u, w, z, yaw, model) in ((-577, 1024, zd + 146, 180, "prodcables256"), (352, 767, zl + 70, 270, "prodcables256"), (-320, 767, zd + 146, 270, "prodcables256"),
+                                      (768, 1087, zd + 146, 270, "prodcables256")):
+            put("props_silo/" + model, u, w, z, yaw)
         kit = (
             # the room inside the door
             ("props_silo/wall_wires2", 831, 160, zp, 180, "s"), ("props_silo/acunit02", 458, 200, zp + 120, 0, "s"),
-            # the main room: a desk of consoles, servers, a wall console, crates
-            ("props_wasteland/controlroom_desk001a", 640, 811, zl + 17, 270, "d"), ("props_silo/desk_console3", 610, 811, zl + 34, 270, "s"),
-            ("props_silo/desk_console1", 670, 811, zl + 34, 270, "s"), ("props_wasteland/controlroom_chair001a", 640, 768, zl + 20, 90, "d"),
-            ("props_silo/silo_server_a", 800, 818, zl, 270, "s"), ("props_silo/silo_server_b", 838, 815, zl, 270, "s"), ("props_silo/wall_console2", 392, 576, zl, 0, "s"),
-            ("props_junk/wood_crate001a", 425, 548, zl + 20, 10, "d"), ("props_junk/wood_crate002a", 480, 795, zl + 20, 0, "d"),
+            # the hall: a crate in the nook beside the stairs' top, a cart by the bunk room's door
+            ("props_junk/wood_crate001a", 542, 798, zl + 20, 10, "d"), ("props_lab/reciever_cart", 860, 800, zl + 36, 270, "d"),
             # the bunk room: the east room, a dead end (the owner: "why did you put the bunkroom as a 'walkway' room before the
             # stairs down?"). Each frame (bunkbed) has its mattresses (bunkbed2: Valve's mattress set for it, the same origin
             # and turn; the owner: they were "floating on the other side of the room away from the bunk bed frames")
             ("props_forest/bunkbed", 1150, 805, zl, 270, "s"), ("props_forest/bunkbed2", 1150, 805, zl, 270, "s"),
             ("props_forest/bunkbed", 1030, 805, zl, 270, "s"), ("props_forest/bunkbed2", 1030, 805, zl, 270, "s"),
             ("props_lab/lockers", 1030, 589, zl, 90, "s"), ("props_forest/footlocker01_closed", 1150, 755, zl + 12, 270, "s"), ("props_wasteland/prison_sink001a", 1202, 610, zl + 28, 180, "s"),
-            # the generator room: the west room, the way through to the second stairs, so all of it stands against its north
-            # and south walls and the line between its two doors (y 656 to 752) stays clear
-            ("props_outland/generator_static01a", 125, 608, zl, 0, "s"), ("props_forest/shelves_wood", 256, 593, zl, 90, "s"),
-            ("props_silo/electricalbox02", 192, 831, zl, 270, "s"), ("props_silo/tirestack2", 150, 788, zl, 30, "s"), ("props_silo/tirestack3", 215, 788, zl, 0, "s"),
-            ("props_silo/barrelwarning", 258, 798, zl, 20, "d"),      # (back from the wall: the window beside the door is there)
-            # the radio room: the base's control room, as White Forest's
-            ("props_wasteland/controlroom_desk001a", -534, 704, zd + 17, 180, "d"), ("props_silo/desk_console1", -534, 674, zd + 34, 180, "s"),
-            ("props_silo/desk_console3", -534, 734, zd + 34, 180, "s"), ("props_wasteland/controlroom_chair001a", -585, 704, zd + 20, 0, "d"),
-            ("props_silo/silo_server_a", -754, 640, zd, 0, "s"), ("props_silo/silo_server_b", -750, 678, zd, 0, "s"), ("props_silo/wall_console1", -760, 770, zd, 0, "s"),
-            ("props_lab/reciever_cart", -555, 600, zd + 36, 180, "d"),
-            # the armoury
-            ("props_lab/lockers", -1140, 640, zd, 0, "s"), ("props_lab/lockers", -1140, 690, zd, 0, "s"), ("props_lab/lockers", -1140, 740, zd, 0, "s"),
-            ("props_forest/footlocker01_closed", -1000, 817, zd + 12, 270, "s"), ("props_forest/footlocker01_closed", -950, 817, zd + 12, 270, "s"),
-            ("props_forest/shelves", -897, 704, zd + 80, 90, "s"), ("props_junk/wood_crate002a", -925, 640, zd + 20, 0, "d"), ("props_junk/wood_crate001a", -925, 710, zd + 20, 25, "d"),
-            # the sick bay
-            ("props_wasteland/prison_metalbed001a", -720, 75, zd + 20, 90, "s"), ("props_wasteland/prison_metalbed001a", -600, 75, zd + 20, 90, "s"),
-            ("props_wasteland/prison_sink001a", -755, 250, zd + 28, 0, "s"), ("props_c17/furnituretable002a", -640, 200, zd + 19, 0, "d"),
-            ("props_wasteland/controlroom_storagecloset001a", -530, 250, zd + 44, 180, "d"),
-            # the stores
-            ("props_forest/shelves_wood", -1135, 160, zd, 0, "s"), ("props_wasteland/kitchen_shelf002a", -1135, 280, zd, 0, "d"), ("props_silo/barrelwarning", -940, 82, zd, 0, "d"),
-            ("props_c17/canister01a", -980, 80, zd + 30, 0, "d"), ("props_junk/wood_crate002a", -1050, 100, zd + 20, 90, "d"), ("props_silo/tirestack3", -925, 230, zd, 0, "s"),
-            # the plant room
-            ("props_outland/generator_static01a", -1500, 515, zd, 270, "s"), ("props_silo/acunit01", -1566, 400, zd + 64, 0, "s"),
-            ("props_silo/electricalbox01", -1430, 262, zd, 90, "s"), ("props_silo/tirestack2", -1340, 545, zd, 0, "s"), ("props_lab/powerbox01a", -1295, 300, zd + 60, 180, "s"),
+            # the plant room (Valve's generator, air plant and switch panels: as it was, the room moved with them)
+            ("props_outland/generator_static01a", pu - 60, pw + 99, zd, 270, "s"), ("props_silo/acunit01", pu - 126, pw - 16, zd + 64, 0, "s"),
+            ("props_silo/electricalbox01", pu + 10, pw - 154, zd, 90, "s"), ("props_silo/tirestack2", pu + 100, pw + 129, zd, 0, "s"),
+            ("props_lab/powerbox01a", pu + 145, pw - 116, zd + 60, 180, "s"),
         )
         for model, u, w, z, yaw, kind in kit:
             put(model, u, w, z, yaw, kind)
@@ -1475,21 +1470,18 @@ class BunkerForest(Forest):
     # (and of the silo's own), so no two fight; the nearest in sight plays.
     SCAPES = (
         (640, 160, "zp", "coast.bridge_concrete_room", 192),          # the room inside the door
-        (640, 672, "zl", "prison.control_room_simple", 224),          # the main room
-        (192, 704, "zl", "d1_canals.floodgate_machineroom", 160),     # the generator room
+        (704, 736, "zl", "eli_01_lower_corridor_1", 140),             # the hall
         (1088, 704, "zl", "general.concrete_quiet", 160),             # the bunks
-        (-160, 704, "zd+150", "eli_01_lower_corridor_1", 120),        # the second stairs
-        (-384, 600, "zd", "eli_01_lower_corridor_1", 100),            # their foot
-        (-832, 448, "zd", "eli_01_lower_corridor_1", 120),            # the passage
-        (-1120, 448, "zd", "eli_01_lower_corridor_1", 100),
-        (-640, 704, "zd", "prison.control_room_simple", 150),         # the radio room
-        (-1024, 704, "zd", "prison.util_quiet_cellblock", 150),       # the armoury
-        (-640, 192, "zd", "GenericIndoor", 150),                      # the sick bay (a fluorescent hum)
-        (-1024, 192, "zd", "prison.util_quiet_cellblock", 150),       # the stores
-        (-1440, 416, "zd", "d1_canals.floodgate_machineroom", 180),   # the plant room
-        (-640, 1024, "zd", "eli_01_lower_corridor_1", 120),           # the corridor to the silo
+        (352, 704, "zd+150", "eli_01_lower_corridor_1", 120),         # the second stairs
+        (-320, 704, "zd", "eli_01_lower_corridor_1", 140),            # the walkway west
+        (-928, 672, "zd", "d1_canals.floodgate_machineroom", 180),    # the plant room
+        (128, 864, "zd", "eli_01_lower_corridor_1", 120),             # the walkway to the complex
+        (640, 1024, "zd", "eli_01_lower_corridor_1", 160),
+        (1408, 1152, "zd", "eli_01_lower_corridor_1", 110),
+        (-640, 960, "zd", "eli_01_lower_corridor_1", 120),            # the corridor to the silo
         (-640, 1344, "zd-128", "eli_01_lower_corridor_1", 120),       # its stairs
-        # (its end at the silo's tunnel is left to the silo's own sound: map_silo.py, Silo soundscapes)
+        # (its end at the silo's tunnel is left to the silo's own sound: map_silo.py, Silo soundscapes; the control complex's
+        #  are map_launch.py's)
         (640, -256, "zp", "canals_canal_nowater", 160),               # outside the door: the forest again
     )
 
@@ -1569,10 +1561,9 @@ class BunkerForest(Forest):
 
     # the doors between rooms: (which level, the doorway's squares, the way through it, the side its keypad is NOT on (+1:
     # east or north; the keypad goes on a face with wall beside the doorway), which way the leaf slides into the wall (-1:
-    # south or west)). The last is the radio room's north door, to the silo.
-    ROOM_DOORS = ((0, (320, 640, 384, 768), "x", -1, -1), (0, (896, 640, 960, 768), "x", 1, -1), (0, (0, 640, 64, 768), "x", -1, -1),
-                  (1, (-704, 512, -576, 576), "y", 1, 1), (1, (-1088, 512, -960, 576), "y", 1, -1), (1, (-704, 320, -576, 384), "y", -1, -1),
-                  (1, (-1088, 320, -960, 384), "y", -1, -1), (1, (-1280, 384, -1216, 512), "x", 1, -1), (1, (-704, 832, -576, 896), "y", 1, -1))
+    # south or west)): the bunk room's (its keypad on the bunks' side: the hall is no wider than the doorway there), the
+    # plant room's at the far end of the big room, and the big room's north door, to the silo.
+    ROOM_DOORS = ((0, (896, 640, 960, 768), "x", -1, -1), (1, (-832, 576, -768, 704), "x", -1, -1), (1, (-704, 832, -576, 896), "y", 1, -1))
 
     # Episode Two's own small silo door, the lab door at the silo's bottom (door_silo_lab_outside_1, the owner: "has
     # CORRECT opening/closing animations and opens at the right speed"): every silo_door01 door copies it. Its func_door:
@@ -1967,6 +1958,7 @@ class BunkerForest(Forest):
         for cell, r, z in self.windows.values():      # (and the shuttered windows beside the room doors: shutter_window)
             inside.append(B(cell[0], cell[1], z, cell[2], cell[3], z + WF_BAND))
         inside.append(self.silo_inside())
+        inside += getattr(self, "complex_air", [])      # (the control complex up by the silo: map_launch.py)
         inside += MS.way_inside()      # (the leader's way out: whoever is in it is still inside until out of its door)
         fv = self.vis("bunker door's failsafe (delete to let it stay shut when empty)")
         v.brush_entity("trigger_multiple", {"targetname": "lc_bunker_inside", "spawnflags": "1", "wait": "1", "StartDisabled": "0"}, inside, MAT["trigger"], fv,
@@ -2428,6 +2420,9 @@ class BunkerForest(Forest):
         sky, shv = MAT["sky"], self.vis("shell (sky, walls, slab)")
         v.world_box(self.box(lx1, self.D, roof, lx2, self.D + WALL, self.lid), sky, sky, sky, vis=shv)
         v.world_box(self.box(lx1, self.D, self.zg - 80, lx2, self.D + WALL, self.zd - 64), nd, vis=shv)
+        lx1, lx2 = self.cuts["north"][2]
+        v.world_box(self.box(lx1, self.D, roof, lx2, self.D + WALL, self.lid), sky, sky, sky, vis=shv)
+        v.world_box(self.box(lx1, self.D, self.zb, lx2, self.D + WALL, self.zd - 64), nd, vis=shv)
 
     def lift(self):
         """The silo's lift, in the piece's frame (named as the piece's: lc_silo_...), as entities for pf_entities. The owner,
