@@ -50,6 +50,7 @@ LC_MODULES = {
         "sh_livingcity_illness",
         "sh_livingcity_zones",
         "sh_livingcity_turret", -- (the Combine's mounted gun on its barricade: manned from behind with E; entities/lc_turret.lua)
+        "sh_livingcity_barnacle", -- (a barnacle lifts the player it has caught: the game alone does not on a server)
     },
     server = {
         "sv_livingcity_perf", -- (first of the server modules: every timer after it is timed and staggered)

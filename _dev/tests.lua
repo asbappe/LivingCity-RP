@@ -44642,6 +44642,44 @@ function Nov23_LipSyncTests() -- (the owner, 23 November: "I REALLY need you to 
 end
 Nov23_LipSyncTests()
 
+function Nov24_BarnacleLiftTests() -- (the owner, 22 November: barnacles "just don't pull me up")
+    section("24 November: a barnacle lifts the player it has caught")
+    local HELD = EFL_IS_BEING_LIFTED_BY_BARNACLE or 1048576
+    local p = _makeplayer("Barnacled", Vector(-156000, -156000, 0))
+    local held = false
+    p.IsEFlagSet = function(_, f) return held and f == HELD end
+    local b = ents.Create("npc_barnacle") b:SetPos(Vector(-156000, -156000, 400)) b:Spawn()
+    b.hp = 35
+    local far = ents.Create("npc_barnacle") far:SetPos(Vector(-156500, -156000, 400)) far:Spawn()
+    far.hp = 35
+    LC.BarnacleHoldTick()
+    ok(not IsValid(p:GetNW2Entity("lc_barnacle")), "nobody caught: nobody lifted")
+    local mv = { o = p:GetPos(), v = Vector(0, 0, -300) }
+    function mv:GetOrigin() return self.o end
+    function mv:SetOrigin(x) self.o = x end
+    function mv:SetVelocity(x) self.v = x end
+    ok(hook.Run("Move", p, mv) == nil and mv.o.z == 0, "their movement is their own")
+    held = true
+    LC.BarnacleHoldTick()
+    ok(p:GetNW2Entity("lc_barnacle") == b, "caught: the barnacle over them holds them, not one further off")
+    local took = hook.Run("Move", p, mv)
+    ok(took == true and mv.o.z > 0 and mv.o.z <= 8.01 and mv.v.z == 0, "each moment they rise a little, not falling back", mv.o.z)
+    for _ = 1, 80 do hook.Run("Move", p, mv) end
+    ok(math.abs(mv.o.z - 306) < 0.01, "up to its mouth and no further", mv.o.z)
+    p:SetPos(mv.o)
+    local hp = p:Health()
+    LC.BarnacleHoldTick()
+    ok(p:Health() == hp, "at the mouth: the barnacle's own bite is waited for")
+    _run(3)
+    ok(p:Health() < hp, "a barnacle that never bites: the server bites for it", p:Health())
+    held = false
+    LC.BarnacleHoldTick()
+    ok(not IsValid(p:GetNW2Entity("lc_barnacle")) and hook.Run("Move", p, mv) == nil, "let go (or the barnacle killed): they drop")
+    b:Remove() far:Remove()
+    p.valid = false
+end
+Nov24_BarnacleLiftTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
