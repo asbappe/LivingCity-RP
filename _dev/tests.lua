@@ -9749,13 +9749,13 @@ local killer = newPlayer("Exterminator", "cp")
 -- everyone in that patch goes down
 local inPatch = {}
 for n, st in pairs(LC.NPCs) do
-    if IsValid(n) and st.role == "zombie" and n:GetPos():Distance(patch.pos) < patch.r + 100 then inPatch[#inPatch + 1] = n end
+    if IsValid(n) and st.role == "zombie" and LCZ.Contains(patch, n:GetPos(), 100) then inPatch[#inPatch + 1] = n end -- (as the game counts them: a patch is a cylinder, not a ball; a ball here missed one standing low at its edge, now and then)
 end
 inPatch[#inPatch + 1] = LC.SpawnZombie(patch.pos + Vector(0, 0, 4), patch)
 for _, n in ipairs(inPatch) do n:SetHealth(0) end
 for _, n in ipairs(inPatch) do hook.Run("OnNPCKilled", n, killer) end
 _run(1)
-ok(not table.HasValue(LC.Zones, patch) and LC.GrownCount("infest") <= 1, "clear a patch out and it's gone", LC.GrownCount("infest")) if LC.GrownCount("infest") > 1 then local dbg = {} for _, q in ipairs(LC.Zones) do if q.kind == "infest" then dbg[#dbg + 1] = "ZONE " .. tostring(q.grown) .. " r" .. math.floor(q.r or -1) .. " dT0 " .. math.floor(q.pos:Distance(T0)) .. " dP " .. math.floor(q.pos:Distance(patch.pos)) .. " c" .. tostring(q.contestedUntil) end end for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "zombie" then dbg[#dbg + 1] = tostring(n:GetClass()) .. ":" .. n:Health() .. ":" .. math.floor(n:GetPos():Distance(patch.pos)) .. ":" .. math.floor(n:GetPos():Distance(T0)) end end ok(false, "DBG", tostring(patch.cells ~= nil) .. " r" .. tostring(patch.r) .. " d" .. math.floor(patch.pos:Distance(T0)) .. " inPatch" .. #inPatch .. " hits" .. tostring(LC.TerritoryState[seed] and LC.TerritoryState[seed].hits) .. " fam" .. #fam .. " z:" .. table.concat(dbg, ",")) end
+ok(not table.HasValue(LC.Zones, patch) and LC.GrownCount("infest") <= 1, "clear a patch out and it's gone", LC.GrownCount("infest"))
 if LC.GrownCount("infest") == 0 then LC.GrowTerritory(seed) end -- (the fight may have spilled into the other patch too)
 ok(LC.TerritoryState[seed].nextGrow > CurTime() + 300, "and the infestation doesn't grow back straight away")
 -- a run of kills at the source pushes back the outermost patch
