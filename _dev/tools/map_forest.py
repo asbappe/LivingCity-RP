@@ -1275,6 +1275,7 @@ class BunkerForest(Forest):
         self.door()
         self.room_doors()
         self.silo()
+        ML.safety(self)         # (the silo's doors shut and locked at a launch, the launch tube's fire: map_launch.py)
         self.dress()
         self.soundscapes()
         self.roof_fence()

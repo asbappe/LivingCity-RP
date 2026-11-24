@@ -419,9 +419,59 @@ def launch(f, F, lr):
     for i in range(len(v.ents)):
         if old in v.ents[i]:
             v.ents[i] = v.ents[i].replace('"%s"' % old, '"%s"' % LAUNCH_RELAY).replace(old + "\x1b", LAUNCH_RELAY + "\x1b")
-    f.notes.append("the launch: the red button (lc_launch_button_launch) or %s runs Valve's launch: countdown, the hatch opening, and at 30 s the "
-                   "silo's rocket rising out of the shaft on lc_launch_train_rocket, killed at z 2500, out of sight; one launch a map" % LAUNCH_RELAY)
+    f.notes.append("the launch: the red button (lc_launch_button_launch) or %s runs Valve's launch: countdown, the silo's doors shut and locked, the "
+                   "hatch opening, and at 30 s the silo's rocket rising out of the shaft on lc_launch_train_rocket, its fire killing anyone in the launch "
+                   "tube (%s) until it is killed at z 2500, out of sight; one launch a map" % (LAUNCH_RELAY, TUBE_FIRE))
     return names
+
+
+# The silo during a launch (the owner, 24 November: "can we please also ensure the silo doors close automatically during a
+# launch? And anyone inside the silo launch tube during a launch is, when the rocket actually fires and begins to rise, is
+# killed? there is no way to survive a hecking rocket launch inside the silo itself", and "(not inside the resistance
+# leaders office if the door is shut, or in his bedroom if the door is shut)"). At the countdown the silo's round blast
+# door runs its own close (its shove at the close: the door itself still never kills) and the office's lab door shuts;
+# both locked (their buttons, the lab door's Use and its lever) until the rocket is gone, then as before. When the rocket
+# fires (30 s) the launch tube burns: a trigger_hurt from the hull's floor through the shaft, the pit and the gantry's level
+# to the collar's mouth, never the office, the bedroom or the tunnel beyond the blast door (all outside the hull's first
+# square), off when the rocket is gone. The owner's own exception to lesson owner-doors-shove-never-kill.
+TUBE_FIRE = "lc_launch_tube_fire"
+TUBE = ((9248, 5760, -1304, 10336, 6848, 200), (9648, 6160, 200, 9936, 6448, 337))    # (the hull's first square, inside its walls; the mouth over it)
+DOORS_SHUT = (("lc_silo_blast_close", "Trigger", 0), ("lc_silo_blast_locked", "SetValue", 0), ("lc_silo_blast_button_corridor", "Lock", 0),
+              ("lc_silo_blast_button_silo", "Lock", 0), ("lc_silo_door_silo_lab_outside_1", "Close", 0), ("lc_silo_door_silo_lab_outside_1", "Lock", 0.1),
+              ("lc_silo_exit_airlock_blastdoor_lever", "Lock", 0))
+DOORS_FREE = (("lc_silo_blast_button_corridor", "Unlock", 1), ("lc_silo_blast_button_silo", "Unlock", 1), ("lc_silo_door_silo_lab_outside_1", "Unlock", 1),
+              ("lc_silo_exit_airlock_blastdoor_lever", "Unlock", 1))
+
+
+def add_outputs(v, name, outs):
+    """Outputs added to the entity named name already in the map's text: [(output, target, input, value, delay)]."""
+    import map_build
+    key = '"targetname" "%s"' % name
+    for i, e in enumerate(v.ents):
+        if key not in e:
+            continue
+        block = map_build.Vmf.wires(outs)
+        head = "\tconnections\n\t{\n"
+        if head in e:
+            v.ents[i] = e.replace(head, block[:-len("\t}\n")], 1)
+        else:
+            v.ents[i] = e.replace(key + "\n", key + "\n" + block, 1)
+        return True
+    raise ValueError("no entity named %s" % name)
+
+
+def safety(f):
+    """The silo during a launch (after BunkerForest.silo() has placed the silo's doors)."""
+    v = f.vmf
+    fire = ("trigger_hurt", {"targetname": TUBE_FIRE, "StartDisabled": "1", "spawnflags": "3", "damage": "10000", "damagecap": "20000", "damagetype": "8",
+                             "damagemodel": "0", "nodmgforce": "0"})
+    v.brush_entity(fire[0], fire[1], list(TUBE), MAT["trigger"], f.vis("launch tube's fire (kills while the rocket burns out of the silo)"))
+    add_outputs(v, LAUNCH_RELAY, [("OnTrigger", t, i, "0" if i == "SetValue" else "", d) for t, i, d in DOORS_SHUT]
+                + [("OnTrigger", TUBE_FIRE, "Enable", "", 30), ("OnTrigger", TUBE_FIRE, "Disable", "", 45)])
+    add_outputs(v, "lc_launch_ptrack_8", [("OnPass", TUBE_FIRE, "Disable", "", 0.5)] + [("OnPass", t, i, "", d) for t, i, d in DOORS_FREE])
+    # (a door the wiring shuts sends itself Close again a second after it is blocked: lesson valve-door-retry; the
+    #  Close input works on it locked, so locked at once it still shuts the moment the way is clear)
+    add_outputs(v, "lc_silo_door_silo_lab_outside_1", [("OnBlockedClosing", "!self", "Close", "", 1)])
 
 
 # The bunker's camera (the owner, 24 November: "copy the big massive screen ... and use it as CCTV footage of the outside
