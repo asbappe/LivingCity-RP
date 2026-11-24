@@ -33,8 +33,10 @@ def lit_from(vmf, name, pos, vis):
 # a nodraw face of the piece that players can now see gets a real face: the levels' ring halls (Valve left the far half
 # of level A, most of level B and the bottom level's outer faces bare) and the gantry's tunnel. (r1, r2, z1, z2) round
 # the shaft's axis, or a box; a face is finished when the point 6 in front of its middle lies in one.
-FINISH_RINGS = ((240, 780, 316, 580),)      # (the bottom level's ring hall; levels A and B are shut off and their halls gone: Silo.halls_shut)
-FINISH_BOXES = ((-544, -130, 1400, -250, 130, 1570),)
+FINISH_RINGS = ((240, 780, 316, 580),      # (the bottom level's ring hall; levels A and B are shut off and their halls gone: Silo.halls_shut)
+                (0, 780, 1150, 1408))      # (and under the top floor: the dark pit's wall and what shows through the gantry's grates, the
+                                           #  owner, 24 November: "walls missing"; nodraw there showed the void)
+FINISH_BOXES = ((-620, -130, 1400, -250, 130, 1650),)      # (the gantry's tunnel on the corridor's side, to the blast door's head)
 RING_RAIL = (162, 168)     # level A's rail round the pit's mouth: from, to, out from the axis (Silo.ring_rail)
 FINISH_MAT = {"floor": "CONCRETE/CONCRETEWALL036A", "ceiling": "CONCRETE/CONCRETEWALL073A", "wall": "CONCRETE/CONCRETEWALL010A"}
 
@@ -560,13 +562,13 @@ class Silo:
             v.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % v.new_id() + det + v.editor(self.vis, "0 180 0") + "}\n")
         # the gantry's floor in front of the lift is Valve's see-through grate (1490) right over level B's hall by the lift:
         # a slab 1 under it, so the grate looks down on concrete and not into the hall
-        v.detail([wbox(self.d, (-376, -95, 1390, -256, 95, 1404))], MAT["nodraw"], top="CONCRETE/CONCRETEFLOOR006A", vis=self.vis)
+        v.detail([wbox(self.d, (-376, -95, 1390, -256, 95, 1404))], FINISH_MAT["wall"], top="CONCRETE/CONCRETEFLOOR006A", vis=self.vis)       # (its edges show)
         # the silo cut to its top floor (the owner, 23 November): the lift's mouth in the walkway's floor and Valve's ladder
         # hatch in the gantry's floor are floor now, each in the floor round it
         hx1, hy1, hx2, hy2 = self.f.LIFT_HOLE
         v.world.append(v.box_text(wbox(self.d, (hx1, hy1, 1392, hx2, hy2, 1408)), MAT["nodraw"], "METAL/METALHULL003A", MAT["nodraw"], self.vis))
         lx1, ly1, ly2, lx2 = self.LADDER_HOLE
-        v.detail([wbox(self.d, (lx1, ly1, 1404, lx2, ly2, 1408))], MAT["nodraw"], top="METAL/METALFLOOR010A", vis=self.vis)
+        v.detail([wbox(self.d, (lx1, ly1, 1404, lx2, ly2, 1408))], "METAL/METALHULL003A", top="METAL/METALFLOOR010A", vis=self.vis)
         self.f.notes.append("the silo cut to its top floor: level B's gap in the pit's wall shut (%d segments), the lift's mouth and the ladder's hatch floored" % sum(len(t) for _, t in self.HALL_FILLS))
 
     # -- 4. the leader's office and bedroom (on the top floor since 24 November: OFFICE_BOX) --------------------------
@@ -610,7 +612,8 @@ class Silo:
         side, and a lid over the beams' recess. Returns (brushes, sides) placed."""
         from map_forest import pf_solid
         v, d, nd = self.v, self.d, MAT["nodraw"]
-        rooms = (OFFICE_ROOM, BEDROOM, VESTIBULE)
+        rooms = (OFFICE_ROOM, BEDROOM, VESTIBULE, (200, -450, 1150, 580, 450, 1408), (200, -450, 1560, 580, 450, 1700))      # (and under the gantry before
+        #                                                                                                                    its door, and over the vestibule)
         det, n, ns = "", 0, 0
         for i, s in enumerate(pf["solids"]):
             if "taken shut" in s["from"] or i in LEVER_BRUSHES:
@@ -640,7 +643,7 @@ class Silo:
         # the alcove's far side (Valve's hull was there), and the lid over the beams' recess in the ceiling (level A's floor was)
         cw, ceil = FINISH_MAT["wall"], "CONCRETE/CONCRETECEILING_BUNKER01A"
         v.world_box(wbox(d, (576, -438, 1376, OFFICE_HULL, -406, 1664)), nd, faces={"west": cw}, vis=self.vis)
-        v.world_box(wbox(d, (544, -438, 1664, OFFICE_HULL, 138, 1680)), nd, bottom=ceil, vis=self.vis)
+        v.world_box(wbox(d, (544, -438, 1664, OFFICE_HULL, 138, 1680)), nd, bottom=ceil, faces={"south": cw, "west": cw}, vis=self.vis)      # (its edges show from the gantry)
         return n + 2, ns + 12
 
     def vestibule(self, pf):
@@ -659,14 +662,15 @@ class Silo:
             v.world.append(pf_solid(v, sides, 1, d, self.vis)[0])
             n, ns = n + 1, ns + len(sides)
         G, top = self.GANTRY, 1568
-        shapes = [prism(d, [(256, 0), (556, 0), (556, 166), (274, 91), (247, 66)], G - 16, G, nd, top=floor),
-                  prism(d, [(256, 0), (247, -66), (274, -91), (556, -166), (556, 0)], G - 16, G, nd, top=floor),
-                  prism(d, [(278, 75), (556, 150), (552, 166), (274, 91)], G, top, nd, sides={0: wall}),
-                  prism(d, [(274, -91), (552, -166), (556, -150), (278, -75)], G, top, nd, sides={2: wall})]
+        # (every face of them in the silo's finish: their edges, ends, tops and undersides show from the gantry and the pit)
+        shapes = [prism(d, [(256, 0), (556, 0), (556, 166), (274, 91), (247, 66)], G - 16, G, wall, top=floor, bottom=FINISH_MAT["ceiling"]),
+                  prism(d, [(256, 0), (247, -66), (274, -91), (556, -166), (556, 0)], G - 16, G, wall, top=floor, bottom=FINISH_MAT["ceiling"]),
+                  prism(d, [(278, 75), (556, 150), (552, 166), (274, 91)], G, top, wall, top=FINISH_MAT["ceiling"], bottom=FINISH_MAT["ceiling"]),
+                  prism(d, [(274, -91), (552, -166), (556, -150), (278, -75)], G, top, wall, top=FINISH_MAT["ceiling"], bottom=FINISH_MAT["ceiling"])]
         for faces in shapes:
             v.world.append(v.convex_text(faces, self.vis))
             n, ns = n + 1, ns + len(faces)
-        v.world_box(wbox(d, (384, -166, DOORWAY_TOP, 556, 166, top)), nd, bottom=wall, vis=self.vis)
+        v.world_box(wbox(d, (384, -166, DOORWAY_TOP, 556, 166, top)), wall, top=FINISH_MAT["ceiling"], bottom=wall, vis=self.vis)
         # nothing may stand in the way from the gantry to the office's door, through it, or through the bedroom's door
         for b, label in (((256, -52, G, 540, 52, DOORWAY_TOP), "the way in to the leader's office"), ((580, -52, G, 630, 52, DOORWAY_TOP), "inside the office's door"),
                          ((628, 60, G, 727, 104, G + 112), "the office's side of the bedroom's door"), ((628, 142, G, 727, 200, G + 112), "the bedroom's side of its door")):

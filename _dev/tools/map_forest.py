@@ -143,14 +143,72 @@ def pf_solid(vmf, sides, q, d, vis):
     return text, tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
 
 
-def pf_solids(vmf, pf, q, d, vis, world=False, skip=None):
+def pf_finish(sols, q, d, rooms, mats):
+    """What Valve left bare (nodraw) where its map ran on and ours now stops at a hull of our own (the owner, 24
+    November: "there are walls missing all over the stairs up to the launch control room"): a nodraw face of a lifted
+    piece whose middle (or a point near one of its corners) looks, 1 out, into the open air of one of `rooms` (boxes of the map; air: inside no other brush
+    of the piece) gets mats["floor"], ["ceiling"] or ["wall"] by the way it faces. sols: the piece's solids to be placed
+    (changed in place: copies). rooms and mats may instead be a list of (rooms, mats), the first that holds the point
+    deciding. How many."""
+    groups = rooms if mats is None else [(rooms, mats)]
+
+    def plane(pts):
+        a, b, c = pts
+        u = [a[k] - b[k] for k in range(3)]
+        w = [c[k] - b[k] for k in range(3)]
+        n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+        ln = math.sqrt(sum(x * x for x in n)) or 1.0
+        n = [x / ln for x in n]
+        return n, sum(n[k] * a[k] for k in range(3))
+    placed = []
+    for sol in sols:
+        sides = [dict(sd, plane=[pf_point(p, q, d) for p in sd["plane"]], corners=[pf_point(p, q, d) for p in (sd.get("verts") or sd.get("corners") or [])])
+                 for sd in sol["sides"]]
+        placed.append((sol, sides, [plane(sd["plane"]) for sd in sides]))
+
+    def inside(p, planes):
+        return all(n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - dd <= 0.01 for n, dd in planes)
+    count = 0
+    for sol, sides, planes in placed:
+        allc = [c for sd in sides for c in sd["corners"]]
+        if not allc:
+            continue
+        mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
+        for k, sd in enumerate(sides):
+            if sd["material"].upper() != "TOOLS/TOOLSNODRAW" or len(sd["corners"]) < 3:
+                continue
+            n = planes[k][0]
+            fc = [sum(c[i] for c in sd["corners"]) / len(sd["corners"]) for i in range(3)]
+            if sum(n[i] * (fc[i] - mid[i]) for i in range(3)) < 0:
+                n = [-x for x in n]
+            got = None
+            near = []
+            for c in sd["corners"]:      # (its middle, and near each corner: a quarter of the way in, and 2 in)
+                ln = math.sqrt(sum((fc[i] - c[i]) ** 2 for i in range(3))) or 1.0
+                near += [[c[i] + (fc[i] - c[i]) * f for i in range(3)] for f in (0.25, min(1.0, 2.0 / ln), 0.05)]
+            for c in [fc] + near:
+                pt = [c[i] + n[i] for i in range(3)]
+                ms = [m for bs, m in groups if any(all(b[i] <= pt[i] <= b[i + 3] for i in range(3)) for b in bs)]
+                if ms and not any(inside(pt, pl) for other, _, pl in placed if other is not sol):
+                    got = ms[0]
+                    break
+            if not got:
+                continue
+            sol["sides"][k] = dict(sol["sides"][k], material=got["floor" if n[2] > 0.7 else "ceiling" if n[2] < -0.7 else "wall"])
+            count += 1
+    return count
+
+
+def pf_solids(vmf, pf, q, d, vis, world=False, skip=None, finish=None):
     """A lifted piece's brushes: with `world`, those that were Valve's world brushes go into the world (they cut up the
     map for visibility, as in Valve's own) and the rest into one func_detail. Their boxes are returned, not handed to
-    the build's checks: Valve's corners are off our grid, and what seals is a hull of our own round the piece."""
+    the build's checks: Valve's corners are off our grid, and what seals is a hull of our own round the piece.
+    finish: [(rooms, mats)] for pf_finish."""
     det, boxes = "", []
-    for s in pf["solids"]:
-        if skip and skip(s):
-            continue
+    sols = [copy.deepcopy(s) for s in pf["solids"] if not (skip and skip(s))]
+    if finish:
+        pf_finish(sols, q, d, finish, None)
+    for s in sols:
         text, box = pf_solid(vmf, s["sides"], q, d, vis)
         boxes.append(box)
         if world and s["from"] == "worldspawn":
@@ -2032,7 +2090,9 @@ class BunkerForest(Forest):
         half = int(pf["size"][1]) // 2       # (112)
         top = zg + 192
         y0, y1 = dy - 32, sy - 544             # (from the drum's face on the corridor's side to the hull's inner face)
-        pf_solids(v, pf, q, d, vis)            # the drum's head, its jambs and hinge posts (detail)
+        # the drum's head, its jambs and hinge posts (detail); what Valve left bare of them where the corridor's end and the
+        # silo's tunnel now show it (the head's back, over the doorway) in the silo's finish
+        pf_solids(v, pf, q, d, vis, finish=[([(sx - 192, y0 - 128, zg - 8, sx + 192, sy - 544 + 64, top + 64)], MS.FINISH_MAT)])
         for a, b in ((sx - 128, sx - half), (sx + half, sx + 128)):      # the doorway filled to the drum each side (world: the areaportal's edges)
             wf_box(v, (a, y0, zg, b, y1, top), {k: wf_face(k, zg, zg, top) for k in ("east", "west", "north", "south")}, vis)
         travel = 60.0 / self.DOOR_SPEED

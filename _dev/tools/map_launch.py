@@ -28,6 +28,14 @@ TECH_BOX = (0, 0, 32, 672, 528, 272)
 # at 344, just over the silo's hull. The room's box in the map.
 LR_TURN, LR_AT = 1, (9792, 6304, 1624)
 LR_BOX = (11432, 6056, 304, 11904, 6600, 784)
+# What finishes the faces Valve left bare where its map ran on and ours stops (pf_finish), and our hulls' faces toward the
+# rooms where a lifted room's openings show them (shell's inner): each room in its own materials, and the launch pad's
+# outside in the concrete of the launch room's front (the owner, 24 November: "a void/hole in the wall before the door on
+# the right, and there are walls missing all over the stairs up to the launch control room")
+CTL_MATS = {"floor": "concrete/concretefloor_bunker02a", "ceiling": "concrete/concreteceiling_bunker01a", "wall": "concrete/concretewall_bunker05a"}
+LR_MATS = {"floor": "concrete/concretefloor006a", "ceiling": "concrete/concreteceiling_bunker01a", "wall": "concrete/concretewall_bunker06c"}
+OUT_MATS = {"floor": "concrete/concretefloor006a", "ceiling": "concrete/concretewall008a", "wall": "concrete/concretewall008a"}
+COLLAR_MATS = {"floor": "concrete/concretefloor006a", "ceiling": "concrete/concretewall_bunker06c", "wall": "concrete/concretewall_bunker06c"}
 # The stair from the control room's east door up to the launch room's back (where Valve's lift came up): its plan's
 # corner, its squares (its own frame), the floors it joins.
 STAIR_AT = (12096, 5632)
@@ -41,10 +49,16 @@ OUT = (9168, 5440, 11432, 6976)
 SKY = 4224
 TILE26 = (10792, 5480, 11304, 5992)
 PAD = 337
+PAD_GRASS = "nature/blendgrassdirt01"
 SILO = (9792, 6304)
 SQUARE = 416            # (the collar's square round the silo's axis: the pad stops there, the collar's apron and sectors fill it)
 SILO_HULL = (9184, 5696, 10400, 6976)       # (where the pad is the silo's lid: from its top floor's ceiling, 200)
 LOW_GAP = (9600, 5440, 9984, 5696)          # (the corridor's stairs down to the silo pass under here: the pad is thin over them)
+
+
+def pad_air():
+    """The launch pad's air, over the pad up to its sky, from the far side to the launch room's window."""
+    return (OUT[0], OUT[1], PAD, OUT[2], OUT[3], SKY)
 
 
 def tech_box():
@@ -53,15 +67,18 @@ def tech_box():
     return (ax + x1, ay + y1, az + z1, ax + x2, ay + y2, az + z2)
 
 
-def shell(v, box, holes, vis, mat=None, skip=()):
+def shell(v, box, holes, vis, mat=None, skip=(), top=None, top_face=None, inner=None):
     """A sealing shell HULL thick round box (nodraw), with rectangular holes in its sides: holes is [(side, (a1, b1, a2,
     b2))] where a and b run along the side's two axes in the order x, y, z (a "west" side's holes are (y1, z1, y2, z2));
-    skip: sides left out (another piece seals there). Returns the boxes."""
+    skip: sides left out (another piece seals there); top: the height its top comes up to (HULL over the box unless
+    given), top_face: the material of its faces there; inner: {"floor", "ceiling", "wall"} materials for its faces
+    toward the box, where a lifted room's openings show it (nodraw unless given). Returns the boxes."""
     x1, y1, z1, x2, y2, z2 = box
     T, nd = HULL, mat or MAT["nodraw"]
-    sides = {"west": (x1 - T, y1 - T, z1 - T, x1, y2 + T, z2 + T), "east": (x2, y1 - T, z1 - T, x2 + T, y2 + T, z2 + T),
-             "south": (x1, y1 - T, z1 - T, x2, y1, z2 + T), "north": (x1, y2, z1 - T, x2, y2 + T, z2 + T),
-             "bottom": (x1, y1, z1 - T, x2, y2, z1), "top": (x1, y1, z2, x2, y2, z2 + T)}
+    zt = top if top is not None else z2 + T
+    sides = {"west": (x1 - T, y1 - T, z1 - T, x1, y2 + T, zt), "east": (x2, y1 - T, z1 - T, x2 + T, y2 + T, zt),
+             "south": (x1, y1 - T, z1 - T, x2, y1, zt), "north": (x1, y2, z1 - T, x2, y2 + T, zt),
+             "bottom": (x1, y1, z1 - T, x2, y2, z1), "top": (x1, y1, z2, x2, y2, zt)}
     axes = {"west": (1, 2), "east": (1, 2), "south": (0, 2), "north": (0, 2), "bottom": (0, 1), "top": (0, 1)}
     out = []
     for name, b in sides.items():
@@ -88,9 +105,11 @@ def shell(v, box, holes, vis, mat=None, skip=()):
                 if b2 < mid[q + 3]:
                     nxt.append(mid[:q] + [b2] + mid[q + 1:])
             pieces = nxt
+        toward = {"west": "east", "east": "west", "south": "north", "north": "south", "bottom": "top", "top": "bottom"}[name]
         for c in pieces:
             if all(c[k] < c[k + 3] for k in range(3)):
-                v.world_box(tuple(c), nd, vis=vis)
+                faces = {toward: inner["floor" if name == "bottom" else "ceiling" if name == "top" else "wall"]} if inner else None
+                v.world_box(tuple(c), nd, top=top_face if top_face and c[5] == zt else None, faces=faces, vis=vis)
                 out.append(tuple(c))
     return out
 
@@ -130,7 +149,7 @@ def build(f, F):
     # (a brush of a live entity, the forest cams' five screens and the silo doors' display, is placed with its entity,
     #  never also as a static brush: the five screens all drawn at once in one plane were the brush "covering them", the
     #  owner, 24 November: "the little screens in the lower control room have some sort of brush covering them")
-    F.pf_solids(v, pf, 0, TECH_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live"))
+    F.pf_solids(v, pf, 0, TECH_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live"), finish=[([tech_box()], CTL_MATS)])
 
     def keep(e):
         k = e["keys"]
@@ -160,7 +179,13 @@ def build(f, F):
     F.pf_entities(v, pf, 0, TECH_AT, "lc_ctl_", vis, wv, keep=keep, edit=edit, valve_anchor=pf["anchor"])
     tb = tech_box()
     leg = (f.ox + f.B0[0] + f.NE_LEG[0], f.ox + f.B0[0] + f.NE_LEG[1])
-    shell(v, tb, [("south", (leg[0], f.zd, leg[1], f.zd + 160)), ("east", (STAIR_AT[1], FLOOR_LOW, STAIR_AT[1] + 128, FLOOR_LOW + 160))], hv)
+    # (its hull's west strip is under the launch pad's edge: its top comes up flush with the pad, in the pad's grass, not
+    #  39 over it in nodraw; and the pad's sky wall stands on it, not in the room: holes())
+    # (where the walkway and the stair come in, the hull gives way to their own walls, floors and ceilings, so no face of
+    #  its lies in theirs: the walkway's end from its walls' outer faces, floor to roof; the east side from the stair's
+    #  south wall on, the stair's walls sealing it; it had stood 32 into the stair's first flight)
+    shell(v, tb, [("south", (leg[0] - 64, f.zd - 64, leg[1] + 64, f.zd + 224)), ("east", (STAIR_AT[1] - 64, tb[2] - HULL, tb[4] + HULL, PAD))], hv,
+          top=PAD, top_face=PAD_GRASS, inner=CTL_MATS)
     air.append(tb)
     places.append(((tb[0] + tb[3]) / 2.0, (tb[1] + tb[4]) / 2.0, FLOOR_LOW + 64, "control room"))
     # --- the stair up to the launch room ------------------------------------------------------------------------------
@@ -184,7 +209,8 @@ def build(f, F):
     v.detail([B(-192, 448, FLOOR_LOW, -176, 576, FLOOR_HIGH)], wall, vis=vis, top=wall)          # (the top landing, at the launch room's floor)
     # (where the stair's top meets the launch room, over the gap Valve's lift ran in: a floor at the room's, its end wall
     #  under it down to the stair's foot)
-    v.world_box(B(-256, 448, FLOOR_LOW - 64, -192, 576, FLOOR_HIGH), MAT["nodraw"], top=F.FMAT["wf_floor"], vis=hv)
+    v.world_box(B(-256, 448, FLOOR_LOW - 64, -192, 576, FLOOR_HIGH), MAT["nodraw"], top=F.FMAT["wf_floor"], vis=hv,
+                faces={"west": LR_MATS["wall"], "south": LR_MATS["wall"], "north": LR_MATS["wall"]})      # (its sides show down the gap)
     f.stair_plan = st
     for x1, y1, x2, y2, sp in st.rectangles():
         if sp[0] != "solid":
@@ -193,7 +219,8 @@ def build(f, F):
     places.append((sx - 64, sy + 512, FLOOR_HIGH + 64, "top of the stair to the launch room"))
     # --- Episode Two's launch room -------------------------------------------------------------------------------------
     lr = PF.load("valve_ep2_launch_room")
-    F.pf_solids(v, lr, LR_TURN, LR_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] and "door" not in s["from"])      # (its screens are live: cctv())
+    F.pf_solids(v, lr, LR_TURN, LR_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] and "door" not in s["from"],       # (its screens are live: cctv())
+                finish=[([LR_BOX], LR_MATS), ([pad_air()], OUT_MATS)])
     # its props, lights and screens as Valve has them (the launch's wiring: launch())
     def in_room(e):
         p = F.pf_point(e["origin"], LR_TURN, LR_AT)
@@ -201,7 +228,8 @@ def build(f, F):
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=lambda e: e["classname"].startswith(("prop_", "light", "env_sprite", "infodecal"))
                   and not e["keys"].get("parentname") and not e["keys"].get("targetname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"])
     x1, y1, z1, x2, y2, z2 = LR_BOX
-    shell(v, LR_BOX, [("east", (sy + 448, LR_BOX[2] - HULL, sy + 576, FLOOR_HIGH + 128))], hv, skip=("west",))     # (its window opens on the pad)
+    # (its window opens on the pad; the stair comes in at its back, the hull giving way to the stair's walls, floor and ceiling)
+    shell(v, LR_BOX, [("east", (sy + 384, LR_BOX[2] - HULL, sy + 640, FLOOR_HIGH + 240))], hv, skip=("west",), inner=LR_MATS)
     air.append(LR_BOX)
     air += outside(f, F, lr)
     launch(f, F, lr)
@@ -280,7 +308,16 @@ def outside(f, F, lr):
             if not ((b[0] >= TILE26[0] - 2 and b[4] <= TILE26[3] + 2) or b[2] > 400):
                 tiles_out.add(i)        # (Valve's ground round the silo, a bowl through its top floor: the pad instead)
     index = dict((id(sol), i) for i, sol in enumerate(pf["solids"]))
-    F.pf_solids(v, pf, LR_TURN, LR_AT, vis, world=True, skip=lambda sol: sig(sol) in in_room or index[id(sol)] in tiles_out)
+    # (and Valve's slab 4 thick at the collar's foot, from its middle out one way, where Valve's own silo was not: it lay
+    #  over half our shaft's mouth, a floor across the open hatch for the rocket to rise through, a hole into the void
+    #  from the gantry looking up; the owner, 24 November: "the rocket is not visible in the silo")
+    ax, ay = SILO
+
+    def over_mouth(sol):
+        b = mbox(sol)
+        return b[0] < ax + 64 and b[3] > ax - 64 and b[1] < ay + 64 and b[4] > ay - 64 and b[5] < 300
+    F.pf_solids(v, pf, LR_TURN, LR_AT, vis, world=True, skip=lambda sol: sig(sol) in in_room or index[id(sol)] in tiles_out or over_mouth(sol),
+                finish=[([pad_air()], OUT_MATS), ([(ax - SQUARE, ay - SQUARE, 200, ax + SQUARE, ay + SQUARE, PAD)], COLLAR_MATS)])      # (the collar's mouth, seen from the gantry)
     # Valve's props: those that stood on the ground left out are set on the pad as high over it as they stood over Valve's
     # ground (the room's own, lifted with both pieces, are placed with the room; Valve's tower is left out, as asked)
     ground = []
@@ -303,7 +340,7 @@ def outside(f, F, lr):
     F.pf_entities(v, pf, LR_TURN, LR_AT, "lc_pad_", vis, vis, keep=keep, edit=edit, valve_anchor=pf["anchor"])
     # the pad: flat at the collar's top; over the silo's hull from its top floor's ceiling (200, where Valve's silo had its
     # lid); over the corridor's stairs down to the silo only from their roof (328)
-    nd, grass, lid = MAT["nodraw"], "nature/blendgrassdirt01", "concrete/concretewall010a"
+    nd, grass, lid = MAT["nodraw"], PAD_GRASS, "concrete/concretewall010a"
     ax, ay = SILO
     rects = [OUT]
     for hole in (TILE26, (ax - SQUARE, ay - SQUARE, ax + SQUARE, ay + SQUARE)):
@@ -327,10 +364,17 @@ def outside(f, F, lr):
     x1, y1, x2, y2 = OUT
     T = HULL
     walls = [(x1 - T, y1 - T, 200, x1, y2 + T, SKY), (x1, y1 - T, 328, x2, y1, SKY), (x1, y2, 328, x2, y2 + T, SKY)]
-    for (ya, za, yb, zb) in ((y1 - T, 200, LR_BOX[1], SKY), (LR_BOX[4], 200, y2 + T, SKY), (LR_BOX[1], 200, LR_BOX[4], LR_BOX[2]), (LR_BOX[1], LR_BOX[5], LR_BOX[4], SKY)):
-        walls.append((x2, ya, za, x2 + T, yb, zb))
+    # (east: on the pad's own side of the line the launch room and the control room start at, never in them: it stood 64
+    #  into the control room's west side and the launch room's window strip, its faces holes into the sky there, the
+    #  owner, 24 November: "a void/hole in the wall"; south of the launch room on the control room's hull from the pad up,
+    #  over the room from its hull's top, north of it from 200; under the room the pad itself closes it)
+    for (ya, za, yb, zb) in ((y1 - T, PAD, LR_BOX[1], SKY), (LR_BOX[4], 200, y2 + T, SKY), (LR_BOX[1], LR_BOX[5], LR_BOX[4], SKY)):
+        walls.append((x2 - T, ya, za, x2, yb, zb))
     for b in walls:
-        v.world_box(b, sky, sky, sky, vis=sv)
+        # (the east wall's ends beside the launch room's window strip show from the window, low down by the room's front:
+        #  there they are the room's outside concrete, not the sky)
+        ends = {"north": OUT_MATS["wall"]} if b[0] == x2 - T and b[4] == LR_BOX[1] else {"south": OUT_MATS["wall"]} if b[0] == x2 - T and b[1] == LR_BOX[4] else None
+        v.world_box(b, sky, sky, sky, faces=ends, vis=sv)
     v.world_box((x1 - T, y1 - T, SKY, x2 + T, y2 + T, SKY + 16), sky, sky, sky, vis=sv)
     # the window's player clip, as Valve's (nobody climbs out onto the pad), and the clerestory's over it
     for b in ((11429, 6088, 408, 11460, 6536, 624), (11456, 6208, 624, 11472, 6416, 688)):
