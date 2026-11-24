@@ -17,6 +17,13 @@ Safe by design: anything the flood can slip into counts as seen (a wall thinner 
 only keeps more faces). Only the material lines of the faces it names change; every other byte of the file stays.
 
     python3 map_hidden_faces.py IN.vmf OUT.vmf [--cell 8] [--list]
+    python3 map_hidden_faces.py IN.vmf --holes          (writes nothing: prints every hole a player can see, HOLE lines)
+
+--holes (the owner, 24 November: holes in the bunker's walls the builder's own checks never saw, since they judge brush
+boxes, not what is drawn): every nodraw face, and every sky face under a roof, that a player can see from where they can
+stand (walked from the starts on floors: a step of 18, any drop, 32 across, stopped by clips, glass, fences and grates;
+seen: a straight line to the face past nothing opaque; a face a brush or a solid model's box lies flush against is
+covered). The build's own pieces should print none.
 Needs numpy."""
 import argparse
 import math
@@ -82,11 +89,23 @@ def main():
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
     ap.add_argument("--brushes", action="store_true", help="also delete the brushes nobody can see that do not seal the map")
     ap.add_argument("--route", nargs=3, type=float, metavar=("X", "Y", "Z"), help="print the way the seen air takes from the player start to this point")
+    ap.add_argument("--holes", action="store_true", help="print every hole a player can see: a nodraw face, or a sky face under a roof, that seen air meets")
     a = ap.parse_args()
     C = float(a.cell)
     root = mv.read(a.vmf)
 
     brushes, faces, disps, seeds, things = [], [], [], [], []      # (planes, bbox) solid; (side id, mat, poly, normal) candidates
+    holes, roofs, stops = [], [], []      # (--holes) nodraw faces of opaque brushes; the boxes of opaque brushes with no sky face;
+                                          # (planes, box) of what stops a player but not the eye (clips, glass, fences, grates)
+    models = []      # (--holes) (origin, forward, left, up, own box) of every solid model one cannot see through: a face it covers is no hole
+    facts = {}
+    if a.holes:
+        import json
+        import os
+        try:
+            facts = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "asset_facts.json")))
+        except (OSError, ValueError):
+            facts = {}
     every = []      # (solid id, "world" or "detail", bbox, sides, opaque, planes): every brush that could go (--brushes)
     every_point = []      # (class, name, origin): every point entity (--brushes checks none stands out in the void)
     for top in root.kids:
@@ -97,10 +116,26 @@ def main():
             o = mv.nums(top.kv.get("origin", ""))
             if len(o) == 3 and not [k for k in top.kids if k.name == "solid"]:
                 every_point.append((cls, top.kv.get("targetname", "") or top.kv.get("model", ""), o))
+            if a.holes and cls.startswith("prop_") and len(o) == 3:
+                model = top.kv.get("model", "").lower()
+                bb = (facts.get(model) or {}).get("bbox")
+                if bb and not mv.see_through(model):
+                    ang = [math.radians(x) for x in (mv.nums(top.kv.get("angles", "")) + [0, 0, 0])[:3]]
+                    sp, cp, sy, cy, sr, cr = math.sin(ang[0]), math.cos(ang[0]), math.sin(ang[1]), math.cos(ang[1]), math.sin(ang[2]), math.cos(ang[2])
+                    fw = np.array([cp * cy, cp * sy, -sp])
+                    rt = np.array([-sr * sp * cy + cr * sy, -sr * sp * sy - cr * cy, -sr * cp])
+                    up = np.array([cr * sp * cy + sr * sy, cr * sp * sy - sr * cy, cr * cp])
+                    models.append((np.array(o, dtype=float), fw, -rt, up, bb))
             if cls.startswith("info_player") and len(o) == 3:
                 seeds.append((o[0], o[1], o[2] + 36))
             elif len(o) == 3 and cls.startswith(("light", "prop_", "npc_", "item_", "env_sprite", "point_spotlight")):
                 things.append((cls, top.kv.get("targetname", "") or top.kv.get("model", ""), o))
+            if a.holes and cls in ("func_brush", "func_breakable", "func_breakable_surf", "func_wall", "func_monitor"):
+                for sol in [k for k in top.kids if k.name == "solid"]:
+                    sides = [k for k in sol.kids if k.name == "side"]
+                    pts = [p for poly in mv.from_planes(sides) if poly for p in poly]
+                    if len(sides) >= 4 and pts:
+                        stops.append((planes_of(sides), [min(p[i] for p in pts) for i in range(3)] + [max(p[i] for p in pts) for i in range(3)]))
             if cls != "func_detail":
                 continue
             owner, sols = "detail", [k for k in top.kids if k.name == "solid"]
@@ -129,9 +164,15 @@ def main():
             every.append((sol.kv.get("id"), owner, box, len(sides), opaque(mats), pl))
             if opaque(mats):
                 brushes.append((pl, box))
+                if a.holes and not any(m.lower() in ("tools/toolsskybox", "tools/toolsskybox2d") for m in mats):
+                    roofs.append((pl, box))
+            elif a.holes and not all(m.lower().startswith("tools/") and not any(t in m.lower() for t in ("playerclip", "toolsclip")) for m in mats):
+                stops.append((pl, box))
             for k, s in enumerate(sides):
                 if drawn(mats[k]) and polys[k] and len(polys[k]) >= 3:
                     faces.append((s.kv.get("id"), mats[k], polys[k], pl[k][0]))
+                elif a.holes and opaque(mats) and mats[k].upper() == NODRAW and polys[k] and len(polys[k]) >= 3:
+                    holes.append((s.kv.get("id"), mats[k], polys[k], pl[k][0]))
     if not seeds:
         sys.exit("no info_player_start to flood from")
 
@@ -256,8 +297,31 @@ def main():
     print("%d lights and placed things checked, %d stand in air the flood never saw" % (len(things), len(lost)))
     for x in lost[:40]:
         print("  LOST: %s %s at %s" % x)
-    hidden = {}
-    for sid, mat, poly, nrm in faces:
+    def covered(pts):
+        """Which points lie inside an opaque brush (exactly, by its planes: a brush thinner than a cube, as a door frame's
+        4 of metal, can cover a face the cubes never see), or inside a solid model's own box (Valve leaves faces under a
+        model bare)."""
+        lo3, hi3 = pts.min(axis=0) - 1, pts.max(axis=0) + 1
+        out = np.zeros(len(pts), dtype=bool)
+        for o, fw, lf, up, bb in models:
+            r = max(abs(x) for x in bb) * 1.8
+            if (o + r < lo3).any() or (o - r > hi3).any():
+                continue
+            q = pts - o
+            lx, ly, lz = q @ fw, q @ lf, q @ up
+            out |= (lx >= bb[0]) & (lx <= bb[3]) & (ly >= bb[1]) & (ly <= bb[4]) & (lz >= bb[2]) & (lz <= bb[5])
+        for pl, box in brushes:
+            if (np.array(box[:3]) > hi3).any() or (np.array(box[3:]) < lo3).any():
+                continue
+            inside = np.ones(len(pts), dtype=bool)
+            for nn, d in pl:
+                inside &= pts @ nn - d <= 0.01
+            out |= inside
+        return out
+
+    def front(poly, nrm, exact=False):
+        """The cubes of seen air just in front of a face (2, 6 and 12 out, over the whole face), or None when the face
+        runs off the grid (not judged). exact: the points of it that something lies flush against (covered) left out."""
         P = np.array(poly)
         if np.cross(P, np.roll(P, -1, axis=0)).sum(axis=0) @ nrm < 0:
             P = P[::-1]      # (anticlockwise round its normal, for the test below: Hammer++'s corners run clockwise, and with
@@ -278,17 +342,23 @@ def main():
             side = np.cross(a1 - a0, cand - a0) @ nrm
             keep &= side >= -0.5
         cand = np.vstack([cand[keep], c[None, :], P + (c - P) * 0.05])
-        seen = False
+        if exact:
+            cand = cand[~covered(cand + nrm * 1.0)]
+            if not len(cand):
+                return np.zeros((0, 3), dtype=int)
         for off in (2.0, 6.0, 12.0):
             I = idx(cand + nrm * off)
             ok = ((I >= 0) & (I < n)).all(axis=1)
             if not ok.all():
-                seen = True      # (off the grid: not judged, kept)
-                break
-            if reached[I[:, 0], I[:, 1], I[:, 2]].any():
-                seen = True
-                break
-        if not seen:
+                return None      # (off the grid: not judged, kept)
+            got = reached[I[:, 0], I[:, 1], I[:, 2]]
+            if got.any():
+                return I[got]
+        return np.zeros((0, 3), dtype=int)
+    hidden = {}
+    for sid, mat, poly, nrm in faces:
+        f = front(poly, nrm)
+        if f is not None and not len(f):
             hidden[sid] = mat
     by = {}
     for sid, mat in hidden.items():
@@ -299,6 +369,170 @@ def main():
     if a.list:
         for sid, mat in sorted(hidden.items(), key=lambda x: int(x[0])):
             print("  side %s  %s" % (sid, mat))
+    if a.holes:
+        # holes a player can see (the owner, 24 November: "a void/hole in the wall before the door on the right, and there
+        # are walls missing all over the stairs"): a nodraw face (the engine draws nothing there: the void or a smear shows),
+        # and a sky face under a roof (a sky wall inside a building is a hole into the sky's black), that a player can see
+        # from where they can stand. Where: the air walked from the player starts, stopped also by what stops a player but
+        # not the eye (player clips, glass, fences, grates: a place to look at only, as the launch pad beyond its window, is
+        # judged from where it is looked at); seen: a straight line from the face to that air meets nothing opaque. Under a
+        # roof: some opaque brush with no sky face, or the ground's skin, is over that cube.
+        walk = air.copy()
+        for pl, box in stops:
+            i0, i1 = np.maximum(idx(box[:3]), 0), np.minimum(idx(box[3:]) + 1, n)
+            if (i1 > i0).all():
+                g = [lo[q] + (np.arange(i0[q], i1[q]) + 0.5) * C for q in range(3)]
+                X, Y, Z = np.meshgrid(g[0], g[1], g[2], indexing="ij")
+                inside = np.ones(X.shape, dtype=bool)
+                for nn, d in pl:
+                    inside &= (nn[0] * X + nn[1] * Y + nn[2] * Z - d) <= 0.01
+                walk[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] &= ~inside
+        # (and a player walks: from the starts, on floors, stepping up at most 18 and dropping any height, so the walk climbs
+        #  no shaft and crosses no sky: the launch pad, open to the silo's shaft, is only looked at. A floor cube: air with
+        #  something under it; land: for each cube of air, the floor cube it falls to)
+        # (a player is 32 across: where they walk the cubes round them, a step over the floor, are free too, so no gap of a
+        #  cube or two between player clips lets the walk through where a body cannot pass)
+        free = walk.copy()
+        for x0 in range(0, n[0], 64):
+            sl = slice(max(0, x0 - 1), min(n[0], x0 + 65))
+            W_ = walk[sl]
+            E = W_.copy()
+            E[1:] &= W_[:-1]
+            E[:-1] &= W_[1:]
+            E2 = E.copy()
+            E2[:, 1:] &= E[:, :-1]
+            E2[:, :-1] &= E[:, 1:]
+            a0 = x0 - sl.start
+            free[x0:x0 + 64] = E2[a0:a0 + min(64, n[0] - x0)]
+            del W_, E, E2
+        land = np.full(n, -1, dtype=np.int16)
+        below = np.full((n[0], n[1]), -1, dtype=np.int16)
+        for k in range(n[2]):
+            w = walk[:, :, k]
+            floor_here = w & (~walk[:, :, k - 1] if k else np.ones((n[0], n[1]), dtype=bool))
+            below = np.where(floor_here, np.int16(k), np.where(w, below, np.int16(-1)))
+            land[:, :, k] = below
+        del below
+        rise = int(math.ceil(18 / C))
+        waist = int(math.ceil(24 / C))      # (the clearance is judged a step over the floor, so a slope does not count as a wall)
+
+        def roomy(Q):
+            return free[Q[:, 0], Q[:, 1], np.minimum(Q[:, 2] + waist, n[2] - 1)]
+        feet, first = set(), []
+        for sd in seeds:
+            i = idx(sd)
+            if (i >= 0).all() and (i < n).all() and land[tuple(i)] >= 0:
+                q = (int(i[0]), int(i[1]), int(land[tuple(i)]))
+                if q not in feet:
+                    feet.add(q)
+                    first.append(q)
+        reach_f = np.zeros(n, dtype=bool)
+        F = np.array(first, dtype=np.int64).reshape(-1, 3)
+        reach_f[F[:, 0], F[:, 1], F[:, 2]] = True
+        offs = np.array([(dx, dy, dz) for dx in (-1, 0, 1) for dy in (-1, 0, 1) for dz in range(0, rise + 1) if (dx, dy) != (0, 0)], dtype=np.int64)
+        while len(F):
+            Q = (F[:, None, :] + offs[None, :, :]).reshape(-1, 3)
+            ok = ((Q >= 0) & (Q < n)).all(axis=1)
+            Q = Q[ok]
+            L = land[Q[:, 0], Q[:, 1], Q[:, 2]]
+            Q = Q[L >= 0]
+            Q[:, 2] = L[L >= 0]
+            Q = np.unique(Q, axis=0)
+            Q = Q[~reach_f[Q[:, 0], Q[:, 1], Q[:, 2]] & roomy(Q)]
+            reach_f[Q[:, 0], Q[:, 1], Q[:, 2]] = True
+            F = Q
+        del land, free
+        stood = np.zeros(n, dtype=bool)      # (a player's body: from the floor up 72)
+        body = int(math.ceil(72 / C))
+        P = np.argwhere(reach_f)
+        del reach_f
+        for k in range(body):
+            Z = P[:, 2] + k
+            m = Z < n[2]
+            stood[P[m, 0], P[m, 1], Z[m]] |= walk[P[m, 0], P[m, 1], Z[m]]
+        del walk
+        print("holes: %.1f M cubes of air a player can stand in or walk to" % (stood.sum() / 1e6))
+        def roofed(f):
+            """Which of the cubes f have a roof over them: an opaque brush with no sky face that the line straight up from the
+            cube's middle passes through (exactly, by its planes), or the ground's skin."""
+            pts = lo + (f + 0.5) * C
+            out = np.zeros(len(f), dtype=bool)
+            for pl, box in roofs:
+                m = (pts[:, 0] >= box[0]) & (pts[:, 0] <= box[3]) & (pts[:, 1] >= box[1]) & (pts[:, 1] <= box[4]) & (pts[:, 2] < box[5]) & ~out
+                if not m.any():
+                    continue
+                P = pts[m]
+                t_lo, t_hi = P[:, 2].copy(), np.full(len(P), 1e9)
+                ok = np.ones(len(P), dtype=bool)
+                for nn, d in pl:
+                    rhs = d - nn[0] * P[:, 0] - nn[1] * P[:, 1]
+                    if abs(nn[2]) < 1e-9:
+                        ok &= rhs >= -0.01
+                    elif nn[2] > 0:
+                        t_hi = np.minimum(t_hi, rhs / nn[2])
+                    else:
+                        t_lo = np.maximum(t_lo, rhs / nn[2])
+                hit = ok & (t_hi > t_lo)
+                idxs = np.where(m)[0]
+                out[idxs[hit]] = True
+            sk = skin_top[f[:, 0], f[:, 1]] > f[:, 2]
+            return out | sk
+        skin_top = np.full((n[0], n[1]), -1, dtype=np.int32)      # (each column's highest cube of the ground's skin)
+        for quads in disps:
+            for quad, _c, _s in quads:
+                for q in quad:
+                    i = idx(q)
+                    if (i >= 0).all() and (i < n).all():
+                        skin_top[i[0], i[1]] = max(skin_top[i[0], i[1]], i[2])
+        # rays: about 200 ways round the face's front (a Fibonacci sphere's half), each up to 4096 long, in steps of a cube
+        k = np.arange(400) + 0.5
+        phi, th = np.arccos(1 - 2 * k / 400), np.pi * (1 + 5 ** 0.5) * k
+        dirs = np.stack([np.cos(th) * np.sin(phi), np.sin(th) * np.sin(phi), np.cos(phi)], axis=1)
+        steps = np.arange(1, int(4096 / C) + 1) * C
+
+        def seen_from_floor(f, nrm):
+            """Of the front cubes f of a face (normal nrm), how many a player can see (a clear line to air one can stand in)."""
+            if not len(f):
+                return 0
+            pts = lo + (f + 0.5) * C
+            if len(pts) > 24:
+                pts = pts[np.linspace(0, len(pts) - 1, 24).astype(int)]
+            D = dirs[dirs @ nrm > 0.05]
+            got = 0
+            for p in pts:
+                P = p[None, None, :] + D[:, None, :] * steps[None, :, None]
+                I = np.floor((P - lo) / C).astype(int)
+                ok = ((I >= 0) & (I < n)).all(axis=2)
+                I = np.where(ok[..., None], I, 0)
+                op = ~air[I[..., 0], I[..., 1], I[..., 2]] | ~ok
+                st = stood[I[..., 0], I[..., 1], I[..., 2]] & ok
+                first_op = np.where(op.any(axis=1), op.argmax(axis=1), len(steps))
+                first_st = np.where(st.any(axis=1), st.argmax(axis=1), len(steps) + 1)
+                if (first_st < first_op).any() or stood[tuple(np.floor((p - lo) / C).astype(int))]:
+                    got += 1
+                    if got >= 3:
+                        break
+            return got
+        found = []
+        for sid, mat, poly, nrm in holes:
+            f = front(poly, nrm, exact=True)
+            if f is not None and len(f):
+                k = seen_from_floor(f, nrm)
+                if k:
+                    found.append(("nodraw face", sid, poly, k))
+        for sid, mat, poly, nrm in faces:
+            if mat.lower() not in ("tools/toolsskybox", "tools/toolsskybox2d"):
+                continue
+            f = front(poly, nrm, exact=True)
+            if f is not None and len(f):
+                under = f[roofed(f)]
+                k = seen_from_floor(under, nrm)
+                if k:
+                    found.append(("sky face under a roof", sid, poly, k))
+        print("holes a player can see: %d" % len(found))
+        for what, sid, poly, k in sorted(found, key=lambda h: (h[0], [round(c) for c in np.array(h[2]).mean(axis=0)])):
+            P = np.array(poly)
+            print("  HOLE: %s (side %s) at (%d %d %d), %d by %d by %d, seen from %d or more of its points" % ((what, sid) + tuple(P.mean(axis=0)) + tuple(P.max(axis=0) - P.min(axis=0)) + (k,)))
     gone = []
     if a.brushes:
         # the seal: world brushes alone (detail, displacements, clips and see-through brushes do not seal), and the void

@@ -31,6 +31,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
+- 24 November (late): **the ring's walk map names its modules** on screen as you stand in each (`--test` chains only:
+  `name_sign`, map_modules.py). The owner is choosing modules to cut (cistern, chimney, crypt add the most).
 - 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"), kept on the shelf:
   map_town.py, town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed that morning to
   6,783 faces). ring.txt: its branch is `straight 512`, nothing else moved, ruins on its ground. Rest without the ring
@@ -46,4 +48,4 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
 - Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
   button launches (lc_rocket_launch), CCTV lc_bunker_cctv (map_launch.py). Apply generator changes to the OWNER'S
-  latest VMF (diff two builds), then map_hidden_faces --brushes. Their bunker VMF: 10,453 brush sides (24 Nov).
+  latest VMF (diff two builds), then map_hidden_faces --brushes, then --holes (0). 24 Nov: their 9 fixes sent, 10,369 sides.

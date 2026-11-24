@@ -1038,18 +1038,31 @@ def octagon(c, up, r):
     return [(c + r, up + k), (c + k, up + r), (c - k, up + r), (c - r, up + k), (c - r, up - k), (c - k, up - r), (c + k, up - r), (c + r, up - k)]
 
 
+# The test map's sky and sun (the owner, 24 November: "can we get a test skybox texture? I can't tell what's void and what's
+# skybox and what's broken cause everything is black. can we get a test env sun too? it's so hecking dark"). The pieces'
+# own sky name is Garry's Mod's "painted", which env_skypaint draws: a map without one (a piece by itself) shows it black,
+# as the void looks. So a test map has Half-Life 2's clear day sky, and a day's sun: brighter, and lower in the sky
+# than City 18's dim one (its 50 and 13, at 70 degrees), so the forest and the launch pad are lit and the sun shows. Never in the file
+# that goes into the real map: City 18 has its own sky and sun (two light_environments in one map fight).
+TEST_SKY = "sky_day01_01"
+TEST_SUN = {"_light": "255 238 205 300", "_ambient": "150 170 200 60", "pitch": -50, "yaw": 149}
+
+
 def test_extras(vmf, start, yaw, vis):
-    """What a piece needs to be compiled and walked BY ITSELF: somewhere to spawn and a sun (the owner's map's own
-    settings). Never in the file that goes into the real map: that already has both."""
+    """What a piece needs to be compiled and walked BY ITSELF: somewhere to spawn, a sky and a sun (TEST_SKY, TEST_SUN).
+    Never in the file that goes into the real map: that already has them."""
     vmf.point("info_player_start", start, {"angles": "0 %d 0" % yaw}, vis)
+    vmf.skyname = TEST_SKY
+    pitch, sun_yaw = TEST_SUN["pitch"], TEST_SUN["yaw"]
     vmf.point("light_environment", (start[0], start[1], start[2] + 128), {
-        "_light": "190 214 193 50", "_ambient": "175 191 207 13", "_lightHDR": "-1 -1 -1 1", "_ambientHDR": "-1 -1 -1 1",
-        "_lightscaleHDR": "1", "_ambientscaleHDR": "1", "angles": "0 149 0", "pitch": "-70", "SunSpreadAngle": "0"}, vis)
+        "_light": TEST_SUN["_light"], "_ambient": TEST_SUN["_ambient"], "_lightHDR": "-1 -1 -1 1", "_ambientHDR": "-1 -1 -1 1",
+        "_lightscaleHDR": "1", "_ambientscaleHDR": "1", "angles": "0 %d 0" % sun_yaw, "pitch": str(pitch), "SunSpreadAngle": "0"}, vis)
     # the sun itself in the sky, where that light comes from (the owner, 22 November: "could you please put a spawn point
-    # and env_sun so I can see outside in the test map?"): the light's own angles with use_angles, as the wiki advises
+    # and env_sun so I can see outside in the test map?"): the light's own angles with use_angles, as the wiki advises;
+    # big and warm enough to find (it was 16 across and a dull red)
     vmf.point("env_sun", (start[0], start[1], start[2] + 160), {
-        "angles": "-70 149 0", "pitch": "-70", "use_angles": "1", "rendercolor": "100 80 80", "overlaycolor": "0 0 0", "size": "16",
-        "overlaysize": "-1", "material": "sprites/light_glow02_add_noz", "overlaymaterial": "sprites/light_glow02_add_noz", "HDRColorScale": "1.0"}, vis)
+        "angles": "%d %d 0" % (pitch, sun_yaw), "pitch": str(pitch), "use_angles": "1", "rendercolor": "255 236 200", "overlaycolor": "255 210 150",
+        "size": "40", "overlaysize": "-1", "material": "sprites/light_glow02_add_noz", "overlaymaterial": "sprites/light_glow02_add_noz", "HDRColorScale": "1.0"}, vis)
 
 
 def bar_row(box, along, gap=24):

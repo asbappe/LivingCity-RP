@@ -143,14 +143,72 @@ def pf_solid(vmf, sides, q, d, vis):
     return text, tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
 
 
-def pf_solids(vmf, pf, q, d, vis, world=False, skip=None):
+def pf_finish(sols, q, d, rooms, mats):
+    """What Valve left bare (nodraw) where its map ran on and ours now stops at a hull of our own (the owner, 24
+    November: "there are walls missing all over the stairs up to the launch control room"): a nodraw face of a lifted
+    piece whose middle (or a point near one of its corners) looks, 1 out, into the open air of one of `rooms` (boxes of the map; air: inside no other brush
+    of the piece) gets mats["floor"], ["ceiling"] or ["wall"] by the way it faces. sols: the piece's solids to be placed
+    (changed in place: copies). rooms and mats may instead be a list of (rooms, mats), the first that holds the point
+    deciding. How many."""
+    groups = rooms if mats is None else [(rooms, mats)]
+
+    def plane(pts):
+        a, b, c = pts
+        u = [a[k] - b[k] for k in range(3)]
+        w = [c[k] - b[k] for k in range(3)]
+        n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+        ln = math.sqrt(sum(x * x for x in n)) or 1.0
+        n = [x / ln for x in n]
+        return n, sum(n[k] * a[k] for k in range(3))
+    placed = []
+    for sol in sols:
+        sides = [dict(sd, plane=[pf_point(p, q, d) for p in sd["plane"]], corners=[pf_point(p, q, d) for p in (sd.get("verts") or sd.get("corners") or [])])
+                 for sd in sol["sides"]]
+        placed.append((sol, sides, [plane(sd["plane"]) for sd in sides]))
+
+    def inside(p, planes):
+        return all(n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - dd <= 0.01 for n, dd in planes)
+    count = 0
+    for sol, sides, planes in placed:
+        allc = [c for sd in sides for c in sd["corners"]]
+        if not allc:
+            continue
+        mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
+        for k, sd in enumerate(sides):
+            if sd["material"].upper() != "TOOLS/TOOLSNODRAW" or len(sd["corners"]) < 3:
+                continue
+            n = planes[k][0]
+            fc = [sum(c[i] for c in sd["corners"]) / len(sd["corners"]) for i in range(3)]
+            if sum(n[i] * (fc[i] - mid[i]) for i in range(3)) < 0:
+                n = [-x for x in n]
+            got = None
+            near = []
+            for c in sd["corners"]:      # (its middle, and near each corner: a quarter of the way in, and 2 in)
+                ln = math.sqrt(sum((fc[i] - c[i]) ** 2 for i in range(3))) or 1.0
+                near += [[c[i] + (fc[i] - c[i]) * f for i in range(3)] for f in (0.25, min(1.0, 2.0 / ln), 0.05)]
+            for c in [fc] + near:
+                pt = [c[i] + n[i] for i in range(3)]
+                ms = [m for bs, m in groups if any(all(b[i] <= pt[i] <= b[i + 3] for i in range(3)) for b in bs)]
+                if ms and not any(inside(pt, pl) for other, _, pl in placed if other is not sol):
+                    got = ms[0]
+                    break
+            if not got:
+                continue
+            sol["sides"][k] = dict(sol["sides"][k], material=got["floor" if n[2] > 0.7 else "ceiling" if n[2] < -0.7 else "wall"])
+            count += 1
+    return count
+
+
+def pf_solids(vmf, pf, q, d, vis, world=False, skip=None, finish=None):
     """A lifted piece's brushes: with `world`, those that were Valve's world brushes go into the world (they cut up the
     map for visibility, as in Valve's own) and the rest into one func_detail. Their boxes are returned, not handed to
-    the build's checks: Valve's corners are off our grid, and what seals is a hull of our own round the piece."""
+    the build's checks: Valve's corners are off our grid, and what seals is a hull of our own round the piece.
+    finish: [(rooms, mats)] for pf_finish."""
     det, boxes = "", []
-    for s in pf["solids"]:
-        if skip and skip(s):
-            continue
+    sols = [copy.deepcopy(s) for s in pf["solids"] if not (skip and skip(s))]
+    if finish:
+        pf_finish(sols, q, d, finish, None)
+    for s in sols:
         text, box = pf_solid(vmf, s["sides"], q, d, vis)
         boxes.append(box)
         if world and s["from"] == "worldspawn":
@@ -413,6 +471,7 @@ class Forest:
         self.cuts = {}                    # side: (from, to) along it: a stretch of the shell's wall the piece builds itself (never the gate's side)
         self.rooms = []                   # (Plan, its origin here): rooms the ground must stay out of (under their floors or over their ceilings)
         self.placed = []                  # every solid prop static() and stand() put down, for settle()
+        self.shell_walls = []             # the shell's sky walls as built (shell()), for the check that none stands in a room
 
     def keep_way_clear(self, box, label):
         """A space players must be able to walk through (a doorway, a hole, a gate's approach, a gallery's middle), as a
@@ -528,6 +587,7 @@ class Forest:
             for s1, s2, face in pieces:
                 x1, y1, x2, y2 = frames[name](s1, s2)
                 v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
+                self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.z0 + GATE_HIGH, self.lid), sky, bottom=MAT["ceiling"], vis=vis)
@@ -1123,6 +1183,12 @@ class BunkerForest(Forest):
         for rect, spec in self.DEEP:
             deep.paint(rect, room if spec == "room" else door)
         deep.walls()
+        # (every doorway square has its door, and every door its doorway: a door left behind when the plan moves leaves a
+        #  gaping hole where its frame should be)
+        doors = set(d for lv, d, _, _, _ in self.ROOM_DOORS if lv == 1)
+        ways = set(rect for rect, spec in self.DEEP if spec == "door")
+        for d in sorted(doors ^ ways):
+            self.problems.append("the deep level's doorway %s has %s" % (d, "no door (ROOM_DOORS)" if d in ways else "a door but no doorway (DEEP)"))
         low = WFPlan(origin, zg - 64, zd + 224, **look)
         low.keep_out += [(-100000, -100000, 100000, 1088), (-100000, 1600, 100000, 100000)]
         low.paint((-704, 1088, -576, 1472), ("low", zg, fm, zd + 160))      # the stairs (their steps are detail: a landing, then 15 steps ending at 1472)
@@ -1133,8 +1199,11 @@ class BunkerForest(Forest):
         # gantry level is the corridor's floor; the forest's north wall is cut where the corridor and its walls pass
         self.silo_at = (origin[0] - 640, origin[1] + 1600 + 544, zg - 1408)
         # (and where the leader's way out passes it, since 24 November: map_silo.py's WAY_X, its walls with it)
+        # (and where the walkway to the complex passes: its run east straddles the forest's edge (y 1024 of the bunker), so the
+        #  wall is cut along all of it, its walls with it, from x 0 to the north leg's east wall. The owner, 24 November:
+        #  "... no wall at all visible and it's all open to the void": the forest's sky wall had stood in its north half.)
         self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512), (MS.WAY_X[0] - MS.WAY_T - self.ox, MS.WAY_X[1] + MS.WAY_T - self.ox),
-                              (self.B0[0] + self.NE_LEG[0] - 64, self.B0[0] + self.NE_LEG[1] + 64)]      # (and where the walkway to the complex passes)
+                              (self.B0[0] + min(r[0] for r, _ in self.DEEP if r[0] >= 0 and r[3] > self.D - self.B0[1]) - 64, self.B0[0] + self.NE_LEG[1] + 64)]
         self.plan, self.deep = plan, deep
         for p in (plan, deep, low):     # (each one's walls may look into the others' rooms where they meet)
             p.others = [q for q in (plan, deep, low) if q is not p]
@@ -1340,9 +1409,29 @@ class BunkerForest(Forest):
             if not any(box[0] < p[0] < box[3] and box[1] < p[1] < box[4] and box[2] < p[2] < box[5] for p in lit):
                 self.problems.append("the bunker's %s has no light" % name)
         # the deep level and the corridor must stay under the ground
-        cover = min(self.natural(bx + (i + 0.5) * CELL, by + (j + 0.5) * CELL) for (i, j) in deep.cells if by + (j + 1) * CELL <= self.D) - top      # (in the forest)
+        # (the ground as it is laid, not as it would be: every corner of every square of the deep level in the forest, walls
+        #  too, by the height of the patch it is in; the owner, 24 November, of the walkway to the complex: "a ground
+        #  texture/displacement stretching over the hallway")
+        cover = 1e9
+        for (i, j) in deep.cells:
+            x, y = bx + i * CELL, by + j * CELL
+            if not (0 <= x and x + CELL <= self.W and 0 <= y and y + CELL <= self.D):
+                continue
+            bias = (x // PATCH * PATCH + PATCH / 2, y // PATCH * PATCH + PATCH / 2)
+            cover = min(cover, min(self.height(x + dx, y + dy, bias) for dx in (0, CELL) for dy in (0, CELL)) - top)
         if cover < 16:
             self.problems.append("the bunker's deep level comes within %d of the ground's surface" % cover)
+        # and nothing of the forest's shell stands in any of the bunker's rooms (its sky wall stood in the north half of the
+        # walkway to the complex where it crosses the forest's edge: "no wall at all visible and it's all open to the void")
+        for p in (plan, deep, low) + ((self.stair_plan,) if getattr(self, "stair_plan", None) else ()):
+            for x1, y1, x2, y2, sp in p.rectangles():
+                if sp[0] == "solid":
+                    continue
+                a = p.box(x1, y1, sp[1], x2, y2, sp[3] if sp[0] == "low" else p.top)
+                for b in self.shell_walls:
+                    if all(a[k] < b[k + 3] and b[k] < a[k + 3] for k in range(3)):
+                        self.problems.append("the forest's shell wall at (%d %d)-(%d %d) stands in the bunker's room at (%d %d)-(%d %d)" % (
+                            b[0], b[1], b[3], b[4], a[0], a[1], a[3], a[4]))
         self.notes.append("the bunker: its door at (%d %d), floor z %d; 15 steps down to the first level (z %d: a hall, the bunk room), 11 more down to the deep level "
                           "(z %d: a walkway west to the plant room and the corridor to the silo, a walkway north and east to the control complex), which is at least %d "
                           "under the ground; %d lamps, each lighting its own pool" % (self.ox + bx + 640, self.oy + by, zp, zl, zd, cover, self.lamps))
@@ -1563,8 +1652,10 @@ class BunkerForest(Forest):
     # the doors between rooms: (which level, the doorway's squares, the way through it, the side its keypad is NOT on (+1:
     # east or north; the keypad goes on a face with wall beside the doorway), which way the leaf slides into the wall (-1:
     # south or west)): the bunk room's (its keypad on the bunks' side: the hall is no wider than the doorway there), the
-    # plant room's at the far end of the big room, and the big room's north door, to the silo.
-    ROOM_DOORS = ((0, (896, 640, 960, 768), "x", -1, -1), (1, (-832, 576, -768, 704), "x", -1, -1), (1, (-704, 832, -576, 896), "y", 1, -1))
+    # plant room's at the far end of the walkway west (its keypad inside the plant room, as it was), and the walkway's north
+    # door, to the silo. Each on its doorway square in DEEP (the owner, 24 November: "the red plant room's door has been
+    # moved over and left a gaping hole in the wall": the two deep doors still stood where the big room's plan had them).
+    ROOM_DOORS = ((0, (896, 640, 960, 768), "x", -1, -1), (1, (-768, 640, -704, 768), "x", 1, -1), (1, (-704, 768, -576, 832), "y", 1, -1))
 
     # Episode Two's own small silo door, the lab door at the silo's bottom (door_silo_lab_outside_1, the owner: "has
     # CORRECT opening/closing animations and opens at the right speed"): every silo_door01 door copies it. Its func_door:
@@ -1662,6 +1753,9 @@ class BunkerForest(Forest):
             sq = (cell[0] // CELL, cell[1] // CELL)
             if plan.cells.get(sq) != ("solid",) or any(plan.looks_at((x // CELL, y // CELL)) != ("room", z) for x, y in beside):
                 self.window_skips.append((k + 1, "the wall on its closing side has a room on one side only"))
+                continue
+            if any(lv == level and d[0] <= x < d[2] and d[1] <= y < d[3] for x, y in beside for lv, d, _, _, _ in self.ROOM_DOORS):
+                self.window_skips.append((k + 1, "the wall on its closing side looks into another doorway"))
                 continue
             plan.windows[sq] = (z, z + WF_BAND)
             self.windows[k] = (cell, r, z)
@@ -1996,7 +2090,9 @@ class BunkerForest(Forest):
         half = int(pf["size"][1]) // 2       # (112)
         top = zg + 192
         y0, y1 = dy - 32, sy - 544             # (from the drum's face on the corridor's side to the hull's inner face)
-        pf_solids(v, pf, q, d, vis)            # the drum's head, its jambs and hinge posts (detail)
+        # the drum's head, its jambs and hinge posts (detail); what Valve left bare of them where the corridor's end and the
+        # silo's tunnel now show it (the head's back, over the doorway) in the silo's finish
+        pf_solids(v, pf, q, d, vis, finish=[([(sx - 192, y0 - 128, zg - 8, sx + 192, sy - 544 + 64, top + 64)], MS.FINISH_MAT)])
         for a, b in ((sx - 128, sx - half), (sx + half, sx + 128)):      # the doorway filled to the drum each side (world: the areaportal's edges)
             wf_box(v, (a, y0, zg, b, y1, top), {k: wf_face(k, zg, zg, top) for k in ("east", "west", "north", "south")}, vis)
         travel = 60.0 / self.DOOR_SPEED
