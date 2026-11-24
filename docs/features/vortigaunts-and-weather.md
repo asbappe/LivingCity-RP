@@ -14,3 +14,5 @@
 - A change of weather is no longer said in chat (the owner, 7 November: it was only noise); you see and hear it. `!time` tells you the time and the weather. Admins: `lc_time <hour>`, `lc_weather <clear|overcast|fog|rain|storm|auto>`. `lc_atmosphere 0` turns day, night and weather off.
 
 **A vortigaunt charging a vest shows it (11 November).** It turns to you and plays its charging animation (the first of `LC.VORT_CHARGE_CANDIDATES` its model has, else anything of its own named for charging, healing or zapping; the one used is in the server log), and for three seconds a pulsing green beam runs from its hand to your chest, with a green light.
+
+- **Rain under cover (23 November; the owner: a walkway 16 wide stopped the rain entirely):** open sky straight up, it rains; something just above you, and how much of the sky round about it hides is sampled in two rings (about 2 and 5 metres out, `LC_CL.RainCover`): under half hidden (a walkway, a sign, scaffolding) it keeps raining round you, none falling on you right under it; half or more (a bridge, a ceiling, a room) it stops at once.

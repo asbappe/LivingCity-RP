@@ -41,3 +41,5 @@ Everyone who was in the city before Civil Intake counts as registered and housed
 - **The station** is everywhere within `lc_intake_station` (1500) units of a Civil Intake terminal or an arrival point. A map with no Civil Intake desk has no station and none of this happens.
 - Settings: `lc_intake_tutor` (1) the searches at the desks, `lc_intake_escort` (1) the walk back, `lc_intake_station` (1500).
 
+
+- **23 November:** registering says one line: "Registration complete: name, #number. Next: Labor Assignment (marked)." (the pamphlet goes into your pockets without a line). **The arrival search waits for your hands up** (F1 > Put my hands up; its panel says so), and R, the slip key, no longer also raises your fists (the arrival search and every pat-down). **Housing Allocation** shows each block as "9 live there, 12 beds, 3 free at night": its citizens and players, the beds in its zones, what's left once everyone sleeps (`LC.BlockBedTally`). **The character screens** (a new life, who are you, registration) frame the whole person by the model's own height. A look listed for new characters with no faces or pieces (an empty list) offers all its own, not none.

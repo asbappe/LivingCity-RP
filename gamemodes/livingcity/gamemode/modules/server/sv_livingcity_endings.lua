@@ -233,7 +233,7 @@ local function Send(to)
         for _, v in pairs(E.votes or {}) do if v then yes = yes + 1 else skip = skip + 1 end end
         net.WriteTable({ id = E.id, phase = E.phase, name = LC.Endings[E.id].name, say = LC.Endings[E.id].say,
             voteEnds = E.voteEnds, yes = yes, skip = skip, song = E.song, songVolume = LC.EndingSongVolume(E.id), lines = E.lines, grigori = E.grigori,
-            floodZ = E.floodZ, client = E.client, flashing = LC.Endings[E.id].flashing or nil })
+            floodZ = E.floodZ, client = E.client, flashing = LC.Endings[E.id].flashing or nil, dream = E.dream and true or nil })
     end
     if to then net.Send(to) elseif E and E.dream then net.Send(LC.EndingPlayers()) else net.Broadcast() end
 end
@@ -303,21 +303,30 @@ local function Open(pos)
     if util.PointContents and CONTENTS_SOLID and bit.band(util.PointContents(pos), CONTENTS_SOLID) ~= 0 then return false end
     return true
 end
+-- The map itself only (its brushes, static props and brush entities), never what an ending put up: the plane
+-- measuring the air above itself hit its own body, read "a roof right here", and was pushed 250 down every
+-- tick until it stuck low in the dream zone (the owner, 23 November: "the jet slowly stuck on the inside of
+-- the dream zone ... Every dream with something flying is absolutely broken").
+local function MapOnly(e)
+    if not IsValid(e) or (e.IsWorld and e:IsWorld()) then return true end
+    return string.sub(e:GetClass() or "", 1, 5) == "func_"
+end
+LC.EndingMapOnly = MapOnly
 local function OpenPath(a, b)
-    local tr = util.TraceLine({ start = a, endpos = b, mask = MASK_SOLID_BRUSHONLY })
+    local tr = util.TraceLine({ start = a, endpos = b, mask = MASK_SOLID_BRUSHONLY, filter = MapOnly })
     return not tr.Hit and not tr.StartSolid
 end
 LC.EndingOpenPath = OpenPath
 -- How high it's open above a spot (the sky, or a roof, whichever's lowest there).
 local function CeilingAt(pos)
-    local tr = util.TraceLine({ start = pos, endpos = pos + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
+    local tr = util.TraceLine({ start = pos, endpos = pos + Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY, filter = MapOnly })
     if tr.StartSolid then return pos.z end
     return tr.Hit and tr.HitPos and tr.HitPos.z or (pos.z + 4000)
 end
 LC.EndingCeilingAt = CeilingAt
 function LC.EndingSky(centre)
     centre = centre or Vector(0, 0, 0)
-    local up = util.TraceLine({ start = centre + Vector(0, 0, 64), endpos = centre + Vector(0, 0, 32768), mask = MASK_SOLID_BRUSHONLY })
+    local up = util.TraceLine({ start = centre + Vector(0, 0, 64), endpos = centre + Vector(0, 0, 32768), mask = MASK_SOLID_BRUSHONLY, filter = MapOnly })
     local top = (up.Hit and up.HitPos and up.HitPos.z) or (centre.z + 1600)
     if not up.HitSky and top - centre.z < 600 then top = centre.z + 1600 end -- (under a roof: aim well above it)
     local z = math.max(centre.z + 350, top - 220)
@@ -3294,7 +3303,8 @@ local cvPlaneCaptions = CreateConVar("lc_ending_plane_captions", "15.1=MA-IA-HII
     "Plane: the sing-along captions, second=TEXT, separated by | (the choruses add their own)")
 local cvPlaneBPM = CreateConVar("lc_ending_plane_bpm", "130", FLAGS, "Plane: the song's beats per minute")
 local cvPlaneCombine = CreateConVar("lc_ending_plane_combine", "8", FLAGS, "Plane: how many of the Combine's Civil Protection units get on the wings too")
-local cvPlaneModelYaw = CreateConVar("lc_ending_plane_model_yaw", "-90", FLAGS, "Plane: which way its body model's nose points, turned to the way it flies (-90, 90, 0 or 180: whichever puts the nose in front)")
+-- (90, was -90: the owner, 23 November, "the numa numa plane is flying backwards")
+local cvPlaneModelYaw = CreateConVar("lc_ending_plane_model_yaw", "90", FLAGS, "Plane: which way its body model's nose points, turned to the way it flies (-90, 90, 0 or 180: whichever puts the nose in front)")
 local PLANE_BODY, PLANE_WING = { "models/xqm/jetbody3.mdl", "models/props_vehicles/van001a_physics.mdl" }, "models/xqm/airplanewing1.mdl"
 local FIREWORK = { { 255, 60, 60 }, { 255, 210, 60 }, { 80, 200, 255 }, { 120, 255, 120 }, { 255, 100, 230 } }
 
@@ -4331,7 +4341,8 @@ local function GoTo(phase)
         for _, p in ipairs(LC.EndingPlayers()) do
             if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.OUT or 2, Color(255, 255, 255, 255), 4, 60) end
         end
-        All("[???] The city resets. Everyone you were is still you.")
+        -- (a dream doesn't reset the city: no such line, the owner, 23 November, "please remove that for all dreams")
+        if not E.dream then All("[???] The city resets. Everyone you were is still you.") end
         hook.Run("LivingCityEndingReset", E.id)
     end
     Send()

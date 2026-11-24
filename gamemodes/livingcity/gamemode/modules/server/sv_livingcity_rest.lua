@@ -72,6 +72,7 @@ local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(
 local function Exempt(ply)
     return not ply:Alive() or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply))
         or ply:GetNW2String("lcf_faction", "") == "stalker" -- (a stalker doesn't sleep: it works)
+        or (LC.Dreaming and LC.Dreaming(ply)) -- (in a dream: no tiredness there, no weakness or heavy legs; the owner, 23 November)
 end
 
 -- Night or dusk: bedtime, the city's sleepers, daytime curfews and the rest all use this.

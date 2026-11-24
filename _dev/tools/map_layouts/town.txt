@@ -1,5 +1,6 @@
 # The Resistance's town: one abandoned street north of the city, with the Resistance's places on both
-# sides of it, the leader's office, a road end and a canal landing. Not fitted to the map yet.
+# sides of it, the leader's office, a road end and a canal landing. ON THE SHELF since 24 November: taken off the map
+# and out of the ring (the owner: the Resistance "need to be more underground"); kept so it and its modules still build.
 #   python3 map_build.py chain --layout map_layouts/town.txt --test
 #
 #   ground street      this layout is a town (map_town.py): a street at the city's road height, not a canal

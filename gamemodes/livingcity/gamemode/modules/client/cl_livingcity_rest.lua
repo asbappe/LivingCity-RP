@@ -99,8 +99,18 @@ function LC_CL.Groggy(me)
     return math.Clamp(left / 40, 0.3, 1)
 end
 local function Wired(me) return me:GetNW2Float("lc_wired_until", 0) > CurTime() end -- (a stimulant: eyes wide open)
+-- The eyelids give way to everything else (the owner, 23 November: "I went to sleep and my eyes are still blinking
+-- from exhaustion in the dream ... can we make it like a low priority effect? it breaks everything"): never in a
+-- dream or an ending, knocked out or down, or with a menu or screen open.
+local function Quiet(me)
+    local now = CurTime()
+    return Wired(me) or me:GetNW2Bool("lc_dreaming", false) or (LC_CL.Ending and LC_CL.Ending() ~= nil)
+        or me:GetNW2Float("lc_ko_until", 0) > now or me:GetNW2Float("lc_downed_until", 0) > now
+        or (vgui and vgui.CursorVisible and vgui.CursorVisible())
+end
+LC_CL.EyelidsQuiet = Quiet
 function LC_CL.DrawEyelids(me, t)
-    if not IsValid(me) or not me:Alive() or me:GetNW2Bool("lc_sleeping", false) or Wired(me) then return false end
+    if not IsValid(me) or not me:Alive() or me:GetNW2Bool("lc_sleeping", false) or Quiet(me) then return false end
     local tired, groggy = me:GetNW2Bool("lc_tired", false), LC_CL.Groggy(me)
     if not tired and groggy <= 0 then return false end
     local f = LC_CL.EyelidClose((t or CurTime()) * (tired and 1 or 1.4))
@@ -132,7 +142,7 @@ hook.Add("RenderScreenspaceEffects", "LivingCityRest", function()
     local me = LocalPlayer()
     if not IsValid(me) then return end
     local groggy = LC_CL.Groggy(me)
-    if (not me:GetNW2Bool("lc_tired", false) and groggy <= 0) or Wired(me) then return end
+    if (not me:GetNW2Bool("lc_tired", false) and groggy <= 0) or Quiet(me) then return end
     if DrawMotionBlur then DrawMotionBlur(0.25, math.max(0.35 * groggy, 0.35 + 0.15 * math.sin(CurTime() * 0.8)), 0.01) end
 end)
 

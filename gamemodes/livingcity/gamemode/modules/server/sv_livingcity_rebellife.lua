@@ -300,17 +300,49 @@ LC.RebelSeatSpots = SeatSpots -- (also where the city finds citizens' couches, c
 
 -- Where to lie on a bed or a mattress: on top, along it, and where to stand
 -- up again beside it.
+-- An editor bed point: which way the mattress runs, its middle, and the head at the wall end (the owner, 23 November:
+-- sleepers "on the wrong side of walls where beds are pushed up against the wall": the point's own facing was used,
+-- which can run across the bed or into the wall). Keeps the point as it is where nothing can be measured.
+local function BedPointLie(p, yaw)
+    local f = Angle(0, yaw or 0, 0):Forward()
+    local r = Vector(f.y, -f.x, 0)
+    local function reach(d, sgn)
+        local got = 0
+        for step = 8, 72, 8 do
+            local q = p + d * (step * sgn)
+            local tr = util.TraceLine({ start = q + Vector(0, 0, 24), endpos = q - Vector(0, 0, 16), mask = MASK_SOLID or MASK_NPCSOLID })
+            if not (tr and tr.Hit and not tr.StartSolid and tr.HitPos and math.abs(tr.HitPos.z - p.z) < 8) then break end
+            got = step
+        end
+        return got
+    end
+    local fa, fb, ra, rb = reach(f, 1), reach(f, -1), reach(r, 1), reach(r, -1)
+    if fa + fb + ra + rb == 0 then return p, yaw or 0 end
+    local long, a, b = f, fa, fb
+    if ra + rb > fa + fb + 8 then long, a, b = r, ra, rb end
+    local mid = p + long * ((a - b) / 2)
+    local function wall(sgn)
+        local s = mid + Vector(0, 0, 24)
+        local tr = util.TraceLine({ start = s, endpos = s + long * (110 * sgn), mask = MASK_SOLID_BRUSHONLY })
+        return (tr and tr.Hit and not tr.StartSolid and tr.Fraction) or 1
+    end
+    local wf, wb = wall(1), wall(-1)
+    local head = long
+    if wb < wf then head = -long elseif wf == wb and long:Dot(f) < 0 then head = -long end
+    return mid, head:Angle().y
+end
+LC.BedPointLie = BedPointLie
 local function BedSpot(t)
     if t.point then
-        local p = t.pos
-        local f = Angle(0, t.yaw or 0, 0):Forward()
+        local p, lieYaw = BedPointLie(t.pos, t.yaw)
+        local f = Angle(0, lieYaw, 0):Forward()
         local side = Vector(f.y, -f.x, 0)
         local stand
         for _, s in ipairs({ 40, -40, 60, -60 }) do
             stand = StandBeside(p, p, side, s)
             if stand then break end
         end
-        return { top = p, yaw = t.yaw or 0, stand = stand }
+        return { top = p, yaw = lieYaw, stand = stand }
     end
     local c = CenterOf(t)
     local top = SurfaceTop(c)
@@ -406,7 +438,9 @@ end
 -- their own model, face, clothes and all, eyes shut, while the real one waits out of sight in its place.
 local cvLift = CreateConVar("lc_bed_npc_lift", "9", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "How far above a mattress a sleeping NPC's back lies")
 local function LieDouble(npc, L, b)
-    if not util.IsValidModel or not npc.SetupBones or not npc.LookupBone then return false end
+    -- (no SetupBones needed: Garry's Mod has it on players' screens only, so on a real server the copy was never made
+    -- and sleepers stood on their beds, "asleep"; the owner, 23 November, with a picture)
+    if not util.IsValidModel or not npc.LookupBone then return false end
     local rag = ents.Create("prop_ragdoll")
     if not IsValid(rag) then return false end
     local ok = LC.Try(function()
@@ -428,7 +462,7 @@ local function LieDouble(npc, L, b)
         end
         -- the standing body, turned onto its back along the bed: its height runs head-ward along the bed,
         -- its front faces the ceiling, the hips over the middle
-        npc:SetupBones()
+        if npc.SetupBones then npc:SetupBones() end
         local head = Angle(0, b.yaw or 0, 0):Forward()
         local m = Matrix()
         m:SetForward(Vector(0, 0, 1)) m:SetUp(head) m:SetRight(Vector(0, 0, 1):Cross(head))
@@ -442,6 +476,7 @@ local function LieDouble(npc, L, b)
             local phys = rag:GetPhysicsObjectNum(i)
             local bone = rag:TranslatePhysBoneToBone(i)
             local bpos, bang = npc:GetBonePosition(bone)
+            if IsValid(phys) and not (bpos and bang) then bpos, bang = phys:GetPos(), phys:GetAngles() end -- (a bone the server can't read: the copy's own pose)
             if IsValid(phys) and bpos then
                 local lp, la = WorldToLocal(bpos, bang, base, baseAng)
                 local wp, wa = LocalToWorld(lp, la, origin, lieAng)

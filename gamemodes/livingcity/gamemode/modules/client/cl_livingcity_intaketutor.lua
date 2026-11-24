@@ -113,7 +113,7 @@ local function BuildState()
         local st = state or {}
         draw.RoundedBox(6, 0, 0, w, h, BG)
         draw.SimpleText(st.learn and "Arrival search (lesson)" or "Arrival search", "DermaDefaultBold", 10, 8, INK)
-        draw.SimpleText("Stand still.", "DermaLarge", 10, 26, ACC)
+        draw.SimpleText(st.hands and "Hands up: F1 > Put my hands up" or "Stand still.", "DermaLarge", 10, 26, ACC)
         local y = 62
         for _, sp in ipairs(st.spots or {}) do
             local tag, col = "not yet", DIM
@@ -355,4 +355,10 @@ net.Receive("lc_tut_close", CloseState)
 net.Receive("lc_tut_done", function() BuildDone(Read()) end)
 
 function LC_CL.TutorPanels() return offerWin, statePanel, state, doneWin, practiceWin end
+
+-- R slips something into a checked spot while you're searched: it doesn't also reach the game as reload, which
+-- raised your fists in front of the unit (the owner, 23 November)
+hook.Add("PlayerBindPress", "LivingCityTutorSlipKey", function(_, bind, pressed)
+    if IsValid(statePanel) and bind and string.find(bind, "+reload", 1, true) then return true end
+end)
 LC_CL.TutorClose = CloseState

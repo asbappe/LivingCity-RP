@@ -226,29 +226,20 @@ function LC.RegisterPerson(ply, how)
     LC.IssueDocuments(ply)
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
     local cid = ply:GetNW2String("lc_cid", "")
-    if how == "custody" then
-        ply:ChatPrint(string.format("[Civil Intake] You were processed while in custody: %s, citizen %s. Your papers are in your pockets (F3). Ration cards come from work: each Union shift you finish earns one.", name, cid))
-    else
-        ply:ChatPrint(string.format("[Civil Intake] Registration complete. %s, citizen %s. Your identity papers are in your pockets (F3): keep them on you. Ration cards come from work: each Union shift you finish earns one.", name, cid))
-    end
+    -- One line, the next step marked on screen (the owner, 23 November: four lines of it, "I'm the hecking owner and
+    -- I don't want to even try to read this. goodness gracious get rid of all this"). Papers, ration cards and the
+    -- pamphlet speak for themselves in your pockets (F3); housing comes after work, on F1 > What now?.
     local n = LC.PlayerBlock and LC.PlayerBlock(ply)
-    -- a Labor Assignment terminal in this city: work first, then a room (sv_livingcity_labor.lua)
-    local labor = LC.AwaitingLabor and LC.AwaitingLabor(ply)
-    if labor then
-        ply:ChatPrint("[Civil Intake] Next, go to Labor Assignment to be given your Union work. It's marked on your screen.")
-        if LC.WaypointTo then LC.WaypointTo(ply, "labor") end
-    end
-    if LC.AwaitingHousing(ply) and HasDesk("housing") then
-        if labor then
-            ply:ChatPrint("[Civil Intake] Then Housing Allocation gives you a room: it only houses citizens with a work assignment.")
-        else
-            ply:ChatPrint("[Civil Intake] Next, go to Housing Allocation to get a room. It's marked on your screen.")
-            if LC.WaypointTo then LC.WaypointTo(ply, "housing") end
-            if LC.Hint then LC.Hint(ply, "intake_housing") end
-        end
-    elseif n then
-        ply:ChatPrint("[Civil Intake] You already have a room: " .. LC.BlockName(n) .. ". Ask at Housing Allocation if you want to know more.")
-    elseif LC.AssignBlock then
+    local labor = LC.AwaitingLabor and LC.AwaitingLabor(ply) -- (a Labor Assignment terminal here: work first, then a room)
+    local housingDesk = LC.AwaitingHousing(ply) and HasDesk("housing") -- (a room later, from Housing Allocation)
+    local housing = not labor and housingDesk
+    local nextStep = labor and " Next: Labor Assignment (marked)." or (housing and " Next: Housing Allocation (marked)." or "")
+    ply:ChatPrint(string.format(how == "custody" and "[Civil Intake] Processed in custody: %s, #%s.%s" or "[Civil Intake] Registration complete: %s, #%s.%s", name, cid, nextStep))
+    if labor and LC.WaypointTo then LC.WaypointTo(ply, "labor", true) end
+    if housing then
+        if LC.WaypointTo then LC.WaypointTo(ply, "housing", true) end
+        if LC.Hint then LC.Hint(ply, "intake_housing") end
+    elseif not housingDesk and not n and LC.AssignBlock then
         n = LC.AssignBlock(ply, false, true) -- (no housing desk here: a room comes with the papers)
         if n then
             ply:SetPData("lc_housed_how", "papers")
@@ -261,6 +252,33 @@ function LC.RegisterPerson(ply, how)
 end
 
 -- The blocks, and how many people live in each.
+-- Each block's beds and who sleeps in them at night (the owner, 23 November: the terminal said "0 live there" while the
+-- city's own people flock there at night): { [block] = { beds, npcs (the city's citizens who call it home), free } },
+-- free counting the players who live there too.
+function LC.BlockBedTally(players)
+    local out = {}
+    local zones = LC.ZonesOfKind and LC.ZonesOfKind("block") or {}
+    for _, a in ipairs(LC.Amenities and LC.Amenities("bed") or {}) do
+        for _, z in ipairs(zones) do
+            if (z.group or 0) > 0 and LCZ and LCZ.Contains and LCZ.Contains(z, a.pos, 0) then
+                local t = out[z.group] or { beds = 0, npcs = 0 }
+                out[z.group] = t
+                t.beds = t.beds + 1
+                break
+            end
+        end
+    end
+    for _, p in ipairs(LC.People and LC.People.list or {}) do
+        if p.alive and p.role == "citizen" and p.home then
+            local t = out[p.home] or { beds = 0, npcs = 0 }
+            out[p.home] = t
+            t.npcs = t.npcs + 1
+        end
+    end
+    for b, t in pairs(out) do t.free = math.max(0, t.beds - t.npcs - ((players or {})[b] or 0)) end
+    return out
+end
+
 local function Residents()
     local counts = {}
     for _, p in ipairs(player.GetAll()) do
@@ -481,9 +499,11 @@ function LC.SendDesk(ply, ent)
     if kind == "labor" and LC.LaborDeskInfo then t.labor = LC.LaborDeskInfo(ply) end
     if kind == "housing" then
         local counts = Residents()
+        local beds = LC.BlockBedTally(counts)
         for _, b in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
             local c = LC.BlockCenter and LC.BlockCenter(b)
-            t.blocks[#t.blocks + 1] = { n = b, name = LC.BlockName(b), residents = counts[b] or 0,
+            local bt = beds[b] or { beds = 0, npcs = 0, free = 0 }
+            t.blocks[#t.blocks + 1] = { n = b, name = LC.BlockName(b), residents = counts[b] or 0, beds = bt.beds, npcs = bt.npcs, free = bt.free,
                 m = c and math.max(1, math.floor(c:Distance(ent:GetPos()) / 40 + 0.5)) or nil }
         end
     end

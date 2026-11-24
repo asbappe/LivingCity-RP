@@ -11,6 +11,15 @@
 
 LC_CL = LC_CL or {}
 
+-- A block's numbers, short: who lives there and its beds at night (the owner, 23 November: "0 living there, but NPCs
+-- flock there at night ... count the beds in the zone and show ... how many beds are left once everyone goes to sleep")
+local function BlockTally(b)
+    local s = string.format("%d live there", (b.residents or 0) + (b.npcs or 0))
+    if (b.beds or 0) > 0 then s = s .. string.format(", %d beds, %d free at night", b.beds, b.free or 0) end
+    return s .. (b.m and (", " .. b.m .. " m away") or "")
+end
+LC_CL.HousingBlockTally = BlockTally
+
 local INK, DIM = Color(232, 226, 210), Color(160, 155, 142)
 local BLUE = Color(120, 200, 255)
 local OUTLINE = Color(0, 0, 0, 220)
@@ -291,8 +300,7 @@ function LC_CL.OpenDesk(t)
         for _, b in ipairs(t.blocks or {}) do least = math.min(least or b.residents, b.residents) end
         for _, b in ipairs(t.blocks or {}) do
             local crowded = b.residents > (least or 0) + 1
-            Button(string.format("Ask for %s   (%d live there%s%s)", b.name, b.residents, b.m and (", " .. b.m .. " m away") or "",
-                crowded and ", crowded" or ""), t.papers, function() LC_CL.DeskAct("apply", b.n) Close() end)
+            Button(string.format("Ask for %s   (%s%s)", b.name, BlockTally(b), crowded and ", crowded" or ""), t.papers, function() LC_CL.DeskAct("apply", b.n) Close() end)
         end
         if #(t.blocks or {}) == 0 then Line("This city has no housing blocks.", BAD) end
     else
@@ -304,7 +312,7 @@ function LC_CL.OpenDesk(t)
             Line("Move to another block (once every half hour). A crowded block needs Civil Standing " .. (t.good or 50) .. ".", DIM)
             for _, b in ipairs(t.blocks or {}) do
                 if b.n ~= t.block then
-                    Button(string.format("Move to %s   (%d live there%s)", b.name, b.residents, b.m and (", " .. b.m .. " m away") or ""),
+                    Button(string.format("Move to %s   (%s)", b.name, BlockTally(b)),
                         t.papers, function() LC_CL.DeskAct("transfer", b.n) Close() end)
                 end
             end

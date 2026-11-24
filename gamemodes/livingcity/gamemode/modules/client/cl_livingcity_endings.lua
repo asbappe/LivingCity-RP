@@ -273,7 +273,7 @@ hook.Add("HUDPaint", "LivingCityEndings", function()
         local a = math.Clamp((now - resetAt) / 4, 0, 1) * 255
         surface.SetDrawColor(255, 255, 255, a)
         surface.DrawRect(0, 0, ScrW(), ScrH())
-        Text("The city resets.", "LCEndBig", cx, ScrH() / 2, Color(60, 60, 60, a))
+        if not S.dream then Text("The city resets.", "LCEndBig", cx, ScrH() / 2, Color(60, 60, 60, a)) end -- (a dream: just the light)
     end
 end)
 
