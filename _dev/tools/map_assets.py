@@ -96,6 +96,8 @@ def read_vmf(path):
             cls = v
         elif k == "model" and v.endswith(".mdl"):
             models.setdefault(v, set()).add(cls)
+        elif k == "skyname" and v != "painted":      # (a sky's six faces; "painted" is Garry's Mod's own, drawn by env_skypaint)
+            materials |= set("skybox/%s%s" % (v, face) for face in ("bk", "dn", "ft", "lf", "rt", "up"))
         elif k in ("material", "texture", "ropematerial", "smokematerial") or (k == "model" and v.endswith((".vmt", ".spr"))):
             v = re.sub(r"\.(vmt|spr)$", "", v)
             if v.startswith("materials/"):      # (a sprite may name its material with the folder in front: the game reads both)
