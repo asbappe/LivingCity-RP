@@ -44768,6 +44768,50 @@ function Nov25_TextGateTests() -- (the owner, 14 November: "I can only read one 
 end
 Nov25_TextGateTests()
 
+function Nov25_RealTrainTests() -- (the owner, 20 November: "the train has to actually show up"; 25 November: wired up, not switched on)
+    section("25 November: new arrivals wait for the map's own train to the station (lc_train_real, off by default)")
+    local T = LC.Train
+    local was = { real = GetConVar("lc_train_real"):GetString(), on = GetConVar("lc_trains"):GetString(), nextAt = T.nextAt, arrive = LC.TrainArrive, wrecked = LC.TracksWrecked, run = LC.Running, ev = LC.Event }
+    ok(GetConVar("lc_train_real"):GetString() == "0", "off by default")
+    local T0 = Vector(-166000, -166000, 0)
+    local plat = LC.AddPoint(T0, 0, "platform", 0)
+    local arrived, called = 0, 0
+    LC.TrainArrive = function() arrived = arrived + 1 T.nextAt = CurTime() + 1440 return true, {} end
+    LC.Running, LC.Event = true, nil
+    _setcvar("lc_trains", 1)
+    local run = ents.Create("logic_relay") run:SetPos(T0) run:SetName("lc_train_station_run") run:Spawn()
+    run.Fire = function(_, what) if what == "Trigger" then called = called + 1 end end
+    ok(LC.TrainReal() == false, "the setting off: the map's train is not asked")
+    _setcvar("lc_train_real", 1)
+    ok(LC.TrainReal() == false, "half the names in the map: not asked either")
+    local got = ents.Create("logic_relay") got:SetPos(T0) got:SetName("lc_train_station_arrived") got:Spawn()
+    ok(LC.TrainReal() == true, "the setting on and both relays in the map: the real train is in charge")
+    T.nextAt, T.calledAt, T.arrivedAt = CurTime() - 1, nil, nil
+    _run(6)
+    ok(called == 1 and arrived == 0, "a train due: the map's is called, and nobody arrives yet", called .. " " .. arrived)
+    hook.Run("AcceptInput", got, "Trigger", got, got)
+    ok(arrived == 1 and T.calledAt == nil, "it stands at the station: now the arrivals")
+    hook.Run("AcceptInput", got, "Trigger", got, got)
+    ok(arrived == 1, "one the map sends by itself straight after: no second crowd")
+    T.arrivedAt = CurTime() - 13 * 60
+    hook.Run("AcceptInput", got, "Trigger", got, got)
+    ok(arrived == 2, "one the map sends by itself after half the usual wait: arrivals")
+    LC.TracksWrecked = function(n) return n == "lc_train_station" end
+    T.nextAt, T.calledAt = CurTime() - 1, nil
+    _run(6)
+    ok(called == 1 and arrived == 2, "that line's tracks wrecked: no train is called", called)
+    LC.TracksWrecked = was.wrecked
+    T.nextAt, T.calledAt = CurTime() - 1, nil
+    _run(6)
+    _run(185)
+    ok(called == 3 and arrived == 2, "called, and never shows: asked again three minutes later", called)
+    run:Remove() got:Remove() LC.RemovePoint(plat)
+    LC.TrainArrive, LC.Running, LC.Event = was.arrive, was.run, was.ev
+    T.nextAt, T.calledAt, T.arrivedAt = was.nextAt, nil, nil
+    _setcvar("lc_train_real", was.real) _setcvar("lc_trains", was.on)
+end
+Nov25_RealTrainTests()
+
 function Nov24_PumphouseWaterTests() -- (the owner, 24 November: "the pumphouse nearest a rebel zone allows or cuts that zone's water")
     section("24 November: the pumphouse nearest a rebel territory is its water")
     local T0 = Vector(-158000, -158000, 0)
