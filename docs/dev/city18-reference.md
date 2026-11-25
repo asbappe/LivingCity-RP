@@ -3941,3 +3941,12 @@ No lights/white004 panels on the Combine wall's kit (they read as flat white blo
 - **Checked by:** map_propkit.py --check (the kit matches the code, rays from where players stand); grep the kit for white004: none.
 - **Tags:** owner, combine, lighting
 
+### What the game's console said of the ring: ladder feet, supply crates, props with no collision (`owner-log-ladders-crates-solid`)
+
+A ladder's two ends must leave a player's box (32 across, 72 tall) touching nothing: no bank sloping up under its foot, no board or kerb it stands in. A supply crate (item_item_crate) carries its model keyvalue. A prop_static whose model has no collision model is solid 0.
+
+- **Why:** The owner's console on loading the ring's test map, 25 November: "Warning, funcladder with blocked bottom point (6878.00 -5968.00 404.00) stuck in (worldspawn/)" (twice, a canal bank under the foot), "item_item_crate at (...) has no model name!" (26 times), "SOLID_VPHYSICS static prop with no vphysics model!" (canal maps, corkboards, hive nests).
+- **How:** Mod.ladder marks no bank on a square 144 round its foot; map_build.lift_ladder_feet raises a foot onto anything low it touches; map_modules.breakable gives the crate its model; Vmf.point makes a prop_static solid 0 when map_assets.collides says the model has none.
+- **Checked by:** map_walk.py: "a ladder's foot ... is inside a brush" (a player's box at each end, touching counts as Source counts it).
+- **Tags:** owner, props, stairs
+

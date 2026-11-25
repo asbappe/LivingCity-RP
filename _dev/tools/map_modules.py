@@ -181,7 +181,8 @@ def breakable(cls, model, keys):
     not named or parented is a physics prop, asleep until touched, so it breaks as Valve's do."""
     if model.lower() == SUPPLY_CRATE:
         k = {kk: vv for kk, vv in keys.items() if kk in ("angles", "targetname", "parentname")}
-        k.update({"CrateType": "0", "ItemClass": "item_dynamic_resupply", "ItemCount": "2", "CrateAppearance": "0", "spawnflags": "0"})
+        k.update({"model": SUPPLY_CRATE, "CrateType": "0", "ItemClass": "item_dynamic_resupply", "ItemCount": "2", "CrateAppearance": "0",
+                  "spawnflags": "0"})      # (model: Garry's Mod's crate does not set its own: "item_item_crate ... has no model name!", 25 November)
         return "item_item_crate", k
     if cls in ("prop_static", "prop_dynamic", "prop_dynamic_override") and any(w in model.lower() for w in BREAKABLE) \
             and not keys.get("targetname") and not keys.get("parentname"):
@@ -486,6 +487,9 @@ class Mod:
         """A ladder against a wall at (u, v), from z0 up to z1 (128 a piece), facing `out` (a yaw in the module: 0 along
         u, 90 left ...): set up the way the owner's own map does its ladders. The floor at the top is behind it."""
         vmf, vis = self.b.vmf, self.dv
+        fu = u + 28 * int(round(math.cos(math.radians(out))))      # (its foot: no bank from any wall within a bank's reach of
+        fv = v + 28 * int(round(math.sin(math.radians(out))))      #  it, 128 and a player's half width; one buried two feet,
+        self.no_bank(fu - 144, fv - 144, fu + 144, fv + 144)      #  the owner's log, 25 November)
         z0, z1 = z0 + self.fr.dz, z1 + self.fr.dz
         x, y = self.fr.pt(u, v)
         dx, dy = self.fr.way(out)
@@ -2377,7 +2381,8 @@ def finish(b, seed, spawn, args):
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)
     link_gates(b)
-    from map_build import drop_useless_portals
+    from map_build import drop_useless_portals, lift_ladder_feet
+    b.notes += lift_ladder_feet(vmf)
     b.notes += drop_useless_portals(vmf, list(b.stoppers))      # (an areaportal the street or the backdrop left parting nothing: vbsp refuses one)
     problems, air = check(vmf, seed, list(b.stoppers))      # (a way meant to open onto the owner's map, as roadend's road: stopped up for the check)
     problems = b.problems + problems

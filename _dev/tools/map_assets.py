@@ -169,6 +169,16 @@ def size(model):
     return (fact or {}).get("bbox")
 
 
+def collides(model):
+    """Has this model a collision model? True, False, or None if it is not known. A prop_static without one must be solid
+    0, or the game warns "SOLID_VPHYSICS static prop with no vphysics model!"."""
+    if kit_piece(model) is not None:
+        return False
+    size(model)
+    fact = (_known or {}).get(model.lower().replace("\\", "/")) or {}
+    return fact.get("collides")
+
+
 def is_static(model):
     """Was this model built to be a prop_static? True, False, or None if it is not known."""
     if kit_piece(model) is not None:

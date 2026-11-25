@@ -708,6 +708,10 @@ class Vmf:
             if spot is not None and tuple(spot) != tuple(pos):
                 self.nudged.append((str(keys["model"]), tuple(pos), tuple(spot)))
                 pos = (round(spot[0]), round(spot[1]), pos[2])
+        if cls == "prop_static" and keys and str(keys.get("solid", "6")) == "6" and keys.get("model"):
+            import map_assets      # (a model with no collision as solid 6: the game warns "SOLID_VPHYSICS static prop with no
+            if map_assets.collides(str(keys["model"])) is False:      # vphysics model!", the owner's log, 25 November)
+                keys = dict(keys, solid="0")
         if not outside:
             self.points.append((cls, tuple(pos)))
             if cls.startswith("prop") and keys and keys.get("model"):
@@ -1281,6 +1285,29 @@ def drop_useless_portals(vmf, stoppers):
             if box in vmf.portals:
                 vmf.portals.remove(box)
             notes.append("an areaportal at (%d %d %d) taken out: it parted nothing (the street or the backdrop opened a way round it)" % tuple((box[a] + box[a + 3]) // 2 for a in range(3)))
+    return notes
+
+
+
+def lift_ladder_feet(vmf):
+    """A ladder's foot that stands in something low under it (a deck's boards, a kerb, a few units proud of the floor) is
+    raised onto it, 4 above its top: a player's box at the foot must touch nothing, or the game says "funcladder with
+    blocked bottom point ... stuck in" (the owner's log, 25 November). Returns notes."""
+    notes = []
+    for i, e in enumerate(vmf.ents):
+        if '"classname" "func_useableladder"' not in e:
+            continue
+        m = re.search(r'"point0" "(-?\d+) (-?\d+) (-?\d+)"', e)
+        if not m:
+            continue
+        x, y, z = (int(m.group(k)) for k in (1, 2, 3))
+        top = z
+        for b, _ in vmf.boxes:
+            if b[0] < x + 16 and b[3] > x - 16 and b[1] < y + 16 and b[4] > y - 16 and b[2] < z and z <= b[5] <= z + 20:
+                top = max(top, b[5] + 4)
+        if top != z:
+            vmf.ents[i] = e.replace(m.group(0), '"point0" "%d %d %d"' % (x, y, top))
+            notes.append("a ladder's foot at (%d %d %d) raised %d onto what stands under it" % (x, y, z, top - z))
     return notes
 
 
