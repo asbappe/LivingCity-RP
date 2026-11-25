@@ -39,9 +39,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is
   `straight 512`. The ring was cut down after the owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md;
   ring piece alone 31,115 faces). Left of their review: the drain, the railway to the station (TODO.md).
-- 22 to 24 November: the canal ring (map_ring_walk.py): the owner compiled the Propper++ kit (35 models, models/lc/kit).
-  vbsp also limits unique vertices (65,536): their quick build stopped at 70,769. map_budget.py now estimates them; the
-  ring's test map needs the nodraw pass (36 min): 30,901 faces, ~56,678 vertices. Stitched map still over (TODO).
+- 22 to 25 November: the canal ring (map_ring_walk.py, ~22 min with the nodraw pass, which vbsp's vertex limit needs).
+  Propper++ kit: 43 pieces; the wall's 20 changed 25 Nov (no white panels, 4 piers, 3 looks): owner recompiles those.
+  Latest test map: 20,200 faces, ~39,913 vertices. Stitched map still over (TODO).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: the dream bubbles, EndingTests, Lamarr (TODO.md).
 - Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
