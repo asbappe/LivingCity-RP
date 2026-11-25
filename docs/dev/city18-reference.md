@@ -3959,3 +3959,12 @@ A ladder's two ends must leave a player's box (32 across, 72 tall) touching noth
 - **Checked by:** map_walk.py: "a ladder's foot ... is inside a brush" (a player's box at each end, touching counts as Source counts it).
 - **Tags:** owner, props, stairs
 
+### Every bank of the canal that looks to the city carries the Combine wall (`owner-combine-wall-every-city-bank`)
+
+The Combine wall never ends where the street does. Where the canal has no street on its city side (the ring's last jog, the first canal's banks), the wall stands on the bank itself: the bank's wall squares become the wall's core, the kit's pieces stand at the street's height on a concrete sill (or on a deck carried to the wall), and nothing of it hangs over stairs, a footbridge's landing or a doorway.
+
+- **Why:** The owner, 25 November, of a screenshot at the jog ("straight 448 nostreet"): "notice in this screenshot that combine walls end? That needs to not happen; every section of the canal that has a side/face towards the city MUST have a combine wall there."
+- **How:** map_corridor.bank_core (a layout's "wall bank X1 Y1 X2 Y2"; map_build.canal's own rectangles: A's banks, B's and D's west bank), combine_wall's sill and its blocked squares; ROUND["deck"] starts at the jog's west wall; map_build.fence leaves no chain link before a core.
+- **Checked by:** The build's note counts the wall's stretches; map_propkit.py --placed casts rays at every placed piece; map_stairs.py fails a flight with the wall over its steps.
+- **Tags:** owner, combine, canal
+

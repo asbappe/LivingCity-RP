@@ -2144,6 +2144,8 @@ def read_layout(path):
             lay["ground"] = words[1].lower()     # ("ground street": a town, map_town.py)
         elif words[0] == "upper":
             lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
+        elif words[0] == "wall" and words[1].lower() == "bank":      # ("wall bank X1 Y1 X2 Y2": the Combine wall on the canal's own bank
+            lay.setdefault("wall_banks", []).append(tuple(int(w) for w in words[2:6]))      #  in this rectangle, where no street runs: map_corridor.bank_core)
         elif words[0] == "wall":
             lay["wall"] = words[1].lower()        # ("wall combine": a Combine wall between the city and the street)
             lay["wall_brushes"] = "brushes" in [w.lower() for w in words[2:]]     # ("wall combine brushes": as brushes, not the kit's models)
@@ -2336,6 +2338,12 @@ def build_chain(lay, args):
         for road in lay.get("roads", []):
             map_corridor.spur(b, *road)
         if b.street_wall == "combine":
+            if lay.get("wall_banks"):
+                more, front = map_corridor.bank_core(b.plan.cells, lay["wall_banks"], map_corridor.STREET + map_corridor.WALL_H - 8, b.sky)
+                b.combine_core = set(getattr(b, "combine_core", set())) | more
+                b.wall_front, b.wall_cells = front, b.plan.cells
+                for c in more:
+                    b.owner[c] = "the Combine wall"
             map_corridor.combine_wall(b)
         if lay.get("backdrop"):
             import map_backdrop

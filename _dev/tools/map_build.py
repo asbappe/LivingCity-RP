@@ -1350,6 +1350,7 @@ useless = []
 # The canal at the road's end
 # ---------------------------------------------------------------------------
 
+COMBINE_CORE = "metal/citadel_metalwall077a"      # (map_corridor.CORE: the Combine wall's core)
 FENCE_POST = 512      # a post every 512 along the walls' tops, and one at each end (were every 256: 504 brushes round the ring)
 
 
@@ -1367,6 +1368,8 @@ def fence(vmf, plan, high, vis, top=None):
             nb = cells.get((i + di, j + dj))
             if nb is None or nb[0] in ("open", "cellar"):
                 continue
+            if nb[0] == "low" and len(nb) > 2 and nb[2] == COMBINE_CORE:
+                continue      # (the Combine wall stands there: no chain link before it)
             at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 else top
             runs.setdefault((axis, line, side, at), []).append(a)
     sheets, bars = {"x": [], "y": []}, []
@@ -1487,6 +1490,11 @@ def canal(args):
     core = {c for c in core if not arm_y1 <= c[1] * CELL < arm_y2}
     for c in core:
         plan.cells[c] = ("low", core_top, mc.CORE, sky)
+    # the Combine wall on the banks that look to the city, where no street runs (the owner, 25 November: "every section of
+    # the canal that has a side/face towards the city MUST have a combine wall there"): A's south bank from the quay
+    # to the south gate's culvert, A's west end and north bank, B's and D's west bank up to the north gate
+    bank, bank_front = mc.bank_core(plan.cells, [P((640, 192, 2560, 256)), P((-64, 256, 0, 832)),
+                                                 P((0, 768, 2560, 832)), P((2496, 768, 2560, 3712))], core_top, sky)      # (not beside the north gate: what joins there seals its own)
 
     vmf = Vmf()
     cells = plan.cells
@@ -1608,7 +1616,8 @@ def canal(args):
     import types      # (not over its last three squares at the north edge, where the ring's stretch beyond ends in a pier over the join,
     #                    nor over the two each side of the arm, so no pier overhangs the water)
     dressed = {c for c in core if c[1] * CELL < road_y2 - 192 and not arm_y1 - 128 <= c[1] * CELL < arm_y2 + 128}
-    mc.combine_wall(types.SimpleNamespace(combine_core=dressed, deck=road_cells | under_cells, name="canal", vmf=vmf, vis="LC canal", notes=[]))
+    mc.combine_wall(types.SimpleNamespace(combine_core=dressed | bank, deck=road_cells | under_cells, wall_front=bank_front, wall_cells=plan.cells,
+                                          name="canal", vmf=vmf, vis="LC canal", notes=[]))
 
     # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
     # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before. The dressing sees
