@@ -436,3 +436,19 @@ The owner, 21 November: "reference the Episode 2 antlion caves and mineshafts, a
 **Episode Two's mine lift (lifted with the holdout, 22 November):** `holdout_elevator_1` in ep2_outland_03 has no cage model and no shaft. It is a brush cage on a `func_tracktrain` riding up an open quarry wall, about 57 s down at speed 20 and 35 s up at 35, and it climbs only while someone stands in it (one `trigger_multiple` with OnStartTouch and OnEndTouch, which breaks with several players). `CaveForest.holdout_lift` rides Valve's own cage brushwork on a tracktrain of our wiring instead (call buttons at both landings and in the cage, stops 3 over each floor); the earlier `CaveForest.lift` (an `elevator01_cage` model on a door) is gone.
 
 *Next, if wanted:* d1_town_04's long tunnel down from the town (west of the big cave), Ravenholm's lower flooded pit and ledge east of the old mine, ep2_outland_01a's watery grub cavern. The Valve maps come from the owner's Drive (`docs/dev/valve-ingest-progress.md`, "Getting the maps again"; the file's id can be found with the Drive connector by its name, `HL2Leak-VMFs-master.zip`).
+
+## Our own canal modules taken off the ring (24 November)
+
+The owner, 24 November, after walking the ring: save these as prefabs and take them out of the canal. Each piece is the whole module as it stood (its stretch of canal and all, with its wiring), heading east from its anchor: the canal's middle at the module's entry, on the canal's floor. The module's own code is kept too, so `python3 map_build.py module --name NAME` still builds it; none is on `map_layouts/ring.txt` (a plain `straight` of the same length stands in its place).
+
+| piece | what it is |
+|---|---|
+| `lc_mod_boathouse` | a smugglers' boat shed in the canal's wall: a roll-up door, a slipway, a hatch to a cellar |
+| `lc_mod_execwall` | the firing wall: a backstop, three posts, one hard lamp |
+| `lc_mod_aqueduct` | a water trough crossing over the canal on two piers |
+| `lc_mod_barge` | a river barge grounded askew: a hideout in its hold, a wheelhouse, a gangplank |
+| `lc_mod_morgue` | the morgue: a cold room of drawers and tables behind a sliding door |
+| `lc_mod_armory` | a Combine armoury vault behind a two-button door |
+| `lc_mod_depot` | the Combine's ration depot: a roller door, a loading bay, caged stores |
+
+Deleted the same day, not saved (the owner: "take out and do not save and do not prefab"): `lift`, `arcade`, `chimney`, `floodroom` (their code is in git before 24 November only). `shell` is off the ring; its code is kept.

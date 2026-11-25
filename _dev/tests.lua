@@ -9704,7 +9704,7 @@ ok(heard, "citizens pass on what's been happening (Chat, in the talk window)", t
 local unitG = newPlayer("GossipUnit", "cp")
 unitG.chat = {}
 math.random = function(a, b) if a == nil then return 0.1 end if b == nil then return realRandom(a) end return realRandom(a, b) end
-hook.Run("LivingCityPlayerUsedNPC", unitG, cit, LC.NPCs[cit])
+LC.NPCs[cit].state = "idle" hook.Run("LivingCityPlayerUsedNPC", unitG, cit, LC.NPCs[cit]) -- (idle: a citizen who had wandered off into another state said nothing, now and then)
 math.random = realRandom
 _run(1)
 ok(not has(unitG.chat, "Resistance") and has(unitG.chat, "officer") or has(unitG.chat, "Nothing") or has(unitG.chat, "head down"), "units just get nervous silence")
@@ -9749,9 +9749,9 @@ local killer = newPlayer("Exterminator", "cp")
 -- everyone in that patch goes down
 local inPatch = {}
 for n, st in pairs(LC.NPCs) do
-    if IsValid(n) and st.role == "zombie" and n:GetPos():Distance(patch.pos) < patch.r + 100 then inPatch[#inPatch + 1] = n end
+    if IsValid(n) and st.role == "zombie" and LCZ.Contains(patch, n:GetPos(), 100) then inPatch[#inPatch + 1] = n end -- (as the game counts them: a patch is a cylinder, not a ball; a ball here missed one standing low at its edge, now and then)
 end
-inPatch[#inPatch + 1] = LC.SpawnZombie(patch.pos + Vector(0, 0, 4), patch)
+inPatch[#inPatch + 1] = LC.SpawnZombie(patch.pos + Vector(0, 0, 4), patch) for _, q in ipairs(LC.ZonesOfKind("infest")) do q.contestedUntil = CurTime() + 90 end -- (nobody new in the patch next door either, while this one is cleared: one within 100 of its edge counts as in it)
 for _, n in ipairs(inPatch) do n:SetHealth(0) end
 for _, n in ipairs(inPatch) do hook.Run("OnNPCKilled", n, killer) end
 _run(1)
@@ -38820,7 +38820,7 @@ for _, t in ipairs(LC.QuestTemplates) do
                         wrong[#wrong + 1] = string.format("%s (%s): paid %d, said %d-%d", t.id, f, got, credits[1], credits[2])
                     end
                     local put = LC.ResistanceFund() - f0
-                    if fund and (put < fund[1] or put > fund[2]) then
+                    if fund and ((put < fund[1] and not (t.id == "res_breakout" and put == 0)) or put > fund[2]) then -- (a breakout finished at once may free nobody: its fund share is paid as the cell opens)
                         wrong[#wrong + 1] = string.format("%s: the fund had %d, said %d-%d", t.id, put, fund[1], fund[2])
                     elseif not fund and put ~= 0 then
                         wrong[#wrong + 1] = string.format("%s: the fund had %d, said nothing", t.id, put)
@@ -44641,6 +44641,191 @@ function Nov23_LipSyncTests() -- (the owner, 23 November: "I REALLY need you to 
     LC.LipSyncForget()
 end
 Nov23_LipSyncTests()
+
+function Nov24_BarnacleLiftTests() -- (the owner, 22 November: barnacles "just don't pull me up")
+    section("24 November: a barnacle lifts the player it has caught")
+    local HELD = EFL_IS_BEING_LIFTED_BY_BARNACLE or 1048576
+    local p = _makeplayer("Barnacled", Vector(-156000, -156000, 0))
+    local held = false
+    p.IsEFlagSet = function(_, f) return held and f == HELD end
+    local b = ents.Create("npc_barnacle") b:SetPos(Vector(-156000, -156000, 400)) b:Spawn()
+    b.hp = 35
+    local far = ents.Create("npc_barnacle") far:SetPos(Vector(-156500, -156000, 400)) far:Spawn()
+    far.hp = 35
+    LC.BarnacleHoldTick()
+    ok(not IsValid(p:GetNW2Entity("lc_barnacle")), "nobody caught: nobody lifted")
+    local mv = { o = p:GetPos(), v = Vector(0, 0, -300) }
+    function mv:GetOrigin() return self.o end
+    function mv:SetOrigin(x) self.o = x end
+    function mv:SetVelocity(x) self.v = x end
+    ok(hook.Run("Move", p, mv) == nil and mv.o.z == 0, "their movement is their own")
+    held = true
+    LC.BarnacleHoldTick()
+    ok(p:GetNW2Entity("lc_barnacle") == b, "caught: the barnacle over them holds them, not one further off")
+    local took = hook.Run("Move", p, mv)
+    ok(took == true and mv.o.z > 0 and mv.o.z <= 8.01 and mv.v.z == 0, "each moment they rise a little, not falling back", mv.o.z)
+    for _ = 1, 80 do hook.Run("Move", p, mv) end
+    ok(math.abs(mv.o.z - 306) < 0.01, "up to its mouth and no further", mv.o.z)
+    p:SetPos(mv.o)
+    local hp = p:Health()
+    LC.BarnacleHoldTick()
+    ok(p:Health() == hp, "at the mouth: the barnacle's own bite is waited for")
+    _run(3)
+    ok(p:Health() < hp, "a barnacle that never bites: the server bites for it", p:Health())
+    held = false
+    LC.BarnacleHoldTick()
+    ok(not IsValid(p:GetNW2Entity("lc_barnacle")) and hook.Run("Move", p, mv) == nil, "let go (or the barnacle killed): they drop")
+    b:Remove() far:Remove()
+    p.valid = false
+end
+Nov24_BarnacleLiftTests()
+
+function Nov24_PumphouseWaterTests() -- (the owner, 24 November: "the pumphouse nearest a rebel zone allows or cuts that zone's water")
+    section("24 November: the pumphouse nearest a rebel territory is its water")
+    local T0 = Vector(-158000, -158000, 0)
+    local z = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(-500, -500, -16), maxs = T0 + Vector(500, 500, 192) })
+    local near = ents.Create("func_rotating") near:SetPos(T0 + Vector(2000, 0, 0)) near:SetName("lc_pump_wheel") near:Spawn()
+    local far = ents.Create("func_rotating") far:SetPos(T0 + Vector(9000, 0, 0)) far:SetName("lc_pump_wheel") far:Spawn()
+    local p = newPlayer("Thirsty", "resistance", nil, 200)
+    p:SetPos(T0)
+    ok(LC.WaterCut(T0) == false, "the pumps running: water")
+    hook.Run("AcceptInput", far, "Stop", p, p)
+    ok(LC.WaterCut(T0) == false, "a pumphouse further off stopped: still water")
+    hook.Run("AcceptInput", near, "Stop", p, p)
+    ok(LC.WaterCut(T0) == true and LC.NearSink(p) == false, "the nearest one stopped: no water on that rebel ground, and no bottle filled")
+    ok(LC.WaterCut(T0 + Vector(0, 3000, 0)) == false, "off rebel ground the taps still run")
+    hook.Run("AcceptInput", near, "Start", p, p)
+    ok(LC.WaterCut(T0) == false, "started again: water again")
+    hook.Run("AcceptInput", near, "Stop", p, p)
+    hook.Run("PostCleanupMap")
+    ok(LC.WaterCut(T0) == false, "the map cleaned up starts its pumps again")
+    LC.RemoveZone(z) near:Remove() far:Remove() p:Remove()
+end
+Nov24_PumphouseWaterTests()
+
+function Nov24_BaseVehicleTests() -- (the owner, 20 November: "each base has one vehicle available when the base is setup there")
+    section("24 November: the live base has one vehicle at the spot placed for it")
+    local V, B = LC.BaseVehicle, LC.Base
+    local T0 = Vector(-160000, -160000, 0)
+    local sWas, liveWas, waterWas = B.S, LC.BaseLive, LC.InWater
+    local zone = { kind = "rebel", pos = T0, r = 500 }
+    local wet = false
+    LC.InWater = function() return wet end
+    B.S = {}
+    LC.BaseLive = function() return B.S.state == "live" and zone or nil end
+    local near = LC.AddPoint(T0 + Vector(800, 0, 0), 90, "basevehicle", 0)
+    local far = LC.AddPoint(T0 + Vector(9000, 0, 0), 0, "basevehicle", 0)
+    V.Tick()
+    ok(not IsValid(V.ent), "no base: no vehicle")
+    B.S = { state = "live", zone = zone, pos = T0 }
+    V.Tick()
+    ok(IsValid(V.ent) and V.ent:GetClass() == "prop_vehicle_jeep" and V.ent:GetPos():Distance(near.pos) < 40, "the base live: a buggy at the spot nearest its flag",
+        IsValid(V.ent) and V.ent:GetClass())
+    local first = V.ent
+    V.Tick()
+    ok(V.ent == first, "one, not one more each time")
+    -- driven off and left: back at its spot after five minutes
+    first:SetPos(T0 + Vector(3000, 0, 0))
+    V.Tick()
+    ok(V.ent == first, "left somewhere: it stays there a while")
+    local driver = newPlayer("BaseDriver", "resistance", nil, 200)
+    first.GetDriver = function() return driver end
+    _run(310)
+    ok(V.ent == first, "someone at the wheel: it is theirs however long")
+    first.GetDriver = function() return nil end
+    _run(310)
+    ok(IsValid(V.ent) and V.ent ~= first and V.ent:GetPos():Distance(near.pos) < 40, "left empty five minutes: back at its spot")
+    -- the base gone: the vehicle goes with it, once nobody sits in it
+    local second = V.ent
+    second.GetDriver = function() return driver end
+    B.S = {}
+    V.Tick()
+    ok(V.ent == second, "the flag down with someone driving: they keep it until they get out")
+    second.GetDriver = function() return nil end
+    V.Tick()
+    ok(not IsValid(V.ent) and not IsValid(second), "empty: gone with the base")
+    -- a spot in water is the airboat's; a base out of reach of every spot has none
+    wet = true
+    B.S = { state = "live", zone = zone, pos = T0 }
+    V.Tick()
+    ok(IsValid(V.ent) and V.ent:GetClass() == "prop_vehicle_airboat", "a spot on water: the airboat", IsValid(V.ent) and V.ent:GetClass())
+    V.Remove()
+    B.S = { state = "live", zone = zone, pos = T0 + Vector(0, 30000, 0) }
+    V.Tick()
+    ok(not IsValid(V.ent), "a base with no spot within reach: none")
+    V.Remove()
+    LC.RemovePoint(near) LC.RemovePoint(far) driver:Remove()
+    B.S, LC.BaseLive, LC.InWater = sWas, liveWas, waterWas
+end
+Nov24_BaseVehicleTests()
+
+function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumpers keep them off ... which a saboteur can switch off")
+    section("24 November: antlions dig up at a stopped thumper's burrow")
+    local A = LC.Antlions
+    local T0 = Vector(-162000, -162000, 0)
+    local th = ents.Create("prop_thumper") th:SetPos(T0) th:SetName("lc_thumper_head") th:Spawn()
+    local burrow = ents.Create("info_target") burrow:SetPos(T0 + Vector(400, 0, 0)) burrow:SetName("lc_thumper_burrow") burrow:Spawn()
+    local p = newPlayer("Saboteur", "resistance", nil, 200)
+    p:SetPos(T0 + Vector(300, 300, 0))
+    local function Out() local n = 0 for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then n = n + 1 end end return n end
+    hook.Run("AcceptInput", th, "Enable", th, th)
+    _run(40)
+    ok(Out() == 0, "the thumper running: no antlions")
+    hook.Run("AcceptInput", th, "Disable", p, p)
+    _run(10)
+    ok(Out() == 0, "stopped: not at once")
+    _run(30)
+    ok(Out() == 2, "then they dig up at its burrow, two at a time", Out())
+    local near = true
+    for e in pairs(A.out) do if e:GetPos():Distance(burrow:GetPos()) > 60 then near = false end end
+    ok(near, "at the burrow's mouth")
+    for e in pairs(A.out) do e:SetHealth(0) end
+    _run(20)
+    ok(Out() == 2, "killed: the next two come", Out())
+    for e in pairs(A.out) do e:SetHealth(0) end
+    A.stopped[th].pool, A.stopped[th].regenAt = 0, CurTime() + 25
+    _run(10)
+    ok(Out() == 0, "the pool empty: a breather", Out())
+    _run(60)
+    ok(Out() >= 1, "lingering brings more", Out())
+    hook.Run("AcceptInput", th, "Enable", p, p)
+    local left = {}
+    for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then left[#left + 1] = e e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
+    _run(30)
+    ok(#left >= 1 and IsValid(left[1]), "started again: those out are left to the thumper for a minute")
+    _run(40)
+    ok(Out() == 0 and not IsValid(left[1]), "then they dig themselves away, and no more come", Out())
+    th:Remove() burrow:Remove() p:Remove()
+    A.stopped, A.out, A.startedAt = {}, {}, nil
+end
+Nov24_ThumperAntlionTests()
+
+function Nov24_CutLineTests() -- (the owner, 20 November: a wrecked line causes "a problem with supplies ... the combine need to go out and repair it")
+    section("24 November: a train line cut by a bomb costs the city its supplies until it is repaired")
+    _setcvar("lc_ledger", 1)
+    local s = LC.Ledger()
+    local was = { supply = s.supply, combine = s.combine, resistance = s.resistance, news = #s.news }
+    local wreckedWas = LC.TracksWrecked
+    s.supply, s.combine, s.resistance = 50, 50, 50
+    local cut = false
+    LC.TracksWrecked = function() return cut end
+    LC.LedgerTracksTick()
+    ok(s.supply == 50, "the lines whole: nothing lost")
+    cut = true
+    hook.Run("LivingCityTracksWrecked", "lc_train_test", Vector(), nil)
+    ok(s.supply == 46 and s.resistance == 52 and s.combine == 49, "cut: the load is lost at once", s.supply)
+    ok(string.find(s.news[#s.news] or "", "train line", 1, true) ~= nil, "and the bulletin says so")
+    LC.LedgerTracksTick() LC.LedgerTracksTick()
+    ok(s.supply == 44, "left wrecked: the stores keep running down", s.supply)
+    cut = false
+    hook.Run("LivingCityTracksRepaired", "lc_train_test", nil)
+    LC.LedgerTracksTick()
+    ok(s.supply == 44 and s.combine == 50, "repaired: it stops", s.supply)
+    LC.TracksWrecked = wreckedWas
+    s.supply, s.combine, s.resistance = was.supply, was.combine, was.resistance
+    while #s.news > was.news do table.remove(s.news) end
+end
+Nov24_CutLineTests()
 
 ----------------------------------------------------------------------
 section("Stop")

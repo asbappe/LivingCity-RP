@@ -56,6 +56,7 @@ LC.POINT_KINDS = {
     ladder = true, -- two with the same number: a ladder NPCs can use (sv_livingcity_navgraph.lua)
     zspawn = true, rspawn = true, colonel = true, -- infested and resistance respawn/spawn points
     rlookout = true, -- an armed rebel stands guard here (sv_livingcity_rebels.lua)
+    basevehicle = true, -- the live base's vehicle stands here: a buggy, or an airboat on water (sv_livingcity_basevehicle.lua)
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
     dream = true, -- where the shared dreams happen, out of the map (sv_livingcity_dreams.lua)

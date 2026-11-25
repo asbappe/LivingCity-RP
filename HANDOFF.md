@@ -17,7 +17,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 - Client smoke test, repo root: `python3 _dev/client_smoke.py` (must end `CLIENT SMOKE PASS`).
 - **The owner asked (2026-10-31) to test less:** compile-check changed files and run only the test section you touched; run the full suite only when they ask. Compile check: `from lupa import luajit21 as lupa`, then `loadstring` on the file.
-- **The run to trust is `python3 _dev/run_parallel.py`** (two minutes; every shard starts from a fresh city). Last run (2026-11-20): 8,701 passed, 2 failed, both passing alone (tests that fail now and then by what ran before them: `TODO.md`, end; on 20 November the maze dream and the prisoners test were fixed, and "Stop" is the last section again: anything added after it runs in every shard). The one-piece run (`cd _dev && timeout 6900 python3 run_tests.py tests.lua`) loads again but stops in `DreamGameTests` (tests.lua line 19504, a dream with no game) because of what earlier tests leave behind: `TODO.md`.
+- **The run to trust is `python3 _dev/run_parallel.py`** (four minutes; every shard starts from a fresh city; needs `pip install lupa`). Last run (2026-11-20): 8,701 passed, 2 failed, both passing alone (tests that fail now and then by what ran before them: `TODO.md`, end; on 20 November the maze dream and the prisoners test were fixed, and "Stop" is the last section again: anything added after it runs in every shard). The one-piece run (`cd _dev && timeout 6900 python3 run_tests.py tests.lua`) loads again but stops in `DreamGameTests` (tests.lua line 19504, a dream with no game) because of what earlier tests leave behind: `TODO.md`.
 - Full suite on every core: `python3 _dev/run_parallel.py` (a few minutes; same last line as `run_tests.py`; see `CLAUDE.md`, Testing).
 - The robot players: `python3 _dev/robots.py` (a minute and a half; must end `ROBOTS PASS`). The house rules: `python3 _dev/house_rules.py`. Both in `CLAUDE.md`, Testing.
 - One section only: `python3 _dev/run_section.py "part of the section name"` or `--unit NameTests` (see `CLAUDE.md`, Testing; the code map is `docs/dev/modules.md`). Gaps in the stub: there's no IN_ATTACK, so build key lists with pairs, not ipairs; no HSVToColor; `Entity()` returns nil in the smoke test and OBBMaxs defaults to (2,24,96).
@@ -31,21 +31,19 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 24 November (late): **the ring's walk map names its modules** on screen as you stand in each (`--test` chains only:
-  `name_sign`, map_modules.py). The owner is choosing modules to cut (cistern, chimney, crypt add the most).
-- 24 November: **the Resistance's town is off the map** (the owner: they "need to be more underground"), kept on the shelf:
-  map_town.py, town.txt and the ten modules in map_mods_b.py still build (the town byte for byte, slimmed that morning to
-  6,783 faces). ring.txt: its branch is `straight 512`, nothing else moved, ruins on its ground. Rest without the ring
-  ~44,200 faces; the town's share is free. Walled garden's plots (lc_garden_plot_N) on no map piece now.
-- 23 November (late, gamemode): **units fight again** (a leftover os.getenv crashed every chase; run_tests.py now fails on
-  Lua GMod lacks); **Overwatch answers raids** (LC.RaidOverwatch); flying dreams free of a short zone's top (LC.DreamTop);
-  sleepers lie on beds (no SetupBones); eyelids yield; intake one line, hands up, R no fists; bed tally; rain cover.
-- 23 November (lip sync): mouths move with the recordings (`_dev/tools/lipsync_bake.py`; LC.PreferWav). Not seen live yet.
-- 22 to 24 November: the canal ring (map_ring_walk.py): the owner compiled the Propper++ kit (35 models, models/lc/kit).
-  vbsp also limits unique vertices (65,536): their quick build stopped at 70,769. map_budget.py now estimates them; the
-  ring's test map needs the nodraw pass (36 min): 30,901 faces, ~56,678 vertices. Stitched map still over (TODO).
+- 24 November (the TODO run; the owner: "make judgement calls as needed"): built, none seen in the real game yet: barnacles
+  lift who they catch (sh_livingcity_barnacle.lua); the pumphouse nearest a rebel territory is its water; the live base's
+  vehicle (editor: "Point: Resistance base vehicle"; a buggy, an airboat on water); antlions at a stopped thumper's burrow;
+  a cut train line costs supplies. docs/features/wildlife.md, resistance-base.md, ieds.md. What waits for the owner's
+  word is the last line of TODO.md. Last full run (24 November): 9,262 passed, 1 failed (Nov21_CellsFullTests, passes alone).
+- 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is
+  `straight 512`. The ring was cut down after the owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md;
+  ring piece alone 31,115 faces). Left of their review: the drain, the railway to the station (TODO.md).
+- 22 to 25 November: the canal ring (map_ring_walk.py, ~22 min with the nodraw pass, which vbsp's vertex limit needs).
+  Propper++ kit: 43 pieces; the wall's 20 changed 25 Nov (no white panels, 4 piers, 3 looks): owner recompiles those.
+  Latest test map: 20,200 faces, ~39,913 vertices. Stitched map still over (TODO).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
-  Flaky in full runs, pass alone: "Fighting it pushes it back" (3), the dream bubbles, EndingTests, Lamarr (TODO.md).
+  Flaky in full runs, pass alone: the dream bubbles, EndingTests, Lamarr (TODO.md).
 - Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
   button launches (lc_rocket_launch), CCTV lc_bunker_cctv (map_launch.py). Generator changes go into the OWNER'S latest
   VMF: map_owner_delta.py (ground merged too), map_hidden_faces --brushes, then --holes. 24 Nov: 9 fixes sent (fixes2: areaportal leak fixed), 10,392 sides.

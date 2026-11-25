@@ -186,6 +186,18 @@ hook.Add("LivingCityIncarcerated", "LivingCityLedger", function(ply, secs, reaso
     end
 end)
 hook.Add("LivingCitySupplyEnded", "LivingCityLedger", function() Add("supply", 8, "A supply drop came in.") end)
+-- A train line cut by a bomb (sv_livingcity_ied.lua; the owner, 20 November: it causes "a problem with supplies ... the
+-- combine need to go out and repair it so they can continue receiving supplies"): the load is lost at once, and the
+-- city's stores run down for as long as the line lies wrecked. Half a supply drop to start with, a whole one an hour.
+hook.Add("LivingCityTracksWrecked", "LivingCityLedger", function()
+    Add("supply", -4, "A bomb cut a train line. Supplies are short until it is repaired.")
+    Add("resistance", 2, nil) Add("combine", -1, nil)
+end)
+hook.Add("LivingCityTracksRepaired", "LivingCityLedger", function() Add("combine", 1, "The train line is repaired.") end)
+function LC.LedgerTracksTick()
+    if LC.TracksWrecked and LC.TracksWrecked() then Add("supply", -1, nil) end
+end
+timer.Create("LivingCityLedgerTracks", 450, 0, function() LC.Try(LC.LedgerTracksTick) end)
 hook.Add("LivingCitySupplyLooted", "LivingCityLedger", function() Add("supply", -2, nil) Add("resistance", 1, "Looters got into the supply drop.") end)
 hook.Add("OnNPCKilled", "LivingCityLedger", function(npc, attacker)
     local st = LC.NPCs and LC.NPCs[npc]

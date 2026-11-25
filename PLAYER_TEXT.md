@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version af2317a. Admin-only console messages and log lines are left out.
+Made from version 427dfeb. Admin-only console messages and log lines are left out.
 
 13562 lines, from 393 files.
 
@@ -1113,7 +1113,7 @@ Made from version af2317a. Admin-only console messages and log lines are left ou
 - "Hunger and thirst appear at the top left once they get low, and briefly after you eat or drink."  (text, line 89)
 - "Staying alive"  (text, line 91)
 - "Eat and drink. Ration dispensers and the ration line give you food; the Commissary (a terminal) sells everything else."  (text, line 92)
-- "Walk into water and press E to drink, but boil it first if you can (on a stove or fire, from F3). To use a sink, stand close and look right at it, with nothing in the way."  (text, line 93)
+- "Walk into water and press E to drink, but boil it first if you can (on a stove or fire, from F3). To use a sink, stand close and look right at it, with nothing in the way. On rebel ground the taps run only while the nearest pumphouse does."  (text, line 93)
 - "Parasites (coughing, hunger, thirst) never go away on their own: antiparasitic tablets from a medic or the black market cure them."  (text, line 94)
 - "Parasites also mean you'll need the toilet (press E on one). Ignore it and you soil yourself: then you need a toilet, a wash (bathtub or shower) and clean clothes, or people back away from the smell."  (text, line 95)
 - "Sleep once a day: press E on a bed at night. Without sleep you get drowsy, can't run and are weaker. A good night's sleep leaves you well rested."  (text, line 96)
@@ -1234,7 +1234,7 @@ Made from version af2317a. Admin-only console messages and log lines are left ou
 - "Press E on bins, dumpsters and fridges to search them: scrap, rags, chemicals, tins, seeds, sometimes gun parts."  (text, line 215)
 - "Fishing line (from the Commissary): stand in the canal or look at it, choose Fish in F3, and keep still: a cast takes up to 45 seconds, and most come up empty. Cook what you catch."  (text, line 216)
 - "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. Looking at it, F1 > Donate food to the crate adds to it. A walled garden's soil takes seeds too: melons and pumpkins."  (text, line 217)
-- "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. The Combine find it only through people: keep it quiet."  (text, line 218)
+- "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. A buggy or an airboat may stand ready near it. The Combine find it only through people: keep it quiet."  (text, line 218)
 - "While the headquarters stands, now and then a courier on the road or a boat up the canal brings food and rounds to its crate: the Resistance can escort him (F4), Civil Protection stop him (F4)."  (text, line 219)
 - "The Advisor screen in your office (E, or F2 > City orders > The Advisors): ask them for troops, supplies or more units, and report to them every third night; try their patience and they cut rations, then send an officer to watch you, then replace you."  (text, line 220)
 - "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Each of you can take one tin every 15 minutes. Look at the crate to see what's in it and when more is due."  (text, line 221)
@@ -9128,55 +9128,55 @@ Made from version af2317a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: restore backup
 
-- "No such backup. lc_backups lists them."  (text, line 192)
-- "That backup can't be read."  (text, line 194)
+- "No such backup. lc_backups lists them."  (text, line 193)
+- "That backup can't be read."  (text, line 195)
 
 > Note for you (not shown in game): Takes the jogging routes out of LC.Points (unless lc_jog is 1). The first stop of each route becomes an exercise yard where there is none within 400 units. How many stops were taken out.
 
-- "before the jogging routes were removed"  (text, line 255)
+- "before the jogging routes were removed"  (text, line 256)
 
 > Note for you (not shown in game): The morning jog is archived (lc_jog 0: sv_livingcity_exercise.lua): its routes come out of the layout, and each route's start stays as an exercise yard (unless a yard is already there), so the morning drill gathers where the jog used to. A backup of the layout is kept first.
 
-- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 334)
+- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 335)
 
 > Note for you (not shown in game): part of: add map zones
 
-- "%s on %s names no kind of zone the editor places (%s): left out"  (message, line 577)
-- "The map's marker %s brought a %s zone (%s)."  (message, line 597)
-- "a box %d wide, %d tall"  (message, line 598)
+- "%s on %s names no kind of zone the editor places (%s): left out"  (message, line 578)
+- "The map's marker %s brought a %s zone (%s)."  (message, line 598)
+- "a box %d wide, %d tall"  (message, line 599)
 
 > Note for you (not shown in game): the console command lc_reload
 
-- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 643)
+- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 644)
 
 > Note for you (not shown in game): the console command lc_backup
 
-- "[Miscount] Backed up the layout as {name}."  (text, line 653)
-- "[Miscount] Nothing to back up yet."  (text, line 653)
+- "[Miscount] Backed up the layout as {name}."  (text, line 654)
+- "[Miscount] Nothing to back up yet."  (text, line 654)
 
 > Note for you (not shown in game): the console command lc_backups
 
-- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 659)
-- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 661)
+- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 660)
+- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 662)
 
 > Note for you (not shown in game): the console command lc_restore
 
-- "[Miscount] Restored {what}."  (text, line 667)
-- "[Miscount] {what}"  (text, line 667)
+- "[Miscount] Restored {what}."  (text, line 668)
+- "[Miscount] {what}"  (text, line 668)
 
 > Note for you (not shown in game): the console command lc_autolink
 
-- "[Miscount] Made %d new links.%s"  (message, line 682)
-- "%d nodes still have no links (shown in red)."  (message, line 683)
+- "[Miscount] Made %d new links.%s"  (message, line 683)
+- "%d nodes still have no links (shown in red)."  (message, line 684)
 
 > Note for you (not shown in game): the console command lc_goto_layout
 
-- "[Miscount] None of those on this map."  (chat message, line 717)
-- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 722)
+- "[Miscount] None of those on this map."  (chat message, line 718)
+- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 723)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
-- "%s set %s to %s"  (message, line 759)
+- "%s set %s to %s"  (message, line 760)
 
 ## the map's own lights, by the hour and by the dream (sv_livingcity_daylight.lua)
 
@@ -14238,88 +14238,88 @@ Made from version af2317a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's living city collapse over moment
 
-- "The Administrator has fallen.{or}"  (text, line 214)
-- "The uprising is crushed. A week of crackdowns in every district."  (text, line 218)
+- "The Administrator has fallen.{or}"  (text, line 226)
+- "The uprising is crushed. A week of crackdowns in every district."  (text, line 230)
 
 > Note for you (not shown in game): Words for a number.
 
-- "very high"  (text, line 247)
-- "very low"  (text, line 249)
+- "very high"  (text, line 259)
+- "very low"  (text, line 261)
 
 > Note for you (not shown in game): part of: ledger lines
 
-- "the Resistance's"  (text, line 260)
-- "the Combine's"  (text, line 260)
-- "(under a crackdown)"  (text, line 261)
+- "the Resistance's"  (text, line 272)
+- "the Combine's"  (text, line 272)
+- "(under a crackdown)"  (text, line 273)
 
 > Note for you (not shown in game): part of: bulletin
 
-- "City Bulletin, day %d."  (message, line 267)
-- "Supply %s. Morale %s."  (message, line 269)
-- "Under a crackdown: {crack}."  (text, line 274)
-- "[City Bulletin] {text}"  (chat message, line 280)
+- "City Bulletin, day %d."  (message, line 279)
+- "Supply %s. Morale %s."  (message, line 281)
+- "Under a crackdown: {crack}."  (text, line 286)
+- "[City Bulletin] {text}"  (chat message, line 292)
 
 > Note for you (not shown in game): the liberation ends: the Combine come back for it (on the next morning someone's here to see it)
 
-- "is the Combine's to retake. Civil Protection moves in."  (text, line 297)
+- "is the Combine's to retake. Civil Protection moves in."  (text, line 309)
 
 > Note for you (not shown in game): The days the city missed while the server was empty (up to a week), drifted through quietly.
 
-- "%d day%s passed while the streets were quiet."  (message, line 316)
+- "%d day%s passed while the streets were quiet."  (message, line 328)
 
 > Note for you (not shown in game): part of: go to speech stand
 
-- "Only the City Administrator speaks from the stand."  (text, line 349)
-- "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)"  (text, line 351)
-- "[The office] You're at the speech stand. F2 > Speak to the city > Give a speech, when you're ready."  (chat message, line 354)
+- "Only the City Administrator speaks from the stand."  (text, line 361)
+- "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)"  (text, line 363)
+- "[The office] You're at the speech stand. F2 > Speak to the city > Give a speech, when you're ready."  (chat message, line 366)
 
 > Note for you (not shown in game): Her words to the city: on the screens and in chat, the crowd's cheer, and what it does to the numbers. by: the player Administrator, or nil (the city's own, sv_livingcity_speech.lua). at: where she spoke.
 
-- "The City Administrator"  (text, line 363)
-- "[The City Administrator, from the stand] {text}"  (chat message, line 367)
+- "The City Administrator"  (text, line 375)
+- "[The City Administrator, from the stand] {text}"  (chat message, line 379)
 
 > Note for you (not shown in game): part of: deliver
 
-- "heard the Administrator speak"  (text, line 372)
-- "%s addressed the city%s."  (message, line 377)
-- "before a crowd of {heard}"  (text, line 377)
+- "heard the Administrator speak"  (text, line 384)
+- "%s addressed the city%s."  (message, line 389)
+- "before a crowd of {heard}"  (text, line 389)
 
 > Note for you (not shown in game): part of: give speech
 
-- "Only the City Administrator gives speeches."  (text, line 383)
-- "You've spoken to the city today. Tomorrow."  (text, line 385)
+- "Only the City Administrator gives speeches."  (text, line 395)
+- "You've spoken to the city today. Tomorrow."  (text, line 397)
 
 > Note for you (not shown in game): (no words written: she speaks into her microphone, and the whole city hears it; the owner, 16 November: "most of the human players would have a microphone and use that instead of typing". Writing it is the other way.)
 
-- "Say something to the city (at least a sentence)."  (text, line 390)
+- "Say something to the city (at least a sentence)."  (text, line 402)
 
 > Note for you (not shown in game): part of: give speech
 
-- "Speak from the speech stand: F2 > Speak to the city > Go to the speech stand."  (text, line 400)
+- "Speak from the speech stand: F2 > Speak to the city > Go to the speech stand."  (text, line 412)
 
 > Note for you (not shown in game): part of: amnesty
 
-- "Only the City Administrator grants an amnesty."  (text, line 408)
-- "One amnesty a day."  (text, line 410)
-- "The Administrator declared an amnesty{or}."  (text, line 417)
-- "[The City Administrator] An amnesty: the wanted are forgiven. Do not make the city regret it."  (chat message, line 418)
+- "Only the City Administrator grants an amnesty."  (text, line 420)
+- "One amnesty a day."  (text, line 422)
+- "The Administrator declared an amnesty{or}."  (text, line 429)
+- "[The City Administrator] An amnesty: the wanted are forgiven. Do not make the city regret it."  (chat message, line 430)
 
 > Note for you (not shown in game): part of: crackdown
 
-- "Only the City Administrator orders a crackdown."  (text, line 424)
-- "Which district?"  (text, line 426)
-- "A crackdown on {block}."  (text, line 431)
-- "[The City Administrator] A crackdown on {block}. Residents: cooperate."  (chat message, line 433)
+- "Only the City Administrator orders a crackdown."  (text, line 436)
+- "Which district?"  (text, line 438)
+- "A crackdown on {block}."  (text, line 443)
+- "[The City Administrator] A crackdown on {block}. Residents: cooperate."  (chat message, line 445)
 
 > Note for you (not shown in game): part of: extra rations
 
-- "Only the City Administrator orders extra rations."  (text, line 439)
-- "The stores are too low for extra rations."  (text, line 441)
-- "The Administrator ordered extra rations."  (text, line 443)
+- "Only the City Administrator orders extra rations."  (text, line 451)
+- "The stores are too low for extra rations."  (text, line 453)
+- "The Administrator ordered extra rations."  (text, line 455)
 
 > Note for you (not shown in game): typing in chat
 
-- "[The office] {why}"  (chat message, line 519)
+- "[The office] {why}"  (chat message, line 531)
 
 ## the state of the city, phase two (the owner, 10 November: (sv_livingcity_ledger2.lua)
 
@@ -14928,7 +14928,7 @@ Made from version af2317a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_voice_replaced
 
-- "[Miscount] {msg}"  (chat message, line 624)
+- "[Miscount] {msg}"  (chat message, line 626)
 
 ## Resistance lookouts (sv_livingcity_lookouts.lua)
 
@@ -24613,110 +24613,110 @@ Made from version af2317a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: inv action
 
-- "Your hands are cuffed."  (chat message, line 669)
-- "You need to be standing in water."  (chat message, line 695)
-- "You can't eat that."  (chat message, line 701)
-- "Cooking won't help that."  (chat message, line 705)
-- "You need a stove or a fire."  (chat message, line 706)
+- "Your hands are cuffed."  (chat message, line 670)
+- "You need to be standing in water."  (chat message, line 696)
+- "You can't eat that."  (chat message, line 702)
+- "Cooking won't help that."  (chat message, line 706)
+- "You need a stove or a fire."  (chat message, line 707)
 
 > Note for you (not shown in game): a crackle and sizzle (the ignite sound was a small bang). Half-Life 2's fire sounds loop forever, so it's stopped after a moment (it used to keep crackling wherever you went)
 
-- "becomes {name}."  (chat message, line 714)
-- "Stand by water, or a sink, to fill it."  (chat message, line 718)
+- "becomes {name}."  (chat message, line 715)
+- "Stand by water, or a sink, to fill it."  (chat message, line 719)
 
 > Note for you (not shown in game): the tap running into it (a splash was too loud for a sink); dipped in water, a soft slosh
 
-- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 725)
-- "That's Combine issue: it stays with you (or another unit)."  (text, line 726)
+- "[Papers] You keep your papers on you. (Stash them at home if you must.)"  (chat message, line 726)
+- "That's Combine issue: it stays with you (or another unit)."  (text, line 727)
 
 > Note for you (not shown in game): pressing E on something
 
-- "Picked up: {name}"  (chat message, line 808)
-- "Your pockets are full."  (chat message, line 810)
+- "Picked up: {name}"  (chat message, line 809)
+- "Your pockets are full."  (chat message, line 811)
 
 > Note for you (not shown in game): the game's physgun drop moment
 
-- "[Miscount] Moved: the {kind} is saved where you put it."  (chat message, line 1197)
+- "[Miscount] Moved: the {kind} is saved where you put it."  (chat message, line 1198)
 
 > Note for you (not shown in game): part of: use vending
 
-- "[Vending] Insert {price} credits."  (text, line 1213)
-- "[Vending] Insert {price} credits."  (chat message, line 1213)
+- "[Vending] Insert {price} credits."  (text, line 1214)
+- "[Vending] Insert {price} credits."  (chat message, line 1214)
 
 > Note for you (not shown in game): part of: use static vending
 
-- "[Vending] Insert {price} credits."  (text, line 1260)
-- "[Vending] Insert {price} credits."  (chat message, line 1260)
+- "[Vending] Insert {price} credits."  (text, line 1261)
+- "[Vending] Insert {price} credits."  (chat message, line 1261)
 
 > Note for you (not shown in game): part of: use fixture
 
-- "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove."  (chat message, line 1281)
-- "[Stove] Cook from your pockets (F3)."  (chat message, line 1281)
-- "[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink."  (chat message, line 1285)
+- "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove."  (chat message, line 1286)
+- "[Stove] Cook from your pockets (F3)."  (chat message, line 1286)
+- "[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink."  (chat message, line 1290)
 
 > Note for you (not shown in game): part of: dispense
 
-- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1354)
-- "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet."  (chat message, line 1355)
+- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1359)
+- "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet."  (chat message, line 1360)
 
 > Note for you (not shown in game): Hacking them (the multitool): a vending machine spits out its water, a ration dispenser its packets (5 to 8 of them), no credits and no coupon. Ten seconds, keep still; a unit who sees you at it makes you wanted. Then it's empty for lc_machine_hack_cooldown minutes (10).
 
-- "the vending machine"  (text, line 1366)
-- "the ration dispenser"  (text, line 1366)
-- "Aim at a vending machine or a ration dispenser."  (text, line 1369)
-- "You need a multitool to get into it."  (text, line 1370)
-- "You're busy."  (text, line 1371)
-- "It's dead: no power. Nothing to get out of it."  (text, line 1372)
+- "the vending machine"  (text, line 1371)
+- "the ration dispenser"  (text, line 1371)
+- "Aim at a vending machine or a ration dispenser."  (text, line 1374)
+- "You need a multitool to get into it."  (text, line 1375)
+- "You're busy."  (text, line 1376)
+- "It's dead: no power. Nothing to get out of it."  (text, line 1377)
 
 > Note for you (not shown in game): part of: hack machine
 
-- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1375)
-- "Hacking {name}... keep still"  (progress bar, line 1379)
-- "You leave it."  (text, line 1380)
+- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1380)
+- "Hacking {name}... keep still"  (progress bar, line 1384)
+- "You leave it."  (text, line 1385)
 
 > Note for you (not shown in game): part of: done
 
-- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1401)
-- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1402)
-- "Tampering with Union property"  (text, line 1404)
-- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1405)
+- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1406)
+- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1407)
+- "Tampering with Union property"  (text, line 1409)
+- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1410)
 
 > Note for you (not shown in game): a unit's ration voucher (their duty allocation, sv_livingcity_cp.lua): a packet, no card and no wait
 
-- "[Rations] Voucher accepted."  (chat message, line 1420)
+- "[Rations] Voucher accepted."  (chat message, line 1425)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one."  (text, line 1428)
-- "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."  (text, line 1430)
-- "[Rations] Your ration privileges have been suspended."  (text, line 1432)
-- "[Rations] Next allocation in %d seconds."  (message, line 1434)
+- "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one."  (text, line 1433)
+- "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."  (text, line 1435)
+- "[Rations] Your ration privileges have been suspended."  (text, line 1437)
+- "[Rations] Next allocation in %d seconds."  (message, line 1439)
 
 > Note for you (not shown in game): a reprimand (skipping morning exercise: sv_livingcity_exercise.lua): this one allocation
 
-- "[Rations] Allocation withheld: {why}. Your next allocation is as normal."  (text, line 1440)
+- "[Rations] Allocation withheld: {why}. Your next allocation is as normal."  (text, line 1445)
 
 > Note for you (not shown in game): the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua). (A new life's first ration is docked like any other: the owner, 7 November, said no to skipping it.)
 
-- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1448)
+- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1453)
 
 > Note for you (not shown in game): the city's stores (sv_livingcity_stockpile.lua): empty, nothing; low, sometimes nothing
 
-- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1455)
-- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1458)
+- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1460)
+- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1463)
 
 > Note for you (not shown in game): a forged card: no questions, usually
 
-- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1467)
-- "Ration fraud"  (text, line 1468)
+- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1472)
+- "Ration fraud"  (text, line 1473)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] Card accepted."  (chat message, line 1471)
+- "[Rations] Card accepted."  (chat message, line 1476)
 
 > Note for you (not shown in game): part of: serve players at line
 
-- "[Rations] Wait at the counter."  (chat message, line 1516)
+- "[Rations] Wait at the counter."  (chat message, line 1521)
 
 ## Realistic or Relaxed survival, chosen per character (sv_livingcity_survivalmode.lua)
 

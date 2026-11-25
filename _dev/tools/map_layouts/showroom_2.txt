@@ -1,4 +1,4 @@
-# Test map 2: quay, collapse, boathouse, arcade, crypt, lift, barge, shell, aqueduct, pipes
+# Test map 2: quay, collapse, boathouse, crypt, barge, shell, aqueduct, pipes
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_2.txt --test
 
@@ -9,14 +9,12 @@ rim 784
 quay
 collapse
 boathouse
-arcade
 crypt
 
 left
 straight 2752
 left
 
-lift
 barge
 shell
 aqueduct

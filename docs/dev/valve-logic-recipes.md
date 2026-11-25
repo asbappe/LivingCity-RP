@@ -137,7 +137,7 @@ Common to most maps (18 or more of 23): trigger_once, trigger_multiple, trigger_
 
 ## What Valve settles among our "Unchecked" notes
 
-- func_rot_button: axis by spawnflag 64 (x) or 128 (y), use 1024, not solid 1: as lc_stash_valve does.
+- func_rot_button: axis by spawnflag 64 (x) or 128 (y), use 1024, not solid 1 (lc_stash_valve was one until 24 November: now a wheel prop on a momentary_rot_button, map_wiring.wheel).
 - func_rotating: `maxspeed` (100 wheels, 350 beacon, 2750 fans), `fanfriction` 20, axis 4 (x) or 8 (y), 64 not solid, 2 reverse, 16 speeds up and down; inputs Start, Stop, StartForward, StopAtStartPos, Toggle.
 - prop_thumper: `model` props_combine/CombineThumper001a.mdl, `dustscale` 256, inputs Enable and Disable (d2_coast_12 thumper_1). No OnThumped in these maps (stays unchecked).
 - func_tracktrain: `startspeed` 500 to 800, `speed` 0, `orientationtype` 1, `height` 4, `wheels` 50, `bank` 0, `volume` 10, `spawnflags` 11 or 3, `movesound` / `stopsound` scripts; inputs SetSpeed, Stop, StartForward, Resume; path_track `OnPass` (Stop, SetSpeed, StartShake, PlaySound), the last one stops the train (d1_town_03 streettram_path_08). Train sounds are scripts (razortrain_wheels 16, razortrain_horn 49), not .wav.

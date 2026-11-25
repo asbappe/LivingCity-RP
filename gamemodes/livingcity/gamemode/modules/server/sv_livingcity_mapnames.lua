@@ -10,6 +10,10 @@
                            hum, puts out its lamps, throws sparks): the district's transformer goes
                            down with it (sv_livingcity_power.lua), as a sabotage would, by whoever
                            broke the panel.
+      lc_pump_wheel        the pumphouse's flywheel (Start, Stop: the button on its desk). The pumphouse
+                           nearest a rebel territory is that territory's water (the owner, 24 November):
+                           while its pumps stand, no sink, toilet or bath there works. Anyone can press
+                           the button, to cut it or to bring it back.
     (The walled garden's lc_garden_plot_N: sv_livingcity_garden.lua.)
 ]]
 
@@ -54,8 +58,47 @@ function LC.SubstationCut(relay, by)
     return LC.TransformerDown(t, IsValid(by) and by:IsPlayer() and by or nil, "substation")
 end
 
+-- The pumphouses: which stand still (the map starts them running, and starts them again when it is cleaned up).
+M.pumpsOff = M.pumpsOff or {}
+hook.Add("PostCleanupMap", "LivingCityMapPumps", function() M.pumpsOff = {} end)
+
+function LC.PumpSet(wheel, running)
+    if not IsValid(wheel) then return false end
+    M.pumpsOff[wheel] = (not running) or nil
+    hook.Run("LivingCityPump", wheel, running and true or false)
+    return true
+end
+
+-- Is the water off at pos? Only on rebel ground, and only when the pumphouse nearest that territory stands still.
+function LC.WaterCut(pos)
+    if not next(M.pumpsOff) or not LC.RebelZoneAt then return false end
+    local z = LC.RebelZoneAt(pos, 0)
+    if not z then return false end
+    local best, bd
+    for _, w in ipairs(ents.FindByName("lc_pump_wheel")) do
+        if IsValid(w) then
+            local d = w:GetPos():DistToSqr(z.pos)
+            if not bd or d < bd then best, bd = w, d end
+        end
+    end
+    return best ~= nil and M.pumpsOff[best] == true
+end
+
+-- A dry tap: a knock in the pipes and one drip. No words (house rule 10: the world shows it).
+function LC.WaterDry(ply)
+    if not IsValid(ply) then return end
+    ply:EmitSound("physics/metal/metal_solid_impact_soft" .. math.random(1, 3) .. ".wav", 55, 70)
+    ply:EmitSound("ambient/water/drip" .. math.random(1, 4) .. ".wav", 60, 80)
+end
+
 hook.Add("AcceptInput", "LivingCityMapNames", function(ent, input, activator, caller)
-    if not IsValid(ent) or string.lower(input or "") ~= "trigger" then return end
+    if not IsValid(ent) then return end
+    local what = string.lower(input or "")
+    if (what == "start" or what == "stop") and (ent.GetName and ent:GetName() or "") == "lc_pump_wheel" then
+        LC.Try(LC.PumpSet, ent, what == "start")
+        return
+    end
+    if what ~= "trigger" then return end
     if (ent.GetName and ent:GetName() or "") ~= "lc_substation_cut" then return end
     local by = (IsValid(activator) and activator:IsPlayer() and activator) or (IsValid(caller) and caller:IsPlayer() and caller) or nil
     LC.Try(LC.SubstationCut, ent, by)

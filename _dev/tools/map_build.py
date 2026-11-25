@@ -155,7 +155,7 @@ def dress_keys(model, x, y, keys):
     return k
 
 
-WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight", "missile_doors", "freightelevatorbutton", "control_lever", "trappropeller_lever",
+WAY_EXEMPT = ("canal_bars002", "struts_tunnel", "struts_wall", "light_cagelight", "missile_doors", "freightelevatorbutton", "control_lever", "trappropeller_lever",
               "models/lc/kit/lc_cwall")     # (arches over the way, their middle open; lamps hung overhead; Silo 2's leaves, the bunker door's, which slide out of the way and stand rolled upright and scaled, past what this box can turn; the Combine wall's models, map_corridor.combine_wall, standing on its core where its brushes stood, a player clip their collision)
 
 
@@ -708,6 +708,10 @@ class Vmf:
             if spot is not None and tuple(spot) != tuple(pos):
                 self.nudged.append((str(keys["model"]), tuple(pos), tuple(spot)))
                 pos = (round(spot[0]), round(spot[1]), pos[2])
+        if cls == "prop_static" and keys and str(keys.get("solid", "6")) == "6" and keys.get("model"):
+            import map_assets      # (a model with no collision as solid 6: the game warns "SOLID_VPHYSICS static prop with no
+            if map_assets.collides(str(keys["model"])) is False:      # vphysics model!", the owner's log, 25 November)
+                keys = dict(keys, solid="0")
         if not outside:
             self.points.append((cls, tuple(pos)))
             if cls.startswith("prop") and keys and keys.get("model"):
@@ -1032,6 +1036,13 @@ def prism(profile, axis, a, b, mat, end_mat=None):
     return faces
 
 
+def hexagon(c, up, r):
+    """A flat round hole's outline with six corners (two fewer than octagon's: fewer sides and vertices), r to its
+    corners left and right, 0.866 r to its flat top and bottom."""
+    k, h = int(round(r * 0.5)), int(round(r * 0.866))
+    return [(c + r, up), (c + k, up + h), (c - k, up + h), (c - r, up), (c - k, up - h), (c + k, up - h)]
+
+
 def octagon(c, up, r):
     """A pipe's outline: eight corners on the grid, about r from the middle (c across, up)."""
     k = int(round(r * 0.4))
@@ -1081,9 +1092,34 @@ def bar_row(box, along, gap=24):
     return out
 
 
+BAR_PANEL = ("models/props_canal/canal_bars002.mdl", 128, 124)      # (Half-Life 2's canal bars: a panel 128 wide, 124 high, 7 thick, its origin at its middle)
+
+
+def bar_props(vmf, slab, along, vis):
+    """The bars across an opening as Valve's own panels, one prop each, in place of a brush for every bar (the owner,
+    24 November: "all the brush grates over any entrance that is blocked in the canals is using up tons of brushes when
+    there are props that can do the same"). The panels are spread evenly over the slab, overlapping where it is not a
+    whole number of them. False (nothing placed) where the opening is smaller than one panel: brush bars there."""
+    model, wide, high = BAR_PANEL
+    x1, y1, z1, x2, y2, z2 = slab
+    lo, hi = (x1, x2) if along == "x" else (y1, y2)
+    if hi - lo < wide or z2 - z1 < high:
+        return False
+    cols, rows = -(-(hi - lo) // wide), -(-(z2 - z1) // high)
+    for r in range(rows):
+        z = z1 + high / 2 + (r * (z2 - z1 - high) / (rows - 1) if rows > 1 else (z2 - z1 - high) / 2)
+        for k in range(cols):
+            p = lo + wide / 2 + (k * (hi - lo - wide) / (cols - 1) if cols > 1 else (hi - lo - wide) / 2)
+            pos = (round(p), (y1 + y2) // 2, round(z)) if along == "x" else ((x1 + x2) // 2, round(p), round(z))
+            vmf.point("prop_static", pos, {"model": model, "angles": "0 %d 0" % (90 if along == "x" else 0), "skin": "0", "solid": "6", "disableshadows": "1",
+                                           "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+    return True
+
+
 def barred(vmf, slab, along, vis, back=None):
     """A row of bars nobody can get through (an unseen wall for players stands in the same place), and the black behind them."""
-    vmf.detail(bar_row(slab, along), MAT["bars"], vis=vis)
+    if not bar_props(vmf, slab, along, vis):
+        vmf.detail(bar_row(slab, along), MAT["bars"], vis=vis)
     c = MAT["clip"]
     vmf.world_box(slab, c, c, c, vis=vis, seals=False)
     if back:
@@ -1281,6 +1317,29 @@ def drop_useless_portals(vmf, stoppers):
             if box in vmf.portals:
                 vmf.portals.remove(box)
             notes.append("an areaportal at (%d %d %d) taken out: it parted nothing (the street or the backdrop opened a way round it)" % tuple((box[a] + box[a + 3]) // 2 for a in range(3)))
+    return notes
+
+
+
+def lift_ladder_feet(vmf):
+    """A ladder's foot that stands in something low under it (a deck's boards, a kerb, a few units proud of the floor) is
+    raised onto it, 4 above its top: a player's box at the foot must touch nothing, or the game says "funcladder with
+    blocked bottom point ... stuck in" (the owner's log, 25 November). Returns notes."""
+    notes = []
+    for i, e in enumerate(vmf.ents):
+        if '"classname" "func_useableladder"' not in e:
+            continue
+        m = re.search(r'"point0" "(-?\d+) (-?\d+) (-?\d+)"', e)
+        if not m:
+            continue
+        x, y, z = (int(m.group(k)) for k in (1, 2, 3))
+        top = z
+        for b, _ in vmf.boxes:
+            if b[0] < x + 16 and b[3] > x - 16 and b[1] < y + 16 and b[4] > y - 16 and b[2] < z and z <= b[5] <= z + 20:
+                top = max(top, b[5] + 4)
+        if top != z:
+            vmf.ents[i] = e.replace(m.group(0), '"point0" "%d %d %d"' % (x, y, top))
+            notes.append("a ladder's foot at (%d %d %d) raised %d onto what stands under it" % (x, y, z, top - z))
     return notes
 
 

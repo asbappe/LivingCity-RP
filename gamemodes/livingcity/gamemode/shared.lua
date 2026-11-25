@@ -50,6 +50,7 @@ LC_MODULES = {
         "sh_livingcity_illness",
         "sh_livingcity_zones",
         "sh_livingcity_turret", -- (the Combine's mounted gun on its barricade: manned from behind with E; entities/lc_turret.lua)
+        "sh_livingcity_barnacle", -- (a barnacle lifts the player it has caught: the game alone does not on a server)
     },
     server = {
         "sv_livingcity_perf", -- (first of the server modules: every timer after it is timed and staggered)
@@ -300,6 +301,8 @@ LC_MODULES = {
         "sv_livingcity_advisors", -- (the Advisor screens: the Administrator asks the Advisors for troops, supplies or units, and reports to them every third night)
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
         "sv_livingcity_idlelife", -- (citizens' idle life as Valve directs it: a pose for each idle spot, moments started where a player looks, a crowd that looks instead of chatting)
+        "sv_livingcity_antlions", -- (antlions dig up at a stopped thumper's burrow, where a map has the thumper module)
+        "sv_livingcity_basevehicle", -- (the live base's one vehicle: a buggy, or an airboat on water, at the spot placed for it)
         "sv_livingcity_hq", -- (the HQ's later stages: what only it does, what the Combine know of it, the raid, a ransack's papers; last, after the Inform list it adds to)
     },
     client = {

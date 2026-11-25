@@ -90,7 +90,7 @@ local GUIDE = {
     } },
     { "Staying alive", {
         "Eat and drink. Ration dispensers and the ration line give you food; the Commissary (a terminal) sells everything else.",
-        "Walk into water and press E to drink, but boil it first if you can (on a stove or fire, from F3). To use a sink, stand close and look right at it, with nothing in the way.",
+        "Walk into water and press E to drink, but boil it first if you can (on a stove or fire, from F3). To use a sink, stand close and look right at it, with nothing in the way. On rebel ground the taps run only while the nearest pumphouse does.",
         "Parasites (coughing, hunger, thirst) never go away on their own: antiparasitic tablets from a medic or the black market cure them.",
         "Parasites also mean you'll need the toilet (press E on one). Ignore it and you soil yourself: then you need a toilet, a wash (bathtub or shower) and clean clothes, or people back away from the smell.",
         "Sleep once a day: press E on a bed at night. Without sleep you get drowsy, can't run and are weaker. A good night's sleep leaves you well rested.",
@@ -215,7 +215,7 @@ local GUIDE = {
         "Press E on bins, dumpsters and fridges to search them: scrap, rags, chemicals, tins, seeds, sometimes gun parts.",
         "Fishing line (from the Commissary): stand in the canal or look at it, choose Fish in F3, and keep still: a cast takes up to 45 seconds, and most come up empty. Cook what you catch.",
         "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. Looking at it, F1 > Donate food to the crate adds to it. A walled garden's soil takes seeds too: melons and pumpkins.",
-        "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. The Combine find it only through people: keep it quiet.",
+        "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. A buggy or an airboat may stand ready near it. The Combine find it only through people: keep it quiet.",
         "While the headquarters stands, now and then a courier on the road or a boat up the canal brings food and rounds to its crate: the Resistance can escort him (F4), Civil Protection stop him (F4).",
         "The Advisor screen in your office (E, or F2 > City orders > The Advisors): ask them for troops, supplies or more units, and report to them every third night; try their patience and they cut rations, then send an officer to watch you, then replace you.",
         "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Each of you can take one tin every 15 minutes. Look at the crate to see what's in it and when more is due.",

@@ -3932,6 +3932,15 @@ A sliding brush door carries whoever touches it along its whole move. Move it aw
 - **Checked by:** by eye: the door's move points away from its button
 - **Tags:** doors, owner
 
+### Repeated small things eat the compiler's limits: props, and the fewest corners (`owner-budget-props-over-brushes`)
+
+Anything repeated along the canal or the street (bars over a blocked opening, a fence, a railing, a pipe stub, a valve) is a prop, never a brush per bar or post: brushes spend vbsp's faces and vertices (65,536 each), props spend neither. Where a round hole must be a brush, six corners, not eight. Before adding a module to the ring, weigh it: build it alone and compare map_budget.py's line with a plain straight of the same length.
+
+- **Why:** The owner, 24 November, after the ring hit vbsp's brush face limit and then its vertex limit: "all the brush grates over any entrance that is blocked in the canals is using up tons of brushes when there are props that can do the same", "octagons or some brush wasting shape when they could just be a hexagon and save on vertices and brushes", "what if we replaced the fence/railing between the railroad and the canal with props?", "the stash valve needs to be replaced with a prop".
+- **How:** map_build.barred places props_canal/canal_bars002 panels (bar_props); map_corridor.edge_fence places props_c17 fence panels; map_build.hexagon; map_wiring.wheel for a valve. python3 map_budget.py FILE.vmf --line before and after.
+- **Checked by:** map_budget.py's line on every build (faces, vertices: NEAR and OVER); grep -c canal_bars002 and props_c17/fence0 in the built VMF.
+- **Tags:** props, geometry, owner, streets
+
 ### The Combine wall: no white light panels, and no detail repeated at one height (`owner-combine-wall-not-orderly`)
 
 No lights/white004 panels on the Combine wall's kit (they read as flat white blocks, nothing HL2 has). A detail the kit repeats along the wall must not stand at the same height or on the same side every time: several piers picked by chance, each run's staircase of panels starting and ending at heights of its own.
@@ -3940,4 +3949,13 @@ No lights/white004 panels on the Combine wall's kit (they read as flat white blo
 - **How:** map_propkit.py: PIER_LOOKS a to d (combine/chain.py pier(front=...): stacks low, high or short with no light panel, or trim bands), LOOKS a to c, run(vary=True); the corner's stacks light=False. map_corridor.combine_wall picks a pier for each joint by chance.
 - **Checked by:** map_propkit.py --check (the kit matches the code, rays from where players stand); grep the kit for white004: none.
 - **Tags:** owner, combine, lighting
+
+### What the game's console said of the ring: ladder feet, supply crates, props with no collision (`owner-log-ladders-crates-solid`)
+
+A ladder's two ends must leave a player's box (32 across, 72 tall) touching nothing: no bank sloping up under its foot, no board or kerb it stands in. A supply crate (item_item_crate) carries its model keyvalue. A prop_static whose model has no collision model is solid 0.
+
+- **Why:** The owner's console on loading the ring's test map, 25 November: "Warning, funcladder with blocked bottom point (6878.00 -5968.00 404.00) stuck in (worldspawn/)" (twice, a canal bank under the foot), "item_item_crate at (...) has no model name!" (26 times), "SOLID_VPHYSICS static prop with no vphysics model!" (canal maps, corkboards, hive nests).
+- **How:** Mod.ladder marks no bank on a square 144 round its foot; map_build.lift_ladder_feet raises a foot onto anything low it touches; map_modules.breakable gives the crate its model; Vmf.point makes a prop_static solid 0 when map_assets.collides says the model has none.
+- **Checked by:** map_walk.py: "a ladder's foot ... is inside a brush" (a player's box at each end, touching counts as Source counts it).
+- **Tags:** owner, props, stairs
 
