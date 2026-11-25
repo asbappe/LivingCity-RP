@@ -44680,6 +44680,67 @@ function Nov24_BarnacleLiftTests() -- (the owner, 22 November: barnacles "just d
 end
 Nov24_BarnacleLiftTests()
 
+function Nov25_HiveBossTests() -- (the owner, 25 November: the Workshop NextBot "half life alyx jeff npc/nextbot" as the hive boss)
+    section("25 November: the hive boss: the owner's Workshop NextBot, when it comes and what its death does")
+    local H = LC.HiveBoss
+    local T0 = Vector(-164000, -164000, 0)
+    local onWas, classWas, zonesWas = GetConVar("lc_hiveboss"):GetString(), GetConVar("lc_hiveboss_class"):GetString(), LC.Zones
+    local blocksWas, infWas, centreWas, saveWas = LC.BlockNumbers, LC.DistrictInfest, LC.BlockCenter, LC.SaveTerritory
+    LC.SaveTerritory = function() end
+    LC.Zones = {}
+    local seed = { kind = "infest", pos = T0, r = 400 }
+    LC.Zones[1] = seed
+    for i = 1, 4 do LC.Zones[#LC.Zones + 1] = { kind = "infest", grown = true, seed = seed, pos = T0 + Vector(400 * i, 0, 0), r = 200 } end
+    local score = { [1] = 10, [2] = 10, [3] = 10, [4] = 10 }
+    LC.BlockNumbers = function() return { 1, 2, 3, 4 } end
+    LC.DistrictInfest = function(n) return score[n] end
+    LC.BlockCenter = function(n) return T0 + Vector(0, 300 * n, 0) end
+    _setcvar("lc_hiveboss_class", "")
+    _setcvar("lc_hiveboss", 1)
+    ok(H.Class() == nil and select(1, H.Spawn()) == false, "the addon not on the server: nothing comes")
+    _setcvar("lc_hiveboss_class", "npc_test_jeff")
+    H.Tick()
+    ok(not H.Alive(), "a quiet city: no hive boss")
+    score[1], score[2] = 80, 60
+    _setcvar("lc_hiveboss", 0)
+    H.Tick()
+    ok(not H.Alive(), "switched off (the default): it never comes by itself")
+    ok(select(1, H.Spawn()) == true and H.Alive() and H.ent:GetClass() == "npc_test_jeff" and H.ent:GetPos():Distance(T0) < 20, "staff can still send one: it comes up in the infestation")
+    H.Remove()
+    ok(not H.Alive() and #LC.Zones == 5, "taken away by staff: nothing crashes")
+    _setcvar("lc_hiveboss", 1)
+    H.Tick()
+    ok(H.Alive(), "switched on, half the districts badly infested: it comes")
+    local boss = H.ent
+    H.Tick()
+    ok(H.ent == boss, "one at a time")
+    -- the spores: no mask, you cough
+    local p = newPlayer("Cougher", "citizen", nil, 200)
+    p:SetPos(T0 + Vector(200, 0, 0))
+    local coughs = 0
+    p.EmitSound = function(_, s) if string.find(s, "cough", 1, true) then coughs = coughs + 1 end end
+    H.Spores()
+    ok(coughs == 1, "near it without a gas mask, you cough", coughs)
+    -- its death crashes the infestation
+    boss:SetHealth(0)
+    hook.Run("OnNPCKilled", boss, p)
+    local grown = 0
+    for _, z in ipairs(LC.Zones) do if z.grown then grown = grown + 1 end end
+    ok(grown == 2 and LC.Zones[1] == seed, "dead: every infestation loses half of what it grew; the placed one stays", grown)
+    local far = false
+    for _, z in ipairs(LC.Zones) do if z.grown and z.pos:Distance(T0) > 900 then far = true end end
+    ok(not far, "the furthest patches first")
+    H.Tick()
+    ok(not H.Alive(), "and no other comes for a while")
+    p:Remove() if IsValid(boss) then boss:Remove() end
+    H.ent, H.deadAt = nil, nil
+    LC.Zones = zonesWas
+    LC.BlockNumbers, LC.DistrictInfest, LC.BlockCenter, LC.SaveTerritory = blocksWas, infWas, centreWas, saveWas
+    _setcvar("lc_hiveboss", onWas) _setcvar("lc_hiveboss_class", classWas)
+    if LC.DistrictInfestForget then LC.DistrictInfestForget() end
+end
+Nov25_HiveBossTests()
+
 function Nov24_PumphouseWaterTests() -- (the owner, 24 November: "the pumphouse nearest a rebel zone allows or cuts that zone's water")
     section("24 November: the pumphouse nearest a rebel territory is its water")
     local T0 = Vector(-158000, -158000, 0)

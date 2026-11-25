@@ -245,6 +245,15 @@ local ACTIONS = {
             local one, why = LC.Breach.Start()
             if not one then return false, tostring(why) end
             return true, "Open the sealed quarter: on the Resistance's board (F4). Take it as a member."
+        elseif v == "hiveboss" then
+            -- (sv_livingcity_hiveboss.lua: the owner's Workshop NextBot, in the worst infestation)
+            if not (LC.HiveBoss and LC.HiveBoss.Spawn) then return false, "No hive boss on this server." end
+            local okH, whyH = LC.HiveBoss.Spawn()
+            if not okH then return false, tostring(whyH) end
+            return true, "The hive boss is out, in the worst infestation. Only explosives hurt it."
+        elseif v == "hiveboss_off" then
+            if LC.HiveBoss and LC.HiveBoss.Remove then LC.HiveBoss.Remove() end
+            return true, "The hive boss is gone."
         elseif v == "supply" then
             -- (sv_livingcity_supplylines.lua: a courier or a boat now, not in 15 to 25 minutes)
             if not LC.SupplyLineStart then return false, "No supply lines on this server." end
