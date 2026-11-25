@@ -108,7 +108,6 @@ function LC.ManpowerPool(side)
 end
 
 function LC.ManpowerOn() return cvOn:GetBool() end
-function LC.ManpowerSideOf(role) return ROLE_SIDE[role] end
 
 -- Spawns inside fn take nobody from a pool (characters with rules of their own).
 function LC.ManpowerFree(fn, ...)

@@ -589,7 +589,6 @@ function LC.CollapsePowers()
     table.sort(out, function(a, b) if Num(a) ~= Num(b) then return Num(a) < Num(b) end return a:EntIndex() < b:EntIndex() end)
     return out
 end
-function LC.CollapsePower() return LC.CollapsePowers()[1] end
 
 -- Where a transformer's glass screen stands: on the side that faced whoever placed it (its front), in the way of
 -- a shot from there (the owner, 10 November: "they HAVE to go deal with the manhack swarm or the turret swarm
@@ -1032,7 +1031,6 @@ StandBegin = function()
     hook.Run("LivingCityLastStand", boss, office, power)
     return true
 end
-LC.CollapseStand = function() return StandBegin() end
 
 -- Overwatch squads coming in through her last stand (the owner, 10 November: "squads of combine need to come in
 -- from outside the direct boss fight area ... a new squad every 45-75 seconds"): from a path node out of her

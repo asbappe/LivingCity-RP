@@ -611,7 +611,6 @@ local function JogTo(npc, st, c)
     end
     return LC.GoTo(npc, st, at, true, { kind = "exercise" })
 end
-LC.ExerciseJogTo = function(npc, st, c) return X and JogTo(npc, st, c) end
 
 -- Where a marcher of the parade's column goes for the stop he is on: his own file, to the side of the way
 -- in to it; at the last stop each rank halts a little short of the one in front.
@@ -1255,7 +1254,6 @@ local function Progress(ply, r)
     local d = Dist2D(ply:GetPos(), X.route[i])
     return X.cum[i - 1] + math.Clamp(seg - d, 0, seg)
 end
-LC.ExerciseProgress = function(ply) local r = Rec(ply) return r and r.cp and Progress(ply, r) or nil end
 
 -- The city's own joggers keep up with the pace marker: one who has fallen behind (lost the way,
 -- held up) catches up out of everyone's sight, a little behind the marker.

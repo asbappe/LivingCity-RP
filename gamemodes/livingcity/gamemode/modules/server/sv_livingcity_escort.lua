@@ -342,10 +342,6 @@ function LC.EscortCovers(ply)
     return CurTime() < (e.graceUntil or 0)
 end
 
-function LC.EscortOf(ply)
-    local e = LC.Escorts[ply]
-    return e and not e.over and e or nil
-end
 
 ------------------------------------------------------------------------
 -- Doors, and who comes through them

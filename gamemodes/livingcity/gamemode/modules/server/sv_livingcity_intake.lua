@@ -149,7 +149,6 @@ function LC.IntakePending(ply)
     end
     return true
 end
-function LC.IsRegistered(ply) return not LC.IntakePending(ply) end
 
 -- No room in this city yet, and one has to be asked for (or comes with the papers).
 function LC.AwaitingHousing(ply)

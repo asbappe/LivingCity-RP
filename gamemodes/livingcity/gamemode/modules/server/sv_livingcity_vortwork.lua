@@ -346,7 +346,6 @@ local function VortLife(now)
         end
     end
 end
-LC.VortLifeTick = function(now) nextLife = 0 VortLife(now or CurTime()) end -- (for tests)
 
 ------------------------------------------------------------------------
 -- Two in one camp: they talk, in their own tongue

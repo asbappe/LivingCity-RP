@@ -380,9 +380,6 @@ end
 
 local cache = { at = -1, groups = {}, sig = "", changed = 0 }
 
-function LC_CL.ContextShown()
-    return cvShow:GetBool()
-end
 
 -- Made once, not every frame: the faint copy of each colour, a key's width, a title in capitals.
 local faded = {}

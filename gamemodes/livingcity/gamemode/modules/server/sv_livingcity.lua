@@ -121,12 +121,6 @@ function LC.SoundExists(path)
     return known
 end
 
--- The first of these sounds that's there (or nil).
-function LC.FirstSound(list)
-    for _, s in ipairs(type(list) == "table" and list or { list }) do
-        if LC.SoundExists(s) then return s end
-    end
-end
 
 -- Every sound the server plays goes through it, ours or not.
 do
