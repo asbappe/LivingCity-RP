@@ -602,6 +602,7 @@ end
 
 -- A sink: one the map has as a prop (dynamic or static), within reach and in view.
 function LC.NearSink(ply)
+    if LC.WaterCut and LC.WaterCut(ply:GetPos()) then return false end -- (a dry tap fills nothing)
     local at = ply:GetPos() + Vector(0, 0, 40)
     local fx = LC.StaticFixtureNear and LC.StaticFixtureNear(at, "sink", 110)
     if fx and LC.CanSeeFixture(ply, fx.pos) then return true end
@@ -1271,6 +1272,10 @@ function LC.UseStaticVending(ply, fx)
 end
 
 local function UseFixture(ply, kind, ent, fx)
+    if (kind == "sink" or kind == "toilet" or kind == "bath") and LC.WaterCut and LC.WaterCut(ply:GetPos()) then
+        if (ply.lcSinkUse or 0) < CurTime() then ply.lcSinkUse = CurTime() + 1 LC.WaterDry(ply) end -- (the pumphouse stands: sv_livingcity_mapnames.lua)
+        return
+    end
     if kind == "vending" then
         if ent then LC.UseVending(ply, ent) else LC.UseStaticVending(ply, fx) end
     elseif kind == "stove" and (ply.lcStoveUse or 0) < CurTime() then

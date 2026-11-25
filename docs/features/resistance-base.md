@@ -48,3 +48,16 @@ No new settings. Tests `Nov22_HQTests`.
 ## For other code
 
 `LC.BaseMayLead(ply)`, `LC.BasePoleUse(ply)` (E at a pole), `LC.BaseLive()` (the base's zone, or nil), `LC.BaseState()` (`raising`, `live`, `striking`, `overrun` or nil), `LC.BaseShows(zone)`, `LC.BaseRaise(ply)`, `LC.BaseStrike(ply)`, `LC.BaseOrder(ply)` (the F2 line), `LC.BaseTear(ply)`; hooks `LivingCityBaseLive(zone)`, `LivingCityBaseGone(zone, how)` (`packed`, `ransacked`, `abandoned`), `LivingCityBaseRansacked(zone, credits, unit)`. The office's list is `LC.BaseOffice`; its places are in `data/livingcity/<map>_base.json`. The flag is drawn by `cl_livingcity_base.lua` from the pole's `lc_flag_h`. The pole's prompt is `LC_CL.BasePolePrompt`. The map's markers, with each one's height from its `_top`: `LC.Base.Markers()`. Tests: `BaseTests` (45), `BaseTallPoleTests` (8), `Nov22_HQTests` (20). The later stages: `LC.HQPos()`, `LC.HQGround(pos)`, `LC.HQKnowWords()`, `LC.HQLearn(n, how, by)`, `LC.HQRaidOrder(by)`, `LC.BaseTearNPC(npc)`; hooks `LivingCityHQKnown`, `LivingCityHQRaid`, `LivingCityHQRaidOver(won)`.
+
+## The base's vehicle (24 November; `sv_livingcity_basevehicle.lua`)
+
+The owner, 20 November: "each base has one vehicle available when the base is setup there": the buggy, and "the airboat for the canal's shantytown".
+
+- **A spot for it** is placed with the Miscount Editor, **"Point: Resistance base vehicle"** (it faces the way you faced), or brought by the map: an `info_target` named `lc_base_vehicle...` (with `airboat` or `buggy` in the name to say which; the shanty module has `lc_base_vehicle_airboat_shanty`). A spot in water gets Half-Life 2's airboat, any other its buggy.
+- **While the base is live**, the spot nearest its flag (within 4000 units) has its vehicle. One at a time. Anyone can drive it, a unit too.
+- **Left empty** more than 600 units from its spot for five minutes, it is back at the spot.
+- **When the base is struck, ransacked or moved**, it is gone as soon as nobody sits in it.
+- Nothing is written on anyone's screen. No settings. Not driven in the real game yet.
+- The shanty module also brings its own territory now (`lc_zone_rebel_r520_h400_shanty`), so a flag can be raised there without placing a zone by hand (after the next compile of the ring).
+
+For other code: `LC.BaseVehicle.Spots()`, `.SpotOf(pos)`, `.Tick()`, `.Remove()`; the vehicle is `LC.BaseVehicle.ent`. Tests: `Nov24_BaseVehicleTests` (10).

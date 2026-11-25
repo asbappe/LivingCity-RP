@@ -1124,7 +1124,7 @@ def gun_rack(m, a, b, at, side, z, axis, rows):
 
 def m_stash(m, opt):
     """The stash: a secret arms room. From the canal there is only a run of rusted pipes on the left wall with a valve
-    wheel on the thick one (lc_stash_valve: Use turns it a quarter, and it turns back by itself), and for the
+    wheel on the thick one (lc_stash_valve, Valve's wheel model: held with Use it turns a quarter; held again it turns back), and for the
     observant a small lambda sprayed low behind the pipe. Turning it slides a section of the wall itself aside
     (lc_stash_wall: 96 wide, 112 high, of the wall's own concrete, flush with it when shut, its sill at the top of the
     bank, 128 up); it shuts again by itself after 12 seconds, and the button on the wall just inside (lc_stash_inside)
@@ -1170,14 +1170,11 @@ def m_stash(m, opt):
     m.det([(30, 236, vz - 10, 50, 256, vz + 10), (166, 236, vz - 10, 186, 256, vz + 10)]                                # a fitting at every bend
           + [(143, 243, z - 7, 157, 256, z + 7) for z in (F + 214, F + 246)] + [(57, 243, F + 207, 71, 256, F + 221)], IRON)
     m.det([(vu - 9, 236, vz - 10, vu + 9, 256, vz + 10)], IRON)                              # the valve's body
-    m.shapes([prism(octagon(vu, vz, 3), "y", 228, 236, BARS)])                               # its stem
-    axis = 64 if m.fr.ax("v") == "x" else 128
-    shape_entity(m, "func_rot_button", {
-        "targetname": "lc_stash_valve", "origin": "%d %d %d" % (m.fr.at(vu, 226, vz)), "distance": "90", "speed": "60", "wait": "4", "sounds": "0", "health": "0",
-        "spawnflags": str(1024 + axis), "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
-        shapes=ring("y", vu, vz, 12, 15, 224, 228, BARS),
-        boxes=[(vu - 13, 225, vz - 1, vu + 13, 227, vz + 1), (vu - 1, 225, vz - 13, vu + 1, 227, vz + 13), (vu - 3, 223, vz - 3, vu + 3, 229, vz + 3)], mat=BARS,
-        connections=[("OnPressed", "lc_stash_wall", "Open", "", 0)])
+    # its wheel: Valve's own pipe wheel, a prop on an unseen brush that turns (the owner, 24 November: "the stash valve needs
+    # to be replaced with a prop and not use brushes for the valve"). Held with E it turns a quarter and the wall opens;
+    # the wall shuts by itself as before, and the wheel turns back the next time it is held.
+    from map_wiring import wheel
+    wheel(m, "lc_stash_valve", vu, 236, vz, 270, on_open=[("lc_stash_wall", "Open", "", 0)], lock_open=False, distance=90, speed=60)
     m.grime("lambda", 184, 256, F + 146, 3)                                                  # (small, low, half behind the pipe's down run)
     m.grime("stain", 90, 256, F + 200, 4)                                                    # (rust run from the joints)
 

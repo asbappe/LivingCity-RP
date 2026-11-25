@@ -1092,9 +1092,8 @@ def m_overflow(m, opt):
 
 def m_shanty(m, opt):
     """4. The shantytown under a street bridge. The canal widens into a basin on its left; a boardwalk runs along the
-    basin's back, with three shacks on it built from pieces (map_mods_c.shack: corner posts, walls of mismatched sheets
-    of wood, tin, steel hull and a salvaged door, uneven tops, tin roofs sloping to the front and overhanging on posts of
-    their own, a window each, boarded or of cracked glass): a card room (a table, two chairs, a radio on the table, the
+    basin's back, with three shacks on it (map_mods_c.shack: a sheet of wood, tin or steel hull a wall, a tin roof sloping to
+    the front, one with a window of cracked glass): a card room (a table, two chairs, a radio on the table, the
     canals' own map on the back wall, a lantern), a trader's stall open at the front (a long table for its counter,
     shelves on its back wall with jars and cans, a painted board over it, a cart and crates outside) and a bunk room
     (two bed frames, mattresses on them, a crate with a lantern between them). Under the street between them, a fire drum
@@ -1102,13 +1101,16 @@ def m_shanty(m, opt):
     street; a string of bulbs on a cable from an old dock pole to the bridge's deck and on to a second pole; washing on a
     line from the card room's roof post to a pole; a boat pulled up; a cork notice board on two poles; posters on and in
     the card room, the lambda on the bridge's pier, trash and puddles on the basin's floor. In front of the card room the
-    basin's floor is left clear for the Resistance's flag. Where the chain's street runs along the bank the bridge starts
+    basin's floor is left clear for the Resistance's flag; east of the bridge three ridge tents stand on the basin's
+    floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _3, where someone sleeps). Where the chain's street runs along the bank the bridge starts
     from (the canal ring, 23 November) the bridge is the street's way in: the street's parapet opens there, and an iron
     ladder comes down the bridge's side (a gap in its side wall, a post under its edge) to the boardwalk by the card room.
     Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
     screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
     lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
-    basin's open floor, 64 clear all round, open to the sky).
+    basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r520_h400_shanty (that territory, brought by
+    the map: 520 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
+    on the canal's floor west of the bridge).
     Left as brushes: the boardwalk, the shacks (sheets, posts, roofs: no model is a shack's wall), the board over the
     stall, the washing on the line (no game has a model of clothes on a line), the street bridge.
     Unchecked: ambient/fire/fire_small_loop2.wav, env_smokestack, the cables (move_rope), sprites/light_glow03.vmt;
@@ -1217,6 +1219,25 @@ def m_shanty(m, opt):
         m.det([(cu - w // 2, cv - 1, cz - h, cu + w // 2, cv + 1, cz - 1)], mat)
     # the Resistance's flag, when a territory covers the shanty town: the open floor in front of the card room
     m.target("lc_hq_setup_shanty", 480, 330, F, 90)
+    # the shanty town's own territory, so nobody has to place it by hand (the owner, 20 November: "the shantytown as a
+    # possible base"; 21 November, of placing one by hand: "pointless overhead"): the basin and the canal before it, one
+    # floor deep (the street over the bridge is not in it). And where its airboat lies while the base is here (the
+    # owner, 20 November: "the airboat for the canal's shantytown"): on the canal's floor west of the bridge, clear of
+    # the boardwalk's steps and the walk along the far wall, its nose down the canal.
+    m.target("lc_zone_rebel_r520_h400_shanty", 768, 448, F + 8)
+    m.target("lc_base_vehicle_airboat_shanty", 200, -40, F + 8, 0)
+    m.blocked(100, -110, 300, 30)
+    # the camp's tents, folded into the shanty town (the owner, 24 November: the camp and the shanty "re-engineered and
+    # combined into one", the "shanty under bridge with camps tents folded in"): three ridge tents on the basin's floor
+    # east of the bridge, before the stall and the bunk room, their open ends to the canal; a mattress in the first
+    from map_mods_a import tent
+    from map_mods_b import mattress
+    beds = [tent(m, u, v, F, L, W, H, "v", "lo", cloth, "props/carpetfloor001a", 14)
+            for (u, v, L, W, H, cloth) in ((928, 272, 104, 96, 80, "props/tarpaperroof002a"), (1052, 276, 100, 88, 72, "props/carpetfloor006a"),
+                                           (1168, 270, 108, 92, 76, "plaster/plasterwall009d"))]
+    mattress(m, beds[0][0], beds[0][1], 90, F + 2)
+    for k, (bu, bv) in enumerate(beds):
+        m.target("lc_shanty_tent_%d" % (k + 1), bu, bv, F + 8)
     # a boat pulled up, a notice board on two poles, what is left lying
     m.static("models/props_canal/boat001a.mdl", 1360, 60, 15)
     m.blocked(1240, -40, 1480, 160)
@@ -1244,16 +1265,14 @@ def m_shanty(m, opt):
 def m_vort(m, opt):
     """6. The vortigaunt culvert: a low side drain in the left wall with the city's pipe along its wall under the roof
     (capped where it starts), turning twice (nobody in the canal can see or shoot into its end); a green glow leaks round
-    its first turn to draw people in; a hanging of thin cloth strips on a cord half across its last turn (people brush
-    through it); and a dead-end den: damp brick walls, broken through into earth and rock in its back corner; a ring of
-    stones round a fire with a pot hung on a tripod, steam rising from it; three old mattresses for mats; shelves on its
+    its first turn to draw people in; and a dead-end den: damp brick walls, broken through into earth and rock in its back corner; a ring of
+    stones round a fire with a pot in it, steam rising from it; three old mattresses for mats; shelves on its
     wall with jars and a pot; bones and an antlion's shell by the rocks, firewood, a few candles; a seep of water in one
     corner glowing faintly green (the vortessence pool: small green glows over it, a green beam on the wall behind).
     Named for the game: lc_vort_fire, lc_vort_seat_1 to _3 (the mats, facing the fire), lc_vort_npc (where a
     vortigaunt the game makes would stand, facing the fire).
-    Left as brushes: the culvert and the den and their linings, the hearth's slab, the tripod's three sticks and its
-    rod, the candles (no model of one), and the hanging of strips (Half-Life 2 has no cloth: a func_illusionary of
-    carpet, nobody is stopped by it).
+    Left as brushes: the culvert and the den and their linings, the hearth's slab, the candles (no model of one: a small
+    block each).
     Unchecked: env_fire, env_steam rising, ambient/fire/fire_small_loop2.wav."""
     from map_mods_b import candle, mattress
     from map_mods_c import cage_lamp
@@ -1277,12 +1296,7 @@ def m_vort(m, opt):
     m.glow(840, 880, F + 30, "120 255 170", 0.1)
     # the hanging: thin strips of cloth on a cord, uneven, a hand's width apart, a foot clear of the floor
     import random
-    rnd = random.Random(61)
-    strips = []
-    for k, u in enumerate(range(706, 800, 10)):
-        strips.append((u, 893, F + 12 + rnd.randrange(0, 34), u + 4, 894, F + 142))
-    m.ent("func_illusionary", {"rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"}, strips, "props/carpetfloor004a")
-    m.det([(704, 892, F + 141, 802, 895, F + 143)], MM["steel"])                # the cord
+    # (no hanging of cloth strips on a cord across the last turn any more: ten brushes for a thing no model exists of; the owner, 24 November)
     # the den's walls: damp brick to a band, concrete above; in its back left corner the earth broken through
     m.det([(704, 896, F, 708, 1150, F + 150), (1020, 896, F - 16, 1024, 1276, F + 150), (830, 1276, F - 16, 1024, 1280, F + 150), (896, 896, F, 1020, 900, F + 150)], brick)
     m.det([(704, 896, F + 150, 708, 1276, F + 208), (1020, 896, F + 150, 1024, 1276, F + 208), (708, 1276, F + 150, 1024, 1280, F + 208),
@@ -1301,12 +1315,9 @@ def m_vort(m, opt):
     ring = [(60, 0), (42, 42), (0, 60), (-42, 42), (-60, 0), (-42, -42), (0, -60), (42, -42)]
     for k, (a, c) in enumerate(ring):                       # the ring of stones (the city's own loose rocks)
         m.static("models/props_junk/rock001a.mdl", fu + a, fv + c, 40 * k)
-    m.shapes([prism([(fu + 40, F), (fu + 46, F), (fu + 4, F + 84), (fu - 2, F + 84)], "y", fv - 3, fv + 3, MAT["bars"]),          # (the sticks' ends uneven
-              prism([(fu - 40, F), (fu - 46, F), (fu - 4, F + 82), (fu + 2, F + 82)], "y", fv - 2, fv + 4, MAT["bars"]),          #  where they cross)
-              prism([(fv + 40, F), (fv + 46, F), (fv + 4, F + 80), (fv - 2, F + 80)], "x", fu - 4, fu + 2, MAT["bars"])])
-    m.det([(fu - 1, fv - 1, F + 52, fu + 1, fv + 1, F + 87)], MM["steel"])                                                       # the pot's rod
-    m.static("models/props_c17/metalpot001a.mdl", fu, fv, 0, z=F + 38)
-    m.point("env_steam", fu, fv, F + 54, {"angles": "-90 0 0", "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "20", "SpreadSpeed": "6",
+    # (the pot stands in the fire on the slab: the tripod of brush sticks and its rod are gone, the owner, 24 November)
+    m.static("models/props_c17/metalpot001a.mdl", fu, fv, 0, z=F + 4)
+    m.point("env_steam", fu, fv, F + 22, {"angles": "-90 0 0", "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "20", "SpreadSpeed": "6",
                                           "StartSize": "4", "EndSize": "16", "Rate": "10", "JetLength": "60", "rendercolor": "220 220 220", "renderamt": "90", "rollspeed": "4"})
     m.point("env_fire", fu, fv, F + 6, {"health": "30", "firesize": "30", "fireattack": "4", "firetype": "0", "spawnflags": "7", "ignitionpoint": "32", "damagescale": "0.2"})
     m.light(fu, fv, F + 70, "255 140 60 120")
@@ -1327,7 +1338,7 @@ def m_vort(m, opt):
     m.static("models/props_lab/jar01b.mdl", 716, 1040, 0, z=F + 60)
     m.static("models/props_c17/metalpot002a.mdl", 716, 1032, 120, z=F + 100)
     for u, v in ((728, 1000), (736, 1012), (840, 1262), (870, 1266), (1008, 1100)):
-        candle(m, u, v, F, light=(u < 760 or u > 1000))
+        candle(m, u, v, F, light=(u < 760 or u > 1000), block=True)
     # the vortessence pool: green glows over the seep, a green beam on the wall behind it
     for u, v, z in ((930, 1190, F - 2), (990, 1230, F - 3), (960, 1170, F - 1), (1000, 1176, F - 2)):
         m.glow(u, v, z, "120 255 170", 0.16)
@@ -1794,7 +1805,7 @@ def m_cistern(m, opt):
 
 
 def m_underpass(m, opt):
-    """13. The barnacle underpass: 1024 of canal under a wide road, unlit. Three piers stand down its middle, chamfered
+    """13. The barnacle underpass: 1024 of canal under a wide road bridge (a deck on piers under the open sky, a parapet along each edge), dark under it. Three piers stand down its middle, chamfered
     (as City 18's columns are) under wider caps, and a concrete girder crosses the canal on each, the road's deck resting
     on them; the road's drains come down the piers in gutter pipes, puddles under them. Six barnacles hang from the deck
     between them, and under each Half-Life 2's tell: bones and a stain on the floor, two of the dead lying where they
@@ -1805,22 +1816,33 @@ def m_underpass(m, opt):
     burns. Graffiti on the piers, a danger sign by the hole.
     Named for the game: lc_underpass_body_1 to _5 (where each body lies: things to search), lc_underpass_dust (the dust
     off the broken edge: SpawnDust; a logic_timer, lc_underpass_dust_timer, works it).
-    Left as brushes: the road over it, the piers, their caps and the girders, the fallen slab.
+    Left as brushes: the road's deck and parapets, the barred gateway's frame, the piers, their caps and the girders, the fallen slab.
     Unchecked: npc_barnacle (and whether the game minds NPCs it did not make), models/humans/corpse1.mdl and
     charple01, charple03, ambient/atmosphere/tunnel1.wav, env_dustpuff, the cables (move_rope); the rebar is laid on its
     side (pitch 90), centred on its origin; the sign and its pole are loose, laid on their sides, and settle."""
     from map_mods_b import vprism
     from map_mods_c import centred, dustmotes
     roof = F + GATE_HIGH
-    m.open(0, -256, 256, 256)
-    m.low(256, -256, 1280, 256, roof)
-    m.open(1280, -256, 1536, 256)
+    # a real bridge under the open sky, not a solid block from the roof to the walls' tops (the owner, 24 November: "the
+    # underpass should be a proper bridge above the underpass instead of a big box"): the canal is open its whole length,
+    # and the road is a deck 20 thick on the piers and girders, its top at the street's height, a parapet along each
+    # edge, the hole where it came in left out of it. On the street's side it meets the street (the edge fence opens);
+    # on a side with no street the road ends at a gateway in the wall, shut with bars, dark behind.
+    m.open(0, -256, 1536, 256)
     for u in (448, 704, 960):                               # the piers
         m.unpaint(u, -64, u + 64, 64)
-    m.open(832, -256, 960, -128)                            # where the roof came in
     m.no_bank(824, -264, 968, -248)
-    m.portal(318, -256, F, 320, 256, roof)
-    m.portal(1216, -256, F, 1218, 256, roof)
+    m.det([(256, -256, roof - 20, 832, 256, roof), (832, -128, roof - 20, 960, 256, roof), (960, -256, roof - 20, 1280, 256, roof)], MAT["beam"], top=MM["road"])
+    m.det([(256, -256, roof, 272, 256, roof + 40), (1264, -256, roof, 1280, 256, roof + 40)], MAT["canal_wall"])
+    for sd in (1, -1):
+        if sd == m.street_side():
+            m.b.edge_gaps.append(m.fr.rect(272, min(sd * 236, sd * 284), 1264, max(sd * 236, sd * 284)))
+            continue
+        w = 256 * sd
+        m.det([(640, min(w, w - 2 * sd), roof, 896, max(w, w - 2 * sd), roof + 192)], MAT["black"])
+        m.bars((640, min(w - 3 * sd, w - 11 * sd), roof, 896, max(w - 3 * sd, w - 11 * sd), roof + 192), "u")
+        m.det([(616, min(w, w - 14 * sd), roof, 640, max(w, w - 14 * sd), roof + 216), (896, min(w, w - 14 * sd), roof, 920, max(w, w - 14 * sd), roof + 216),
+               (640, min(w, w - 14 * sd), roof + 192, 896, max(w, w - 14 * sd), roof + 216)], MAT["beam"])
 
     def octo(u1, v1, u2, v2, e, c):
         return [(u1 - e, v1 - e + c), (u1 - e + c, v1 - e), (u2 + e - c, v1 - e), (u2 + e, v1 - e + c), (u2 + e, v2 + e - c), (u2 + e - c, v2 + e),
@@ -1852,9 +1874,8 @@ def m_underpass(m, opt):
                 "fademaxdist": "0", "fadescale": "1"}, m.pv)
     m.prop("prop_physics", "models/props_c17/signpole001.mdl", 990, -170, 0, F + 4, {"spawnflags": "0", "angles": "0 %d 90" % m.fr.yaw(30)})
     m.prop("prop_physics", "models/props_c17/streetsign004f.mdl", 1010, -120, 0, F + 14, {"spawnflags": "0", "angles": "0 %d 90" % m.fr.yaw(70)})
-    m.spot(896, -192, roof + 120, "230 236 240 220", 0, pitch=90, cone=50)
     dustmotes(m, (840, -250, F + 16, 952, -136, roof + 100))
-    m.point("env_dustpuff", 896, -128, roof - 8, {"targetname": "lc_underpass_dust", "scale": "16", "speed": "10", "color": "120 116 108", "angles": "90 0 0"})
+    m.point("env_dustpuff", 896, -128, roof - 28, {"targetname": "lc_underpass_dust", "scale": "16", "speed": "10", "color": "120 116 108", "angles": "90 0 0"})
     import map_wiring      # (the dust falls only while someone is under the bridge to see it: Valve's sleeping timer)
     map_wiring.sleepy_timer(m, "lc_underpass_dust_timer", 896, -100, roof - 40, [(0, -256, F - 64, 1536, 256, roof)],
                             [("lc_underpass_dust", "SpawnDust", "", 0)], low=20, high=70)
@@ -1862,7 +1883,7 @@ def m_underpass(m, opt):
     m.blocked(800, -256, 990, -60)
     # the barnacles, and under each the tell
     for k, (u, v) in enumerate(((380, 10), (576, -130), (640, 120), (832, 70), (1090, -100), (1180, 110))):
-        m.point("npc_barnacle", u, v, roof - 4, {"angles": "0 0 0", "spawnflags": "0", "RestDist": "16"}, m.b.vis + ": barnacles (delete them if the game minds)")      # (4 under the roof, not 1: the owner, 22 November, "barnacles don't pick me up")
+        m.point("npc_barnacle", u, v, roof - 24, {"angles": "0 0 0", "spawnflags": "0", "RestDist": "16"}, m.b.vis + ": barnacles (delete them if the game minds)")      # (4 under the roof, not 1: the owner, 22 November, "barnacles don't pick me up")
         m.decal("decals/bloodstain_%s" % ("001", "002", "003", "101", "201", "001")[k], u + 6, v - 4, F + 1)
         if k % 2 == 0:
             m.loose("models/gibs/hgibs.mdl", u + 14, v + 10, 40 * k, z=F)
@@ -1883,9 +1904,9 @@ def m_underpass(m, opt):
     m.static("models/props_c17/lamp001a.mdl", 716, 186, 30)                # the lantern
     m.glow(716, 186, F + 14, "255 200 120", 0.15)
     m.light(716, 186, F + 22, "255 190 110 16")
-    m.rope([(600, 200, roof - 2), (700, 150, roof - 2)], slack=90, width=1)
-    m.rope([(1000, -200, roof - 2), (1130, -40, roof - 2)], slack=110, width=1)
-    m.rope([(400, -180, roof - 2), (420, -60, roof - 2)], slack=70, width=1)
+    m.rope([(600, 200, roof - 22), (700, 150, roof - 22)], slack=90, width=1)
+    m.rope([(1000, -200, roof - 22), (1130, -40, roof - 22)], slack=110, width=1)
+    m.rope([(400, -180, roof - 22), (420, -60, roof - 22)], slack=70, width=1)
     m.loose("models/props_junk/wood_crate001a.mdl", 640, 200, 15)
     m.sound("ambient/atmosphere/tunnel1.wav", 768, 0, F + 120, radius=1000, volume=4)
     m.soundscape(SCAPES["tunnel"], 768, 0, F, radius=700)

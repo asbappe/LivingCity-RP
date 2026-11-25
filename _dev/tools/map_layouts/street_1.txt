@@ -1,4 +1,4 @@
-# Street test map 1: relay, chimney, cells, memorial, pit
+# Street test map 1: relay, cells, memorial, pit
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/street_1.txt --test
 # The street (a railway and a road) runs along the left bank; a train runs between the two sheds.
@@ -11,7 +11,6 @@ cars 2
 
 shed
 relay up flip
-chimney up flip
 cells up
 memorial up
 pit up

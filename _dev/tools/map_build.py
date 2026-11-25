@@ -155,7 +155,7 @@ def dress_keys(model, x, y, keys):
     return k
 
 
-WAY_EXEMPT = ("struts_tunnel", "struts_wall", "light_cagelight", "missile_doors", "freightelevatorbutton", "control_lever", "trappropeller_lever",
+WAY_EXEMPT = ("canal_bars002", "struts_tunnel", "struts_wall", "light_cagelight", "missile_doors", "freightelevatorbutton", "control_lever", "trappropeller_lever",
               "models/lc/kit/lc_cwall")     # (arches over the way, their middle open; lamps hung overhead; Silo 2's leaves, the bunker door's, which slide out of the way and stand rolled upright and scaled, past what this box can turn; the Combine wall's models, map_corridor.combine_wall, standing on its core where its brushes stood, a player clip their collision)
 
 
@@ -1036,6 +1036,13 @@ def prism(profile, axis, a, b, mat, end_mat=None):
     return faces
 
 
+def hexagon(c, up, r):
+    """A flat round hole's outline with six corners (two fewer than octagon's: fewer sides and vertices), r to its
+    corners left and right, 0.866 r to its flat top and bottom."""
+    k, h = int(round(r * 0.5)), int(round(r * 0.866))
+    return [(c + r, up), (c + k, up + h), (c - k, up + h), (c - r, up), (c - k, up - h), (c + k, up - h)]
+
+
 def octagon(c, up, r):
     """A pipe's outline: eight corners on the grid, about r from the middle (c across, up)."""
     k = int(round(r * 0.4))
@@ -1085,9 +1092,34 @@ def bar_row(box, along, gap=24):
     return out
 
 
+BAR_PANEL = ("models/props_canal/canal_bars002.mdl", 128, 124)      # (Half-Life 2's canal bars: a panel 128 wide, 124 high, 7 thick, its origin at its middle)
+
+
+def bar_props(vmf, slab, along, vis):
+    """The bars across an opening as Valve's own panels, one prop each, in place of a brush for every bar (the owner,
+    24 November: "all the brush grates over any entrance that is blocked in the canals is using up tons of brushes when
+    there are props that can do the same"). The panels are spread evenly over the slab, overlapping where it is not a
+    whole number of them. False (nothing placed) where the opening is smaller than one panel: brush bars there."""
+    model, wide, high = BAR_PANEL
+    x1, y1, z1, x2, y2, z2 = slab
+    lo, hi = (x1, x2) if along == "x" else (y1, y2)
+    if hi - lo < wide or z2 - z1 < high:
+        return False
+    cols, rows = -(-(hi - lo) // wide), -(-(z2 - z1) // high)
+    for r in range(rows):
+        z = z1 + high / 2 + (r * (z2 - z1 - high) / (rows - 1) if rows > 1 else (z2 - z1 - high) / 2)
+        for k in range(cols):
+            p = lo + wide / 2 + (k * (hi - lo - wide) / (cols - 1) if cols > 1 else (hi - lo - wide) / 2)
+            pos = (round(p), (y1 + y2) // 2, round(z)) if along == "x" else ((x1 + x2) // 2, round(p), round(z))
+            vmf.point("prop_static", pos, {"model": model, "angles": "0 %d 0" % (90 if along == "x" else 0), "skin": "0", "solid": "6", "disableshadows": "1",
+                                           "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+    return True
+
+
 def barred(vmf, slab, along, vis, back=None):
     """A row of bars nobody can get through (an unseen wall for players stands in the same place), and the black behind them."""
-    vmf.detail(bar_row(slab, along), MAT["bars"], vis=vis)
+    if not bar_props(vmf, slab, along, vis):
+        vmf.detail(bar_row(slab, along), MAT["bars"], vis=vis)
     c = MAT["clip"]
     vmf.world_box(slab, c, c, c, vis=vis, seals=False)
     if back:
