@@ -44741,6 +44741,33 @@ function Nov25_HiveBossTests() -- (the owner, 25 November: the Workshop NextBot 
 end
 Nov25_HiveBossTests()
 
+function Nov25_TextGateTests() -- (the owner, 14 November: "I can only read one at a time"; 25 November: "sure?")
+    section("25 November: the text gate: the game's own hint lines one at a time; what people and the city say untouched")
+    local was = GetConVar("lc_text_gate"):GetString()
+    _setcvar("lc_text_gate", 3)
+    local p = newPlayer("GateReader", "citizen", nil, 200)
+    p.lcGate, p.chat = nil, {}
+    ok(LC.TextGate(p, "[Miscount] One.") == "show", "a hint after a quiet while: at once")
+    ok(LC.TextGate(p, "[Civil Protection] Halt.") == "show" and LC.TextGate(p, "[Barney] 'Hey.'") == "show" and LC.TextGate(p, "No tag at all") == "show",
+        "a unit, a person, an untagged line: always at once")
+    ok(LC.TextGate(p, "[Miscount] Two.") == "hold", "a second hint straight after: it waits")
+    ok(LC.TextGate(p, "[Miscount] Two.") == "drop" and LC.TextGate(p, "[Miscount] One.") == "drop", "the same line again: never twice")
+    ok(LC.TextGate(p, "[Tips] Three.") == "hold" and LC.TextGate(p, "[Miscount] Four.") == "hold", "more pile up")
+    local function Mine() local o = {} for _, m in ipairs(p.chat) do if string.find(m, "Two.", 1, true) or string.find(m, "Three.", 1, true) or string.find(m, "Four.", 1, true) then o[#o + 1] = m end end return o end
+    _run(3.4)
+    ok(#Mine() == 1 and Mine()[1] == "[Tips] Three.", "the oldest of the pile was dropped; the next comes after the quiet", table.concat(Mine(), " | "))
+    _run(3.4)
+    ok(#Mine() == 2 and Mine()[2] == "[Miscount] Four.", "then the last, one at a time", table.concat(Mine(), " | "))
+    _run(25)
+    ok(LC.TextGate(p, "[Miscount] One.") == "show", "the same line long after: said again")
+    _setcvar("lc_text_gate", 0)
+    ok(LC.TextGate(p, "[Miscount] Five.") == "show" and LC.TextGate(p, "[Miscount] Six.") == "show", "lc_text_gate 0: every line at once, as before")
+    p.lcGate = nil
+    p:Remove()
+    _setcvar("lc_text_gate", was)
+end
+Nov25_TextGateTests()
+
 function Nov24_PumphouseWaterTests() -- (the owner, 24 November: "the pumphouse nearest a rebel zone allows or cuts that zone's water")
     section("24 November: the pumphouse nearest a rebel territory is its water")
     local T0 = Vector(-158000, -158000, 0)
