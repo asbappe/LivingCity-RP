@@ -68,6 +68,7 @@ local function Unit(ply) return LC.PlayerIsCP and LC.PlayerIsCP(ply) end
 function LC.CanLinkScanner(ply, console)
     if not cvOn:GetBool() then return false, "The console is dead. (Scanner links are off on this server.)" end
     if not ply:Alive() then return false end
+    if LC.ChapterReversed and LC.ChapterReversed() then return false end -- (the console is dead: sv_livingcity_chapter.lua)
     if LC.ScannerLinks[ply] then return false, "You're already linked." end
     if not (Prisoner(ply) or Unit(ply) or ply:IsAdmin()) then return false, "ACCESS DENIED. Civil Protection credentials required." end
     for other, l in pairs(LC.ScannerLinks) do

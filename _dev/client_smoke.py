@@ -6161,6 +6161,41 @@ if not ok then return "parade march: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the chapter "the city falls to the Resistance" (cl_livingcity_chapter.lua): the wave is drawn in the sky and flashes
+# the screen, with or without Episode Two's own effects; a unit's mask glitches only while the server says so
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local CH = LC_CL.Chapter
+    local sky, flash = hook.t.PostDrawTranslucentRenderables.LivingCityChapter, hook.t.HUDPaint.LivingCityChapterWave
+    local mask, tint = hook.t.HUDPaintBackground.LivingCityChapterMask, hook.t.RenderScreenspaceEffects.LivingCityChapterMask
+    if not (CH and CH.Wave and sky and flash and mask and tint) then error("a hook is missing") end
+    local was = { surface.DrawRect, surface.PlaySound, _me.nw.lc_chapter_mask }
+    local rects, sounds = 0, 0
+    surface.DrawRect = function() rects = rects + 1 end
+    surface.PlaySound = function() sounds = sounds + 1 end
+    sky(false, false) flash() mask() tint()
+    if rects ~= 0 then error("something is drawn with no wave and no mask: " .. rects) end
+    CH.Wave(Vector(0, 0, 4000), 6, 46000)
+    if not CH.wave or sounds < 2 then error("the wave did not start: " .. sounds .. " sounds") end
+    sky(false, false) sky(false, true) flash()
+    if rects ~= 1 then error("the wave's flash: " .. rects .. " rectangles") end
+    CH.wave.t0 = CurTime() - 60
+    rects = 0
+    sky(false, false) flash()
+    if CH.wave or rects ~= 0 then error("the wave never ends") end
+    _me.nw.lc_chapter_mask = true
+    mask() tint()
+    if rects < 50 then error("a glitching mask draws next to nothing: " .. rects) end
+    _me.nw.lc_chapter_mask = false
+    rects = 0
+    mask()
+    if rects ~= 0 then error("the mask is off and still glitches") end
+    surface.DrawRect, surface.PlaySound, _me.nw.lc_chapter_mask = was[1], was[2], was[3]
+end)
+if not ok then return "chapter: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")

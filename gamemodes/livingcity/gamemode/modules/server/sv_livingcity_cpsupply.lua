@@ -46,6 +46,7 @@ local LOAD = {
 
 local function Unit(ply) return LC.PlayerIsCP and LC.PlayerIsCP(ply) end
 local function ArmourFor(ply)
+    if LC.ChapterVestDead and LC.ChapterVestDead(ply) then return 0 end -- (no vest takes a charge: sv_livingcity_chapter.lua)
     if LCF.IsOverwatch(ply) then return 100 end
     return (LC.IsCPOfficer and LC.IsCPOfficer(ply)) and 75 or 50
 end

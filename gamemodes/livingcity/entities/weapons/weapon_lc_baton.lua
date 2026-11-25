@@ -64,10 +64,19 @@ end
 
 local function Tell(ply, msg) ply:ChatPrint("[Miscount] " .. msg) end
 
+-- The city is the Resistance's (sv_livingcity_chapter.lua): the baton's charge is gone. A dry click and a fizzle,
+-- no blow and no arrest, and no words about it.
+local function Dead() return GetGlobal2Bool ~= nil and GetGlobal2Bool("lc_chapter", false) == true end
+local function Fizzle(self)
+    self:EmitSound("weapons/pistol/pistol_empty.wav", 60, 90)
+    self:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 50, 160)
+end
+
 function SWEP:PrimaryAttack()
     local owner = self:GetOwner()
     if not IsValid(owner) then return end
     self:SetNextPrimaryFire(CurTime() + 0.8)
+    if Dead() then return Fizzle(self) end
     owner:SetAnimation(PLAYER_ATTACK1)
 
     local tr = MeleeTrace(owner)
@@ -97,6 +106,7 @@ end
 
 function SWEP:SecondaryAttack()
     self:SetNextSecondaryFire(CurTime() + 1)
+    if Dead() then return Fizzle(self) end
     if CLIENT then return end
     local owner = self:GetOwner()
     if not IsValid(owner) or not LC or not LC.BatonMayArrest then return end
@@ -235,7 +245,7 @@ if CLIENT then
     end
 
     function SWEP:PostDrawViewModel(vm)
-        if not IsValid(vm) or not render or not render.DrawSprite then return end
+        if not IsValid(vm) or not render or not render.DrawSprite or Dead() then return end -- (no charge: no glow)
         local tip = Tip(vm, self.ViewModelFOV)
         if not tip then return end
         local at = LC_CL.BatonGlowPos(tip)

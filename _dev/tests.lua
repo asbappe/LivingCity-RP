@@ -44827,6 +44827,274 @@ function Nov24_CutLineTests() -- (the owner, 20 November: a wrecked line causes 
 end
 Nov24_CutLineTests()
 
+function Nov25_ChapterTests() -- (the owner, 25 November: the rocket's wave "kills all the combine and disables all their equipment ... a role reversal for a roleplay server story chapter")
+    section("25 November: the chapter, the city falls to the Resistance")
+    local C = LC.Chapter
+    local T0 = Vector(-172000, -172000, 0)
+    local N0 = T0 + Vector(6000, 0, 0)
+    local FILE = "livingcity/" .. game.GetMap() .. "_chapter.json"
+    local fileWas, sWas, eventWas = _files[FILE], C.S, LC.Event
+    local cvWas = { GetConVar("lc_chapter"):GetString(), GetConVar("lc_chapter_hold_minutes"):GetString(), GetConVar("lc_chapter_cooldown_minutes"):GetString(),
+        GetConVar("lc_ledger"):GetString() }
+    _setcvar("lc_ledger", 1)
+    local led = LC.Ledger()
+    local ledWas = { combine = led.combine, authority = led.authority, resistance = led.resistance, districts = table.Copy(led.districts),
+        crackdown = table.Copy(led.crackdown), liberated = table.Copy(led.liberated), news = #led.news }
+    local aliveWas = {}
+    for _, p in ipairs(player.GetAll()) do aliveWas[p] = p:Alive() end
+    local noticeWas, waveWas = LC.Notice, LC.RebelWave
+    local told, waves = {}, 0
+    LC.Notice = function(p, _, title, text) if title == "The Nexus" then told[#told + 1] = { p, text } end end
+    LC.RebelWave = function() waves = waves + 1 return 0, {} end
+    local began, ended = 0, 0
+    hook.Add("LivingCityChapterBegan", "ChapterTests", function() began = began + 1 end)
+    hook.Add("LivingCityChapterEnded", "ChapterTests", function() ended = ended + 1 end)
+    if LC.Event then LC.EndEvent(true) end
+    C.S = { state = "normal", elapsed = 0, cooldown = 0, lock = false }
+    C.retake, C.pendingAt, C.pendingBy = nil, nil, nil
+    local function toldTo(p, from) for i = (from or 0) + 1, #told do if told[i][1] == p then return told[i][2] end end return nil end
+
+    ok(cvWas[1] == "0" and cvWas[2] == "60" and cvWas[3] == "120", "off by default; an hour before the retake, two before it can start again", table.concat(cvWas, " ", 1, 3))
+    ok(LC.ChapterReversed() == false and GetGlobal2Bool("lc_chapter", false) ~= true, "the city is the Combine's")
+
+    -- who is there
+    local unit, ota, her = newPlayer("ChapterUnit", "cp"), newPlayer("ChapterOverwatch", "ota"), newPlayer("ChapterAdministrator", "admin")
+    local lt, private, cit = newPlayer("ChapterLieutenant", "resistance", nil, 99999), newPlayer("ChapterPrivate", "resistance", nil, 0), newPlayer("ChapterCitizen", "citizen")
+    local staff = newPlayer("ChapterStaff", "citizen")
+    staff.admin = true
+    for i, p in ipairs({ unit, ota, her, lt, private, cit, staff }) do p:SetPos(T0 + Vector(0, 3000 + i * 80, 0)) end
+    local nexus = LC.AddZone(nil, nil, "combine", 0, { mins = N0 + Vector(-400, -400, -16), maxs = N0 + Vector(400, 400, 192) })
+    local desk = LC.AddPoint(N0, 0, "desk", 0)
+    local rsp = LC.AddPoint(T0 + Vector(0, -4000, 0), 0, "rspawn", 0)
+    local door = ents.Create("func_door") door.mapid = 25111 door:SetPos(T0 + Vector(0, -800, 0))
+    LC.SetDoorTag(door, "cp")
+    local plain = ents.Create("func_door") plain.mapid = 25112 plain:SetPos(T0 + Vector(0, -1200, 0))
+    local bank = ents.Create("lc_powerbank") bank:SetPos(T0 + Vector(0, 800, 0))
+    local field = ents.Create("lc_forcefield") field:SetPos(T0 + Vector(100, 800, 0))
+    field.lcForcefield = true
+    local turret = ents.Create("npc_turret_floor") turret:SetPos(T0 + Vector(0, 1400, 0)) turret:Spawn()
+    local monitor = ents.Create("lc_monitor") monitor:SetPos(T0 + Vector(0, 1800, 0))
+    LC.CheckpointTick(CurTime()) LC.RefreshPower()
+    ok(door.locked == true and not door.isOpen and not field:GetNW2Bool("lc_nopower", false) and not monitor:GetNW2Bool("lc_nopower", false),
+        "(before: a Combine door locked, a forcefield and a monitor with power)")
+    ok(LC.MayEnterCombine(cit) == false, "(before: a Combine-only zone is not a citizen's to walk into)")
+
+    -- the launch: only with the setting on, only a Lieutenant or Commander at the button
+    local relay = ents.Create("logic_relay") relay:SetName("lc_rocket_launch") relay:SetPos(T0)
+    hook.Run("AcceptInput", relay, "Trigger", lt, lt)
+    ok(C.pendingAt == nil, "lc_chapter 0: the launch is only a launch")
+    _setcvar("lc_chapter", 1)
+    hook.Run("AcceptInput", relay, "Trigger", private, private)
+    ok(C.pendingAt == nil, "a rebel of no rank at the button: only a launch")
+    hook.Run("AcceptInput", relay, "Trigger", lt, lt)
+    ok(C.pendingAt ~= nil and not LC.ChapterReversed(), "a Lieutenant or Commander at it: the wave is coming, and not here yet")
+    _run(C.COUNTDOWN + C.CLIMB - 4)
+    ok(not LC.ChapterReversed(), "through the countdown and the climb: nothing yet")
+    local cop = LC.ManpowerFree(LC.Spawners.cop, T0 + Vector(400, 0, 0))
+    local soldier = LC.ManpowerFree(LC.Spawners.soldier, T0 + Vector(480, 0, 0))
+    local scanner = LC.Spawners.scanner(T0 + Vector(560, 0, 0))
+    local hack = ents.Create("npc_manhack") hack:SetPos(T0 + Vector(640, 0, 0)) hack:Spawn()
+    local rebel = LC.ManpowerFree(LC.SpawnRebel, T0 + Vector(400, 9000, 0))
+    local citizen = ents.Create("npc_citizen") citizen:SetPos(T0 + Vector(480, 9000, 0)) citizen:Spawn()
+    ok(IsValid(cop) and IsValid(soldier) and IsValid(scanner) and IsValid(rebel), "(a unit, a soldier, a scanner and a fighter on the street)")
+    unit:SetArmor(50) her:SetArmor(60)
+    net.sent = {}
+    _run(6)
+    ok(LC.ChapterReversed() and began == 1 and GetGlobal2Bool("lc_chapter", false) == true, "the wave: the city is the Resistance's", "began " .. began)
+    ok(_lastnet("lc_chapter_wave") ~= nil and #told == 0, "everyone's game draws it, and nothing is said")
+
+    -- what it kills
+    ok(not (IsValid(cop) and cop:Health() > 0) and not (IsValid(soldier) and soldier:Health() > 0) and not (IsValid(scanner) and scanner:Health() > 0)
+        and not (IsValid(hack) and hack:Health() > 0), "every Combine NPC dies: unit, soldier, scanner, manhack")
+    ok(not unit:Alive() and not ota:Alive(), "and every Civil Protection and Overwatch player")
+    ok(unit:GetNW2String("lcf_faction", "") == "cp" and ota:GetNW2String("lcf_faction", "") == "cp", "who are still who they were (no character ends with the wave)")
+    ok(her:Alive() and her:Armor() == 0, "the Administrator lives, her vest's charge gone", tostring(her:Armor()))
+    ok(lt:Alive() and private:Alive() and cit:Alive() and IsValid(rebel) and rebel:Health() > 0 and IsValid(citizen) and citizen:Health() > 0,
+        "rebels and citizens are untouched")
+    _run(5)
+    local left = 0
+    for npc, st in pairs(LC.NPCs) do if IsValid(npc) and (st.role == "cop" or st.role == "soldier" or st.role == "scanner") then left = left + 1 end end
+    ok(left == 0 and not IsValid(hack), "none of them is left standing or lying about", left .. " left")
+
+    -- machines and doors
+    ok(field:GetNW2Bool("lc_nopower", false) and monitor:GetNW2Bool("lc_nopower", false) and LC.PowerBankLive(bank) == false, "forcefields, power banks and monitors are dead")
+    ok(turret.lcChapterOff == true and turret.fired[#turret.fired] == "Disable", "a turret is switched off")
+    ok(LC.TurretMayUse(lt, nil) == false and LC.CanLinkScanner(her, nil) == false, "nobody mans a mounted gun or flies a scanner")
+    ok(door.isOpen == true and door.locked == true and door.lcHeldOpen == true, "a Combine door stands open, locked open")
+    ok(not plain.lcChapterOpen, "an ordinary door is left as it was")
+    door.isOpen = false
+    _run(C.KEEP_EVERY + 2)
+    ok(door.isOpen == true, "shut by the map: open again before long")
+
+    -- the streets
+    ok(LC.ManpowerCan("cp") == false and LC.ManpowerCan("ota") == false and LC.SpawnCop(T0) == nil and LC.SpawnSoldier(T0) == nil and LC.Spawners.scanner(T0) == nil,
+        "no unit, soldier or scanner comes out")
+    ok(LC.FlyDropship({ pos = T0 }) == nil and LC.SpawnCremator(T0, "models/x.mdl") == nil, "no dropship, no Cremator")
+    _run(20)
+    left = 0
+    for npc, st in pairs(LC.NPCs) do if IsValid(npc) and (st.role == "cop" or st.role == "soldier" or st.role == "scanner") then left = left + 1 end end
+    ok(left == 0, "and the city sends none by itself", left .. " came")
+    cit.chat = {}
+    local spoke, speaksWas = 0, LC.OverwatchSpeaks
+    LC.OverwatchSpeaks = function() spoke = spoke + 1 end
+    LC.Announce("curfew")
+    LC.OverwatchSpeaks = speaksWas
+    ok(spoke == 0 and #cit.chat == 0, "the PA is silent")
+    ok(LC.StartEvent("curfew") == false and LC.Event == nil, "no curfew starts")
+    ok(LC.MayEnterCombine(cit) == true and LC.SocioAuto() == "green", "a Combine-only zone is nobody's to trespass in; sociostability judges nothing")
+    local mine = true
+    for _, n in ipairs(LC.BlockNumbers()) do if LC.DistrictOwner(n) ~= "resistance" then mine = false end end
+    ok(mine and led.combine <= 5 and led.authority <= 5 and led.resistance >= math.min(100, ledWas.resistance + 40),
+        "every district is the Resistance's, and the ledger swings hard", string.format("combine %d authority %d resistance %d", led.combine, led.authority, led.resistance))
+
+    -- a unit in the Resistance's city
+    unit.alive, ota.alive, unit.hp, ota.hp = true, true, 100, 100
+    unit:SetArmor(40)
+    _run(1.5)
+    ok(unit:Armor() == 0 and LC.VestCap(unit) == 0 and LC.ChargeVest(unit, 25) == 0 and LC.VestCap(her) > 0, "a unit's vest holds no charge and takes none")
+    local battery = ents.Create("item_battery")
+    ok(hook.Run("PlayerCanPickupItem", unit, battery) == false and hook.Run("PlayerCanPickupItem", cit, battery) ~= false, "a suit battery is no use to them")
+    battery:Remove()
+    local swepWas = SWEP
+    SWEP = { Primary = {}, Secondary = {} }
+    assert(loadstring(_WEAPONSRC["weapons/weapon_lc_baton.lua"], "weapon_lc_baton"))()
+    local snd, swings, arrests = {}, 0, 0
+    local baton = setmetatable({ GetOwner = function() return unit end, EmitSound = function(_, s) snd[#snd + 1] = s end,
+        SetNextPrimaryFire = function() end, SetNextSecondaryFire = function() end, SendWeaponAnim = function() end }, { __index = SWEP })
+    SWEP = swepWas
+    local arrestWas, animWas = LC.BatonArrest, unit.SetAnimation
+    LC.BatonArrest = function() arrests = arrests + 1 return false end
+    unit.SetAnimation = function() swings = swings + 1 end
+    unit.chat = {}
+    baton:SecondaryAttack()
+    ok(arrests == 0 and #snd == 2 and string.find(snd[1], "empty", 1, true) and string.find(snd[2], "spark", 1, true) and #unit.chat == 0,
+        "the baton's arrest: a dry click and a fizzle, nothing else", table.concat(snd, " "))
+    snd = {}
+    baton:PrimaryAttack()
+    ok(swings == 0 and #snd == 2, "and its blow the same")
+    ok(unit:GetNW2Bool("lc_chapter_mask", false) == true and ota:GetNW2Bool("lc_chapter_mask", false) == true and not her:GetNW2Bool("lc_chapter_mask", false)
+        and not lt:GetNW2Bool("lc_chapter_mask", false), "a unit's mask glitches (F2 has the line); nobody else's")
+    ok(LC.GasMasked(unit) == true, "(masked, it still keeps the gas out)")
+    ok(LC.TargetActions.chaptermask(unit) == true and unit:GetNW2Bool("lc_chapter_mask", false) == false and LC.ChapterMaskOff(unit) == true,
+        "F2 > Take off the mask: no more glitch")
+    ok(not LC.GasMasked(unit) and LC.GasMasked(ota) == true and LC.TargetActions.chaptermask(unit) == false and LC.TargetActions.chaptermask(lt) == false,
+        "and no more of what it kept out; once, and only a unit")
+
+    -- where they come back
+    local function back(p)
+        p.alive = true
+        p:SetPos(T0 + Vector(0, 20000, 0))
+        p:Spawn()
+        _run(0.3)
+        return p:GetPos()
+    end
+    local function atOne(pos, kind)
+        for _, pt in ipairs(LC.PointsOfKind(kind)) do if pt.pos:Distance(pos) < 40 then return true end end
+        return false
+    end
+    ok(atOne(back(unit), "rspawn"), "no holdout placed: a unit comes back at a Resistance spawn point")
+    ok(LC.CombineZoneAt(back(lt)) ~= nil or LC.NearCombineZone(lt:GetPos()) ~= nil, "and a rebel on the units' own ground")
+    local holdout = LC.AddPoint(T0 + Vector(0, -9000, 0), 0, "choldout", 0)
+    ok(holdout ~= nil and back(unit):Distance(holdout.pos) < 40 and back(ota):Distance(holdout.pos) < 40, "a Combine holdout placed with the editor: units come back there")
+    ok(not (lt:GetPos():Distance(holdout.pos) < 40) and LC.ChapterSpawn(lt) == false and LC.ChapterSpawn(cit) == false, "and the Resistance where it always did")
+
+    -- kept over a restart
+    LC.ChapterSave()
+    local t = util.JSONToTable(_files[FILE] or "") or {}
+    ok(t.state == "reversed" and t.lock == false and (t.elapsed or 0) > 20, "saved in data/" .. FILE, tostring(_files[FILE]))
+    C.S = { state = "normal", elapsed = 0, cooldown = 0, lock = false }
+    door.lcChapterOpen, door.lcHeldOpen, door.isOpen = nil, nil, false
+    LC.ChapterReload()
+    ok(LC.ChapterReversed() and C.S.elapsed > 20 and door.isOpen == true, "read back: still the Resistance's, its doors open again")
+
+    -- the Combine take it back
+    _setcvar("lc_chapter_hold_minutes", 5)
+    unit:SetPos(N0) ota:SetPos(N0 + Vector(60, 0, 0))
+    _run(3)
+    ok(C.retake == nil and #told == 0, "the Nexus held before lc_chapter_hold_minutes are up: nothing")
+    C.S.elapsed = 5 * 60
+    ota:SetPos(T0)
+    _run(3)
+    ok(C.retake == nil, "one unit in it, with a full server: not enough")
+    ota:SetPos(N0 + Vector(60, 0, 0))
+    _run(2)
+    ok(C.retake ~= nil and toldTo(unit) ~= nil and toldTo(her) == toldTo(unit) and toldTo(lt) ~= nil and toldTo(lt) ~= toldTo(unit) and toldTo(cit) == nil,
+        "two in it: the hold starts, one line to each side", tostring(toldTo(unit)) .. " / " .. tostring(toldTo(lt)))
+    _run(12)
+    local prog = C.retake and C.retake.prog or -1
+    ok(prog > 9 and waves >= 1, "its clock runs, and the fighters come for the Nexus", string.format("%.1f s, %d waves", prog, waves))
+    unit:SetPos(T0) ota:SetPos(T0)
+    local wavesThen = waves
+    _run(10)
+    ok(C.retake ~= nil and math.abs(C.retake.prog - prog) < 0.01 and waves == wavesThen, "nobody of theirs in it: the clock stands, and no wave comes")
+    unit:SetPos(N0)
+    _run(5)
+    ok(C.retake ~= nil and C.retake.prog > prog + 3, "one unit back in it: on it goes")
+    local n = #told
+    if C.retake then C.retake.prog = C.RETAKE_SECS - 2 end
+    _run(4)
+    ok(not LC.ChapterReversed() and ended == 1 and C.retake == nil and GetGlobal2Bool("lc_chapter", false) == false, "held to the end: the city is the Combine's again", "ended " .. ended)
+    ok(toldTo(unit, n) ~= nil and toldTo(lt, n) ~= nil and toldTo(lt, n) ~= toldTo(unit, n) and toldTo(cit, n) == nil, "one line to each side again")
+    ok(door.isOpen == false and door.locked == true and not door.lcHeldOpen and not door.lcChapterOpen, "Combine doors shut and lock again")
+    LC.CheckpointTick(CurTime())
+    ok(not field:GetNW2Bool("lc_nopower", false) and not monitor:GetNW2Bool("lc_nopower", false) and LC.PowerBankLive(bank) == true
+        and turret.lcChapterOff == nil and turret.fired[#turret.fired] == "Enable", "the machines come back")
+    ok(LC.VestCap(unit) > 0 and not unit:GetNW2Bool("lc_chapter_mask", false) and not LC.ChapterMaskOff(unit) and LC.MayEnterCombine(cit) == false,
+        "vests charge, masks work, the Combine's ground is the Combine's")
+    snd = {}
+    LC.Try(baton.SecondaryAttack, baton)
+    ok(#snd == 0, "the baton works again")
+    LC.BatonArrest, unit.SetAnimation = arrestWas, animWas
+    local back1 = LC.Spawners.scanner(T0 + Vector(560, 0, 0))
+    ok(IsValid(back1), "the Combine's own come out again")
+    if IsValid(back1) then back1:Remove() end
+    local contested = true
+    for _, b in ipairs(LC.BlockNumbers()) do if LC.DistrictOwner(b) ~= "contested" then contested = false end end
+    ok(contested and led.combine >= 30, "the districts are contested, the Combine's strength back", "combine " .. led.combine)
+    ok(not atOne(back(unit), "choldout"), "and units come back where they always did")
+
+    -- the cooldown, and staff
+    ok(C.S.cooldown > 119 * 60 and select(2, LC.ChapterLaunch(lt)) == "cooldown" and C.pendingAt == nil, "it cannot start again for lc_chapter_cooldown_minutes", tostring(C.S.cooldown))
+    ok(LC.AdminTool(staff, nil, "chapter", "wave") == false and not LC.ChapterReversed(), "the staff's lines are a superadmin's")
+    staff.superadmin = true
+    ok(LC.AdminTool(staff, nil, "chapter", "lock") == true and C.S.lock == true, "staff lock it")
+    C.S.cooldown = 0
+    ok(select(2, LC.ChapterLaunch(lt)) == "locked", "locked: the launch does not start it")
+    _setcvar("lc_chapter", 0)
+    ok(LC.AdminTool(staff, nil, "chapter", "wave") == true and LC.ChapterReversed() and began == 2, "staff launch the wave whatever the setting, the cooldown or the lock")
+    unit.alive, ota.alive = true, true
+    C.S.elapsed = 5 * 60
+    unit:SetPos(N0) ota:SetPos(N0 + Vector(60, 0, 0))
+    _run(3)
+    ok(C.retake == nil, "locked: the Nexus held does not flip it either")
+    ok(LC.AdminTool(staff, nil, "chapter", "retake") == true and not LC.ChapterReversed() and ended == 2, "staff give the city back to the Combine")
+    ok(LC.AdminTool(staff, nil, "chapter", "retake") == false, "(once)")
+    LC.ChapterReload()
+    ok(C.S.state == "normal" and C.S.lock == true and C.S.cooldown > 0, "the lock and the cooldown are kept over a restart too")
+    ok(LC.AdminTool(staff, nil, "chapter", "lock") == true and C.S.lock == false, "and unlock it")
+    ok(LC.ChapterStatus().line ~= nil, "(the testing tools say how it stands)")
+
+    -- everything as it was
+    hook.Remove("LivingCityChapterBegan", "ChapterTests") hook.Remove("LivingCityChapterEnded", "ChapterTests")
+    LC.Notice, LC.RebelWave = noticeWas, waveWas
+    _setcvar("lc_chapter", tonumber(cvWas[1])) _setcvar("lc_chapter_hold_minutes", tonumber(cvWas[2])) _setcvar("lc_chapter_cooldown_minutes", tonumber(cvWas[3]))
+    _setcvar("lc_ledger", tonumber(cvWas[4]))
+    C.S, C.retake, C.pendingAt, C.pendingBy, C.maskOff = sWas, nil, nil, nil, {}
+    _files[FILE] = fileWas
+    LC.ChapterApply()
+    led.combine, led.authority, led.resistance = ledWas.combine, ledWas.authority, ledWas.resistance
+    led.districts, led.crackdown, led.liberated = ledWas.districts, ledWas.crackdown, ledWas.liberated
+    while #led.news > ledWas.news do table.remove(led.news) end
+    LC.SetDoorTag(door, nil)
+    LC.RemovePoint(desk) LC.RemovePoint(rsp) LC.RemovePoint(holdout) LC.RemoveZone(nexus)
+    for _, e in ipairs({ door, plain, bank, field, turret, monitor, relay, rebel, citizen }) do if IsValid(e) then e:Remove() end end
+    for _, p in ipairs({ unit, ota, her, lt, private, cit, staff }) do p:Remove() end
+    for p, was in pairs(aliveWas) do if IsValid(p) and was and not p:Alive() then p.alive = true end end
+    if eventWas and not LC.Event then LC.StartEvent(eventWas) end
+    LC.RefreshPower()
+end
+Nov25_ChapterTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
