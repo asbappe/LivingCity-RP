@@ -668,8 +668,9 @@ def rail_runs(b, elems, s, cars):
             rail = e.get("rail", [])
             if rail and not e["junction"]:
                 b.problems.append("%s: \"over\" and \"back\" (a train's tunnel) go only on a turn toward the street's side with the street on both runs" % e["tag"])
-            if "over" in rail and "back" in rail:
-                b.problems.append("%s: \"over\" and \"back\" at one corner would cross the two tracks in its square: keep one" % e["tag"])
+            # ("over" and "back" at one corner cross the two tracks in its square, a level crossing of rails: allowed since 26
+            #  November, the owner: tracks "need to never go to a dead end in the street/open"; the two trains are never sent
+            #  at once, tunnel_train's locks)
     runs, cur, before = [], [], None
     for e in elems + [None]:
         if e is not None and e["kind"] == "leg":
@@ -1450,6 +1451,10 @@ ROUND = {
 }
 
 
+BANK_TRACKS = False     # (the east bank's own tracks carried no train and ended at buffer stops: gone, its track bed road, since the
+#                         owner, 26 November: tracks "need to never go to a dead end in the street/open")
+
+
 def east_bank(x_mid, y1, y2, road_only=()):
     """The squares of a street on the east bank of a canal running north whose middle is x_mid, from y1 to y2, laid as
     the chain's street is (the canal's edge, the tracks, the road and its pavements out to the frontage, which stands
@@ -1460,7 +1465,7 @@ def east_bank(x_mid, y1, y2, road_only=()):
     street, core = {}, set()
     for j in range(y1 // CELL, y2 // CELL):
         plain = any(a <= j * CELL < b for a, b in road_only)
-        for a, c, mat in ((EDGE, TRACK, MM["walk"]), (TRACK, ROAD_IN, MM["gravel"]), (ROAD_IN, fr_line, MM["road"])):
+        for a, c, mat in ((EDGE, TRACK, MM["walk"]), (TRACK, ROAD_IN, MM["gravel"] if BANK_TRACKS else MM["road"]), (ROAD_IN, fr_line, MM["road"])):
             for i in range((x_mid + a) // CELL, (x_mid + c) // CELL):
                 street[(i, j)] = MM["road"] if plain else mat
         core.add(((x_mid + fr_line) // CELL, j))
@@ -1518,6 +1523,8 @@ def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer
         m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"])
         edge_fence(vmf, fr, a, c, s * (EDGE + 6), STREET + 40, vis)
     ties, rails = [], []
+    if not BANK_TRACKS:
+        tracks, buffers, pave = (), (), ()      # (no rails, no buffer stops, and no pavement between a track and the road)
     for a, c in tracks:
         v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
         for u in range(a // CELL * CELL, c, CELL):      # (on the map's grid, as the chain's are: the same spacing across a join)
