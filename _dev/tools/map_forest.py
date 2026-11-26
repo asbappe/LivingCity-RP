@@ -319,6 +319,13 @@ def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=Non
             if k.lower() in PF_SPOT_KEYS and valve_anchor:
                 p = [float(c) for c in keys[k].split()]
                 keys[k] = " ".join(PF.fmt(round(c, 2)) for c in pf_point([p[i] - valve_anchor[i] for i in range(3)], q, d))
+        if e["classname"] == "func_useableladder" and keys.get("point0") and keys.get("point1"):
+            # (a ladder's lower end 2 off the floor: Valve stood some exactly on it, and a player's box there touches it, which
+            #  the game calls stuck, "funcladder with blocked bottom point"; map_walk.py's ladder check, 25 November)
+            p0, p1 = ([float(c) for c in keys[n].split()] for n in ("point0", "point1"))
+            low = "point0" if p0[2] <= p1[2] else "point1"
+            lp = p0 if low == "point0" else p1
+            keys[low] = " ".join(PF.fmt(round(c, 2)) for c in (lp[0], lp[1], lp[2] + 2))
         brushes = e.get("brushes")
         if brushes:
             if keys.get("movedir"):
