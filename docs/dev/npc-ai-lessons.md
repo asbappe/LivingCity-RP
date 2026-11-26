@@ -18,6 +18,17 @@ The owner asked for these to be read for ideas. Ideas only: VJ Base's code is al
 8. **Help with a cap** (VJ): hurt with no target calls up to 4 allies within 800, every 9 to 12 s; they come to the caller, 50 units off, not onto the same spot.
 9. **Unseen means three traces** (Background NPCs): at 10, 40 and 64 units up the body, all blocked, before someone is spawned or moved out of a player's sight.
 
+## Gunfire and fights in Background NPCs, looked at closely (26 November)
+
+The owner saw its page show people running from shots and police strafing. What the code does:
+
+- **The strafing, crouching, reloading and shooting are the engine's own.** The addon only gives the NPC its enemy and switches on moving while shooting, ducking and squads, and never interrupts the engine's fight. Ours does the same and more (`sv_livingcity_combat.lua`: stops a march to fight, goes for a line of fire, takes cover when hurt).
+- Its own rule on top, every 3 s: enemy over 700 away, run at them; under 500, back off to a spot 500 behind; between, hold and let the engine fight; out of sight, run to where they were last seen.
+- **Reacting to the sound of a shot is off by default there.** What is on: seeing someone actually hit (2500 units, in front, in sight), being hit, and a calm person within 1000 who sees both a frightened person and what frightened them.
+- **Fear:** cower only while the threat is within 200 and looking at them, else 1 chance in 4 each pass to break and run; the run picks, every 5 s, the walkable point 700 to 1000 away that is farthest from the threat; past 1000 they stop and pant 5 to 15 s; calm again 20 s after the threat stops fighting, or 60 s unseen.
+
+Three things there that ours lacks (`LC.GunfireFear` picks cower 35 in 100 or one run, once): cowering that depends on the gunman being close and facing them; a flight that keeps choosing a new farthest point while the danger lasts; stopping out of breath once far enough.
+
 ## Not to copy
 
 - Jeff: timers 50 times a second per bot; the player's own game telling the server what was heard (a cheat could steer it).
