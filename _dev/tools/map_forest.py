@@ -3322,7 +3322,8 @@ class CaveForest(Forest):
         def edit(e):
             if e["classname"] in ("light", "light_spot"):
                 e["keys"]["spawnflags"] = "0"
-        pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit)
+        pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit,
+                                solids=lambda sols: self.bare_finish(sols, skip, "the big room"))
         # two flights of the shaft's metal stairs are broken in Valve's own map (its stair check finds the same): the top
         # one stops in mid air where the stairs above collapsed, the bottom one hangs over the floor (its fallen catwalk,
         # a func_physbox, is left out); kept as Valve built them
@@ -3602,7 +3603,7 @@ class CaveForest(Forest):
                 e["keys"]["spawnflags"] = "3"
         extra = self.holdout_lift()
         pf, boxes = self.lifted("valve_ep2_holdout", 0, d, hv, hp, "lc_holdout_", skip=skip, keep=keep, edit=edit, extra=extra, clip=3040 - 2848,
-                                solids=self.lift_2_recess)
+                                solids=lambda sols: self.bare_finish(self.lift_2_recess(sols), skip, "the holdout"))
         X1, Y1, Z1 = (min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         X2, Y2, Z2 = (max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         self.deep_reach = (X1, Y1, Z1, X2, Y2, Z2)
@@ -3726,6 +3727,84 @@ class CaveForest(Forest):
         self.deep_reach = tuple(min(r[k], lo[k]) for k in range(3)) + tuple(max(r[k + 3], hi[k]) for k in range(3))
         self.notes.append("the chasm under the antlion tunnels: Valve's (%d brushes, %d displaced faces), its floor at z %d" % (
             len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), lo[2]))
+
+    def bare_finish(self, sols, skip, what):
+        """A lifted piece's bare faces that now show. Valve left faces nobody saw in its own map bare (nodraw draws
+        nothing): in ep2_outland_03 those seen only against the sky (over the pit, the gallery's open side, the cliff:
+        the backs of the pit's top walls, blocks behind its tree cards, left out here, the tops of the sheds' walls
+        under their eaves, the ends of the lift's framework), and in both pieces those behind what is left out or past
+        where the piece is cut (Ravenholm's fence over its mouth passage's timber, the sealing round its passage's
+        areaportal, the landing's walls over the shaft). Here the sky is black (lifted()), so they showed the void. Each
+        of Valve's own nodraw faces that looks into open air (inside no other brush of the piece, and inside the piece's
+        reach, so not its outer shell) is drawn: black as the sky and the box round it, or, a small face (256 or less
+        across) of something built (a brush with a material of its own), in that material. No brush is added or moved
+        (the owner, 26 November, of patching the cave: "when AI tries to patch a VMF map, it tries to use flat brushes
+        behind/with displacement geometry and it doesn't work"). sols: the piece's brushes in its own frame, changed in
+        place; skip: those not placed."""
+        nd, black = "TOOLS/TOOLSNODRAW", MAT["black"].upper()
+        placed = [sol for sol in sols if not skip(sol)]
+
+        def pts(sd):
+            return sd.get("verts") or sd.get("corners") or []
+        geo, boxes = [], []
+        for sol in placed:
+            allc = [c for sd in sol["sides"] for c in pts(sd)]
+            if not allc:
+                geo.append(None)
+                continue
+            mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
+            planes = []
+            for sd in sol["sides"]:
+                a, b, c = sd["plane"]
+                u, w = [a[k] - b[k] for k in range(3)], [c[k] - b[k] for k in range(3)]
+                n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+                ln = math.sqrt(sum(x * x for x in n)) or 1.0
+                n = [x / ln for x in n]
+                dd = sum(n[k] * a[k] for k in range(3))
+                if sum(n[k] * mid[k] for k in range(3)) - dd > 0:
+                    n, dd = [-x for x in n], -dd
+                planes.append((n, dd))
+            box = [min(c[k] for c in allc) for k in range(3)] + [max(c[k] for c in allc) for k in range(3)]
+            boxes.append(box)
+            if any(sd.get("disp") for sd in sol["sides"]):
+                geo.append(None)      # (a displaced brush covers nothing: the compiler keeps only its skin, and the skin is not its box)
+                continue
+            geo.append((planes, box, mid))
+        reach = [min(b[k] for b in boxes) + 2 for k in range(3)] + [max(b[k + 3] for b in boxes) - 2 for k in range(3)]
+
+        def covered(p, own):
+            for j, g in enumerate(geo):
+                if g is None or j == own or any(p[k] < g[1][k] - 0.01 or p[k] > g[1][k + 3] + 0.01 for k in range(3)):
+                    continue
+                if all(n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - dd <= 0.01 for n, dd in g[0]):
+                    return True
+            return False
+        count = {"black": 0, "own": 0}
+        for i, sol in enumerate(placed):
+            if geo[i] is None:
+                continue      # (a displaced brush: the compiler draws only its skin)
+            mats = [sd["material"].upper() for sd in sol["sides"] if not sd["material"].upper().startswith("TOOLS/")]
+            own = max(set(mats), key=mats.count) if mats else None
+            for k, sd in enumerate(sol["sides"]):
+                c4 = pts(sd)
+                if sd["material"].upper() != nd or len(c4) < 3:
+                    continue
+                n = geo[i][0][k][0]
+                fc = [sum(c[q] for c in c4) / len(c4) for q in range(3)]
+                near = [fc]      # (its middle, and in from each corner and each edge's middle: a sliver poking out of the brush it crosses shows at one end)
+                for j, c in enumerate(c4):
+                    e = [(c[q] + c4[(j + 1) % len(c4)][q]) / 2 for q in range(3)]
+                    for a in (c, e):
+                        ln = math.sqrt(sum((fc[q] - a[q]) ** 2 for q in range(3))) or 1.0
+                        near += [[a[q] + (fc[q] - a[q]) * f for q in range(3)] for f in (0.05, 0.25, min(1.0, 2.0 / ln))]
+                if not any(all(reach[q] <= p[q] + n[q] <= reach[q + 3] for q in range(3)) and not covered([p[q] + n[q] for q in range(3)], i) for p in near):
+                    continue
+                span = max(max(c[q] for c in c4) - min(c[q] for c in c4) for q in range(3))
+                got = own if own and span <= 256 else black
+                sol["sides"][k] = dict(sd, material=got)
+                count["own" if got != black else "black"] += 1
+        self.notes.append("%s: %d of Valve's bare faces that now show drawn black, %d in their own brush's material" % (what, count["black"], count["own"]))
+        return sols
 
     def holdout_sheds(self):
         """The sheds on the holdout's floor (Valve's: three huts of forest steel, A and C with two doorways, B one, on the
