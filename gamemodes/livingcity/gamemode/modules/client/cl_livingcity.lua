@@ -120,11 +120,11 @@ local POINT_COLORS = {
     advisorscreen = Color(200, 70, 60), -- (the Advisor screen: sv_livingcity_advisors.lua)
     dream = Color(200, 160, 255), -- (the shared dreams: sv_livingcity_dreams.lua)
     sterm = Color(150, 200, 255), -- (a Combine zone's stalker works a terminal here)
-    speechcrowd = Color(230, 200, 120), adminapc = Color(230, 200, 120), adminheli = Color(230, 200, 120), execwall = Color(200, 90, 80), -- (where the city gathers for her address: sv_livingcity_speech.lua)
+    speechcrowd = Color(230, 200, 120), adminapc = Color(230, 200, 120), apcroute = Color(120, 170, 230), adminheli = Color(230, 200, 120), execwall = Color(200, 90, 80), -- (where the city gathers for her address: sv_livingcity_speech.lua)
 }
 local POINT_NAMES = {
     supplyroad = "SUPPLY ROAD", supplycanal = "SUPPLY CANAL",
-    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD", adminapc = "ADMINISTRATOR'S APC", adminheli = "ADMINISTRATOR'S HELICOPTER", execwall = "EXECUTION WALL",
+    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD", adminapc = "ADMINISTRATOR'S APC", apcroute = "APC ROUTE", adminheli = "ADMINISTRATOR'S HELICOPTER", execwall = "EXECUTION WALL",
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     window = "WINDOW", armscrossed = "ARMS CROSSED", drinker = "DRINKER", couch = "COUCH", bedside = "BED EDGE",
     advisorscreen = "ADVISOR SCREEN",

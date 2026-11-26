@@ -260,6 +260,16 @@ local ACTIONS = {
             local okS, run = LC.SupplyLineStart()
             if not okS then return false, tostring(run) end
             return true, (run.kind == "canal" and "A boat" or "A courier") .. " sets out (" .. run.route.label .. "): the jobs are on the boards (F4)."
+        elseif v == "apc" then
+            -- (sv_livingcity_apc.lua: one now, about 1500 along its route from whoever asked, coming their way)
+            if not (LC.Apc and LC.Apc.Send) then return false, "No APC patrol on this server." end
+            local okA, why = LC.Apc.Send(IsValid(admin) and admin or t)
+            if not okA then return false, tostring(why) end
+            return true, "An APC is on the road, coming your way."
+        elseif v == "apcoff" then
+            if not (LC.Apc and LC.Apc.S) then return false, "No APC is out." end
+            LC.Apc.Remove()
+            return true, "The APC is gone."
         elseif string.sub(v, 1, 6) == "event:" then
             if not LC.Running then return false, "Start the city first." end
             if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end

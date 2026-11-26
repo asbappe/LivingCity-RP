@@ -25,7 +25,7 @@ LC.NextNodeId = LC.NextNodeId or 1
 LC.POINT_KINDS = {
     idle = true, sit = true, sitchair = true, lean = true, queue = true,
     window = true, armscrossed = true, drinker = true, couch = true, bedside = true, -- Valve's idle spots, one pose each (sv_livingcity_idlelife.lua)
-    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true, speech = true, speechcrowd = true, adminapc = true, adminheli = true, execwall = true,
+    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true, speech = true, speechcrowd = true, adminapc = true, apcroute = true, adminheli = true, execwall = true,
     work = true, vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, console = true,
     infodesk = true, civposter = true,
     workbench = true, recycler = true, bin = true, salvage = true, -- (sv_livingcity_salvage.lua)

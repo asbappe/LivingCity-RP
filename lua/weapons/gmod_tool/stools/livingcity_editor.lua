@@ -44,6 +44,7 @@ local MODES = {
     { id = "speech",      label = "Point: Administrator's speech stand (where the City Administrator speaks to the city; face it toward the crowd)" },
     { id = "speechcrowd", label = "Point: Administrator's speech crowd (where the city gathers for her address; with one placed, attendance is mandatory)" },
     { id = "adminapc",    label = "Point: Administrator's APC (parked here during her address, near the stand; attacked, she is taken out in it; it drives off the way you face)" },
+    { id = "apcroute",    label = "Point: APC route (place them in order along the middle of the road; # is the order)", group = true },
     { id = "execwall",    label = "Point: execution wall (the condemned stands here, back to the wall, facing the way you face; the firing squad lines up in front)" },
     { id = "adminheli",   label = "Point: Administrator's helicopter (parked here during her address, near the stand, facing the way you face; attacked, she is flown to her office door in it; from outside that door it fetches her to the stand)" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },

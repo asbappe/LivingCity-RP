@@ -249,6 +249,10 @@ local function Build()
         Label(r9, "Hive boss:", 70)
         Btn(r9, "Send it now", function() Do("solo", "hiveboss") end, 110)
         Btn(r9, "Remove it", function() Do("solo", "hiveboss_off") end, 100)
+        local r10 = Row(so2)
+        Label(r10, "The roads:", 70)
+        Btn(r10, "APC: send one now", function() Do("solo", "apc") end, 140)
+        Btn(r10, "APC: remove it", function() Do("solo", "apcoff") end, 120)
     end
     -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
     if state.superadmin then

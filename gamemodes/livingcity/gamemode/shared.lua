@@ -303,6 +303,7 @@ LC_MODULES = {
         "sv_livingcity_idlelife", -- (citizens' idle life as Valve directs it: a pose for each idle spot, moments started where a player looks, a crowd that looks instead of chatting)
         "sv_livingcity_antlions", -- (antlions dig up at a stopped thumper's burrow, where a map has the thumper module)
         "sv_livingcity_hiveboss", -- (the hive boss: the owner's Workshop NextBot, when it comes and what its death does; off until switched on)
+        "sv_livingcity_apc", -- (a Combine APC patrols the roads: the map's lc_apc_route marks, or the editor's APC route points)
         "sv_livingcity_basevehicle", -- (the live base's one vehicle: a buggy, or an airboat on water, at the spot placed for it)
         "sv_livingcity_hq", -- (the HQ's later stages: what only it does, what the Combine know of it, the raid, a ransack's papers; last, after the Inform list it adds to)
     },
