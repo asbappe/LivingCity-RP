@@ -29,6 +29,7 @@
 start 6144 5696
 heading N
 rim 968
+base 64            # (deeper than the usual 224: the tram's tunnel runs under the canal's floor, its rails at z 96)
 upper left
 wall combine
 wall bank 5824 1024 5952 1856      # (the last jog has no street: the wall stands on its west bank, on from the street's)
@@ -95,7 +96,7 @@ left back       # the south run's train: out of a tunnel west of the west side's
 tunnel 2048
 crypt flip
 straight 1024      # (was "shell": taken off the ring, 24 November)
-tram
+straight 1536      # (was "tram": the tram is under the breach now, on the east side: the owner, 26 November)
 widen
 lockgate flip
 narrow
@@ -119,7 +120,7 @@ straight 256       # (with the ash, the 1024 that was "chimney")
 swingbridge
 relay
 straight 64
-breach
+tramfall           # (the breach, with the tram's tunnel under the canal's floor and its station under the street)
 left nostreet
 straight 448 nostreet
 right nostreet

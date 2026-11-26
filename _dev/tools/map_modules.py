@@ -119,8 +119,9 @@ class Frame:
 class Build:
     """One file being made: its plan, and what the modules leave for the dressing and the checks."""
 
-    def __init__(self, name, rim, first_node, upper=None, wall=None, buried=False):
+    def __init__(self, name, rim, first_node, upper=None, wall=None, buried=False, base=None):
         self.name, self.rim, self.sky = name, rim, rim + 384
+        self.base = BASE if base is None else base      # (a layout's "base Z": deeper, for a tunnel under the canal's floor)
         # buried (a layout's "buried"): a chain under the owner's city, nothing of it over its rim (the street's height):
         # no band of sky over its walls, every stretch of canal roofed 16 under the rim (Mod.paint), only a square with a
         # sky of its own (a churchyard) open above it (the crypt's inlet, 26 November)
@@ -134,12 +135,12 @@ class Build:
         if upper:
             import map_corridor
             self.sky = map_corridor.STREET + (1024 if wall == "combine" else 768)      # (room over the Combine wall's piers)
-            self.plan = map_corridor.CorridorPlan(BASE, rim, self.sky, self.vis + ": walls and floors")
+            self.plan = map_corridor.CorridorPlan(self.base, rim, self.sky, self.vis + ": walls and floors")
         elif buried:
             self.sky = rim - 16
-            self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"])], sky=self.sky, vis=self.vis + ": walls and floors")
+            self.plan = Plan((0, 0), [(self.base, rim, MAT["canal_wall"])], sky=self.sky, vis=self.vis + ": walls and floors")
         else:
-            self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
+            self.plan = Plan((0, 0), [(self.base, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
         self.taken, self.blocked, self.no_bank, self.no_mud, self.lanes = [], [], [], [], []
         self.upright = []     # rectangles where the canal's walls stand upright: no bank, the rest of the dressing as ever
         self.after, self.bumps, self.notes, self.names, self.problems = [], [], [], [], []
@@ -906,7 +907,8 @@ def m_drain(m, opt):
     far end railed), the bank stopping either side of it in slopes: the drain's keepers' way along the canal.
     Under a street along its bank (the canal ring) the chamber's roof is the street's deck, at 640, and the lamps' rods
     are 16 shorter, so none comes up through the road.
-    Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
+    Named for the game: lc_drain_wheel (the valve wheel beside the grate, a momentary_rot_button: hold it and the grate
+    lifts, let go and it drops), lc_drain_grate (a func_movelinear: SetPosition 0 shut to 1 open; unseen, the four bar panels riding
     on it), lc_drain_junction (the chamber), lc_drain_cache (the case at the bottom of the sump: a place the game can
     fill).
     Left as brushes: the mouth, its collar and arch, the chamber, the sump and its steps, the plugs that darken the
@@ -973,16 +975,28 @@ def m_drain(m, opt):
         m.lane(u, v)
     cage(m, 384, 1490, SEWER + 110, 0, "238 226 162 40")     # a lamp at the stair's foot, to see the grate by
     m.grime("stain", 640, 1470, SEWER + 150, 8)
-    b.vmf.brush_entity("func_door", {"targetname": "lc_drain_grate", "movedir": "-90 0 0", "speed": "30", "lip": "24", "wait": "-1", "spawnflags": "32",
-                                     "spawnpos": "0", "dmg": "0", "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0",
-                                     "noise1": "MetalGrate.ScrapeSmooth", "noise2": "MetalGrate.ImpactSoft", "renderamt": "0", "rendercolor": "255 255 255",
-                                     "renderfx": "0", "rendermode": "10", "disableshadows": "1"}, [m.fr.box(384, 1544, CH, 640, 1552, SEWER + 240)], MAT["nodraw"], m.dv)
-    b.names.append(("lc_drain_grate", "func_door", m.tag))
+    # (the grate is worked as Valve's flood gate is, by a valve wheel beside it: hold it to lift the grate, let go and it
+    #  drops: the owner, 26 November, of the flood gate's wheel, "use that for all these 'below the water line'
+    #  entrances/doors in the canal". It was a func_door a test button opened.)
+    travel = SEWER + 240 - CH - 24
+    b.vmf.brush_entity("func_movelinear", {"targetname": "lc_drain_grate", "movedir": "-90 0 0", "movedistance": str(travel), "speed": "600", "startposition": "0",
+                                           "blockdamage": "0", "spawnflags": "0", "startsound": "MetalGrate.ScrapeSmooth", "stopsound": "MetalGrate.ImpactSoft",
+                                           "renderamt": "0", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "10", "disableshadows": "1"},
+                       [m.fr.box(384, 1544, CH, 640, 1552, SEWER + 240)], MAT["nodraw"], m.dv)
+    b.names.append(("lc_drain_grate", "func_movelinear", m.tag))
     from map_mods_c import ride
     for gu in (448, 576):                                    # the canals' bar panels (128 by 124), two by two: the top pair's heads go 8 into the roof
         for gz in (SEWER, SEWER + 124):                      # (under the walks' height the channel's dark water hides the rest; the unseen door reaches its floor)
             ride(m, "lc_drain_grate", "models/props_canal/canal_bars002.mdl", gu, 1548, 0, gz)
-    m.test_button((384, 1500, SEWER + 48, 392, 1516, SEWER + 64), [("OnIn", "lc_drain_grate", "Open"), ("OnOut", "lc_drain_grate", "Close")])
+    wu, wv, wz = 388, 1508, SEWER + 56                       # the wheel, on the wall beside the grate at a hand's height
+    wax = 64 if m.fr.ax("u") == "x" else 128
+    b.vmf.brush_entity("momentary_rot_button", {"targetname": "lc_drain_wheel", "speed": "40", "distance": "720", "returnspeed": "360", "startposition": "0",
+                                                "startdirection": "-1", "sounds": "0", "spawnflags": str(1024 + wax), "rendermode": "10", "renderamt": "0",
+                                                "disableshadows": "1", "origin": "%d %d %d" % m.fr.at(wu, wv, wz)},
+                       [m.fr.box(384, 1494, wz - 14, 400, 1522, wz + 14)], MAT["nodraw"], m.dv, connections=[("Position", "lc_drain_grate", "SetPosition", "", 0)])
+    b.names.append(("lc_drain_wheel", "momentary_rot_button", m.tag))
+    m.point("prop_dynamic", 392, wv, wz, {"model": "models/props_pipes/valvewheel001.mdl", "angles": "90 %d 0" % m.fr.yaw(0), "parentname": "lc_drain_wheel",
+                                           "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
     # beyond the grate the start of the owner's sewer: dark water in a channel, a walk each side, a round arch over it
     b.vmf.world_box(m.fr.box(448, 1552, CH, 576, 1640, SEWER - 2), MAT["nodraw"], top="nature/sewer_waterdarkfog2", vis=b.vis + ": water and sludge", seals=False)
     round_arch(m, 384, 640, SEWER + 112, 1556, 1640, axis="y")
@@ -2225,6 +2239,8 @@ def read_layout(path):
             lay.setdefault("backdrop", []).append(words[1:])      # (the scenery beyond the outer wall: map_backdrop.py)
         elif words[0] == "round":
             lay["round"] = words[1].lower()       # ("round east": the road round the first canal's east side, map_corridor.ROUND)
+        elif words[0] == "base":
+            lay["base"] = int(words[1])           # (the bottom of the piece, lower than BASE: for a tunnel under the canal's floor)
         elif words[0] == "buried":
             lay["buried"] = True                  # (a chain under the owner's city: Build's buried)
         elif words[0] == "close":
@@ -2290,7 +2306,7 @@ def name_sign(b, fr, length, half, words):
 
 def build_chain(lay, args):
     upper = lay.get("upper")
-    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper, lay.get("wall"), buried=lay.get("buried", False))
+    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper, lay.get("wall"), buried=lay.get("buried", False), base=lay.get("base"))
     b.wall_brushes = lay.get("wall_brushes", False)      # (map_corridor.combine_wall: the kit's models unless the layout says brushes)
     b.test = bool(args.test)
     elems, shed_n = [], 0

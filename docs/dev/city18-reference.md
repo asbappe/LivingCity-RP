@@ -4049,3 +4049,21 @@ A module's side must fit its story: what the Combine dump (the ash outfall) come
 - **Checked by:** The chain build has no PROBLEM lines; map_walk.py.
 - **Tags:** owner, canal
 
+### Below-water doors are worked by Valve's valve wheel, set where the water would not reach it (`owner-valve-wheel-gates`)
+
+A gate or grate below the canal's water line opens by a valve wheel as Valve's flood gate does (d1_canals_05): a momentary_rot_button whose Position drives a func_movelinear's SetPosition; hold it to open, let go and it runs back fast and the gate slams shut. The wheel stands just under the road's height on a service platform, never down on the canal's floor: built with the water level in mind.
+
+- **Why:** The owner, 26 November: "copy the flood gate that blocks the airboat (right after you get the airboat) from HL2 and requires the valve to be turned; and if the valve stops being turned mid-open, the gate slams shut? yeah please use that for all these 'below the water line' entrances/doors in the canal"; "please make sure the valve wheel is just below the canal/road level and not at the bottom of the canal or anything; we need to keep in mind how it would have been constructed with a potential water level in mind".
+- **How:** map_mods_e.m_floodgate (lc_floodgate_N_wheel, _leaf_a, _leaf_b); m_drain's grate (lc_drain_wheel, lc_drain_grate).
+- **Checked by:** map_lint.py's wire check; the walk check passes an opening gate (its leaves are left out of vmf.boxes).
+- **Tags:** owner, canal, doors
+
+### A canal under the owner's city is a buried chain: nothing of it over the street's height (`owner-inlet-under-the-city`)
+
+A piece that runs under the city (the crypt's inlet) is laid "buried": rim at the street's height, no band of sky over its walls, every stretch of canal roofed 16 under the rim, only a yard with a sky of its own open above, and that only on ground the city leaves free. Check it --against c18_lc.vmf and the infested quarter. A ramp of collapsed slab, never steps, leads down a hole broken in the canal's floor.
+
+- **Why:** The owner, 26 November: "the canal forks off in this direction > floodgate module (which now uses a water hazard gate with the valve and all) > canal tunnel > crypt module > church in infested quarter"; of the tram: "sink the tram line even lower than the canal floor and combine it with the breach module"; of the steps first put in the hole: "why are there steps going down from a hole in the bottom of a canal? ... just make it a slab of broken/collapsed concrete: a ramp".
+- **How:** map_modules.Build(buried, base), Mod.paint and Mod.portal; map_layouts/inlet.txt (off a tee on the ring's east side); map_mods_d.m_tramfall (ring.txt: base 64).
+- **Checked by:** map_build.py chain --layout map_layouts/inlet.txt --against c18_lc.vmf lc_ravenholm.vmf: nothing runs into anything.
+- **Tags:** owner, canal, geometry
+

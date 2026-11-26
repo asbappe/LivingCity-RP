@@ -508,9 +508,103 @@ def m_morgue(m, opt):
     m.view(290, 700, F, 330, 0, "the drawers")
 
 
+def m_tramfall(m, opt):
+    """The tram under the breach (the owner, 26 November, of the tram's station that could not stand under the street
+    and of the breach: "sink the tram line even lower than the canal floor and combine it with the breach module so
+    the broken canal floor is above the crashed tram, and the crashed tram is flat on the tracks but the
+    rubble/concrete slabs from the breach have fallen onto it so it's still the EP2 model"). A tram tunnel 320 wide
+    crosses under the canal, its rails 304 under the canal's floor, its roof the canal's floor slab; over it the floor
+    has fallen in, a hole 320 by 256: Episode Two's wrecked car (wrecked_train_02) lies flat on the rails under the
+    hole, slabs of the canal's floor leaning on it and lying on its roof, rubble and bent bars round it, daylight and
+    dust down the hole. Beside the car a slab of the collapsed floor lies as a ramp from the hole's edge down to the
+    tunnel's walk. Away from the city the tunnel ends in the dark, black; toward the city it runs on under the street into the
+    station: a hall under the road, a platform along the track, lamps, a bench, and at its far end, directly under the
+    Combine wall, the line's gate, barred, black beyond (the owner: the "gate/black void side ... directly under a
+    combine wall section").
+    Named for the game: lc_breach_bottom (the tunnel's floor under the hole), lc_tram_exit (an info_target on the
+    platform before the gate: where people come from or go to the city), lc_tram_stash (beside the car: a cache).
+    The layout needs "base 64" or lower: the tunnel's floor is at z 96.
+    Left as brushes: the tunnel, the hall, the platform, the fallen slabs, the rails.
+    Unchecked: the car is Episode Two's; how it sits flat on the rails (its origin at its underside); the look of it."""
+    import map_corridor
+    from map_mods_c import dustmotes, cage_lamp
+    from map_modules import MM
+    b = m.b
+    s = m.street_side() or 1                    # (the city's side: the station's)
+    TZ, TC = F - 304, F - 48                    # the rails' bed and the tunnel's roof under the canal's floor
+    if getattr(b, "base", 224) > TZ - 16:
+        b.problems.append("%s: the tram's tunnel is at z %d: the layout needs \"base %d\" or lower" % (m.tag, TZ, TZ - 32))
+        return
+    FR = map_corridor.front_line(b) if m.street_side() else 1088
+    A, B = 384, 704                              # the tunnel's sides
+    cu = 480                                     # the track's middle (the walk beside it is u 576..704)
+
+    def sv(a, c):
+        return tuple(sorted((s * a, s * c)))
+    m.open(0, -256, 1024, 256)
+    m.cellar(A, -256, B, 256, TZ, TC, F, mat=MM["gravel"], upper_mat=MAT["canal_floor"])
+    m.open(A, -128, B, 128, floor=TZ, mat=MM["gravel"])                      # the hole
+    o1, o2 = sv(-448, -256)                                                   # (away from the city: on into the dark)
+    m.low(A, o1, B, o2, TC, floor=TZ, mat=MM["gravel"])
+    h1, h2 = sv(256, FR)                                                      # (the station, under the street)
+    m.low(A - 64, h1, B + 64, h2, TZ + 304, floor=TZ, mat=MM["gravel"])
+    for r in ((A, -448, B, 256), (A - 64, min(h1, h2), B + 64, max(h1, h2))):
+        m.side(*r)
+    m.blocked(A - 32, -160, B + 32, 160)
+    m.no_bank(A - 64, -264, B + 64, 264)
+    # the black ends, and nobody past them
+    e1, e2 = sv(-448, -440)
+    m.det([(A, e1, TZ, B, e2, TC)], MAT["black"])
+    g1, g2 = sv(FR - 8, FR)
+    m.det([(A - 64, g1, TZ, B + 64, g2, TZ + 304)], MAT["black"])
+    b1, b2 = sv(FR - 40, FR - 32)
+    m.bars((A - 64, b1, TZ, B + 64, b2, TZ + 304), "u")
+    # the rails, from the dark to the gate
+    r1, r2 = sv(-440, FR - 40)
+    m.det([(cu - 30, r1, TZ, cu - 26, r2, TZ + 6), (cu + 26, r1, TZ, cu + 30, r2, TZ + 6)], MAT["bars"])
+    # the car, flat on the rails under the hole; what fell on it
+    m.static("models/props_trainstation/wrecked_train_02.mdl", cu, s * 40, 0, z=TZ + 6)
+    slab = MAT["canal_floor"]
+    m.shapes([prism([(-128, F), (-128, F - 28), (60, TZ + 214), (76, TZ + 238)], "x", 400, 560, slab),          # a slab of the floor leaning from the hole's edge onto its roof
+              prism([(128, F), (156, F - 10), (176, TZ + 220), (150, TZ + 214)], "x", 420, 540, slab)])           # a second, hanging steep at the other edge, its foot on the roof
+    m.det([(432, 96, TZ + 214, 536, 208, TZ + 232)], slab)                                                       # one lying on the roof
+    m.static("models/props_debris/concrete_debris128pile001a.mdl", 620, -60, 30, z=TZ)
+    m.static("models/props_debris/concrete_chunk01a.mdl", 600, 90, 110, z=TZ)
+    for k in range(4):
+        m.point("prop_static", 404 + 70 * k, -126 + 2 * (k % 2), F - 20 - 6 * (k % 3), {"model": "models/props_debris/rebar00%dc_64.mdl" % (2 if k % 2 else 4),
+                                                                                         "angles": "90 %d 0" % m.fr.yaw(90), "skin": "0", "solid": "0"})
+    # the way down: a slab of the collapsed floor lying as a ramp beside the car, from the hole's far edge to the tunnel's
+    # walk (the owner, 26 November, of the steps first put here: "why are there steps going down from a hole in the bottom
+    # of a canal? ... just make it a slab of broken/collapsed concrete: a ramp"): 304 down over 456, about 34 degrees
+    v0, v1 = -s * 128, s * 328
+    m.shapes([prism([(v0, F), (v1, TZ), (v1 - s * 44, TZ), (v0, F - 28)], "x", 580, 700, slab)])
+    m.spot(cu + 80, 0, F + 380, "255 240 220 260", 0, -90, 60)                # daylight down the hole
+    dustmotes(m, (A + 16, -112, TZ + 16, B - 16, 112, F - 8))
+    # the station: a platform along the track, lamps, a bench, the gate's sign
+    p1, p2 = sv(400, FR - 40)                                                 # (it starts past the steps' foot, three steps up onto it)
+    m.det([(576, p1, TZ, B + 64, p2, TZ + 40)], MAT["canal_wall"], top=MAT["quay_floor"])
+    m.steps(s * 340, 592, 688, TZ, TZ + 40, "v", s)
+    for v in range(384, FR - 100, 256):
+        cage_lamp(m, B + 64, s * v, TZ + 220, 180, "255 214 160 120")
+    m.static("models/props_c17/bench01a.mdl", B + 36, s * 520, 180, z=TZ + 40)
+    m.grime("danger", cu, s * (FR - 8), TZ + 210, 3)
+    m.grime("number", B + 64, s * 330, TZ + 150, 4)
+    m.target("lc_breach_bottom", 640, 0, TZ + 8)
+    m.target("lc_tram_exit", 640, s * (FR - 120), TZ + 48, 270 if s > 0 else 90)
+    m.target("lc_tram_stash", 610, s * 180, TZ + 8)
+    m.soundscape(SCAPES["tunnel"], cu, s * 500, TZ, radius=700)
+    m.lane(200, 0)
+    m.lane(860, 0)
+    m.lane(640, s * 300, TZ)
+    m.lane(640, s * 700, TZ + 40)
+    m.view(200, -80, F, 15, -20, "the hole in the canal's floor and the car under it")
+    b.notes.append("%s: the tram's rails at z %d under the canal's floor, the station's gate under the Combine wall at (%d %d)" % ((m.tag, TZ) + m.fr.pt(cu, s * FR)))
+
+
 MODULES = {
     "execwall": (768, m_execwall, "the firing wall: a backstop, three posts, one hard lamp (left)"),
     "substation": (1024, m_substation, "the substation: transformers behind the Combine's fence, a fuse panel to break (right)"),
+    "tramfall": (1024, m_tramfall, "the tram under the breach: the canal's floor fallen in over a tram tunnel, the wrecked car under the slabs, a station under the street"),
     "breach": (1024, m_breach, "the breach: the floor fallen into an old cellar, slabs for ramps, an undercut"),
     "tunnel": (1024, m_tunnel, "the canal under the city: a covered stretch of any length (\"tunnel 1536\")", {"stretch": True}),
     "wreck": (1024, m_wreck, "the wreck: a Combine carrier's container down in the canal, hollow, to race for"),
