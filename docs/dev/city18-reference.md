@@ -4067,3 +4067,12 @@ A piece that runs under the city (the crypt's inlet) is laid "buried": rim at th
 - **Checked by:** map_build.py chain --layout map_layouts/inlet.txt --against c18_lc.vmf lc_ravenholm.vmf: nothing runs into anything.
 - **Tags:** owner, canal, geometry
 
+### When the owner says move a thing, copy it whole: never rebuild it bare (`owner-move-means-copy`)
+
+When the owner asks for something that exists (a module's station, a room, a set piece) to be moved, sunk, or put into another module, reuse its own code and props whole: factor it out and call it, or copy it. Never write a plain stand-in for it. And a thing goes on the side its story points to: a church the infested quarter's, on the canal's bank toward the quarter.
+
+- **Why:** The owner, 26 November, of the tram under the breach first built as a new plain hall: "I told you to take the tram module that had the little station and put it in the breach module and you recreated it? WHY? WHY NOT JUST COPY PASTE IT? WHERE IS THE STATION? WHERE ARE THE PROPS? ITS A BARE FUCKING SQUARE ROOM WITH A FLOATING TRAM IN IT"; and of the church set south of the inlet, away from the quarter: "you put the church on THE WRONG SIDE OF THE CANAL".
+- **How:** map_mods_a.tram_station (m_tram's left station, copied whole) called by map_mods_d.m_tramfall with the module's frame moved; the car on its two bogies as m_tram stands a car. inlet.txt: "crypt flip", the fork at y -6016 so the church's yard stands north of the inlet on free ground by the quarter's corner.
+- **Checked by:** Count the station's props in the built file (columns, arches, lamps, benches, clock, payphone, booth, gate); --against c18_lc.vmf and the quarter.
+- **Tags:** owner, interiors
+

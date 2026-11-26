@@ -1,15 +1,17 @@
 # The crypt's inlet: a fork west off the ring's east side, under the street and the Combine wall, to the infested
 # quarter's south-east corner (the owner, 26 November: "the canal forks off in this direction > floodgate module
 # (which now uses a water hazard gate with the valve and all) > canal tunnel > crypt module > church in infested
-# quarter"). It starts at the side gate of the ring's tee on the east side (5952 -3328, heading W); the flood gate
+# quarter"). It starts at the side gate of the ring's tee on the east side (5952 -6016, heading W); the flood gate
 # shuts it off from the ring; the tunnel runs under the city's blocks, which stand at the street's height and over
-# (nothing of the owner's map is at the canal's depth between x 2816 and 5952 here); the crypt's hole is in the left
-# (south) wall, and the church stands in its walled yard south of it, on the free ground by the quarter's corner
+# (nothing of the owner's map is at the canal's depth between x 2816 and 5952 here); the crypt's hole is in the right
+# (north) wall, and the church stands in its walled yard north of it, between the inlet and the quarter, on the free
+# ground by the quarter's south-east corner (the owner, 26 November, of the church first set south of the inlet: "you put
+# the church on THE WRONG SIDE OF THE CANAL")
 # (the quarter: x 1024..2816, y -3840..-1280).
 # Checked with
 #   python3 map_build.py chain --layout map_layouts/inlet.txt --against c18_lc.vmf lc_ravenholm.vmf lc_ring.vmf
 
-start 5952 -3328
+start 5952 -6016
 heading W
 rim 656
 buried
@@ -17,4 +19,4 @@ close
 
 floodgate
 tunnel 1280       # (the gate takes 256, the flood gate 512: the crypt then ends at x 2880, 64 clear of the quarter's edge)
-crypt
+crypt flip        # (flipped: its hole and the church on the right, the north side, toward the quarter)

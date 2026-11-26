@@ -111,10 +111,10 @@ left over       # the south run's track on east over the east side's canal into 
 straight 768      # (was "execwall flip": taken off the ring, 24 November)
 straight 1024      # (was "lift flip": taken off the ring, 24 November)
 pumphouse flip
+straight 384       # (with the tee, the 1024 that was "aqueduct", moved south before the quay)
+tee                # (the crypt's inlet forks west here under the street, at y -6016: map_layouts/inlet.txt; south enough that the church stands on its NORTH side, toward the infested quarter: the owner, 26 November)
 quay
-straight 1536      # (was "arcade": taken off the ring, 24 November)
-straight 512       # (with the tee, the 1024 that was "aqueduct")
-tee                # (the crypt's inlet forks west here under the street: map_layouts/inlet.txt; the owner, 26 November)
+straight 1664      # (was "arcade": taken off the ring, 24 November) (128 longer: the tee and the quay stand 128 further south, so the church's yard clears the city's block north of it)
 ash                # (the ash outfall, its chute in the city's side under the street; the nearest of the ring to the spawn: the owner, 26 November)
 straight 256       # (with the ash, the 1024 that was "chimney")
 swingbridge
