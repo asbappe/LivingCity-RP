@@ -1,4 +1,4 @@
-# Test map 3: camp, stash, lock, thumper, swingbridge, railbridge, execwall, breach, wreck
+# Test map 3: camp, stash, lock, thumper, quay (with the swing bridge), railbridge, execwall, breach, wreck
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_3.txt --test
 
@@ -10,7 +10,7 @@ camp
 stash
 lock
 thumper
-swingbridge
+quay
 
 left
 straight 1792

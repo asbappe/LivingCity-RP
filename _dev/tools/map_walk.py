@@ -310,7 +310,7 @@ def ladder_feet(text, ents):
     return out
 
 
-def check_text(text, limit=12, where=None, start=None):
+def check_text(text, limit=12, where=None, start=None, also=()):
     boxes = map_stairs.boxes_of(text)
     props = prop_boxes(text)
     fl = Floors(boxes, props, mud_tops(text), slope_floors(text))
@@ -377,6 +377,8 @@ def check_text(text, limit=12, where=None, start=None):
             targets.append(("the front of the button %s" % (name or kv.get("model")), (o[0] + math.cos(yaw) * 36, o[1] + math.sin(yaw) * 36, o[2] - 30), "button"))
     # the start: the spawn or one given; else the biggest stretch of floor a player can walk round
     starts = nearest(fl, start, reach=48, down=128) if start else []
+    for p in also:      # (more places to walk from: the far side of ground this walk cannot read, as a forest's displaced ground)
+        starts = starts + nearest(fl, p, reach=48, down=128) if starts else starts
     if starts:
         seen = walk(fl, starts, ladders)
     else:
@@ -449,10 +451,18 @@ def check_text(text, limit=12, where=None, start=None):
 
 
 def main():
+    """map_walk.py FILE.vmf ... [--also X Y Z]...: each --also is one more place the walk starts from (beside the spawn):
+    for a part of the map that can only be reached over ground this walk cannot read (a forest's ground is displaced:
+    the walk knows flat and sloped brushes), or from the inside (a door that only opens from within)."""
     bad = 0
-    for path in sys.argv[1:]:
+    args, also = sys.argv[1:], []
+    while "--also" in args:
+        i = args.index("--also")
+        also.append(tuple(float(v) for v in args[i + 1:i + 4]))
+        del args[i:i + 4]
+    for path in args:
         text = open(path, errors="replace").read()
-        found = check_text(text, limit=300)
+        found = check_text(text, limit=300, also=also)
         print("%s: %d problems" % (path, len(found)))
         for p in found:
             print("  " + p)

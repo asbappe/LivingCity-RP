@@ -8,7 +8,6 @@ Living City: canal modules, set C: the Combine's and the city's machinery in the
     thumper      a Combine thumper on a fenced terrace, with the box that stops it (experimental)
     depot        the Combine's ration depot: a roller door, a loading bay, caged stores, a staff door
     armory       a Combine armoury vault behind a door that takes two people to open
-    swingbridge  a footbridge that turns on a pier in the middle of the canal (experimental)
     floodroom    a valve chamber that can be flooded and drained (experimental)
 
 map_modules.py picks this file up by itself (docs/dev/map-modules.md). Nothing here has been compiled: each module's
@@ -379,13 +378,25 @@ def combine_field(m, a, b, z, name=None, high=180, hum=True):
         m.sound("ambient/machines/combine_shield_loop3.wav", mu, mv, z + 80, radius=500, volume=4, name=(name + "_hum") if name else None)
 
 
-def pour(m, u, v, z, length=120, colour="196 208 214", size=6, yaw=0, pitch=90):
-    """Water (or slime) running out of a pipe's mouth at (u, v, z) and falling: an env_steam pointed down (pitch 90:
-    straight down; less, out toward `yaw` too), as the owner's map points its jets (no falling-water material is in
-    Half-Life 2's lists)."""
-    m.point("env_steam", u, v, z, {"angles": "%d %d 0" % (pitch, m.fr.yaw(yaw)), "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "150", "SpreadSpeed": "5",
-                                   "StartSize": str(size), "EndSize": str(size * 3), "Rate": "36", "JetLength": str(length), "rendercolor": colour,
-                                   "renderamt": "150", "rollspeed": "4"})
+ENGINE = "models/props_combine/combinetrain01a.mdl"      # (the razor train's engine)
+
+
+def pour(m, u, v, z, length=120, colour="214 226 232", size=6, yaw=0, pitch=90):
+    """Water (or slime) running out of a pipe's mouth at (u, v, z) and falling: env_steam jets pointed down (pitch 90:
+    straight down; less, out toward `yaw` too), as the owner's map points its jets (no falling-water material or particle
+    is in Half-Life 2's or the Episodes' lists: Valve's own canal maps show none). Since 26 November three jets, not one
+    (the owner: "I can barely barely barely see the water effect ... it is like 97% transparent"): a dense core of big
+    opaque puffs, a softer sleeve round it, and spray thrown up where it lands."""
+    ang = "%d %d 0" % (pitch, m.fr.yaw(yaw))
+    for start, end, rate, amt, spread, speed in ((size * 2, size * 4, 120, 255, 4, 190), (size * 3, size * 6, 45, 200, 12, 150)):
+        m.point("env_steam", u, v, z, {"angles": ang, "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": str(speed), "SpreadSpeed": str(spread),
+                                       "StartSize": str(start), "EndSize": str(end), "Rate": str(rate), "JetLength": str(length), "rendercolor": colour,
+                                       "renderamt": str(amt), "rollspeed": "4"})
+    c = math.cos(math.radians(pitch))
+    fu, fv = u + length * c * math.cos(math.radians(yaw)), v + length * c * math.sin(math.radians(yaw))
+    m.point("env_steam", int(round(fu)), int(round(fv)), int(round(z - length * math.sin(math.radians(pitch)))) + 6,
+            {"angles": "-90 0 0", "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "45", "SpreadSpeed": "40", "StartSize": str(size * 3),
+             "EndSize": str(size * 8), "Rate": "18", "JetLength": "44", "rendercolor": colour, "renderamt": "150", "rollspeed": "6"})
 
 
 def round_arch(m, lo, hi, spring, a, b, axis="y", mat=None, steps=5):
@@ -832,8 +843,9 @@ def m_railbridge(m, opt):
     if raised:
         import map_backdrop
         SKY_RUN = 4096      # (a corridor of sky on past the scenery's far edge, for the train to wait in unseen: below)
-        FAR = {street: T0[street] + 1408, -street: 256 + map_backdrop.DEPTH + SKY_RUN - 64}      # (1408 behind the wall's face: 64 clear of the city's
-        #                                                                              block at y 6272 on the ring's north run, checked --against c18_lc.vmf)
+        FAR = {street: T0[street] + 2048, -street: 256 + map_backdrop.DEPTH + SKY_RUN - 64}      # (2048 behind the wall's face since the engine,
+        #   26 November: the train is 1588 long. On the ring's north run the strip runs down beside the city's west edge, 24 clear of its sky wall
+        #   at x -3432 and 40 of the block at y 5772..6272: checked --against c18_lc.vmf)
     m.open(0, -256, L, 256)
     from map_mods_c import cage_lamp
     for s in (1, -1):
@@ -841,9 +853,13 @@ def m_railbridge(m, opt):
         lo, hi = (t0, far) if s > 0 else (-far, -t0)
         if raised:
             if s == street:      # (behind the wall: its core carried back under the line, the sky of the wall's own over it)
-                m.paint(c - 160, lo, c + 160, hi, ("low", map_corridor.STREET + map_corridor.WALL_H - 8, map_corridor.CORE, b.sky))
-                m.side(c - 160, lo, c + 160, hi)
-                m.blocked(c - 160, lo, c + 160, hi)
+                # (320 wide for its first 1408, then 192: the deep end on the ring's north run passes the city's west edge, and
+                #  its side wall must stand clear of the city's sky wall at x -3432)
+                for half, e1, e2 in ((160, t0, t0 + 1408), (96, t0 + 1408, far)):
+                    q1, q2 = min(s * e1, s * e2), max(s * e1, s * e2)
+                    m.paint(c - half, q1, c + half, q2, ("low", map_corridor.STREET + map_corridor.WALL_H - 8, map_corridor.CORE, b.sky))
+                    m.side(c - half, q1, c + half, q2)
+                    m.blocked(c - half, q1, c + half, q2)
             else:
                 # beyond the scenery's far edge the line runs on in a corridor of sky 320 wide (the owner, 26 November: "make
                 # a skybox tunnel big enough to fit the train and have it stretch far enough out that the train spawns out
@@ -924,7 +940,7 @@ def m_railbridge(m, opt):
     m.taken(c - 90, -256, D - 64, c + 90, 256, D + 40)
     # the track: ballast on the bed, ties on the bridge and a little way in, rails the whole way (broken where the
     # areaportals stand), an overhead wire on three posts from tunnel to tunnel
-    if not raised:      # (nobody can see the top of the raised bed: no ballast, ties or rails there; its posts and wire are seen)
+    if not raised:      # (nobody can see the top of the raised bed: no ballast, ties or rails there)
         m.det([(c - 52, vl, D, c + 52, vh, D + 1)], MM["gravel"])
         pa, pb = -(T0[-1] + 62), T0[1] + 62                # (the areaportals: no tie or rail through them)
         m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(pa + 6, pb - 8, 48) if not (pa - 4 < v < pa + 12 or pb - 16 < v + 12 < pb + 4)], "wood/woodfloor006b")
@@ -938,9 +954,7 @@ def m_railbridge(m, opt):
         for a, e in ((-FAR[-1] + 8, pa - 2), (pa, pb), (pb + 2, FAR[1] - 8)):
             rails += [(c - 30, a, D, c - 26, e, D + 6), (c + 26, a, D, c + 30, e, D + 6)]
         m.det(rails, PIPE)
-    else:
-        m.det([q for v in (-176, 0, 176, street * 480, street * 800) for q in ((c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134))], PIPE)
-        m.rope([(c, vl + 16, D + 126)] + [(c, v, D + 128) for v in sorted((-176, 0, 176, street * 480, street * 800))] + [(c, vh - 16, D + 126)], slack=6, width=1)
+    # (a raised bed has no posts and no wire since 26 November: the Combine's engine, 289 high, runs under none)
 
     # the train, standing where it waits: the left tunnel, its middle on lc_rail_p1. The tracktrain itself is unseen;
     # two flat cars (train005, 460 long) ride on it, one with two bundles of steel beams, one with three crates
@@ -948,10 +962,15 @@ def m_railbridge(m, opt):
     tr = T0[-1] + 544
     way = -1                                         # (it runs from +v to -v)
     if raised:      # (it waits at the far end of the corridor of sky, 496 in from its end, and runs to the city's side: it stops with its
-        #              tail 460 behind the wall's face, where from the street nobody sees it over the wall's top)
+        #              tail 448 behind the wall's face, where from the street nobody sees it over the wall's top)
         way = street
-        tv, tr = -street * (FAR[-street] - 496), FAR[street] - 480
+        tv, tr = -street * (FAR[-street] - 496), FAR[street] - 1132      # (the engine's nose stops 12 short of the strip's end)
     parts = [((c - 58, tv - 468, base + 2, c + 58, tv + 468, base + 94), MAT["nodraw"])]
+    if raised:      # (the Combine's engine at the head of the cars: the owner, 26 November, "add the combine train at the head of the
+        #              freight cars". combinetrain01a: 640 long, 140 wide, 289 high, standing on its origin, its nose toward +x; its tail 12
+        #              ahead of the first car, so the whole train is 1588 long and stops with its tail 448 behind the wall's face)
+        e1, e2 = sorted((tv + way * 480, tv + way * 1120))
+        parts.append(((c - 66, e1, base + 2, c + 66, e2, base + 280), MAT["nodraw"]))
     brush(m, "func_tracktrain", {
         "targetname": "lc_rail_train", "target": "lc_rail_p1", "origin": "%d %d %d" % (m.fr.at(c, tv, base)), "orientationtype": "0", "velocitytype": "0",
         "startspeed": "350", "speed": "350", "height": "0", "wheels": "50", "bank": "0", "dmg": "1000", "spawnflags": "530", "volume": "10",
@@ -960,6 +979,8 @@ def m_railbridge(m, opt):
         "rendercolor": "255 255 255", "disableshadows": "1"}, parts, MAT["nodraw"], vis=b.vis + ": the train")
     for k in (0, 1):
         ride(m, "lc_rail_train", "models/props_trainstation/train005.mdl", c, tv - 238 + 476 * k, 0, base)
+    if raised:
+        ride(m, "lc_rail_train", ENGINE, c, tv + way * 851, 90 if way > 0 else 270, base)
     for du in (-22, 22):
         ride(m, "lc_rail_train", "models/props_junk/ibeam01a_cluster01.mdl", c + du, tv - 238, 90, base + 54)
     for du, dv, model in ((-24, 180, "wood_crate002a"), (22, 250, "wood_crate002a"), (-14, 330, "wood_crate001a")):
@@ -1739,8 +1760,14 @@ def street_landing(m, s, cu, deck, arc, lip, U, B, Y):
     m.taken(*B(252, 228, deck - 60, 772, 256, deck + 120))
 
 
-def m_swingbridge(m, opt):
-    """EXPERIMENTAL: a footbridge 224 over the canal's floor (32 under the trim, so that every room of it is roofed at
+def swing_bridge(m, cu, deck, street, quay=False):
+    """The quay's bridge since 26 November (the owner: "combine the quay and the switchbridge modules so the switchbridge
+    IS the bridge for the quay, and remove the static bridge for the quay"): it was the module `swingbridge`, and m_quay
+    builds it now, about (cu, 0) with its deck at `deck`. quay=True: the left end is the quay's own edge (as beside a
+    street: street_landing), the right end the landing alone, 128 high, with no stairs of its own (the quay has its
+    stairs and its ladder; the store's barred door stands in the landing's back wall). As the module was written:
+
+    a footbridge 224 over the canal's floor (32 under the trim, so that every room of it is roofed at
     720 or lower and a street along the outside bank passes over it) that turns on a round pier in the middle of the
     canal. As the map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it
     lies along the canal and joins nothing. Each landing is a roofed alcove 192 long and 96 high with a street doorway
@@ -1786,8 +1813,6 @@ def m_swingbridge(m, opt):
     motor box and turntable, the landings, their lips and corbels, the stairs, their parapet and the wall between the
     flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstripe01a)."""
     b = m.b
-    street = m.street_side()
-    L, cu, deck = 1024, 512, (TRIM if street else TRIM - 32)      # (beside a street the deck is at the street's height and meets it on that bank)
     half, wide, cap = 229, 32, 232          # the deck's straight sides end 229 out; its ends are arcs reaching 232
     lip = cap + 1                           # the lips' edges: arcs 1 farther out than the deck's ends
     ends = [(cu - 32, half), (cu - 16, 231), (cu, cap), (cu + 16, 231), (cu + 32, half)]
@@ -1796,12 +1821,12 @@ def m_swingbridge(m, opt):
     inner = min(math.hypot((a[0] + c[0]) / 2.0 - cu, (a[1] + c[1]) / 2.0) for a, c in zip(arc, arc[1:]))
     if reach >= inner:
         b.problems.append("%s: the bridge's ends (%d out) would hit the landings' lips (%d out)" % (m.tag, reach, inner))
-    m.open(0, -256, L, 256)
     from map_town import board
     for s in (1, -1):
-        # drawn for the left bank; the right is the same turned half round about the pier
+        # drawn for the left bank; the right is the same turned half round about the pier (the numbers are the module's,
+        # whose pier stood at u 512)
         def U(u):
-            return cu + s * (u - cu)
+            return cu + s * (u - 512)
 
         def R(u1, v1, u2, v2):
             return (min(U(u1), U(u2)), min(s * v1, s * v2), max(U(u1), U(u2)), max(s * v1, s * v2))
@@ -1812,39 +1837,45 @@ def m_swingbridge(m, opt):
 
         def Y(yaw):
             return (yaw + (0 if s > 0 else 180)) % 360
-        if s == street:
+        if s == street or (quay and s > 0):
             street_landing(m, s, cu, deck, arc, lip, U, B, Y)
             continue
-        mid = F + (deck - F) // 2                                 # the half landing: each flight climbs 112 in 7 steps
-        roof_lo, roof_up = (F + 160, F + 200, mid + 128), (deck + 96, deck + 80, mid + 144)    # (each flight's roof, stepping with it)
-        # the landing (192 long, the bridge's end in its far half), 96 high
-        m.low(*R(384, 256, 576, 320), deck + 96, floor=deck, mat=MAT["quay_floor"])
-        # the way up: the doorway in the canal's wall, the corridor behind it under the landing, the lower flight up
-        # away from it, the half landing, the upper flight back along the canal's wall onto the landing
-        m.low(*R(320, 256, 384, 320), F + 144)
-        m.low(*R(320, 320, 576, 384), F + 144)
-        for k in range(3):
-            m.low(*R(576 + 64 * k, 320, 640 + 64 * k, 384), roof_lo[k])
-            m.low(*R(576 + 64 * k, 256, 640 + 64 * k, 320), roof_up[k], floor=mid)
-        m.low(*R(768, 256, 832, 384), mid + 128, floor=mid)
-        m.side(*R(320, 256, 832, 384))
-        m.blocked(*R(320, 256, 832, 384))
-        lo2, hi2 = sorted((s * 320, s * 384))
-        m.steps(U(576), lo2, hi2, F, mid, "u", s)
-        m.det([B(744, 320, F, 768, 384, mid)], MAT["canal_wall"], top=MAT["stairs"])      # (the half landing's end over the lower flight's cell)
-        lo1, hi1 = sorted((s * 256, s * 320))
-        m.steps(U(744), lo1, hi1, mid, deck, "u", -s)
-        m.det([B(max(578, 576 + 64 * k), 320, F, 640 + 64 * k, 324, roof_lo[k]) for k in range(3)], MAT["beam"])     # (the wall between the flights)
-        r1, r2 = sorted((s * 254, s * 260))                       # the parapet on the upper flight's open side (2 proud of the wall's face)
-        m.shapes([prism([(U(744), mid - 8), (U(744), mid + 36), (U(576), deck + 36), (U(576), deck - 8)], "y", r1, r2, MAT["beam"])])
-        m.det([B(744, 254, mid - 8, 832, 260, mid + 36)], MAT["beam"])
-        m.det([B(312, 248, F, 322, 256, F + 144), B(382, 248, F, 392, 256, F + 144), B(312, 248, F + 144, 392, 256, F + 160)], STEEL)   # the doorway's frame
-        m.taken(*B(304, 228, F, 840, 256, deck + 120))
-        cage_lamp(m, U(448), s * 384, F + 92, Y(270), "238 226 162 40")
-        cage_lamp(m, U(832), s * 352, mid + 72, Y(180), "238 226 162 40")
-        m.lane(U(352), s * 290)
-        m.lane(U(448), s * 352)
-        m.lane(U(800), s * 320, mid)
+        if quay:
+            m.low(*R(384, 256, 576, 320), deck + 128, floor=deck, mat=MAT["quay_floor"])
+            m.side(*R(384, 256, 576, 320))
+            m.blocked(*R(384, 256, 576, 320))
+            m.taken(*B(376, 228, deck - 60, 584, 256, deck + 140))
+        else:
+            mid = F + (deck - F) // 2                                 # the half landing: each flight climbs 112 in 7 steps
+            roof_lo, roof_up = (F + 160, F + 200, mid + 128), (deck + 96, deck + 80, mid + 144)    # (each flight's roof, stepping with it)
+            # the landing (192 long, the bridge's end in its far half), 96 high
+            m.low(*R(384, 256, 576, 320), deck + 96, floor=deck, mat=MAT["quay_floor"])
+            # the way up: the doorway in the canal's wall, the corridor behind it under the landing, the lower flight up
+            # away from it, the half landing, the upper flight back along the canal's wall onto the landing
+            m.low(*R(320, 256, 384, 320), F + 144)
+            m.low(*R(320, 320, 576, 384), F + 144)
+            for k in range(3):
+                m.low(*R(576 + 64 * k, 320, 640 + 64 * k, 384), roof_lo[k])
+                m.low(*R(576 + 64 * k, 256, 640 + 64 * k, 320), roof_up[k], floor=mid)
+            m.low(*R(768, 256, 832, 384), mid + 128, floor=mid)
+            m.side(*R(320, 256, 832, 384))
+            m.blocked(*R(320, 256, 832, 384))
+            lo2, hi2 = sorted((s * 320, s * 384))
+            m.steps(U(576), lo2, hi2, F, mid, "u", s)
+            m.det([B(744, 320, F, 768, 384, mid)], MAT["canal_wall"], top=MAT["stairs"])      # (the half landing's end over the lower flight's cell)
+            lo1, hi1 = sorted((s * 256, s * 320))
+            m.steps(U(744), lo1, hi1, mid, deck, "u", -s)
+            m.det([B(max(578, 576 + 64 * k), 320, F, 640 + 64 * k, 324, roof_lo[k]) for k in range(3)], MAT["beam"])     # (the wall between the flights)
+            r1, r2 = sorted((s * 254, s * 260))                       # the parapet on the upper flight's open side (2 proud of the wall's face)
+            m.shapes([prism([(U(744), mid - 8), (U(744), mid + 36), (U(576), deck + 36), (U(576), deck - 8)], "y", r1, r2, MAT["beam"])])
+            m.det([B(744, 254, mid - 8, 832, 260, mid + 36)], MAT["beam"])
+            m.det([B(312, 248, F, 322, 256, F + 144), B(382, 248, F, 392, 256, F + 144), B(312, 248, F + 144, 392, 256, F + 160)], STEEL)   # the doorway's frame
+            m.taken(*B(304, 228, F, 840, 256, deck + 120))
+            cage_lamp(m, U(448), s * 384, F + 92, Y(270), "238 226 162 40")
+            cage_lamp(m, U(832), s * 352, mid + 72, Y(180), "238 226 162 40")
+            m.lane(U(352), s * 290)
+            m.lane(U(448), s * 352)
+            m.lane(U(800), s * 320, mid)
         # the landing's lip: an arc about the pier, out to meet the bridge's end, on a corbel; the handrail each side of
         # the bridge's end and along the landing's open edge
         m.shapes([vprism([(a[0], s * a[1]), (c[0], s * c[1]), (c[0], s * 256), (a[0], s * 256)], deck - 16, deck, MAT["beam"], MAT["quay_floor"])
@@ -1857,7 +1888,7 @@ def m_swingbridge(m, opt):
         # door, which opens), the lamp. Beside a street the other bank is the edge of the world, and a bridge from the
         # street to a door nobody can open is pointless (the owner, 23 November): no door there, the landing is the
         # bridge's way down into the canal
-        if not street:
+        if not street and not quay:
             f1, f2 = sorted((s * 304, s * 320))
             p1, p2 = sorted((s * 316, s * 320))
             du = U(432)
@@ -1937,11 +1968,6 @@ def m_swingbridge(m, opt):
     sound(m, "lc_swing_stop", "Streetwar.d3_c17_11_garage_stop1", cu, 0, deck, radius=1600, volume=8)
     m.lane(cu, 120, deck)
     m.lane(cu, -120, deck)
-    m.view(150, 60, F, 0, -12, "the bridge from the canal")
-    m.view(cu + 10, 290, deck, 270, 10, "from the left landing, across the bridge")
-    m.view(240, 120, F, 30, 2, "the left bank's doorway and stairs")
-    m.view(700, 300, F + 128, 180, 4, "the left bank's half landing, up the upper flight")
-    m.view(cu - 40, -280, deck, 60, 6, "on the right landing: the wheel")
     b.notes.append("%s: the bridge turns about (%d %d); its deck is z %d; its ends reach %d out, the landings' lips are %d out, the walls 256" % (
         (m.tag,) + m.fr.pt(cu, 0) + (deck, reach, lip)))
 
@@ -1960,6 +1986,5 @@ MODULES = {
     "thumper": (1024, m_thumper, "a Combine thumper on a fenced terrace, with the box that stops it (experimental)"),
     "depot": (1280, m_depot, "the Combine's ration depot: a roller door, a loading bay, caged stores, a staff door"),
     "armory": (1024, m_armory, "a Combine armoury vault behind a two-button door: a heist target"),
-    "swingbridge": (1024, m_swingbridge, "a footbridge that turns on a pier: across the canal, or along it (experimental)"),
     "railbridge": (1024, m_railbridge, "a railway bridge: a Combine train crosses every few minutes (experimental)"),
 }

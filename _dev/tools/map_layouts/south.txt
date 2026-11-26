@@ -37,7 +37,7 @@ straight 1536
 shanty
 underpass
 straight 704
-overflow 704
+straight 1024
 cistern
 straight 1920 bridge
 left

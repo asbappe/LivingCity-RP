@@ -77,7 +77,7 @@ straight 1408
 right wall      # the west run's track straight on across the corner's street into a black portal in the Combine wall (the owner, 26 November: yes)
 # S1: west
 drain
-overflow flip
+straight 1024      # (the overflow stood here until the owner had it deleted, 26 November)
 stash flip
 straight 128
 left            # (no train: the boathouse's rooms and the stash's wall stand where either tunnel would go)
@@ -117,7 +117,7 @@ quay
 straight 1664      # (was "arcade": taken off the ring, 24 November) (128 longer: the tee and the quay stand 128 further south, so the church's yard clears the city's block north of it)
 ash                # (the ash outfall, its chute in the city's side under the street; the nearest of the ring to the spawn: the owner, 26 November)
 straight 256       # (with the ash, the 1024 that was "chimney")
-swingbridge
+straight 1024      # (the swing bridge stood here as a module of its own: it is the quay's bridge since 26 November)
 relay
 straight 64
 tramfall           # (the breach, with the tram's tunnel under the canal's floor and its station under the street)

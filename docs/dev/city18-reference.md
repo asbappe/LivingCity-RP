@@ -4076,3 +4076,39 @@ When the owner asks for something that exists (a module's station, a room, a set
 - **Checked by:** Count the station's props in the built file (columns, arches, lamps, benches, clock, payphone, booth, gate); --against c18_lc.vmf and the quarter.
 - **Tags:** owner, interiors
 
+### Scenery nobody walks to is a handful of buildings and Valve's card trees (`owner-far-scenery-cheap`)
+
+Beyond a wall players only look over, spend almost nothing: about one building to every 1000 squares of ground, no single tree props, and Valve's own far trees (one model that is a whole clump on flat cards: tree_deciduous_card_01 over ruins, tree_pine_card_cluster_01 and _02 in a forest), their length along the wall.
+
+- **Why:** The owner, 26 November, of the ring's backdrop (355 kit buildings, 270 pines, 15 dead trees): "can we adjust to a simplified version where we have about 5% the same number of buildings and remove the tree props and instead use the EP2 skybox trees and maybe any HL2 trees ... I think we are wasting resources at something people won't look at"; and "valve seems to use tree_deciduous_card_01 as a static prop on the canal walls in HL2".
+- **How:** map_backdrop.py: BUILDINGS (a cap on kit_lots), the leftovers' rates, tree_cards (CARDS, PINE_CARDS, CARD_GAP).
+- **Checked by:** The backdrop's note in the chain's build output: buildings, tree clumps and pine clumps counted.
+- **Tags:** owner, props, geometry
+
+### A side piece is reached down a long tunnel of Valve's, never right at the gate (`owner-side-piece-down-a-tunnel`)
+
+Where another place (a forest, a bunker, a quarter) joins the canal, put a long way between them, and make it one of Valve's own tunnels lifted whole (map_prefab.py extract), laid end to end as often as the length needs, with a short room of ours at each end to meet the gates. Move the far piece with map_shift.py; never rebuild it at a new origin unless its builder is proven to take one.
+
+- **Why:** The owner, 26 November: "please stitch in the forest bunker to the ring now ... though can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel copy/pasted". The forest's builder set its silo and rooms by fixed coordinates: built with --origin it was not sealed.
+- **How:** map_mods_e.m_servicetunnel (valve_eli_raven_tunnel twice, 2752 long), map_layouts/bunker_way.txt, map_shift.py (3520 east), map_ring_walk.py.
+- **Checked by:** map_shift.py prints SHIFT PASS; the joined map's flood from the spawn stays inside; map_walk.py reaches the forest's gate from the canal's spawn.
+- **Tags:** owner, geometry, valve
+
+### An effect a player is meant to notice must be plainly visible (`owner-effects-must-be-seen`)
+
+Water, slime or steam drawn with env_steam: a core of big, fully opaque puffs at a high rate, a softer sleeve round it and spray where it lands. One thin jet at renderamt 150 cannot be seen. Half-Life 2 and the Episodes have no falling-water material or particle (Valve's canal maps show none): say so rather than leave a faint one.
+
+- **Why:** The owner, 26 November, of the drain's and the cistern's pipes: "I can barely barely barely see the water effect you made coming out of the pipes, it is like 97% transparent".
+- **How:** map_mods_c.pour: three env_steam (core, sleeve, spray at the foot).
+- **Checked by:** Only in the game: the owner looks at the drain and the cistern.
+- **Tags:** owner, props
+
+### Two modules that do one job become one: the better piece replaces the plain one (`owner-one-bridge-per-quay`)
+
+Where one module has a plain version of what another module does well (a fixed footbridge beside a turning one), put the good one in and take the plain one out, reusing its code whole (owner-move-means-copy), and take the spare module off the layouts.
+
+- **Why:** The owner, 26 November: "please combine the quay and the switchbridge modules so the switchbridge IS the bridge for the quay, and remove the static bridge for the quay".
+- **How:** map_mods_c.swing_bridge (the old module's body, its pier at any u) called by map_mods_a.m_quay with quay=True; the store's barred door in the far landing's back wall.
+- **Checked by:** python3 map_build.py module --name quay: sealed, map_walk.py 0 problems; the names lc_swing_* in its list.
+- **Tags:** owner, geometry
+

@@ -3,7 +3,7 @@
 Living City: canal modules, set A (picked up by map_modules.py; the guide is docs/dev/map-modules.md)
 
     tram        a tram line's fallen bridge: a station in each wall (Half-Life 2's station kit), a derailed car hanging from one
-    quay        stairs up to a quay and a street doorway, a footbridge across to a store behind bars
+    quay        stairs up to a quay and a street doorway, the swing bridge across to a store behind bars
     collapse    a street's retaining wall and roadway fallen in: a squeeze and a crawl
     boathouse   a smugglers' boat shed under a pitched roof: a roll-up door, a slipway, a hatch to a brick cellar
     arcade      a market arcade over the canal on three arches: stalls, shops behind bars, a stair on each bank
@@ -698,21 +698,26 @@ def m_quay(m, opt):
     in the edge wall (a second way up), three posts before the street doorway, a skip, a bench, a payphone, crates. At
     the back a street doorway 128 wide and 128 high stands in a concrete frame, a route sign over it, the city's notices
     beside it and a Combine camera on the wall watching who comes down; it is closed 64 in by a cap of the world in its
-    own visgroup ("the quay's street end (delete to join a street)"). From the quay a footbridge on two trestles,
-    railed both sides, crosses to a barred door of Nova Prospekt's in the right wall: a button on the wall beside it, at
-    the bridge's end, slides the bars aside into the wall and back (Toggle, with the grate's own scrape and clunk); behind
-    them a short passage to the city's store for the quay (the Combine's supply crates on shelves, a lamp left on), seen
+    own visgroup ("the quay's street end (delete to join a street)"). From the quay the swing bridge (map_mods_c.swing_bridge:
+    it was a module of its own until 26 November, and a fixed footbridge stood here) crosses to a landing in the right
+    wall: it turns on a round pier in the middle of the canal, a button on a post at the quay's edge and one over the
+    winch on the landing turn it (a bell, then a quarter turn: along the canal it joins nothing), green and red lamps
+    and a barrier arm at each end. In the landing's back wall a barred door of Nova Prospekt's: a button on the
+    landing's end wall beside it slides the bars aside into the wall and back (Toggle, with the grate's own scrape and
+    clunk); behind them a short passage to the city's store for the quay (the Combine's supply crates on shelves, a lamp left on), seen
     through the bars while they are shut. Beside the chain's street (the canal ring) the quay is the street's own edge:
     no doorway, frame, back wall or camera (the railway runs over its back half), its furniture on the far pavement,
     lc_quay_street there too, and the street's parapet is its edge wall, open at the landing, the ladder and the
-    footbridge, so the stairs, the ladder and the bridge to the store all meet the street.
+    bridge, so the stairs, the ladder and the bridge to the store all meet the street.
     Sounds: the quiet courtyard up on the quay, the watery hallway down in the canal (both the owner's map's own).
     Named for the game: lc_quay_street (an info_target in the street doorway, facing the quay: where people arrive
     from the street), lc_quay_far_door (an info_target on the bridge before the barred door), lc_quay_store_door (the
     barred door: a func_door, unseen, wearing the cell door's model; Open, Close, Toggle), lc_quay_store_button (the
-    button beside it, Episode Two's button model, that toggles it).
+    button beside it, Episode Two's button model, that toggles it); and the bridge's: lc_swing_bridge (Toggle, or Open:
+    along the canal; Close: across), lc_swing_wheel_a and _b (its buttons: the quay's, the landing's), lc_swing_lamp_a/_b
+    and lc_swing_red_a/_b (the lamps), lc_swing_arm_a/_b (the barrier arms), lc_swing_move, lc_swing_stop, lc_swing_bell.
     Left as brushes: the stairs and their solid side, the landing, the quay's low wall, the doorway's frame, the
-    store's walls, the footbridge's deck, girders and trestles (a structure, no model fits 512 by 64).
+    store's walls, the bridge (deck, beams, truss, counterweight), its pier and drum, the landing's lip.
     Unchecked: that handrail04_doublerise rises toward its own +y end (if the stair rail falls the wrong way, turn
     both by 180) and where its posts meet the steps (they were made for steps of 8 and 12, these are 16 and 24); how
     the boat, bench, payphone and camera models face; that the hung tyres (turned up on edge) lie flat to the wall;
@@ -720,15 +725,16 @@ def m_quay(m, opt):
     the street."""
     b = m.b
     steel = HULL
+    CU = 768      # (where the bridge's pier stands: its ends sweep 232 round it, clear of the stairs' landing at u 512)
     m.open(0, -256, 1024, 256)
     on_street = m.street_side() == 1      # (the chain's street runs along this bank: the quay is part of it, no street end)
     m.open(320, 256, 960, 512, floor=TRIM, mat=MAT["quay_floor"])
     if not on_street:
         m.low(576, 512, 704, 640, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
-    m.low(832, -320, 896, -256, TRIM + 112, floor=TRIM)
-    m.low(768, -448, 960, -320, TRIM + 128, floor=TRIM)
+    m.low(832, -384, 896, -320, TRIM + 112, floor=TRIM)
+    m.low(768, -512, 960, -384, TRIM + 128, floor=TRIM)
     m.side(320, 256, 960, 512 if on_street else 640)
-    m.side(768, -448, 960, -256)
+    m.side(768, -512, 960, -320)
     if not on_street:
         m.world((576, 576, TRIM, 704, 640, TRIM + 128), MAT["black"], vis="%s: the quay's street end (delete to join a street)" % b.vis)
         b.plan.keep_out.append(m.fr.rect(512, 640, 768, 704))
@@ -752,12 +758,12 @@ def m_quay(m, opt):
     m.taken(0, 176, F, 520, 256, TRIM + 64)
     for (u, z) in ((36, F), (160, F + 64), (304, F + 160), (480, TRIM)):
         m.lane(u, 224, z)
-    # --- the quay: a low wall along its edge (a gap at the landing, a gap at the footbridge), its coping. Beside the
-    # chain's street its parapet is the quay's edge, opened at the landing, the ladder and the footbridge (the owner,
+    # --- the quay: a low wall along its edge (a gap at the landing, a gap from the ladder to the bridge's end), its coping. Beside the
+    # chain's street its parapet is the quay's edge, opened at the landing, the ladder and the bridge (the owner,
     # 23 November: the street's fence cut them off) ---
-    edge = [(320, 448), (512, 672), (704, 832), (896, 960)]
+    edge = [(320, 448), (512, 648), (832, 960)]      # (open at the landing, and from the ladder to the bridge's end)
     if on_street:
-        for a, c in ((448, 512), (640, 704), (832, 896)):
+        for a, c in ((448, 512), (640, 704)):
             b.edge_gaps.append(m.fr.rect(a, 236, c, 284))
     else:
         m.det([(a, 256, TRIM, c, 268, TRIM + 40) for a, c in edge], MAT["canal_wall"])
@@ -767,7 +773,7 @@ def m_quay(m, opt):
     if not on_street:
         m.det([(556, 496, TRIM, 576, 512, TRIM + 128), (704, 496, TRIM, 724, 512, TRIM + 128), (548, 492, TRIM + 127, 732, 512, TRIM + 152)], MAT["beam"])
     # two of the city's street lamps, their arms over the quay (the arm reaches along the model's left)
-    for u in (392, 816):
+    for u in (392, 916):      # (the second clear of the bridge's end and its button post)
         m.static(P + "props_c17/lamppost03a_on.mdl", u, 286, 0, TRIM)
         m.light(u, 386, TRIM + 400, "255 214 170 300")
         m.blocked(u - 24, 262, u + 24, 310)
@@ -775,70 +781,58 @@ def m_quay(m, opt):
     if not on_street:
         for u in (560, 640, 720):
             m.static(P + "props_trainstation/trainstation_post001.mdl", u, 440, 0, TRIM)
-    for u in (548, 760):
+    for u in (548, 620):
         m.static(P + "props_docks/dock01_cleat01a.mdl", u, 290, 0, TRIM)
     put(m, P + "props_junk/trashdumpster02.mdl", 424, far or 440, 0, z=TRIM + (8 if far else 0))
     put(m, P + "props_trainstation/benchoutdoor01a.mdl", 800, (far + 6) if far else 494, 270, z=TRIM + (8 if far else 0))
     put(m, P + "props_trainstation/payphone001a.mdl", 752, (far + 12) if far else 500, 270, z=TRIM + (8 if far else 0))
-    put(m, P + "props_c17/oildrum001.mdl", 936, 300, 0, z=TRIM)
+    put(m, P + "props_c17/oildrum001.mdl", 940, 348, 0, z=TRIM)
     if not far:
-        put(m, P + "props_c17/oildrum001.mdl", 936, 332, 0, z=TRIM)
-        m.loose(P + "props_junk/wood_crate001a.mdl", 928, 380, 20, z=TRIM)
-    m.loose(P + "props_junk/wood_crate002a.mdl", 600, 300, 90, z=TRIM)
-    m.loose(P + "props_junk/wood_pallet001a.mdl", 668, 300, 30, z=TRIM)
-    put(m, P + "props_canal/boat001a.mdl", 690, 70, 12)
-    m.rope([(760, 290, TRIM + 14), (752, 250, TRIM + 44), (720, 96, F + 40)], slack=70)
-    m.blocked(580, 0, 800, 128)
+        put(m, P + "props_c17/oildrum001.mdl", 940, 380, 0, z=TRIM)
+        m.loose(P + "props_junk/wood_crate001a.mdl", 928, 440, 20, z=TRIM)
+    m.loose(P + "props_junk/wood_crate002a.mdl", 584, 300, 90, z=TRIM)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 500, 310, 30, z=TRIM)
+    put(m, P + "props_canal/boat001a.mdl", 560, 70, 12)      # (moored short of the bridge's pier)
+    m.rope([(620, 290, TRIM + 14), (612, 250, TRIM + 44), (590, 96, F + 40)], slack=70)
+    m.blocked(450, 0, 670, 128)
     m.lane(480, 290 if far else 330, TRIM)
     if not far:
         m.lane(640, 380, TRIM)
         m.lane(640, 490, TRIM)
-    m.lane(864, 290 if far else 330, TRIM)
-    # --- the footbridge: a plank deck on two girders, two trestles, a rail each side ---
-    m.det([(832, -256, TRIM - 6, 896, 256, TRIM)], WOODTRIM, top=MM["wood"])
-    m.det([(836, -256, TRIM - 24, 842, 256, TRIM - 6), (886, -256, TRIM - 24, 892, 256, TRIM - 6)], MAT["bars"])
-    br = []
-    for u in (835, 893):                    # its rails: the city's own, four lengths a side
-        for c in (-192, -64, 64, 192):
-            m.static(P + "props_c17/handrail04_long.mdl", u, c, 0, TRIM)
-    for v in (-100, 96):
-        br += [(836, v, F, 842, v + 6, TRIM - 24), (886, v, F, 892, v + 6, TRIM - 24), (837, v + 1, F + 120, 891, v + 5, F + 124), (832, v - 2, TRIM - 30, 896, v + 8, TRIM - 24)]
-        m.shapes([prism([(842, F + 4), (886, F + 116), (886, F + 120), (842, F + 8)], "y", v + 2, v + 4, MAT["bars"]),
-                  prism([(886, F + 124), (842, F + 226), (842, F + 230), (886, F + 128)], "y", v + 2, v + 4, MAT["bars"])])
-        m.blocked(816, v - 24, 912, v + 32)
-    m.det(br, MAT["bars"])
-    m.taken(808, 216, F, 920, 256, TRIM + 48)
-    m.taken(808, -256, F, 944, -216, b.rim)
-    for v in (200, 0, -200):
-        m.lane(864, v, TRIM)
-    # --- the barred door across: a cell door of Nova Prospekt's in a steel frame fitted to it, riding on an unseen door
-    # that slides it aside into the wall; a button beside it at the bridge's end; a caged lamp on the wall over it ---
-    slide_door(m, "lc_quay_store_door", [((839, -262, TRIM, 889, -258, TRIM + 103), steel)], "0 %d 0" % m.fr.yaw(0), speed=48, lip=2, unseen=True)
-    rider(m, "lc_quay_store_door", P + "props_wasteland/prison_celldoor001a.mdl", 864, -260, 90, TRIM)
-    m.button("lc_quay_store_button", 918, -256, TRIM + 40, 90, [("lc_quay_store_door", "Toggle", "", 0)], wait="2")
-    m.det([(824, -264, TRIM - 1, 839, -250, TRIM + 103), (889, -264, TRIM - 1, 904, -250, TRIM + 103), (824, -264, TRIM + 103, 904, -250, TRIM + 120)], steel)
+    m.lane(CU, 290 if far else 330, TRIM)
+    # --- the bridge: the swing bridge (it was a module of its own, and a fixed footbridge on two trestles stood here: the
+    # owner, 26 November, "combine the quay and the switchbridge modules so the switchbridge IS the bridge for the quay,
+    # and remove the static bridge for the quay"). It turns on its pier in the middle of the canal: across, from the quay's
+    # edge to a landing in the right wall; a quarter round, along the canal, joining nothing. A button at each end turns it ---
+    from map_mods_c import swing_bridge
+    swing_bridge(m, CU, TRIM, m.street_side(), quay=True)
+    # --- the barred door in the landing's back wall: a cell door of Nova Prospekt's in a steel frame fitted to it, riding
+    # on an unseen door that slides it aside into the wall; its button on the landing's end wall beside it ---
+    slide_door(m, "lc_quay_store_door", [((839, -326, TRIM, 889, -322, TRIM + 103), steel)], "0 %d 0" % m.fr.yaw(0), speed=48, lip=2, unseen=True)
+    rider(m, "lc_quay_store_door", P + "props_wasteland/prison_celldoor001a.mdl", 864, -324, 90, TRIM)
+    m.button("lc_quay_store_button", 896, -288, TRIM + 40, 180, [("lc_quay_store_door", "Toggle", "", 0)], wait="2")
+    m.det([(824, -328, TRIM - 1, 839, -320, TRIM + 103), (889, -328, TRIM - 1, 896, -320, TRIM + 103), (824, -328, TRIM + 103, 896, -320, TRIM + 120)], steel)
     # behind it, the city's store for the quay, locked up: the Combine's crates of supplies on shelves, a lamp left on
-    m.portal(832, -302, TRIM, 896, -300, TRIM + 112)
-    m.det([(768, -448, TRIM, 960, -446, TRIM + 128), (768, -448, TRIM, 770, -320, TRIM + 128), (958, -448, TRIM, 960, -320, TRIM + 128),
-           (770, -322, TRIM, 832, -320, TRIM + 128), (896, -322, TRIM, 958, -320, TRIM + 128)], "concrete/concretewall008a")
-    for (u, v, yaw) in ((800, -420, 0), (928, -420, 0)):
+    m.portal(832, -366, TRIM, 896, -364, TRIM + 112)
+    m.det([(768, -512, TRIM, 960, -510, TRIM + 128), (768, -512, TRIM, 770, -384, TRIM + 128), (958, -512, TRIM, 960, -384, TRIM + 128),
+           (770, -386, TRIM, 832, -384, TRIM + 128), (896, -386, TRIM, 958, -384, TRIM + 128)], "concrete/concretewall008a")
+    for (u, v, yaw) in ((800, -484, 0), (928, -484, 0)):
         m.dynamic(P + "props_wasteland/kitchen_shelf001a.mdl", u, v, yaw, TRIM)
-    for (u, v, z, yaw) in ((790, -360, TRIM, 15), (790, -360, TRIM + 24, 40), (930, -370, TRIM, 80), (864, -420, TRIM, 0)):
+    for (u, v, z, yaw) in ((790, -424, TRIM, 15), (790, -424, TRIM + 24, 40), (930, -434, TRIM, 80), (864, -484, TRIM, 0)):
         m.static(P + "items/item_item_crate.mdl", u, v, yaw, z)
-    m.static(P + "props_c17/light_cagelight02_on.mdl", 864, -446, 90, TRIM + 96)
-    m.light(864, -420, TRIM + 100, "200 220 255 30")
-    m.grime("number", 959, -380, TRIM + 70, 3)
-    m.grime("stain", 769, -400, TRIM + 90, 4)
-    m.blocked(768, -448, 960, -320)
-    m.static(P + "props_c17/light_cagelight02_on.mdl", 864, -256, 90, TRIM + 130)
-    m.light(864, -236, TRIM + 128, "255 120 90 25")
-    m.blocked(832, -320, 896, -256)
-    m.target("lc_quay_far_door", 864, -230, TRIM + 8, 270)
+    m.static(P + "props_c17/light_cagelight02_on.mdl", 864, -510, 90, TRIM + 96)
+    m.light(864, -484, TRIM + 100, "200 220 255 30")
+    m.grime("number", 959, -444, TRIM + 70, 3)
+    m.grime("stain", 769, -464, TRIM + 90, 4)
+    m.blocked(768, -512, 960, -384)
+    m.light(864, -296, TRIM + 104, "255 120 90 25")
+    m.blocked(832, -384, 896, -320)
+    m.target("lc_quay_far_door", 864, -292, TRIM + 8, 270)
     # a working quay: tyres hung down its wall as fenders, an iron ladder up from the canal, the street's sign and the
     # city's notices by the doorway, a camera watching who comes down
     m.no_bank(640, 248, 704, 264)
-    m.ladder(688, 254, F, TRIM, 270)
-    for u in (560, 760, 912):
+    m.ladder(672, 254, F, TRIM, 270)      # (16 clear of the bridge's lip and its barrier post at u 704)
+    for u in (560, 620, 912):      # (none under the bridge's lip)
         tilted(m, "prop_dynamic_override", P + "props_vehicles/tire001c_car.mdl", u, 250, F + 210, 90, 0, 90, {"solid": "6"})
         m.rope([(u, 262, TRIM + 40), (u, 252, F + 224)], slack=6)
     m.taken(540, 236, F + 180, 932, 256, TRIM)
@@ -857,7 +851,8 @@ def m_quay(m, opt):
     m.view(20, 150, F, 20, -8, "the stairs")
     m.view(480, 224, TRIM, 40, 6, "from the landing")
     m.view(930, 450, TRIM, 195, 2, "the quay, the street doorway")
-    m.view(864, 200, TRIM, 270, 6, "the footbridge")
+    m.view(CU, 280, TRIM, 270, 6, "across the swing bridge")
+    m.view(740, -290, TRIM, 20, 2, "on the far landing: the winch, the store's barred door")
     m.view(560, -110, F, 50, -22, "from the canal")
     b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its cap" % ((m.tag,) + m.fr.at(640, 640, TRIM)))
 
@@ -1971,7 +1966,7 @@ def m_camp(m, opt):
 
 MODULES = {
     "tram": (1536, m_tram, "a fallen tram bridge: a station in each wall, a derailed car to climb, a beam walk"),
-    "quay": (1024, m_quay, "stairs up to a quay with a street doorway (a cap to delete), a footbridge to a barred door"),
+    "quay": (1024, m_quay, "stairs up to a quay with a street doorway (a cap to delete), the swing bridge (it turns on a pier) to a barred door"),
     "collapse": (768, m_collapse, "a street's wall and roadway fallen in: a squeeze by the right wall, a crawl under the slabs"),
     "boathouse": (1024, m_boathouse, "a smugglers' boat shed in the left wall: a roll-up door, a slipway, a hatch to a cellar"),
     "crypt": (1024, m_crypt, "the left wall broken into a church crypt: pillars, coffins, an altar, a tunnel to Ravenholm's church in its walled graveyard behind"),

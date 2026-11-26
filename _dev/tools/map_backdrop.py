@@ -80,8 +80,14 @@ BROKEN_WALLS = [(M + "props_debris/walldestroyed02a.mdl", 2), (M + "props_debris
                 (M + "props_debris/building_brokenexterior002a.mdl", 1), (M + "props_debris/building_brokenexterior002c.mdl", 1)]
 RUBBLE = [(M + "props_debris/concrete_debris256pile001a.mdl", 3), (M + "props_debris/concrete_debris128pile001a.mdl", 2), (M + "props_debris/concrete_debris256barricade001a.mdl", 1)]
 POLES = [(M + "props_c17/utilitypole01a.mdl", 1), (M + "props_c17/utilitypole01d.mdl", 1), (M + "props_c17/utilitypole03a.mdl", 1)]
-DEAD_TREES = [(M + "props_foliage/tree_dead01.mdl", 1), (M + "props_foliage/tree_dead02.mdl", 1), (M + "props_foliage/tree_dead03.mdl", 1), (M + "props_foliage/tree_dead04.mdl", 1)]
-PINES = [(M + "props_foliage/tree_pine04.mdl", 3), (M + "props_foliage/tree_pine05.mdl", 3), (M + "props_foliage/tree_pine06.mdl", 3), (M + "props_foliage/tree_pine_large.mdl", 2)]
+# The far trees since 26 November (the owner: "about 5% the same number of buildings and remove the tree props and instead use the EP2
+# skybox trees and maybe any HL2 trees ... we are wasting resources at something people won't look at"; and "valve seems to use
+# tree_deciduous_card_01 as a static prop on the canal walls in HL2"): Valve's own far trees, each one model that is a whole clump of
+# trees on flat cards (about 1000 deep, 2400 long, 700 to 1000 high), one every CARD_GAP along the band, its length along the wall.
+CARDS = M + "props_foliage/tree_deciduous_card_01.mdl"            # hl2: on the ruins' ground
+PINE_CARDS = (M + "props_foliage/tree_pine_card_cluster_01.mdl", M + "props_foliage/tree_pine_card_cluster_02.mdl")      # ep2: in the forest rectangles
+CARD_GAP = (1200, 900)      # (between two clumps: on the ruins' ground, in the forest)
+BUILDINGS = 1.0       # buildings to every 1000 of the band's squares outside the forest (about a twentieth of what stood there before)
 ROCKS = [(M + "props_foliage/forestrock_cluster01.mdl", 2), (M + "props_foliage/forestrock_cluster02.mdl", 2), (M + "props_wasteland/rockcliff_cluster03a.mdl", 2),
          (M + "props_wasteland/rockcliff01f.mdl", 1), (M + "props_wasteland/rockcliff01j.mdl", 1), (M + "props_wasteland/rockcliff_cluster02a.mdl", 1)]
 
@@ -593,7 +599,10 @@ class Backdrop:
         order = sorted(free)
         rnd.shuffle(order)
         kinds = (("block", 3), ("house", 3), ("shell", 4), ("collapsed", 1))
+        left = max(2, int(round(BUILDINGS * sum(1 for c in self.band if self.forest_w(c[0] * CELL + 32, c[1] * CELL + 32) < 0.5) / 1000.0)))
         for c in order:
+            if left <= 0:      # (a handful along the whole band, where they fell in the shuffle: the owner, 26 November)
+                break
             if c not in free:
                 continue
             x, y = c[0] * CELL + CELL // 2, c[1] * CELL + CELL // 2
@@ -628,6 +637,7 @@ class Backdrop:
             name, fp, rect = got
             self.take_lot(free, fp, rnd)
             self.kit_building(name, rect, out)
+            left -= 1
 
     def kit_building(self, name, rect, out):
         """A building of the kit on its lot, its front to the canal; on a block's roof chimney pipes and aerials (as on
@@ -685,19 +695,17 @@ class Backdrop:
                 continue
             r = rnd.random()
             z = self.rim
-            if r < 0.025 * ruin:
+            if r < 0.0004 * ruin:
                 model = pick(rnd, collapsed)
                 ok = self.put_ruin(model, x, y, rnd.choice((0, 90, 180, 270)) + rnd.randint(-12, 12), z, c, "collapsed blocks", free)
-            elif r < 0.06 * ruin:
+            elif r < 0.0014 * ruin:
                 model = pick(rnd, walls)
                 ok = self.put_ruin(model, x, y, rnd.choice((0, 90, 180, 270)), z, c, "broken walls", free)
-            elif r < 0.085 * ruin:
+            elif r < 0.0054 * ruin:
                 ok = self.put(pick(rnd, RUBBLE), x, y, rnd.randint(0, 359), z, why="rubble", on=free)
-            elif r < 0.092:
+            elif r < 0.0062:
                 ok = self.put(pick(rnd, POLES), x, y, rnd.randint(0, 359), z, pitch=rnd.choice((0, 0, 4, 7, -6)), why="poles", on=free)
-            elif r < 0.098:
-                ok = self.put(pick(rnd, DEAD_TREES), x, y, rnd.randint(0, 359), z - 2, why="dead trees", on=free)
-            else:
+            else:      # (no dead trees since 26 November: tree_cards)
                 continue
             if ok:      # (its room, and a little round it: the next thing stands apart)
                 bx = self.last
@@ -880,35 +888,55 @@ class Backdrop:
             self.put(pick(rnd, RUBBLE), cx, cy, rnd.randint(0, 359), top, why="rubble")
 
     def forest(self):
-        """Pines on the climbing ground, thick where it is all forest and thinning into the ruins, rocks among them
-        and a few cliffs of rock near the far edge; a dead tree here and there, as in the forests."""
+        """A few rocks on the forest's climbing ground, and the far trees along the whole band (tree_cards). The pines
+        that stood here one by one (270 of them, and 15 dead trees among the ruins) are gone: the owner, 26 November."""
         rnd = random.Random(23112)
-        spots = []
-        for c in sorted(self.free):
-            x, y = c[0] * CELL + CELL // 2, c[1] * CELL + CELL // 2
-            w = self.forest_w(x, y)
-            if w <= 0.05:
-                continue
-            spots.append((c, w))
+        spots = [(c, self.forest_w(c[0] * CELL + CELL // 2, c[1] * CELL + CELL // 2)) for c in sorted(self.free)]
+        spots = [(c, w) for c, w in spots if w > 0.05]
+        rnd.shuffle(spots)
         placed = []
-        for round_ in range(3):      # (three passes over the forest's squares, so it fills up as far as the trees' room lets it)
-            rnd.shuffle(spots)
-            for c, w in spots:
-                x = c[0] * CELL + rnd.randint(4, CELL - 4)
-                y = c[1] * CELL + rnd.randint(4, CELL - 4)
-                r = rnd.random()
-                if r < 0.05 * w:
-                    model, gap, why = pick(rnd, ROCKS), 220, "rocks"
-                elif r < 0.8 * w:
-                    model, gap, why = pick(rnd, PINES + [(DEAD_TREES[0][0], 0.3), (DEAD_TREES[2][0], 0.3)]), 128, "pines"
-                else:
+        for c, w in spots:
+            if rnd.random() >= 0.02 * w:
+                continue
+            x, y = c[0] * CELL + rnd.randint(4, CELL - 4), c[1] * CELL + rnd.randint(4, CELL - 4)
+            if any((x - px) ** 2 + (y - py) ** 2 < 220 ** 2 for px, py in placed):
+                continue
+            z = self.ground_low((x - 24, y - 24, x + 24, y + 24))
+            if self.put(pick(rnd, ROCKS), x, y, rnd.randint(0, 359), z - (4 if z <= self.rim + 1 else 40), why="rocks", on=self.free):
+                placed.append((x, y))
+        self.tree_cards(rnd)
+
+    def tree_cards(self, rnd):
+        """Valve's far trees along the band: one clump model every CARD_GAP or so, its length along the wall and its depth
+        on the band's middle (the one way it fits: the band is 1536 deep, a clump about 1000 by 2400), standing on the
+        ground under it; Half-Life 2's leafy clump over the ruins, Episode Two's pine clumps in the forest rectangles.
+        Whole and never faded (they are the skyline, and one model each); not solid (nobody walks there)."""
+        from map_build import prop_box
+        spots = sorted(c for c in self.band if 7 * CELL <= self.d_any.get(c, 0) <= 17 * CELL)
+        rnd.shuffle(spots)
+        placed = []
+        for c in spots:
+            x, y = c[0] * CELL + CELL // 2, c[1] * CELL + CELL // 2
+            pine = self.forest_w(x, y) > 0.5
+            gap = CARD_GAP[1 if pine else 0]
+            if any((x - px) ** 2 + (y - py) ** 2 < gap ** 2 for px, py in placed):
+                continue
+            out = self.band[c]
+            model = rnd.choice(PINE_CARDS) if pine else CARDS
+            for yaw in rnd.sample((0, 180), 2):       # (the model's own x across the band, either way round)
+                yaw = (yaw + int(round(math.degrees(math.atan2(out[1], out[0]))))) % 360
+                bx = prop_box(model, (x, y, self.rim), yaw)
+                if bx is None or any(q not in self.band for q in cells_of((bx[0] + 48, bx[1] + 48, bx[3] - 48, bx[4] - 48))):
                     continue
-                if any((x - px) ** 2 + (y - py) ** 2 < (gap + pg) ** 2 / 4 for px, py, pg in placed):
+                z = int(math.floor(self.ground_low((bx[0] + 200, bx[1] + 200, bx[3] - 200, bx[4] - 200)))) - 6
+                if z + (bx[5] - bx[2]) > self.lid - 32:
                     continue
-                z = self.ground_low((x - 24, y - 24, x + 24, y + 24))
-                sink = 4 if z <= self.rim + 1 else (40 if why == "rocks" else 12)
-                if self.put(model, x, y, rnd.randint(0, 359), z - sink, why=why, on=self.free):
-                    placed.append((x, y, gap))
+                self.m.prop("prop_static", model, x, y, yaw, z, {"solid": "0", "disableshadows": "1", "screenspacefade": "0", "fadescale": "1",
+                                                                  "fademindist": "-1", "fademaxdist": "0"})
+                placed.append((x, y))
+                why = "pine clumps" if pine else "tree clumps"
+                self.count[why] = self.count.get(why, 0) + 1
+                break
 
     def report(self):
         b = self.b

@@ -4,9 +4,8 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 
 | Module | Long | What it is | Named for the game | File |
 |---|---|---|---|---|
-| `drain` | 1024 | 1. the storm drain junction, down to the city's sewers (left) | `lc_drain_cache`, `lc_drain_grate`, `lc_drain_junction` | `map_modules.py` |
-| `overflow` | 1024 | 2. the overflow toward Ravenholm, behind a sluice plate (left) | `lc_overflow_drop`, `lc_overflow_far`, `lc_overflow_lever`, `lc_overflow_lift`, `lc_overflow_moan`, `lc_overflow_sluice` | `map_modules.py` |
-| `shanty` | 1536 | 4. the shantytown under a street bridge (left) | `lc_base_vehicle_airboat_shanty`, `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3`, `lc_zone_rebel_r520_h400_shanty` | `map_modules.py` |
+| `drain` | 1024 | 1. the storm drain junction, down to the city's sewers (left) | `lc_drain_cache`, `lc_drain_grate`, `lc_drain_junction`, `lc_drain_wheel` | `map_modules.py` |
+| `shanty` | 2048 | 4. the shantytown under a street bridge (left) | `lc_base_vehicle_airboat_shanty`, `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3`, `lc_shanty_tent_4`, `lc_shanty_tent_5`, `lc_zone_rebel_r780_h400_shanty` | `map_modules.py` |
 | `vort` | 1024 | 6. the vortigaunt culvert (left) | `lc_vort_fire`, `lc_vort_npc`, `lc_vort_seat_1`, `lc_vort_seat_2`, `lc_vort_seat_3` | `map_modules.py` |
 | `relay` | 1024 | 7. Cubbage's relay shack and mast, on a pier (right) | `lc_relay_hum`, `lc_relay_lamp`, `lc_relay_mast`, `lc_relay_radio`, `lc_relay_seat` | `map_modules.py` |
 | `checkpoint` | 1280 | 8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight | `lc_checkpoint_field`, `lc_checkpoint_hum`, `lc_checkpoint_light`, `lc_checkpoint_light_b`, `lc_checkpoint_pen`, `lc_checkpoint_pen_spot`, `lc_checkpoint_post`, `lc_checkpoint_queue` | `map_modules.py` |
@@ -15,7 +14,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `cistern` | 1536 | 12. the cistern for the hive boss (right) | `lc_cistern_gallery`, `lc_hive_boss_spot` | `map_modules.py` |
 | `underpass` | 1536 | 13. the barnacle underpass | `lc_underpass_body_1`, `lc_underpass_body_2`, `lc_underpass_body_3`, `lc_underpass_body_4`, `lc_underpass_body_5`, `lc_underpass_dust`, `lc_underpass_dust_timer`, `lc_underpass_dust_timer_near` | `map_modules.py` |
 | `tram` | 1536 | a fallen tram bridge: a station in each wall, a derailed car to climb, a beam walk | `lc_tram_exit`, `lc_tram_stash` | `map_mods_a.py` |
-| `quay` | 1024 | stairs up to a quay with a street doorway (a cap to delete), a footbridge to a barred door | `lc_quay_far_door`, `lc_quay_store_button`, `lc_quay_store_door`, `lc_quay_street` | `map_mods_a.py` |
+| `quay` | 1024 | stairs up to a quay with a street doorway (a cap to delete), the swing bridge (it turns on a pier) to a barred door | `lc_quay_far_door`, `lc_quay_store_button`, `lc_quay_store_door`, `lc_quay_street`, `lc_swing_arm_a`, `lc_swing_arm_b`, `lc_swing_bell`, `lc_swing_bridge`, `lc_swing_lamp_a`, `lc_swing_lamp_b`, `lc_swing_move`, `lc_swing_red_a`, `lc_swing_red_a2`, `lc_swing_red_b`, `lc_swing_red_b2`, `lc_swing_stop`, `lc_swing_wheel_a`, `lc_swing_wheel_b` | `map_mods_a.py` |
 | `collapse` | 768 | a street's wall and roadway fallen in: a squeeze by the right wall, a crawl under the slabs | `lc_collapse_hide` | `map_mods_a.py` |
 | `boathouse` | 1024 | a smugglers' boat shed in the left wall: a roll-up door, a slipway, a hatch to a cellar | `lc_boathouse_button_in`, `lc_boathouse_button_out`, `lc_boathouse_cellar`, `lc_boathouse_door`, `lc_boathouse_hatch`, `lc_boathouse_hatch_button` | `map_mods_a.py` |
 | `crypt` | 1024 | the left wall broken into a church crypt: pillars, coffins, an altar, a tunnel to Ravenholm's church in its walled graveyard behind | `lc_church_altar`, `lc_church_grigori`, `lc_church_side_door`, `lc_crypt_altar` | `map_mods_a.py` |
@@ -39,15 +38,15 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `thumper` | 1024 | a Combine thumper on a fenced terrace, with the box that stops it (experimental) | `lc_thumper_burrow`, `lc_thumper_button`, `lc_thumper_down`, `lc_thumper_dust`, `lc_thumper_gate`, `lc_thumper_glow`, `lc_thumper_head`, `lc_thumper_hit`, `lc_thumper_lamp`, `lc_thumper_pad`, `lc_thumper_shake`, `lc_thumper_start`, `lc_thumper_stop`, `lc_thumper_timer`, `lc_thumper_top` | `map_mods_c.py` |
 | `depot` | 1280 | the Combine's ration depot: a roller door, a loading bay, caged stores, a staff door | `lc_depot_alarm`, `lc_depot_alarm_light`, `lc_depot_button_door`, `lc_depot_button_side`, `lc_depot_cage_1`, `lc_depot_cage_2`, `lc_depot_cage_3`, `lc_depot_desk`, `lc_depot_door`, `lc_depot_side` | `map_mods_c.py` |
 | `armory` | 1024 | a Combine armoury vault behind a two-button door: a heist target | `lc_armory_alarm`, `lc_armory_beam_1`, `lc_armory_beam_1a`, `lc_armory_beam_1b`, `lc_armory_beam_2`, `lc_armory_beam_2a`, `lc_armory_beam_2b`, `lc_armory_blip`, `lc_armory_button_a`, `lc_armory_button_b`, `lc_armory_button_exit`, `lc_armory_count`, `lc_armory_door`, `lc_armory_groan`, `lc_armory_lamp_a`, `lc_armory_lamp_b`, `lc_armory_light`, `lc_armory_move`, `lc_armory_open`, `lc_armory_red_1`, `lc_armory_red_2`, `lc_armory_shake`, `lc_armory_shut`, `lc_armory_slam`, `lc_armory_vault` | `map_mods_c.py` |
-| `swingbridge` | 1024 | a footbridge that turns on a pier: across the canal, or along it (experimental) | `lc_swing_arm_a`, `lc_swing_arm_b`, `lc_swing_bell`, `lc_swing_bridge`, `lc_swing_lamp_a`, `lc_swing_lamp_b`, `lc_swing_move`, `lc_swing_red_a`, `lc_swing_red_a2`, `lc_swing_red_b`, `lc_swing_red_b2`, `lc_swing_stop`, `lc_swing_wheel_a`, `lc_swing_wheel_b` | `map_mods_c.py` |
 | `railbridge` | 1024 | a railway bridge: a Combine train crosses every few minutes (experimental) | `lc_rail_dust_1`, `lc_rail_dust_2`, `lc_rail_dust_3`, `lc_rail_horn`, `lc_rail_p1`, `lc_rail_p2`, `lc_rail_p3`, `lc_rail_p4`, `lc_rail_run`, `lc_rail_shake`, `lc_rail_signal_1`, `lc_rail_signal_2`, `lc_rail_timer`, `lc_rail_train` | `map_mods_c.py` |
 | `execwall` | 768 | the firing wall: a backstop, three posts, one hard lamp (left) | `lc_execwall_lamp`, `lc_execwall_line`, `lc_execwall_post_1`, `lc_execwall_post_2`, `lc_execwall_post_3` | `map_mods_d.py` |
 | `substation` | 1024 | the substation: transformers behind the Combine's fence, a fuse panel to break (right) | `lc_substation_cut`, `lc_substation_fuse`, `lc_substation_gate`, `lc_substation_glow`, `lc_substation_hum`, `lc_substation_lamp`, `lc_substation_light_1`, `lc_substation_light_2`, `lc_substation_smoke`, `lc_substation_spark`, `lc_substation_spark_t1`, `lc_substation_spark_t2`, `lc_substation_spark_t3` | `map_mods_d.py` |
+| `tramfall` | 1024 | the tram under the breach: the canal's floor fallen in over a tram tunnel, the wrecked car under the slabs, a station under the street | none | `map_mods_d.py` |
 | `breach` | 1024 | the breach: the floor fallen into an old cellar, slabs for ramps, an undercut | `lc_breach_bottom`, `lc_breach_stash` | `map_mods_d.py` |
-| `tramfall` | 1024 | the tram under the breach: the canal's floor fallen in over a tram tunnel, the wrecked car flat on its rails under the slabs, a collapsed slab for a ramp down, and under the street the tram module's own station copied whole (`map_mods_a.tram_station`), its black end under the Combine wall (needs the layout's `base 64`) | `lc_breach_bottom`, `lc_tram_exit`, `lc_tram_stash` | `map_mods_d.py` |
-| `floodgate` | 512 | Valve's sluice gate in a headwall across the canal: hold its valve wheel (on a platform just under the road's height) and the two leaves slide open; let go and they slam shut | `lc_floodgate_N_wheel`, `lc_floodgate_N_leaf_a`, `lc_floodgate_N_leaf_b` | `map_mods_e.py` |
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_chute`, `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
+| `servicetunnel` | 3008 | a long way on foot: Valve's tunnel from Black Mesa East toward Ravenholm, twice end to end, a bulkhead doorway at each end | none | `map_mods_e.py` |
+| `floodgate` | 512 | Valve's sluice gate in a headwall across the canal: hold its valve wheel to slide the leaves open; let go and they slam shut | `lc_floodgate_1_alarm`, `lc_floodgate_1_alarm_timer`, `lc_floodgate_1_beacon`, `lc_floodgate_1_clang`, `lc_floodgate_1_latch`, `lc_floodgate_1_leaf_a`, `lc_floodgate_1_leaf_b`, `lc_floodgate_1_move`, `lc_floodgate_1_wheel` | `map_mods_e.py` |
 | `lockgate` | 2048 | Valve's lock gates across the wide canal: toggled open and shut, a klaxon, a control booth, a passage round | `lc_lockgate_beacon`, `lc_lockgate_close`, `lc_lockgate_closed`, `lc_lockgate_klaxon`, `lc_lockgate_leaf_a`, `lc_lockgate_leaf_b`, `lc_lockgate_open`, `lc_lockgate_opened`, `lc_lockgate_portal`, `lc_lockgate_state`, `lc_lockgate_switch`, `lc_lockgate_switch_light`, `lc_lockgate_switch_model`, `lc_lockgate_toggle` | `map_mods_e.py` |
 | `roadend` | 1088 | the west road's end: a platform at the road's height, stairs down, and a side gate on (the ring's north half ends here) | none | `map_mods_f.py` |
 | `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it (the game puts the flagpole at its door) | `lc_hq_desk`, `lc_hq_map`, `lc_hq_table` | `map_town.py` |
@@ -81,7 +80,8 @@ Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on
 far end railed), the bank stopping either side of it in slopes: the drain's keepers' way along the canal.
 Under a street along its bank (the canal ring) the chamber's roof is the street's deck, at 640, and the lamps' rods
 are 16 shorter, so none comes up through the road.
-Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
+Named for the game: lc_drain_wheel (the valve wheel beside the grate, a momentary_rot_button: hold it and the grate
+lifts, let go and it drops), lc_drain_grate (a func_movelinear: SetPosition 0 shut to 1 open; unseen, the four bar panels riding
 on it), lc_drain_junction (the chamber), lc_drain_cache (the case at the bottom of the sump: a place the game can
 fill).
 Left as brushes: the mouth, its collar and arch, the chamber, the sump and its steps, the plugs that darken the
@@ -89,29 +89,6 @@ inflow pipes' insides, the stair, the sewer channel's walks and arch, the sewer 
 Unchecked: ambient/water/water_flow_loop1.wav, ambient/water/drip_loop1.wav; the water running from the pipes is an
 env_steam aimed down and out (as the owner's map aims its jets: Half-Life 2 has no falling-water material), how it
 reads is not seen; that the concrete pipe is open at both ends (a dark plug closes its back, against the wall).
-
-### `overflow`
-
-2. The overflow toward Ravenholm. A spillway in the left wall, its apron stepping down into the canal, shut by a
-steel sluice plate on two lifting rods under two of the canal's winches on a ledge, a chain and padlock slung
-between the winches, caged red lamps either side, danger signs and rust stains on the wall; a lever on the wall
-by it, padlocked like the winches until the game unlocks it. Driftwood (the coast's own), a pallet and two bodies
-lie against the plate. Behind the plate a ribbed channel runs on to a cap ("delete to join Ravenholm"), a shallow
-strip of water down its middle (where the channel is long enough), and it says Ravenholm the moment the plate lifts: Half-Life 2's own Ravenholm sign
-on its wall, blood on the walls and the floor, a headcrab canister come through its roof, a zombie's torso and a
-burnt body under it, a wheelbarrow on its side, rags; one oil lamp still burning low, one caged lamp dead.
-"overflow 1280": how far the channel reaches from the canal's middle (default 1024).
-Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
-far end railed), the bank stopping either side of it in slopes: where the sluice keepers watch the plate.
-Named for the game: lc_overflow_sluice (a func_door: Open lifts it), lc_overflow_moan (a sound from beyond the
-plate, silent until told: PlaySound), lc_overflow_far (the channel's far end), lc_overflow_lever (the lever by the
-plate, a button that starts locked: Unlock lets players lift and drop the plate by hand, Lock takes it back;
-lc_overflow_lift and lc_overflow_drop are its two relays, taking turns).
-Left as brushes: the weir, its sill, apron and frame, the ledge the winches stand on, the channel and its ribs, and
-the sluice plate with its rods (a slab of steel 384 wide and 176 high: no model is a plate that size; the canals'
-bar panels are bars, and stacked to that height they would rise out over the wall's top when it lifts).
-Unchecked: ambient/creatures/town_zombie_call1.wav, models/humans/charple02.mdl, the zombie torso as a ragdoll, the
-chain's material (cable/chain.vmt) on a rope; which way winch02 and the Ravenholm sign face.
 
 ### `shanty`
 
@@ -126,14 +103,14 @@ street; a string of bulbs on a cable from an old dock pole to the bridge's deck 
 line from the card room's roof post to a pole; a boat pulled up; a cork notice board on two poles; posters on and in
 the card room, the lambda on the bridge's pier, trash and puddles on the basin's floor. In front of the card room the
 basin's floor is left clear for the Resistance's flag; east of the bridge three ridge tents stand on the basin's
-floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _3, where someone sleeps). Where the chain's street runs along the bank the bridge starts
+floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _5, where someone sleeps). Where the chain's street runs along the bank the bridge starts
 from (the canal ring, 23 November) the bridge is the street's way in: the street's parapet opens there, and an iron
 ladder comes down the bridge's side (a gap in its side wall, a post under its edge) to the boardwalk by the card room.
 Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
 screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
 lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
-basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r520_h400_shanty (that territory, brought by
-the map: 520 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
+basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r780_h400_shanty (that territory, brought by
+the map: 780 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
 on the canal's floor west of the bridge).
 Left as brushes: the boardwalk, the shacks (sheets, posts, roofs: no model is a shack's wall), the board over the
 stall, the washing on the line (no game has a model of clothes on a line), the street bridge.
@@ -338,21 +315,26 @@ below, tyres hung down the quay wall as fenders on short ropes, an iron ladder f
 in the edge wall (a second way up), three posts before the street doorway, a skip, a bench, a payphone, crates. At
 the back a street doorway 128 wide and 128 high stands in a concrete frame, a route sign over it, the city's notices
 beside it and a Combine camera on the wall watching who comes down; it is closed 64 in by a cap of the world in its
-own visgroup ("the quay's street end (delete to join a street)"). From the quay a footbridge on two trestles,
-railed both sides, crosses to a barred door of Nova Prospekt's in the right wall: a button on the wall beside it, at
-the bridge's end, slides the bars aside into the wall and back (Toggle, with the grate's own scrape and clunk); behind
-them a short passage to the city's store for the quay (the Combine's supply crates on shelves, a lamp left on), seen
+own visgroup ("the quay's street end (delete to join a street)"). From the quay the swing bridge (map_mods_c.swing_bridge:
+it was a module of its own until 26 November, and a fixed footbridge stood here) crosses to a landing in the right
+wall: it turns on a round pier in the middle of the canal, a button on a post at the quay's edge and one over the
+winch on the landing turn it (a bell, then a quarter turn: along the canal it joins nothing), green and red lamps
+and a barrier arm at each end. In the landing's back wall a barred door of Nova Prospekt's: a button on the
+landing's end wall beside it slides the bars aside into the wall and back (Toggle, with the grate's own scrape and
+clunk); behind them a short passage to the city's store for the quay (the Combine's supply crates on shelves, a lamp left on), seen
 through the bars while they are shut. Beside the chain's street (the canal ring) the quay is the street's own edge:
 no doorway, frame, back wall or camera (the railway runs over its back half), its furniture on the far pavement,
 lc_quay_street there too, and the street's parapet is its edge wall, open at the landing, the ladder and the
-footbridge, so the stairs, the ladder and the bridge to the store all meet the street.
+bridge, so the stairs, the ladder and the bridge to the store all meet the street.
 Sounds: the quiet courtyard up on the quay, the watery hallway down in the canal (both the owner's map's own).
 Named for the game: lc_quay_street (an info_target in the street doorway, facing the quay: where people arrive
 from the street), lc_quay_far_door (an info_target on the bridge before the barred door), lc_quay_store_door (the
 barred door: a func_door, unseen, wearing the cell door's model; Open, Close, Toggle), lc_quay_store_button (the
-button beside it, Episode Two's button model, that toggles it).
+button beside it, Episode Two's button model, that toggles it); and the bridge's: lc_swing_bridge (Toggle, or Open:
+along the canal; Close: across), lc_swing_wheel_a and _b (its buttons: the quay's, the landing's), lc_swing_lamp_a/_b
+and lc_swing_red_a/_b (the lamps), lc_swing_arm_a/_b (the barrier arms), lc_swing_move, lc_swing_stop, lc_swing_bell.
 Left as brushes: the stairs and their solid side, the landing, the quay's low wall, the doorway's frame, the
-store's walls, the footbridge's deck, girders and trestles (a structure, no model fits 512 by 64).
+store's walls, the bridge (deck, beams, truss, counterweight), its pier and drum, the landing's lip.
 Unchecked: that handrail04_doublerise rises toward its own +y end (if the stair rail falls the wrong way, turn
 both by 180) and where its posts meet the steps (they were made for steps of 8 and 12, these are 16 and 24); how
 the boat, bench, payphone and camera models face; that the hung tyres (turned up on edge) lie flat to the wall;
@@ -983,57 +965,7 @@ size alone. The weapon and ammunition models pass the assets check as prop_dynam
 players pick such props up is its affair. How weaponstripper looks as a rack (its size is read). env_beam's keys
 (from memory: LightningStart, LightningEnd, texture sprites/laserbeam.vmt, life 0, spawnflags 1 starts it on).
 
-### `swingbridge`
-
-EXPERIMENTAL: a footbridge 224 over the canal's floor (32 under the trim, so that every room of it is roofed at
-720 or lower and a street along the outside bank passes over it) that turns on a round pier in the middle of the
-canal. As the map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it
-lies along the canal and joins nothing. Each landing is a roofed alcove 192 long and 96 high with a street doorway
-that is never used (planked over, boards nailed across; none on the far landing beside a street, where the bridge
-is the street's way down into the canal: across, then down the far landing's stairs), a green lamp that shows while the bridge is across and a red one while it is turned
-away (and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge
-that drops while the bridge is away, the city's handrail each side of the bridge's end and along the landing's open
-edge, and against its back wall the canal's winch with the button over it that turns the bridge (a press rings a
-bell, and two seconds later is Toggle). Each landing has its own way up from the canal floor (the owner, 22 November:
-"the stairs for the turnbridge on both sides go into the canal walls"): a doorway in the canal's wall beside the
-landing (60 wide, 144 high, in a steel frame), a corridor behind it under the landing, a covered flight of 7 steps
-climbing away from the doorway, a half landing, and a flight of 7 back along the canal's wall (open to the canal over
-the bank behind a concrete parapet, a wall between it and the flight below) up onto the landing. The left one runs
-toward the module's exit, the right one toward its entry. Whoever turns the bridge away strands the other bank at
-that height.
-
-The bridge is 458 long and 64 wide: a plank deck on two steel beams with a truss of posts and a bottom chord under
-each and a counterweight under its right end, one func_door_rotating, with the city's handrail along both sides
-riding on it (prop_dynamics parented to it). Its two ends are arcs about the pier (232 out at the middle) and the
-landings' lips are arcs 1 farther out (the owner: "LOOK AT THAT GAP"): across, the deck meets each lip with 2 or
-less between them, and turning it sweeps past them. It turns on a drum: a wide cap on the round pier with a toothed
-ring round it and a motor box driving a pinion. The canal is 512 wide, so it sweeps through nothing (ribs and drain
-stubs are kept off the walls there). It has no damage of its own.
-
-Named for the game:
-  lc_swing_bridge    the bridge: Toggle (or Open: along the canal; Close: across). 12 degrees a second.
-  lc_swing_wheel_a   the button over the winch on the left landing.     lc_swing_wheel_b   the same on the right.
-  lc_swing_lamp_a, lc_swing_lamp_b   the green lamps (env_sprites): lit while the bridge is across.
-  lc_swing_move, lc_swing_stop       the turning sound (looping) and the clank as it comes to rest.
-  lc_swing_bell      the bell a press rings before the bridge moves.
-  lc_swing_red_a, lc_swing_red_b     the red lamps (env_sprites): lit while the bridge is turned away.
-  lc_swing_arm_a, lc_swing_arm_b     the barrier arms (func_door_rotating, no Use): Close drops one across the
-                     landing's edge, Open lifts it; the bridge works them (drawn down, the map lifts them as it starts).
-
-Unchecked: a func_door_rotating this big, turning about its middle with people on it: the engine carries riders
-round on a turning brush, but how well is only seen in the game. Spawnflags 32 (toggle) and no Use; outputs OnOpen,
-OnClose, OnFullyOpen, OnFullyClosed for the sound and lamps. With "wait" -1 a blocked door does not turn back: it
-waits, pushing. Sounds are the bunker door's (heard there). That handrails parented to the turning bridge turn
-with it (props ride on doors so). Which way the winch faces. Which way the arms swing (spawnflags 64 or 128: about
-the canal's axis across the landing; if they swing down through the floor, add 2, Reverse). ambient/alarms/warningbell1.wav.
-
-Left as brushes: the bridge's deck, beams, truss and counterweight (a bridge deck), the pier, its drum, toothed ring,
-motor box and turntable, the landings, their lips and corbels, the stairs, their parapet and the wall between the
-flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstripe01a).
-
 ### `railbridge`
-
-**Beside a walled street (26 November):** the bed stands 144 over the Combine wall's top (z 1312 on the ring), a viaduct on piers with no tunnels: from the far edge of the scenery beyond the canal, over the canal, the street and the wall, to a strip 1408 deep behind the wall (the wall's core carried back under it). Beyond the scenery's far edge the line runs on 4096 in a corridor of sky 320 wide (floor, walls and lid all sky brush: the owner, "make a skybox tunnel big enough to fit the train and have it stretch far enough out that the train spawns out of view"); the train waits at its far end and runs to the city's side, stopping out of sight behind the wall; it never leaves the map's sealed space. The owner: "raise it up but there is no need for a tunnel mouth on a side where the train is now above the wall". Without a walled street it is as described below.
 
 EXPERIMENTAL: a railway crosses over the canal on a steel girder bridge, from a tunnel mouth in the left wall to
 one in the right. Every 150 seconds a horn sounds, a red lamp shows at each mouth, and two seconds later a freight
@@ -1128,6 +1060,32 @@ func_breakable: the game needs a thing that breaks, and a model riding on it wou
 Unchecked: ambient/energy/electric_loop.wav, func_breakable's keys, the cables (move_rope); where on the
 transformers' tops their insulators are (the cables start at the middle of each top); combine_shield_loop3.wav.
 
+### `tramfall`
+
+The tram under the breach (the owner, 26 November, of the tram's station that could not stand under the street
+and of the breach: "sink the tram line even lower than the canal floor and combine it with the breach module so
+the broken canal floor is above the crashed tram, and the crashed tram is flat on the tracks but the
+rubble/concrete slabs from the breach have fallen onto it so it's still the EP2 model"). The tram's line crosses
+under the canal in a tunnel, its rails 304 under the canal's floor, its roof the canal's floor slab; over it the
+floor has fallen in, a hole 384 by 256: Episode Two's wrecked car (wrecked_train_02) stands level on the rails on
+its two bogies under the hole, as the tram module stands its cars, slabs of the canal's floor leaning on it and
+lying on its roof, rubble and bent bars round it, daylight and dust down the hole. Beside the car a slab of the
+collapsed floor lies as a ramp from the hole's edge down to the tunnel's floor (no steps: the owner, "just make it
+a slab of broken/collapsed concrete: a ramp"). Away from the city the tunnel ends in the dark, black.
+Toward the city the line runs under the street into THE TRAM MODULE'S OWN STATION, copied whole
+(map_mods_a.tram_station: the owner, the same day, of a bare hall first built here: "I told you to take the tram
+module that had the little station and put it in the breach module ... WHY NOT JUST COPY PASTE IT? WHERE IS THE
+STATION? WHERE ARE THE PROPS?"): the hall with its platforms either side of the track's pit, Half-Life 2's
+station columns and arches, the two-tone walls, the wall lamps, the ticket booth, the benches, the clock, the bin,
+the payphone, the signs, the signal, and the barred stair behind the prison's sliding gate; its tunnel's black end
+and the stair's lie directly under the Combine wall (the owner: the "gate/black void side ... directly under a
+combine wall section"), the station set 64 further from the canal than the tram module's to reach it.
+Named for the game: lc_breach_bottom (the tunnel's floor under the hole), lc_tram_exit (the station's, on the
+platform before the barred stair), lc_tram_stash (beside the car: a cache).
+The layout needs "base 64" or lower (the rails are at z 96), and the street on the module's left.
+Left as brushes: the tunnel, the fallen slabs, and what the station leaves as brushes.
+Unchecked: the car and its bogies are Episode Two's; the look of it.
+
 ### `breach`
 
 The breach: the canal's floor has fallen into an old cellar. A pit 640 by 256 and 160 deep in the middle of
@@ -1181,6 +1139,52 @@ into the wall: Half-Life 2 has no morgue drawers), the chute's hatch and frame a
 Unchecked: models/humans/corpse1.mdl as a ragdoll laid on a table with its motion disabled (spawnflags 16388:
 debris and motion disabled, so it stays where it is laid), func_dustcloud's keys for the mist; which way the
 surgery table's head is (it is the same both ways in its size).
+
+### `servicetunnel`
+
+A long way on foot, in Valve's own tunnel: Black Mesa East's tunnel toward Ravenholm (the prefab
+valve_eli_raven_tunnel, lifted from d1_eli_02), laid twice end to end, 2752 of it: an arched concrete tunnel 192 wide
+and 176 to its crown on a marble floor, Valve's pipes along one wall, deck lamps in the crown (one lit in each length,
+the others dead, as Valve left them), a red emergency lamp, and in each length Valve's bulkhead (a doorway 176 wide
+and 112 high, where the Ravenholm door hung) 312 from its outer end. The owner, 26 November, of the bunker forest's
+place on the ring: "can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel
+copy/pasted". At each end 128 of the canal's own culvert (512 wide, the gate's height), shut across by a concrete
+bulkhead with a doorway 128 wide and 128 high into the tunnel, a caged lamp over it. For a buried chain between two
+gates (map_layouts/bunker_way.txt).
+Changed from Valve's: the story left out (Dog, the door he lifts, its marks and triggers); the emergency lamp, dark
+until the attack in Valve's map, is lit; the two fence panels at the base's end left out. The second length is the
+first turned half round. Left as brushes: the tunnel (Valve's own, one func_detail a length), the bulkheads.
+Unchecked: which way Valve's pipe models lie once turned with the piece.
+
+### `floodgate`
+
+The flood gate (the owner, 26 November: "copy the flood gate that blocks the airboat (right after you get the
+airboat) from HL2 and requires the valve to be turned; and if the valve stops being turned mid-open, the gate slams
+shut"): Valve's sliding sluice gate of d1_canals_05 (the prefab valve_canal_sluicegate_a: two metal leaves 188 wide
+side by side, door panels under a band of grating in a truss frame, 206 high) in a concrete headwall across the
+canal, its crest at the street's height. The leaves are func_movelinears that slide apart into the headwall's
+piers as far as the wheel has been turned (Half-Life 2's valvewheel001 on an unseen momentary_rot_button: hold E;
+two full turns open them). While it is turned an alarm sounds as the forest bunker's door does and a red beacon
+turns over the wheel; the gate's rumble lasts while it moves and stops with it. Let go before it is fully open
+and it slams shut; once fully open it stays, closing so slowly that it takes two minutes, and turning the wheel
+again in that time opens it again (the owner, 26 November: "once the door has been opened all the way, it stays
+open and doesn't slam shut EXCEPT it slowly slowly starts to shut and would take about 2 minutes to shut all the
+way again; if someone turns the valve again during this 2 minutes it resumes it's opening sequence"). The wheel
+stands where the men who built it would have set it with the water in mind (the owner: "the valve wheel is just
+below the canal/road level and not at the bottom of the canal ... we need to keep in mind how it would have been
+constructed with a potential water level in mind"): on the headwall's upstream face 64 under its crest, over a
+steel service platform 112 under it on the street's bank (the left, where there is no street), reached by an iron
+ladder up the canal's wall. A lamp by the wheel, a danger sign and a number on the headwall. A leaf that meets
+someone stops.
+Named for the game: lc_floodgate_N_wheel (the momentary_rot_button: Lock, Unlock, SetPosition 0 to 1),
+lc_floodgate_N_leaf_a and _b (the func_movelinears: SetPosition 0 shut to 1 open), lc_floodgate_N_latch (a
+logic_branch: 1 from fully open until shut again), lc_floodgate_N_beacon, _alarm, _alarm_timer, _move and _clang
+(the beacon and the sounds), N counting the flood gates of a map from 1.
+Left as brushes: the headwall, the leaves (they move), the platform.
+Unchecked (from Valve's wiki and maps, not run here): that a momentary_rot_button's Position output drives a
+func_movelinear's SetPosition as it turns and as it runs back, and that SetPositionImmediately 0 on the wheel sends
+it; which way valvewheel001 faces when pitched 90; plats/elevator_move_loop1.wav and
+doors/door_metal_large_chamber_close1.wav.
 
 ### `lockgate`
 

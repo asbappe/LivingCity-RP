@@ -1018,119 +1018,6 @@ def m_drain(m, opt):
     walk_ledge(m, 64, 960, -1, stairs=1)      # (the maintenance walk opposite the drain's mouth: Valve's canal, 21 November)
 
 
-def m_overflow(m, opt):
-    """2. The overflow toward Ravenholm. A spillway in the left wall, its apron stepping down into the canal, shut by a
-    steel sluice plate on two lifting rods under two of the canal's winches on a ledge, a chain and padlock slung
-    between the winches, caged red lamps either side, danger signs and rust stains on the wall; a lever on the wall
-    by it, padlocked like the winches until the game unlocks it. Driftwood (the coast's own), a pallet and two bodies
-    lie against the plate. Behind the plate a ribbed channel runs on to a cap ("delete to join Ravenholm"), a shallow
-    strip of water down its middle (where the channel is long enough), and it says Ravenholm the moment the plate lifts: Half-Life 2's own Ravenholm sign
-    on its wall, blood on the walls and the floor, a headcrab canister come through its roof, a zombie's torso and a
-    burnt body under it, a wheelbarrow on its side, rags; one oil lamp still burning low, one caged lamp dead.
-    "overflow 1280": how far the channel reaches from the canal's middle (default 1024).
-    Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
-    far end railed), the bank stopping either side of it in slopes: where the sluice keepers watch the plate.
-    Named for the game: lc_overflow_sluice (a func_door: Open lifts it), lc_overflow_moan (a sound from beyond the
-    plate, silent until told: PlaySound), lc_overflow_far (the channel's far end), lc_overflow_lever (the lever by the
-    plate, a button that starts locked: Unlock lets players lift and drop the plate by hand, Lock takes it back;
-    lc_overflow_lift and lc_overflow_drop are its two relays, taking turns).
-    Left as brushes: the weir, its sill, apron and frame, the ledge the winches stand on, the channel and its ribs, and
-    the sluice plate with its rods (a slab of steel 384 wide and 176 high: no model is a plate that size; the canals'
-    bar panels are bars, and stacked to that height they would rise out over the wall's top when it lifts).
-    Unchecked: ambient/creatures/town_zombie_call1.wav, models/humans/charple02.mdl, the zombie torso as a ragdoll, the
-    chain's material (cable/chain.vmt) on a rope; which way winch02 and the Ravenholm sign face."""
-    from map_mods_c import cage_lamp, toggle
-    reach = int(opt[0]) if opt and opt[0].isdigit() else 1024
-    steel = MM["steel"]
-    m.open(0, -256, 1024, 256)
-    m.low(320, 256, 704, 640, F + 192)
-    m.low(384, 640, 640, reach, F + 192)
-    wet = reach - 128 >= 832                                          # (a strip of water down the channel, where it is long enough for one)
-    if wet:
-        m.low(448, 704, 576, reach - 128, F + 192, floor=F - 16)    # the strip the overflow still runs in
-    m.side(320, 256, 704, reach)
-    m.det([(320, 256, F, 704, 272, F + 16), (320, 208, F, 704, 256, F + 12), (320, 160, F, 704, 208, F + 6)], MAT["beam"])      # the weir's sill and apron
-    m.door("lc_overflow_sluice", [(320, 288, F + 16, 704, 304, F + 192), (440, 293, F + 192, 446, 299, F + 280), (578, 293, F + 192, 584, 299, F + 280)],
-           steel, "-90 0 0", speed=24, lip=104)
-    m.portal(320, 295, F, 704, 297, F + 192)
-    m.test_button((304, 240, F + 48, 320, 248, F + 64), [("OnIn", "lc_overflow_sluice", "Open"), ("OnOut", "lc_overflow_sluice", "Close")])
-    m.det([(304, 248, F, 322, 256, F + 208), (702, 248, F, 720, 256, F + 208), (304, 248, F + 208, 720, 256, F + 224)], steel)   # its frame (the banks' ends hide in its posts)
-    m.det([(408, 200, F + 232, 616, 256, F + 240)], MAT["beam"])                                                                # the ledge for the winches
-    for u in (443, 581):                                                                                                          # a winch over each rod
-        m.static("models/props_canal/winch02.mdl", u, 226, 270, z=F + 240)
-    keys = {"Slack": "40", "Type": "0", "Subdiv": "2", "Barbed": "0", "Width": "2", "TextureScale": "1", "Collide": "0", "Dangling": "0", "Breakable": "0",
-            "RopeMaterial": "cable/chain.vmt", "MoveSpeed": "64", "PositionInterpolator": "2", "NoWind": "1"}
-    m.b.vmf.point("move_rope", m.fr.at(458, 226, F + 268), dict(keys, targetname="lc_overflow_chain_a", NextKey="lc_overflow_chain_b"), m.b.vis + ": ropes")
-    m.b.vmf.point("keyframe_rope", m.fr.at(566, 226, F + 268), dict(keys, targetname="lc_overflow_chain_b"), m.b.vis + ": ropes")
-    m.static("models/props_wasteland/prison_padlock001a.mdl", 512, 226, 0, z=F + 241)          # (its lock lies on the ledge under the chain's sag)
-    m.taken(296, 200, F, 728, 256, F + 312)
-    for u in (280, 744):                                     # caged lamps either side, lit red
-        cage_lamp(m, u, 256, F + 224, 270, "255 60 40 30")
-        m.glow(u, 245, F + 234, "255 50 30", 0.25)
-    toggle(m, "lc_overflow_lift", "lc_overflow_drop", 780, 200, F + 200, [("lc_overflow_sluice", "Open", "", 0)], [("lc_overflow_sluice", "Close", "", 0)], 8)
-    m.button("lc_overflow_lever", 780, 256, F + 136, 270, [("lc_overflow_lift", "Trigger", "", 0), ("lc_overflow_drop", "Trigger", "", 0)], wait="8")
-    m.taken(760, 236, F + 120, 800, 256, F + 180)
-    m.static("models/props_wasteland/prison_padlock001a.mdl", 780, 246, 0, z=F + 120)          # (its padlock, hung under it)
-    for kind, u, z, seed in (("danger", 264, F + 150, 1), ("danger", 760, F + 190, 2), ("stain", 380, F + 236, 3), ("stain", 650, F + 236, 4), ("number", 512, F + 290, 5)):
-        m.grime(kind, u, 256, z, seed)
-    # behind the plate: Ravenholm's threshold
-    if wet:
-        m.water(448, 704, 576, reach - 128, F - 16, F - 4)
-    for v in range(704, reach - 64, 128):                    # the channel's ribs
-        m.det([(384, v, F + 176, 640, v + 16, F + 192), (384, v, F, 392, v + 16, F + 176), (632, v, F, 640, v + 16, F + 176)], MAT["beam"])
-    m.world((384, reach - 64, F, 640, reach, F + 192), MAT["black"], vis="%s: the overflow's far end (delete to join Ravenholm)" % m.b.vis)
-    m.b.plan.keep_out.append(m.fr.rect(320, reach, 704, reach + 64))
-    m.blocked(384, reach - 128, 640, reach)
-    m.blocked(320, 144, 704, 320)
-    back = reach - 64                                                                          # (the cap's face; with a short reach the things stand in the room behind the plate)
-
-    def V(d):
-        return max(330, back - d)
-
-    def wall(v, left=True):
-        return (320 if left else 704) if v < 640 else (384 if left else 640)
-    sv = V(220)
-    m.static("models/props_junk/ravenholmsign.mdl", wall(sv) + 11, sv, 0, z=F + 96)            # (nailed to the left wall, facing across)
-    cu, cv = 560, V(330)                                                                       # the canister, nose down through the roof
-    m.point("prop_static", cu, cv, F + 176, {"model": "models/props_combine/headcrabcannister01a.mdl", "angles": "55 %d 0" % m.fr.yaw(250), "skin": "0", "solid": "6",
-                                             "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
-    m.static("models/props_debris/concrete_chunk01a.mdl", 590, cv - 40, 30, z=F)
-    m.static("models/props_debris/broken_pile001a.mdl", 576, cv + 50, 120, z=F)
-    m.body("models/zombie/classic_torso.mdl", 470, cv - 20, 200, z=F)
-    m.body("models/humans/charple02.mdl", 430, V(450), 80, z=F)
-    m.prop("prop_physics", "models/props_junk/wheebarrow01a.mdl", 606, V(520), 0, F + 24, {"spawnflags": "0", "angles": "0 %d 85" % m.fr.yaw(100)})
-    for k, (left, d, z) in enumerate(((True, 380, F + 60), (False, 300, F + 40), (None, 400, F + 1), (None, 350, F + 1), (False, 200, F + 70))):
-        v = V(d)
-        u = 512 if left is None else wall(v, left)
-        m.decal("decals/bloodstain_%s" % ("001", "002", "003", "101", "201")[k], u, v, z)
-    lv = V(260)
-    m.static("models/props_c17/lamp001a.mdl", wall(lv) + 26, lv, 30, z=F)                     # the one lamp still burning, low
-    m.glow(wall(lv) + 26, lv, F + 14, "255 190 110", 0.12)
-    m.light(wall(lv) + 26, lv, F + 24, "255 170 90 14")
-    dv = V(60)
-    cage_lamp(m, wall(dv, False), dv, F + 140, 180, lit=False)                                # (a dead one on the wall)
-    m.sound("ambient/creatures/town_zombie_call1.wav", 512, reach - 96, F + 60, radius=1400, volume=8, name="lc_overflow_moan", on=False)
-    m.target("lc_overflow_far", 512, reach - 80, F + 8, 270)
-    m.soundscape("d1_town.HeadcrabCave", 512, V(300), F, radius=420)                     # (Ravenholm's own: the owner's map uses it)
-    m.soundscape(SCAPES["courtyard"], 512, -60, F, radius=600)
-    # what the flood left against the plate
-    m.static("models/props_debris/concrete_chunk01a.mdl", 250, 96, 40, z=F + 4)
-    m.static("models/props_debris/broken_pile001a.mdl", 780, 96, 200, z=F + 4)
-    m.static("models/props_foliage/driftwood_03a.mdl", 430, 120, 10, z=F + 6)
-    m.static("models/props_foliage/driftwood_03a.mdl", 596, 176, 160, z=F + 6)
-    m.loose("models/props_junk/wood_pallet001a.mdl", 690, 70, 25, z=F + 12)
-    m.body("models/humans/charple02.mdl", 520, 420, 70)
-    m.body("models/humans/charple02.mdl", 470, 60, 200)
-    m.decal("decals/decalstain002a", 512, 100, F + 1)
-    m.lane(512, 60)
-    m.lane(512, 480)
-    m.view(512, -120, F, 90, -6, "the sluice")
-    m.view(512, 560, F, 270, 0, "behind the plate")
-    m.view(512, 680, F, 90, 0, "toward Ravenholm")
-    m.b.notes.append("%s: the overflow's far end is at (%d %d), floor z %d, 256 wide and 192 high" % ((m.tag,) + m.fr.at(512, reach, F)))
-    walk_ledge(m, 64, 960, -1, stairs=1)      # (the sluice keepers' walk along the opposite wall: Valve's canal, 21 November)
-
-
 def m_shanty(m, opt):
     """4. The shantytown under a street bridge. The canal widens into a basin on its left; a boardwalk runs along the
     basin's back, with three shacks on it (map_mods_c.shack: a sheet of wood, tin or steel hull a wall, a tin roof sloping to
@@ -2162,7 +2049,6 @@ MODULES = {
     "tee": (512, m_tee, "a standard gate in the left wall, for another piece or layout to join"),
     "shed": (2112, m_shed, "plain canal with a train's shed on the street beside it (two to a straight run; needs \"upper left\")", {"stretch": True}),
     "drain": (1024, m_drain, "1. the storm drain junction, down to the city's sewers (left)"),
-    "overflow": (1024, m_overflow, "2. the overflow toward Ravenholm, behind a sluice plate (left)"),
     "shanty": (2048, m_shanty, "4. the shantytown under a street bridge (left)"),
     "vort": (1024, m_vort, "6. the vortigaunt culvert (left)"),
     "relay": (1024, m_relay, "7. Cubbage's relay shack and mast, on a pier (right)"),

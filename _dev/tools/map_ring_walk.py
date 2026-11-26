@@ -1,5 +1,5 @@
-"""The canal ring's test map: the first canal and the ring (map_layouts/ring.txt)
-built as test files and joined into ONE file to compile and walk by itself, with one spawn (on the first canal's quay)
+"""The canal ring's test map: the first canal, the ring (map_layouts/ring.txt), the crypt's inlet, and the bunker forest
+down its tunnel (map_layouts/bunker_way.txt), built as test files and joined into ONE file to compile and walk by itself, with one spawn (on the first canal's quay)
 and the owner's sun. Everything stands at its real place in City 18's coordinates, so what is walked here is what goes
 into the real map (the owner, 22 November: "I will need a test map once you are done with this so that I can walk it
 and check on all of it (so an env_sun and spawn point please); please keep the scale correct for us to plug directly
@@ -50,15 +50,25 @@ def main():
     args = ap.parse_args()
     py = sys.executable
     plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"]),
-             ("chain", ["--layout", "map_layouts/inlet.txt", "--first-node", "9000"])]      # (the crypt's inlet off the east side, 26 November)
+             ("chain", ["--layout", "map_layouts/inlet.txt", "--first-node", "9000"]),      # (the crypt's inlet off the east side, 26 November)
+             # (the bunker forest, down Valve's long tunnel from the first canal's east gate: the owner, 26 November, "please
+             #  stitch in the forest bunker to the ring now ... down a longer tunnel". The forest is the generator's own build,
+             #  3520 east of where it was first set: the owner's file of it, edited in Hammer, is not in this test map)
+             ("chain", ["--layout", "map_layouts/bunker_way.txt", "--first-node", "9500"]),
+             ("forest_bunker", [])]      # (built at its first place, then moved: map_shift.py, below)
     if args.against:
         print("checking against: " + " ".join(args.against))
         for piece, extra in plain:
             run([py, "map_build.py", piece] + extra + ["--against"] + args.against + ["--out", os.devnull])
     print("building the test pieces:")
-    names = ["lc_canal_test.vmf", "lc_ring_test.vmf", "lc_inlet_test.vmf"]
+    names = ["lc_canal_test.vmf", "lc_ring_test.vmf", "lc_inlet_test.vmf", "lc_bunker_way_test.vmf", "lc_forest_bunker_test.vmf"]
     for (piece, extra), name in zip(plain, names):
         run([py, "map_build.py", piece] + extra + ["--test", "--out", name])
+    # (the forest's builder is written for its first place, its west gate at the canal's east gate: the finished file is
+    #  moved to the tunnel's far end, 3520 east)
+    run([py, "map_shift.py", "lc_forest_bunker_test.vmf", "lc_forest_bunker_east_test.vmf", "3520", "0"], show=("SHIFT",))
+    os.remove(os.path.join(HERE, "lc_forest_bunker_test.vmf"))
+    names[-1] = "lc_forest_bunker_east_test.vmf"
     print("joining them:")
     run([py, "map_merge.py", "--blank"] + names + ["--out", args.out])
     for name in names:
@@ -71,7 +81,11 @@ def main():
     run([py, "map_slim.py", args.out], show=("MB",))
     print("  finished: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("checking the finished file:")
-    run([py, "map_walk.py", args.out], show=("problems", "  "))
+    # (the walk starts at the spawn and also at three places in the bunker forest: inside the bunker before its door's
+    #  button, in the silo's secret room and in the leader's way out. The forest's ground is displaced, which the walk
+    #  cannot read; the bunker's door opens only from the inside and the other two lie behind secret doors. The forest's
+    #  own build walks its inside; what this walk proves there is the way from the canal down the tunnel to its gate)
+    run([py, "map_walk.py", args.out, "--also", "14768", "4260", "410", "--also", "12688", "7024", "-142", "--also", "11748", "4770", "410"], show=("problems", "  "))
     run([py, "map_stairs.py", args.out], show=("flights", "  "))
     fin = map_budget.count(os.path.join(HERE, args.out))
     for key in ("faces", "verts"):

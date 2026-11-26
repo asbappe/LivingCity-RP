@@ -15,7 +15,7 @@ caged lamps). Its floor sags about 42 at its middle (the dish, map_modules.dish_
 round the steps and stop against the wide canal's walls.
 """
 
-from map_build import CELL, GATE_HIGH, MAT, gate_cap
+from map_build import CELL, GATE_HIGH, MAT, gate_cap, prism
 from map_modules import CANAL_W, F, SCAPES, WIDE_W, CANAL_JUNK, canal_grime, walk_ledge
 
 HALF, WHALF = CANAL_W // 2, WIDE_W // 2
@@ -476,12 +476,88 @@ def m_floodgate(m, opt):
     b.notes.append("%s: the flood gate %s at (%d %d): the wheel at z %d on its platform at z %d" % ((m.tag, name) + m.fr.pt(G, 0) + (wz + m.fr.dz, pz + m.fr.dz)))
 
 
+def m_servicetunnel(m, opt):
+    """A long way on foot, in Valve's own tunnel: Black Mesa East's tunnel toward Ravenholm (the prefab
+    valve_eli_raven_tunnel, lifted from d1_eli_02), laid twice end to end, 2752 of it: an arched concrete tunnel 192 wide
+    and 176 to its crown on a marble floor, Valve's pipes along one wall, deck lamps in the crown (one lit in each length,
+    the others dead, as Valve left them), a red emergency lamp, and in each length Valve's bulkhead (a doorway 176 wide
+    and 112 high, where the Ravenholm door hung) 312 from its outer end. The owner, 26 November, of the bunker forest's
+    place on the ring: "can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel
+    copy/pasted". At each end 128 of the canal's own culvert (512 wide, the gate's height), shut across by a concrete
+    bulkhead with a doorway 128 wide and 128 high into the tunnel, a caged lamp over it. For a buried chain between two
+    gates (map_layouts/bunker_way.txt).
+    Changed from Valve's: the story left out (Dog, the door he lifts, its marks and triggers); the emergency lamp, dark
+    until the attack in Valve's map, is lit; the two fence panels at the base's end left out. The second length is the
+    first turned half round. Left as brushes: the tunnel (Valve's own, one func_detail a length), the bulkheads.
+    Unchecked: which way Valve's pipe models lie once turned with the piece."""
+    import copy
+    import map_prefab
+    from map_mods_c import cage_lamp, vprism
+    L, T, RUN = 3008, 128, 1376
+    roof = F + GATE_HIGH
+    m.low(0, -256, T, 256, roof)
+    m.low(L - T, -256, L, 256, roof)
+    m.low(T, -128, L - T, 128, F + 192, floor=F - 8)      # (the room Valve's tunnel stands in: its floor brush is 8 thick, its vault's back at 192)
+    m.side(0, -256, L, 256)
+    m.blocked(T, -128, L - T, 128)
+    m.no_bank(0, -264, L, 264)
+    m.portal(62, -256, F, 64, 256, roof)
+    m.portal(L - 64, -256, F, L - 62, 256, roof)
+    pf = copy.deepcopy(map_prefab.load("valve_eli_raven_tunnel"))
+    keep = []
+    for q in pf["points"]:
+        k = q["keys"]
+        if "interior_fence" in k.get("model", ""):
+            continue
+        if k.get("targetname") == "light_emergency_turnon":
+            k.pop("targetname"); k["spawnflags"] = "0"
+        if k.get("targetname") == "Sprite_emerg_lights":
+            k.pop("targetname"); k["spawnflags"] = "1"
+        keep.append(q)
+    pf["points"] = keep
+    map_prefab.place(m, pf, T, 0, F, turn=0, wiring=False)
+    map_prefab.place(m, pf, L - T, 0, F, turn=2, wiring=False)
+    # (the lifted run began where Valve's tunnel bent away north: for its first 208 the north wall and part of the vault were
+    #  the bend's own brushes, left behind. The same section built on over that length, in Valve's materials)
+    wall, low_, high_, crown = "concrete/concretewall002c", "concrete/concretewall002a", "concrete/concretewall002c", "concrete/concretewall008a"
+    for base, way in ((T, 1), (L - T, -1)):
+        fill = []
+        for sg, e, mat, prof in ((1, 208, wall, [(96, 0), (96, 112), (112, 112), (112, 0)]), (1, 203, low_, [(96, 112), (91, 136), (112, 136), (112, 112)]),
+                                 (1, 189, low_, [(91, 136), (77, 157), (112, 157), (112, 136)]), (1, 168, high_, [(77, 157), (56, 171), (56, 192), (112, 192), (112, 157)]),
+                                 (1, 144, high_, [(56, 171), (32, 176), (32, 192), (56, 192)]), (1, 80, crown, [(-32, 176), (-32, 192), (32, 192), (32, 176)]),
+                                 (-1, 56, high_, [(56, 171), (32, 176), (32, 192), (56, 192)])):
+            u1, u2 = sorted((base, base + way * e))
+            fill.append(prism([(way * sg * v, F + z) for v, z in prof], "x", u1, u2, mat))
+        # (and the floor's corner the bend cut off: a triangle of the same marble)
+        fill.append(vprism([(base, -way * 112), (base + way * 224, way * 112), (base, way * 112)], F - 8, F, MAT["nodraw"], "stone/marblefloor001b"))
+        m.shapes(fill)
+    # (Valve's floor stops 24 short of the cut at the base's end: the two ends meet in the middle, a strip of the same marble between them)
+    m.det([(T + RUN - 24, -112, F - 8, L - T - RUN + 24, 112, F)], MAT["nodraw"], top="stone/marblefloor001d")
+    for u0, u1, out in ((T - 16, T, 180), (L - T, L - T + 16, 0)):
+        # the bulkhead across the culvert at the tunnel's mouth: it hides the tunnel's cut end, a doorway through it
+        m.det([(u0, -128, F, u1, -64, F + 192), (u0, 64, F, u1, 128, F + 192), (u0, -64, F + 128, u1, 64, F + 192)], "concrete/concretewall002a")
+        m.det([(u0 - 4 if out == 180 else u1, -72, F, u0 if out == 180 else u1 + 4, -64, F + 136), (u0 - 4 if out == 180 else u1, 64, F, u0 if out == 180 else u1 + 4, 72, F + 136),
+               (u0 - 4 if out == 180 else u1, -72, F + 128, u0 if out == 180 else u1 + 4, 72, F + 136)], MAT["beam"])
+        cage_lamp(m, u0 - 4 if out == 180 else u1 + 4, 0, F + 150, out, "255 214 160 45")
+        m.b.vmf.keep_way_clear(m.fr.box(u0 - 64, -64, F, u1 + 64, 64, F + 128), "%s: the tunnel's doorway" % m.tag)
+    for u in list(range(64, L, 256)) + [L - 64]:
+        m.lane(u, 0, F)
+    m.soundscape(SCAPES["tunnel"], T + 600, 0, F, radius=900)
+    m.soundscape(SCAPES["tunnel"], L - T - 600, 0, F, radius=900)
+    m.soundscape(SCAPES["watery"], 64, 0, F, radius=300)
+    m.soundscape(SCAPES["watery"], L - 64, 0, F, radius=300)
+    m.view(40, 0, F, 0, 0, "the bulkhead and its doorway")
+    m.view(T + 40, 0, F, 0, 0, "down Valve's tunnel")
+    m.view(T + 500, 0, F, 180, 0, "back through the bulkhead doorway")
+
+
 MODULES = {
     "widen": (768, m_widen, "the canal widens from 512 to 1024 in two steps (its next module must be a wide one)", {"width": (CANAL_W, WIDE_W)}),
     "narrow": (768, m_narrow, "the wide canal narrows back to 512 in two steps", {"width": (WIDE_W, CANAL_W)}),
     "wide": (1024, m_wide, "the wide canal: 1024 between upright walls, any length (\"wide 2048\"), a walk along a wall from 2048", {"width": (WIDE_W, WIDE_W), "stretch": True}),
     "widetee": (512, m_widetee, "a standard gate in the wide canal's left wall, for another piece or layout to join", {"width": (WIDE_W, WIDE_W)}),
     "basin": (2048, m_basin, "the canal widens into a 1024 basin and narrows again (512 at both ends; \"basin 2560\")", {"stretch": True}),
+    "servicetunnel": (3008, m_servicetunnel, "a long way on foot: Valve's tunnel from Black Mesa East toward Ravenholm, twice end to end, a bulkhead doorway at each end"),
     "floodgate": (512, m_floodgate, "Valve's sluice gate in a headwall across the canal: hold its valve wheel to slide the leaves open; let go and they slam shut"),
     "lockgate": (2048, m_lockgate, "Valve's lock gates across the wide canal: toggled open and shut, a klaxon, a control booth, a passage round", {"width": (WIDE_W, WIDE_W)}),
 }

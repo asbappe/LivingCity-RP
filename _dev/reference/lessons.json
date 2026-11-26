@@ -4350,6 +4350,56 @@
    "why": "The owner, 26 November, of the tram under the breach first built as a new plain hall: \"I told you to take the tram module that had the little station and put it in the breach module and you recreated it? WHY? WHY NOT JUST COPY PASTE IT? WHERE IS THE STATION? WHERE ARE THE PROPS? ITS A BARE FUCKING SQUARE ROOM WITH A FLOATING TRAM IN IT\"; and of the church set south of the inlet, away from the quarter: \"you put the church on THE WRONG SIDE OF THE CANAL\".",
    "how": "map_mods_a.tram_station (m_tram's left station, copied whole) called by map_mods_d.m_tramfall with the module's frame moved; the car on its two bogies as m_tram stands a car. inlet.txt: \"crypt flip\", the fork at y -6016 so the church's yard stands north of the inlet on free ground by the quarter's corner.",
    "check": "Count the station's props in the built file (columns, arches, lamps, benches, clock, payphone, booth, gate); --against c18_lc.vmf and the quarter."
+  },
+  {
+   "id": "owner-far-scenery-cheap",
+   "tags": [
+    "owner",
+    "props",
+    "geometry"
+   ],
+   "title": "Scenery nobody walks to is a handful of buildings and Valve's card trees",
+   "rule": "Beyond a wall players only look over, spend almost nothing: about one building to every 1000 squares of ground, no single tree props, and Valve's own far trees (one model that is a whole clump on flat cards: tree_deciduous_card_01 over ruins, tree_pine_card_cluster_01 and _02 in a forest), their length along the wall.",
+   "why": "The owner, 26 November, of the ring's backdrop (355 kit buildings, 270 pines, 15 dead trees): \"can we adjust to a simplified version where we have about 5% the same number of buildings and remove the tree props and instead use the EP2 skybox trees and maybe any HL2 trees ... I think we are wasting resources at something people won't look at\"; and \"valve seems to use tree_deciduous_card_01 as a static prop on the canal walls in HL2\".",
+   "how": "map_backdrop.py: BUILDINGS (a cap on kit_lots), the leftovers' rates, tree_cards (CARDS, PINE_CARDS, CARD_GAP).",
+   "check": "The backdrop's note in the chain's build output: buildings, tree clumps and pine clumps counted."
+  },
+  {
+   "id": "owner-side-piece-down-a-tunnel",
+   "tags": [
+    "owner",
+    "geometry",
+    "valve"
+   ],
+   "title": "A side piece is reached down a long tunnel of Valve's, never right at the gate",
+   "rule": "Where another place (a forest, a bunker, a quarter) joins the canal, put a long way between them, and make it one of Valve's own tunnels lifted whole (map_prefab.py extract), laid end to end as often as the length needs, with a short room of ours at each end to meet the gates. Move the far piece with map_shift.py; never rebuild it at a new origin unless its builder is proven to take one.",
+   "why": "The owner, 26 November: \"please stitch in the forest bunker to the ring now ... though can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel copy/pasted\". The forest's builder set its silo and rooms by fixed coordinates: built with --origin it was not sealed.",
+   "how": "map_mods_e.m_servicetunnel (valve_eli_raven_tunnel twice, 2752 long), map_layouts/bunker_way.txt, map_shift.py (3520 east), map_ring_walk.py.",
+   "check": "map_shift.py prints SHIFT PASS; the joined map's flood from the spawn stays inside; map_walk.py reaches the forest's gate from the canal's spawn."
+  },
+  {
+   "id": "owner-effects-must-be-seen",
+   "tags": [
+    "owner",
+    "props"
+   ],
+   "title": "An effect a player is meant to notice must be plainly visible",
+   "rule": "Water, slime or steam drawn with env_steam: a core of big, fully opaque puffs at a high rate, a softer sleeve round it and spray where it lands. One thin jet at renderamt 150 cannot be seen. Half-Life 2 and the Episodes have no falling-water material or particle (Valve's canal maps show none): say so rather than leave a faint one.",
+   "why": "The owner, 26 November, of the drain's and the cistern's pipes: \"I can barely barely barely see the water effect you made coming out of the pipes, it is like 97% transparent\".",
+   "how": "map_mods_c.pour: three env_steam (core, sleeve, spray at the foot).",
+   "check": "Only in the game: the owner looks at the drain and the cistern."
+  },
+  {
+   "id": "owner-one-bridge-per-quay",
+   "tags": [
+    "owner",
+    "geometry"
+   ],
+   "title": "Two modules that do one job become one: the better piece replaces the plain one",
+   "rule": "Where one module has a plain version of what another module does well (a fixed footbridge beside a turning one), put the good one in and take the plain one out, reusing its code whole (owner-move-means-copy), and take the spare module off the layouts.",
+   "why": "The owner, 26 November: \"please combine the quay and the switchbridge modules so the switchbridge IS the bridge for the quay, and remove the static bridge for the quay\".",
+   "how": "map_mods_c.swing_bridge (the old module's body, its pier at any u) called by map_mods_a.m_quay with quay=True; the store's barred door in the far landing's back wall.",
+   "check": "python3 map_build.py module --name quay: sealed, map_walk.py 0 problems; the names lc_swing_* in its list."
   }
  ]
 }
