@@ -124,7 +124,6 @@ function LC_CL.CloseHub()
 end
 function LC_CL.HubOpen() return IsValid(hub) end
 function LC_CL.HubTab() return IsValid(hub) and current or nil end
-function LC_CL.HubLastTab() return last end
 
 net.Receive("lc_hub", function() LC_CL.OpenHub(nil, true) LC_CL.HubFill("me", BuildMe) end)
 

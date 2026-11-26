@@ -143,13 +143,15 @@ def pf_solid(vmf, sides, q, d, vis):
     return text, tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
 
 
-def pf_finish(sols, q, d, rooms, mats):
+def pf_finish(sols, q, d, rooms, mats, models=()):
     """What Valve left bare (nodraw) where its map ran on and ours now stops at a hull of our own (the owner, 24
     November: "there are walls missing all over the stairs up to the launch control room"): a nodraw face of a lifted
     piece whose middle (or a point near one of its corners) looks, 1 out, into the open air of one of `rooms` (boxes of the map; air: inside no other brush
     of the piece) gets mats["floor"], ["ceiling"] or ["wall"] by the way it faces. sols: the piece's solids to be placed
     (changed in place: copies). rooms and mats may instead be a list of (rooms, mats), the first that holds the point
-    deciding. How many."""
+    deciding. A brush that lies wholly inside one of `models` (the boxes of the piece's own models, in its frame) is
+    dressed by that model and keeps Valve's nodraw: the forest cams' screens, 2 thick inside their TVs, had been given
+    concrete round their pictures. How many."""
     groups = rooms if mats is None else [(rooms, mats)]
 
     def plane(pts):
@@ -172,6 +174,9 @@ def pf_finish(sols, q, d, rooms, mats):
     for sol, sides, planes in placed:
         allc = [c for sd in sides for c in sd["corners"]]
         if not allc:
+            continue
+        own = [c for sd in sol["sides"] for c in (sd.get("verts") or sd.get("corners") or [])]
+        if own and any(all(m[k] - 0.5 <= min(c[k] for c in own) and max(c[k] for c in own) <= m[k + 3] + 0.5 for k in range(3)) for m in models):
             continue
         mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
         for k, sd in enumerate(sides):
@@ -199,6 +204,23 @@ def pf_finish(sols, q, d, rooms, mats):
     return count
 
 
+def pf_model_boxes(pf):
+    """The boxes of a lifted piece's upright models (no pitch or roll) that nothing moves (no parent, no name), in the
+    piece's own frame, by their real sizes. (A door's model moves away from what it covered shut: the strip over White
+    Forest's south door, inside the door model's box, showed as a hole when it kept Valve's nodraw.)"""
+    import map_build
+    out = []
+    for e in pf["points"]:
+        k = e["keys"]
+        m = k.get("model", "")
+        a = [float(c) for c in (k.get("angles") or "0 0 0").split()]
+        if m.endswith(".mdl") and len(a) == 3 and abs(a[0]) < 0.01 and abs(a[2]) < 0.01 and not k.get("parentname") and not k.get("targetname"):
+            b = map_build.prop_box(m, e["origin"], a[1])
+            if b:
+                out.append(b)
+    return out
+
+
 def pf_solids(vmf, pf, q, d, vis, world=False, skip=None, finish=None):
     """A lifted piece's brushes: with `world`, those that were Valve's world brushes go into the world (they cut up the
     map for visibility, as in Valve's own) and the rest into one func_detail. Their boxes are returned, not handed to
@@ -207,7 +229,7 @@ def pf_solids(vmf, pf, q, d, vis, world=False, skip=None, finish=None):
     det, boxes = "", []
     sols = [copy.deepcopy(s) for s in pf["solids"] if not (skip and skip(s))]
     if finish:
-        pf_finish(sols, q, d, finish, None)
+        pf_finish(sols, q, d, finish, None, models=pf_model_boxes(pf))
     for s in sols:
         text, box = pf_solid(vmf, s["sides"], q, d, vis)
         boxes.append(box)
@@ -251,13 +273,14 @@ def pf_outputs(conns):
     return out
 
 
-def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=None, extra=(), valve_anchor=None):
+def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=None, extra=(), valve_anchor=None, exact=False):
     """A lifted piece's props, lights and wiring (its path points too), turned and moved as its brushes. Every name the
     piece gives is prefixed (two pieces never answer each other), an output to anything the piece does not have is
     dropped (Valve's story, outside the piece), and every output may fire again (Valve's once-only buttons become
     reusable). keep(e) says what to place; edit(e) may change an entity first (each is a copy, its outputs already
     as (output, target, input, value, delay) in e["out"]); extra: entities of our own in the piece's frame, named as
-    the piece's. A turned piece's tilting doors and spinners change axis with it. Returns the names placed."""
+    the piece's. A turned piece's tilting doors and spinners change axis with it. exact: points keep Valve's places to
+    0.01, not cut to whole units (Vmf.point). Returns the names placed."""
     ents = []
     for e in list(pf["points"]) + list(pf.get("wiring", [])) + list(extra):
         e = copy.deepcopy(e)
@@ -285,7 +308,9 @@ def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=Non
         cls = e["classname"]
         keys = dict((k, v) for k, v in e["keys"].items() if k not in ("classname", "origin", "id"))
         for k in list(keys):
-            if k.lower() in PF_NAME_KEYS and keys[k]:
+            # (a particle system's control points name entities too: ep2_outland_12a's hatch smoke named door.silo, and
+            #  the game said "could not find control point entity (door.silo)" when it kept Valve's name)
+            if (k.lower() in PF_NAME_KEYS or re.match(r"cpoint\d+$", k.lower())) and keys[k]:
                 r = ren(keys[k])
                 if r:
                     keys[k] = r
@@ -322,7 +347,7 @@ def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=Non
         if brushes:
             pf_brush_entity(vmf, cls, keys, brushes, q, d, vis_logic, outs, pf_point(e["origin"], q, d) if "origin" in e else None)
         else:
-            vmf.point(cls, tuple(pf_point(e["origin"], q, d)), keys, vis_props if cls.startswith("prop") else vis_logic, connections=outs)
+            vmf.point(cls, tuple(pf_point(e["origin"], q, d)), keys, vis_props if cls.startswith("prop") else vis_logic, connections=outs, exact=exact)
     return names
 
 
@@ -1954,15 +1979,20 @@ class BunkerForest(Forest):
         model = [p for p in pf["points"] if p["keys"].get("model", "").endswith("missile_doors.mdl")][0]["keys"]
         e0, e1 = W(0, 0, 0), W(1, 0, 0)
         east = int(round(math.degrees(math.atan2(e1[1] - e0[1], e1[0] - e0[0])))) % 360       # (the bunker's +u in the map)
-        for tag, (a, b), way, roll in (("west", (d1 - 8, mid), -1, -90), ("east", (mid, d2 + 8), 1, 90)):
+        # Both leaves the same way up (the owner, 26 November, thought one leaf sat higher than the other: both stood at
+        # the same height, but the west leaf was the east one turned upside down in the wall's plane, as Valve's pair lie
+        # turned half round each other, so whatever of the model is not the same top and bottom showed the other way up
+        # on it). Now the west leaf is the east one moved along: the same yaw and roll, its own +x toward the middle.
+        for tag, (a, b), way in (("west", (d1 - 8, mid), -1), ("east", (mid, d2 + 8), 1)):
             name = "lc_bunker_door_" + tag
-            yaw = (east + (0 if way > 0 else 180)) % 360        # (the model's own +x away from the middle: its meeting edge is its -x, as in Valve's)
+            yaw = (east + (0 if way > 0 else 180)) % 360        # (the way it slides: away from the middle, into its jamb)
+            mdl_yaw, roll = east, 90
             v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % yaw, "speed": str(self.FLAT_SPEED), "lip": str(lip), "wait": "-1", "spawnflags": "0",
                                            "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
                            [B(a, 32 - self.FLAT_HALF_T - 2, zp, b, 32 + self.FLAT_HALF_T + 2, top)], MAT["nodraw"], dv)     # (as thick as the pair of leaves)
             keys = {k: model[k] for k in ("model", "skin", "MinAnimTime", "MaxAnimTime", "RandomAnimation", "SetBodyGroup", "PerformanceMode", "pressuredelay",
                                           "ExplodeDamage", "ExplodeRadius") if k in model}
-            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1", "lightingorigin": lit,
+            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (mdl_yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1", "lightingorigin": lit,
                          "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "modelscale": str(sc), "StartDisabled": "0", "renderamt": "255",
                          "rendercolor": "255 255 255"})
             # Valve's leaf is drawn on one side only (the side seen from inside Silo 2): its other side shows as nodraw (the
@@ -1971,7 +2001,7 @@ class BunkerForest(Forest):
             # pair, back to back on the doorway's middle (32): this one inside, its drawn side to the bunker, and its mirror
             # (turned half round its length) outside, its drawn side to the forest, lit from outside.
             v.point("prop_dynamic", W((a + b) // 2, 32 + self.FLAT_HALF_T, zp + int(round(164.8 * sc))), keys, dv)
-            back = dict(keys, targetname="lc_bunker_outer_leaf_" + tag, angles="0 %d %d" % (yaw, roll + 180), lightingorigin=lit_out)
+            back = dict(keys, targetname="lc_bunker_outer_leaf_" + tag, angles="0 %d %d" % (mdl_yaw, roll + 180), lightingorigin=lit_out)
             v.point("prop_dynamic", W((a + b) // 2, 32 - self.FLAT_HALF_T, zp + int(round(164.8 * sc))), back, dv)
         v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
         # an areaportal across the doorway, in the leaves' plane, shut with them, so the bunker is not drawn from outside
@@ -2035,8 +2065,10 @@ class BunkerForest(Forest):
         relay = W(mid, 200, zp + 120)
         v.point("logic_relay", relay, {"targetname": "lc_bunker_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
         v.point("logic_relay", (relay[0] + 16, relay[1], relay[2]), {"targetname": "lc_bunker_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
-        # the button: on the wall inside, west of the stairs; one press works whichever relay is live
-        wall_button(v, W(512, 256, zp + 40), 270, "lc_bunker_button", B(506, 246, zp + 36, 526, 256, zp + 64), dv,
+        # the button: inside, on the front wall right by the doors (east of them, the owner, 26 November: it had been on the
+        # far wall west of the stairs), at hand height; one press works whichever relay is live. Emergency closes in the
+        # control room and the leader's office: map_launch.emergency_buttons.
+        wall_button(v, W(780, 64, zp + 40), 90, "lc_bunker_button", B(766, 64, zp + 36, 786, 74, zp + 64), dv,
                     [("OnPressed", "lc_bunker_close", "Trigger", "", 0), ("OnPressed", "lc_bunker_open", "Trigger", "", 0)], "9")
         # nobody left inside and the door shut: it opens again (the unshutting relay is only live while it is shut). Inside
         # is every room, stair and corridor of the bunker, the corridor to the silo and the WHOLE silo (its hull's inside,
@@ -2354,6 +2386,7 @@ class BunkerForest(Forest):
         def edit(e):
             cls, k = e["classname"], e["keys"]
             tn, o = k.get("targetname", ""), tuple(e.get("origin", ()))
+            ML.steady(e)        # (nothing of Valve's fades out in the silo: the office door was not drawn from across it)
             if o in pad_name:
                 if cls.startswith("prop"):
                     k["targetname"] = pad_name[o]
@@ -2424,7 +2457,7 @@ class BunkerForest(Forest):
         #  with the office, on the top floor since 24 November)
         extra = [{"classname": "ambient_generic", "origin": [261, 300, 384], "keys": {
             "targetname": "lab_lever_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100", "pitchstart": "100", "radius": "1250", "spawnflags": "48"}}]
-        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
+        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"], exact=True)
         # the rocket, back in the shaft as it stands in Episode Two (the owner, 22 November: "we could use the rocket in that silo
         # after all ... can we please re-insert the rocket into the silo as it exists in EP2?"): valve_ep2_rocket, Valve's own
         # stages, engines, nose and hatch, in the silo's frame. Its engines end 6 over the pit's cover (322).

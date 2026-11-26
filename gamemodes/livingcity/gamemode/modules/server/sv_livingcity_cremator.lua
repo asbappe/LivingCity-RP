@@ -451,6 +451,7 @@ end
 
 -- A Cremator at pos: the unseen walker and the model on it. Returns its record.
 function LC.SpawnCremator(pos, model, now)
+    if LC.ChapterReversed and LC.ChapterReversed() then return nil end -- (the city is the Resistance's: sv_livingcity_chapter.lua)
     model = model or LC.CrematorModel()
     if not model then return nil end
     now = now or CurTime()

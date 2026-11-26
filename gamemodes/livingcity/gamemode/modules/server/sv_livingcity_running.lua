@@ -81,14 +81,15 @@ end
 LC.PlayerSprinting = Running
 
 -- Why the cops wouldn't shout at this player, or nil if they would.
-local function ExemptWhy(ply)
+-- hunted = true: for what a unit hears (sv_livingcity_noise.lua), where the wanted still count.
+local function ExemptWhy(ply, hunted)
     if not ply:Alive() or ply:InVehicle() then return "dead or in a vehicle" end
     if ply:GetNW2Bool("lc_build", false) then return "build mode" end
     if LC.PlayerIsCP(ply) then return "a Civil Protection unit" end
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return "a stalker (Combine property)" end
     if LC.FoolsSecurity and LC.FoolsSecurity(ply) then return "in a convincing uniform" end
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return "infested" end
-    if LC.PlayerIsWanted(ply) then return "already wanted" end -- already being chased
+    if not hunted and LC.PlayerIsWanted(ply) then return "already wanted" end -- already being chased
     if (LC.InCustody and LC.InCustody(ply)) or (LC.Prisoners and LC.Prisoners[ply]) then return "in custody" end
     if LC.Stops and LC.Stops[ply] then return "being stopped" end -- walking off from a stop is handled there
     if ply:GetNW2String("lcf_faction", "") == "admin" or LCF.IsOverwatch(ply) then return "Overwatch or the Administrator" end
@@ -99,6 +100,7 @@ local function ExemptWhy(ply)
     return nil
 end
 local function Exempt(ply) return ExemptWhy(ply) ~= nil end
+LC.RunningExemptWhy = ExemptWhy
 
 -- The nearest metrocop on the street who can see ply.
 local function Watcher(ply)

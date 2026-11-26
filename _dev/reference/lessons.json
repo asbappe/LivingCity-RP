@@ -3864,6 +3864,19 @@
    "check": "review"
   },
   {
+   "id": "owner-lifts-are-valves-models",
+   "tags": [
+    "props",
+    "owner",
+    "valve"
+   ],
+   "title": "A lift is Valve's lift: models on unseen collision, never a car drawn with brushes",
+   "rule": "Never build a lift's car, gates or buttons as visible brushwork. Use the game's own: the cage model parented to a mover made only of unseen collision brushes, the gate models over unseen sliding clips, the button models under an unseen func_button, the lift's own sounds. The same goes for anything else the game already has a model for: look for the model (asset_facts.json, the prefab library) before drawing a brush.",
+   "why": "The owner, 26 November, of the cistern's first lift (a steel platform, rails and sliding grates of brushes): \"why are you making the lift car out of brushes? USE THE ELEVATORS IN HL2 STOP USING BRUSHES GOOD GOLLY\".",
+   "how": "map_cistern.lift: Black Mesa East's freight lift from the prefab valve_eli_lift_ride (props_lab/freightelevator.mdl on Valve's 38 nodraw boxes, props_lab/elevatordoor.mdl with SetAnimation open and close, props_lab/freightelevatorbutton.mdl, eli_lab.elevator_move and _stop), all Half-Life 2's. Episode Two's: props_mining/elevator01_cage and elevator02_cage (the mine lifts), props_silo/silo_elevator (the silo's).",
+   "check": "review (a func_movelinear, func_tracktrain or func_door named *lift* with a drawn material)"
+  },
+  {
    "id": "join-valve-cuts",
    "tags": [
     "geometry",
@@ -4185,6 +4198,31 @@
    "why": "The owner's console on loading the ring's test map, 25 November: \"Warning, funcladder with blocked bottom point (6878.00 -5968.00 404.00) stuck in (worldspawn/)\" (twice, a canal bank under the foot), \"item_item_crate at (...) has no model name!\" (26 times), \"SOLID_VPHYSICS static prop with no vphysics model!\" (canal maps, corkboards, hive nests).",
    "how": "Mod.ladder marks no bank on a square 144 round its foot; map_build.lift_ladder_feet raises a foot onto anything low it touches; map_modules.breakable gives the crate its model; Vmf.point makes a prop_static solid 0 when map_assets.collides says the model has none.",
    "check": "map_walk.py: \"a ladder's foot ... is inside a brush\" (a player's box at each end, touching counts as Source counts it)."
+  },
+  {
+   "id": "owner-train-fixed-orientation",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "A func_tracktrain that must not turn gets the flags, not only orientationtype",
+   "rule": "Garry's Mod's func_tracktrain turned to face along a straight-up path although its orientationtype was 0 (fixed). Give a train that carries things upright spawnflags 1 (No Pitch) and 16 (Always Fixed Orientation).",
+   "why": "\"the rocket launched sideways and not upwards ... it was solid black with no lighting and too small\" (25 November: the train pitched 90 degrees; the rocket's lighting point, riding on it, swung into the rock).",
+   "how": "map_launch.py launch(): the train's spawnflags 25 (8 Passable + 1 + 16).",
+   "check": "the train's spawnflags include 1 and 16"
+  },
+  {
+   "id": "owner-lifted-origins-exact",
+   "tags": [
+    "props",
+    "geometry",
+    "owner"
+   ],
+   "title": "Lifted point entities keep Valve's fractions",
+   "rule": "A prop lifted with its brushes must keep its origin to the hundredth: cut to whole units, Valve's TVs sat off their screen brushes and sank into their shelf.",
+   "why": "\"the lower control room screens that come from EP2 have a brush stuck in them AND the screens are slightly off kilter of the TV models\" (25 November).",
+   "how": "Vmf.point(..., exact) for the bunker's lifted pieces (control room, launch room, pad, launch, silo).",
+   "check": "by computing: each lifted prop's offset from its brushes equals Valve's"
   },
   {
    "id": "owner-combine-wall-every-city-bank",

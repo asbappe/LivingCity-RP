@@ -164,7 +164,7 @@ if SERVER then
     T.Gunners = T.Gunners or {} -- [gun] = the player manning it
 
     -- Who may man it: anyone (the owner, 21 November: "anyone can use the gun"). One place to change.
-    function LC.TurretMayUse(ply, gun) return true end
+    function LC.TurretMayUse(ply, gun) return not (LC.ChapterReversed and LC.ChapterReversed()) end -- (dead while the city is the Resistance's: sv_livingcity_chapter.lua)
 
     -- The gun this player mans, or nil.
     function LC.TurretOf(ply)

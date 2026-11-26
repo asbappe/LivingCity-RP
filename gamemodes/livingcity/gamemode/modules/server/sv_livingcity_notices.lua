@@ -78,12 +78,71 @@ function LC.FlushNotices()
 end
 timer.Create("LivingCityNotices", 0.1, 0, function() LC.FlushNotices() end)
 
+------------------------------------------------------------------------
+-- The text gate (the owner, 14 November: "I can only read one at a time"; 25 November, to "one gate every chat
+-- line passes through ... minor lines that pile up are dropped, important ones always get through": "sure?").
+--
+-- Minor lines are the game's own voice: hints, reminders and instructions ("[Miscount] ...", "[Tips] ...").
+-- One of them reaches a player every lc_text_gate seconds (3; 0 turns the gate off). One that comes sooner
+-- waits its turn; when more than two wait, the oldest is dropped; the same line again within 20 seconds is
+-- never repeated. Everything else passes untouched and at once: what a person says, the radio, Civil
+-- Protection, the city's notices, a search, an interrogation.
+------------------------------------------------------------------------
+
+local cvGate = CreateConVar("lc_text_gate", "3", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
+    "Seconds between the game's own hint lines in a player's chat ([Miscount], [Tips]); ones that pile up are dropped (0: every line at once, as before)")
+local MINOR = { ["Miscount"] = true, ["Tips"] = true }
+local WAIT_MAX, SAME_SECS = 2, 20
+LC.TextGateMinor = MINOR
+
+-- What becomes of a chat line to ply: "show" (now), "hold" (it waits its turn) or "drop".
+function LC.TextGate(ply, msg)
+    local gap = cvGate:GetFloat()
+    if gap <= 0 or type(msg) ~= "string" then return "show" end
+    local tag = string.match(msg, "^%[([^%]]+)%]")
+    if not (tag and MINOR[tag]) then return "show" end
+    local now = CurTime()
+    local g = ply.lcGate
+    if not g then g = { last = -1e9, wait = {}, seen = {} } ply.lcGate = g end
+    if g.seen[msg] and now - g.seen[msg] < SAME_SECS then return "drop" end
+    for _, w in ipairs(g.wait) do if w == msg then return "drop" end end
+    if #g.wait == 0 and now - g.last >= gap then
+        g.last, g.seen[msg] = now, now
+        return "show"
+    end
+    g.wait[#g.wait + 1] = msg
+    while #g.wait > WAIT_MAX do table.remove(g.wait, 1) end
+    return "hold"
+end
+
+-- The lines that waited: one each, when its turn has come.
+function LC.TextGateFlush()
+    local gap = cvGate:GetFloat()
+    local now = CurTime()
+    for _, ply in ipairs(player.GetAll()) do
+        local g = ply.lcGate
+        if g and #g.wait > 0 and (gap <= 0 or now - g.last >= gap) then
+            local msg = table.remove(g.wait, 1)
+            g.last, g.seen[msg] = now, now
+            ply.lcGatePass = true
+            ply:ChatPrint(msg)
+            ply.lcGatePass = nil
+        end
+        if g and g.seen and next(g.seen) and (g.swept or 0) < now then -- (forget old lines now and then)
+            g.swept = now + 60
+            for m, t in pairs(g.seen) do if now - t >= SAME_SECS then g.seen[m] = nil end end
+        end
+    end
+end
+timer.Create("LivingCityTextGate", 0.5, 0, function() LC.Try(LC.TextGateFlush) end)
+
 -- Every tagged chat line to a player goes on the screen too.
 local meta = FindMetaTable and FindMetaTable("Player")
 if meta and meta.ChatPrint and not meta.lcNoticeBase then
     local base = meta.ChatPrint
     meta.lcNoticeBase = base
     meta.ChatPrint = function(self, msg)
+        if not self.lcGatePass and LC.TextGate(self, msg) ~= "show" then return end -- (a minor line held back or dropped)
         base(self, msg)
         local kind, title, text = LC.NoticeForChat(msg)
         if kind then LC.Notice(self, kind, title, text) end

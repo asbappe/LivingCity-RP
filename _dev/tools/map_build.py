@@ -699,8 +699,10 @@ class Vmf:
                     return p
         return None
 
-    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None, outside=False):
+    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None, outside=False, exact=False):
         # (outside: the thing stands in the owner's own map, not in this piece: it is not held to the piece's sealed space)
+        # (exact: its origin written to 0.01, not cut to whole units: a thing lifted from Valve's maps stands where Valve
+        #  put it, in step with its brushes; the forest cams' TVs had dropped 0.73 off their screens)
         if not outside and cls.startswith("prop") and cls != "prop_door_rotating" and keys and keys.get("model") \
                 and not any(k in str(keys["model"]) for k in WAY_EXEMPT) and (self.ways or self.door_ents):
             ang = str(keys.get("angles", "0 0 0")).split()
@@ -720,7 +722,11 @@ class Vmf:
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
-        s += '\t"origin" "%d %d %d"\n' % tuple(pos)
+        if exact:
+            nums = [("%.2f" % c).rstrip("0").rstrip(".") for c in pos]
+            s += '\t"origin" "%s"\n' % " ".join("0" if n == "-0" else n for n in nums)
+        else:
+            s += '\t"origin" "%d %d %d"\n' % tuple(pos)
         s += self.wires(connections)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
@@ -1677,6 +1683,10 @@ def canal(args):
                                                 node_share("canal") - (node_id[0] - args.first_node), ch.dished)
     for x, y, z in dim:
         vmf.point("info_target", W(x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC canal: the dimmer southern half (marks for the gamemode)")
+    # the APC's route up this piece's stretch of the ring road (the ring's own marks end at this piece's south edge and
+    # start again at its north edge: map_corridor.apc_route), numbered after the ring's so the loop closes in name order
+    for n, (x, y) in enumerate(mc.apc_marks([(R["mid"] + mc.APC_ROAD, road_y1 + mc.APC_END), (R["mid"] + mc.APC_ROAD, road_y2 - mc.APC_END)])):
+        vmf.point("info_target", (x, y, road_z + mc.APC_UP), {"targetname": mc.APC_NAME % (mc.APC_CANAL + n)}, "LC canal: the APC's route (marks for the gamemode)")
 
     # reflections: one cubemap for each stretch, at eye height
     for x, y, z in ((320, 128, road_z), (800, 512, floor_z), (2000, 512, floor_z), (2816, 1500, floor_z), (3200, 1472, floor_z), (2816, 2560, floor_z), (3900, 2560, floor_z), (2816, 3300, floor_z)):
@@ -1811,11 +1821,12 @@ def against(vmf, path, expected, allow=()):
 
 
 def main():
+    import map_cistern
     import map_forest
     import map_modules
     import map_raven
     import map_ring
-    pieces = {"chain": map_modules.chain, "module": map_modules.module, "canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
+    pieces = {"chain": map_modules.chain, "module": map_modules.module, "cistern": map_cistern.cistern, "canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
     ap = argparse.ArgumentParser(description="Write a new piece of map as its own VMF (never touches the owner's VMF).")
     ap.add_argument("piece", choices=sorted(pieces))
     ap.add_argument("--out", help="the VMF to write (default: lc_PIECE.vmf)")

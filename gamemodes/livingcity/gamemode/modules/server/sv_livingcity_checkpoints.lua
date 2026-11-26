@@ -76,6 +76,7 @@ local function Radio(band, text) if LC.RadioNotice then LC.RadioNotice(band, tex
 ------------------------------------------------------------------------
 
 function LC.PowerBankLive(b)
+    if LC.ChapterReversed and LC.ChapterReversed() then return false end -- (the Combine's machines are dead: sv_livingcity_chapter.lua)
     return IsValid(b) and not b:GetNW2Bool("lc_nopower", false) and b:GetNW2Float("lc_short_until", 0) < CurTime()
 end
 local function FieldUp(f)
@@ -142,6 +143,7 @@ end
 -- With lc_forcefield_needs_bank 0, off its bank if it has one, else its district.
 -- (sv_livingcity_power.lua asks this for every forcefield.)
 function LC.FieldOff(f)
+    if LC.ChapterReversed and LC.ChapterReversed() then return true end -- (no forcefield stands: sv_livingcity_chapter.lua)
     if cvNeedBank:GetBool() then
         local b = LC.BankLoads()[f]
         return not (b and LC.PowerBankLive(b))

@@ -93,7 +93,6 @@ local loaded, dirty = false, false
 local function Path() return "livingcity/" .. game.GetMap() .. "_market.json" end
 LC.MarketFile = Path
 local function On() return cvOn:GetBool() end
-function LC.MarketOn() return On() end
 
 local function Load()
     loaded = true

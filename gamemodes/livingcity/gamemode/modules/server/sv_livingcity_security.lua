@@ -26,6 +26,7 @@ local warned = {} -- [ply] = time they become wanted
 
 local function MayEnter(ply)
     if not ply:Alive() then return true end
+    if LC.ChapterReversed and LC.ChapterReversed() then return true end -- (nobody's to keep anyone out of: sv_livingcity_chapter.lua)
     if LC.PlayerIsCP(ply) or ply:IsAdmin() and ply:GetNW2Bool("lc_build", false) then return true end
     if LC.InCustody and LC.InCustody(ply) then return true end
     if LC.HeldByCombine and LC.HeldByCombine(ply) then return true end -- (cuffed, in a struggle: held, not trespassing)

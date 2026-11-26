@@ -844,6 +844,8 @@ local function ShiftItems(me)
     if me:GetNW2Bool("lc_offduty", false) then out[#out + 1] = Item("Back on duty (start a shift)", function() Send("shiftbreak") end)
     elseif me:GetNW2String("lc_shift", "") ~= "" then out[#out + 1] = Page("My shift", ShiftPage) end
     if me:GetNW2String("lc_bounty_menu", "") ~= "" then out[#out + 1] = Page("Bounties on the wanted", BountyPage) end
+    -- (the city is the Resistance's and the mask shows nothing but static: sv_livingcity_chapter.lua)
+    if me:GetNW2Bool("lc_chapter_mask", false) then out[#out + 1] = Item("Take off the uniform", function() Send("chaptermask") end) end
     return out
 end
 

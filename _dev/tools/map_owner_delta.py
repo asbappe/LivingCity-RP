@@ -11,8 +11,9 @@ that piece is left as it is and reported, and its new version is not added when 
 
 Then the ground. A displacement keeps its planes when the generator raises or lowers it, so it is merged point by point,
 three ways (the base, AFTER, the owner's): a point the owner never moved that the generator moved takes the new place;
-every point they sculpted, and all their alphas, stay theirs. The base is BEFORE, or --ground-base when the owner's
-ground is older than BEFORE (the owner, 24 November: a dip left from the old bunker's ground cut through the new hallway,
+every point they sculpted, and all their alphas, stay theirs. The base is BEFORE and every --ground-base OLD.vmf given
+(any number: a point of theirs that matches any of these builds is one they never moved), for when their ground is older
+than BEFORE (the owner, 24 November: a dip left from the old bunker's ground cut through the new hallway,
 since the carry-over compared brushes by their planes only and never saw the ground move).
 
 The owner's line ends (CRLF) are kept. Afterwards: map_hidden_faces.py OUT.vmf FINAL.vmf --brushes, then FINAL --holes.
@@ -163,26 +164,31 @@ def close(a, b, tol=0.02):
     return all(abs(x - y) <= tol for x, y in zip(a, b))
 
 
-def merge_ground(base_t, new_t, own_t):
-    bd = {k: (s, e) for k, s, e in disp_blocks(base_t)}
+def merge_ground(base_ts, new_t, own_t):
+    """base_ts: one or more earlier builds; a point of the owner's that matches any of them, and not AFTER, takes AFTER's."""
+    bds = [{k: (s, e) for k, s, e in disp_blocks(b)} for b in base_ts]
     nd = {k: (s, e) for k, s, e in disp_blocks(new_t)}
     edits = []
     for k, s, e in disp_blocks(own_t):
-        if k not in bd or k not in nd:
+        if k not in nd:
             continue
-        bb, nb, ob = base_t[slice(*bd[k])], new_t[slice(*nd[k])], own_t[s:e]
-        br, nr, orr = ({f: rows(x, f) for f in FIELDS} for x in (bb, nb, ob))
-        size = len(br['distances'])
-        if len(nr['distances']) != size or len(orr['distances']) != size:
+        nb, ob = new_t[slice(*nd[k])], own_t[s:e]
+        nr, orr = ({f: rows(x, f) for f in FIELDS} for x in (nb, ob))
+        size = len(nr['distances'])
+        brs = [r for r in ({f: rows(b[slice(*bd[k])], f) for f in FIELDS} for b, bd in zip(base_ts, bds) if k in bd) if len(r['distances']) == size]
+        if not brs:
+            continue
+        if len(orr['distances']) != size:
             print('  ground at %s: a different power, left as it is' % (k[0],))
             continue
         took = kept = 0
         for r in range(size):
             for c in range(size):
-                bv, nv, ov = moved(br, r, c), moved(nr, r, c), moved(orr, r, c)
-                if close(bv, nv) or close(ov, nv):
-                    continue      # (the generator did not move it, or the owner has it there already)
-                if close(ov, bv):
+                nv, ov = moved(nr, r, c), moved(orr, r, c)
+                bvs = [moved(br, r, c) for br in brs]
+                if close(ov, nv) or all(close(bv, nv) for bv in bvs):
+                    continue      # (the owner has it there already, or the generator never moved it)
+                if any(close(ov, bv) for bv in bvs):
                     for f, w in (('normals', 3), ('distances', 1), ('offsets', 3)):
                         orr[f][r][w * c:w * c + w] = nr[f][r][w * c:w * c + w]
                     took += 1
@@ -206,10 +212,10 @@ def merge_ground(base_t, new_t, own_t):
 
 def main():
     args = sys.argv[1:]
-    ground_base = None
-    if '--ground-base' in args:
+    ground_base = []
+    while '--ground-base' in args:
         i = args.index('--ground-base')
-        ground_base = args[i + 1]
+        ground_base.append(args[i + 1])
         del args[i:i + 2]
     loose = '--loose' in args
     before_p, after_p, owner_p, out_p = [a for a in args if not a.startswith('--')][:4]
@@ -311,7 +317,7 @@ def main():
                       + '\t\t"color" "200 200 200"' + eol + '\t}' + eol for n, v in vnew)
         out = out[:i + len(eol)] + add + out[i + len(eol):]
         print('%d visgroups added' % len(vnew))
-    out, n_ground = merge_ground(read(ground_base) if ground_base else B, A, out)
+    out, n_ground = merge_ground([B] + [read(g) for g in ground_base], A, out)
     open(out_p, 'w', encoding='utf-8', errors='surrogateescape', newline='').write(out)
     print('removed %d entities and %d world brushes; added %d entities and %d world brushes; %d displacements of ground merged' % (
         len(rm_e), len(rm_w), len(new_ents), len(new_sols), n_ground))

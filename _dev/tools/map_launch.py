@@ -124,10 +124,26 @@ def lifted_door(e, PF_):
     e["out"] = [("OnOpen", name, "SetAnimation", "unlock", 0), ("OnFullyClosed", name, "SetAnimation", "lock", 0)] if name else []
 
 
+def steady(e):
+    """A lifted model is drawn from anywhere (the owner, 26 November: the leader's office door, Valve's fademindist 800,
+    was not drawn from across the silo until you walked close): Valve's fade distances under 2000, set for its own
+    smaller rooms and views, become none."""
+    k = e["keys"]
+    if not (e["classname"].startswith("prop_") and k.get("model")):
+        return
+    try:
+        lo, hi = float(k.get("fademindist") or -1), float(k.get("fademaxdist") or 0)
+    except ValueError:
+        return
+    if 0 < lo < 2000 or 0 < hi < 2000:
+        k.update({"fademindist": "-1", "fademaxdist": "0"})
+
+
 def loose(e):
     """Valve's loose things (prop_physics) stand where Valve put them, solid, as the bunker's furniture does (a
     prop_dynamic_override): nobody knocks the control rooms' kit about, and it stays in step with the room on every
-    player's screen."""
+    player's screen. And nothing lifted fades out (steady)."""
+    steady(e)
     if e["classname"] == "prop_physics":
         e["classname"] = "prop_dynamic_override"
         k = e["keys"]
@@ -135,6 +151,58 @@ def loose(e):
                     "damagetoenablemotion", "Damagetype", "PerformanceMode"):
             k.pop(key, None)
         k.update({"solid": "6", "spawnflags": "0", "StartDisabled": "0"})
+
+
+def seat(pf, model):
+    """Valve's copies of `model` in a piece stood on the brush they sink into, each with whatever brush lies inside it
+    (its screen) raised as much (the owner, 26 November, of the control room's forest-cam TVs: "a brush stuck in them":
+    Valve's TVs stand 0.97 into the shelf under them). How far each was raised."""
+    import map_build
+
+    def bbox(sides):
+        cs = [c for sd in sides for c in (sd.get("verts") or sd.get("corners") or [])]
+        return tuple(min(c[k] for c in cs) for k in range(3)) + tuple(max(c[k] for c in cs) for k in range(3)) if cs else None
+
+    def inside(b, m):
+        return all(m[k] - 0.5 <= b[k] and b[k + 3] <= m[k + 3] + 0.5 for k in range(3))
+
+    def up(p, dz):
+        return [p[0], p[1], p[2] + dz]
+
+    def lift(sides, dz):
+        for sd in sides:
+            sd["plane"] = [up(p, dz) for p in sd["plane"]]
+            for key in ("verts", "corners"):
+                if sd.get(key):
+                    sd[key] = [up(p, dz) for p in sd[key]]
+            sd["uaxis"], sd["vaxis"] = PF.turn_axis(sd["uaxis"], 0, (0, 0, dz)), PF.turn_axis(sd["vaxis"], 0, (0, 0, dz))
+    statics = [s["sides"] for s in pf["solids"]]
+    out = []
+    for e in pf["points"]:
+        k = e["keys"]
+        if not k.get("model", "").endswith(model):
+            continue
+        m = map_build.prop_box(k["model"], e["origin"], float((k.get("angles") or "0 0 0").split()[1]))
+        dz = 0
+        for sides in statics:
+            b = bbox(sides)
+            if b and not inside(b, m) and b[0] < m[3] and b[3] > m[0] and b[1] < m[4] and b[4] > m[1] and b[2] < m[2] < b[5] < m[2] + 4:
+                dz = max(dz, b[5] - m[2])
+        if dz:
+            for sides in statics:
+                b = bbox(sides)
+                if b and inside(b, m):
+                    lift(sides, dz)
+            for w in pf.get("wiring", []):
+                bs = w.get("brushes") or []
+                if bs and all(bbox(b) and inside(bbox(b), m) for b in bs):
+                    for b in bs:
+                        lift(b, dz)
+                    if w.get("origin"):
+                        w["origin"] = up(w["origin"], dz)
+            e["origin"] = up(e["origin"], dz)
+        out.append(round(dz, 2))
+    return out
 
 
 def build(f, F):
@@ -146,6 +214,7 @@ def build(f, F):
     air, places = [], []
     # --- White Forest's control room -------------------------------------------------------------------------------------
     pf = PF.load("valve_ep2_control_room")
+    seat(pf, "props_lab/monitor01b.mdl")        # (the forest cams' four TVs onto their shelf, their screens with them)
     # (a brush of a live entity, the forest cams' five screens and the silo doors' display, is placed with its entity,
     #  never also as a static brush: the five screens all drawn at once in one plane were the brush "covering them", the
     #  owner, 24 November: "the little screens in the lower control room have some sort of brush covering them")
@@ -176,7 +245,7 @@ def build(f, F):
             e["drop"] = True
         if e["classname"] == "math_counter" and tn == "math_mon_hatelife":
             e["drop"] = True
-    F.pf_entities(v, pf, 0, TECH_AT, "lc_ctl_", vis, wv, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+    F.pf_entities(v, pf, 0, TECH_AT, "lc_ctl_", vis, wv, keep=keep, edit=edit, valve_anchor=pf["anchor"], exact=True)
     tb = tech_box()
     leg = (f.ox + f.B0[0] + f.NE_LEG[0], f.ox + f.B0[0] + f.NE_LEG[1])
     # (its hull's west strip is under the launch pad's edge: its top comes up flush with the pad, in the pad's grass, not
@@ -226,7 +295,7 @@ def build(f, F):
         p = F.pf_point(e["origin"], LR_TURN, LR_AT)
         return all(LR_BOX[k] <= p[k] <= LR_BOX[k + 3] for k in range(3))
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=lambda e: e["classname"].startswith(("prop_", "light", "env_sprite", "infodecal"))
-                  and not e["keys"].get("parentname") and not e["keys"].get("targetname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"])
+                  and not e["keys"].get("parentname") and not e["keys"].get("targetname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"], exact=True)
     x1, y1, z1, x2, y2, z2 = LR_BOX
     # (its window opens on the pad; the stair comes in at its back, the hull giving way to the stair's walls, floor and ceiling)
     shell(v, LR_BOX, [("east", (sy + 384, LR_BOX[2] - HULL, sy + 640, FLOOR_HIGH + 240))], hv, skip=("west",), inner=LR_MATS)
@@ -337,7 +406,7 @@ def outside(f, F, lr):
             g = min(ground, key=lambda c: (c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2)
             if (g[0] - q[0]) ** 2 + (g[1] - q[1]) ** 2 < 96 ** 2:
                 e["origin"] = [e["origin"][0], e["origin"][1], e["origin"][2] + PAD - g[2]]
-    F.pf_entities(v, pf, LR_TURN, LR_AT, "lc_pad_", vis, vis, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+    F.pf_entities(v, pf, LR_TURN, LR_AT, "lc_pad_", vis, vis, keep=keep, edit=edit, valve_anchor=pf["anchor"], exact=True)
     # the pad: flat at the collar's top; over the silo's hull from its top floor's ceiling (200, where Valve's silo had its
     # lid); over the corridor's stairs down to the silo only from their roof (328)
     nd, grass, lid = MAT["nodraw"], PAD_GRASS, "concrete/concretewall010a"
@@ -394,6 +463,11 @@ ROCKET_FOOT = -1232                 # the rocket's foot (its engines' bottom) in
 # Valve's path above its start (ptrack_1 3 9 6 7 4), its rocket's top 86 into the hatch at the start; ours starts 169
 # under it, so each comes 255 later; killed (ptrack_8) when its foot is at 2500, its top at 4130, under the sky (SKY)
 PATH = (("ptrack_1", 0), ("ptrack_3", 315), ("ptrack_9", 571), ("ptrack_6", 1451), ("ptrack_7", 1931), ("ptrack_4", 3583), ("ptrack_8", 2500 - ROCKET_FOOT))
+# How fast it climbs (the owner, 26 November: "far too fast"): about a third of Valve's speeds (its relay's SetSpeedReal 50
+# at 30 s, its tracks' 500 1000 1500 1700 1900), so it starts slow and takes about 11 s from the silo's floor to the kill
+# track (out of the collar's mouth at about 6.5 s); the train blends each track's speed into the next (velocitytype 2).
+RISE_START = 20
+RISE = {"ptrack_3": 150, "ptrack_9": 300, "ptrack_6": 420, "ptrack_7": 480, "ptrack_4": 540}
 
 
 def launch(f, F, lr):
@@ -452,9 +526,13 @@ def launch(f, F, lr):
             e["origin"] = [0, 0, foot]
             e["brushes"] = [[{"plane": pl, "verts": [], "corners": [], "material": "TOOLS/TOOLSNODRAW", "uaxis": "[1 0 0 0] 0.25", "vaxis": "[0 -1 0 0] 0.25",
                               "lightmapscale": "16"} for pl in box_planes((-8, -8, foot - 8, 8, 8, foot + 8))]]
-            k.update({"orientationtype": "0", "dmg": "0", "spawnflags": str(int(k.get("spawnflags", "0") or 0) | 8)})     # (8: not solid)
+            # (8: not solid; 1 no pitch and 16 always fixed orientation: Garry's Mod turned the train to face along its
+            #  upright path despite orientationtype 0, and the rocket rose lying on its side, the owner, 26 November)
+            k.update({"orientationtype": "0", "dmg": "0", "spawnflags": str(int(k.get("spawnflags", "0") or 0) | 8 | 1 | 16)})
         if tn.startswith("ptrack_"):
             e["origin"] = [0, 0, foot + path[tn]]
+            if tn in RISE:
+                k["speed"] = str(RISE[tn])
             order = [n for n, _ in PATH]
             i = order.index(tn)
             k["target"] = order[i + 1] if i + 1 < len(order) else ""
@@ -468,9 +546,9 @@ def launch(f, F, lr):
         if cls == "env_shake":          # (Valve's shook the whole world; here the room)
             k.update({"spawnflags": str(int(k.get("spawnflags", "0") or 0) & ~1), "radius": "640"})
         if tn == "relay_launch":        # (one launch a map; the ending hooks in here: LAUNCH_RELAY)
-            e["out"] = [o for o in e["out"] if o[1] not in ("birds", "logic_start_redlight")] + [
+            e["out"] = [(o, t, i, str(RISE_START) if i == "SetSpeedReal" else val, d) for o, t, i, val, d in e["out"] if t not in ("birds", "logic_start_redlight")] + [
                 ("OnTrigger", "!self", "Disable", "", 0.1), ("OnTrigger", "button_launch", "Lock", "", 0)]
-    names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"])
+    names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"], exact=True)
     # the red button's cover (the owner, 24 November: "I can't press the launch button cause Dr Kleiner opens the cover for
     # the button in EP2 and I guess pressing E on it doesn't work?"): Valve's button starts locked under its cover and only
     # Kleiner's scene opened it (button.red's "open", its sound, the button unlocked 1.5 s later). Here E on the cover does
@@ -578,12 +656,17 @@ def cctv(f, F, lr):
         if e["classname"] == "func_monitor":
             e["keys"].update({"target": "cctv", "StartDisabled": "0", "spawnflags": "2", "disableshadows": "1"})
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", f.vis("launch room's screens"), f.vis("bunker's camera"), keep=keep, edit=edit, extra=[cam],
-                  valve_anchor=lr["anchor"])
+                  valve_anchor=lr["anchor"], exact=True)
     for i in range(len(v.ents)):
         if "lc_launch_cctv" in v.ents[i]:
             v.ents[i] = v.ents[i].replace("lc_launch_cctv", CCTV_NAME)
     for where, wall, facing, along, z, frame in cctv_walls(f):
         screen(v, wall, facing, along, z, frame, f.vis("bunker's camera"))
+    for where, wall, facing, at, z in emergency_buttons(f):
+        emergency_button(v, F, where, wall, facing, at, z, f.vis("bunker door (the leaves, the button, the wiring)"))
+    door_camera(f)
+    for where, wall, facing, along, z, frame in door_screens(f):
+        door_screen(v, wall, facing, along, z, frame, f.vis("bunker door's camera"))
     f.notes.append("the bunker's camera (%s): Episode Two's security camera on the bunker's front at (%d %d %d), looking down the path; shown on the "
                    "launch room's two big screens, and on a screen in %s" % (CCTV_NAME, ex, ey, ezz, " and one in ".join(w[0] for w in cctv_walls(f))))
 
@@ -593,12 +676,33 @@ def cctv(f, F, lr):
 # missile launch control room? the ones inside the missile launch control room work nicely"): made as the launch room's
 # that work, a func_monitor whose face is dev/dev_tvmonitor1a (the camera's picture, its 256 by 256 stretched to the face
 # exactly), here on a wall in a metal frame 4 deep and 4 round it. Each: (where, the wall's face, the way the screen
-# faces, its span along the wall, its bottom and top, the frame's metal).
+# faces, its span along the wall, its bottom and top, the frame's metal). Since 26 November each has room beside it for
+# a second screen, of a camera inside the bunker's door (door_screens), and an emergency close for the door under them
+# (emergency_buttons): in the office the pair is over the servers and the bench (the forest's screen moved up from
+# between them, where the button is now), in the control room over the wall consoles and west of them.
 def cctv_walls(f):
     import map_silo as MS
     tx, ty, _ = TECH_AT
-    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] - 16, SILO[0] + 56), (f.zg + 52, f.zg + 96), "metal/metalwall085a"),
+    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] - 12, SILO[0] + 60), (f.zg + 110, f.zg + 154), "metal/metalwall085a"),
             ("the control room", ty + 496, "south", (tx + 378, tx + 458), (FLOOR_LOW + 102, FLOOR_LOW + 144), "metal/metalwall074a")]
+
+
+# The emergency closes of the bunker's front doors (the owner, 26 November): a button under each pair of screens, in the
+# leader's office and in White Forest's control room, that shuts the doors as the button by them does (lc_bunker_close:
+# the klaxon, the slide, the shove at the close, never a kill; while they are shut or shutting it does nothing; it never
+# opens them). Each: (where, the wall's face, the way it faces, the model's foot along the wall, its height: hand height).
+def emergency_buttons(f):
+    import map_silo as MS
+    tx, ty, _ = TECH_AT
+    return [("office", SILO[1] + MS.OFFICE_HULL, "south", SILO[0] + 16, f.zg + 40),
+            ("ctl", ty + 496, "south", tx + 326, FLOOR_LOW + 40)]
+
+
+def emergency_button(v, F, where, wall, facing, at, z, vis):
+    """Episode Two's mine lift button on a wall facing south (map_forest.wall_button), named lc_bunker_button_<where>."""
+    assert facing == "south"
+    F.wall_button(v, (at, wall, z), 270, "lc_bunker_button_" + where, (at - 6, wall - 10, z - 4, at + 14, wall, z + 24), vis,
+                  [("OnPressed", "lc_bunker_close", "Trigger", "", 0)], "9")
 
 
 def screen(v, wall, facing, along, z, frame, vis):
@@ -625,6 +729,70 @@ def screen(v, wall, facing, along, z, frame, vis):
                                     "Solidity": "0", "solidbsp": "0", "InputFilter": "0", "invert_exclusion": "0", "renderamt": "255", "rendercolor": "255 255 255",
                                     "renderfx": "0", "rendermode": "0", "origin": "%g %g %g" % tuple((box[k] + box[k + 3]) / 2.0 for k in range(3))},
                    [(box, {facing: "DEV/DEV_TVMONITOR1A"}, {facing: (u, vv)})], MAT["nodraw"], vis)
+
+
+# The camera inside the bunker's door and its screens (the owner, 26 November: a second screen by each emergency close,
+# of a camera inside the bunker looking at the front doors). The gamemode draws the picture (its own entity,
+# lc_cctv_screen: plain Sandbox has none, and nothing in the map depends on it): each screen is a point at the middle of
+# the picture, its forward out of the screen toward whoever looks at it, with the camera's name and the picture's size in
+# units; the gamemode draws on the plane through it facing forward, from the camera's origin along its angles at a field
+# of view of 75. Each screen is framed as the forest camera's beside it (a metal plate 4 deep, a dark slab 2 deep on it:
+# the dead screen where the gamemode draws nothing), the picture 0.5 in front of the slab. The camera: an info_target
+# high in the bunker's north-west corner, at the lens of Episode Two's security camera (as on the bunker's front, its
+# arm on the west wall, looking along it), aimed so the whole doorway (224 by 192, the shut leaves' inner face) is in the
+# picture at 72 by 48 with about a tenth to spare all round (camfit: DOOR_CAM_AIM).
+DOOR_CAM = "lc_cctv_door_cam"
+DOOR_CAM_PROP = (448, 240, 620)         # (the bunker's own frame: on its first room's west wall, 16 from the north wall, 12 under the ceiling)
+DOOR_CAM_EYE = (22, -26, -2)            # (its lens from the model, as the front camera's: 6 in front of the model, 22 along its arm)
+DOOR_CAM_AIM = (24.5, 298.6)            # (pitch down and yaw: the doorway's middle, its corners at no more than 0.88 of the picture's half-width and half-height)
+DOOR_SCREEN = (72, 48)
+
+
+def door_screens(f):
+    """Each: (where, the wall's face, the way it faces, its span along the wall, its bottom and top, the frame's metal):
+    beside the forest camera's screen (cctv_walls), the emergency close under them (emergency_buttons)."""
+    import map_silo as MS
+    tx, ty, _ = TECH_AT
+    w, h = DOOR_SCREEN
+    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] + 68, SILO[0] + 68 + w), (f.zg + 108, f.zg + 108 + h), "metal/metalwall085a"),
+            ("the control room", ty + 496, "south", (tx + 294, tx + 294 + w), (FLOOR_LOW + 101, FLOOR_LOW + 101 + h), "metal/metalwall074a")]
+
+
+def door_screen(v, wall, facing, along, z, frame, vis):
+    """A screen of the door's camera on the face of a wall: the frame and dead screen (detail), and the gamemode's
+    lc_cctv_screen at the middle of the picture."""
+    (a1, a2), (z1, z2) = along, z
+    out = {"south": -1, "west": -1, "north": 1, "east": 1}[facing]
+    ns = facing in ("south", "north")
+
+    def slab(d1, d2, b1, b2, h1, h2):
+        y1, y2 = sorted((wall + out * d1, wall + out * d2))
+        return (b1, y1, h1, b2, y2, h2) if ns else (y1, b1, h1, y2, b2, h2)
+    v.detail([slab(0, 4, a1 - 4, a2 + 4, z1 - 4, z2 + 4)], frame, vis=vis)
+    v.detail([slab(4, 6, a1, a2, z1, z2)], MAT["black"], vis=vis)
+    mid = (a1 + a2) / 2.0
+    face = wall + out * 6.5
+    at = (mid, face, (z1 + z2) / 2.0) if ns else (face, mid, (z1 + z2) / 2.0)
+    yaw = {"south": 270, "north": 90, "east": 0, "west": 180}[facing]
+    v.point("lc_cctv_screen", at, {"camera": DOOR_CAM, "width": str(a2 - a1), "height": str(z2 - z1), "angles": "0 %d 0" % yaw}, vis, exact=True)
+
+
+def door_camera(f):
+    """Episode Two's security camera high in the north-west corner of the room inside the bunker's door, and the
+    info_target at its lens that the gamemode looks from (DOOR_CAM)."""
+    v = f.vmf
+    vis = f.vis("bunker door's camera")
+    bx, by = f.ox + f.B0[0], f.oy + f.B0[1]
+    u, w, z = DOOR_CAM_PROP
+    p = (bx + u, by + w, z)
+    v.point("prop_static", p, {"model": "models/props_silo/camera.mdl", "angles": "0 270 0", "solid": "6", "skin": "0", "disableshadows": "1",
+                                "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "screenspacefade": "0"}, vis)
+    du, dw, dz = DOOR_CAM_EYE
+    pitch, yaw = DOOR_CAM_AIM
+    eye = (p[0] + du, p[1] + dw, p[2] + dz)
+    v.point("info_target", eye, {"targetname": DOOR_CAM, "angles": "%g %g 0" % (pitch, yaw), "spawnflags": "2"}, vis)      # (2: sent to every client)
+    f.notes.append("the door's camera (%s): at (%d %d %d) looking at the inside of the front doors (pitch %g, yaw %g), for the gamemode's screens "
+                   "(lc_cctv_screen) beside the forest camera's in %s" % (DOOR_CAM, eye[0], eye[1], eye[2], pitch, yaw, " and ".join(d[0] for d in door_screens(f))))
 
 
 def box_planes(b):

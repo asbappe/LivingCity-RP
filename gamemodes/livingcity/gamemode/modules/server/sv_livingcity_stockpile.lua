@@ -72,7 +72,6 @@ function LC.Stock()
     return stock
 end
 function LC.StockOn() return cvOn:GetBool() end
-function LC.StockFraction() return LC.Stock() / Max() end
 
 -- "empty", "short", "normal" or "full"
 function LC.StockLevel()

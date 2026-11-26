@@ -245,12 +245,31 @@ local ACTIONS = {
             local one, why = LC.Breach.Start()
             if not one then return false, tostring(why) end
             return true, "Open the sealed quarter: on the Resistance's board (F4). Take it as a member."
+        elseif v == "hiveboss" then
+            -- (sv_livingcity_hiveboss.lua: the owner's Workshop NextBot, in the worst infestation)
+            if not (LC.HiveBoss and LC.HiveBoss.Spawn) then return false, "No hive boss on this server." end
+            local okH, whyH = LC.HiveBoss.Spawn()
+            if not okH then return false, tostring(whyH) end
+            return true, "The hive boss is out, in the worst infestation. Only explosives hurt it."
+        elseif v == "hiveboss_off" then
+            if LC.HiveBoss and LC.HiveBoss.Remove then LC.HiveBoss.Remove() end
+            return true, "The hive boss is gone."
         elseif v == "supply" then
             -- (sv_livingcity_supplylines.lua: a courier or a boat now, not in 15 to 25 minutes)
             if not LC.SupplyLineStart then return false, "No supply lines on this server." end
             local okS, run = LC.SupplyLineStart()
             if not okS then return false, tostring(run) end
             return true, (run.kind == "canal" and "A boat" or "A courier") .. " sets out (" .. run.route.label .. "): the jobs are on the boards (F4)."
+        elseif v == "apc" then
+            -- (sv_livingcity_apc.lua: one now, about 1500 along its route from whoever asked, coming their way)
+            if not (LC.Apc and LC.Apc.Send) then return false, "No APC patrol on this server." end
+            local okA, why = LC.Apc.Send(IsValid(admin) and admin or t)
+            if not okA then return false, tostring(why) end
+            return true, "An APC is on the road, coming your way."
+        elseif v == "apcoff" then
+            if not (LC.Apc and LC.Apc.S) then return false, "No APC is out." end
+            LC.Apc.Remove()
+            return true, "The APC is gone."
         elseif string.sub(v, 1, 6) == "event:" then
             if not LC.Running then return false, "Start the city first." end
             if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end
@@ -296,6 +315,7 @@ local function Snapshot(admin, target)
     -- how the city's territory is doing (superadmins can grow it from the panel)
     if admin:IsSuperAdmin() then
         local sp = LC.SpeechSession and LC.SpeechSession()
+        data.chapter = LC.ChapterStatus and LC.ChapterStatus() or nil -- (the chapter: sv_livingcity_chapter.lua)
         data.solo = { address = sp and true or false, places = (LC.SpeechPlaces and LC.SpeechPlaces()) and true or false,
             event = GetGlobal2String("lc_event", ""), collapse = GetGlobal2String("lc_collapse_stage", "") }
     end

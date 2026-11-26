@@ -2534,6 +2534,58 @@ return bad
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "Combine monitors (client): " + str(err)
+# the bunker's live door camera screens (entities/lc_cctv_screen.lua, 26 November): a screen you face from its front
+# makes a picture from its camera; one behind you or with no camera found makes none; a picture is never started
+# from inside another, and the glass is drawn either way
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_cctv_screen.lua")).read()
+err = L.execute(r"""
+local entWas, grtWas, eyeWas = ENT, GetRenderTarget, EyePos
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_cctv_screen"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+if not (LC_CL.CCTVScreenFeed and def.Draw and hook.t.RenderScene and hook.t.RenderScene.LivingCityCCTVScreens) then return "the picture's functions or hook are missing" end
+local bad
+local function want(cond, what) if not cond and not bad then bad = what end end
+local function n(k) return _calls[k] or 0 end
+GetRenderTarget = function(name) return { GetName = function() return name end } end
+local eye, look = Vector(300, 0, 64), Angle(0, 180, 0)
+EyePos = function() return eye end
+local views = 0
+render.RenderView = function() views = views + 1 if LC_CL.CCTVScreenFeed(eye, look) then bad = bad or "a picture started inside another" end end
+local s = ents.Create("lc_cctv_screen")
+s:SetPos(Vector(0, 0, 64))
+s.Draw = def.Draw
+s:SetNW2Float("lc_scr_w", 40) s:SetNW2Float("lc_scr_h", 30)
+local ok, e = pcall(function()
+    _advance(1)
+    want(LC_CL.CCTVScreenFeed(eye, look) == false and views == 0, "a screen with no camera found made a picture")
+    local faces = n("cam.Start3D2D")
+    s:Draw()
+    want(n("cam.Start3D2D") == faces + 1, "the glass isn't drawn")
+    s:SetNW2Bool("lc_scr_live", true)
+    s:SetNW2Vector("lc_scr_cam", Vector(2000, 0, 600))
+    s:SetNW2Vector("lc_scr_camang", Vector(30, 270, 0))
+    _advance(1)
+    want(LC_CL.CCTVScreenFeed(eye, look) == true and views == 1 and not LC_CL.LiveCamRendering, "the screen in front of you made no picture")
+    local pics = n("surface.DrawTexturedRect")
+    s:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1, "its picture isn't drawn on it")
+    _advance(1)
+    views = 0
+    want(LC_CL.CCTVScreenFeed(eye, Angle(0, 0, 0)) == false and views == 0, "a screen behind you made a picture")
+end)
+render.RenderView = nil
+GetRenderTarget, EyePos = grtWas, eyeWas
+s:Remove()
+_advance(1)
+LC_CL.CCTVScreenFeed()
+if not ok then return "error: " .. tostring(e) end
+return bad
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the bunker's camera screens (client): " + str(err)
 # the train station's giant screen (lc_screen, kind screen_station: Valve's curved strips): six sheets 1 unit apart
 # in Valve's own Combine monitor material (dev/dev_combinemonitor_3, its back dev/dev_combinemonitor_b), its scanlines
 # scrolling (the owner, 23 November: "it's just a curved black brush"). It shows the scanner's picture of an
@@ -6158,6 +6210,41 @@ local ok, e = pcall(function()
     _globals.lc_parade_music, _globals.lc_parade_music_at, _globals.lc_parade_music_pos = was[6], was[7], was[8]
 end)
 if not ok then return "parade march: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# the chapter "the city falls to the Resistance" (cl_livingcity_chapter.lua): the wave is drawn in the sky and flashes
+# the screen, with or without Episode Two's own effects; a unit's mask glitches only while the server says so
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local CH = LC_CL.Chapter
+    local sky, flash = hook.t.PostDrawTranslucentRenderables.LivingCityChapter, hook.t.HUDPaint.LivingCityChapterWave
+    local mask, tint = hook.t.HUDPaintBackground.LivingCityChapterMask, hook.t.RenderScreenspaceEffects.LivingCityChapterMask
+    if not (CH and CH.Wave and sky and flash and mask and tint) then error("a hook is missing") end
+    local was = { surface.DrawRect, surface.PlaySound, _me.nw.lc_chapter_mask }
+    local rects, sounds = 0, 0
+    surface.DrawRect = function() rects = rects + 1 end
+    surface.PlaySound = function() sounds = sounds + 1 end
+    sky(false, false) flash() mask() tint()
+    if rects ~= 0 then error("something is drawn with no wave and no mask: " .. rects) end
+    CH.Wave(Vector(0, 0, 4000), 6, 46000)
+    if not CH.wave or sounds < 2 then error("the wave did not start: " .. sounds .. " sounds") end
+    sky(false, false) sky(false, true) flash()
+    if rects ~= 1 then error("the wave's flash: " .. rects .. " rectangles") end
+    CH.wave.t0 = CurTime() - 60
+    rects = 0
+    sky(false, false) flash()
+    if CH.wave or rects ~= 0 then error("the wave never ends") end
+    _me.nw.lc_chapter_mask = true
+    mask() tint()
+    if rects < 50 then error("a glitching mask draws next to nothing: " .. rects) end
+    _me.nw.lc_chapter_mask = false
+    rects = 0
+    mask()
+    if rects ~= 0 then error("the mask is off and still glitches") end
+    surface.DrawRect, surface.PlaySound, _me.nw.lc_chapter_mask = was[1], was[2], was[3]
+end)
+if not ok then return "chapter: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)

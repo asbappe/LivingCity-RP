@@ -23,8 +23,6 @@ LC = LC or {}
 
 local HOLDS_JOBS = { citizen = true, resistance = true }
 
--- May someone of this faction hold a Union job at all?
-function LC.FactionHoldsJobs(fid) return HOLDS_JOBS[fid or ""] == true end
 
 -- Every tool any Union job hands out.
 local function JobTools()

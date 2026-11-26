@@ -43,7 +43,6 @@ local function IsUnit(st) return st and (st.role == "cop" or st.role == "soldier
 local KNOCKED_OUT = "You're struck from behind, and everything goes black. When you come to, you're in a cell."
 local function Up(npc) return IsValid(npc) and npc:Health() > 0 end
 
-function LC.IsMarching(ply) return LC.Marching[ply] ~= nil end
 -- Someone being walked in (or a unit walking them) near pos: a door there stays open for them.
 function LC.MarchNear(pos, r)
     for ply, m in pairs(LC.Marching) do

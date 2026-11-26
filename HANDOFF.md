@@ -31,20 +31,20 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 24 November (the TODO run; the owner: "make judgement calls as needed"): built, none seen in the real game yet: barnacles
-  lift who they catch (sh_livingcity_barnacle.lua); the pumphouse nearest a rebel territory is its water; the live base's
-  vehicle (editor: "Point: Resistance base vehicle"; a buggy, an airboat on water); antlions at a stopped thumper's burrow;
-  a cut train line costs supplies. docs/features/wildlife.md, resistance-base.md, ieds.md. What waits for the owner's
-  word is the last line of TODO.md. Last full run (24 November): 9,262 passed, 1 failed (Nov21_CellsFullTests, passes alone).
-- 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is
-  `straight 512`. The ring was cut down after the owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md;
-  ring piece alone 31,115 faces). Left of their review: the drain, the railway to the station (TODO.md).
+- 26 November: the cistern lifted out of the ring into its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf,
+  sent). A street plate over it and a lift from the gallery to the street: Valve's own freight lift, models not brushes (the owner
+  insists; lc_cistern_lift; map-building.md, "The cistern by itself"). Not compiled. The ring's cistern is untouched. Next: Propper++.
+- 25 and 26 November (the owner's answers; none seen in the real game): a Combine APC on the ring's road (apc-patrol.md); the chapter,
+  the city falls, `lc_chapter` 0 (chapter-city-falls.md); the hive boss as the Workshop NextBot 2149660804, `lc_hiveboss` 0
+  (wildlife.md); `lc_text_gate` 3; `lc_train_real` 0. Staff lines: F4 > Factions > Admin: testing tools. The ten new settings are in the core
+  snapshot (the owner's OK, 26 November). A unit who takes the glitching mask off is out of uniform (citizen clothes). Last full run
+  (26 November): 9,460 passed, 4 failed, all four passing alone (old order-dependent tests: TODO.md, end).
+- 25 November: units hear (sv_livingcity_noise.lua; contraband.md "Keeping quiet"). NPC addon ideas, none built: docs/dev/npc-ai-lessons.md.
+- 24 November (the TODO run), not yet seen in game: barnacles lift, pumphouse water, the base's vehicle, antlions at a stopped thumper,
+  a cut train line (wildlife.md, resistance-base.md, ieds.md). The Resistance's town is off the map (map_town.py still builds it).
 - 22 to 26 November: the canal ring (map_ring_walk.py, ~36 min with the nodraw pass, which vbsp's vertex limit needs).
   Kit: 43 pieces (the wall's 20 changed 25 Nov). 26 Nov: the Combine wall on every city bank (bank_core: the jog, the
   first canal); rail bridge a viaduct 144 over the wall with a corridor of sky for its train; big grates on blocked
   tunnels, Valve's ring and grate on culverts; pipes module deleted. Test map: 19,437 faces, ~38,966 vertices.
-- The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
-  Flaky in full runs, pass alone: the dream bubbles, EndingTests, Lamarr (TODO.md).
-- Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
-  button launches (lc_rocket_launch), CCTV lc_bunker_cctv (map_launch.py). Generator changes go into the OWNER'S latest
-  VMF: map_owner_delta.py (ground merged too), map_hidden_faces --brushes, then --holes. 24 Nov: 9 fixes sent (fixes2: areaportal leak fixed), 10,392 sides.
+- The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them). Flaky, pass alone: TODO.md, end.
+- Map chat (bunker): owner's VMF via map_owner_delta.py, map_hidden_faces --brushes/--holes, map_areas.py. 26 Nov fixes3 sent.

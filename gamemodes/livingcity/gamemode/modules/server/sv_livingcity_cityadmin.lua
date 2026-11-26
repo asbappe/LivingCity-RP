@@ -503,6 +503,7 @@ function LC.AdminGuardArm(npc)
 end
 
 local function SpawnGuard(admin)
+    if LC.ChapterReversed and LC.ChapterReversed() then return nil end -- (she has no guards while the city is the Resistance's: sv_livingcity_chapter.lua)
     local p = admin:GetPos() - admin:GetForward() * 120
     p = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40)) or p
     if not LC.SpawnSoldier then return nil end

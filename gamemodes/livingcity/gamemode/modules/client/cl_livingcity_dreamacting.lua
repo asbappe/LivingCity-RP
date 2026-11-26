@@ -180,7 +180,6 @@ local function Scan()
     end
     for _, e in ipairs(was) do if not seen[e] then LC_CL.DreamActRest(e) end end
 end
-LC_CL.DreamActFigures = function() return list end
 LC_CL.DreamActScan = Scan
 
 hook.Add("Think", "LivingCityDreamActing", function()
