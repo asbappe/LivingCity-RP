@@ -6,6 +6,9 @@ The owner asked for these to be read for ideas. Ideas only: VJ Base's code is al
 
 - **One noise rule** (`sv_livingcity_noise.lua`, `docs/features/contraband.md`): range from the engine's loudness (Jeff, VJ), the heard spot up to 60 units off (Jeff), go and look then give up (Jeff), a unit who can see the source does not walk to it (VJ), sneaking is silent (all three).
 
+- **The fight is the engine's** (26 November; `docs/features/civil-protection-tools.md`): Background NPCs' whole way of handing a fight over: capabilities from the start, never an order while the engine shoots or reloads, one decision every 3 seconds (advance over 700, back off under 500, hold between), a run given at most twice a second.
+- **A fright that lasts** (26 November; `docs/features/city-people.md`, "Under fire"): Background NPCs' three: head down only while the gunman is close and facing them, a flight that picks a new farthest place every 5 seconds, stopping out of breath.
+
 ## Worth recreating, best first (not built: ask the owner before each, they change how people behave)
 
 1. **Heavy work staggered** (VJ, Background NPCs): each NPC's costly pass once a second at its own random offset, and a shared few-milliseconds budget for all background loops, so nothing spikes.
