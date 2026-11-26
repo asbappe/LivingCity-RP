@@ -205,6 +205,9 @@ end
 -- The model for this rank: the one the player chose, if the rank has it (or its
 -- counterpart, such as the same face in the Resistance's clothes); else by unit number.
 local function PickModel(ply, models)
+    -- a unit out of uniform while the city is the Resistance's (sv_livingcity_chapter.lua): before any other body
+    local plain = LC.OutOfUniformModel and LC.OutOfUniformModel(ply)
+    if plain then return plain end
     -- a body that isn't the rank's list: a stalker's (sv_livingcity_custody.lua),
     -- an installed Combine pack's (sv_livingcity_combinemodels.lua)
     for _, fn in pairs(LC.ModelOverrides or {}) do

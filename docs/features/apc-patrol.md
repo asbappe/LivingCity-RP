@@ -52,5 +52,5 @@ The map side: `python3 map_build.py chain --layout map_layouts/ring.txt --out X.
 - The smoke over a dead one (`env_smokestack`).
 - The tracers, and whether its fire from 118 over the road clears its own hull.
 - The soldier's walk to a player and back on the real map's paths (he is given 30 seconds to reach them and 15 to get back).
-- **Under the rail bridge on the ring's north run** the road has 108 of headroom and the APC is 137 tall: its roof will pass through the girders' underside for a moment. Nothing else is in its way on the ring's route: in the built VMF no other brush stands within 96 of the line from 12 to 120 over the road, and no prop has its origin within 190 of it. The trains' tracks are never crossed: at each corner the road turns before the next run's track.
+- The ring's rail bridge was raised to about 280 over the road on 26 November (the owner), so the APC (137 tall) passes under it. Nothing else is in its way on the ring's route.
 - It does not tilt on a slope: the ring's road is level.

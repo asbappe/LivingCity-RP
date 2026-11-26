@@ -11,7 +11,8 @@
 # the owner: "it wastes too many brushes and kind of ruins the concept of a Resistance when they have a town; they need
 # to be more underground": its branch is plain canal now, its ground the backdrop's ruins; the town is kept, map_town.py.) The west run comes straight down to the south
 # part; the owner's west road meets the street by a road climbing to it ("road": it replaces their brushes 14734 and
-# 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there.
+# 15630, as roadend did). The last jog into the first canal has no street: the first canal hugs the city there;
+# the Combine wall stands on the jog's own west bank ("wall bank"), and on the first canal's city banks (map_build.canal).
 # Between the city and the street stands a Combine wall ("wall combine"; the owner, 23 November: "City > combine wall >
 # road > railroad > canal > wall/scenery"), made by map_combine's recipe along the street's whole far side, as the
 # Propper++ kit's models (map_propkit.py, _dev/propkit/; "wall combine brushes" would build it as brushes).
@@ -30,6 +31,7 @@ heading N
 rim 968
 upper left
 wall combine
+wall bank 5824 1024 5952 1856      # (the last jog has no street: the wall stands on its west bank, on from the street's)
 end 6144 1856 N
 road -4480 1920 -2624 2560 840 replaces 14734 15630
 
@@ -68,7 +70,7 @@ left back       # the west run's train: out of a tunnel north of the north run's
 # nothing here has side rooms)
 straight 3200 stairs
 tee flip
-pipes
+straight 1280      # (was "pipes": the module deleted, the owner, 25 November)
 straight 1408
 right
 # S1: west

@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f84d75a. Admin-only console messages and log lines are left out.
+Made from version 9193a61. Admin-only console messages and log lines are left out.
 
 13625 lines, from 398 files.
 
@@ -4803,7 +4803,7 @@ Made from version f84d75a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (the city is the Resistance's and the mask shows nothing but static: sv_livingcity_chapter.lua)
 
-- "Take off the mask"  (menu option, line 848)
+- "Take off the uniform"  (menu option, line 848)
 
 > Note for you (not shown in game): Only what's about you (the owner, 18 November, the menu audit: Me was where everything that didn't fit went): where you stand, dreams and survival, and a citizen's or a rebel's household.
 
@@ -5818,81 +5818,81 @@ Made from version f84d75a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: cop provoked
 
-- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2526)
-- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2527)
-- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2531)
-- "Obstructing Civil Protection"  (text, line 2532)
+- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2531)
+- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2532)
+- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2536)
+- "Obstructing Civil Protection"  (text, line 2537)
 
 > Note for you (not shown in game): A city scanner that has a fugitive in sight (wanted, or a hunted rebel who isn't passing as a citizen) tells the units where they are: a flash, a report to every unit on duty, and the nearby units come after them.
 
-- "a wanted citizen"  (text, line 2690)
+- "a wanted citizen"  (text, line 2695)
 
 > Note for you (not shown in game): part of: scanner tip off
 
-- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2695)
-- "[CP net] Scanner report: %s%s."  (message, line 2699)
+- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2700)
+- "[CP net] Scanner report: %s%s."  (message, line 2704)
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2940)
-- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2947)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2945)
+- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2952)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Miscount NPCs."  (chat message, line 2964)
+- "Stopped and removed all Miscount NPCs."  (chat message, line 2969)
 
 > Note for you (not shown in game): part of: spawn test walker
 
-- "your path network (%d hops)"  (message, line 2993)
-- "the map's own navigation"  (text, line 2993)
-- "Test walker heading out using {how}."  (chat message, line 2994)
+- "your path network (%d hops)"  (message, line 2998)
+- "the map's own navigation"  (text, line 2998)
+- "Test walker heading out using {how}."  (chat message, line 2999)
 
 > Note for you (not shown in game): part of: test arrived
 
-- "Test walker arrived in %.1f seconds. This route works."  (message, line 2999)
+- "Test walker arrived in %.1f seconds. This route works."  (message, line 3004)
 
 > Note for you (not shown in game): part of: test stuck
 
-- "Test walker stuck at %s on hop %d/%d"  (message, line 3006)
-- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 3007)
-- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 3010)
+- "Test walker stuck at %s on hop %d/%d"  (message, line 3011)
+- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 3012)
+- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 3015)
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3240)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3246)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 3244)
+- "[Civil Protection] "{Pick}""  (chat message, line 3250)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3262)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3268)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 3320)
-- "Assaulting Civil Protection"  (text, line 3323)
-- "Assaulting a citizen"  (text, line 3323)
+- "Damaging city property"  (text, line 3326)
+- "Assaulting Civil Protection"  (text, line 3329)
+- "Assaulting a citizen"  (text, line 3329)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 3359)
+- "Civil Protection has stood down."  (chat message, line 3365)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3366)
-- "Added %s point (%d total on this map)."  (message, line 3369)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3372)
+- "Added %s point (%d total on this map)."  (message, line 3375)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 3375)
-- "No point within 150 Civil Protection units."  (chat message, line 3375)
+- "Removed nearest {kind} point."  (text, line 3381)
+- "No point within 150 Civil Protection units."  (chat message, line 3381)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3386)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3390)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3392)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3396)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -7578,32 +7578,32 @@ Made from version f84d75a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: chapter end
 
-- "The Combine hold the city again."  (text, line 326)
+- "The Combine hold the city again."  (text, line 328)
 
 > Note for you (not shown in game): one line to each side, at the start and at the end (house rule 10: nothing else is said)
 
-- "The Nexus"  (on-screen notice, line 474)
+- "The Nexus"  (on-screen notice, line 495)
 
 > Note for you (not shown in game): part of: chapter retake tick
 
-- "Hold the Nexus. The city comes back with it."  (chat message, line 507)
-- "The Combine are in the Nexus. Drive them out."  (chat message, line 507)
-- "The city is yours again."  (chat message, line 514)
-- "The Combine have the city again."  (chat message, line 514)
+- "Hold the Nexus. The city comes back with it."  (chat message, line 528)
+- "The Combine are in the Nexus. Drive them out."  (chat message, line 528)
+- "The city is yours again."  (chat message, line 535)
+- "The Combine have the city again."  (chat message, line 535)
 
 > Note for you (not shown in game): Staff: F4 > Factions > Admin: testing tools > The city (sv_livingcity_admintools.lua)
 
-- "Superadmins only."  (text, line 585)
-- "The city is the Resistance's already."  (text, line 587)
-- "The wave: the city falls to the Resistance."  (text, line 589)
+- "Superadmins only."  (text, line 606)
+- "The city is the Resistance's already."  (text, line 608)
+- "The wave: the city falls to the Resistance."  (text, line 610)
 
 > Note for you (not shown in game): part of: chapter
 
-- "The city is the Combine's already."  (text, line 591)
-- "The Combine have the city again."  (text, line 592)
-- "The chapter is locked: neither the launch nor the Nexus flips it."  (text, line 596)
-- "The chapter is unlocked."  (text, line 596)
-- "Chapter: wave, retake or lock?"  (text, line 598)
+- "The city is the Combine's already."  (text, line 612)
+- "The Combine have the city again."  (text, line 613)
+- "The chapter is locked: neither the launch nor the Nexus flips it."  (text, line 617)
+- "The chapter is unlocked."  (text, line 617)
+- "Chapter: wave, retake or lock?"  (text, line 619)
 
 ## characters and permanent death (sv_livingcity_character.lua)
 
@@ -11654,136 +11654,136 @@ Made from version f84d75a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: sides even
 
-- "The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up."  (message, line 528)
-- "The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up."  (message, line 530)
+- "The Resistance is too big for the city's Combine right now (%d fighters, %d of Civil Protection and Overwatch). Wait for more units to come on, or for a place to free up."  (message, line 531)
+- "The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up."  (message, line 533)
 
 > Note for you (not shown in game): A vortigaunt character: shackled (the Vortigaunt faction) or freed (the Resistance's Free Vortigaunt). Being one is chosen at the start of a new life (sv_livingcity_vortstart.lua), never taken up by a human, and a vortigaunt never becomes human (the owner, 14 November: "it is absurd for a human to take on a vortigaunt role and transform into a vortigaunt, not lore friendly").
 
-- "No such faction."  (text, line 543)
+- "No such faction."  (text, line 546)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "A vortigaunt is chosen at the start of a new life, not taken up. The Free Vortigaunt is a vortigaunt the Resistance freed."  (text, line 549)
-- "A vortigaunt can't become human."  (text, line 552)
-- "Only the Resistance can free you: cut your shackles (or reach out through the vortessence)."  (text, line 555)
-- "Nobody chooses the infestation. It chooses you."  (text, line 559)
+- "A vortigaunt is chosen at the start of a new life, not taken up. The Free Vortigaunt is a vortigaunt the Resistance freed."  (text, line 552)
+- "A vortigaunt can't become human."  (text, line 555)
+- "Only the Resistance can free you: cut your shackles (or reach out through the vortessence)."  (text, line 558)
+- "Nobody chooses the infestation. It chooses you."  (text, line 562)
 
 > Note for you (not shown in game): (a stalker is bound even as a superadmin: only death, or lc_unstalker, ends it)
 
-- "Whitelist only."  (text, line 570)
+- "Whitelist only."  (text, line 573)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 576)
+- "Civil Protection only takes citizens in good standing (%d or more). Yours is %d."  (message, line 579)
 
 > Note for you (not shown in game): and who've come up the Civil Protection path: Intake Processor, or Infestation Cleanup (sv_livingcity_work.lua counts the shifts)
 
-- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d."  (message, line 582)
+- "Civil Protection recruits from the train station's Intake Processors and the infestation cleanup crews: finish %d Intake Processor shifts first, or half as many in Infestation Cleanup (F4 > Jobs). You've done %d."  (message, line 585)
 
 > Note for you (not shown in game): the sides kept even (the owner, 9 November: "keep the sides even"): neither the Resistance nor the Combine (Civil Protection and Overwatch together) may grow past double the other side's players, plus 4. Only joining waits: nobody on a side is ever put off it.
 
-- "The Resistance will never take someone with a rat carved into their face."  (text, line 592)
-- "The Resistance doesn't trust you yet."  (text, line 593)
+- "The Resistance will never take someone with a rat carved into their face."  (text, line 595)
+- "The Resistance doesn't trust you yet."  (text, line 596)
 
 > Note for you (not shown in game): part of: can join faction
 
-- "Requires %s in %s."  (message, line 598)
-- "No such role."  (text, line 603)
-- "Someone already holds that role."  (text, line 605)
+- "Requires %s in %s."  (message, line 601)
+- "No such role."  (text, line 606)
+- "Someone already holds that role."  (text, line 608)
 
 > Note for you (not shown in game): (the owner, 7 November: a recruit became Overwatch Commander; the rank is needed, superadmin or not, and an Overwatch role needs the conditioning like any Overwatch rank)
 
-- "Requires {name} in {name}."  (text, line 609)
-- "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."  (text, line 612)
+- "Requires {name} in {name}."  (text, line 612)
+- "Overwatch roles need the transhuman conditioning first (the Overwatch Candidate story)."  (text, line 615)
 
 > Note for you (not shown in game): part of: set faction
 
-- "You are now {name}."  (chat message, line 636)
+- "You are now {name}."  (chat message, line 639)
 
 > Note for you (not shown in game): the game answering something done in a window (lcf_join)
 
-- "Not while you're in custody."  (chat message, line 663)
-- "Not while you're wanted or in a fight."  (chat message, line 664)
-- "You can change faction again in {CurTime} seconds."  (chat message, line 666)
+- "Not while you're in custody."  (chat message, line 666)
+- "Not while you're wanted or in a fight."  (chat message, line 667)
+- "You can change faction again in {CurTime} seconds."  (chat message, line 669)
 
 > Note for you (not shown in game): what Civil Protection asks of a citizen, as progress bars on the card (the owner asked)
 
-- "Civil Standing"  (label, line 690)
-- "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)"  (label, line 691)
+- "Civil Standing"  (label, line 693)
+- "Intake Processor shifts finished (F4 > Jobs; Infestation Cleanup counts double)"  (label, line 694)
 
 > Note for you (not shown in game): part of: send menu
 
-- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)"  (label, line 697)
+- "Jobs done for the Resistance, to be trusted as a Fighter (their board, F4)"  (label, line 700)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You're a citizen for now; join again from the faction menu (F4) when there's room. Your rank and experience are kept."  (chat message, line 777)
-- "Welcome back. You're still {name}."  (chat message, line 780)
-- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 785)
-- "back to your rank"  (message, line 787)
+- "You're a citizen for now; join again from the faction menu (F4) when there's room. Your rank and experience are kept."  (chat message, line 780)
+- "Welcome back. You're still {name}."  (chat message, line 783)
+- "You can't be %s right now: %s You're %s for now; take it again from the faction menu (F4) when there's a place."  (message, line 788)
+- "back to your rank"  (message, line 790)
 
 > Note for you (not shown in game): XP The transhuman conditioning: the Overwatch ranks open, and whatever XP you've earned counts at once. There's no undoing it.
 
-- "the conditioning"  (text, line 802)
+- "the conditioning"  (text, line 805)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Conditioning complete"  (on-screen notice, line 858)
-- "You are Overwatch now: {name}. Your new uniform and weapons are on you. The higher Overwatch ranks come with experience."  (on-screen notice, line 858)
+- "Conditioning complete"  (on-screen notice, line 861)
+- "You are Overwatch now: {name}. Your new uniform and weapons are on you. The higher Overwatch ranks come with experience."  (on-screen notice, line 861)
 
 > Note for you (not shown in game): part of: add xp
 
-- "Promoted to {name}!{or}"  (chat message, line 880)
-- "[%s] %s has been promoted to %s."  (message, line 885)
-- "Demoted to {name}."  (chat message, line 889)
+- "Promoted to {name}!{or}"  (chat message, line 883)
+- "[%s] %s has been promoted to %s."  (message, line 888)
+- "Demoted to {name}."  (chat message, line 892)
 
 > Note for you (not shown in game): A rebel put down by a Civil Protection or Overwatch player (the owner, 7 November): standing, two credits, and an ammunition allocation (a box of rounds for the gun in hand), so sweeping in on them is worth the danger. (The XP for it: sv_livingcity_rebels.lua.)
 
-- "anticitizen neutralized"  (text, line 932)
-- "anticitizen neutralized"  (text, line 933)
+- "anticitizen neutralized"  (text, line 935)
+- "anticitizen neutralized"  (text, line 936)
 
 > Note for you (not shown in game): part of: rebel kill reward
 
-- "twelve rounds"  (text, line 944)
-- "Anticitizen neutralized"  (on-screen notice, line 947)
-- "+%d standing, +%d credits%s."  (message, line 947)
-- ", and an ammunition allocation: {got}"  (text, line 948)
+- "twelve rounds"  (text, line 947)
+- "Anticitizen neutralized"  (on-screen notice, line 950)
+- "+%d standing, +%d credits%s."  (message, line 950)
+- ", and an ammunition allocation: {got}"  (text, line 951)
 
 > Note for you (not shown in game): (the XP, as for an NPC rebel in sv_livingcity_rebels.lua: the owner, 8 November, "5 xp per kill")
 
-- "anticitizen neutralized"  (text, line 967)
+- "anticitizen neutralized"  (text, line 970)
 
 > Note for you (not shown in game): Admin commands
 
-- "Player not found."  (text, line 1055)
+- "Player not found."  (text, line 1058)
 
 > Note for you (not shown in game): admin cmd
 
-- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 1062)
-- "No such special role."  (text, line 1064)
-- "set to {name}."  (text, line 1066)
-- "Usage: lcf_setxp <name> <xp>"  (text, line 1072)
-- "now has {xp} XP in {name}."  (text, line 1076)
+- "Factions: citizen, resistance, cp, ota, admin, zombie"  (text, line 1065)
+- "No such special role."  (text, line 1067)
+- "set to {name}."  (text, line 1069)
+- "Usage: lcf_setxp <name> <xp>"  (text, line 1075)
+- "now has {xp} XP in {name}."  (text, line 1079)
 
 > Note for you (not shown in game): part of: step
 
-- "by staff"  (text, line 1086)
-- "is now {name}."  (text, line 1087)
+- "by staff"  (text, line 1089)
+- "is now {name}."  (text, line 1090)
 
 > Note for you (not shown in game): admin cmd
 
-- "Usage: lcf_whitelist <name> <faction>"  (text, line 1094)
-- "whitelisted for"  (text, line 1098)
-- "removed from"  (text, line 1098)
+- "Usage: lcf_whitelist <name> <faction>"  (text, line 1097)
+- "whitelisted for"  (text, line 1101)
+- "removed from"  (text, line 1101)
 
 > Note for you (not shown in game): A job done for the Resistance builds their trust; the last one needed makes a Fighter of a member with the XP.
 
-- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 1108)
-- "trusted by the Resistance"  (text, line 1109)
+- "[Resistance] You've proved yourself. They trust you now."  (chat message, line 1111)
+- "trusted by the Resistance"  (text, line 1112)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 1111)
+- "[Resistance] They're starting to trust you: %d of %d jobs before they'd arm you as a Fighter."  (message, line 1114)
 
 ## bug reports and feedback from players (the owner, 14 November: "add a bug report and (sv_livingcity_feedback.lua)
 
@@ -12647,10 +12647,10 @@ Made from version f84d75a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: spawn
 
-- "One is already out."  (text, line 80)
-- "The hive boss addon is not on this server (Workshop 2149660804)."  (text, line 82)
-- "No infestation is placed on this map."  (text, line 84)
-- "The class {class} could not be made."  (text, line 86)
+- "One is already out."  (text, line 102)
+- "The hive boss addon is not on this server (Workshop 2149660804)."  (text, line 104)
+- "No infestation is placed on this map."  (text, line 106)
+- "The class {class} could not be made."  (text, line 108)
 
 ## households (the owner, 10 November: "shared households: (sv_livingcity_households.lua)
 
@@ -24443,7 +24443,7 @@ Made from version f84d75a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: cower
 
-- "head down"  (text, line 274)
+- "head down"  (text, line 328)
 
 ## Combine strongholds' tripwires and turrets, as the gamemode hears them (sv_livingcity_strongholds.lua)
 

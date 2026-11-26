@@ -3734,6 +3734,15 @@ A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4
 - **Checked by:** review
 - **Tags:** props, owner
 
+### A lift is Valve's lift: models on unseen collision, never a car drawn with brushes (`owner-lifts-are-valves-models`)
+
+Never build a lift's car, gates or buttons as visible brushwork. Use the game's own: the cage model parented to a mover made only of unseen collision brushes, the gate models over unseen sliding clips, the button models under an unseen func_button, the lift's own sounds. The same goes for anything else the game already has a model for: look for the model (asset_facts.json, the prefab library) before drawing a brush.
+
+- **Why:** The owner, 26 November, of the cistern's first lift (a steel platform, rails and sliding grates of brushes): "why are you making the lift car out of brushes? USE THE ELEVATORS IN HL2 STOP USING BRUSHES GOOD GOLLY".
+- **How:** map_cistern.lift: Black Mesa East's freight lift from the prefab valve_eli_lift_ride (props_lab/freightelevator.mdl on Valve's 38 nodraw boxes, props_lab/elevatordoor.mdl with SetAnimation open and close, props_lab/freightelevatorbutton.mdl, eli_lab.elevator_move and _stop), all Half-Life 2's. Episode Two's: props_mining/elevator01_cage and elevator02_cage (the mine lifts), props_silo/silo_elevator (the silo's).
+- **Checked by:** review (a func_movelinear, func_tracktrain or func_door named *lift* with a drawn material)
+- **Tags:** props, owner, valve
+
 ### Join Valve's pieces with the cut hidden: cap faces inside the kept tunnel, consecutive maps at their shared landmark (`join-valve-cuts`)
 
 Lift whole connected sections of Valve's maps, so Valve's own tunnels join inside each piece; between two consecutive maps (ep2_outland_03 and 04, say) place both pieces with their shared info_landmark (landmark_outland_03_04 in both files) at the same point, and their shared transition area lines up exactly. Where a Valve tunnel must be cut, cut it where it is narrow (or at Valve's own seal there, an areaportal's frame), on the piece's own grid where it has one, and put the capping wall's face 32 to 64 INSIDE what is kept of the tunnel (never on the cut plane), so the cut edges of the displacements and the nodraw end faces of the brushes are inside the wall. Give every face of ours that can be seen a real material (top and bottom too: world_box leaves them nodraw), and nodraw only where a face touches something solid or faces the void. Lift with --keep-nodraw, so Valve's own nodraw shell keeps the piece shut where it is not cut. A Valve map's sky becomes black underground.
@@ -3976,6 +3985,33 @@ A prop lifted with its brushes must keep its origin to the hundredth: cut to who
 - **How:** Vmf.point(..., exact) for the bunker's lifted pieces (control room, launch room, pad, launch, silo).
 - **Checked by:** by computing: each lifted prop's offset from its brushes equals Valve's
 - **Tags:** props, geometry, owner
+
+### Every bank of the canal that looks to the city carries the Combine wall (`owner-combine-wall-every-city-bank`)
+
+The Combine wall never ends where the street does. Where the canal has no street on its city side (the ring's last jog, the first canal's banks), the wall stands on the bank itself: the bank's wall squares become the wall's core, the kit's pieces stand at the street's height on a concrete sill (or on a deck carried to the wall), and nothing of it hangs over stairs, a footbridge's landing or a doorway.
+
+- **Why:** The owner, 25 November, of a screenshot at the jog ("straight 448 nostreet"): "notice in this screenshot that combine walls end? That needs to not happen; every section of the canal that has a side/face towards the city MUST have a combine wall there."
+- **How:** map_corridor.bank_core (a layout's "wall bank X1 Y1 X2 Y2"; map_build.canal's own rectangles: A's banks, B's and D's west bank), combine_wall's sill and its blocked squares; ROUND["deck"] starts at the jog's west wall; map_build.fence leaves no chain link before a core.
+- **Checked by:** The build's note counts the wall's stretches; map_propkit.py --placed casts rays at every placed piece; map_stairs.py fails a flight with the wall over its steps.
+- **Tags:** owner, combine, canal
+
+### A line carried over the street clears the street's train, on a viaduct with no portals (`owner-railbridge-over-the-street`)
+
+A railway crossing over the street's own railway stands clear of its train (290 high): beside a walled street the rail bridge's bed is 144 over the Combine wall's top, a viaduct on piers from the far edge of the scenery to a strip of the piece's own behind the wall, with no tunnel mouth or portal where the line is above the walls. Its train waits and stops inside the map's sealed space (an entity outside it is a leak) and never reaches into the city or another piece: check --against the owner's map. Where a train must wait out of sight in the open, carry its line on beyond the scenery in a corridor of sky brush (floor, walls and lid all sky) long enough that nobody on the street or in the canal sees its far end.
+
+- **Why:** The owner, 25 and 26 November: "railbridge is too low when intersecting over a railway and the train would clip into it"; "raise it up but there is no need for a tunnel mouth on a side where the train is now above the wall ... it can just drive from the distant void into the void toward the city (obviously we can't have it clipping into the city once we've stitched the canal ring and city together, nor the forest bunker, forest cave, infested quarter, etc". And: "make a skybox tunnel big enough to fit the train and have it stretch far enough out that the train spawns out of view of a player on the street/canal".
+- **How:** map_mods_c.m_railbridge: raised (a street with "wall combine"): D, FAR, the piers, the strip behind the wall as core squares, the train's way reversed (from the scenery to the city's side). The backdrop keeps its buildings off whatever stands over the rim (Backdrop.busy). SKY_RUN 4096: open squares floored in sky beyond the backdrop's DEPTH.
+- **Checked by:** map_build.py chain --against c18_lc.vmf: nothing runs into the city (the strip is 1408 deep: 64 clear of the block at y 6272).
+- **Tags:** owner, streets, geometry
+
+### Big grates on blocked tunnels, Valve's round grate in the culverts, the ring sunk in the wall (`owner-canal-grates-and-culverts`)
+
+A blocked tunnel's mouth (256 wide and 192 high or more) carries the canals' big grate (canal_bars001), side by side from its middle, tops at the opening's top. A culvert is Valve's ring (canal_cap001) with its origin ON the wall's face (7 sunk in, 12 out) and Valve's round grate (canal_bars002) in it, before the dark: no grating brush. No decal under or near it: a decal lies over the dark and the grate too. No planks over the street's tracks at a stair's head.
+
+- **Why:** The owner, 25 November: "I asked for canal grates over the big black brushes at various blocked tunnels in the canals and it used the round grate for a culvert...fix that, then take that model that is the culvert/drainage grate and put it over the culverts in the canals instead of the hexagon/octagon grate brush/block"; of a culvert's pale foot (a stain decal over it) "also generating wrong"; "can see through the sides of these culverts they stick out too much"; "there is a little wooden block/brush over the tracks at straight 3200 stairs, please remove it, it's silly".
+- **How:** map_build.bar_props (BAR_GATE), map_ring.outfalls (no GRATE prism), map_modules.dress_canal_walls (the ring at 0 out, the grate at 6, no stain), map_corridor's stairs (no planks).
+- **Checked by:** grep the built VMF: no METALGRATE013A six-sided sheets; canal_bars001 at the caps.
+- **Tags:** owner, canal, props, grime
 
 ### Outdoor props never fade (`owner-props-never-fade`)
 

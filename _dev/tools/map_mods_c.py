@@ -814,15 +814,60 @@ def m_railbridge(m, opt):
     wide = 96                                       # half a tunnel's width
     import map_corridor
     street = m.street_side()
+    # RAISED (the owner, 25 and 26 November: "railbridge is too low when intersecting over a railway and the train would
+    # clip into it"; "raise it up but there is no need for a tunnel mouth on a side where the train is now above the
+    # wall ... it can just drive from the distant void into the void toward the city (obviously we can't have it clipping
+    # into the city)"): beside a street with a Combine wall the bed stands 144 over the wall's top, clear of the street's
+    # train (290 high) and of both walls, with no tunnel and no portal: a viaduct on piers from the far edge of the
+    # scenery beyond the canal, over the canal, the street and the wall, to a strip of this piece's own behind the wall
+    # (the wall's core carried back under it, its own sky over it), where the train stops out of sight and is put back at
+    # the far end. The train waits and stops inside the map's sealed space: an entity outside it is a leak.
+    raised = bool(street) and getattr(b, "street_wall", None) == "combine"
+    if raised:
+        D = max(rim, map_corridor.STREET + map_corridor.WALL_H) + 144
     # where each tunnel's mouth is: in the canal's wall, or on a street's bank behind the street (an overpass carries
     # the line over the road and tracks: the owner, 22 November, "cant you just make an overpass?")
     T0 = {s: (map_corridor.front_line(b) if s == street else 256) for s in (1, -1)}
     FAR = {s: T0[s] + 1024 for s in (1, -1)}
+    if raised:
+        import map_backdrop
+        SKY_RUN = 4096      # (a corridor of sky on past the scenery's far edge, for the train to wait in unseen: below)
+        FAR = {street: T0[street] + 1408, -street: 256 + map_backdrop.DEPTH + SKY_RUN - 64}      # (1408 behind the wall's face: 64 clear of the city's
+        #                                                                              block at y 6272 on the ring's north run, checked --against c18_lc.vmf)
     m.open(0, -256, L, 256)
     from map_mods_c import cage_lamp
     for s in (1, -1):
         t0, far = T0[s], FAR[s]
         lo, hi = (t0, far) if s > 0 else (-far, -t0)
+        if raised:
+            if s == street:      # (behind the wall: its core carried back under the line, the sky of the wall's own over it)
+                m.paint(c - 160, lo, c + 160, hi, ("low", map_corridor.STREET + map_corridor.WALL_H - 8, map_corridor.CORE, b.sky))
+                m.side(c - 160, lo, c + 160, hi)
+                m.blocked(c - 160, lo, c + 160, hi)
+            else:
+                # beyond the scenery's far edge the line runs on in a corridor of sky 320 wide (the owner, 26 November: "make
+                # a skybox tunnel big enough to fit the train and have it stretch far enough out that the train spawns out
+                # of view of a player on the street/canal"): its floor, walls and lid are all sky, so from the street and
+                # the canal it is sky like the rest; the train waits at its far end, SKY_RUN beyond the scenery
+                e0 = 256 + map_backdrop.DEPTH
+                m.paint(c - 160, min(s * e0, s * (e0 + SKY_RUN)), c + 160, max(s * e0, s * (e0 + SKY_RUN)), ("open", D - 128, MAT["sky"]))
+                m.side(c - 160, min(s * e0, s * (e0 + SKY_RUN)), c + 160, max(s * e0, s * (e0 + SKY_RUN)))
+                m.blocked(c - 160, min(s * e0, s * (e0 + SKY_RUN)), c + 160, max(s * e0, s * (e0 + SKY_RUN)))
+            piers = [(256, 276), (map_corridor.ROAD_IN + 8, map_corridor.ROAD_OUT - 8), (t0 + 128, t0 + 160)] if s == street else \
+                [(256 + 96, 256 + 128), (256 + 640, 256 + 672), (256 + 1184, 256 + 1216)]
+            for k, (e1, e2) in enumerate(piers):
+                q1, q2 = min(s * e1, s * e2), max(s * e1, s * e2)
+                foot = (map_corridor.STREET + map_corridor.WALL_H - 8 if k == 2 else map_corridor.STREET) if s == street else rim
+                m.det([(c - 56, q1, foot, c + 56, q2, D - 72)], MAT["canal_wall"])
+                m.det([(c - 88, q1 - 4, D - 72, c + 88, q2 + 4, D - 56)], MAT["beam"])
+            q1, q2 = min(s * 128, s * 160), max(s * 128, s * 160)      # (and the pier at the bank's foot, a lamp and a scrawl on it)
+            m.det([(c - 56, q1, F, c + 56, q2, D - 72)], MAT["canal_wall"])
+            m.det([(c - 88, q1 - 12, D - 72, c + 88, q2 + 12, D - 56)], MAT["beam"])
+            m.blocked(c - 96, q1 - 32, c + 96, q2 + 32)
+            sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - 96, s * 144, F + 300, "255 50 30", 0.4, on=False)
+            m.grime("graffiti", c, s * 128, F + 100, 5 if s > 0 else 6)
+            cage_lamp(m, c, s * 128, F + 160, 270 if s > 0 else 90, "255 214 160 50", lit=s > 0)
+            continue
         m.low(c - wide, lo, c + wide, hi, rim, floor=D, mat="nature/dirtfloor005c")
         m.side(c - wide, lo, c + wide, hi)
         m.blocked(c - wide, lo, c + wide, hi)
@@ -863,37 +908,49 @@ def m_railbridge(m, opt):
     # the bridge: two plate girders with the bed between them, cross girders under it
     girders, stiff = [], []
     vl, vh = -T0[-1], T0[1]                          # (the girders run from mouth to mouth: over the canal, and over a street)
+    if raised:
+        vl, vh = -FAR[-1], FAR[1]                    # (from the scenery's far edge to the strip's end behind the wall)
+    near = (max(vl, -640), min(vh, 640)) if not raised else ((-640, T0[1] + 128) if street > 0 else (-(T0[-1] + 128), 640))      # (what is seen close to)
     for s in (1, -1):
         g1, g2 = min(s * 64, s * 80), max(s * 64, s * 80)
         girders += [(c + g1, vl, D - 56, c + g2, vh, D + 32)]
         girders += [(c + g1 - 4, vl, D + 32, c + g2 + 4, vh, D + 36), (c + g1 - 4, vl, D - 60, c + g2 + 4, vh, D - 56)]
         o1, o2 = min(s * 80, s * 83), max(s * 80, s * 83)
-        stiff += [(c + o1, v, D - 56, c + o2, v + 6, D + 32) for v in range(vl + 29, vh, 64)]
+        stiff += [(c + o1, v, D - 56, c + o2, v + 6, D + 32) for v in (range(near[0] + 29, near[1], 128) if raised else range(vl + 29, vh, 64))]
     m.det(girders, STEEL)
     m.det(stiff, PIPE)
     m.det([(c - 64, vl, D - 16, c + 64, vh, D)], STEEL)
-    m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in range(vl + 56, vh - 55, 100)], PIPE)
+    m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in (range(near[0] + 56, near[1] - 55, 200) if raised else range(vl + 56, vh - 55, 100))], PIPE)
     m.taken(c - 90, -256, D - 64, c + 90, 256, D + 40)
     # the track: ballast on the bed, ties on the bridge and a little way in, rails the whole way (broken where the
     # areaportals stand), an overhead wire on three posts from tunnel to tunnel
-    m.det([(c - 52, vl, D, c + 52, vh, D + 1)], MM["gravel"])
-    pa, pb = -(T0[-1] + 62), T0[1] + 62                # (the areaportals: no tie or rail through them)
-    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(pa + 6, pb - 8, 48) if not (pa - 4 < v < pa + 12 or pb - 16 < v + 12 < pb + 4)], "wood/woodfloor006b")
-    posts = []
-    for v in [-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256]:
-        posts += [(c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134)]
-    m.det(posts, PIPE)
-    wire = [(c, -(T0[-1] + 204), D + 126)] + [(c, v, D + 128) for v in sorted([-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256])] + [(c, T0[1] + 204, D + 126)]
-    m.rope(wire, slack=6, width=1)
-    rails = []
-    for a, e in ((-FAR[-1] + 8, pa - 2), (pa, pb), (pb + 2, FAR[1] - 8)):
-        rails += [(c - 30, a, D, c - 26, e, D + 6), (c + 26, a, D, c + 30, e, D + 6)]
-    m.det(rails, PIPE)
+    if not raised:      # (nobody can see the top of the raised bed: no ballast, ties or rails there; its posts and wire are seen)
+        m.det([(c - 52, vl, D, c + 52, vh, D + 1)], MM["gravel"])
+        pa, pb = -(T0[-1] + 62), T0[1] + 62                # (the areaportals: no tie or rail through them)
+        m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(pa + 6, pb - 8, 48) if not (pa - 4 < v < pa + 12 or pb - 16 < v + 12 < pb + 4)], "wood/woodfloor006b")
+        posts = []
+        for v in [-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256]:
+            posts += [(c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134)]
+        m.det(posts, PIPE)
+        wire = [(c, -(T0[-1] + 204), D + 126)] + [(c, v, D + 128) for v in sorted([-176, 0, 176] + [s * (T0[s] - 256) // 2 + s * 256 for s in (1, -1) if T0[s] > 256])] + [(c, T0[1] + 204, D + 126)]
+        m.rope(wire, slack=6, width=1)
+        rails = []
+        for a, e in ((-FAR[-1] + 8, pa - 2), (pa, pb), (pb + 2, FAR[1] - 8)):
+            rails += [(c - 30, a, D, c - 26, e, D + 6), (c + 26, a, D, c + 30, e, D + 6)]
+        m.det(rails, PIPE)
+    else:
+        m.det([q for v in (-176, 0, 176, street * 480, street * 800) for q in ((c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134))], PIPE)
+        m.rope([(c, vl + 16, D + 126)] + [(c, v, D + 128) for v in sorted((-176, 0, 176, street * 480, street * 800))] + [(c, vh - 16, D + 126)], slack=6, width=1)
 
     # the train, standing where it waits: the left tunnel, its middle on lc_rail_p1. The tracktrain itself is unseen;
     # two flat cars (train005, 460 long) ride on it, one with two bundles of steel beams, one with three crates
     tv, base = T0[1] + 544, D + 6                   # (it waits in the left tunnel, 544 in: wholly hidden)
     tr = T0[-1] + 544
+    way = -1                                         # (it runs from +v to -v)
+    if raised:      # (it waits at the far end of the corridor of sky, 496 in from its end, and runs to the city's side: it stops with its
+        #              tail 460 behind the wall's face, where from the street nobody sees it over the wall's top)
+        way = street
+        tv, tr = -street * (FAR[-street] - 496), FAR[street] - 480
     parts = [((c - 58, tv - 468, base + 2, c + 58, tv + 468, base + 94), MAT["nodraw"])]
     brush(m, "func_tracktrain", {
         "targetname": "lc_rail_train", "target": "lc_rail_p1", "origin": "%d %d %d" % (m.fr.at(c, tv, base)), "orientationtype": "0", "velocitytype": "0",
@@ -910,15 +967,29 @@ def m_railbridge(m, opt):
     for k, v in enumerate((-150, 0, 150)):                    # dust and grit off the bridge's underside as it passes
         m.point("env_dustpuff", c + (k - 1) * 30, v, D - 62, {"targetname": "lc_rail_dust_%d" % (k + 1), "scale": "14", "speed": "8", "color": "110 104 96", "angles": "90 0 0"})
     dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (1.2, 1.7, 2.2, 2.8)]
-    stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv - 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
-             ("lc_rail_p3", -(tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", -tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
+    if raised:
+        dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (0.6, 1.1, 1.6, 2.2, 2.8)]      # (it is 1.2 seconds from the canal's edge at lc_rail_pb)
+    stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv + way * 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
+             ("lc_rail_p3", way * (tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", way * tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
+    if raised:
+        # (it starts far down the corridor of sky, about 15 seconds from the canal: the horn and the lamps as it comes into
+        #  view at the scenery's far edge (lc_rail_pa), the shake and the dust as it reaches the canal (lc_rail_pb), not
+        #  as it starts: the owner, 26 November, "I just want to make sure it's not silent")
+        va, vb = -street * (256 + map_backdrop.DEPTH - 64), -street * (256 + 420)
+        stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv + way * 128, "lc_rail_pa", "0", None),
+                 ("lc_rail_pa", va, "lc_rail_pb", "0", [("OnPass", "lc_rail_horn", "PlaySound", "", 0), ("OnPass", "lc_rail_signal_*", "ShowSprite", "", 0),
+                                                        ("OnPass", "lc_rail_signal_*", "HideSprite", "", 14)]),
+                 ("lc_rail_pb", vb, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
+                 ("lc_rail_p3", way * (tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", way * tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
     for name, v, nxt, flags, wires in stops:
         m.point("path_track", c, v, base, {"targetname": name, "target": nxt, "spawnflags": flags, "orientationtype": "0", "speed": "0", "radius": "0"},
                 b.vis + ": the train", connections=wires)
-    sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, T0[1] + 64, D + 64, radius=4000)
-    m.point("env_shake", c, 0, D, {"targetname": "lc_rail_shake", "amplitude": "3", "radius": "1000", "duration": "3.5", "frequency": "35", "spawnflags": "0"})
-    m.relay("lc_rail_run", c, 0, D + 180, [("lc_rail_horn", "PlaySound", "", 0), ("lc_rail_signal_*", "ShowSprite", "", 0), ("lc_rail_train", "StartForward", "", 2),
-                                           ("lc_rail_signal_*", "HideSprite", "", 10)])
+    sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, 0 if raised else T0[1] + 64, D + 64, radius=4000)
+    # (the shake reaches 1700 when raised: the street and the canal's floor are 650 and 900 under the bed)
+    m.point("env_shake", c, 0, D, {"targetname": "lc_rail_shake", "amplitude": "3", "radius": "1700" if raised else "1000", "duration": "3.5", "frequency": "35", "spawnflags": "0"})
+    m.relay("lc_rail_run", c, 0, D + 180, [("lc_rail_train", "StartForward", "", 0)] if raised else
+            [("lc_rail_horn", "PlaySound", "", 0), ("lc_rail_signal_*", "ShowSprite", "", 0), ("lc_rail_train", "StartForward", "", 2),
+             ("lc_rail_signal_*", "HideSprite", "", 10)])
     m.point("logic_timer", c, 0, D + 200, {"targetname": "lc_rail_timer", "RefireTime": "150", "UseRandomTime": "0", "StartDisabled": "0", "spawnflags": "0"},
             connections=[("OnTimer", "lc_rail_run", "Trigger", "", 0)])
     m.test_button((c - 8, 120, F + 40, c + 8, 128, F + 56), [("OnIn", "lc_rail_run", "Trigger")])
@@ -936,10 +1007,12 @@ def m_railbridge(m, opt):
     m.lane(c, 0)
     m.view(180, -40, F, 8, -14, "the bridge from the canal")
     m.view(c + 360, -100, F, 138, -16, "the left tunnel's mouth and the bridge")
-    m.view(c - 56, T0[1] + 44, D, 86, 2, "in the left tunnel: the train where it waits")
+    if not raised:
+        m.view(c - 56, T0[1] + 44, D, 86, 2, "in the left tunnel: the train where it waits")
     m.view(c + 60, 40, F, 200, -30, "under the bridge")
-    b.notes.append("%s: the rails are at z %d (the walls' top less 144); the train waits at (%d %d) and stops at (%d %d)" % (
-        (m.tag, D + 6) + m.fr.pt(c, tv) + m.fr.pt(c, -tr)))
+    how = "144 over the Combine wall's top, a viaduct" if raised else "the walls' top less 144"
+    b.notes.append("%s: the rails are at z %d (%s); the train waits at (%d %d) and stops at (%d %d)" % (
+        (m.tag, D + 6, how) + m.fr.pt(c, tv) + m.fr.pt(c, way * tr)))
 
 
 def m_pumphouse(m, opt):
