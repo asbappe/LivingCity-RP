@@ -285,7 +285,9 @@ def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=Non
         cls = e["classname"]
         keys = dict((k, v) for k, v in e["keys"].items() if k not in ("classname", "origin", "id"))
         for k in list(keys):
-            if k.lower() in PF_NAME_KEYS and keys[k]:
+            # (a particle system's control points name entities too: ep2_outland_12a's hatch smoke named door.silo, and
+            #  the game said "could not find control point entity (door.silo)" when it kept Valve's name)
+            if (k.lower() in PF_NAME_KEYS or re.match(r"cpoint\d+$", k.lower())) and keys[k]:
                 r = ren(keys[k])
                 if r:
                     keys[k] = r
