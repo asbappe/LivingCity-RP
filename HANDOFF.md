@@ -39,9 +39,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   (wildlife.md); `lc_text_gate` 3; `lc_train_real` 0. Staff lines: F4 > Factions > Admin: testing tools. The ten new settings are in the core
   snapshot (the owner's OK, 26 November). A unit who takes the glitching mask off is out of uniform (citizen clothes). Last full run
   (26 November): 9,460 passed, 4 failed, all four passing alone (old order-dependent tests: TODO.md, end).
-- 25 November: units hear (sv_livingcity_noise.lua; contraband.md "Keeping quiet"). NPC addon ideas, none built: docs/dev/npc-ai-lessons.md.
-- 24 November (the TODO run), not yet seen in game: barnacles lift, pumphouse water, the base's vehicle, antlions at a stopped thumper,
-  a cut train line (wildlife.md, resistance-base.md, ieds.md). The Resistance's town is off the map (map_town.py still builds it).
+- 26 November, not seen in game: fights handed to the engine Background NPCs' way (LC.CombatDrive; civil-protection-tools.md), citizens'
+  fright lasts while the shooting does (LC.FearStep; city-people.md), units hear (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md.
+- 24 November (the TODO run), not seen in game: wildlife.md, resistance-base.md, ieds.md. The Resistance's town is off the map.
 - 22 to 26 November: the canal ring (map_ring_walk.py, ~36 min with the nodraw pass, which vbsp's vertex limit needs).
   Kit: 43 pieces (the wall's 20 changed 25 Nov). 26 Nov: the Combine wall on every city bank (bank_core: the jog, the
   first canal); rail bridge a viaduct 144 over the wall with a corridor of sky for its train; big grates on blocked

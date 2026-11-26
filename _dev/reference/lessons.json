@@ -4265,6 +4265,18 @@
    "check": "grep the built VMF: no METALGRATE013A six-sided sheets; canal_bars001 at the caps."
   },
   {
+   "id": "owner-props-never-fade",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "Outdoor props never fade",
+   "rule": "Trees, rocks, logs, plants and anything else out in the open get fademindist -1 and fademaxdist 0: a forest seen from its edge is wider than any fade distance, so props pop in as you walk.",
+   "why": "\"now all the trees are invisible from the spawn and fade in, those need to not do that. it's like a ps2 game...\" (26 November).",
+   "how": "map_forest.py static() and stand(): fade (-1, 0) unless asked.",
+   "check": "no outdoor prop_static in a forest build has a fademaxdist other than 0"
+  },
+  {
    "id": "owner-wall-stands-on-the-bank",
    "tags": [
     "owner",

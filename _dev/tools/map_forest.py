@@ -708,8 +708,9 @@ class Forest:
             return True
         return self.wet(x, y)
 
-    def static(self, model, x, y, z, yaw, what, solid=6, pitch=0, fade=(2800, 3400), movable=None):
-        """movable: (its height at a spot: a function of (x, y); where it may stand: a test of (x, y), or None for planting's
+    def static(self, model, x, y, z, yaw, what, solid=6, pitch=0, fade=(-1, 0), movable=None):
+        """fade: never, unless asked (the owner, 26 November: "now all the trees are invisible from the spawn and fade in, those
+        need to not do that. it's like a ps2 game"). movable: (its height at a spot: a function of (x, y); where it may stand: a test of (x, y), or None for planting's
         own rules) for a rock or log that settle() may move off whatever it stands in."""
         self.vmf.point("prop_static", self.w(x, y, z), {
             "model": model, "angles": "%d %d 0" % (pitch, yaw), "skin": "0", "solid": solid, "disableshadows": "0",
@@ -765,7 +766,7 @@ class Forest:
             x, y = rnd.uniform(90, self.W - 90), rnd.uniform(90, self.D - 90)
             if self.kept_clear(x, y, -30) or self.slope(x, y) > 0.7:
                 continue
-            self.static(rnd.choice(PLANTS), x, y, self.natural(x, y) - 2, rnd.randrange(0, 360, 5), "rocks, plants and fallen wood", solid=0, fade=(1500, 2000))
+            self.static(rnd.choice(PLANTS), x, y, self.natural(x, y) - 2, rnd.randrange(0, 360, 5), "rocks, plants and fallen wood", solid=0)
             n["plants"] += 1
         for kind, models, count, sink in (("rocks", ROCKS, self.ROCKS_N, 10), ("logs", LOGS, self.LOGS_N, 4)):
             for _ in range(900):
@@ -1375,7 +1376,7 @@ class BunkerForest(Forest):
         self.roof_fence()
         for model, x, y, yaw in (("models/props_c17/concrete_barrier001a.mdl", bx + 380, by - 110, 80), ("models/props_c17/concrete_barrier001a.mdl", bx + 920, by - 130, 100),
                                  ("models/props_vehicles/truck001a.mdl", bx + 300, by - 360, 35)):
-            self.stand(model, x, y, self.natural(x, y), yaw, "structures", fade=(2800, 3400))
+            self.stand(model, x, y, self.natural(x, y), yaw, "structures")
         self.plan_nodes(plan, self.B0, skip=[(576, 256, 704, 448), (jx, 640, 512, 768)])
         self.plan_nodes(deep, self.B0, skip=[(-704, 768, -576, 832), (-768, 640, -704, 768)])
         for (u, w, z) in ((640, 296, zp - 32), (640, 364, zp - 72), (640, 420, zp - 116), (420, 704, zl - 32), (336, 704, zl - 80), (252, 704, zl - 144), (160, 704, zd)):
@@ -2734,7 +2735,7 @@ class BunkerForest(Forest):
                 x, y = cx + rx * r * math.cos(a), cy + ry * r * math.sin(a)
                 h = self.natural(x, y)
                 if self.level + 3 <= h <= self.level + 22:
-                    self.static(rnd.choice(SHORE), x, y, h - 2, rnd.randrange(0, 360, 5), "rocks, plants and fallen wood", solid=0, fade=(1500, 2000))
+                    self.static(rnd.choice(SHORE), x, y, h - 2, rnd.randrange(0, 360, 5), "rocks, plants and fallen wood", solid=0)
                     n += 1
                     break
         top = self.natural(ix, iy)
@@ -3148,7 +3149,7 @@ class CaveForest(Forest):
         for k in range(16):
             dx = rnd.choice((-1, 1)) * rnd.uniform(235, 640)
             x, y = cx + dx, ym - rnd.uniform(40, 190)
-            self.static(rnd.choice(PLANTS), x, y, self.natural(x, y) - 2, rnd.randrange(0, 360, 5), "cave", solid=0, fade=(1500, 2000))
+            self.static(rnd.choice(PLANTS), x, y, self.natural(x, y) - 2, rnd.randrange(0, 360, 5), "cave", solid=0)
         self.fence_gate()
         old_nest_draws(rnd, 2560)        # (what the first nest drew from the forest's numbers: the trees stay where the owner has seen them)
         # beyond the cave's end, behind the forest's north wall (each part draws its own numbers, if any)
@@ -3540,7 +3541,7 @@ class CaveForest(Forest):
         # the larval extract at the tunnels' end (Valve's honeycomb nest and the essence over it, as at the end of
         # ep2_outland_04: the essence 127 over the nest's foot, its own glow), in the chamber the loop comes round to
         ex = P(2240, -6880, -1768)
-        self.static("models/props_hive/nest_extract.mdl", ex[0], ex[1], ex[2] - 2, 271, "holdout: the extract", fade=(2200, 2300))
+        self.static("models/props_hive/nest_extract.mdl", ex[0], ex[1], ex[2] - 2, 271, "holdout: the extract")
         v.point("prop_dynamic", self.w(ex[0] + 6, ex[1] + 5, ex[2] + 127), {
             "targetname": "lc_nest_extract", "model": "models/props_hive/larval_essence.mdl", "angles": "0 298 0", "skin": "0", "solid": "6", "disableshadows": "0",
             "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0",

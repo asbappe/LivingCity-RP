@@ -224,8 +224,8 @@ end)
 -- Gunfire (the owner, 7 November: "when firearms are being shot and bullets flying, we need nearby
 -- citizens to run in terror, some to squat and cover their heads"). Any gun fired, a player's or an
 -- NPC's: the citizens within lc_gunfire_fear who aren't spoken for (held, in a cell, under escort, in
--- an event, asleep) run from the shooter, and about a third drop and cover their heads for a few
--- seconds first. A citizen reacts once every ten seconds or so, a gun is heard once every second and
+-- an event, asleep) run from the shooter, and about half drop and cover their heads first (how long, and
+-- what comes after: the 26 November notes below). A citizen reacts once every ten seconds or so, a gun is heard once every second and
 -- a half, so a firefight doesn't send them off again every shot.
 ------------------------------------------------------------------------
 
@@ -239,6 +239,54 @@ local function Cry(npc, st)
     elseif LC.Cue then LC.Cue(npc, st, { "say_warn_go", "say_saw_death" }, { lead = false }) end -- (sv_livingcity_voicecues.lua)
 end
 
+-- 26 November (the owner: "yes build all 3 that you numbered", after reading how Background NPCs' people
+-- take fright; Shark_vil's addon, Apache License 2.0: its sv_fear.lua, sv_run_from_danger.lua and
+-- sv_dyspnea.lua, written afresh here). Fear now lasts while the danger does, not one reaction:
+--   1. Head down depends on the gunman: within 700 about half cry out and drop; they stay down while he is
+--      within 200 and facing them, and once he isn't, each half second one in four gets up and runs. Running
+--      past him as he turns on them, they drop again.
+--   2. The flight goes on: every 5 seconds a new place, the route point 700 to 1000 units round them that is
+--      farthest from him, for as long as the shooting lasts (and 20 seconds after the last shot they hear).
+--   3. Out of breath: past 1000 units from him, 10 to 20 seconds into the run, they stop and pant for 5 to 15
+--      seconds, then run on if he is still at it.
+local CALM = 20        -- seconds after the last shot heard before the fright is over
+local KEEP = 2500      -- someone already frightened hears the shooting go on from this far
+local PIN = 200        -- the gunman this near, and facing them: they stay down
+local SAFE = 1000      -- this far from him they may stop for breath
+local RETARGET = 5     -- seconds between new places to run to
+local PANT = { "d2_coast03_PostBattle_Idle02", "d2_coast03_PostBattle_Idle01", "LineIdle02" }
+
+-- Where the one they fear is now (where the shot came from, once he is gone).
+local function ThreatPos(f)
+    local w = f.who
+    if IsValid(w) and (not w.Alive or w:Alive()) and (not w.Health or w:Health() > 0) then f.src = w:GetPos() end
+    return f.src
+end
+
+-- Right on them, and looking their way?
+local function Pinned(npc, f)
+    local d = npc:GetPos() - ThreatPos(f)
+    if d:LengthSqr() > PIN * PIN or not IsValid(f.who) then return false end
+    local aim = (f.who.GetAimVector and f.who:GetAimVector()) or f.who:GetForward()
+    local fwd = Vector(aim.x, aim.y, 0)
+    d.z = 0
+    if d:LengthSqr() < 1 or fwd:LengthSqr() < 0.01 then return true end
+    d:Normalize() fwd:Normalize()
+    return fwd:Dot(d) > 0.5
+end
+
+-- The route point round them that is farthest from the danger (and farther from it than they are now).
+local function FleeSpot(npc, from)
+    local npos = npc:GetPos()
+    local best, bd
+    for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(npos, math.random(700, 1000)) or {}) do
+        local d = nd.pos:DistToSqr(from)
+        if (not bd or d > bd) and (not LC.CitizenSpotOK or LC.CitizenSpotOK(nd.pos)) then best, bd = nd.pos, d end
+    end
+    if best and bd > npos:DistToSqr(from) then return best end
+    return nil
+end
+
 -- Off, away from where the shots came from (not just anywhere).
 local function RunFrom(npc, st, from, now)
     local npos = npc:GetPos()
@@ -246,10 +294,12 @@ local function RunFrom(npc, st, from, now)
     away.z = 0
     if away:LengthSqr() < 1 then away = VectorRand() away.z = 0 end
     away:Normalize()
-    local dest
-    for _ = 1, 8 do
-        local p = LC.RandomWanderPos("citizen", npos + away * 700)
-        if p and (p - npos):GetNormalized():Dot(away) > 0.2 then dest = p break end
+    local dest = FleeSpot(npc, from)
+    if not dest then
+        for _ = 1, 8 do
+            local p = LC.RandomWanderPos("citizen", npos + away * 700)
+            if p and (p - npos):GetNormalized():Dot(away) > 0.2 then dest = p break end
+        end
     end
     dest = dest or LC.RandomWanderPos("citizen", npos)
     if not dest then return false end
@@ -261,25 +311,112 @@ local function RunFrom(npc, st, from, now)
     return true
 end
 
--- Down, head covered, then off.
-local function Cower(npc, st, from, now)
+local function StopGesture(npc)
+    if IsValid(npc.lcGesture) then npc.lcGesture:Fire("CancelSequence") npc.lcGesture:Remove() end
+end
+
+-- Down, head covered (for secs; the fright decides when they get up).
+local function Cower(npc, st, now, secs)
     if LC.CancelBusy then LC.CancelBusy(npc, st) end
     LC.LeaveLine(npc, st)
     LC.Release(npc, st)
     if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
     st.dest, st.route = nil, nil
     LC.SetState(npc, st, "idle")
-    st.untilT = now + 4 -- (nothing new till they've got up)
+    st.untilT = now + secs -- (nothing new till they've got up)
     st.nextChat = math.max(st.nextChat or 0, now + 12)
     LC.SetNPCStr(npc, "lc_doing", "head down")
-    if LC.PlayGesture then LC.PlayGesture(npc, COWER, 4) end
-    timer.Simple(math.Rand(3, 4), function()
-        if not IsValid(npc) or LC.NPCs[npc] ~= st or npc:Health() <= 0 then return end
-        LC.SetNPCStr(npc, "lc_doing", "")
-        if not FEAR_BUSY[st.state] then RunFrom(npc, st, from, CurTime()) end
-    end)
+    if LC.PlayGesture then LC.PlayGesture(npc, COWER, secs) end
     return true
 end
+
+local function GetUp(npc, st)
+    StopGesture(npc)
+    LC.SetNPCStr(npc, "lc_doing", "")
+end
+
+local function EndFear(npc, st, now)
+    local f = st.fear
+    st.fear = nil
+    if f and f.mode ~= "run" and IsValid(npc) then
+        GetUp(npc, st)
+        if st.state == "idle" then st.untilT = math.min(st.untilT or now, now + 1) end
+    end
+    return "over"
+end
+
+-- One frightened citizen, every half second. Returns "cower", "run", "pant", "over", or nil (not frightened).
+function LC.FearStep(npc, st, now)
+    local f = st.fear
+    if not f then return nil end
+    if FEAR_BUSY[st.state] or st.questLock or st.subject or now > f.untilT then return EndFear(npc, st, now) end
+    local from = ThreatPos(f)
+    local d2 = npc:GetPos():DistToSqr(from)
+    if f.mode == "cower" then
+        if Pinned(npc, f) then
+            if now >= (f.downUntil or 0) then f.downUntil = now + 4 Cower(npc, st, now, 4.5) end
+            return "cower"
+        end
+        if now < (f.flinchUntil or 0) or math.random() >= 0.25 then
+            -- (down a little longer; the animation is kept going while they are)
+            if now >= (f.downUntil or 0) then f.downUntil = now + 4 Cower(npc, st, now, 4.5) end
+            return "cower"
+        end
+        GetUp(npc, st)
+        f.mode, f.nextRun = "run", 0
+    elseif f.mode == "pant" then
+        if d2 < PIN * PIN then
+            StopGesture(npc)
+            f.mode, f.downUntil, f.flinchUntil = "cower", now + 4, now + 1.5
+            Cower(npc, st, now, 4.5)
+            return "cower"
+        end
+        if now < f.pantUntil and not (d2 < SAFE * SAFE and math.random() < 0.4) then
+            st.untilT = math.max(st.untilT or 0, now + 1)
+            return "pant"
+        end
+        StopGesture(npc)
+        f.mode, f.nextRun, f.pantAt = "run", 0, now + math.random(10, 20)
+    end
+    -- running
+    if Pinned(npc, f) and (f.who:IsPlayer() or math.random() < 0.1) then
+        f.mode, f.downUntil, f.flinchUntil = "cower", now + 4, now + 1.5
+        Cower(npc, st, now, 4.5)
+        return "cower"
+    end
+    if now < (f.nextRun or 0) then return "run" end
+    f.nextRun = now + RETARGET
+    if math.random() < 0.05 then Cry(npc, st) end
+    if d2 > SAFE * SAFE and now >= (f.pantAt or 0) then
+        -- far enough, and winded: stop for breath
+        if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
+        st.dest, st.route = nil, nil
+        LC.SetState(npc, st, "idle")
+        f.mode, f.pantUntil = "pant", now + math.random(5, 15)
+        st.untilT = f.pantUntil
+        if LC.PlayGesture then LC.PlayGesture(npc, PANT, f.pantUntil - now) end
+        return "pant"
+    end
+    RunFrom(npc, st, from, now)
+    return "run"
+end
+
+function LC.FearTick(now)
+    for npc, st in pairs(LC.NPCs or {}) do
+        if st.fear then
+            if not IsValid(npc) or npc:Health() <= 0 then
+                st.fear = nil
+            else
+                local ok, err = LC.Try(LC.FearStep, npc, st, now)
+                if not ok then st.fear = nil if LC.Error then LC.Error("fear", err) end end
+            end
+        end
+    end
+end
+timer.Create("LivingCityFear", 0.5, 0, function()
+    if not LC.Running then return end
+    LC.FearTick(CurTime())
+end)
 
 function LC.GunfireFear(shooter, src, now)
     local r = cvFear:GetFloat()
@@ -288,13 +425,34 @@ function LC.GunfireFear(shooter, src, now)
     local n = 0
     for npc, st in pairs(LC.NPCs) do
         if IsValid(npc) and st.role == "citizen" and not st.test and not st.questLock and not st.subject and not FEAR_BUSY[st.state]
-            and npc:Health() > 0 and npc ~= shooter and (st.nextFear or 0) < now and npc:GetPos():DistToSqr(src) < r * r then
-            st.nextFear = now + math.Rand(9, 13)
-            local done
-            if math.random() < 0.35 then done = Cower(npc, st, src, now) else done = RunFrom(npc, st, src, now) end
-            if done then
-                n = n + 1
-                if math.random() < 0.5 then Cry(npc, st) end
+            and npc:Health() > 0 and npc ~= shooter then
+            local d2 = npc:GetPos():DistToSqr(src)
+            local f = st.fear
+            if f then
+                -- still frightened, and the shooting goes on: it isn't over yet (and the nearer gun is the one they fear)
+                if d2 < KEEP * KEEP then
+                    f.untilT = now + CALM
+                    if f.who ~= shooter and d2 < npc:GetPos():DistToSqr(ThreatPos(f)) then f.who, f.src = shooter, src end
+                end
+            elseif (st.nextFear or 0) < now and d2 < r * r then
+                st.nextFear = now + math.Rand(9, 13)
+                f = { who = shooter, src = src, untilT = now + CALM, pantAt = now + math.random(10, 20) }
+                st.fear = f
+                local done, cried
+                if d2 <= 700 * 700 and math.random() < 0.45 then
+                    f.mode, f.downUntil, f.flinchUntil = "cower", now + 4, now + 1.5
+                    done = Cower(npc, st, now, 4)
+                    if done then Cry(npc, st) cried = true end
+                else
+                    f.mode, f.nextRun = "run", now + RETARGET
+                    done = RunFrom(npc, st, src, now)
+                end
+                if done then
+                    n = n + 1
+                    if not cried and math.random() < 0.5 then Cry(npc, st) end
+                else
+                    st.fear = nil
+                end
             end
         end
     end

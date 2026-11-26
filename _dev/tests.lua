@@ -2048,7 +2048,8 @@ ok(copAst.state == "hostile" and copA.enemyMemory ~= nil, "a hostile unit is tol
 _run(5)
 ok(copA:GetPos():Distance(runner2:GetPos()) < d0 - 400, "and runs after them, even out of sight", string.format("%.0f -> %.0f", d0, copA:GetPos():Distance(runner2:GetPos())))
 _run(10)
-ok(copA:GetPos():Distance(runner2:GetPos()) < 600 and copA.sched == SCHED_CHASE_ENEMY, "close in, the combat AI takes over", copA.sched)
+-- (inside 700 with a stick the engine closes in by itself, since 26 November: Background NPCs' number; it was 600)
+ok(copA:GetPos():Distance(runner2:GetPos()) <= 700 and copA.sched == SCHED_CHASE_ENEMY and copAst.cmbDid == "melee", "close in, the combat AI takes over", tostring(copA.sched) .. " " .. tostring(copAst.cmbDid))
 _setcvar("lc_squads", 1)
 
 ----------------------------------------------------------------------
@@ -45723,6 +45724,183 @@ for npc, st in pairs(held) do if IsValid(npc) then LC.NPCs[npc] = st end end
 LC.Running = wasRunning
 end
 NoiseTests()
+function Nov26_CombatDriveTests()
+section("Fights handed to the engine, Background NPCs' way (26 November)")
+local F0 = Vector(-171000, 171000, 0)
+local cop, cst = LC.Spawners.cop(F0)
+cst = cst or LC.NPCs[cop]
+local foe = ents.Create("npc_citizen") foe:SetPos(F0 + Vector(900, 0, 0)) foe:Spawn()
+local sees, gun, cur = true, "weapon_pistol", nil
+local guns = {}
+cop.GetEnemy = function() return foe end
+cop.Visible = function() return sees end
+cop.GetActiveWeapon = function() guns[gun] = guns[gun] or ents.Create(gun) return guns[gun] end
+local sched, last, target, nstate
+local real = { cop.SetSchedule, cop.SetLastPosition, cop.IsCurrentSchedule }
+cop.SetSchedule = function(self, s) sched = s cur = s end
+cop.SetLastPosition = function(self, p) last = p end
+cop.IsCurrentSchedule = function(self, s) return s ~= nil and cur == s end
+cop.SetTarget = function(self, e) target = e end
+cop.SetNPCState = function(self, n) nstate = n end
+SCHED_RANGE_ATTACK1 = SCHED_RANGE_ATTACK1 or 43 -- (the game's own numbers, where the stand-in has none)
+SCHED_RELOAD = SCHED_RELOAD or 51
+SCHED_MOVE_AWAY_FROM_ENEMY = SCHED_MOVE_AWAY_FROM_ENEMY or 68
+NPC_STATE_COMBAT = NPC_STATE_COMBAT or 3
+local nnWas = LC.NavNodesNear
+LC.NavNodesNear = function() return {} end
+local now = CurTime() + 1000
+cst.cmbNext, cst.cmbWalk, cst.cmbLast, cst.cmbLof = nil, nil, nil, nil
+
+ok(LC.CombatEngage(cop, foe, foe:GetPos()) == true and target == foe and nstate == NPC_STATE_COMBAT, "given an enemy: the target and the combat state too, at once")
+ok(LC.CombatDrive(cop, cst, foe, now) == true and cst.cmbDid == "advance" and cst.cmbWalk and cst.cmbWalk.ent == foe, "in sight and over 700 away: run at them", tostring(cst.cmbDid))
+sched = nil
+ok(LC.CombatMove(cop, cst, now) == true and sched == SCHED_FORCED_GO_RUN and last == foe:GetPos(), "the run is given to the engine")
+sched = nil
+ok(LC.CombatMove(cop, cst, now + 0.5) == false and sched == nil, "and not again while it is still on its way there")
+foe:SetPos(F0 + Vector(900, 300, 0))
+ok(LC.CombatMove(cop, cst, now + 1) == true and last == foe:GetPos(), "they moved a good way: after them")
+cur, sched = SCHED_RANGE_ATTACK1, nil
+foe:SetPos(F0 + Vector(900, 900, 0))
+ok(LC.CombatBusy(cop) == true and LC.CombatMove(cop, cst, now + 1.5) == false and sched == nil, "while the engine is shooting, nothing is ordered")
+cur = SCHED_RELOAD
+ok(LC.CombatBusy(cop) == true and LC.CombatMove(cop, cst, now + 2) == false and sched == nil, "nor while it reloads")
+foe:SetPos(F0 + Vector(300, 0, 0))
+ok(LC.CombatDrive(cop, cst, foe, now + 2) == true and cst.cmbDid == "advance", "one decision every 3 seconds, no oftener")
+cur = SCHED_RANGE_ATTACK1
+ok(LC.CombatDrive(cop, cst, foe, now + 3.1) == true and cst.cmbDid == "busy", "near, and the engine is mid-shot: left alone")
+cur = nil
+ok(LC.CombatDrive(cop, cst, foe, now + 6.2) == true and cst.cmbDid == "backoff" and cst.cmbWalk.pos ~= nil
+    and cst.cmbWalk.pos:DistToSqr(foe:GetPos()) > 290 * 290, "under 500 with a gun: back to a spot behind", tostring(cst.cmbDid))
+LC.NavNodesNear = function(c) return { { pos = c + Vector(100, 0, 0) }, { pos = c + Vector(-400, 0, 0) } } end
+ok(LC.CombatBackOffSpot(cop, foe) == (F0 - Vector(500, 0, 0)) + Vector(-400, 0, 0), "(with route points: the farthest of those round a spot 500 behind it)")
+LC.NavNodesNear = function() return {} end
+local nrWas = LC.NavReachable
+LC.NavReachable = function() return false end
+sched = nil
+ok(LC.CombatDrive(cop, cst, foe, now + 9.3) == true and cst.cmbDid == "away" and sched == SCHED_MOVE_AWAY_FROM_ENEMY and cst.cmbWalk == nil,
+    "no way to that spot: the engine's own move away from the enemy")
+LC.NavReachable = nrWas
+foe:SetPos(F0 + Vector(600, 0, 0))
+cst.cmbWalk = nil
+ok(LC.CombatDrive(cop, cst, foe, now + 12.4) == true and cst.cmbDid == "hold" and cst.cmbWalk == nil, "between 500 and 700: it holds, and the engine fights")
+gun, cur, sched = "weapon_stunstick", SCHED_FORCED_GO_RUN, nil
+ok(LC.CombatDrive(cop, cst, foe, now + 12.5) == true and cst.cmbDid == "melee" and sched == SCHED_CHASE_ENEMY, "with a stick, inside 700: the engine closes in and swings")
+gun, cur, sees = "weapon_pistol", nil, false
+ok(LC.CombatDrive(cop, cst, foe, now + 16, F0 + Vector(2000, 0, 0), true) == true and cst.cmbDid == "search" and cst.cmbWalk.ent == foe,
+    "out of sight, told where they are (the pursuit): after them")
+cst.cmbLast = F0 + Vector(1500, 0, 0)
+ok(LC.CombatDrive(cop, cst, foe, now + 19.1) == true and cst.cmbDid == "search" and cst.cmbWalk.pos == cst.cmbLast,
+    "out of sight, nobody telling: to where they were last seen")
+cst.state, sched = "idle", nil
+ok(LC.CombatDrive(cop, cst, foe, now + 22.2, cop:GetPos()) == true and cst.cmbDid == "closing" and sched ~= nil and cst.cmbWalk == nil,
+    "there, and still no sight of them: a line of fire, not a stare at the wall (ours)", tostring(cst.cmbDid))
+-- hurt while reloading: the reload is finished first
+local wasRand = math.random
+math.random = function(a, b) if a then return wasRand(a, b) end return 0 end
+SCHED_TAKE_COVER_FROM_ENEMY = SCHED_TAKE_COVER_FROM_ENEMY or 27
+cst.cmbCover, cur, sched = nil, SCHED_RELOAD, nil
+ok(LC.CombatHurt(cop, cst, foe, 5, now + 40) == false and sched == nil, "hurt while reloading: it finishes the reload")
+cur = nil
+cst.cmbWalk = { ent = foe }
+ok(LC.CombatHurt(cop, cst, foe, 5, now + 41) == true and sched == SCHED_TAKE_COVER_FROM_ENEMY and cst.cmbWalk == nil,
+    "hurt otherwise: into cover, and no run of ours pulls it straight back out")
+math.random = wasRand
+-- a marcher held up to fight is driven the same way; one walking on is not
+sees = true
+foe:SetPos(F0 + Vector(900, 0, 0))
+cst.state, cst.cmbHold, cst.cmbNext, cst.cmbWalk = "moving", now, nil, nil
+ok(LC.CombatStep(cop, cst, now + 50) == "fighting" and cst.cmbWalk ~= nil, "a marcher who stopped to fight is driven the same way")
+cst.cmbHold = nil
+ok(LC.CombatStep(cop, cst, now + 51) == "fighting" and cst.cmbWalk == nil, "walking on again: its march is left alone")
+local caps = 0
+local unit2 = ents.Create("npc_metropolice")
+unit2.CapabilitiesAdd = function(self, c) caps = bit.bor(caps, c) end
+LC.CombatTune(unit2, {})
+ok(bit.band(caps, CAP_MOVE_SHOOT or 0) == (CAP_MOVE_SHOOT or 0) and bit.band(caps, CAP_TURN_HEAD or 0) == (CAP_TURN_HEAD or 0),
+    "every fighter can shoot on the move and turn its head")
+_setcvar("lc_combat_ai", 0)
+ok(LC.CombatDrive(cop, cst, foe, now + 60) == false, "lc_combat_ai 0: the pursuit as it was")
+_setcvar("lc_combat_ai", 1)
+LC.NavNodesNear = nnWas
+cop.SetSchedule, cop.SetLastPosition, cop.IsCurrentSchedule = real[1], real[2], real[3]
+for _, g in pairs(guns) do if IsValid(g) then g:Remove() end end
+unit2:Remove() foe:Remove() cop:Remove()
+end
+Nov26_CombatDriveTests()
+
+function Nov26_FearTests()
+section("A fright that lasts while the shooting does (26 November)")
+local G = Vector(-166000, -166000, 0)
+local cit, cst = LC.Spawners.citizen(G)
+cst = cst or LC.NPCs[cit]
+local gunman = newPlayer("Gunman26", "resistance")
+gunman:SetPos(G + Vector(150, 0, 0))
+gunman.aim = Vector(-1, 0, 0) -- (looking at them)
+local rwWas, brWas, nnWas, okWas = LC.RandomWanderPos, LC.BuildRoute, LC.NavNodesNear, LC.CitizenSpotOK
+local wander = G + Vector(-600, 0, 0)
+LC.RandomWanderPos = function() return wander end
+LC.BuildRoute = function() return nil end
+LC.NavNodesNear = function() return {} end
+LC.CitizenSpotOK = function() return true end
+local wasRand, roll = math.random, 0
+math.random = function(a, b) if b then return wasRand(a, b) elseif a then return wasRand(a) end return roll end
+cst.untilT, cst.nextFear, cst.fear = CurTime() + 100, nil, nil
+gunman.lcShotHeardAt = 0
+hook.Run("EntityFireBullets", gunman, { Src = gunman:GetPos() })
+local f = cst.fear
+ok(f ~= nil and f.mode == "cower" and cst.state == "idle", "a shot close by: about half cry out and drop, head covered", f and f.mode)
+local now = CurTime()
+ok(LC.FearStep(cit, cst, now + 2) == "cower" and LC.FearStep(cit, cst, now + 3) == "cower", "they stay down while he is on them and facing them")
+gunman.aim = Vector(1, 0, 0)
+roll = 0.9
+ok(LC.FearStep(cit, cst, now + 4) == "cower", "he turns away: not everyone is up at once")
+roll = 0
+LC.NavNodesNear = function() return { { pos = G + Vector(-800, 0, 0) }, { pos = G + Vector(400, 0, 0) } } end
+ok(LC.FearStep(cit, cst, now + 4.5) == "run" and cst.state == "moving" and cst.dest == G + Vector(-800, 0, 0),
+    "then up and off, to the place round them farthest from him", tostring(cst.dest))
+LC.NavNodesNear = function() return { { pos = G + Vector(-900, 300, 0) } } end
+roll = 0.9
+ok(LC.FearStep(cit, cst, now + 6) == "run" and cst.dest == G + Vector(-800, 0, 0), "(not a new place every moment)")
+ok(LC.FearStep(cit, cst, now + 9.6) == "run" and cst.dest == G + Vector(-900, 300, 0), "five seconds on, still shooting: a new place, farther off")
+LC.NavNodesNear = function() return {} end
+wander = G + Vector(-700, 100, 0)
+ok(LC.FearStep(cit, cst, now + 14.7) == "run" and cst.dest == wander, "(with no route points round them: away from him, as before)")
+-- he comes round on them as they run
+gunman.aim = Vector(-1, 0, 0)
+ok(LC.FearStep(cit, cst, now + 15) == "cower" and cst.state == "idle", "he turns on them as they run past: down again")
+gunman.aim = Vector(1, 0, 0)
+roll = 0
+ok(LC.FearStep(cit, cst, now + 17) == "run", "(and off again when he looks away)")
+-- out of breath
+f.untilT = now + 1000 -- (he is still shooting)
+cit:SetPos(G + Vector(-1500, 0, 0))
+f.pantAt, f.nextRun = now + 18, 0
+roll = 0.9
+ok(LC.FearStep(cit, cst, now + 20) == "pant" and cst.state == "idle" and f.pantUntil >= now + 25 and f.pantUntil <= now + 35,
+    "a thousand units from him and winded: they stop for breath, 5 to 15 seconds", tostring(f.mode))
+ok(LC.FearStep(cit, cst, now + 22) == "pant", "(still getting it back)")
+ok(LC.FearStep(cit, cst, f.pantUntil + 0.1) == "run" and f.pantAt > f.pantUntil, "then on again, if he is still at it")
+-- the shooting goes on, heard from farther off than it starts them
+f.untilT = CurTime() + 3
+gunman.lcShotHeardAt = 0
+hook.Run("EntityFireBullets", gunman, { Src = gunman:GetPos() })
+ok(f.untilT >= CurTime() + 19, "someone already frightened hears the shooting go on from much farther off", tostring(f.untilT - CurTime()))
+local far, fst = LC.Spawners.citizen(G + Vector(-1500, 200, 0))
+fst = fst or LC.NPCs[far]
+gunman.lcShotHeardAt = 0
+hook.Run("EntityFireBullets", gunman, { Src = gunman:GetPos() })
+ok(fst.fear == nil, "but it starts nobody that far away")
+ok(LC.FearStep(cit, cst, f.untilT + 1) == "over" and cst.fear == nil, "twenty seconds after the last shot: it is over")
+cst.fear = { who = gunman, src = gunman:GetPos(), untilT = CurTime() + 100, mode = "run" }
+cst.state = "detained"
+ok(LC.FearStep(cit, cst, CurTime()) == "over" and cst.fear == nil, "someone a unit has hold of isn't running anywhere")
+math.random = wasRand
+LC.RandomWanderPos, LC.BuildRoute, LC.NavNodesNear, LC.CitizenSpotOK = rwWas, brWas, nnWas, okWas
+if IsValid(cit) then LC.NPCs[cit] = nil cit:Remove() end
+if IsValid(far) then LC.NPCs[far] = nil far:Remove() end
+end
+Nov26_FearTests()
+
 section("Stop")
 LC.Stop(admin)
 _run(1)

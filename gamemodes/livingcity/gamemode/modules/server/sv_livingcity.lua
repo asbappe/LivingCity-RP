@@ -2224,6 +2224,8 @@ local function CalmOne(npc, st, now)
     npc:SetEnemy(NULL)
     npc:ClearEnemyMemory()
     npc:SetSchedule(SCHED_IDLE_STAND)
+    if npc.SetNPCState and NPC_STATE_IDLE then npc:SetNPCState(NPC_STATE_IDLE) end
+    st.cmbWalk, st.cmbNext, st.cmbLast = nil, nil, nil
     st.enemy, st.provokedBy, st.arrestOnly = nil, nil, nil
     st.chaseRoute, st.chaseGoal, st.chaseAt, st.chaseMoved, st.chaseAskAt = nil, nil, nil, nil, nil
     if st.armed then
@@ -2463,10 +2465,13 @@ local function Pursue(npc, st, e, now)
     local running = npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or npc:IsCurrentSchedule(SCHED_FORCED_GO)
     -- as a squad (sv_livingcity_squadai.lua): just hurt, the combat AI has them; a
     -- follower keeps with the leader rather than running at the target alone
-    if LC.SquadHurt and LC.SquadHurt(st, now) then return end
+    if LC.SquadHurt and LC.SquadHurt(st, now) then st.cmbWalk = nil return end
     -- (down a ladder, or where the straight run has no way: each unit round by the ladder or the city's routes)
-    if LC.ChaseWay(npc, st, e, epos, now, sees, st.armed == true or st.role == "soldier") then return end
-    if LC.SquadFollow and LC.SquadFollow(npc, st, e, now, sees) then return end
+    if LC.ChaseWay(npc, st, e, epos, now, sees, st.armed == true or st.role == "soldier") then st.cmbWalk = nil return end
+    if LC.SquadFollow and LC.SquadFollow(npc, st, e, now, sees) then st.cmbWalk = nil return end
+    -- the fight itself is the engine's: one decision every few seconds, and never an order while it shoots,
+    -- reloads or steps aside (sv_livingcity_combat.lua; the lines below are lc_combat_ai 0, as it was)
+    if LC.CombatDrive and LC.CombatDrive(npc, st, e, now, epos, true) then return end
     if sees and d2 < 600 * 600 then
         -- in sight and close: let the combat AI close in and swing
         if running then npc:SetSchedule(SCHED_CHASE_ENEMY) end
@@ -3052,6 +3057,7 @@ function LC.MakeOneHostile(npc, st, target)
     if target:IsPlayer() then SetRel(npc, st, target, D_HT) else npc:AddEntityRelationship(target, D_HT, 99) end
     npc:SetEnemy(target)
     if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(target, target:GetPos()) end
+    if LC.CombatEngage then LC.CombatEngage(npc, target, target:GetPos()) end -- (the target and the combat state too)
     npc:SetSchedule(SCHED_CHASE_ENEMY) -- drop any walking schedule; walking ignores enemies
     if LC.ArmForAlert then LC.ArmForAlert(npc, st, target) end
 end

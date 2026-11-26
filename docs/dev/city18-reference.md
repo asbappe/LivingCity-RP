@@ -4013,6 +4013,15 @@ A blocked tunnel's mouth (256 wide and 192 high or more) carries the canals' big
 - **Checked by:** grep the built VMF: no METALGRATE013A six-sided sheets; canal_bars001 at the caps.
 - **Tags:** owner, canal, props, grime
 
+### Outdoor props never fade (`owner-props-never-fade`)
+
+Trees, rocks, logs, plants and anything else out in the open get fademindist -1 and fademaxdist 0: a forest seen from its edge is wider than any fade distance, so props pop in as you walk.
+
+- **Why:** "now all the trees are invisible from the spawn and fade in, those need to not do that. it's like a ps2 game..." (26 November).
+- **How:** map_forest.py static() and stand(): fade (-1, 0) unless asked.
+- **Checked by:** no outdoor prop_static in a forest build has a fademaxdist other than 0
+- **Tags:** props, owner
+
 ### The Combine wall on a bank stands back on the canal wall's top, never on a slab out over the canal (`owner-wall-stands-on-the-bank`)
 
 Where the Combine wall runs along a canal bank with no street, its core is set back 2 or 3 squares and the canal's own wall is cut to a ledge at the street's height before it, so the pieces stand on the canal wall's top, flush with its face or recessed. Nothing is cantilevered out over the canal to carry them. A culvert's roof at a join is a deck at the street's height, not a block of concrete to the rim.

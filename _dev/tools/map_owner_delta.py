@@ -88,6 +88,11 @@ def shape_sig(txt):
             tuple(sorted(tuple(sorted(nums(p) for p in re.findall(r'"plane" "([^"]+)"', s))) for s in sols)))
 
 
+def point_sig(txt):
+    """A point entity's class, name, model and place: the same thing in two builds even when its other keys changed."""
+    return (key(txt, 'classname'), key(txt, 'targetname'), key(txt, 'model').lower(), nums(key(txt, 'origin')) if key(txt, 'origin') else ())
+
+
 def full_sig(txt):
     """Everything about an entity as the generator writes it: every key but the ids, its outputs, its brushes (to tell
     whether it changed between two builds; the owner's copy is found by ent_sig, which Hammer's own keys do not upset)."""
@@ -226,7 +231,7 @@ def main():
 
     rm_e, add_e = only(be, ae), only(ae, be)
     rm_w, add_w = only(bw, aw), only(aw, bw)
-    cut, kept_shapes = [], set()
+    cut, kept_shapes, kept_points = [], set(), set()
     for _k, (s0, e0) in rm_e:
         bt = B[s0:e0]
         k = ent_sig(bt)      # (the owner's copy, by its class, name, place and brushes)
@@ -252,6 +257,8 @@ def main():
                 print('  not found (left as it is): entity %s' % (str(k)[:140],))
                 if '\tsolid' in bt:
                     kept_shapes.add(shape_sig(bt))
+                else:
+                    kept_points.add(point_sig(bt))
                 continue
             sys.exit('STOP: entity %s found %d times in the owner file' % (str(k)[:120], len(got)))
         cut.append(got[0])
@@ -297,6 +304,10 @@ def main():
     def vis_ok(t):
         return re.sub(r'"visgroupid" "(\d+)"', lambda m: '"visgroupid" "%s"' % vmap.get(m.group(1), m.group(1)), t)
 
+    moved = [(k, se) for k, se in add_e if '\tsolid' not in A[se[0]:se[1]] and point_sig(A[se[0]:se[1]]) in kept_points]
+    if moved:
+        print('%d changed point entities not added: the owner moved them, and their copies keep the old keys (set those by hand)' % len(moved))
+        add_e = [x for x in add_e if x not in moved]
     same_shape = [(k, se) for k, se in add_e if '\tsolid' in A[se[0]:se[1]] and shape_sig(A[se[0]:se[1]]) in kept_shapes]
     if same_shape:
         print('%d new brush entities not added: the owner has the same shape, retextured' % len(same_shape))

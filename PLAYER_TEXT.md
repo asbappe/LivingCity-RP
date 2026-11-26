@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version c01cd5d. Admin-only console messages and log lines are left out.
+Made from version 9193a61. Admin-only console messages and log lines are left out.
 
 13625 lines, from 398 files.
 
@@ -5818,81 +5818,81 @@ Made from version c01cd5d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: cop provoked
 
-- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2526)
-- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2527)
-- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2531)
-- "Obstructing Civil Protection"  (text, line 2532)
+- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2531)
+- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2532)
+- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2536)
+- "Obstructing Civil Protection"  (text, line 2537)
 
 > Note for you (not shown in game): A city scanner that has a fugitive in sight (wanted, or a hunted rebel who isn't passing as a citizen) tells the units where they are: a flash, a report to every unit on duty, and the nearby units come after them.
 
-- "a wanted citizen"  (text, line 2690)
+- "a wanted citizen"  (text, line 2695)
 
 > Note for you (not shown in game): part of: scanner tip off
 
-- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2695)
-- "[CP net] Scanner report: %s%s."  (message, line 2699)
+- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2700)
+- "[CP net] Scanner report: %s%s."  (message, line 2704)
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2940)
-- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2947)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2945)
+- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2952)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Miscount NPCs."  (chat message, line 2964)
+- "Stopped and removed all Miscount NPCs."  (chat message, line 2969)
 
 > Note for you (not shown in game): part of: spawn test walker
 
-- "your path network (%d hops)"  (message, line 2993)
-- "the map's own navigation"  (text, line 2993)
-- "Test walker heading out using {how}."  (chat message, line 2994)
+- "your path network (%d hops)"  (message, line 2998)
+- "the map's own navigation"  (text, line 2998)
+- "Test walker heading out using {how}."  (chat message, line 2999)
 
 > Note for you (not shown in game): part of: test arrived
 
-- "Test walker arrived in %.1f seconds. This route works."  (message, line 2999)
+- "Test walker arrived in %.1f seconds. This route works."  (message, line 3004)
 
 > Note for you (not shown in game): part of: test stuck
 
-- "Test walker stuck at %s on hop %d/%d"  (message, line 3006)
-- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 3007)
-- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 3010)
+- "Test walker stuck at %s on hop %d/%d"  (message, line 3011)
+- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 3012)
+- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 3015)
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3240)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3246)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 3244)
+- "[Civil Protection] "{Pick}""  (chat message, line 3250)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3262)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3268)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 3320)
-- "Assaulting Civil Protection"  (text, line 3323)
-- "Assaulting a citizen"  (text, line 3323)
+- "Damaging city property"  (text, line 3326)
+- "Assaulting Civil Protection"  (text, line 3329)
+- "Assaulting a citizen"  (text, line 3329)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 3359)
+- "Civil Protection has stood down."  (chat message, line 3365)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3366)
-- "Added %s point (%d total on this map)."  (message, line 3369)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3372)
+- "Added %s point (%d total on this map)."  (message, line 3375)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 3375)
-- "No point within 150 Civil Protection units."  (chat message, line 3375)
+- "Removed nearest {kind} point."  (text, line 3381)
+- "No point within 150 Civil Protection units."  (chat message, line 3381)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3386)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3390)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3392)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3396)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -24443,7 +24443,7 @@ Made from version c01cd5d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: cower
 
-- "head down"  (text, line 274)
+- "head down"  (text, line 328)
 
 ## Combine strongholds' tripwires and turrets, as the gamemode hears them (sv_livingcity_strongholds.lua)
 
