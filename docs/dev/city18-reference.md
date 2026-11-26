@@ -3968,3 +3968,21 @@ The Combine wall never ends where the street does. Where the canal has no street
 - **Checked by:** The build's note counts the wall's stretches; map_propkit.py --placed casts rays at every placed piece; map_stairs.py fails a flight with the wall over its steps.
 - **Tags:** owner, combine, canal
 
+### A line carried over the street clears the street's train, on a viaduct with no portals (`owner-railbridge-over-the-street`)
+
+A railway crossing over the street's own railway stands clear of its train (290 high): beside a walled street the rail bridge's bed is 144 over the Combine wall's top, a viaduct on piers from the far edge of the scenery to a strip of the piece's own behind the wall, with no tunnel mouth or portal where the line is above the walls. Its train waits and stops inside the map's sealed space (an entity outside it is a leak) and never reaches into the city or another piece: check --against the owner's map.
+
+- **Why:** The owner, 25 and 26 November: "railbridge is too low when intersecting over a railway and the train would clip into it"; "raise it up but there is no need for a tunnel mouth on a side where the train is now above the wall ... it can just drive from the distant void into the void toward the city (obviously we can't have it clipping into the city once we've stitched the canal ring and city together, nor the forest bunker, forest cave, infested quarter, etc".
+- **How:** map_mods_c.m_railbridge: raised (a street with "wall combine"): D, FAR, the piers, the strip behind the wall as core squares, the train's way reversed (from the scenery to the city's side). The backdrop keeps its buildings off whatever stands over the rim (Backdrop.busy).
+- **Checked by:** map_build.py chain --against c18_lc.vmf: nothing runs into the city (the strip is 1408 deep: 64 clear of the block at y 6272).
+- **Tags:** owner, streets, geometry
+
+### Big grates on blocked tunnels, Valve's round grate in the culverts, the ring sunk in the wall (`owner-canal-grates-and-culverts`)
+
+A blocked tunnel's mouth (256 wide and 192 high or more) carries the canals' big grate (canal_bars001), side by side from its middle, tops at the opening's top. A culvert is Valve's ring (canal_cap001) with its origin ON the wall's face (7 sunk in, 12 out) and Valve's round grate (canal_bars002) in it, before the dark: no grating brush. No decal under or near it: a decal lies over the dark and the grate too. No planks over the street's tracks at a stair's head.
+
+- **Why:** The owner, 25 November: "I asked for canal grates over the big black brushes at various blocked tunnels in the canals and it used the round grate for a culvert...fix that, then take that model that is the culvert/drainage grate and put it over the culverts in the canals instead of the hexagon/octagon grate brush/block"; of a culvert's pale foot (a stain decal over it) "also generating wrong"; "can see through the sides of these culverts they stick out too much"; "there is a little wooden block/brush over the tracks at straight 3200 stairs, please remove it, it's silly".
+- **How:** map_build.bar_props (BAR_GATE), map_ring.outfalls (no GRATE prism), map_modules.dress_canal_walls (the ring at 0 out, the grate at 6, no stain), map_corridor's stairs (no planks).
+- **Checked by:** grep the built VMF: no METALGRATE013A six-sided sheets; canal_bars001 at the caps.
+- **Tags:** owner, canal, props, grime
+

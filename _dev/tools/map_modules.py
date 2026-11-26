@@ -2645,13 +2645,16 @@ def dress_canal_walls(b, ch, avoid=()):
             wx, wy = (g, line) if axis == "x" else (line, g)
             b.vmf.point("infodecal", (wx, wy, F + 192), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")      # (in the band between the bank's top and the trim)
     for (axis, line, side, at, z, kind) in made.get("outfalls", []):
-        x, y = at_wall(axis, line, side, at, 7)      # (its back flush with the wall, as Valve's)
+        # (the ring's origin on the wall's face, as Valve sets it: 7 of it sunk in the wall, 12 standing out. It stood 7 out,
+        #  its open sides showing: the owner, 25 November, "can see through the sides of these culverts they stick out too
+        #  much". Valve's culvert grate in the ring, before the dark. No stain under it any more: the decal lay over the
+        #  dark and the grate too, a pale patch in the hole's foot: the owner, the same day, "also generating wrong")
+        x, y = at_wall(axis, line, side, at, 0)
         b.vmf.point("prop_static", (x, y, z), {"model": "models/props_canal/canal_cap001.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "6",
-                                               "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls")
-        # a stain on the wall's own face under the ring, between it and the trim's band (a blotch: the drain streaks
-        # came out lying on their sides, the owner, 23 November)
-        wx, wy = at_wall(axis, line, side, at, 0)
-        b.vmf.point("infodecal", (wx, wy, z - 100), {"texture": rnd.choice(GRIME["stain"])}, b.vis + ": canal grime")
+                                               "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls", outside=True)
+        gx, gy = at_wall(axis, line, side, at, 6)
+        b.vmf.point("prop_static", (gx, gy, z), {"model": "models/props_canal/canal_bars002.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "0",
+                                                 "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls", outside=True)
     for (axis, line, side, at, z) in made.get("stubs", []):
         wx, wy = (at, line) if axis == "x" else (line, at)
         b.vmf.point("infodecal", (wx, wy, z - 40), {"texture": rnd.choice(GRIME["stain"])}, b.vis + ": canal grime")

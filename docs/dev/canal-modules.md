@@ -1031,6 +1031,8 @@ flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstr
 
 ### `railbridge`
 
+**Beside a walled street (26 November):** the bed stands 144 over the Combine wall's top (z 1312 on the ring), a viaduct on piers with no tunnels: from the far edge of the scenery beyond the canal, over the canal, the street and the wall, to a strip 1408 deep behind the wall (the wall's core carried back under it). The train waits at the scenery's far end and runs to the city's side, stopping out of sight behind the wall; it never leaves the map's sealed space. The owner: "raise it up but there is no need for a tunnel mouth on a side where the train is now above the wall". Without a walled street it is as described below.
+
 EXPERIMENTAL: a railway crosses over the canal on a steel girder bridge, from a tunnel mouth in the left wall to
 one in the right. Every 150 seconds a horn sounds, a red lamp shows at each mouth, and two seconds later a freight
 train of two flat cars (Half-Life 2's train005, one loaded with steel beams, one with crates) comes out of the left

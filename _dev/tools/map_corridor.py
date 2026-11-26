@@ -328,8 +328,8 @@ def lay(b, elems, side, cars):
             top = tuple(sorted((u0 + d * 384, u0 + d * 448)))
             stairs.append((top[0] - 64, top[1]) if d > 0 else (top[0], top[1] + 64))      # (the parapet stops a square short: its top steps step off sideways onto the street)
             over = e.get("rail_span") is None or e["rail_span"][0] <= top[0] and top[1] <= e["rail_span"][1]      # (no planks where the track has ended short)
-            if over:
-                m.det([(top[0], sv(TRACK, ROAD_IN)[0], STREET, top[1], sv(TRACK, ROAD_IN)[1], STREET + 9)], MM["wood"], vis=dv)
+            over = False      # (no planks across the tracks at the stairs' head any more: the owner, 25 November, "a little wooden
+            #                   block/brush over the tracks ... please remove it, it's silly")
             m.lane(u0 - d * 24, s * 224, F)
             m.lane(u0 + d * 190, s * 224, F + 128)
             m.lane(top[0] + 32, s * 288, STREET)

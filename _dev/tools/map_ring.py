@@ -220,9 +220,9 @@ class Channel:
                 taken.append(ring)
                 # (six corners, not eight, the owner, 24 November: 74 to its corners, 64 to its flats, so Valve's ring (77) hides its edge)
                 shapes.append(prism(hexagon(p, z, 74), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
-                # a grate over the hole, inside Valve's ring (the owner, 22 November: "put a grate over every outpipe/
-                # drainage pipe on the sidewalls"): a thin sheet of grating 2 in front of the dark, detail
-                shapes.append(prism(hexagon(p, z, 74), across, min(line + side * 3, line + side * 5), max(line + side * 3, line + side * 5), GRATE))
+                # (the grate over the hole is Valve's own culvert grate now, a model inside Valve's ring, where a six-sided sheet
+                #  of grating stood: the owner, 25 November, "take that model that is the culvert/drainage grate and put it
+                #  over the culverts in the canals instead of the hexagon/octagon grate brush": map_modules.dress_canal_walls)
                 placed.append((axis, line, side, p, z, "high"))
                 self.made.setdefault("outfalls", []).append((axis, line, side, p, z, "high"))
                 self.stats["stubs"] += 1

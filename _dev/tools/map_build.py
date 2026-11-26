@@ -1092,6 +1092,7 @@ def bar_row(box, along, gap=24):
     return out
 
 
+BAR_GATE = ("models/props_canal/canal_bars001.mdl", 384, 448)       # (the canals' big grate over a tunnel's mouth: 385 wide, 449 high, 13 thick, its origin at its middle)
 BAR_PANEL = ("models/props_canal/canal_bars002.mdl", 128, 124)      # (Half-Life 2's canal bars: a panel 128 wide, 124 high, 7 thick, its origin at its middle)
 
 
@@ -1103,6 +1104,22 @@ def bar_props(vmf, slab, along, vis):
     model, wide, high = BAR_PANEL
     x1, y1, z1, x2, y2, z2 = slab
     lo, hi = (x1, x2) if along == "x" else (y1, y2)
+    if hi - lo >= 256 and z2 - z1 >= 192:
+        # a blocked tunnel's mouth: the canals' big grate (canal_bars001, 385 wide and 449 high), not the culverts' small
+        # one (the owner, 25 November: "I asked for canal grates over the big black brushes at various blocked tunnels in
+        # the canals and it used the round grate for a culvert"). Side by side from the opening's middle, never
+        # overlapping, their tops at the opening's top: what is over stands in the walls beside it and the ground under it.
+        bmodel, bwide, bhigh = BAR_GATE
+        cols, rows = -(-(hi - lo) // bwide), -(-(z2 - z1) // bhigh)
+        start = (lo + hi) / 2.0 - cols * bwide / 2.0
+        for r in range(rows):
+            z = z2 - bhigh / 2.0 - r * bhigh
+            for k in range(cols):
+                p = start + bwide / 2.0 + k * bwide
+                pos = (round(p), (y1 + y2) // 2, round(z)) if along == "x" else ((x1 + x2) // 2, round(p), round(z))
+                vmf.point("prop_static", pos, {"model": bmodel, "angles": "0 %d 0" % (90 if along == "x" else 0), "skin": "0", "solid": "6", "disableshadows": "1",
+                                               "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis, outside=True)
+        return True
     if hi - lo < wide or z2 - z1 < high:
         return False
     cols, rows = -(-(hi - lo) // wide), -(-(z2 - z1) // high)
