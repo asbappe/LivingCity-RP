@@ -664,6 +664,9 @@ def cctv(f, F, lr):
         screen(v, wall, facing, along, z, frame, f.vis("bunker's camera"))
     for where, wall, facing, at, z in emergency_buttons(f):
         emergency_button(v, F, where, wall, facing, at, z, f.vis("bunker door (the leaves, the button, the wiring)"))
+    door_camera(f)
+    for where, wall, facing, along, z, frame in door_screens(f):
+        door_screen(v, wall, facing, along, z, frame, f.vis("bunker door's camera"))
     f.notes.append("the bunker's camera (%s): Episode Two's security camera on the bunker's front at (%d %d %d), looking down the path; shown on the "
                    "launch room's two big screens, and on a screen in %s" % (CCTV_NAME, ex, ey, ezz, " and one in ".join(w[0] for w in cctv_walls(f))))
 
@@ -726,6 +729,70 @@ def screen(v, wall, facing, along, z, frame, vis):
                                     "Solidity": "0", "solidbsp": "0", "InputFilter": "0", "invert_exclusion": "0", "renderamt": "255", "rendercolor": "255 255 255",
                                     "renderfx": "0", "rendermode": "0", "origin": "%g %g %g" % tuple((box[k] + box[k + 3]) / 2.0 for k in range(3))},
                    [(box, {facing: "DEV/DEV_TVMONITOR1A"}, {facing: (u, vv)})], MAT["nodraw"], vis)
+
+
+# The camera inside the bunker's door and its screens (the owner, 26 November: a second screen by each emergency close,
+# of a camera inside the bunker looking at the front doors). The gamemode draws the picture (its own entity,
+# lc_cctv_screen: plain Sandbox has none, and nothing in the map depends on it): each screen is a point at the middle of
+# the picture, its forward out of the screen toward whoever looks at it, with the camera's name and the picture's size in
+# units; the gamemode draws on the plane through it facing forward, from the camera's origin along its angles at a field
+# of view of 75. Each screen is framed as the forest camera's beside it (a metal plate 4 deep, a dark slab 2 deep on it:
+# the dead screen where the gamemode draws nothing), the picture 0.5 in front of the slab. The camera: an info_target
+# high in the bunker's north-west corner, at the lens of Episode Two's security camera (as on the bunker's front, its
+# arm on the west wall, looking along it), aimed so the whole doorway (224 by 192, the shut leaves' inner face) is in the
+# picture at 72 by 48 with about a tenth to spare all round (camfit: DOOR_CAM_AIM).
+DOOR_CAM = "lc_cctv_door_cam"
+DOOR_CAM_PROP = (448, 240, 620)         # (the bunker's own frame: on its first room's west wall, 16 from the north wall, 12 under the ceiling)
+DOOR_CAM_EYE = (22, -26, -2)            # (its lens from the model, as the front camera's: 6 in front of the model, 22 along its arm)
+DOOR_CAM_AIM = (24.5, 298.6)            # (pitch down and yaw: the doorway's middle, its corners at no more than 0.88 of the picture's half-width and half-height)
+DOOR_SCREEN = (72, 48)
+
+
+def door_screens(f):
+    """Each: (where, the wall's face, the way it faces, its span along the wall, its bottom and top, the frame's metal):
+    beside the forest camera's screen (cctv_walls), the emergency close under them (emergency_buttons)."""
+    import map_silo as MS
+    tx, ty, _ = TECH_AT
+    w, h = DOOR_SCREEN
+    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] + 68, SILO[0] + 68 + w), (f.zg + 108, f.zg + 108 + h), "metal/metalwall085a"),
+            ("the control room", ty + 496, "south", (tx + 294, tx + 294 + w), (FLOOR_LOW + 101, FLOOR_LOW + 101 + h), "metal/metalwall074a")]
+
+
+def door_screen(v, wall, facing, along, z, frame, vis):
+    """A screen of the door's camera on the face of a wall: the frame and dead screen (detail), and the gamemode's
+    lc_cctv_screen at the middle of the picture."""
+    (a1, a2), (z1, z2) = along, z
+    out = {"south": -1, "west": -1, "north": 1, "east": 1}[facing]
+    ns = facing in ("south", "north")
+
+    def slab(d1, d2, b1, b2, h1, h2):
+        y1, y2 = sorted((wall + out * d1, wall + out * d2))
+        return (b1, y1, h1, b2, y2, h2) if ns else (y1, b1, h1, y2, b2, h2)
+    v.detail([slab(0, 4, a1 - 4, a2 + 4, z1 - 4, z2 + 4)], frame, vis=vis)
+    v.detail([slab(4, 6, a1, a2, z1, z2)], MAT["black"], vis=vis)
+    mid = (a1 + a2) / 2.0
+    face = wall + out * 6.5
+    at = (mid, face, (z1 + z2) / 2.0) if ns else (face, mid, (z1 + z2) / 2.0)
+    yaw = {"south": 270, "north": 90, "east": 0, "west": 180}[facing]
+    v.point("lc_cctv_screen", at, {"camera": DOOR_CAM, "width": str(a2 - a1), "height": str(z2 - z1), "angles": "0 %d 0" % yaw}, vis, exact=True)
+
+
+def door_camera(f):
+    """Episode Two's security camera high in the north-west corner of the room inside the bunker's door, and the
+    info_target at its lens that the gamemode looks from (DOOR_CAM)."""
+    v = f.vmf
+    vis = f.vis("bunker door's camera")
+    bx, by = f.ox + f.B0[0], f.oy + f.B0[1]
+    u, w, z = DOOR_CAM_PROP
+    p = (bx + u, by + w, z)
+    v.point("prop_static", p, {"model": "models/props_silo/camera.mdl", "angles": "0 270 0", "solid": "6", "skin": "0", "disableshadows": "1",
+                                "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "screenspacefade": "0"}, vis)
+    du, dw, dz = DOOR_CAM_EYE
+    pitch, yaw = DOOR_CAM_AIM
+    eye = (p[0] + du, p[1] + dw, p[2] + dz)
+    v.point("info_target", eye, {"targetname": DOOR_CAM, "angles": "%g %g 0" % (pitch, yaw), "spawnflags": "2"}, vis)      # (2: sent to every client)
+    f.notes.append("the door's camera (%s): at (%d %d %d) looking at the inside of the front doors (pitch %g, yaw %g), for the gamemode's screens "
+                   "(lc_cctv_screen) beside the forest camera's in %s" % (DOOR_CAM, eye[0], eye[1], eye[2], pitch, yaw, " and ".join(d[0] for d in door_screens(f))))
 
 
 def box_planes(b):
