@@ -3959,3 +3959,21 @@ A ladder's two ends must leave a player's box (32 across, 72 tall) touching noth
 - **Checked by:** map_walk.py: "a ladder's foot ... is inside a brush" (a player's box at each end, touching counts as Source counts it).
 - **Tags:** owner, props, stairs
 
+### A func_tracktrain that must not turn gets the flags, not only orientationtype (`owner-train-fixed-orientation`)
+
+Garry's Mod's func_tracktrain turned to face along a straight-up path although its orientationtype was 0 (fixed). Give a train that carries things upright spawnflags 1 (No Pitch) and 16 (Always Fixed Orientation).
+
+- **Why:** "the rocket launched sideways and not upwards ... it was solid black with no lighting and too small" (25 November: the train pitched 90 degrees; the rocket's lighting point, riding on it, swung into the rock).
+- **How:** map_launch.py launch(): the train's spawnflags 25 (8 Passable + 1 + 16).
+- **Checked by:** the train's spawnflags include 1 and 16
+- **Tags:** props, owner
+
+### Lifted point entities keep Valve's fractions (`owner-lifted-origins-exact`)
+
+A prop lifted with its brushes must keep its origin to the hundredth: cut to whole units, Valve's TVs sat off their screen brushes and sank into their shelf.
+
+- **Why:** "the lower control room screens that come from EP2 have a brush stuck in them AND the screens are slightly off kilter of the TV models" (25 November).
+- **How:** Vmf.point(..., exact) for the bunker's lifted pieces (control room, launch room, pad, launch, silo).
+- **Checked by:** by computing: each lifted prop's offset from its brushes equals Valve's
+- **Tags:** props, geometry, owner
+
