@@ -668,8 +668,9 @@ def rail_runs(b, elems, s, cars):
             rail = e.get("rail", [])
             if rail and not e["junction"]:
                 b.problems.append("%s: \"over\" and \"back\" (a train's tunnel) go only on a turn toward the street's side with the street on both runs" % e["tag"])
-            if "over" in rail and "back" in rail:
-                b.problems.append("%s: \"over\" and \"back\" at one corner would cross the two tracks in its square: keep one" % e["tag"])
+            # ("over" and "back" at one corner cross the two tracks in its square, a level crossing of rails: allowed since 26
+            #  November, the owner: tracks "need to never go to a dead end in the street/open"; the two trains are never sent
+            #  at once, tunnel_train's locks)
     runs, cur, before = [], [], None
     for e in elems + [None]:
         if e is not None and e["kind"] == "leg":
@@ -1129,32 +1130,74 @@ def combine_core(b, shed_front):
     b.combine_core = core
 
 
-def bank_core(cells, rects, top, sky):
+def bank_core(cells, rects, top, sky, ledge=None, fill=()):
     """The Combine wall along a canal's bank where no street runs (the owner, 25 November, of the wall ending where the
-    street does: "every section of the canal that has a side/face towards the city MUST have a combine wall there"):
-    every wall square in rects (world rectangles) with a canal square beside it (open water or a quay; a culvert level
-    with the canal's floor) becomes core, as combine_core's. Gives (the core's squares, the squares before them: what
-    combine_wall takes for the street, b.wall_front)."""
-    core, front = set(), set()
+    street does: "every section of the canal that has a side/face towards the city MUST have a combine wall there").
+    rects: world rectangles (x1, y1, x2, y2[, back]) round the bank's wall squares at the canal's edge.
+    back 0 (a layout's "wall bank"): those squares themselves become core, as combine_core's, and the wall's pieces
+    stand before them where a deck at the street's height reaches the wall (the ring's last jog).
+    back 2 or 3: the wall stands BACK on the top of the canal's own wall (the owner, 26 November, of the sill the
+    pieces first stood on, 96 out over the canal: "they are on a slab of concrete floating in the air ... push them BACK
+    so they are flush with the canal walls; if that doesn't work ... push them even further back so they are recessed a
+    bit"): the first `back` squares in from the canal's face are cut down to the street's height (a ledge, the canal's
+    own concrete below it, floored in `ledge`), the next one is core; round an outside corner the ledge goes round and
+    the two cores meet behind it. A doorway's jambs (where a footbridge lands in the wall) stay as they are.
+    Gives (the core's squares, the squares before them: what combine_wall takes for the street, every ledge square)."""
+    def wall(c):
+        spec = cells.get(c)
+        return spec is None or spec[0] == "solid"
+
+    def canal(c):
+        nb = cells.get(c)
+        if nb is None or (len(nb) > 2 and nb[2] == CORE):
+            return False
+        return nb[0] == "open" or (nb[0] in ("low", "under") and nb[1] < STREET)
+
+    def jamb(c):
+        return any((nb := cells.get(n)) is not None and nb[0] == "low" and nb[1] >= STREET and not (len(nb) > 2 and nb[2] == CORE)
+                   for n in ((c[0] + di, c[1] + dj) for di in (-1, 0, 1) for dj in (-1, 0, 1) if di or dj))      # (its corners too: the doorway's check wants wall all round)
+    edge = {}      # (a wall square at the canal's edge in a rectangle: how far back its wall stands)
     for r in rects:
+        back = r[4] if len(r) > 4 else 0
         for i in range(r[0] // CELL, -(-r[2] // CELL)):
             for j in range(r[1] // CELL, -(-r[3] // CELL)):
-                spec = cells.get((i, j))
-                if spec is not None and spec[0] != "solid":
-                    continue
-                around = [cells.get(n) for n in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1))]
-                if any(nb is not None and nb[0] == "low" and nb[1] >= STREET and not (len(nb) > 2 and nb[2] == CORE) for nb in around):
-                    continue      # (a doorway's jamb, where a footbridge lands in the wall: it stays the canal's concrete)
-                for n in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1)):
-                    nb = cells.get(n)
-                    if nb is None or (len(nb) > 2 and nb[2] == CORE):
-                        continue
-                    if nb[0] == "open" or (nb[0] in ("low", "under") and nb[1] < STREET):
-                        core.add((i, j))
-                        front.add(n)
+                if wall((i, j)) and any(canal(n) for n in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1))):
+                    edge[(i, j)] = max(back, edge.get((i, j), 0))
+    core, ledges, front = set(), set(), set()
+    deep = max(edge.values() or [0])
+    cand = {}
+    for (i, j), back in edge.items():      # (every wall square straight in from an edge square, as far as its wall stands back)
+        if jamb((i, j)):
+            continue      # (nothing behind a doorway's jamb: the canal's concrete stands there whole)
+        for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            if not canal((i - di, j - dj)):
+                continue
+            for k in range(back + 1):
+                c = (i + di * k, j + dj * k)
+                if not wall(c):
+                    break
+                cand.setdefault(c, []).append((k, back))
+    for c, got in cand.items():
+        if jamb(c):
+            continue
+        if any(k < back for k, back in got):
+            ledges.add(c)
+        else:
+            core.add(c)
+    core = {c for c in core if c not in ledges}
+    for r in fill:      # (fill: wall squares made core outright, a return joining a wall set back to one that is not)
+        for i in range(r[0] // CELL, -(-r[2] // CELL)):
+            for j in range(r[1] // CELL, -(-r[3] // CELL)):
+                if wall((i, j)) and (i, j) not in ledges:
+                    core.add((i, j))
+    for c in ledges:
+        cells[c] = ("open", STREET, ledge or MAT["quay_floor"])
     for c in core:
         cells[c] = ("low", top, CORE, sky)
-    return core, front
+        for n in ((c[0] + 1, c[1]), (c[0] - 1, c[1]), (c[0], c[1] + 1), (c[0], c[1] - 1)):
+            if n in ledges or (n not in core and canal(n)):
+                front.add(n)
+    return core, front, ledges
 
 
 def wall_stretches(core, street):
@@ -1172,7 +1215,7 @@ def wall_stretches(core, street):
                 if k is not None and k == prev + 1:
                     prev = k
                     continue
-                if prev - start + 1 >= 5:
+                if prev - start + 1 >= 4:      # (from 256: a stretch too short for a run still gets a pier, combine_wall)
                     cellsof = [((t, row) if axis == "x" else (row, t)) for t in range(start, prev + 1)]
                     lo = sum(1 for (i, j) in cellsof if ((i, j - 1) if axis == "x" else (i - 1, j)) in street)
                     hi = sum(1 for (i, j) in cellsof if ((i, j + 1) if axis == "x" else (i + 1, j)) in street)
@@ -1249,9 +1292,6 @@ def combine_wall(b, seed=1):
     st = []
     bank_front = set(getattr(b, "wall_front", ()))      # (the canal's squares before a bank's wall: bank_core)
     cells_now = getattr(b, "wall_cells", None)
-    # (a bank's wall hangs over the canal: where a flight of stairs climbs the wall or a footbridge lands on it, anything
-    #  built within 160 of the face between 120 under the wall's foot and 80 over it, the models, their sill and their
-    #  clip are left off those squares and the core's plain metal face stands there)
     blocked = set()
     built = ([bx for bx, _ in getattr(v, "boxes", [])] + list(getattr(v, "shape_boxes", []))) if bank_front else []
     for c in core:
@@ -1261,12 +1301,12 @@ def combine_wall(b, seed=1):
             fx, fy = n[0] - c[0], n[1] - c[1]
             x1, y1 = c[0] * CELL + (CELL if fx > 0 else -160 if fx < 0 else 0), c[1] * CELL + (CELL if fy > 0 else -160 if fy < 0 else 0)
             x2, y2 = x1 + (160 if fx else CELL), y1 + (160 if fy else CELL)
-            near = [q for q in built if q[0] < x2 - 1 and q[3] > x1 + 1 and q[1] < y2 - 1 and q[4] > y1 + 1 and q[2] < STREET + 80 and q[5] > STREET - 120]
+            near = [q for q in built if q[0] < x2 - 1 and q[3] > x1 + 1 and q[1] < y2 - 1 and q[4] > y1 + 1 and q[2] < STREET + 80 and q[5] > STREET]
             mx, my = (x1 + x2) / 2.0, (y1 + y2) / 2.0
-            if any(q[5] == STREET and q[0] <= mx <= q[3] and q[1] <= my <= q[4] for q in near):
-                near = [q for q in near if q[5] > STREET]      # (a deck at the street's own height is a floor for the wall to stand
-            if near:                                           #  on: only what stands on that deck is in its way, not what is under it)
-                blocked.add(c)
+            spec = cells_now.get(n) if cells_now is not None else None
+            floor = (spec is not None and ((spec[0] == "open" and spec[1] == STREET) or spec[0] == "under")) or any(q[5] == STREET and q[0] <= mx <= q[3] and q[1] <= my <= q[4] for q in built)
+            if near or not floor:      # (the pieces stand only where there is a floor at the street's height before the core, the
+                blocked.add(c)         #  bank's own ledge or a deck, and nothing standing on it: never out over the canal)
     for seg in wall_stretches(core - blocked, set(b.deck) | bank_front):
         o, d, L = stretch_frame(*seg)
         st.append({"o": o, "d": d, "f": (d[1], -d[0]), "L": L, "ends": ["free", "free"]})
@@ -1274,31 +1314,6 @@ def combine_wall(b, seed=1):
     def before(s, u):
         """The square before a stretch's face at u along it."""
         return ((s["o"][0] + s["d"][0] * u + s["f"][0] * 32) // CELL, (s["o"][1] + s["d"][1] * u + s["f"][1] * 32) // CELL)
-
-    def sill(s):
-        """Along a bank: a concrete sill under the wall's foot wherever the canal lies open below it (the models' own
-        undersides are left out: they stand on a street everywhere else), 96 out."""
-        if cells_now is None:
-            return
-        runs, start = [], None
-        for u in list(range(0, s["L"], CELL)) + [None]:
-            spec = cells_now.get(before(s, u + 32)) if u is not None else None
-            low = u is not None and before(s, u + 32) in bank_front and spec is not None and spec[0] == "open" and spec[1] < STREET - 64
-            if low:               # (and no deck already carrying the wall's foot there)
-                mx, my = s["o"][0] + s["d"][0] * (u + 32) + s["f"][0] * 48, s["o"][1] + s["d"][1] * (u + 32) + s["f"][1] * 48
-                low = not any(q[0] <= mx <= q[3] and q[1] <= my <= q[4] and q[5] == STREET for q in built)
-            if low and start is None:
-                start = u
-            elif not low and start is not None:
-                runs.append((start, u if u is not None else s["L"]))
-                start = None
-        for a, z in runs:
-            if s["d"][0]:      # (round an outside corner, under the corner pier's foot: the stretch along x carries it on, so two never overlap)
-                a, z = (a - 96 if a == 0 and s["ends"][0] == "corner" else a), (z + 96 if z == s["L"] and s["ends"][1] == "corner" else z)
-            p1 = (s["o"][0] + s["d"][0] * a, s["o"][1] + s["d"][1] * a)
-            p2 = (s["o"][0] + s["d"][0] * z + s["f"][0] * 96, s["o"][1] + s["d"][1] * z + s["f"][1] * 96)
-            v.detail([(min(p1[0], p2[0]), min(p1[1], p2[1]), STREET - 16, max(p1[0], p2[0]), max(p1[1], p2[1]), STREET)], MAT["canal_wall"], vis=vis + "'s sill")
-            counts["sills"] = counts.get("sills", 0) + 1
 
     def end(s, e):
         """A stretch's end e (0 its start, 1 its end): its point on the street face, the way into the wall, the square."""
@@ -1323,14 +1338,13 @@ def combine_wall(b, seed=1):
                         s1["ends"][e1] = s2["ends"][e2] = "corner"
                         corners.append((p1, s1["f"], s2["f"]))
     for s in st:
-        sill(s)
         a = half if s["ends"][0] == "free" else 0
         z = s["L"] - (half if s["ends"][1] == "free" else 0)
         if z - a < 512 <= s["L"]:
             a, z = 0, s["L"]          # (just long enough for one run: it takes the whole stretch, the end piers stand over its ends)
         if z - a < 512:
             counts["plain"] += 1      # (too short for a run: the core stays plain metal, a pier on its middle if it has room)
-            if s["L"] >= 256:
+            if s["L"] >= 320:      # (not on a 256 return: players can stand behind one, where a pier's back shows over the core)
                 put(r.choice(W["piers"]), (s["o"][0] + s["d"][0] * (s["L"] // 2), s["o"][1] + s["d"][1] * (s["L"] // 2), STREET), int(round(math.degrees(math.atan2(s["d"][1], s["d"][0])))) % 360)
                 counts["piers"] += 1
             continue
@@ -1360,7 +1374,9 @@ def combine_wall(b, seed=1):
             put(r.choice(W["runs"][str(k)]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
             counts["runs"] += 1
         us = [(runs[n][0] + runs[n][1] + runs[n + 1][0]) // 2 for n in range(len(runs) - 1)]
-        us = ([half] if s["ends"][0] == "free" else []) + us + ([s["L"] - half] if s["ends"][1] == "free" else [])
+        # (a free end's pier stands over its run's end, wherever a remainder has pushed that: a pier narrower than the
+        #  widest left the run's end showing when it stood a fixed way in from the stretch's end)
+        us = ([runs[0][0]] if s["ends"][0] == "free" else []) + us + ([runs[-1][0] + runs[-1][1]] if s["ends"][1] == "free" else [])
         for u in us:
             put(r.choice(W["piers"]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
             counts["piers"] += 1
@@ -1435,6 +1451,10 @@ ROUND = {
 }
 
 
+BANK_TRACKS = False     # (the east bank's own tracks carried no train and ended at buffer stops: gone, its track bed road, since the
+#                         owner, 26 November: tracks "need to never go to a dead end in the street/open")
+
+
 def east_bank(x_mid, y1, y2, road_only=()):
     """The squares of a street on the east bank of a canal running north whose middle is x_mid, from y1 to y2, laid as
     the chain's street is (the canal's edge, the tracks, the road and its pavements out to the frontage, which stands
@@ -1445,7 +1465,7 @@ def east_bank(x_mid, y1, y2, road_only=()):
     street, core = {}, set()
     for j in range(y1 // CELL, y2 // CELL):
         plain = any(a <= j * CELL < b for a, b in road_only)
-        for a, c, mat in ((EDGE, TRACK, MM["walk"]), (TRACK, ROAD_IN, MM["gravel"]), (ROAD_IN, fr_line, MM["road"])):
+        for a, c, mat in ((EDGE, TRACK, MM["walk"]), (TRACK, ROAD_IN, MM["gravel"] if BANK_TRACKS else MM["road"]), (ROAD_IN, fr_line, MM["road"])):
             for i in range((x_mid + a) // CELL, (x_mid + c) // CELL):
                 street[(i, j)] = MM["road"] if plain else mat
         core.add(((x_mid + fr_line) // CELL, j))
@@ -1503,6 +1523,8 @@ def east_bank_dress(vmf, vis, x_mid, edge=(), rail=(), tracks=(), pave=(), outer
         m.det([(a, v1, STREET, c, v2, STREET + 40)], MAT["beam"])
         edge_fence(vmf, fr, a, c, s * (EDGE + 6), STREET + 40, vis)
     ties, rails = [], []
+    if not BANK_TRACKS:
+        tracks, buffers, pave = (), (), ()      # (no rails, no buffer stops, and no pavement between a track and the road)
     for a, c in tracks:
         v1, v2 = sv(RAIL_V - 68, RAIL_V + 68)
         for u in range(a // CELL * CELL, c, CELL):      # (on the map's grid, as the chain's are: the same spacing across a join)

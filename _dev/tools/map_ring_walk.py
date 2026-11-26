@@ -66,7 +66,7 @@ def main():
     print("  joined: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("finishing it:")
     if not args.quick:
-        run([py, "map_hidden_faces.py", args.out, args.out, "--cell", str(args.cell)], show=("can never be seen", "LOST", "written", "not written"))
+        run([py, "map_hidden_faces.py", args.out, args.out, "--cell", str(args.cell)], show=("can never be seen", "LOST", "LEAK", "written", "not written"))
     run([py, "map_slim.py", args.out], show=("MB",))
     print("  finished: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("checking the finished file:")
