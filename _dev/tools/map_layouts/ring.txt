@@ -29,6 +29,7 @@
 start 6144 5696
 heading N
 rim 968
+base 64            # (deeper than the usual 224: the tram's tunnel runs under the canal's floor, its rails at z 96)
 upper left
 wall combine
 wall bank 5824 1024 5952 1856      # (the last jog has no street: the wall stands on its west bank, on from the street's)
@@ -66,14 +67,14 @@ straight 1024      # (was "morgue flip": taken off the ring, 24 November)
 straight 1024      # (was "floodroom flip": taken off the ring, 24 November)
 railbridge
 straight 1088
-left over       # the north run's track on west over the west run's canal into a tunnel: its train runs through, tunnel to tunnel (26 November: no track ends in the open; the west run has no track now)
+left back over  # the west run's train out of a tunnel north of the north run's canal; and the north run's track on west over the west run's canal into a tunnel (the two never sent at once)
 # N4 and N5: south down the west (the cave forest's branch in the middle; its wall stands along the outside bank, so
 # nothing here has side rooms)
 straight 3200 stairs
 tee flip
 straight 1280      # (was "pipes": the module deleted, the owner, 25 November)
 straight 1408
-right
+right wall      # the west run's track straight on across the corner's street into a black portal in the Combine wall (the owner, 26 November: yes)
 # S1: west
 drain
 overflow flip
@@ -95,7 +96,7 @@ left back       # the south run's train: out of a tunnel west of the west side's
 tunnel 2048
 crypt flip
 straight 1024      # (was "shell": taken off the ring, 24 November)
-tram
+straight 1536      # (was "tram": the tram is under the breach now, on the east side: the owner, 26 November)
 widen
 lockgate flip
 narrow
@@ -110,15 +111,16 @@ left over       # the south run's track on east over the east side's canal into 
 straight 768      # (was "execwall flip": taken off the ring, 24 November)
 straight 1024      # (was "lift flip": taken off the ring, 24 November)
 pumphouse flip
+straight 384       # (with the tee, the 1024 that was "aqueduct", moved south before the quay)
+tee                # (the crypt's inlet forks west here under the street, at y -6016: map_layouts/inlet.txt; south enough that the church stands on its NORTH side, toward the infested quarter: the owner, 26 November)
 quay
-straight 1536      # (was "arcade": taken off the ring, 24 November)
-straight 1024      # (was "aqueduct": taken off the ring, 24 November)
+straight 1664      # (was "arcade": taken off the ring, 24 November) (128 longer: the tee and the quay stand 128 further south, so the church's yard clears the city's block north of it)
 ash                # (the ash outfall, its chute in the city's side under the street; the nearest of the ring to the spawn: the owner, 26 November)
 straight 256       # (with the ash, the 1024 that was "chimney")
 swingbridge
 relay
 straight 64
-breach
+tramfall           # (the breach, with the tram's tunnel under the canal's floor and its station under the street)
 left nostreet
 straight 448 nostreet
 right nostreet

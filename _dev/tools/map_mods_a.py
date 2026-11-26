@@ -214,6 +214,131 @@ def street_side(m):
     return -s if m.fr.flip else s
 
 
+def tram_station(m, zr, mouth):
+    """The tram's own left station (m_tram's, copied whole: its hall, platforms and pit, Half-Life 2's station kit of
+    columns and arches, the two-tone walls, the wall lamps, the rails, the tunnel to the dark, the ticket booth, the
+    barred stair with the prison's sliding gate and black beyond, the signal, the clock, the benches, the bin, the
+    payphone, the signs and notices), built at a track bed zr with its mouth's head at `mouth`, in m's frame as m_tram
+    lays it: the mouth at v 256, the track's middle at u 768. For the tram under the breach (m_tramfall: the owner, 26
+    November, "I told you to take the tram module that had the little station and put it in the breach module ...
+    WHY NOT JUST COPY PASTE IT? WHERE IS THE STATION? WHERE ARE THE PROPS?")."""
+    b = m.b
+    s = 1
+    pz = zr + 64                            # the platforms
+    hall = pz + 288                         # the hall's ceiling
+    tun = zr + 320                          # the tunnel's head
+    e1, e2 = 680, 856                       # the pit between the platforms (the track's middle at u 768)
+    deep = 192                              # how far the tunnel runs before the dark
+    steel = HULL
+
+    def v(a, c):
+        return (a * s, c * s) if s > 0 else (c * s, a * s)
+
+    def box(u1, v1, z1, u2, v2, z2):
+        lo, hi = v(v1, v2)
+        return (u1, lo, z1, u2, hi, z2)
+    back = 832 if s > 0 else 1088
+    end = back + deep
+    m.low(640, v(256, 384)[0], 896, v(256, 384)[1], mouth, floor=zr)
+    m.low(448, v(384, back)[0], 1088, v(384, back)[1], hall, floor=zr)
+    m.low(640, v(back, end)[0], 896, v(back, end)[1], tun, floor=zr)
+    m.side(448, v(256, end)[0], 1088, v(256, end)[1])
+    m.portal(640, v(318, 320)[0], zr, 896, v(318, 320)[1], mouth)
+    # the platforms either side of the pit, out to the mouth; steps at the mouth's low side climb from the deck
+    m.det([box(448, 384, zr, e1, back, pz), box(e2, 384, zr, 1088, back, pz), box(640, 352, zr, e1, 384, pz), box(e2, 256, zr, 896, 384, pz)],
+          MAT["canal_wall"], top=TILE)
+    steps_up(m, 640, e1, 256 * s, zr, pz, s)
+    m.det([box(e1 - 4, 352, pz, e1, back, pz + 1), box(e2, 256, pz, e2 + 4, back, pz + 1)], MAT["beam"])          # a dark strip along the edges
+    # from each platform's end, steps down beside the track into the tunnel's mouth (where people cross the line)
+    steps_up(m, 640, e1, (back + 96) * s, zr, pz, -s)
+    steps_up(m, e2, 896, (back + 96) * s, zr, pz, -s)
+    # Half-Life 2's own station kit: its cast iron columns standing their full height on the platforms, its arches at
+    # their heads (column_arch001a between them, ceiling_arch001a on to the walls), a girder across the hall over each
+    # pair of columns, a plaster ceiling
+    rows = (480, 736) if s > 0 else (480, 736, 992)
+    for c in rows:
+        for u in (620, 916):
+            m.static(P + "props_trainstation/trainstation_column001.mdl", u, c * s, 0, pz)
+    m.det([box(448, c - 7, pz + 256, 1088, c + 9, pz + 272) for c in rows], steel)
+    for u in (620, 916):
+        for c1, c2 in zip(rows, rows[1:]):
+            m.static(P + "props_trainstation/column_arch001a.mdl", u, (c1 + c2) // 2 * s, 0, pz + 150)
+        m.static(P + "props_trainstation/ceiling_arch001a.mdl", u, (rows[-1] + back) // 2 * s, 0 if s > 0 else 180, pz + 150)
+        m.static(P + "props_trainstation/ceiling_arch001a.mdl", u, (rows[0] + 384) // 2 * s, 180 if s > 0 else 0, pz + 150)
+    m.det([box(448, 384, hall - 2, 1088, back, hall), box(640, 256, mouth - 2, 896, 384, mouth)], "plaster/plasterceiling008a_c17")
+    # the walls in two tones as the city's station: brick to the shoulder, a rail, plaster over it; over the mouth,
+    # the tunnel and the barred stair, plaster alone
+    walls = [box(448, 384, pz, 450, back, hall - 2), box(1086, 384, pz, 1088, back, hall - 2), box(448, 384, pz, 640, 386, hall - 2),
+             box(896, 384, pz, 1088, 386, hall - 2), box(896, back - 2, pz, 1088, back, hall - 2)]
+    walls += [box(576, back - 2, pz, 640, back, hall - 2)] if s > 0 else [box(448, back - 2, pz, 640, back, hall - 2)]
+    heads = [box(640, 384, mouth, 896, 386, hall - 2), box(640, back - 2, tun, 896, back, hall - 2)]
+    if s > 0:
+        heads.append(box(448, back - 2, pz + 192, 576, back, hall - 2))
+    m.det([w[:2] + (w[2],) + w[3:5] + (pz + 72,) for w in walls], BRICK)
+    m.det([w[:2] + (pz + 76,) + w[3:5] + (hall - 2,) for w in walls] + heads, "plaster/plasterwall041a")
+    m.det([(w[0] - (w[3] - w[0] == 2), w[1] - (w[4] - w[1] == 2), pz + 72, w[3] + (w[3] - w[0] == 2), w[4] + (w[4] - w[1] == 2), pz + 76) for w in walls],
+          WOODTRIM)
+    # the rails in the pit, from the mouth's lip into the tunnel to the dark
+    for u in (736, 796):
+        m.det([box(u, 256, zr, u + 4, 316, zr + 3), box(u, 322, zr, u + 4, end - 16, zr + 3)], MAT["bars"])
+    # the tunnel: dark at its far end, a caged lamp each side by the steps
+    m.det([box(640, end - 16, zr, 896, end, tun)], MAT["black"])
+    for u, yaw in ((640, 0), (896, 180)):
+        m.static(P + "props_c17/light_cagelight02_on.mdl", u, (back + 128) * s, yaw, zr + 196)
+        m.light(u + (24 if yaw == 0 else -24), (back + 128) * s, zr + 190, "255 200 150 18")
+    # light: the station's own wall lamps as Valve mounts them, each with a light at its head and a beam down
+    for (u, c) in ((448, 640), (448, 790), (1088, 608), (1088, 790)) if s > 0 else ((448, 608), (448, 864), (1088, 608), (1088, 864)):
+        inward = 0 if u == 448 else 180
+        k = 1 if u == 448 else -1
+        m.static(P + "props_trainstation/light_128wallmounted001a.mdl", u + k * 67, c * s, inward, pz + 168)
+        m.light(u + k * 120, c * s, pz + 176, "255 214 170 45" if s > 0 else "200 214 255 30")
+        m.spot(u + k * 124, c * s, pz + 164, "255 220 180 60" if s > 0 else "200 214 255 40", inward, 75, 55)
+    m.soundscape("d1_trainstation.Turnstyle", 768, 600 * s, pz, radius=520)       # (one the owner's own map uses 14 times)
+    m.lane(660, 368 * s, pz)
+    m.lane(576, 608 * s, pz)
+    m.lane(960, 608 * s, pz)
+    m.lane(768, (back + 150) * s, zr)
+    m.blocked(e1, v(256, back)[0], e2, v(256, back)[1])
+
+    # --- the left station: the booth, the barred stair, the signal at the tunnel ---
+    m.low(448, 832, 576, 1024, pz + 192, floor=pz)
+    m.det([(448, 826, pz, 456, 838, pz + 120), (568, 826, pz, 576, 838, pz + 120), (448, 826, pz + 120, 576, 838, pz + 192)], steel)      # its frame round the gate
+    m.static(P + "props_wasteland/prison_slidingdoor001a.mdl", 512, 842, 90, pz)                  # Nova Prospekt's sliding gate, shut
+    clip(m, (456, 846, pz, 568, 848, pz + 120))
+    m.steps(880, 448, 576, pz, pz + 48, "v", 1)
+    m.det([(448, 952, pz, 576, 1008, pz + 48)], MAT["canal_wall"], top=MAT["stairs"])            # the landing at its head
+    m.det([(448, 1008, pz, 576, 1024, pz + 192)], MAT["black"])                                    # and black beyond
+    m.target("lc_tram_exit", 512, 790, pz + 8, 90)
+    m.blocked(448, 832, 576, 1024)
+    # the ticket booth: 96 by 112 and 128 high under its own roof, a barred window with a sill toward the track, an open
+    # doorway on its far side
+    bz = pz
+    m.det(wall(448, 480, 544, 488, bz, bz + 128) + wall(448, 584, 544, 592, bz, bz + 128, [(472, 520, bz, bz + 88)]) +
+          wall(536, 488, 544, 584, bz, bz + 128, [(500, 572, bz + 36, bz + 90)]) + [(448, 480, bz + 128, 544, 592, bz + 136)], MM["wood"])
+    m.det([(528, 500, bz + 32, 556, 572, bz + 37)], WOODTRIM)                                   # the sill
+    for c in (518, 554):
+        m.static(P + "props_wasteland/prison_cellwindow002a.mdl", 540, c, 0, bz + 36)
+    m.static(P + "props_wasteland/controlroom_chair001a.mdl", 492, 536, 0, bz)
+    m.light(492, 536, bz + 110, "255 190 120 20")
+    m.blocked(448, 448, 576, 608)
+    m.lane(496, 624, pz)
+    m.static(P + "props_trainstation/light_signal001a.mdl", 900, 790, 90, pz)                     # its lamp toward the tunnel, its arm over the track
+    m.static(P + "props_trainstation/trainstation_clock001.mdl", 1000, 825, 270, pz + 168)        # (its back 2 off the wall)
+    m.static(P + "props_trainstation/bench_indoor001a.mdl", 467, 690, 0, pz)
+    m.static(P + "props_trainstation/bench_indoor001a.mdl", 1069, 600, 180, pz)
+    m.static(P + "props_trainstation/trashcan_indoor001a.mdl", 470, 762, 0, pz)
+    m.static(P + "props_trainstation/payphone001a.mdl", 1076, 700, 180, pz)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 1040, 430, 20, z=pz)
+    m.decal("decals/decal_signroute004a", 450, 620, pz + 112)                    # route signs, a timetable, the city's notices
+    m.decal("decals/decal_signroute007a", 1086, 700, pz + 120)
+    m.decal("decals/decal_posterbreen", 1086, 470, pz + 100)
+    m.grime("poster", 450, 720, pz + 96, 3)
+    m.grime("danger", 512, 826, pz + 150, 1)                                      # no entry, over the barred stair
+    m.grime("trash", 600, 620, pz + 1, 5)
+    m.grime("stain", 1086, 820, pz + 60, 6)
+    m.grime("crack", 608, 830, pz + 200, 7)
+
+
 def m_tram(m, opt):
     """The fallen tram bridge. A tram line crossed the canal here, 88 over its floor; its bridge is gone but for a stub
     of deck at each wall, one whole girder on a pier and one that sags. In each wall a station opens: a mouth 256 wide

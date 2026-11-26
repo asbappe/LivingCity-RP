@@ -31,7 +31,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 26 November (the owner): the quiet HUD card lost "This server hides numbers on screen"; ambient PA lines no longer add "> Just the city talking. Nothing changes." in chat.
+- 26 November (the owner): the quiet HUD card lost "This server hides numbers on screen"; ambient PA lines get no second line in chat (not "Just the city talking", not the unrest one).
+- 26 November: the old-timer's fisherman head no longer parented (it floated where he left a player's view, his own head shrunk): it takes its bones from his every frame and draws only with him (LC_CL.HeadOn; city-people.md). Not seen in game yet.
 - 26 November: the cistern as its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf, sent), a street plate
   over it, Valve's freight lift from gallery to street (models, lc_cistern_lift; map-building.md). Not compiled. Next: Propper++.
 - 25 and 26 November (the owner's answers; none seen in game): Combine APC on the ring's road (apc-patrol.md); the city falls chapter,
@@ -40,6 +41,9 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   9,460 passed, 4 failed, all four passing alone (order-dependent: TODO.md, end). HintTests stops at tests.lua:4168 (old: TODO.md, end).
 - 26 November, not seen in game: LC.CombatDrive (civil-protection-tools.md), LC.FearStep (city-people.md), units hear
   (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md. 24 Nov TODO run: wildlife, resistance-base, ieds (not seen).
-- 22 to 26 November: the canal ring (map_ring_walk.py, ~36 min with the nodraw pass). Kit: 43 pieces. Combine wall on every city bank,
-  rail viaduct 144 over the wall, big grates on blocked tunnels, Valve's grates on culverts. Test map: 19,437 faces, ~38,966 vertices.
+- 22 to 26 November: the canal ring (map_ring_walk.py joins the first canal, ring.txt and inlet.txt; ~44 min with
+  the nodraw pass). Kit: 43 pieces. 26 Nov: Combine wall on every city bank, set back on the canal wall's top; rail
+  bridge a viaduct with a sky corridor; trains only portal to portal (3 through trains, locks where tracks cross);
+  floodgate (valve wheel), tramfall (tram under the breach, base 64), the crypt's inlet (buried chain) to a church
+  by the infested quarter. Test map: 19,596 faces, ~39,656 vertices. Not run in game: the wheel gates.
 - Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes3 sent).

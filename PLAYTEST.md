@@ -12,7 +12,7 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **The two dreams:** the bus flies on under the sky without sticking, and the screen is clear at once when you wake? The Harpies: black fog close round you, a thick forest, about 24 armed units in the ring, and you are carried off?
   Notes:
-- [ ] **The old timer and the stalker:** a white man's body under the fisherman's head, head on? The stalker leans in once, then types, never bending in again every two seconds?
+- [ ] **The old timer and the stalker:** a white man's body under the fisherman's head, head on? Walk away until he's out of sight and back: nothing left floating where he was, head still on? The stalker leans in once, then types, never bending in again every two seconds?
   Notes:
 - [ ] **Your bodyguards and the turrets:** a zombie near you: do they shoot it unasked, keep up with you, and drop it for a target you order killed? Does a unit stand a knocked-over turret back up?
   Notes:

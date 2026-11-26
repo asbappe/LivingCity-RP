@@ -61,6 +61,9 @@ class Channel:
         spec = self.cells.get(c)
         if spec is None or spec[0] == "solid" or spec[1] > self.floor_z:
             return "wall"      # (a quay or a doorway is higher ground: a wall from down here)
+        if spec[0] == "low" and len(spec) > 4 and spec[4] == "canal":
+            return "floor"      # (a buried chain's canal, roofed under the city: its banks as any canal's; the owner, 26 November, of
+            #                     steps put up to the crypt there: "it should have the sloped sides of the canal")
         return "floor" if spec[0] == "open" else "gap"   # (gap: a culvert, level with the floor: an opening, no bank)
 
     def wall_near(self, x, y):

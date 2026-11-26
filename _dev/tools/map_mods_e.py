@@ -355,11 +355,133 @@ def m_lockgate(m, opt):
                    % (m.tag, G, "shut" if shut else "open (they swing open as the map starts)", bz + m.fr.dz))
 
 
+def m_floodgate(m, opt):
+    """The flood gate (the owner, 26 November: "copy the flood gate that blocks the airboat (right after you get the
+    airboat) from HL2 and requires the valve to be turned; and if the valve stops being turned mid-open, the gate slams
+    shut"): Valve's sliding sluice gate of d1_canals_05 (the prefab valve_canal_sluicegate_a: two metal leaves 188 wide
+    side by side, door panels under a band of grating in a truss frame, 206 high) in a concrete headwall across the
+    canal, its crest at the street's height. The leaves are func_movelinears that slide apart into the headwall's
+    piers as far as the wheel has been turned (Half-Life 2's valvewheel001 on an unseen momentary_rot_button: hold E;
+    two full turns open them). While it is turned an alarm sounds as the forest bunker's door does and a red beacon
+    turns over the wheel; the gate's rumble lasts while it moves and stops with it. Let go before it is fully open
+    and it slams shut; once fully open it stays, closing so slowly that it takes two minutes, and turning the wheel
+    again in that time opens it again (the owner, 26 November: "once the door has been opened all the way, it stays
+    open and doesn't slam shut EXCEPT it slowly slowly starts to shut and would take about 2 minutes to shut all the
+    way again; if someone turns the valve again during this 2 minutes it resumes it's opening sequence"). The wheel
+    stands where the men who built it would have set it with the water in mind (the owner: "the valve wheel is just
+    below the canal/road level and not at the bottom of the canal ... we need to keep in mind how it would have been
+    constructed with a potential water level in mind"): on the headwall's upstream face 64 under its crest, over a
+    steel service platform 112 under it on the street's bank (the left, where there is no street), reached by an iron
+    ladder up the canal's wall. A lamp by the wheel, a danger sign and a number on the headwall. A leaf that meets
+    someone stops.
+    Named for the game: lc_floodgate_N_wheel (the momentary_rot_button: Lock, Unlock, SetPosition 0 to 1),
+    lc_floodgate_N_leaf_a and _b (the func_movelinears: SetPosition 0 shut to 1 open), lc_floodgate_N_latch (a
+    logic_branch: 1 from fully open until shut again), lc_floodgate_N_beacon, _alarm, _alarm_timer, _move and _clang
+    (the beacon and the sounds), N counting the flood gates of a map from 1.
+    Left as brushes: the headwall, the leaves (they move), the platform.
+    Unchecked (from Valve's wiki and maps, not run here): that a momentary_rot_button's Position output drives a
+    func_movelinear's SetPosition as it turns and as it runs back, and that SetPositionImmediately 0 on the wheel sends
+    it; which way valvewheel001 faces when pitched 90; plats/elevator_move_loop1.wav and
+    doors/door_metal_large_chamber_close1.wav."""
+    from map_mods_c import brush, cage_lamp, sound
+    from map_modules import TRIM
+    b = m.b
+    b.floodgates = getattr(b, "floodgates", 0) + 1
+    name = "lc_floodgate_%d" % b.floodgates
+    cw = MAT["canal_wall"]
+    m.open(0, -256, 512, 256)
+    side = m.street_side() or 1                     # (the bank the platform, its ladder and the wheel are on)
+    G = 256                                         # the gate's line
+    if getattr(b, "buried", False):
+        TRIM = b.rim - 16                           # (under the city the headwall stands to the tunnel's roof)
+    # the headwall: a pier each side, a beam over the gate's opening (376 wide, 206 high), its crest a walk
+    m.det([(G - 32, -256, F, G + 32, -188, TRIM), (G - 32, 188, F, G + 32, 256, TRIM)], cw, top=MAT["quay_floor"])
+    m.det([(G - 32, -188, F + 208, G + 32, 188, TRIM)], cw, top=MAT["quay_floor"])
+    m.det([(G - 36, -196, F + 200, G + 36, 196, F + 216)], MAT["beam"])                    # (the opening's lintel, 4 proud)
+    m.taken(G - 40, -256, F, G + 40, 256, TRIM + 8)
+    m.no_bank(G - 96, -264, G + 96, 264)
+    m.blocked(G - 64, -256, G + 64, 256)
+    # the leaves
+    for leaf, sgn in (("a", -1), ("b", 1)):
+        v1, v2 = sorted((0, sgn * 188))
+        e1, e2 = (v1, v1 + 8) if sgn < 0 else (v2 - 8, v2)       # (its outer stile, in the pier; its meeting stile at the middle)
+        c1, c2 = (v2 - 8, v2) if sgn < 0 else (v1, v1 + 8)
+        parts = [((G - 4, v1 + 8, F + 2, G + 4, v2 - 8, F + 180), "metal/metaldoor046a"), ((G - 3, v1 + 8, F + 180, G + 3, v2 - 8, F + 198), "metal/metalgrate013a"),
+                 ((G - 6, e1, F + 2, G + 6, e2, F + 206), "metal/metaltruss017a"), ((G - 6, c1, F + 2, G + 6, c2, F + 206), "metal/metaltruss017a"),
+                 ((G - 6, v1 + 8, F + 198, G + 6, v2 - 8, F + 206), "metal/metaltruss017a")]
+        brush(m, "func_movelinear", {"targetname": "%s_leaf_%s" % (name, leaf), "movedir": "0 %d 0" % m.fr.yaw(90 if sgn > 0 else 270), "movedistance": "184",
+                                     "speed": "900", "startposition": "0", "blockdamage": "0", "spawnflags": "0", "disableshadows": "1"}, parts, "metal/metaldoor046a",
+              connections=[("OnFullyClosed", name + "_clang", "PlaySound", "", 0)] if leaf == "a" else None)
+        del b.vmf.boxes[-len(parts):]      # (a gate that opens is a way through, to the walk check)
+    # the service platform on the bank, 112 under the crest, its ladder up the canal's wall, the wheel on the headwall's
+    # upstream face 64 under the crest
+    pz, wz = TRIM - 112, TRIM - 64
+    p1, p2 = sorted((side * 144, side * 256))
+    m.det([(G - 128, p1, pz - 8, G - 32, p2, pz)], "metal/metalgrate013a")
+    m.det([(G - 128, p1, pz - 24, G - 120, p2, pz - 8), (G - 44, p1, pz - 24, G - 36, p2, pz - 8)], MAT["bars"])
+    r1, r2 = sorted((side * 144, side * 148))
+    m.det([(G - 128, r1, pz, G - 124, r2, pz + 40), (G - 36, r1, pz, G - 32, r2, pz + 40), (G - 128, r1, pz + 36, G - 32, r2, pz + 40)], MAT["bars"])
+    m.ladder(G - 160, side * 256, F, pz, 270 if side > 0 else 90)
+    m.taken(G - 200, side * 136, F, G - 32, side * 256, TRIM)
+    wv = side * 216
+    ax = 64 if m.fr.ax("u") == "x" else 128
+    # How it works (the owner, 26 November, after trying the first one, which followed the wheel and slammed whenever it
+    # was let go): hold the wheel and the leaves slide open as it turns, an alarm sounding as the forest bunker's door does
+    # (its klaxon, every 1.7 seconds) and a red beacon turning; the gate's own rumble lasts as long as it is being turned
+    # and no longer. Let go before it is fully open and it slams shut. Once fully open it does not slam: the wheel runs
+    # back so slowly that the leaves take two minutes to close, the beacon turning all the while, and turning the wheel
+    # again in that time opens it again from where it is.
+    #   the wheel's returnspeed is 6 (720 degrees in 120 seconds), so by itself it always closes slowly;
+    #   _latch (a logic_branch, 0 until the gate has been fully open, 0 again once it is shut): the wheel's OnUnpressed
+    #   tests it, and while it is 0 the wheel is put straight back to 0 (SetPositionImmediately), which slams the leaves.
+    wires = [("Position", "%s_leaf_a" % name, "SetPosition", "", 0), ("Position", "%s_leaf_b" % name, "SetPosition", "", 0),
+             ("OnPressed", name + "_move", "PlaySound", "", 0), ("OnPressed", name + "_alarm_timer", "Enable", "", 0), ("OnPressed", name + "_alarm", "PlaySound", "", 0),
+             ("OnPressed", name + "_beacon", "Start", "", 0), ("OnPressed", name + "_beacon_spot", "LightOn", "", 0),
+             ("OnUnpressed", name + "_move", "StopSound", "", 0), ("OnUnpressed", name + "_alarm_timer", "Disable", "", 0), ("OnUnpressed", name + "_latch", "Test", "", 0),
+             ("OnFullyClosed", name + "_latch", "SetValue", "1", 0), ("OnFullyClosed", name + "_move", "StopSound", "", 0),
+             ("OnFullyClosed", name + "_alarm_timer", "Disable", "", 0), ("OnFullyClosed", name + "_clang", "PlaySound", "", 0),
+             ("OnFullyOpen", name + "_latch", "SetValue", "0", 0), ("OnFullyOpen", name + "_beacon", "Stop", "", 0), ("OnFullyOpen", name + "_beacon_spot", "LightOff", "", 0)]
+    brush(m, "momentary_rot_button", {"targetname": name + "_wheel", "speed": "40", "distance": "720", "returnspeed": "6", "startposition": "0", "startdirection": "-1",
+                                      "sounds": "0", "spawnflags": str(1024 + ax), "rendermode": "10", "renderamt": "0", "disableshadows": "1",
+                                      "origin": "%d %d %d" % m.fr.at(G - 40, wv, wz)},
+          [((G - 48, wv - 14, wz - 14, G - 32, wv + 14, wz + 14), MAT["nodraw"])], MAT["nodraw"], connections=wires)
+    m.point("logic_branch", G - 60, wv, wz + 40, {"targetname": name + "_latch", "InitialValue": "0"},
+            connections=[("OnFalse", name + "_wheel", "SetPositionImmediately", "0", 0), ("OnFalse", "%s_leaf_a" % name, "SetPosition", "0", 0),
+                         ("OnFalse", "%s_leaf_b" % name, "SetPosition", "0", 0), ("OnFalse", name + "_beacon", "Stop", "", 0.5),
+                         ("OnFalse", name + "_beacon_spot", "LightOff", "", 0.5)])
+    sound(m, name + "_move", "plats/elevator_move_loop1.wav", G, 0, F + 120, loops=True, radius=2200)
+    sound(m, name + "_alarm", "ambient/alarms/klaxon1.wav", G - 40, wv, wz + 30, radius=2600)
+    sound(m, name + "_clang", "doors/door_metal_large_chamber_close1.wav", G, 0, F + 120, radius=2200)
+    m.point("logic_timer", G - 60, wv, wz + 56, {"targetname": name + "_alarm_timer", "RefireTime": "1.7", "UseRandomTime": "0", "StartDisabled": "1", "spawnflags": "0"},
+            connections=[("OnTimer", name + "_alarm", "PlaySound", "", 0)])
+    # the red beacon over the wheel, as the lock gates' booth has: a func_rotating with two red spotlights in a cage lamp
+    bu, bv, bz = G - 40, side * 176, TRIM - 30
+    m.static("models/props_c17/light_cagelight01_on.mdl", bu + 7, bv, 180, z=bz - 6)
+    bx, by, bz2 = m.fr.at(bu, bv, bz)
+    b.vmf.brush_entity("func_rotating", {"targetname": name + "_beacon", "spawnflags": "64", "maxspeed": "350", "fanfriction": "20", "volume": "0",
+                                         "origin": "%d %d %d" % (bx, by, bz2), "rendermode": "0", "dmg": "0", "solidbsp": "0"},
+                       [m.fr.box(bu - 8, bv - 8, bz - 8, bu + 8, bv + 8, bz + 8)], MAT["nodraw"], m.dv)
+    for ang in ("0 0 -180", "0 180 -180"):
+        b.vmf.point("point_spotlight", (bx, by, bz2), {"targetname": name + "_beacon_spot", "parentname": name + "_beacon", "angles": ang, "rendercolor": "255 0 0",
+                                                      "spotlightlength": "96", "spotlightwidth": "25", "spawnflags": "2", "HDRColorScale": "0.6", "renderamt": "255"}, m.lv)
+    b.names.append((name + "_beacon", "func_rotating", m.tag))
+    m.point("prop_dynamic", G - 32, wv, wz, {"model": "models/props_pipes/valvewheel001.mdl", "angles": "90 %d 0" % m.fr.yaw(180), "parentname": name + "_wheel",
+                                               "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
+    cage_lamp(m, G - 32, side * 240, TRIM - 24, 180, "255 214 160 60")
+    m.grime("danger", G - 32, -side * 120, F + 250, 3)
+    m.grime("number", G - 32, 0, F + 236, 4)
+    m.lane(G - 160, 0)
+    m.lane(G + 160, 0)
+    m.view(40, -120, F, 20, -8, "the flood gate and its wheel")
+    b.notes.append("%s: the flood gate %s at (%d %d): the wheel at z %d on its platform at z %d" % ((m.tag, name) + m.fr.pt(G, 0) + (wz + m.fr.dz, pz + m.fr.dz)))
+
+
 MODULES = {
     "widen": (768, m_widen, "the canal widens from 512 to 1024 in two steps (its next module must be a wide one)", {"width": (CANAL_W, WIDE_W)}),
     "narrow": (768, m_narrow, "the wide canal narrows back to 512 in two steps", {"width": (WIDE_W, CANAL_W)}),
     "wide": (1024, m_wide, "the wide canal: 1024 between upright walls, any length (\"wide 2048\"), a walk along a wall from 2048", {"width": (WIDE_W, WIDE_W), "stretch": True}),
     "widetee": (512, m_widetee, "a standard gate in the wide canal's left wall, for another piece or layout to join", {"width": (WIDE_W, WIDE_W)}),
     "basin": (2048, m_basin, "the canal widens into a 1024 basin and narrows again (512 at both ends; \"basin 2560\")", {"stretch": True}),
+    "floodgate": (512, m_floodgate, "Valve's sluice gate in a headwall across the canal: hold its valve wheel to slide the leaves open; let go and they slam shut"),
     "lockgate": (2048, m_lockgate, "Valve's lock gates across the wide canal: toggled open and shut, a klaxon, a control booth, a passage round", {"width": (WIDE_W, WIDE_W)}),
 }

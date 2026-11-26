@@ -1396,7 +1396,7 @@ def fence(vmf, plan, high, vis, top=None):
                 continue      # (the Combine wall stands there: no chain link before it)
             if nb[0] == "under" and len(nb) > 4 and nb[4] == MAT["quay_floor"]:
                 continue      # (a gate's culvert under its deck: no chain link along the deck's edge)
-            at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 else STREET_Z if nb[0] == "under" else top
+            at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 and not isinstance(nb[4], str) else STREET_Z if nb[0] == "under" else top
             runs.setdefault((axis, line, side, at), []).append(a)
     sheets, bars = {"x": [], "y": []}, []
 

@@ -49,13 +49,14 @@ def main():
     ap.add_argument("--quick", action="store_true", help="skip the nodraw pass (about 40 minutes): only to look the map over; vbsp needs the pass (its vertex limit)")
     args = ap.parse_args()
     py = sys.executable
-    plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"])]
+    plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"]),
+             ("chain", ["--layout", "map_layouts/inlet.txt", "--first-node", "9000"])]      # (the crypt's inlet off the east side, 26 November)
     if args.against:
         print("checking against: " + " ".join(args.against))
         for piece, extra in plain:
             run([py, "map_build.py", piece] + extra + ["--against"] + args.against + ["--out", os.devnull])
     print("building the test pieces:")
-    names = ["lc_canal_test.vmf", "lc_ring_test.vmf"]
+    names = ["lc_canal_test.vmf", "lc_ring_test.vmf", "lc_inlet_test.vmf"]
     for (piece, extra), name in zip(plain, names):
         run([py, "map_build.py", piece] + extra + ["--test", "--out", name])
     print("joining them:")
