@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9193a61. Admin-only console messages and log lines are left out.
+Made from version 9db4cba. Admin-only console messages and log lines are left out.
 
 13625 lines, from 398 files.
 
@@ -12326,7 +12326,7 @@ Made from version 9193a61. Admin-only console messages and log lines are left ou
 - "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). Get rations from the ration dispensers, and water from vending machines and sinks. If either one reaches zero, you start dying."  (text, line 99)
 - "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). The Resistance's supply crate in rebel territory gives you food; bins, fishing and the vegetable pots help too. If either one reaches zero, you start dying."  (text, line 100)
 - "Where to find your numbers"  (title, line 101)
-- "This server hides numbers on screen. Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}."  (text, line 102)
+- "Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}."  (text, line 102)
 - "Camera sway"  (title, line 103)
 - "The camera sways slightly as you walk and dips when you land. If that bothers you, turn it off in F4 > Me and settings > Camera sway (this only changes it for you)."  (text, line 104)
 
