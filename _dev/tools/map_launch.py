@@ -153,6 +153,58 @@ def loose(e):
         k.update({"solid": "6", "spawnflags": "0", "StartDisabled": "0"})
 
 
+def seat(pf, model):
+    """Valve's copies of `model` in a piece stood on the brush they sink into, each with whatever brush lies inside it
+    (its screen) raised as much (the owner, 26 November, of the control room's forest-cam TVs: "a brush stuck in them":
+    Valve's TVs stand 0.97 into the shelf under them). How far each was raised."""
+    import map_build
+
+    def bbox(sides):
+        cs = [c for sd in sides for c in (sd.get("verts") or sd.get("corners") or [])]
+        return tuple(min(c[k] for c in cs) for k in range(3)) + tuple(max(c[k] for c in cs) for k in range(3)) if cs else None
+
+    def inside(b, m):
+        return all(m[k] - 0.5 <= b[k] and b[k + 3] <= m[k + 3] + 0.5 for k in range(3))
+
+    def up(p, dz):
+        return [p[0], p[1], p[2] + dz]
+
+    def lift(sides, dz):
+        for sd in sides:
+            sd["plane"] = [up(p, dz) for p in sd["plane"]]
+            for key in ("verts", "corners"):
+                if sd.get(key):
+                    sd[key] = [up(p, dz) for p in sd[key]]
+            sd["uaxis"], sd["vaxis"] = PF.turn_axis(sd["uaxis"], 0, (0, 0, dz)), PF.turn_axis(sd["vaxis"], 0, (0, 0, dz))
+    statics = [s["sides"] for s in pf["solids"]]
+    out = []
+    for e in pf["points"]:
+        k = e["keys"]
+        if not k.get("model", "").endswith(model):
+            continue
+        m = map_build.prop_box(k["model"], e["origin"], float((k.get("angles") or "0 0 0").split()[1]))
+        dz = 0
+        for sides in statics:
+            b = bbox(sides)
+            if b and not inside(b, m) and b[0] < m[3] and b[3] > m[0] and b[1] < m[4] and b[4] > m[1] and b[2] < m[2] < b[5] < m[2] + 4:
+                dz = max(dz, b[5] - m[2])
+        if dz:
+            for sides in statics:
+                b = bbox(sides)
+                if b and inside(b, m):
+                    lift(sides, dz)
+            for w in pf.get("wiring", []):
+                bs = w.get("brushes") or []
+                if bs and all(bbox(b) and inside(bbox(b), m) for b in bs):
+                    for b in bs:
+                        lift(b, dz)
+                    if w.get("origin"):
+                        w["origin"] = up(w["origin"], dz)
+            e["origin"] = up(e["origin"], dz)
+        out.append(round(dz, 2))
+    return out
+
+
 def build(f, F):
     """The complex, for BunkerForest f (map_forest.py, passed as F): the control room, the stair, the launch room, each
     sealed by a hull of our own (Valve's brushes do not count for the build's checks). Returns the boxes of air they
@@ -162,6 +214,7 @@ def build(f, F):
     air, places = [], []
     # --- White Forest's control room -------------------------------------------------------------------------------------
     pf = PF.load("valve_ep2_control_room")
+    seat(pf, "props_lab/monitor01b.mdl")        # (the forest cams' four TVs onto their shelf, their screens with them)
     # (a brush of a live entity, the forest cams' five screens and the silo doors' display, is placed with its entity,
     #  never also as a static brush: the five screens all drawn at once in one plane were the brush "covering them", the
     #  owner, 24 November: "the little screens in the lower control room have some sort of brush covering them")
@@ -192,7 +245,7 @@ def build(f, F):
             e["drop"] = True
         if e["classname"] == "math_counter" and tn == "math_mon_hatelife":
             e["drop"] = True
-    F.pf_entities(v, pf, 0, TECH_AT, "lc_ctl_", vis, wv, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+    F.pf_entities(v, pf, 0, TECH_AT, "lc_ctl_", vis, wv, keep=keep, edit=edit, valve_anchor=pf["anchor"], exact=True)
     tb = tech_box()
     leg = (f.ox + f.B0[0] + f.NE_LEG[0], f.ox + f.B0[0] + f.NE_LEG[1])
     # (its hull's west strip is under the launch pad's edge: its top comes up flush with the pad, in the pad's grass, not
@@ -242,7 +295,7 @@ def build(f, F):
         p = F.pf_point(e["origin"], LR_TURN, LR_AT)
         return all(LR_BOX[k] <= p[k] <= LR_BOX[k + 3] for k in range(3))
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=lambda e: e["classname"].startswith(("prop_", "light", "env_sprite", "infodecal"))
-                  and not e["keys"].get("parentname") and not e["keys"].get("targetname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"])
+                  and not e["keys"].get("parentname") and not e["keys"].get("targetname") and "brushes" not in e and in_room(e), edit=loose, valve_anchor=lr["anchor"], exact=True)
     x1, y1, z1, x2, y2, z2 = LR_BOX
     # (its window opens on the pad; the stair comes in at its back, the hull giving way to the stair's walls, floor and ceiling)
     shell(v, LR_BOX, [("east", (sy + 384, LR_BOX[2] - HULL, sy + 640, FLOOR_HIGH + 240))], hv, skip=("west",), inner=LR_MATS)
@@ -353,7 +406,7 @@ def outside(f, F, lr):
             g = min(ground, key=lambda c: (c[0] - q[0]) ** 2 + (c[1] - q[1]) ** 2)
             if (g[0] - q[0]) ** 2 + (g[1] - q[1]) ** 2 < 96 ** 2:
                 e["origin"] = [e["origin"][0], e["origin"][1], e["origin"][2] + PAD - g[2]]
-    F.pf_entities(v, pf, LR_TURN, LR_AT, "lc_pad_", vis, vis, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+    F.pf_entities(v, pf, LR_TURN, LR_AT, "lc_pad_", vis, vis, keep=keep, edit=edit, valve_anchor=pf["anchor"], exact=True)
     # the pad: flat at the collar's top; over the silo's hull from its top floor's ceiling (200, where Valve's silo had its
     # lid); over the corridor's stairs down to the silo only from their roof (328)
     nd, grass, lid = MAT["nodraw"], PAD_GRASS, "concrete/concretewall010a"
@@ -495,7 +548,7 @@ def launch(f, F, lr):
         if tn == "relay_launch":        # (one launch a map; the ending hooks in here: LAUNCH_RELAY)
             e["out"] = [(o, t, i, str(RISE_START) if i == "SetSpeedReal" else val, d) for o, t, i, val, d in e["out"] if t not in ("birds", "logic_start_redlight")] + [
                 ("OnTrigger", "!self", "Disable", "", 0.1), ("OnTrigger", "button_launch", "Lock", "", 0)]
-    names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"])
+    names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"], exact=True)
     # the red button's cover (the owner, 24 November: "I can't press the launch button cause Dr Kleiner opens the cover for
     # the button in EP2 and I guess pressing E on it doesn't work?"): Valve's button starts locked under its cover and only
     # Kleiner's scene opened it (button.red's "open", its sound, the button unlocked 1.5 s later). Here E on the cover does
@@ -603,7 +656,7 @@ def cctv(f, F, lr):
         if e["classname"] == "func_monitor":
             e["keys"].update({"target": "cctv", "StartDisabled": "0", "spawnflags": "2", "disableshadows": "1"})
     F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", f.vis("launch room's screens"), f.vis("bunker's camera"), keep=keep, edit=edit, extra=[cam],
-                  valve_anchor=lr["anchor"])
+                  valve_anchor=lr["anchor"], exact=True)
     for i in range(len(v.ents)):
         if "lc_launch_cctv" in v.ents[i]:
             v.ents[i] = v.ents[i].replace("lc_launch_cctv", CCTV_NAME)

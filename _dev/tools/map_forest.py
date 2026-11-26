@@ -143,13 +143,15 @@ def pf_solid(vmf, sides, q, d, vis):
     return text, tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
 
 
-def pf_finish(sols, q, d, rooms, mats):
+def pf_finish(sols, q, d, rooms, mats, models=()):
     """What Valve left bare (nodraw) where its map ran on and ours now stops at a hull of our own (the owner, 24
     November: "there are walls missing all over the stairs up to the launch control room"): a nodraw face of a lifted
     piece whose middle (or a point near one of its corners) looks, 1 out, into the open air of one of `rooms` (boxes of the map; air: inside no other brush
     of the piece) gets mats["floor"], ["ceiling"] or ["wall"] by the way it faces. sols: the piece's solids to be placed
     (changed in place: copies). rooms and mats may instead be a list of (rooms, mats), the first that holds the point
-    deciding. How many."""
+    deciding. A brush that lies wholly inside one of `models` (the boxes of the piece's own models, in its frame) is
+    dressed by that model and keeps Valve's nodraw: the forest cams' screens, 2 thick inside their TVs, had been given
+    concrete round their pictures. How many."""
     groups = rooms if mats is None else [(rooms, mats)]
 
     def plane(pts):
@@ -172,6 +174,9 @@ def pf_finish(sols, q, d, rooms, mats):
     for sol, sides, planes in placed:
         allc = [c for sd in sides for c in sd["corners"]]
         if not allc:
+            continue
+        own = [c for sd in sol["sides"] for c in (sd.get("verts") or sd.get("corners") or [])]
+        if own and any(all(m[k] - 0.5 <= min(c[k] for c in own) and max(c[k] for c in own) <= m[k + 3] + 0.5 for k in range(3)) for m in models):
             continue
         mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
         for k, sd in enumerate(sides):
@@ -199,6 +204,20 @@ def pf_finish(sols, q, d, rooms, mats):
     return count
 
 
+def pf_model_boxes(pf):
+    """The boxes of a lifted piece's upright models (no pitch or roll), in the piece's own frame, by their real sizes."""
+    import map_build
+    out = []
+    for e in pf["points"]:
+        m = e["keys"].get("model", "")
+        a = [float(c) for c in (e["keys"].get("angles") or "0 0 0").split()]
+        if m.endswith(".mdl") and len(a) == 3 and abs(a[0]) < 0.01 and abs(a[2]) < 0.01:
+            b = map_build.prop_box(m, e["origin"], a[1])
+            if b:
+                out.append(b)
+    return out
+
+
 def pf_solids(vmf, pf, q, d, vis, world=False, skip=None, finish=None):
     """A lifted piece's brushes: with `world`, those that were Valve's world brushes go into the world (they cut up the
     map for visibility, as in Valve's own) and the rest into one func_detail. Their boxes are returned, not handed to
@@ -207,7 +226,7 @@ def pf_solids(vmf, pf, q, d, vis, world=False, skip=None, finish=None):
     det, boxes = "", []
     sols = [copy.deepcopy(s) for s in pf["solids"] if not (skip and skip(s))]
     if finish:
-        pf_finish(sols, q, d, finish, None)
+        pf_finish(sols, q, d, finish, None, models=pf_model_boxes(pf))
     for s in sols:
         text, box = pf_solid(vmf, s["sides"], q, d, vis)
         boxes.append(box)
@@ -251,13 +270,14 @@ def pf_outputs(conns):
     return out
 
 
-def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=None, extra=(), valve_anchor=None):
+def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=None, extra=(), valve_anchor=None, exact=False):
     """A lifted piece's props, lights and wiring (its path points too), turned and moved as its brushes. Every name the
     piece gives is prefixed (two pieces never answer each other), an output to anything the piece does not have is
     dropped (Valve's story, outside the piece), and every output may fire again (Valve's once-only buttons become
     reusable). keep(e) says what to place; edit(e) may change an entity first (each is a copy, its outputs already
     as (output, target, input, value, delay) in e["out"]); extra: entities of our own in the piece's frame, named as
-    the piece's. A turned piece's tilting doors and spinners change axis with it. Returns the names placed."""
+    the piece's. A turned piece's tilting doors and spinners change axis with it. exact: points keep Valve's places to
+    0.01, not cut to whole units (Vmf.point). Returns the names placed."""
     ents = []
     for e in list(pf["points"]) + list(pf.get("wiring", [])) + list(extra):
         e = copy.deepcopy(e)
@@ -324,7 +344,7 @@ def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=Non
         if brushes:
             pf_brush_entity(vmf, cls, keys, brushes, q, d, vis_logic, outs, pf_point(e["origin"], q, d) if "origin" in e else None)
         else:
-            vmf.point(cls, tuple(pf_point(e["origin"], q, d)), keys, vis_props if cls.startswith("prop") else vis_logic, connections=outs)
+            vmf.point(cls, tuple(pf_point(e["origin"], q, d)), keys, vis_props if cls.startswith("prop") else vis_logic, connections=outs, exact=exact)
     return names
 
 
@@ -2427,7 +2447,7 @@ class BunkerForest(Forest):
         #  with the office, on the top floor since 24 November)
         extra = [{"classname": "ambient_generic", "origin": [261, 300, 384], "keys": {
             "targetname": "lab_lever_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100", "pitchstart": "100", "radius": "1250", "spawnflags": "48"}}]
-        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
+        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"], exact=True)
         # the rocket, back in the shaft as it stands in Episode Two (the owner, 22 November: "we could use the rocket in that silo
         # after all ... can we please re-insert the rocket into the silo as it exists in EP2?"): valve_ep2_rocket, Valve's own
         # stages, engines, nose and hatch, in the silo's frame. Its engines end 6 over the pit's cover (322).

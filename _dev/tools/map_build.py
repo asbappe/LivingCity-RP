@@ -699,8 +699,10 @@ class Vmf:
                     return p
         return None
 
-    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None, outside=False):
+    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None, outside=False, exact=False):
         # (outside: the thing stands in the owner's own map, not in this piece: it is not held to the piece's sealed space)
+        # (exact: its origin written to 0.01, not cut to whole units: a thing lifted from Valve's maps stands where Valve
+        #  put it, in step with its brushes; the forest cams' TVs had dropped 0.73 off their screens)
         if not outside and cls.startswith("prop") and cls != "prop_door_rotating" and keys and keys.get("model") \
                 and not any(k in str(keys["model"]) for k in WAY_EXEMPT) and (self.ways or self.door_ents):
             ang = str(keys.get("angles", "0 0 0")).split()
@@ -720,7 +722,11 @@ class Vmf:
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
-        s += '\t"origin" "%d %d %d"\n' % tuple(pos)
+        if exact:
+            nums = [("%.2f" % c).rstrip("0").rstrip(".") for c in pos]
+            s += '\t"origin" "%s"\n' % " ".join("0" if n == "-0" else n for n in nums)
+        else:
+            s += '\t"origin" "%d %d %d"\n' % tuple(pos)
         s += self.wires(connections)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
