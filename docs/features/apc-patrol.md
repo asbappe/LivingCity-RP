@@ -20,7 +20,7 @@ A driveable APC for players is a later wish: nothing of it is built.
 ## The route
 
 - **The map's names:** `info_target`s named `lc_apc_route_000`, `lc_apc_route_001`, ... taken in name order, 8 over the road. The canal ring's street has them along the middle of its roadway, one at most every 512 and one at every corner (`_dev/tools/map_corridor.py`, `apc_route`: 124 on the ring, and 9 more numbered from 900 on the first canal's stretch of the ring road, which closes the loop when both pieces are in the map).
-- **The Miscount Editor**, on a map without them: "Point: APC route (place them in order along the middle of the road; # is the order)", in the Administrator's folder beside her APC point. Shown as APC ROUTE. Points with the same # go in the order they were placed.
+- **The Miscount Editor**, on a map without them: "Point: APC route (place them in order along the middle of the road; # is the order)", in the "Civil Protection and the Combine" folder beside her APC point. Shown as APC ROUTE. Points with the same # go in the order they were placed.
 - **A loop or not:** the last mark within 1500 of the first: it goes round and round. Else it drives there and back.
 - The map's marks win when a map has two or more; the editor's points are read only when it has none.
 

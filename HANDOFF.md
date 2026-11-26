@@ -31,17 +31,18 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 24 November (the TODO run; the owner: "make judgement calls as needed"): built, none seen in the real game yet: barnacles
-  lift who they catch (sh_livingcity_barnacle.lua); the pumphouse nearest a rebel territory is its water; the live base's
-  vehicle (editor: "Point: Resistance base vehicle"; a buggy, an airboat on water); antlions at a stopped thumper's burrow;
-  a cut train line costs supplies. docs/features/wildlife.md, resistance-base.md, ieds.md. What waits for the owner's
-  word is the last line of TODO.md. Last full run (24 November): 9,262 passed, 1 failed (Nov21_CellsFullTests, passes alone).
+- 25 and 26 November (the owner's answers; none of it seen in the real game): a Combine APC on patrol down the ring's
+  road (apc-patrol.md); the chapter, the city falls to the Resistance, `lc_chapter` 0 (chapter-city-falls.md); the hive
+  boss as the Workshop NextBot 2149660804, `lc_hiveboss` 0 (wildlife.md); the text gate, `lc_text_gate` 3; the real
+  train, `lc_train_real` 0. Staff lines for each: F4 > Factions > Admin: testing tools. Ten new settings wait for the
+  owner's OK before they go in the core snapshot (CORE_CHANGELOG.md): the core check fails on exactly those until then.
+  Last full run
+  (26 November): 9,423 passed, 4 failed (the core check, and three that pass alone: TODO.md, end).
 - 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is
   `straight 512`. The ring was cut down after the owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md;
   ring piece alone 31,115 faces). Left of their review: the drain, the railway to the station (TODO.md).
-- 22 to 24 November: the canal ring (map_ring_walk.py): the owner compiled the Propper++ kit (35 models, models/lc/kit).
-  vbsp also limits unique vertices (65,536): their quick build stopped at 70,769. map_budget.py now estimates them; the
-  ring's test map needs the nodraw pass (36 min): 30,901 faces, ~56,678 vertices. Stitched map still over (TODO).
+- The canal ring (map_ring_walk.py): vbsp limits faces and unique vertices to 65,536 each; map_budget.py estimates both;
+  the ring's test map needs the nodraw pass. The stitched map is still over (TODO.md).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: the dream bubbles, EndingTests, Lamarr (TODO.md).
 - Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red

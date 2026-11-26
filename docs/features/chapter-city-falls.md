@@ -42,7 +42,7 @@ Both clocks count the server's running time, not the calendar: a night with the 
 
 ## The editor
 
-**Point: Combine holdout (where units come back while the city is the Resistance's)**, kind `choldout`, in the Miscount Editor's list straight after the Administrator's desk and in the layout browser's "The Administrator" folder. Place one or several somewhere the Combine can set up a base. It does nothing while the city is the Combine's.
+**Point: Combine holdout (where units come back while the city is the Resistance's)**, kind `choldout`, in the Miscount Editor's list straight after the Administrator's desk and in the layout browser's "Civil Protection and the Combine" folder. Place one or several somewhere the Combine can set up a base. It does nothing while the city is the Combine's.
 
 ## Staff
 

@@ -2,7 +2,7 @@
 
 Made by `python3 _dev/dead_weight.py` (TODO.md, "Simpler and better", idea 9). A rough pass by name: each line is a lead to check by hand before anything goes. Tests are not counted as callers. Regenerate it after changes; never hand-edit.
 
-**104 functions with no caller by name, 0 net messages never sent, 0 sent but never received, 1 items named nowhere but the items table.** Commands no menu names: `python3 _dev/house_rules.py --list`.
+**105 functions with no caller by name, 0 net messages never sent, 0 sent but never received, 1 items named nowhere but the items table.** Commands no menu names: `python3 _dev/house_rules.py --list`.
 
 ## Functions with no caller by name
 
@@ -61,6 +61,7 @@ Made by `python3 _dev/dead_weight.py` (TODO.md, "Simpler and better", idea 9). A
 - `LC.Chipped` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_bedtime.lua:32)
 - `LC.BrainHasKey` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_brain.lua:52)
 - `LC.CampForget` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_campmove.lua:28)
+- `LC.ChapterReload` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_chapter.lua:529)
 - `LC.HazardWalkWidth` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_cleanup.lua:278)
 - `LC.CollapseGmanEnt` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_collapse.lua:84)
 - `LC.CollapseStage` (gamemodes/livingcity/gamemode/modules/server/sv_livingcity_collapse.lua:204)
