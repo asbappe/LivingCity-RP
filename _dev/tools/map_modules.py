@@ -1114,14 +1114,14 @@ def m_shanty(m, opt):
     line from the card room's roof post to a pole; a boat pulled up; a cork notice board on two poles; posters on and in
     the card room, the lambda on the bridge's pier, trash and puddles on the basin's floor. In front of the card room the
     basin's floor is left clear for the Resistance's flag; east of the bridge three ridge tents stand on the basin's
-    floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _3, where someone sleeps). Where the chain's street runs along the bank the bridge starts
+    floor (the camp's, folded in on 24 November: lc_shanty_tent_1 to _5, where someone sleeps). Where the chain's street runs along the bank the bridge starts
     from (the canal ring, 23 November) the bridge is the street's way in: the street's parapet opens there, and an iron
     ladder comes down the bridge's side (a gap in its side wall, a post under its edge) to the boardwalk by the card room.
     Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
     screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
     lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
-    basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r520_h400_shanty (that territory, brought by
-    the map: 520 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
+    basin's open floor, 64 clear all round, open to the sky), lc_zone_rebel_r780_h400_shanty (that territory, brought by
+    the map: 780 round the basin's middle, 400 high) and lc_base_vehicle_airboat_shanty (where the base's airboat lies,
     on the canal's floor west of the bridge).
     Left as brushes: the boardwalk, the shacks (sheets, posts, roofs: no model is a shack's wall), the board over the
     stall, the washing on the line (no game has a model of clothes on a line), the street bridge.
@@ -1130,11 +1130,24 @@ def m_shanty(m, opt):
     from map_mods_c import shack
     from map_mods_b import fire, mattress
     wood, beam = MM["wood"], "wood/woodfloor006b"
-    m.open(0, -256, 1536, 256)
-    m.open(256, 256, 1280, 640)
-    m.no_bank(256, 400, 1280, 648)
+    # (2048 long since 26 November, the owner: "the shanty town is a bit too small": the basin 512 longer, a store room, a
+    #  second bunk room and two more tents in it)
+    m.open(0, -256, 2048, 256)
+    m.open(256, 256, 1792, 640)
+    m.no_bank(256, 400, 1792, 648)
     on_street = m.street_side() == -1      # (the chain's street runs along the bank the bridge starts from)
     m.bridge(640, 896, -256, 640, far_pier=False, gaps=[(640, 536, 584)] if on_street else ())
+    # where the bridge meets the basin's back wall, a tunnel's mouth (the owner, 26 November: "the bridge above the shanty
+    # goes to a canal wall with no tunnel entrance; please add one, even if it's just a black void"): the road goes on
+    # into the wall between concrete jambs under a lintel, black 128 in, an unseen wall across it 48 in
+    rz = TRIM + 8
+    m.low(640, 640, 896, 832, rz + 168, floor=rz, mat=MAT["quay_floor"])
+    m.side(640, 640, 896, 832)
+    m.blocked(640, 640, 896, 832)
+    m.det([(640, 760, rz, 896, 768, rz + 168)], MAT["black"])
+    m.det([(624, 628, rz - 48, 656, 644, rz + 184), (880, 628, rz - 48, 912, 644, rz + 184), (624, 628, rz + 168, 912, 644, rz + 200)], MAT["beam"])
+    m.b.vmf.world_box(m.fr.box(640, 688, rz, 896, 696, rz + 168), MAT["clip"], MAT["clip"], MAT["clip"], vis=m.dv, seals=False)
+    m.taken(608, 600, rz - 64, 928, 660, rz + 216)
     if on_street:
         # beside the street the bridge is the street's way into the shanty town (the owner, 23 November, of bridges that
         # lead nowhere: "this is a pointless bridge"): the street's parapet opens where the bridge starts, and a ladder
@@ -1147,10 +1160,10 @@ def m_shanty(m, opt):
         m.lane(700, 560, TRIM + 8)
         m.lane(768, -200, TRIM + 8)
     # the boardwalk the shacks stand on, and its kerb
-    m.det([(264, 400, F, 632, 632, F + 8), (904, 400, F, 1272, 632, F + 8)], wood)
-    m.det([(264, 388, F, 632, 400, F + 5), (904, 388, F, 1272, 400, F + 5)], beam)
+    m.det([(264, 400, F, 632, 632, F + 8), (904, 400, F, 1784, 632, F + 8)], wood)
+    m.det([(264, 388, F, 632, 400, F + 5), (904, 388, F, 1784, 400, F + 5)], beam)
     m.side(256, 384, 640, 640)                                            # (no mud under the boardwalk)
-    m.side(896, 384, 1280, 640)
+    m.side(896, 384, 1792, 640)
     z = F + 8
     # the card room
     shack(m, 272, 440, 520, 632, z, 41, window="boards")
@@ -1193,6 +1206,19 @@ def m_shanty(m, opt):
     m.static("models/props_c17/lamp001a.mdl", 1188, 606, 0, z=z + 40)
     m.glow(1188, 606, z + 53, "255 190 110", 0.12)
     m.light(1188, 560, z + 80, "255 180 100 30")
+    # the store room and a second bunk room, on the boardwalk's new length
+    shack(m, 1296, 440, 1480, 632, z, 44, window="boards")
+    for u, v, yaw in ((1340, 590, 0), (1400, 596, 20), (1440, 560, 75)):
+        m.static("models/props_junk/wood_crate001a.mdl", u, v, yaw, z=z)
+    m.static("models/props_c17/oildrum001.mdl", 1330, 520, 0, z=z)
+    m.light(1390, 560, z + 80, "255 180 100 30")
+    shack(m, 1504, 436, 1700, 632, z, 45, window="glass")
+    for bu in (1552, 1650):
+        m.static("models/props_wasteland/prison_bedframe001b.mdl", bu, 572, 90, z=z)
+        mattress(m, bu, 572, 90, z=z + 30)
+    m.static("models/props_c17/lamp001a.mdl", 1600, 606, 0, z=z)
+    m.glow(1600, 606, z + 13, "255 190 110", 0.12)
+    m.light(1600, 560, z + 80, "255 180 100 30")
     # under the street: the fire drum and seats, the stove and its pipe, a table for the soup
     m.static("models/props_c17/oildrum001.mdl", 768, 400, 0)
     fire(m, 768, 400, F + 45, size=28, drop=False)                        # (it burns in the drum: an env_fire drops to the ground unless told not to)
@@ -1212,9 +1238,8 @@ def m_shanty(m, opt):
     m.grime("graffiti", 720, -112, F + 70, 14)
     # a plank fence against the wind at the basin's edge east of the street (west of it the floor is the flag's), clear
     # of the bank against the basin's end wall
-    m.static("models/props_wasteland/wood_fence01a.mdl", 965, 266, 0, z=F)
-    m.static("models/props_wasteland/wood_fence02a.mdl", 1062, 266, 0, z=F)
-    m.blocked(892, 248, 1102, 284)
+    # (the plank fence that stood here is gone: it stood across the tents' open ends, the owner, 26 November, "the tents'
+    #  entrances are blocked by the wooden panel you placed")
     # a string of bulbs: from a dock pole over the east basin to the bridge's deck, and on to a second pole
     poles = [(916, 330), (1136, 330)]
     for u, v in poles:
@@ -1236,7 +1261,7 @@ def m_shanty(m, opt):
     # floor deep (the street over the bridge is not in it). And where its airboat lies while the base is here (the
     # owner, 20 November: "the airboat for the canal's shantytown"): on the canal's floor west of the bridge, clear of
     # the boardwalk's steps and the walk along the far wall, its nose down the canal.
-    m.target("lc_zone_rebel_r520_h400_shanty", 768, 448, F + 8)
+    m.target("lc_zone_rebel_r780_h400_shanty", 1024, 448, F + 8)
     m.target("lc_base_vehicle_airboat_shanty", 200, -40, F + 8, 0)
     m.blocked(100, -110, 300, 30)
     # the camp's tents, folded into the shanty town (the owner, 24 November: the camp and the shanty "re-engineered and
@@ -1246,13 +1271,14 @@ def m_shanty(m, opt):
     from map_mods_b import mattress
     beds = [tent(m, u, v, F, L, W, H, "v", "lo", cloth, "props/carpetfloor001a", 14)
             for (u, v, L, W, H, cloth) in ((928, 272, 104, 96, 80, "props/tarpaperroof002a"), (1052, 276, 100, 88, 72, "props/carpetfloor006a"),
-                                           (1168, 270, 108, 92, 76, "plaster/plasterwall009d"))]
+                                           (1168, 270, 108, 92, 76, "plaster/plasterwall009d"), (1320, 274, 104, 92, 78, "props/tarpaperroof002a"),
+                                           (1470, 272, 100, 90, 74, "props/carpetfloor006a"))]
     mattress(m, beds[0][0], beds[0][1], 90, F + 2)
     for k, (bu, bv) in enumerate(beds):
         m.target("lc_shanty_tent_%d" % (k + 1), bu, bv, F + 8)
     # a boat pulled up, a notice board on two poles, what is left lying
-    m.static("models/props_canal/boat001a.mdl", 1360, 60, 15)
-    m.blocked(1240, -40, 1480, 160)
+    m.static("models/props_canal/boat001a.mdl", 1880, 60, 15)
+    m.blocked(1760, -40, 2000, 160)
     for u in (563, 629):
         m.static("models/props_docks/dock01_pole01a_128.mdl", u, 270, 0)
     m.static("models/props_lab/corkboard001.mdl", 596, 262, 270, z=F + 60)
@@ -1841,8 +1867,12 @@ def m_underpass(m, opt):
     # edge, the hole where it came in left out of it. On the street's side it meets the street (the edge fence opens);
     # on a side with no street the road ends at a gateway in the wall, shut with bars, dark behind.
     m.open(0, -256, 1536, 256)
-    for u in (448, 704, 960):                               # the piers
-        m.unpaint(u, -64, u + 64, 64)
+    # (the piers are slim columns now, 64 square under a small cap, each on a low sloped foot: the owner, 26 November,
+    #  "the underpass support columns and the sloped concrete brushes at their base look very cool but are way too
+    #  wide/broad/big; they need to be slimmed". They were 96 by 160, and stood as wall in the canal's floor, so the
+    #  canal's own banks, 128 out and 128 high, sloped up all round each)
+    for u in (448, 704, 960):
+        m.blocked(u - 40, -72, u + 104, 72)
     m.no_bank(824, -264, 968, -248)
     m.det([(256, -256, roof - 20, 832, 256, roof), (832, -128, roof - 20, 960, 256, roof), (960, -256, roof - 20, 1280, 256, roof)], MAT["beam"], top=MM["road"])
     m.det([(256, -256, roof, 272, 256, roof + 40), (1264, -256, roof, 1280, 256, roof + 40)], MAT["canal_wall"])
@@ -1861,20 +1891,25 @@ def m_underpass(m, opt):
                 (u1 - e + c, v2 + e), (u1 - e, v2 + e - c)]
     piers = []
     for u in (448, 704, 960):                               # each pier clad chamfered, a wider cap, a girder across on it
-        piers.append(vprism(octo(u, -64, u + 64, 64, 16, 16), F, roof - 24, "concrete/concretewall008a"))
-        piers.append(vprism(octo(u, -64, u + 64, 64, 32, 24), roof - 24, roof, MAT["beam"]))
+        piers.append(vprism(octo(u, -32, u + 64, 32, 0, 12), F, roof - 24, "concrete/concretewall008a"))
+        piers.append(vprism(octo(u, -32, u + 64, 32, 12, 12), roof - 24, roof, MAT["beam"]))
+        # its foot: a slope 32 out and 56 high against each face
+        piers.append(prism([(32, F + 56), (32, F), (64, F)], "x", u, u + 64, MAT["canal_wall"]))
+        piers.append(prism([(-32, F + 56), (-64, F), (-32, F)], "x", u, u + 64, MAT["canal_wall"]))
+        piers.append(prism([(u, F + 56), (u - 32, F), (u, F)], "y", -32, 32, MAT["canal_wall"]))
+        piers.append(prism([(u + 64, F + 56), (u + 64, F), (u + 96, F)], "y", -32, 32, MAT["canal_wall"]))
     m.shapes(piers)
     girders = []
     for u in (448, 704, 960):
         cu = u + 32
-        for v1, v2 in ((-256, -96), (96, 256)):
+        for v1, v2 in ((-256, -44), (44, 256)):
             girders.append(prism([(cu - 20, roof), (cu + 20, roof), (cu + 20, roof - 20), (cu + 12, roof - 30), (cu - 12, roof - 30), (cu - 20, roof - 20)], "y", v1, v2, MAT["beam"]))
     m.shapes(girders)
     for u in (448, 704, 960):                               # the road's drains down the piers' sides, a puddle under each
-        centred(m, "models/props_pipes/gutter_256_001a.mdl", u + 20, -86, 0, F + 128)        # (its head in the cap)
-        m.grime("puddle", u + 20, -110, F + 1, u)
-        m.grime("graffiti", u + 44, -80, F + 90, u + 1)
-    m.grime("graffiti", 736, 80, F + 120, 7)
+        centred(m, "models/props_pipes/gutter_256_001a.mdl", u + 20, -42, 0, F + 128)        # (its head in the cap)
+        m.grime("puddle", u + 20, -90, F + 1, u)
+        m.grime("graffiti", u + 32, -32, F + 110, u + 1)
+    m.grime("graffiti", 736, 32, F + 120, 7)
     # where the roof came in: the slab, its bars, rubble, a sign and its pole, daylight and dust
     m.shapes([prism([(-256, F + 210), (-256, F + 180), (-130, F), (-108, F)], "x", 836, 950, MAT["beam"])])
     m.static("models/props_debris/concrete_chunk01a.mdl", 820, -110, 40)
@@ -2094,7 +2129,7 @@ MODULES = {
     "shed": (2112, m_shed, "plain canal with a train's shed on the street beside it (two to a straight run; needs \"upper left\")", {"stretch": True}),
     "drain": (1024, m_drain, "1. the storm drain junction, down to the city's sewers (left)"),
     "overflow": (1024, m_overflow, "2. the overflow toward Ravenholm, behind a sluice plate (left)"),
-    "shanty": (1536, m_shanty, "4. the shantytown under a street bridge (left)"),
+    "shanty": (2048, m_shanty, "4. the shantytown under a street bridge (left)"),
     "vort": (1024, m_vort, "6. the vortigaunt culvert (left)"),
     "relay": (1024, m_relay, "7. Cubbage's relay shack and mast, on a pier (right)"),
     "checkpoint": (1280, m_checkpoint, "8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight"),

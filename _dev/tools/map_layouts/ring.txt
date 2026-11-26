@@ -84,7 +84,7 @@ left            # (no train: the boathouse's rooms and the stash's wall stand wh
 straight 1024      # (was "boathouse flip": taken off the ring, 24 November)
 straight 1024
 shanty flip
-straight 1280      # (was "camp flip": its tents are in the shanty now, 24 November)
+straight 768      # (was "camp flip", 1280: its tents are in the shanty now, 24 November; the shanty 512 longer, 26 November)
 vort flip
 sludge flip
 straight 1280      # (was "barge": taken off the ring, 24 November)
