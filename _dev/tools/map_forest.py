@@ -401,6 +401,55 @@ def clip_x(sol, xmax):
     return out
 
 
+def _pf_normal(pl):
+    a, b, c = pl
+    u = [c[k] - a[k] for k in range(3)]
+    w = [b[k] - a[k] for k in range(3)]
+    n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+    ln = math.sqrt(sum(x * x for x in n))
+    return [x / ln for x in n] if ln > 1e-9 else None
+
+
+def pf_clamp(sol, lo, hi):
+    """A lifted brush cut back to lie within lo..hi (x y z, in the piece's frame) where that only shortens it: along each
+    axis it overruns, every face is either square to that axis or runs along it (a box, or a wall or a floor sloped along
+    another axis), so its corners and plane points are moved in to the limit and every plane stays the plane it was.
+    Gives the brush (a copy when cut), or None: nothing of it inside, a displaced face, or an end that is not square."""
+    pts = [c for sd in sol["sides"] for c in (sd.get("corners") or []) + sd["plane"]]
+    out = None
+    for k in range(3):
+        mn, mx = min(c[k] for c in pts), max(c[k] for c in pts)
+        if min(mx, hi[k]) - max(mn, lo[k]) < 1:
+            return None
+        if mn >= lo[k] - 0.01 and mx <= hi[k] + 0.01:
+            continue
+        if any(sd.get("disp") for sd in sol["sides"]):
+            return None
+        for sd in sol["sides"]:
+            n = _pf_normal(sd["plane"])
+            if n is None or (abs(n[k]) > 1e-3 and abs(abs(n[k]) - 1) > 1e-3):       # (Valve's plane points are off by a thousandth here and there)
+                return None
+        out = copy.deepcopy(out or sol)
+        for sd in out["sides"]:
+            n0 = _pf_normal(sd["plane"])
+            for key in ("plane", "verts", "corners"):
+                sd[key] = [[min(max(c[i], lo[i]), hi[i]) if i == k else c[i] for i in range(3)] for c in sd.get(key) or []]
+            if _pf_normal(sd["plane"]) is None:          # (two of its plane points moved on to one: three of its corners instead)
+                cs = []
+                for c in sd["corners"]:
+                    if not any(all(abs(c[i] - d[i]) < 0.01 for i in range(3)) for d in cs):
+                        cs.append(c)
+                for a in range(len(cs)):
+                    trio = [cs[a], cs[(a + 1) % len(cs)], cs[(a + 2) % len(cs)]]
+                    n = _pf_normal(trio)
+                    if n is not None:
+                        sd["plane"] = trio if sum(n[i] * n0[i] for i in range(3)) > 0 else [trio[0], trio[2], trio[1]]
+                        break
+                else:
+                    return None
+    return out or sol
+
+
 def smooth(t):
     t = 0.0 if t < 0 else 1.0 if t > 1 else t
     return t * t * (3 - 2 * t)
@@ -617,6 +666,8 @@ class Forest:
                     a0 = c2
                 pieces.append((a0, b, None))
             for s1, s2, face in pieces:
+                if s2 <= s1:
+                    continue      # (two cuts that meet: nothing between them)
                 x1, y1, x2, y2 = frames[name](s1, s2)
                 v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
                 self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
@@ -3163,6 +3214,7 @@ class CaveForest(Forest):
         self.holdout()
         self.nest_door()
         self.nest_bridge()
+        self.back_way()
         self.workings_hull()
         for q in range(64, self.LONG - 100, 192):
             y = ym + q
@@ -3266,7 +3318,7 @@ class CaveForest(Forest):
         inside its south face; Valve's passage runs 48 into its north face (its cut, and the cut faces of its brushes,
         are inside the wall)."""
         v, zf, D, T = self.vmf, self.zf, self.D, WALL
-        x1, x2 = self.cuts["north"]
+        x1, x2 = self.cuts["north"][0] if isinstance(self.cuts["north"], list) else self.cuts["north"]     # (the back way cuts the wall too: back_way_plan)
         top = zf + 704
         B = self.box
         sv = self.vis("shell (sky, walls, slab)")
@@ -4000,6 +4052,379 @@ class CaveForest(Forest):
         self.lifts.append((s, train, car, top_z, bottom_z))
         return out
 
+    # --- the back way (the owner, 26 November) ------------------------------------------------------------------------
+
+    BW_PORCH = (1080, -1144, -3648)     # (d1_town_04's own coordinates) the porch of the brick head house at the top of the big room's
+                                        # shaft: its floor at its open south edge, where the gallery's side doorway opens on to it
+    BW_CLIMB_Y = 4992                   # the climb up the hill's west flank: its middle, along y (by the owner's spot on the mound)
+    BW_CLIMB_X = (216, 296, 392, 672)   # its foot's pad (west edge), the first ladder's frame, the second's, the top deck's east end
+
+    def back_way_plan(self):
+        """Where the back way goes, worked out before the shell is built: the forest's north wall is cut where its passage
+        goes through, just east of the stretch the big room's joint builds (back_way)."""
+        px, py, pz = self.room_pt(*self.BW_PORCH)
+        bw = {"door": (px, py, pz)}
+        bw["hx1"] = px + 1096                       # the gallery's low end (cut on Valve's grid where its slope starts): the head room's west end
+        bw["hx2"] = bw["hx1"] + 208                 # the head room's east end (inside)
+        bw["yi1"], bw["yi2"] = py - 336, py - 16    # the gallery's inside, across (its far wall cut back to the forest's north wall)
+        bw["zl"] = pz - 256                         # its floor at the low end: it climbs 256 to the porch's floor
+        bw["sx1"], bw["sx2"] = bw["hx2"] - 88, bw["hx2"] - 8      # the shaft and the passage to it, inside (80 across)
+        bw["sy2"] = bw["yi1"] + 216
+        bw["sy1"] = bw["sy2"] - 96
+        mid = (bw["sx1"] + bw["sx2"]) // 2
+        bw["mid"] = mid
+        bw["shed"] = (mid - 88, self.D - 176, mid + 88, self.D - 8)        # the shed's inside, its back wall on the forest's north wall
+        ground = max(self.natural(x, y) for x in range(mid - 112, mid + 113, 16) for y in range(self.D - 280, self.D + 1, 16))
+        bw["zd"] = int(math.ceil((ground + 40) / 8.0)) * 8                 # the shed's deck and the passage's floor: clear of the ground under them
+        joint = self.cuts["north"][0] if isinstance(self.cuts["north"], list) else self.cuts["north"]
+        bw["cut"] = (joint[1], joint[1] + 256)      # the stretch of the north wall built here, with the passage's hole in it
+        self.cuts["north"] = [joint, bw["cut"]]
+        bw["ways"], bw["keepout"] = [], []          # (the back way's own ways, and where its timbers stand: no tree or plant of the forest's in them, bw_trees)
+        self.bw = bw
+
+    def back_way(self):
+        """The back way into the workings (the owner, 26 November: "facing the cave entrance ... on the left side is little area
+        that goes around the left side of the cave that is kind of pointless: please add a way to get up to the top of the
+        displacement mound above the cave, to the outside top of it ... a way for intruders to get inside, and then make a
+        mine tunnel cut/pasted from EP2 ... and use it to connect to the existing ravenholm entrance"). A climb of two timber
+        ladders up the hill's west flank from the ditch round the left of the cave (bw_climb); across the mound, a mine shed
+        against the forest's north wall (bw_shed); a passage through the wall to a timber shaft with a ladder up it and a
+        head room at its top (bw_wall, bw_head); and Episode Two's sloped mine gallery (ep2_outland_03) climbing from the head
+        room to the porch of the brick head house at the top of the big room's shaft, its own side doorway opening on to the
+        porch (bw_gallery, bw_porch). All of it but the climb and the shed is inside the big room's box, which reaches east
+        over the head room and the shaft; the passage is that box's third opening (workings_hull)."""
+        bw = self.bw
+        px, py, pz = bw["door"]
+        if py - 408 != self.D + WALL:
+            self.problems.append("the back way's gallery does not meet the forest's north wall (its far wall at %d, the wall's back at %d)" % (py - 408, self.D + WALL))
+        self.bw_gallery()
+        self.bw_porch()
+        self.bw_head()
+        self.bw_wall()
+        self.bw_shed()
+        self.bw_climb()
+        r = list(self.room_box)
+        r[3] = max(r[3], bw["cut"][1])
+        self.room_box = tuple(r)
+        self.room_openings = [bw["hole"]]
+        w = lambda x, y, z: tuple(int(round(c)) for c in self.w(x, y, z))
+        cx, top = self.BW_CLIMB_X, bw["climb_top"]
+        self.notes.append("the back way: a climb of two timber ladders up the hill's west flank from the ditch at (%d %d %d) to the mound's top at (%d %d %d); "
+                          "the mine shed on the mound at (%d %d %d), its door south; through the forest's north wall to a ladder up a timber shaft (%d high) "
+                          "and Episode Two's sloped mine gallery (ep2_outland_03, %d long, climbing %d) to the porch of the head house at the top of the big room's shaft (%d %d %d)" % (
+                              w(cx[0] + 40, self.BW_CLIMB_Y, bw["pad"]) + w(cx[3] - 16, self.BW_CLIMB_Y, top) + w(bw["mid"], (bw["shed"][1] + bw["shed"][3]) / 2, bw["zd"])
+                              + (bw["zl"] - bw["zd"], bw["hx1"] - (px - 88), 256) + w(px, py + 48, pz)))
+
+    def bw_box(self, box, mat, vis, top=None, bottom=None, faces=None, world=True):
+        """One brush of the back way (forest frame): a world brush, or a func_detail with world=False."""
+        if world:
+            self.vmf.world_box(self.box(*box), mat, top=top or mat, bottom=bottom or mat, vis=vis, faces=faces)
+        else:
+            f = dict(faces or {})
+            if bottom:
+                f["bottom"] = bottom
+            self.vmf.detail([self.box(*box)], mat, vis=vis, top=top or mat, faces=f or None)
+
+    def bw_way(self, box, label):
+        self.keep_way_clear(box, label)
+        self.bw["ways"].append(self.box(*box))
+
+    def bw_gallery(self):
+        """Episode Two's sloped mine gallery (ep2_outland_03, lifted as valve_ep2_incline_gallery): a timber-lined box tunnel 320
+        wide that climbs 256 at 14 degrees, turned half round so it climbs west, its side doorway (Valve's own timber frame) on
+        the porch's south edge. Cut on Valve's grid: at its low end where its slope starts (the head room goes on from there),
+        at its high end 160 past the slope's top, capped 32 inside the cut (map_lessons: join Valve's pieces with the cut
+        hidden); its far wall cut back to the forest's north wall (72 of its 104 left), a back put in the refuge niche in it.
+        Left out: its railcar and the boards and crates across its foot (the owner: "nonono please don't insert the railcar as
+        a moving component"), the ladder up out of its top and the lamp beyond the cap."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        px, py, pz = bw["door"]
+        d = self.w(px, py, pz)
+        gv, gp = self.vis("back way: the gallery (Episode Two's, lifted from ep2_outland_03)"), self.vis("back way: the gallery's lights and timbers")
+        pf = copy.deepcopy(PF.load("valve_ep2_incline_gallery"))
+        lo, hi = (-1096, 0, -1000), (120, 408, 1000)      # (the piece's frame: Valve's x from the doorway, Valve's y from its wall, Valve's z from its floor)
+        pf["solids"] = [c for c in (pf_clamp(sol, lo, hi) for sol in pf["solids"]) if c is not None]
+        porch = [self.box(px - 216, py, pz, px + 360, py + 104, pz + 168)]
+        pf_finish(pf["solids"], 2, d, [(porch, {"floor": "concrete/concretefloor013a", "ceiling": "wood/woodfloor005a", "wall": "brick/brickwall048a"})], None,
+                  models=pf_model_boxes(pf))
+        for sol in pf["solids"]:      # (the rest of what Valve left bare faces the big room's box, or the space under its displaced floor: black as the box)
+            for sd in sol["sides"]:
+                if sd["material"].upper() == "TOOLS/TOOLSNODRAW":
+                    sd["material"] = MAT["black"].upper()
+        pf_solids(v, pf, 2, d, gv, world=True)
+
+        def keep(e):
+            cls, k = e["classname"], e["keys"]
+            if cls not in ("prop_static", "light", "light_spot", "env_sprite", "infodecal") or k.get("targetname") or "ladder" in k.get("model", ""):
+                return False
+            return -1080 <= e["origin"][0] <= 80
+
+        def edit(e):
+            if e["classname"] in ("light", "light_spot"):
+                e["keys"]["spawnflags"] = "0"
+        n0 = len(v.props)
+        pf_entities(v, pf, 2, d, "lc_back_", gp, gp, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+        self.valve_props.update(range(n0, len(v.props)))
+        wall, nd = "wood/woodwall_mine001a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        # the cap at the high end (its face 32 inside the cut), the wall over the doorway's lintel (Valve's alcove roofed it), the sill under the doorway
+        B((px - 120, py - 336, pz - 32, px - 88, py - 16, pz + 224), wall, gv, top=nd, bottom=nd, faces={"west": nd})
+        B((px - 56, py - 16, pz + 144, px + 56, py, pz + 224), wall, gv, top=nd, bottom=nd, faces={"north": "brick/brickwall048a"})
+        B((px - 40, py - 16, pz - 32, px + 40, py, pz), "wood/woodfloor005a", gv, bottom=nd, world=False)
+        # the refuge niche in the far wall: Valve's ran 104 deep, through where the forest's north wall stands; a back for it
+        B((px + 584, py - 408, pz - 200, px + 716, py - 392, pz - 22), wall, gv, top=nd, bottom=nd, faces={"south": nd})
+        # its ways: the doorway, the flat top, the slope (in steps, each kept clear from 10 over its highest floor), the porch to the house's door
+        self.bw_way((px - 36, py - 300, pz + 8, px + 36, py + 8, pz + 100), "the back way: the gallery's side doorway on to the porch")
+        self.bw_way((px - 80, py - 320, pz + 10, px - 72, py - 32, pz + 90), "the back way: the gallery's top")
+        self.bw_way((px - 72, py - 320, pz + 10, px + 72, py - 32, pz + 90), "the back way: the gallery's top")
+        for k in range(8):
+            xa = px + 72 + 128 * k
+            self.bw_way((xa, py - 320, pz - 32 * k + 10, xa + 128, py - 32, pz - 32 * k + 90), "the back way: the gallery's slope")
+        self.bw_way((px + 40, py + 8, pz + 8, px + 300, py + 96, pz + 90), "the back way: the porch, from the gallery to the head house's door")
+        for (x, y, z) in ((px + 900, py - 176, pz - 256 + 32), (px + 400, py - 176, pz - 80), (px, py - 176, pz), (px + 200, py + 56, pz)):
+            self.node(x, y, z)
+        v.point("env_cubemap", self.w(px + 500, py - 176, pz - 40), {"cubemapsize": "0"}, gv)
+        J = lambda a, b: self.w(*a) + self.w(*b)
+        self.joints += [("the back way: the gallery's side doorway on to the porch", J((px - 120, py - 320, pz - 16), (px + 120, py + 96, pz + 200)),
+                         [self.w(px, py - 80, pz + 48), self.w(px, py + 50, pz + 48)]),
+                        ("the back way: the cap at the gallery's high end", J((px - 96, py - 328, pz - 16), (px + 100, py - 8, pz + 232)), [self.w(px - 40, py - 176, pz + 64)]),
+                        ("the back way: the refuge niche in the gallery's far wall", J((px + 560, py - 400, pz - 100), (px + 740, py - 200, pz - 10)), [self.w(px + 650, py - 300, pz - 60)])]
+        # (that box starts over the gallery's floor: its gravel bed is a slab 8 thick on the slope, which the check's 8 unit cells can miss)
+
+    def bw_porch(self):
+        """The porch of the brick head house at the top of the big room's shaft: Valve's ran on to the town (left out, its
+        south wall with it), so it stood open to the dark of the box. Now the gallery's wall closes its south side and its
+        doorway opens on to it; a brick wall closes the rest of that side, and its west end."""
+        bw, B = self.bw, self.bw_box
+        px, py, pz = bw["door"]
+        pv, brick, nd = self.vis("back way: the porch's walls"), "brick/brickwall048a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        B((px - 224, py - 8, pz - 8, px - 120, py, pz + 176), brick, pv, top=nd, bottom=nd, faces={"south": nd})
+        B((px - 224, py, pz - 8, px - 216, py + 112, pz + 176), brick, pv, top=nd, bottom=nd, faces={"west": nd})
+        self.joints.append(("the back way: the porch's new walls", self.w(px - 230, py - 12, pz - 16) + self.w(px - 60, py + 106, pz + 172), [self.w(px - 150, py + 50, pz + 48)]))
+
+    def bw_head(self):
+        """The head room at the gallery's low end (its walls, floor and roof in line with the gallery's, so the cut is hidden),
+        with the shaft under it: a timber well 80 by 96 up from the passage's floor, and a ladder of Valve's wooden pieces
+        (props_forest/ladderwood, as Episode Two's mines have them) up its far wall to the head room's floor."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        hx1, hx2, yi1, yi2, zl, zd = bw["hx1"], bw["hx2"], bw["yi1"], bw["yi2"], bw["zl"], bw["zd"]
+        sx1, sx2, sy1, sy2, mid = bw["sx1"], bw["sx2"], bw["sy1"], bw["sy2"], bw["mid"]
+        hv = self.vis("back way: the head room, the shaft and the passage")
+        wall, floor, roof, nd = "wood/woodwall_mine001a", "nature/dirtfloor_mine001a", "wood/woodfloor005a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        ys, zr = self.D + WALL, zl + 320
+        # the head room: walls (the south one as thick as the gallery's far wall), roof, and its floor round the well
+        B((hx1, ys, zl - 16, hx2 + 16, yi1, zr + 32), wall, hv, top=nd, bottom=nd, faces={"south": nd})
+        B((hx1, yi2, zl - 16, hx2 + 16, yi2 + 16, zr + 32), wall, hv, top=nd, bottom=nd, faces={"north": nd})
+        B((hx2, yi1, zl - 16, hx2 + 16, yi2, zr + 32), wall, hv, top=nd, bottom=nd, faces={"east": nd})
+        B((hx1, yi1, zr, hx2, yi2, zr + 32), roof, hv, top=nd, bottom=roof)
+        for box in ((hx1, yi1, zl - 8, sx1, yi2, zl), (sx2, yi1, zl - 8, hx2, yi2, zl), (sx1, yi1, zl - 8, sx2, sy1, zl), (sx1, sy2, zl - 8, sx2, yi2, zl)):
+            B(box, roof, hv, top=floor, bottom=nd)
+        B((hx1, yi1, zl - 64, hx1 + 16, yi2, zl - 8), roof, hv)       # (a beam under the floor's edge at the join: the gallery's floor ends on it)
+        # the shaft: its walls from the passage's floor up to the head room's floor (over the passage, its south wall)
+        B((sx1 - 16, sy1, zd, sx1, sy2 + 16, zl - 8), wall, hv, top=nd, bottom=nd, faces={"west": nd})
+        B((sx2, sy1, zd, sx2 + 16, sy2 + 16, zl - 8), wall, hv, top=nd, bottom=nd, faces={"east": nd})
+        B((sx1, sy2, zd, sx2, sy2 + 16, zl - 8), wall, hv, top=nd, bottom=nd, faces={"north": nd})
+        B((sx1, sy1 - 16, zd + 128, sx2, sy1, zl - 8), wall, hv, top=nd, bottom=nd, faces={"south": nd})
+        # timber cribbing round the well every 128 up (16 by 16, Ravenholm's shafts have a ring every 190 to 320)
+        tb = FMAT["timber"]
+        for z in range(zd + 128, zl - 40, 128):
+            v.detail([self.box(sx1, sy2 - 8, z, sx2, sy2, z + 16), self.box(sx1, sy1, z, sx1 + 8, sy2 - 8, z + 16), self.box(sx2 - 8, sy1, z, sx2, sy2 - 8, z + 16)], tb, vis=hv)
+        # the ladder up the well's north wall, facing south
+        ly = sy2 - 3.5
+        z = zd
+        while z < zl - 20:
+            v.point("prop_static", self.w(mid, ly, z + 75), {"model": "models/props_forest/ladderwood.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                                             "fademindist": "-1", "fadescale": "1"}, hv)
+            z += 148
+        fy = int(sy2 - 24)
+        v.point("func_useableladder", self.w(mid, fy, zd + 130), {"point0": "%d %d %d" % self.w(mid, fy, zd + 2), "point1": "%d %d %d" % self.w(mid, fy, zl + 12),
+                                                                  "spawnflags": "0", "StartDisabled": "0"}, hv)
+        v.point("info_ladder_dismount", self.w(mid, sy2 - 74, zd + 1), {}, hv)
+        v.point("info_ladder_dismount", self.w(mid, sy2 + 40, zl + 1), {}, hv)
+        for (x, y, z, col) in ((mid, (sy1 + sy2) / 2, zd + 96, "255 210 150 50"), (mid, (sy1 + sy2) / 2, zl - 120, "255 210 150 30"), (hx1 + 80, (yi1 + yi2) / 2, zl + 200, "255 210 150 60")):
+            v.point("light", self.w(x, y, z), {"_light": col, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, hv)
+        self.bw_way((mid - 16, sy2 - 40, zd + 2, mid + 16, sy2 - 8, zl + 72), "the back way: the ladder up the shaft")
+        self.bw_way((hx1 + 8, yi1 + 8, zl + 8, sx1 - 4, yi2 - 8, zl + 90), "the back way: the head room")
+        self.bw_way((sx1 - 4, sy2 + 4, zl + 8, hx2 - 8, yi2 - 8, zl + 90), "the back way: the head room, off the ladder")
+        self.node(hx1 + 60, (yi1 + yi2) / 2, zl)
+        J = lambda a, b: self.w(*a) + self.w(*b)
+        self.joints += [("the back way: the gallery's low end and the head room", J((hx1 - 160, yi1 - 8, zl - 40), (hx2 + 8, yi2 + 8, zr + 8)),
+                         [self.w(hx1 - 80, (yi1 + yi2) / 2, zl + 60), self.w(hx1 + 80, (yi1 + yi2) / 2, zl + 60)]),
+                        ("the back way: the shaft", J((sx1 - 8, sy1 - 8, zd - 4), (sx2 + 8, sy2 + 8, zl + 4)), [self.w(mid, (sy1 + sy2) / 2, zd + 200)])]
+
+    def bw_wall(self):
+        """The stretch of the forest's north wall east of the big room's joint (back_way_plan cut it out of the shell), built
+        as the shell builds it, with the hole the passage goes through; the passage, lined in timber, from the shed's back
+        through the wall to the foot of the shaft."""
+        bw, B = self.bw, self.bw_box
+        D, T = self.D, WALL
+        c1, c2 = bw["cut"]
+        sx1, sx2, sy1, zd = bw["sx1"], bw["sx2"], bw["sy1"], bw["zd"]
+        h1, h2, z1, z2 = sx1 - 16, sx2 + 16, zd - 8, zd + 128
+        sv, sky, black = self.vis("shell (sky, walls, slab)"), MAT["sky"], MAT["black"]
+        # Sky on the forest's side where it shows, as the shell's; black (as the big room's box) on its back, and on its
+        # front behind the shed (up to its roof) and under the ground beside it: where the shed's posts, boards and ramp go
+        # into the ground the hole check's cubes slip under the ground's skin, and a sky face there counts as one under a roof
+        x1s, x2s = bw["shed"][0] - 8, bw["shed"][2] + 8
+        zr = zd + 152
+        under = int(min(self.natural(x, D - 8) for x in range(c1, c2 + 1, 8))) - 16
+        for (a, b, lo, hi) in ((c1, x1s, self.zb, self.lid), (x1s, h1, self.zb, self.lid), (h1, h2, self.zb, z1), (h1, h2, z2, self.lid),
+                               (h2, x2s, self.zb, self.lid), (x2s, c2, self.zb, self.lid)):
+            if b <= a:
+                continue
+            split = zr if x1s <= a and b <= x2s else under
+            for (za, zb_, front) in ((lo, min(hi, split), black), (max(lo, split), hi, sky)):
+                if zb_ > za:
+                    self.vmf.world_box(self.box(a, D, za, b, D + T, zb_), sky, vis=sv, faces={"north": black, "south": front})
+        bw["hole"] = (h1, D, z1, h2, D + T, z2)
+        hv = self.vis("back way: the head room, the shaft and the passage")
+        wall, floor, roof, nd = "wood/woodwall_mine001a", "nature/dirtfloor_mine001a", "wood/woodfloor005a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        B((h1, D, z1, h2, bw["sy2"] + 16, zd), floor, hv, top=floor, bottom=nd)
+        B((h1, D, zd + 112, h2, sy1, z2), roof, hv, top=nd, bottom=roof)
+        B((h1, D, zd, sx1, sy1, zd + 112), wall, hv, top=nd, bottom=nd, faces={"west": nd})
+        B((sx2, D, zd, h2, sy1, zd + 112), wall, hv, top=nd, bottom=nd, faces={"east": nd})
+        # timber sets along it (posts and a cap, Ravenholm's 16 by 16)
+        tb = FMAT["timber"]
+        for y in (D + T + 24, sy1 - 40):
+            self.vmf.detail([self.box(sx1, y, zd, sx1 + 8, y + 16, zd + 104), self.box(sx2 - 8, y, zd, sx2, y + 16, zd + 104), self.box(sx1, y, zd + 104, sx2, y + 16, zd + 112)], tb, vis=hv)
+        self.bw_way((sx1 + 10, D - 8, zd + 8, sx2 - 10, sy1 + 40, zd + 100), "the back way: the passage through the north wall to the shaft")
+        self.joints.append(("the back way: the passage through the forest's north wall", self.w(sx1 - 20, D - 120, zd - 12) + self.w(sx2 + 20, sy1 + 8, zd + 132),
+                            [self.w(bw["mid"], D - 60, zd + 48), self.w(bw["mid"], D + T + 60, zd + 48)]))
+
+    def bw_shed(self):
+        """The mine shed on the mound (the owner: "build a small structure on top of the existing cave entrance mound that
+        connects it all"): Episode Two's board walls and corrugated iron on a plank deck raised on 16 by 16 posts sunk in the
+        ground (nothing flat laid on the displaced ground: the owner, of gaps where flat brushes meet it), its back against
+        the forest's north wall where the passage goes in, its door south on to the mound up a plank ramp sunk at its foot."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        x1, y1, x2, y2 = bw["shed"]
+        zd, mid, sx1, sx2 = bw["zd"], bw["mid"], bw["sx1"], bw["sx2"]
+        D = self.D
+        zt = zd + 144
+        shv = self.vis("back way: the mine shed")
+        board, deck, post, tin, nd = FMAT["office_wall"], "wood/woodfloor005a", FMAT["timber"], FMAT["office_ceiling"], MAT["nodraw"]
+        low = lambda xa, ya, xb, yb: int(min(self.natural(x, y) for x in range(int(xa), int(xb) + 1, 8) for y in range(int(ya), int(yb) + 1, 8))) - 48
+        # the deck, and the posts it stands on (sunk 48 below the lowest ground round each)
+        B((x1 - 8, y1 - 8, zd - 8, x2 + 8, D, zd), deck, shv, world=False)
+        for (xa, ya) in ((x1 - 12, y1 - 12), (x2 - 4, y1 - 12), (x1 - 12, D - 12), (x2 - 4, D - 12)):
+            B((xa, ya, low(xa, ya, xa + 16, ya + 12 if ya > y1 else ya + 16), xa + 16, ya + (12 if ya > y1 else 16), zt), post, shv, world=False)
+        for xa in (x1 - 12, x2 - 4):
+            B((xa, (y1 + D) / 2 - 8, low(xa, (y1 + D) / 2 - 8, xa + 16, (y1 + D) / 2 + 8), xa + 16, (y1 + D) / 2 + 8, zd - 8), post, shv, world=False)
+        # the walls (8 thick, board), the doorway framed in timber standing 4 proud each side
+        B((x1 - 8, y1, zd, x1, y2, zt), board, shv, world=False)
+        B((x2, y1, zd, x2 + 8, y2, zt), board, shv, world=False)
+        B((x1 - 8, y1 - 8, zd, mid - 40, y1, zt), board, shv, world=False)
+        B((mid + 40, y1 - 8, zd, x2 + 8, y1, zt), board, shv, world=False)
+        B((mid - 40, y1 - 8, zd + 120, mid + 40, y1, zt), board, shv, world=False)
+        for xa in (mid - 40, mid + 32):
+            B((xa, y1 - 12, zd, xa + 8, y1 + 4, zd + 120), post, shv, world=False)
+        B((mid - 32, y1 - 12, zd + 112, mid + 32, y1 + 4, zd + 120), post, shv, world=False)
+        # the back wall, with the passage's opening in it
+        B((x1 - 8, y2, zd, sx1, D, zt), board, shv, world=False, faces={"north": nd})
+        B((sx2, y2, zd, x2 + 8, D, zt), board, shv, world=False, faces={"north": nd})
+        B((sx1, y2, zd + 112, sx2, D, zt), board, shv, world=False, faces={"north": nd})
+        # the roof: corrugated iron, eaves 24 over the walls, to the wall behind
+        B((x1 - 8, y1 - 32, zt, x2 + 8, D, zt + 8), post, shv, top=tin, bottom=tin, world=False)
+        # (no eaves at its sides, and boards down from the deck into the ground behind it: the forest's north wall is sky, and
+        #  none of it may show under the shed)
+        B((x1 - 8, y2, low(x1 - 8, y2, x2 + 8, D) + 8, x2 + 8, D, zd - 8), board, shv, world=False, faces={"north": nd})
+        # the ramp up to the door, its foot sunk into the ground
+        g = int(self.natural(mid, y1 - 104))
+        foot = min(g - 4, zd - 24)
+        length = max(96, int(math.ceil((zd - foot) / 0.75 / 8.0)) * 8)
+        ya, yb = y1 - 8 - length, y1 - 8
+        under = min(foot, low(mid - 32, ya, mid + 32, yb) + 40) - 40
+        faces = []
+        for xa in (mid - 32, mid + 32):
+            faces.append(([(xa, yb, zd), (xa, ya, foot), (xa, ya, under), (xa, yb, under)], deck))
+        corners = lambda pts: [tuple(int(c) for c in self.w(*p)) for p in pts]
+        shape = [(corners([(mid - 32, yb, zd), (mid + 32, yb, zd), (mid + 32, ya, foot), (mid - 32, ya, foot)]), deck),
+                 (corners([(mid - 32, yb, under), (mid - 32, ya, under), (mid + 32, ya, under), (mid + 32, yb, under)]), deck),
+                 (corners([(mid - 32, yb, zd), (mid - 32, yb, under), (mid + 32, yb, under), (mid + 32, yb, zd)]), deck),
+                 (corners([(mid - 32, ya, foot), (mid + 32, ya, foot), (mid + 32, ya, under), (mid - 32, ya, under)]), deck)]
+        shape += [(corners(pts), m) for pts, m in faces]
+        v.detail_shapes([shape], vis=shv)
+        # a lamp over the passage, its light, a crate in a corner
+        v.point("prop_static", self.w(mid, y2 - 1, zd + 128), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 270 0", "skin": "0", "solid": "0",
+                                                                "fademindist": "-1", "fadescale": "1"}, shv)
+        v.point("light", self.w(mid, (y1 + y2) / 2, zd + 110), {"_light": "255 214 160 40", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, shv)
+        self.bw_way((mid - 28, ya, zd + 8, mid + 28, D, zd + 100), "the back way: the shed's door, from its ramp to the passage")
+        bw["keepout"].append(self.box(x1 - 40, ya, zd - 64, x2 + 40, D, zt + 160))      # (no tree or plant through the shed: bw_trees)
+        self.joints.append(("the back way: the shed's back, where the passage goes in", self.w(x1, y2 - 60, zd - 4) + self.w(x2, D + 40, zt - 4), [self.w(mid, y2 - 40, zd + 48)]))
+
+    def bw_climb(self):
+        """The climb (the owner: "a way to get up to the top of the displacement mound above the cave ... whether that's a
+        ladder, a switchback of logs to climb up, etc", and "it's ok if the player has to jump up logs; please don't just make
+        literal stairs"): two ladders of Valve's wooden pieces against timber frames, from a timber pad across the bottom of
+        the ditch to a landing on posts halfway up the hill's west flank, and from there to a deck that runs out on to the
+        mound's top. Every timber that meets the ground goes down into it, sunk 32 under the lowest ground round it."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        cy = self.BW_CLIMB_Y
+        xp, xa, xb, xt = self.BW_CLIMB_X
+        cv = self.vis("back way: the climb up the hill's west flank")
+        deck, post, nd = "wood/woodfloor005a", FMAT["timber"], MAT["nodraw"]
+        low = lambda xa_, ya, xb_, yb: int(min(self.natural(x, y) for x in range(int(xa_), int(xb_) + 1, 8) for y in range(int(ya), int(yb) + 1, 8))) - 32
+        ditch = min(self.natural(x, cy) for x in range(xp, xa + 17, 4))
+        zp = int(ditch) + 40                                     # the pad: a jump (40) up from the ditch's bottom
+        zt = int(math.ceil(max(self.natural(x, y) for x in range(xt - 64, xt + 1, 8) for y in range(cy - 48, cy + 49, 16)) + 2))     # the top deck: level with the mound's edge
+        zm = int((zp + zt) / 2)                                  # the landing halfway
+        bw["pad"], bw["climb_top"] = zp, zt
+        y1, y2 = cy - 48, cy + 48
+        B((xp, cy - 40, low(xp, cy - 40, xa + 16, cy + 40), xa, cy + 40, zp), deck, cv, world=False)
+        B((xa, y1, zm - 56, xb + 48, y2, zm), deck, cv, world=False)
+        B((xb, y1, zt - 32, xt, y2, zt), deck, cv, world=False)
+        # the frames the ladders stand against, and the posts under the landing and the top deck
+        for (x, za, zb) in ((xa, None, zm - 56), (xb, zm, zt - 32), (xa + 64, None, zm - 56), (xb + 112, None, zt - 32)):
+            for ya in (y1, y2 - 16):
+                bottom = za if za is not None else low(x, ya, x + 16, ya + 16)
+                if zb - bottom > 8:
+                    B((x, ya, bottom, x + 16, ya + 16, zb), post, cv, world=False)
+        # the ladders, facing west (a climber faces east, up the hill)
+        for (x, z0, z1) in ((xa, zp, zm), (xb, zm, zt)):
+            lx = x - 3.5
+            z = z0
+            while z < z1 - 20:
+                self.static("models/props_forest/ladderwood.mdl", lx, cy, z + 75, 180, "back way: the climb up the hill's west flank")
+                z += 148
+            fx = int(lx - 20)
+            v.point("func_useableladder", self.w(fx, cy, z0 + 130), {"point0": "%d %d %d" % self.w(fx, cy, z0 + 2), "point1": "%d %d %d" % self.w(fx, cy, z1 + 12),
+                                                                     "spawnflags": "0", "StartDisabled": "0"}, cv)
+            v.point("info_ladder_dismount", self.w(lx - 60, cy, z0 + 1), {}, cv)
+            v.point("info_ladder_dismount", self.w(lx + 42, cy, z1 + 1), {}, cv)
+            self.bw_way((fx - 14, cy - 16, z0 + 2, x - 8, cy + 16, z1 + 72), "the back way: a ladder up the hill's west flank")
+        self.bw_way((xa + 20, cy - 32, zm + 4, xb - 8, cy + 32, zm + 80), "the back way: the landing halfway up the hill's west flank")
+        self.bw_way((xb + 20, cy - 32, zt + 4, xt, cy + 32, zt + 80), "the back way: the top of the climb, on to the mound")
+        self.bw_way((xp + 8, cy - 32, zp + 4, xa - 8, cy + 32, zp + 80), "the back way: the climb's foot")
+        bw["keepout"].append(self.box(xp, y1, zp - 40, xt, y2, zt + 160))      # (no tree or plant through the climb: bw_trees)
+
+    def bw_trees(self, final=False):
+        """(After planting, and again after settle() has moved rocks and logs off what they stood in.) A tree, plant, rock or
+        log of the forest's that stands in one of the back way's ways or timbers is left out: nothing else moves and
+        planting's own numbers are drawn as they always were, so every other tree is where the owner has seen it."""
+        import map_build
+        ways = self.bw.get("ways", []) + self.bw.get("keepout", [])
+        by_ent = dict((r["ent"], r) for r in self.placed)
+        gone = []
+        for k, text in enumerate(self.vmf.ents):
+            if '"classname" "prop_static"' not in text:
+                continue
+            m = re.search(r'\t"model" "(models/(?:props_foliage/|props_forest/log)[^"]*)"\n', text)
+            o = re.search(r'\t"origin" "([^"]*)"\n', text)
+            a = re.search(r'\t"angles" "([^"]*)"\n', text)
+            if not (m and o):
+                continue
+            pos = tuple(float(c) for c in o.group(1).split())
+            yaw = float(a.group(1).split()[1]) if a else 0.0
+            b = map_build.prop_box(m.group(1), pos, yaw)
+            if b and any(b[0] < w[3] and b[3] > w[0] and b[1] < w[4] and b[4] > w[1] and b[2] < w[5] and b[5] > w[2] for w in ways):
+                self.vmf.ents[k] = ""
+                if k in by_ent:
+                    by_ent[k]["gone"] = True
+                gone.append((m.group(1), pos))
+        self.vmf.props = [p for p in self.vmf.props if not any(p[2] == g[0] and all(abs(p[1][i] - g[1][i]) < 1 for i in range(3)) for g in gone)]
+        self.bw["trees_gone"] = self.bw.get("trees_gone", 0) + len(gone)
+        if final and self.bw["trees_gone"]:
+            self.notes.append("the back way: %d of the forest's trees, plants, rocks and logs left out where they stood in its climb or its shed" % self.bw["trees_gone"])
+
     def workings_hull(self):
         """One shut box round all that lies behind the forest's north wall, and inside it a shut box of its own round the
         big room: the room's box is shut but for the hole from the cave and the emergency door (its west wall is the
@@ -4066,7 +4491,8 @@ class CaveForest(Forest):
         closed = flood(v, inside_deep, [stop_door])
         if closed[0] is None or reaches(closed, forest_air) or reaches(closed, inside_room):
             self.problems.append("what lies behind the emergency door is open to the room or the forest somewhere other than the door")
-        closed = flood(v, inside_room, [stop_hole, stop_door])
+        stops = [stop_hole, stop_door] + [self.box(*o) for o in getattr(self, "room_openings", [])]      # (and the back way's passage: back_way)
+        closed = flood(v, inside_room, stops)
         if closed[0] is None or reaches(closed, forest_air) or reaches(closed, inside_deep):
             self.problems.append("the big room's box is open somewhere other than the hole from the cave and the emergency door")
         self.notes.append("behind the forest's north wall: one shut box x %d to %d, y %d to %d, z %d to %d (the big room's own box inside it)" % (
@@ -4340,12 +4766,15 @@ def forest_cave(args):
     f = CaveForest("forest (cave, stream)", tuple(args.origin or (-10240, 4608)), floor, 47, args.first_node or 4600, ("east", 256))
     f.test = bool(getattr(args, "test", False))
     f.setup()
+    f.back_way_plan()
     f.shell()
     f.ground()
     f.water()
     f.cave()
     f.plant()
+    f.bw_trees()
     f.settle()
+    f.bw_trees(final=True)
     f.ground_nodes()
     f.finish()
     if args.preview:
