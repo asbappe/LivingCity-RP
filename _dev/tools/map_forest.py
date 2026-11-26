@@ -528,6 +528,7 @@ class Forest:
     SHORE_MUD = True # ground just above a water's level turns to dirt (the pond's shore)
     TREES = 0.75     # how thickly trees stand (the owner, after walking both: "too thick with trees ... reduce it about 25%")
     ROCKS_N, LOGS_N = 34, 12     # how many rocks and fallen logs
+    BACK_BLACK = False   # the shell's faces on its north side look into a shut box of black walls behind it (the cave forest's): black, not sky
 
     def __init__(self, name, origin, z0, seed, first_node, gate):
         self.name, self.seed = name, seed
@@ -648,7 +649,8 @@ class Forest:
         sky, nd = MAT["sky"], MAT["nodraw"]
         vis = self.vis("shell (sky, walls, slab)")
         v.world_box(self.box(-T, -T, self.zb - 64, W + T, D + T, self.zb), nd, vis=vis)
-        v.world_box(self.box(-T, -T, self.lid, W + T, D + T, self.lid + 16), sky, sky, sky, vis=vis)
+        back = {"north": MAT["black"]} if self.BACK_BLACK else {}
+        v.world_box(self.box(-T, -T, self.lid, W + T, D + T, self.lid + 16), sky, sky, sky, vis=vis, faces=back or None)
         side, g = self.gate
         ends = {"west": (-T, D + T), "east": (-T, D + T), "south": (0, W), "north": (0, W)}
         frames = {"west": lambda a, b: (-T, a, 0, b), "east": lambda a, b: (W, a, W + T, b), "south": lambda a, b: (a, -T, b, 0), "north": lambda a, b: (a, D, b, D + T)}
@@ -669,7 +671,9 @@ class Forest:
                 if s2 <= s1:
                     continue      # (two cuts that meet: nothing between them)
                 x1, y1, x2, y2 = frames[name](s1, s2)
-                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
+                faces = dict(back) if y2 == D + T else {}
+                faces.update({face: MAT["canal_wall"]} if face else {})
+                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces=faces or None)
                 self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
@@ -2851,6 +2855,7 @@ def old_nest_draws(rnd, L):
 
 class CaveForest(Forest):
     SHORE_MUD = False                   # (the stream's banks are dirt by their own rule)
+    BACK_BLACK = True                   # (behind its north wall, the box round the big room and the holdout, black inside: workings_hull)
     CX, YM, LONG = 2304, 2560, 3072     # the mouth's middle, the hillside's line, how far in it goes (to the forest's north wall: the emergency door)
     # The bend (the owner: "it's a straight shot still; can it curve ... so a combine unit can't just slaughter everyone
     # inside if they are standing outside"): straight in for 768, then over the next 768 the passage moves 960 west, then
@@ -3331,7 +3336,7 @@ class CaveForest(Forest):
         v.world_box(B(hx2, D, self.zb, x2, D + T, top), jm, vis=sv)
         v.world_box(B(hx1, D, zf + hz, hx2, D + T, top), jm, bottom=jm, vis=sv)
         v.world_box(B(hx1, D, self.zb, hx2, D + T, zf), jm, top=fl, vis=sv)
-        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv)
+        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv, faces={"north": MAT["black"]})      # (its back in the big room's box: black as the box)
         under = min(self.natural(x, D, (0, 0)) for x in range(x1, x2 + 1, 64)) - top
         if under < 8:
             self.problems.append("the wall the cave ends in stands %d out of the hill" % -under)
@@ -3374,7 +3379,8 @@ class CaveForest(Forest):
         def edit(e):
             if e["classname"] in ("light", "light_spot"):
                 e["keys"]["spawnflags"] = "0"
-        pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit)
+        pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit,
+                                solids=lambda sols: self.bare_finish(sols, skip, "the big room"))
         # two flights of the shaft's metal stairs are broken in Valve's own map (its stair check finds the same): the top
         # one stops in mid air where the stairs above collapsed, the bottom one hangs over the floor (its fallen catwalk,
         # a func_physbox, is left out); kept as Valve built them
@@ -3654,10 +3660,11 @@ class CaveForest(Forest):
                 e["keys"]["spawnflags"] = "3"
         extra = self.holdout_lift()
         pf, boxes = self.lifted("valve_ep2_holdout", 0, d, hv, hp, "lc_holdout_", skip=skip, keep=keep, edit=edit, extra=extra, clip=3040 - 2848,
-                                solids=self.lift_2_recess)
+                                solids=lambda sols: self.bare_finish(self.lift_2_recess(sols), skip, "the holdout"))
         X1, Y1, Z1 = (min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         X2, Y2, Z2 = (max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         self.deep_reach = (X1, Y1, Z1, X2, Y2, Z2)
+        self.holdout_pit(d)
         B, P = self.box, self.deep_pt
         cm, rock = "concrete/concretewall_mine_002a", "nature/blendrockslime02a"
 
@@ -3749,6 +3756,112 @@ class CaveForest(Forest):
                           "Valve's %d grubs where Valve put them; the alarm post by the emergency door; %d antlion makers in the cleft beyond it" % (
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), 2848 - 1150, 1728 - 512,
                               grubs, len(makers)))
+
+    def holdout_pit(self, d):
+        """The chasm under the antlion tunnels, Valve's own (valve_ep2_holdout_pit, lifted from ep2_outland_03 below the
+        holdout's box, same anchor). The drop beyond the emergency door and the tunnels' edges look down into it: in
+        Valve's map the cleft goes on down between walls of black rock to a black floor 1024 under the walkway. Without it
+        the drop opened into the shut box's empty space, where Valve's sealing blocks showed their nodraw faces (the owner,
+        26 November: "can you just re-copy the cave from EP2? ... when AI tries to patch a VMF map, it tries to use flat
+        brushes behind/with displacement geometry and it doesn't work"). Valve's triggers there (a fall kills) are left
+        out: a fall of 1024 does it."""
+        pv = self.vis("holdout: the chasm under the antlion tunnels (Episode Two's)")
+        cap = -5696 + 10136        # (Valve's y -5696, in the piece's frame: the north face of Valve's sealing wall at the chasm's north end)
+
+        def short(sols):      # (two of Valve's rock brushes there run 256 on behind that wall; their rock is their south face, so they end with the wall;
+            sols = [sol for sol in sols if min(c[1] for sd in sol["sides"] for c in sd["corners"] or []) < cap]      # a board wholly beyond it is left out)
+            for sol in sols:
+                if len(sol["sides"]) == 6 and any(c[1] > cap for sd in sol["sides"] for c in sd["corners"] or []) and all(
+                        c[1] <= cap for sd in sol["sides"] if sd.get("disp") for c in sd["corners"] or []):
+                    for sd in sol["sides"]:
+                        for key in ("plane", "verts", "corners"):
+                            sd[key] = [[c[0], min(c[1], cap), c[2]] for c in sd.get(key) or []]
+            return sols
+        pf, boxes = self.lifted("valve_ep2_holdout_pit", 0, d, pv, pv, "lc_holdout_pit_", keep=lambda e: False, clip=3040 - 2848, solids=short)
+        r = self.deep_reach
+        lo = [min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3)]
+        hi = [max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3)]
+        self.deep_reach = tuple(min(r[k], lo[k]) for k in range(3)) + tuple(max(r[k + 3], hi[k]) for k in range(3))
+        self.notes.append("the chasm under the antlion tunnels: Valve's (%d brushes, %d displaced faces), its floor at z %d" % (
+            len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), lo[2]))
+
+    def bare_finish(self, sols, skip, what):
+        """A lifted piece's bare faces that now show. Valve left faces nobody saw in its own map bare (nodraw draws
+        nothing): in ep2_outland_03 those seen only against the sky (over the pit, the gallery's open side, the cliff:
+        the backs of the pit's top walls, blocks behind its tree cards, left out here, the tops of the sheds' walls
+        under their eaves, the ends of the lift's framework), and in both pieces those behind what is left out or past
+        where the piece is cut (Ravenholm's fence over its mouth passage's timber, the sealing round its passage's
+        areaportal, the landing's walls over the shaft). Here the sky is black (lifted()), so they showed the void. Each
+        of Valve's own nodraw faces that looks into open air (inside no other brush of the piece, and inside the piece's
+        reach, so not its outer shell) is drawn: black as the sky and the box round it, or, a small face (256 or less
+        across) of something built (a brush with a material of its own), in that material. No brush is added or moved
+        (the owner, 26 November, of patching the cave: "when AI tries to patch a VMF map, it tries to use flat brushes
+        behind/with displacement geometry and it doesn't work"). sols: the piece's brushes in its own frame, changed in
+        place; skip: those not placed."""
+        nd, black = "TOOLS/TOOLSNODRAW", MAT["black"].upper()
+        placed = [sol for sol in sols if not skip(sol)]
+
+        def pts(sd):
+            return sd.get("verts") or sd.get("corners") or []
+        geo, boxes = [], []
+        for sol in placed:
+            allc = [c for sd in sol["sides"] for c in pts(sd)]
+            if not allc:
+                geo.append(None)
+                continue
+            mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
+            planes = []
+            for sd in sol["sides"]:
+                a, b, c = sd["plane"]
+                u, w = [a[k] - b[k] for k in range(3)], [c[k] - b[k] for k in range(3)]
+                n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+                ln = math.sqrt(sum(x * x for x in n)) or 1.0
+                n = [x / ln for x in n]
+                dd = sum(n[k] * a[k] for k in range(3))
+                if sum(n[k] * mid[k] for k in range(3)) - dd > 0:
+                    n, dd = [-x for x in n], -dd
+                planes.append((n, dd))
+            box = [min(c[k] for c in allc) for k in range(3)] + [max(c[k] for c in allc) for k in range(3)]
+            boxes.append(box)
+            if any(sd.get("disp") for sd in sol["sides"]):
+                geo.append(None)      # (a displaced brush covers nothing: the compiler keeps only its skin, and the skin is not its box)
+                continue
+            geo.append((planes, box, mid))
+        reach = [min(b[k] for b in boxes) + 2 for k in range(3)] + [max(b[k + 3] for b in boxes) - 2 for k in range(3)]
+
+        def covered(p, own):
+            for j, g in enumerate(geo):
+                if g is None or j == own or any(p[k] < g[1][k] - 0.01 or p[k] > g[1][k + 3] + 0.01 for k in range(3)):
+                    continue
+                if all(n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - dd <= 0.01 for n, dd in g[0]):
+                    return True
+            return False
+        count = {"black": 0, "own": 0}
+        for i, sol in enumerate(placed):
+            if geo[i] is None:
+                continue      # (a displaced brush: the compiler draws only its skin)
+            mats = [sd["material"].upper() for sd in sol["sides"] if not sd["material"].upper().startswith("TOOLS/")]
+            own = max(set(mats), key=mats.count) if mats else None
+            for k, sd in enumerate(sol["sides"]):
+                c4 = pts(sd)
+                if sd["material"].upper() != nd or len(c4) < 3:
+                    continue
+                n = geo[i][0][k][0]
+                fc = [sum(c[q] for c in c4) / len(c4) for q in range(3)]
+                near = [fc]      # (its middle, and in from each corner and each edge's middle: a sliver poking out of the brush it crosses shows at one end)
+                for j, c in enumerate(c4):
+                    e = [(c[q] + c4[(j + 1) % len(c4)][q]) / 2 for q in range(3)]
+                    for a in (c, e):
+                        ln = math.sqrt(sum((fc[q] - a[q]) ** 2 for q in range(3))) or 1.0
+                        near += [[a[q] + (fc[q] - a[q]) * f for q in range(3)] for f in (0.05, 0.25, min(1.0, 2.0 / ln))]
+                if not any(all(reach[q] <= p[q] + n[q] <= reach[q + 3] for q in range(3)) and not covered([p[q] + n[q] for q in range(3)], i) for p in near):
+                    continue
+                span = max(max(c[q] for c in c4) - min(c[q] for c in c4) for q in range(3))
+                got = own if own and span <= 256 else black
+                sol["sides"][k] = dict(sd, material=got)
+                count["own" if got != black else "black"] += 1
+        self.notes.append("%s: %d of Valve's bare faces that now show drawn black, %d in their own brush's material" % (what, count["black"], count["own"]))
+        return sols
 
     def holdout_sheds(self):
         """The sheds on the holdout's floor (Valve's: three huts of forest steel, A and C with two doorways, B one, on the
@@ -4436,9 +4549,9 @@ class CaveForest(Forest):
         r = self.room_box
         rx1, ry1, rz1, rx2, ry2, rz2 = r
         # the room's own box: north, east, under and over (its west wall is the bulkhead, its south the forest's wall)
-        for box in ((rx1, ry2, rz1 - 64, rx2 + 64, ry2 + 64, rz2 + 64), (rx2, ry1, rz1 - 64, rx2 + 64, ry2, rz2 + 64), (rx1, ry1, rz1 - 64, rx2, ry2, rz1),
-                    (rx1, ry1, rz2, rx2, ry2, rz2 + 64)):
-            v.world_box(self.box(*box), black, vis=nv)
+        for box, top, bottom in (((rx1, ry2, rz1 - 64, rx2 + 64, ry2 + 64, rz2 + 64), None, None), ((rx2, ry1, rz1 - 64, rx2 + 64, ry2, rz2 + 64), None, None),
+                                 ((rx1, ry1, rz1 - 64, rx2, ry2, rz1), black, None), ((rx1, ry1, rz2, rx2, ry2, rz2 + 64), None, black)):
+            v.world_box(self.box(*box), black, top=top, bottom=bottom, vis=nv)      # (black inside: its floor's top and its lid's underside too)
         # the box round everything
         d = self.deep_reach
         X1 = int(math.floor((min(d[0], rx1) - 64) / 64.0)) * 64
@@ -4446,9 +4559,9 @@ class CaveForest(Forest):
         Y2 = int(math.ceil((max(d[4], ry2 + 64) + 64) / 64.0)) * 64
         Z1 = int(math.floor((min(d[2], rz1 - 64) - 64) / 64.0)) * 64
         Z2 = int(math.ceil((max(d[5], rz2 + 64)) / 64.0)) * 64
-        for box in ((X1 - 64, ys, Z1 - 64, X2 + 64, Y2 + 64, Z1), (X1 - 64, ys, Z2, X2 + 64, Y2 + 64, Z2 + 64), (X1 - 64, ys, Z1, X1, Y2 + 64, Z2),
-                    (X2, ys, Z1, X2 + 64, Y2 + 64, Z2), (X1, Y2, Z1, X2, Y2 + 64, Z2)):
-            v.world_box(self.box(*box), black, vis=nv)
+        for box, top, bottom in (((X1 - 64, ys, Z1 - 64, X2 + 64, Y2 + 64, Z1), black, None), ((X1 - 64, ys, Z2, X2 + 64, Y2 + 64, Z2 + 64), None, black),
+                                 ((X1 - 64, ys, Z1, X1, Y2 + 64, Z2), None, None), ((X2, ys, Z1, X2 + 64, Y2 + 64, Z2), None, None), ((X1, Y2, Z1, X2, Y2 + 64, Z2), None, None)):
+            v.world_box(self.box(*box), black, top=top, bottom=bottom, vis=nv)
         # its south side where the forest's north wall does not stand: west of the forest, under its slab, over its sky (and
         # over the stretch the cave's wall and its sky are, the room's box over the sky too)
         tw = WALL
