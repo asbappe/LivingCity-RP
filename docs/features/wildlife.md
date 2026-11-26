@@ -35,6 +35,10 @@ The owner's long-term idea 3 ("blind, hunts by sound ... bullets barely hurt it 
 - Nothing is written on anyone's screen.
 - `lc_hiveboss_class`: its entity class. Empty, the gamemode finds the installed class with "jeff" in its name.
 
+**Where it comes up:** the map's own lair if it has one (an `info_target` named `lc_hive_boss_spot`: the cistern's island in the canal ring), else the placed infestation nearest the worst district.
+
+**A navmesh is not path nodes.** The city's own people walk the map's path nodes (`info_node`, which our map pieces place). A NextBot cannot use those: it walks a navigation mesh, a separate file (`maps/<map>.nav`) the game itself works out from the compiled map and nobody places by hand. It is made once in the game (console: `sv_cheats 1`, `nav_generate`, then `nav_save`; or the addon's own generator window), takes some minutes, and has to be made again after every compile of the map.
+
 **What the server needs:** the addon itself (subscribed through the server's Workshop collection, or unpacked into `garrysmod/addons/`), and a navmesh for the map (`garrysmod/maps/rp_c18_ug.nav`): without one the addon opens its own "navmesh generator" window for an admin. Not known without the real game: the class name the addon uses (hence the search by name), whether it hears a cough, whether its death is told to the game as an NPC's is (a removed boss with no health left counts too).
 
 `LC.HiveBoss.Class()`, `.Spawn([pos])`, `.Remove()`, `.Crash()`, `.Due()`; hooks `LivingCityHiveBoss(ent)`, `LivingCityHiveBossDead(by, patchesGone)`. Tests: `Nov25_HiveBossTests` (11).

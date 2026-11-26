@@ -319,7 +319,9 @@ function LC.ChapterEnd(why)
     if s.state ~= "reversed" then return false end
     s.state, s.elapsed = "normal", 0
     s.cooldown = math.max(0, cvCool:GetFloat()) * 60
+    local plain = C.maskOff
     C.retake, C.maskOff = nil, {}
+    for p in pairs(plain) do C.Redress(p) end -- (back in uniform)
     LC.Try(LC.ChapterApply)
     Districts(0)
     LedgerTo("combine", 40)
@@ -396,13 +398,32 @@ end)
 function LC.ChapterVestDead(ply) return LC.ChapterReversed() and LC.ChapterIsUnit(ply) end
 function LC.ChapterMaskOff(ply) return LC.ChapterVestDead(ply) and C.maskOff[ply] == true end
 
--- F2 > Take off the mask (cl_livingcity_quick.lua: only while it glitches)
+-- Out of uniform (the owner, 26 November: "unmasked cops means they take off their CP uniforms"): with the mask
+-- off a unit wears a citizen's clothes, with the face they chose for their character if it is a citizen's, else
+-- one by their unit number. Asked first of all by the model picker (sv_livingcity_factions.lua).
+local PLAIN = { "models/humans/group01/male_02.mdl", "models/humans/group01/male_04.mdl", "models/humans/group01/male_07.mdl",
+    "models/humans/group01/male_09.mdl", "models/humans/group01/female_01.mdl", "models/humans/group01/female_02.mdl" }
+function LC.OutOfUniformModel(ply)
+    if not LC.ChapterMaskOff(ply) then return nil end
+    local chosen = ply:GetNW2String("lc_model", "")
+    local face = string.match(string.lower(chosen), "/(f?e?male_%d+%.mdl)$")
+    if face and string.find(string.lower(chosen), "humans/", 1, true) then return "models/humans/group01/" .. face end
+    local n = LCF and LCF.UnitNumber and LCF.UnitNumber(ply:SteamID()) or 0
+    return PLAIN[(n % #PLAIN) + 1]
+end
+
+function C.Redress(ply)
+    if IsValid(ply) and ply:Alive() and LC.RefreshModel then LC.Try(LC.RefreshModel, ply) end
+end
+
+-- F2 > Take off the uniform (cl_livingcity_quick.lua: only while the mask glitches)
 LC.TargetActions = LC.TargetActions or {}
 LC.TargetActions.chaptermask = function(ply)
     if not LC.ChapterVestDead(ply) or C.maskOff[ply] then return false end
     C.maskOff[ply] = true
     ply:SetNW2Bool("lc_chapter_mask", false)
     ply:EmitSound("npc/combine_soldier/gear" .. math.random(1, 6) .. ".wav", 60, 90)
+    C.Redress(ply)
     return true
 end
 

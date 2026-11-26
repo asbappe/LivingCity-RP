@@ -45046,6 +45046,9 @@ function Nov25_HiveBossTests() -- (the owner, 25 November: the Workshop NextBot 
     ok(select(1, H.Spawn()) == true and H.Alive() and H.ent:GetClass() == "npc_test_jeff" and H.ent:GetPos():Distance(T0) < 20, "staff can still send one: it comes up in the infestation")
     H.Remove()
     ok(not H.Alive() and #LC.Zones == 5, "taken away by staff: nothing crashes")
+    local lair = ents.Create("info_target") lair:SetPos(T0 + Vector(0, 5000, -300)) lair:SetName("lc_hive_boss_spot") lair:Spawn()
+    ok(H.Spot():Distance(lair:GetPos()) < 1, "a map with a lair for it (the cistern): it comes up there, not in the street's infestation")
+    lair:Remove()
     _setcvar("lc_hiveboss", 1)
     H.Tick()
     ok(H.Alive(), "switched on, half the districts badly infested: it comes")
@@ -45446,7 +45449,9 @@ function Nov25_ChapterTests() -- (the owner, 25 November: the rocket's wave "kil
         and not lt:GetNW2Bool("lc_chapter_mask", false), "a unit's mask glitches (F2 has the line); nobody else's")
     ok(LC.GasMasked(unit) == true, "(masked, it still keeps the gas out)")
     ok(LC.TargetActions.chaptermask(unit) == true and unit:GetNW2Bool("lc_chapter_mask", false) == false and LC.ChapterMaskOff(unit) == true,
-        "F2 > Take off the mask: no more glitch")
+        "F2 > Take off the uniform: no more glitch")
+    ok(string.find(LC.OutOfUniformModel(unit) or "", "humans/group01/", 1, true) ~= nil and LC.OutOfUniformModel(ota) == nil and LC.OutOfUniformModel(lt) == nil,
+        "out of uniform they wear a citizen's clothes; whoever kept the mask on, and the Resistance, wear their own", tostring(LC.OutOfUniformModel(unit)))
     ok(not LC.GasMasked(unit) and LC.GasMasked(ota) == true and LC.TargetActions.chaptermask(unit) == false and LC.TargetActions.chaptermask(lt) == false,
         "and no more of what it kept out; once, and only a unit")
 

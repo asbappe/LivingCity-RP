@@ -14,6 +14,9 @@
                            and not again for lc_hiveboss_minutes (90) after one dies.
       lc_hiveboss_class    its entity class. Empty: found by itself (the addon's class with "jeff" in it).
 
+    Where it comes up: the map's own lair if it has one (lc_hive_boss_spot, the cistern's island in the canal
+    ring), else in the placed infestation nearest the worst district.
+
     Dead, the infestation crashes: every infestation loses half of what it had grown, the furthest first.
     Near it the air is thick with spores: anyone within 500 units with no gas mask coughs (a mask in the
     pockets goes on by itself, as in gas). Nothing is written on anyone's screen.
@@ -56,8 +59,27 @@ end
 
 function H.Alive() return IsValid(H.ent) and (not H.ent.Health or H.ent:Health() > 0) end
 
--- Where: the placed infestation nearest the worst district's middle (any, if districts say nothing).
+-- Where: the map's own lair for it if it has one (an info_target named lc_hive_boss_spot: the cistern's island,
+-- docs/dev/canal-modules.md; the owner, 26 November, of its paths: "in the cistern"), the nearest to the worst
+-- district; else the placed infestation nearest the worst district's middle (any, if districts say nothing).
 function H.Spot()
+    local lairs = ents.FindByName and ents.FindByName("lc_hive_boss_spot") or {}
+    if #lairs > 0 then
+        local worstN, sc
+        for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
+            local v = LC.DistrictInfest and LC.DistrictInfest(n) or 0
+            if not sc or v > sc then worstN, sc = n, v end
+        end
+        local m = worstN and LC.BlockCenter and LC.BlockCenter(worstN) or nil
+        local bestL, bl
+        for _, e in ipairs(lairs) do
+            if IsValid(e) then
+                local d = m and e:GetPos():DistToSqr(m) or 0
+                if not bl or d < bl then bestL, bl = e, d end
+            end
+        end
+        if bestL then return bestL:GetPos() end
+    end
     local worst, score
     for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
         local v = LC.DistrictInfest and LC.DistrictInfest(n) or 0

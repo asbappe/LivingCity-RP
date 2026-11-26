@@ -6,7 +6,7 @@
                 the game's own render calls, so it is there whatever the server has; Episode Two's portal storm
                 particles and sounds are added when the game has them (looked for, never assumed). No words.
     The mask    a unit's mask while the city is the Resistance's: static, tearing and dropouts over the view,
-                until it is taken off (F2 > Take off the mask).
+                until it is taken off (F2 > Take off the uniform).
 ]]
 
 LC_CL = LC_CL or {}
