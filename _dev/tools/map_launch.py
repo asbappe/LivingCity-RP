@@ -124,10 +124,26 @@ def lifted_door(e, PF_):
     e["out"] = [("OnOpen", name, "SetAnimation", "unlock", 0), ("OnFullyClosed", name, "SetAnimation", "lock", 0)] if name else []
 
 
+def steady(e):
+    """A lifted model is drawn from anywhere (the owner, 26 November: the leader's office door, Valve's fademindist 800,
+    was not drawn from across the silo until you walked close): Valve's fade distances under 2000, set for its own
+    smaller rooms and views, become none."""
+    k = e["keys"]
+    if not (e["classname"].startswith("prop_") and k.get("model")):
+        return
+    try:
+        lo, hi = float(k.get("fademindist") or -1), float(k.get("fademaxdist") or 0)
+    except ValueError:
+        return
+    if 0 < lo < 2000 or 0 < hi < 2000:
+        k.update({"fademindist": "-1", "fademaxdist": "0"})
+
+
 def loose(e):
     """Valve's loose things (prop_physics) stand where Valve put them, solid, as the bunker's furniture does (a
     prop_dynamic_override): nobody knocks the control rooms' kit about, and it stays in step with the room on every
-    player's screen."""
+    player's screen. And nothing lifted fades out (steady)."""
+    steady(e)
     if e["classname"] == "prop_physics":
         e["classname"] = "prop_dynamic_override"
         k = e["keys"]

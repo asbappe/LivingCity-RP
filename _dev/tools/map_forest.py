@@ -2356,6 +2356,7 @@ class BunkerForest(Forest):
         def edit(e):
             cls, k = e["classname"], e["keys"]
             tn, o = k.get("targetname", ""), tuple(e.get("origin", ()))
+            ML.steady(e)        # (nothing of Valve's fades out in the silo: the office door was not drawn from across it)
             if o in pad_name:
                 if cls.startswith("prop"):
                     k["targetname"] = pad_name[o]
