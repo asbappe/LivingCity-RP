@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9db4cba. Admin-only console messages and log lines are left out.
+Made from version aafc1d3. Admin-only console messages and log lines are left out.
 
-13625 lines, from 398 files.
+13624 lines, from 398 files.
 
 ## Contents
 
@@ -239,7 +239,7 @@ Made from version 9db4cba. Admin-only console messages and log lines are left ou
 - [a business of your own (the owner, 10 November: "real](#a-business-of-your-own-the-owner-10-november-real-svlivingcityemploymentlua) (23)
 - [secret endings](#secret-endings-svlivingcityendingslua) (84)
 - [escorts through Combine doors](#escorts-through-combine-doors-svlivingcityescortlua) (74)
-- [city events](#city-events-svlivingcityeventslua) (84)
+- [city events](#city-events-svlivingcityeventslua) (83)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (67)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (65)
 - [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (58)
@@ -11188,7 +11188,6 @@ Made from version 9db4cba. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): What actually happens, for the person reading it.
 
 - "The city is in unrest: more inspections and raids, and rations come slower. See !city."  (text, line 129)
-- "Just the city talking. Nothing changes."  (text, line 131)
 
 > Note for you (not shown in game): part of: rations
 
