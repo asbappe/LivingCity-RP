@@ -55,6 +55,7 @@ LC.POINT_KINDS = {
     dock = true, graffiti = true, rubble = true, pipe = true, -- loading docks, walls that get tagged, rubble piles (Union shifts)
     ladder = true, -- two with the same number: a ladder NPCs can use (sv_livingcity_navgraph.lua)
     zspawn = true, rspawn = true, colonel = true, -- infested and resistance respawn/spawn points
+    choldout = true, -- where units come back while the city is the Resistance's (sv_livingcity_chapter.lua)
     rlookout = true, -- an armed rebel stands guard here (sv_livingcity_rebels.lua)
     basevehicle = true, -- the live base's vehicle stands here: a buggy, or an airboat on water (sv_livingcity_basevehicle.lua)
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)

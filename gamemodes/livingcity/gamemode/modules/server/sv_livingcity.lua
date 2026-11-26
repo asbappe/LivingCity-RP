@@ -1596,6 +1596,7 @@ end
 LC.SpawnCop, LC.SpawnSoldier = SpawnCop, SpawnSoldier
 
 local function SpawnScanner(pos)
+    if LC.ChapterReversed and LC.ChapterReversed() then return end -- (the Combine's machines are dead: sv_livingcity_chapter.lua)
     local npc = ents.Create("npc_cscanner")
     if not IsValid(npc) then return end
     npc:SetPos(pos + Vector(0, 0, 110))

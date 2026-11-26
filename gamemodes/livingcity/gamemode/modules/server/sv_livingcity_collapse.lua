@@ -1770,6 +1770,7 @@ end
 
 function LC.SuppressorFire(target)
     if C.shell or not IsValid(target) then return false end
+    if LC.ChapterReversed and LC.ChapterReversed() then return false end -- (dead with the rest: sv_livingcity_chapter.lua)
     local src = LC.SuppressorSource()
     if src == false then return false end
     -- (from the device: a flash and its launch)

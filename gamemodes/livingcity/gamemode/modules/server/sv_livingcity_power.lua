@@ -95,7 +95,7 @@ function LC.RefreshPower()
             if e.lcForcefield and LC.FieldOff then
                 off = LC.FieldOff(e) -- (off its checkpoint's power bank, if it has one: sv_livingcity_checkpoints.lua)
             else
-                off = Dark(e:GetPos())
+                off = Dark(e:GetPos()) or (LC.ChapterDeadTech and LC.ChapterDeadTech(e)) or false -- (the Combine's own, dead: sv_livingcity_chapter.lua)
             end
             if e:GetNW2Bool("lc_nopower", false) ~= off then
                 e:SetNW2Bool("lc_nopower", off)

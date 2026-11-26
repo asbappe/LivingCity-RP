@@ -58,6 +58,7 @@ local MODES = {
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
     { id = "desk",        label = "Point: Administrator's desk (her last stand; only if the map's own desk isn't found by itself: on the desk or beside it, within 100 feet of her power)" },
+    { id = "choldout",    label = "Point: Combine holdout (where units come back while the city is the Resistance's)" },
     { id = "suppressor",  label = "Fixture: Combine suppression device (the Nexus mortar: in BLACK it shells rebels under open sky near a Combine zone; blow it up to stop it)" },
     { id = "adminpower",  label = "Fixture: Administrator's power (her last stand: place 2 or 3; # is its guards: 1 manhacks, 2 turrets, 3 mines; its glass screen goes on the side facing you; her shield holds till all are destroyed)", group = true },
     { id = "advisorscreen", label = "Fixture: Advisor screen (the Administrator reports to the Advisors here and asks them for troops, supplies or units; on a wall in her office, facing you; with none placed there are no Advisors)" },

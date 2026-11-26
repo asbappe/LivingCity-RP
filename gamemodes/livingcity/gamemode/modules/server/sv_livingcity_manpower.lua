@@ -120,7 +120,10 @@ end
 
 -- May one more of this side come out now?
 function LC.ManpowerCan(side)
-    if not side or not cvOn:GetBool() or freeDepth > 0 then return true end
+    if not side or freeDepth > 0 then return true end
+    -- (the city is the Resistance's: nobody of the Combine's comes out. sv_livingcity_chapter.lua)
+    if (side == "cp" or side == "ota") and LC.ChapterReversed and LC.ChapterReversed() then return false end
+    if not cvOn:GetBool() then return true end
     return LC.ManpowerPool(side).reserve >= 1
 end
 

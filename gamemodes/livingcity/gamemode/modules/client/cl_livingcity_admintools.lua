@@ -165,6 +165,17 @@ local function Build()
     Btn(br, "Black out the city", function() Do("blackout", "on") end, 140)
     Btn(br, "Lights on", function() Do("blackout", "off") end, 90)
     Btn(br, "Follow the grid", function() Do("blackout", "auto") end, 120)
+    -- the chapter "the city falls to the Resistance" (superadmins; sv_livingcity_chapter.lua)
+    if state.chapter then
+        local c1 = Row(cs)
+        Btn(c1, "Chapter: launch the rocket's wave (the city falls)", function() Do("chapter", "wave") end, 300):SetEnabled(state.chapter.state ~= "reversed")
+        Btn(c1, "Chapter: the Combine retake the city", function() Do("chapter", "retake") end, 240):SetEnabled(state.chapter.state == "reversed")
+        local c2 = Row(cs)
+        Btn(c2, state.chapter.lock and "Chapter: unlock" or "Chapter: lock (nobody can flip it)", function() Do("chapter", "lock") end, 300)
+        local cl = Label(Row(cs, 34), state.chapter.line or "", 600)
+        cl:Dock(FILL)
+        cl:SetWrap(true)
+    end
     -- the confiscated contraband, burned in public (sv_livingcity_evidence.lua)
     if state.evidence then
         local er = Row(cs)
