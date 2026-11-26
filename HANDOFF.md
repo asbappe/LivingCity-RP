@@ -42,9 +42,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 26 November, not seen in game: fights handed to the engine Background NPCs' way (LC.CombatDrive; civil-protection-tools.md), citizens'
   fright lasts while the shooting does (LC.FearStep; city-people.md), units hear (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md.
 - 24 November (the TODO run), not seen in game: wildlife.md, resistance-base.md, ieds.md. The Resistance's town is off the map.
-- 22 to 26 November: the canal ring (map_ring_walk.py, ~36 min with the nodraw pass, which vbsp's vertex limit needs).
-  Kit: 43 pieces (the wall's 20 changed 25 Nov). 26 Nov: the Combine wall on every city bank (bank_core: the jog, the
-  first canal); rail bridge a viaduct 144 over the wall with a corridor of sky for its train; big grates on blocked
-  tunnels, Valve's ring and grate on culverts; pipes module deleted. Test map: 19,437 faces, ~38,966 vertices.
+- 22 to 26 November: the canal ring (map_ring_walk.py joins the first canal, ring.txt and inlet.txt; ~44 min with
+  the nodraw pass). Kit: 43 pieces. 26 Nov: Combine wall on every city bank, set back on the canal wall's top; rail
+  bridge a viaduct with a sky corridor; trains only portal to portal (3 through trains, locks where tracks cross);
+  floodgate (valve wheel), tramfall (tram under the breach, base 64), the crypt's inlet (buried chain) to a church
+  by the infested quarter. Test map: 19,596 faces, ~39,656 vertices. Not run in game: the wheel gates.
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them). Flaky, pass alone: TODO.md, end.
 - Map chat (bunker): owner's VMF via map_owner_delta.py, map_hidden_faces --brushes/--holes, map_areas.py. 26 Nov fixes3 sent.
