@@ -220,8 +220,17 @@ def build(f, F):
     #  owner, 24 November: "the little screens in the lower control room have some sort of brush covering them")
     F.pf_solids(v, pf, 0, TECH_AT, vis, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live"), finish=[([tech_box()], CTL_MATS)])
 
+    # (the silo door Valve left shut as a static model in the north wall's recess, where the door camera's screen now
+    #  hangs: gone, and the recess filled flush with the wall in the wall's own concrete, sealed; the owner, 26 November:
+    #  "you put the extra TV over the door prop that doesn't open; please just remove that door prop. and make sure the
+    #  wall is sealed where the door prop was")
+    v.world_box((TECH_AT[0] + 240, TECH_AT[1] + 496, TECH_AT[2] + 56, TECH_AT[0] + 344, TECH_AT[1] + 528, TECH_AT[2] + 192), MAT["nodraw"],
+                faces={"south": "CONCRETE/CONCRETEWALL_BUNKER05B"}, vis=vis)
+
     def keep(e):
         k = e["keys"]
+        if e["classname"] == "prop_static" and k.get("model", "").endswith("silo_door01_static.mdl"):
+            return False
         if e["classname"] == "func_button" and not any("count_mon_1" in c[1] for c in e.get("connections", [])):
             return False        # (the keypads by the doors: models only, as the bunker's; the doors open by Use)
         if e["classname"] in ("info_target", "info_lighting") and not k.get("targetname", "").startswith("l_"):
