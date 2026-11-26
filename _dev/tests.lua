@@ -45564,6 +45564,46 @@ function Nov25_ChapterTests() -- (the owner, 25 November: the rocket's wave "kil
     LC.RefreshPower()
 end
 Nov25_ChapterTests()
+function Nov26_BunkerCCTVTests()
+section("The bunker's live door camera screens and Episode Two's effects")
+-- the screen placed in the map: its keys, then the camera marker it names, found once it exists
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_cctv_screen.lua"], "lc_cctv_screen"))()
+local def = ENT
+ENT = was
+ok(def.KeyValue and def.FindCamera and def.Think, "the screen reads its keys and finds its camera")
+local scr = ents.Create("lc_cctv_screen")
+def.KeyValue(scr, "camera", "lc_cctv_door_cam_test")
+def.KeyValue(scr, "width", "40")
+def.KeyValue(scr, "height", "30")
+ok(scr.lcCamName == "lc_cctv_door_cam_test" and scr.lcW == 40 and scr.lcH == 30, "its keys: the camera's name and the picture's size")
+ok(def.FindCamera(scr) == false and not scr:GetNW2Bool("lc_scr_live", false), "no marker yet: not live, looked for again later")
+local cam = ents.Create("info_target")
+cam:SetName("lc_cctv_door_cam_test")
+cam:SetPos(Vector(11000, 4300, 600))
+cam:SetAngles(Angle(30, 270, 0))
+ok(def.FindCamera(scr) == true and scr:GetNW2Bool("lc_scr_live", false), "the marker found: live")
+local at, a = scr:GetNW2Vector("lc_scr_cam"), scr:GetNW2Vector("lc_scr_camang")
+ok(at and at.x == 11000 and at.z == 600 and a and a.x == 30 and a.y == 270, "it sees from the marker, the way the marker looks")
+scr:Remove() cam:Remove()
+-- the effects: the particle files that hold them are found by reading them, loaded once each, and only what was found is made ready
+local addWas, preWas = game.AddParticles, PrecacheParticleSystem
+local added, readied = {}, {}
+game.AddParticles = function(p) added[#added + 1] = p end
+PrecacheParticleSystem = function(n) readied[n] = true end
+_files["particles/aaa_other.pcf"] = "nothing of ours"
+_files["particles/choreo_launch.pcf"] = "...choreo_launch_rocket_start...choreo_launch_rocket_jet...choreo_silo_door..."
+_files["particles/zz_dust.pcf"] = "...Dust_Ceiling_Rumble_24Diam..."
+local loaded, missing = LC.LoadMapParticles({ "choreo_launch_rocket_start", "choreo_launch_rocket_jet", "choreo_silo_door",
+    "Dust_Ceiling_Rumble_24Diam", "not_in_any_file" })
+ok(#loaded == 2 and #added == 2 and added[1] == "particles/choreo_launch.pcf", "the two files that hold them are loaded, the likely one first", table.concat(added, " "))
+ok(readied.choreo_launch_rocket_jet and readied.Dust_Ceiling_Rumble_24Diam and not readied.not_in_any_file and missing.not_in_any_file,
+    "what was found is made ready; what is in no file is reported, not asked for")
+_files["particles/aaa_other.pcf"], _files["particles/choreo_launch.pcf"], _files["particles/zz_dust.pcf"] = nil, nil, nil
+game.AddParticles, PrecacheParticleSystem = addWas, preWas
+end
+Nov26_BunkerCCTVTests()
 
 ----------------------------------------------------------------------
 function NoiseTests()

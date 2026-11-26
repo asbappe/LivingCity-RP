@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a180d5b. Admin-only console messages and log lines are left out.
+Made from version f84d75a. Admin-only console messages and log lines are left out.
 
-13624 lines, from 397 files.
+13625 lines, from 398 files.
 
 ## Contents
 
@@ -16,6 +16,7 @@ Made from version a180d5b. Admin-only console messages and log lines are left ou
 - [lc_barricade.lua](#lcbarricadelua-lcbarricadelua) (1)
 - [lc_broadcastcam.lua](#lcbroadcastcamlua-lcbroadcastcamlua) (1)
 - [lc_cardtable.lua](#lccardtablelua-lccardtablelua) (1)
+- [lc_cctv_screen.lua](#lccctvscreenlua-lccctvscreenlua) (1)
 - [lc_citybin.lua](#lccitybinlua-lccitybinlua) (1)
 - [lc_civposter.lua](#lccivposterlua-lccivposterlua) (28)
 - [lc_console.lua](#lcconsolelua-lcconsolelua) (1)
@@ -443,6 +444,12 @@ Made from version a180d5b. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/entities/entities/lc_cardtable.lua`
 
 - "Card table"  (name, line 12)
+
+## lc_cctv_screen.lua (lc_cctv_screen.lua)
+
+`gamemodes/livingcity/entities/entities/lc_cctv_screen.lua`
+
+- "Camera screen"  (name, line 22)
 
 ## lc_citybin.lua (lc_citybin.lua)
 
