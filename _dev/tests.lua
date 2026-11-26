@@ -44875,6 +44875,21 @@ local wall = true
 local oldLOS = LC.LineOfSight
 LC.LineOfSight = function() return not wall end
 sneak:SetPos(T) sneak.ground = true
+local evWas, graceWas, zokWas = LC.Event, LC.EventGraceEnds, LC.ZonesOfKind
+LC.Event, LC.EventGraceEnds = nil, 0
+sneak.keys = { [IN_SPEED] = true } sneak.vel = Vector(400, 0, 0)
+LC.NoiseTick(CurTime())
+hook.Run("KeyPress", sneak, IN_JUMP)
+ok(not stC.heard, "with no curfew on, running and jumping bring nobody")
+LC.Event = "curfew"
+local inBlock = true
+LC.ZonesOfKind = function(kind) if kind == "block" and inBlock then return { { kind = "block", pos = T, r = 500, group = 1 } } end return {} end
+ok(LC.NoiseStepsCount(sneak) == false, "(inside a block)")
+LC.NoiseTick(CurTime())
+hook.Run("KeyPress", sneak, IN_JUMP)
+ok(not stC.heard, "nor during a curfew inside a habitation block")
+inBlock = false
+ok(LC.NoiseStepsCount(sneak) == true, "(out in the street after curfew: now it counts)")
 sneak.vel = Vector(60, 0, 0) sneak.keys = {}
 LC.NoiseTick(CurTime())
 ok(not stC.heard, "walking makes no noise")
@@ -44918,6 +44933,7 @@ RunConsoleCommand("lc_noise", "0")
 ok(LC.Noise(T, 800, nil, false) == nil, "lc_noise 0: nobody comes")
 RunConsoleCommand("lc_noise", "1")
 LC.LineOfSight = oldLOS
+LC.Event, LC.EventGraceEnds, LC.ZonesOfKind = evWas, graceWas, zokWas
 can:Remove()
 LC.NPCs[cop] = nil cop:Remove()
 for npc, st in pairs(held) do if IsValid(npc) then LC.NPCs[npc] = st end end

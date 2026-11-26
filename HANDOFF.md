@@ -31,8 +31,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 25 November: units hear (sv_livingcity_noise.lua; docs/features/contraband.md "Keeping quiet"): running, a jump, a shot or
-  a thrown thing landing sends the nearest free Civil Protection unit to look. Ideas from three NPC addons, none built: docs/dev/npc-ai-lessons.md.
+- 25 November: units hear (sv_livingcity_noise.lua; docs/features/contraband.md "Keeping quiet"): a shot or a thrown thing landing (and, only out
+  after curfew outside the blocks, running or a jump) sends the nearest free Civil Protection unit to look. Ideas from three NPC addons, none built: docs/dev/npc-ai-lessons.md.
 - 24 November (the TODO run), built, not yet seen in game: barnacles lift, pumphouse water, the base's vehicle, antlions at a
   stopped thumper, a cut train line (docs/features/wildlife.md, resistance-base.md, ieds.md). Last full run: 9,262 passed, 1 failed.
 - 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is

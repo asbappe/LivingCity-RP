@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 75d1306. Admin-only console messages and log lines are left out.
+Made from version b24e190. Admin-only console messages and log lines are left out.
 
 13562 lines, from 393 files.
 
@@ -1143,7 +1143,7 @@ Made from version 75d1306. Admin-only console messages and log lines are left ou
 - "Don't crowd Civil Protection units. They warn you first, then hit you with the stunstick."  (text, line 121)
 - "When a Civil Protection unit stops you, stand still. They may search you and find anything illegal in your pockets."  (text, line 122)
 - "A unit player searching you pats you down one spot at a time (Jacket, Waist, Legs, Boots): a panel shows which. Stand still. Once a spot has been checked you may press R, once, to try to slip something into it; it works more often than not, but if they feel it, it's found."  (text, line 123)
-- "Crouch to sneak: a Civil Protection unit only spots you from half the usual distance, even less if you move slowly or stay in the dark, and never from behind. While crouching, a bar shows how visible you are, and each unit's line of sight is drawn in front of him (red means he can see you). Units hear too: running, a jump or a shot brings one round to look, even through a wall; walking and crouching are silent. Throw something to draw him away."  (text, line 124)
+- "Crouch to sneak: a Civil Protection unit only spots you from half the usual distance, even less if you move slowly or stay in the dark, and never from behind. While crouching, a bar shows how visible you are, and each unit's line of sight is drawn in front of him (red means he can see you). Units hear too: a shot brings one round to look, and out after curfew so does running or a jump, even through a wall; walking and crouching are silent. Throw something to draw him away."  (text, line 124)
 - "Wanted but haven't hurt anyone? Units chase you down and cuff you. They shoot at violent suspects, and at anyone with a gun in their hand."  (text, line 125)
 - "Sleeping in a bed, you lie still and heal; press Jump to get up. Rations being handed out during your shift? F2 > Take a ration break: your job waits for you."  (text, line 126)
 - "Resistance: with fighters following you, F2 > Squad orders tells them to act casual (plain clothes, guns away), get their guns out, or meet you at the job's marker. In a camp, hold E on a mattress, crate or chair to move it (let go to put it down, R rotates it). At your stash, Stash it puts away the weapon you're holding."  (text, line 127)

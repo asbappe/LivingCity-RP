@@ -9,14 +9,17 @@
     A louder noise takes it off a quieter one.
 
     What makes a noise:
-      running     heard through walls (a unit who can SEE you running shouts
-                  instead: sv_livingcity_running.lua)
+      running     during a curfew, outside the habitation blocks only (the
+                  owner, 26 November): heard through walls (a unit who can
+                  SEE you running shouts instead: sv_livingcity_running.lua)
       jumping     the same, a little nearer
       a thrown thing landing (what you threw with E or the gravity gun):
                   throw a can down an alley and the unit goes there
       a shot      a player's gunfire
 
-    Walking and crouching make none: that is how you get past a patrol.
+    Walking and crouching make none: that is how you get past a patrol
+    after curfew. At any other time, and inside any habitation block, running
+    and jumping bring nobody.
 
     Units on a post (a door, a checkpoint, a lane, a zone's guard), in a fight,
     escorting, in a raid or walking somewhere on an errand do not leave for a noise. Civil Protection players,
@@ -118,10 +121,22 @@ local function Quiet(ply)
 end
 LC.NoiseQuiet = Quiet
 
--- A player's own noise, no more than one every few seconds.
+-- Do this player's steps count? Only during a curfew, outside every habitation block
+-- (the owner, 26 November: "we don't want running or jumping to draw a CP unless it's
+-- outside a habitation block during curfew").
+function LC.NoiseStepsCount(ply)
+    if LC.Event ~= "curfew" then return false end
+    local pos = ply:GetPos()
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("block") or {}) do
+        if LCZ.Contains(z, pos, LCZ.Mercy()) then return false end
+    end
+    return true
+end
+
+-- A player's own noise (running, a jump), no more than one every few seconds.
 function LC.PlayerNoise(ply, range, now)
     now = now or CurTime()
-    if (ply.lcNoiseAt or 0) > now or Quiet(ply) then return nil end
+    if (ply.lcNoiseAt or 0) > now or not LC.NoiseStepsCount(ply) or Quiet(ply) then return nil end
     ply.lcNoiseAt = now + 3
     return LC.Noise(ply:GetPos(), range, ply, true, now)
 end
@@ -142,7 +157,7 @@ function LC.NoiseTick(now)
             end
         end
     end
-    if not LC.PlayerSprinting then return end
+    if not LC.PlayerSprinting or LC.Event ~= "curfew" then return end
     for _, ply in ipairs(player.GetAll()) do
         if (ply.lcNoiseAt or 0) <= now and LC.PlayerSprinting(ply) then LC.PlayerNoise(ply, cvRun:GetFloat(), now) end
     end
