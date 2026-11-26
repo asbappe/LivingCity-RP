@@ -3734,6 +3734,15 @@ A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4
 - **Checked by:** review
 - **Tags:** props, owner
 
+### A lift is Valve's lift: models on unseen collision, never a car drawn with brushes (`owner-lifts-are-valves-models`)
+
+Never build a lift's car, gates or buttons as visible brushwork. Use the game's own: the cage model parented to a mover made only of unseen collision brushes, the gate models over unseen sliding clips, the button models under an unseen func_button, the lift's own sounds. The same goes for anything else the game already has a model for: look for the model (asset_facts.json, the prefab library) before drawing a brush.
+
+- **Why:** The owner, 26 November, of the cistern's first lift (a steel platform, rails and sliding grates of brushes): "why are you making the lift car out of brushes? USE THE ELEVATORS IN HL2 STOP USING BRUSHES GOOD GOLLY".
+- **How:** map_cistern.lift: Black Mesa East's freight lift from the prefab valve_eli_lift_ride (props_lab/freightelevator.mdl on Valve's 38 nodraw boxes, props_lab/elevatordoor.mdl with SetAnimation open and close, props_lab/freightelevatorbutton.mdl, eli_lab.elevator_move and _stop), all Half-Life 2's. Episode Two's: props_mining/elevator01_cage and elevator02_cage (the mine lifts), props_silo/silo_elevator (the silo's).
+- **Checked by:** review (a func_movelinear, func_tracktrain or func_door named *lift* with a drawn material)
+- **Tags:** props, owner, valve
+
 ### Join Valve's pieces with the cut hidden: cap faces inside the kept tunnel, consecutive maps at their shared landmark (`join-valve-cuts`)
 
 Lift whole connected sections of Valve's maps, so Valve's own tunnels join inside each piece; between two consecutive maps (ep2_outland_03 and 04, say) place both pieces with their shared info_landmark (landmark_outland_03_04 in both files) at the same point, and their shared transition area lines up exactly. Where a Valve tunnel must be cut, cut it where it is narrow (or at Valve's own seal there, an areaportal's frame), on the piece's own grid where it has one, and put the capping wall's face 32 to 64 INSIDE what is kept of the tunnel (never on the cut plane), so the cut edges of the displacements and the nodraw end faces of the brushes are inside the wall. Give every face of ours that can be seen a real material (top and bottom too: world_box leaves them nodraw), and nodraw only where a face touches something solid or faces the void. Lift with --keep-nodraw, so Valve's own nodraw shell keeps the piece shut where it is not cut. A Valve map's sky becomes black underground.

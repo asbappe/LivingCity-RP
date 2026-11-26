@@ -32,8 +32,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 ## Where things stand
 
 - 26 November: the cistern lifted out of the ring into its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf,
-  sent). A street plate over it and a lift from the gallery to the street (lc_cistern_lift; docs/dev/map-building.md, "The cistern by
-  itself"). Not compiled. The ring's own cistern is untouched (another chat has the ring). Next: its Propper++ pieces.
+  sent). A street plate over it and a lift from the gallery to the street: Valve's own freight lift, models not brushes (the owner
+  insists; lc_cistern_lift; map-building.md, "The cistern by itself"). Not compiled. The ring's cistern is untouched. Next: Propper++.
 - 25 and 26 November (the owner's answers; none seen in the real game): a Combine APC on the ring's road (apc-patrol.md); the chapter,
   the city falls, `lc_chapter` 0 (chapter-city-falls.md); the hive boss as the Workshop NextBot 2149660804, `lc_hiveboss` 0
   (wildlife.md); `lc_text_gate` 3; `lc_train_real` 0. Staff lines: F4 > Factions > Admin: testing tools. Ten new settings wait for the

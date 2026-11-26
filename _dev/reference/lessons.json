@@ -3864,6 +3864,19 @@
    "check": "review"
   },
   {
+   "id": "owner-lifts-are-valves-models",
+   "tags": [
+    "props",
+    "owner",
+    "valve"
+   ],
+   "title": "A lift is Valve's lift: models on unseen collision, never a car drawn with brushes",
+   "rule": "Never build a lift's car, gates or buttons as visible brushwork. Use the game's own: the cage model parented to a mover made only of unseen collision brushes, the gate models over unseen sliding clips, the button models under an unseen func_button, the lift's own sounds. The same goes for anything else the game already has a model for: look for the model (asset_facts.json, the prefab library) before drawing a brush.",
+   "why": "The owner, 26 November, of the cistern's first lift (a steel platform, rails and sliding grates of brushes): \"why are you making the lift car out of brushes? USE THE ELEVATORS IN HL2 STOP USING BRUSHES GOOD GOLLY\".",
+   "how": "map_cistern.lift: Black Mesa East's freight lift from the prefab valve_eli_lift_ride (props_lab/freightelevator.mdl on Valve's 38 nodraw boxes, props_lab/elevatordoor.mdl with SetAnimation open and close, props_lab/freightelevatorbutton.mdl, eli_lab.elevator_move and _stop), all Half-Life 2's. Episode Two's: props_mining/elevator01_cage and elevator02_cage (the mine lifts), props_silo/silo_elevator (the silo's).",
+   "check": "review (a func_movelinear, func_tracktrain or func_door named *lift* with a drawn material)"
+  },
+  {
    "id": "join-valve-cuts",
    "tags": [
     "geometry",
