@@ -213,7 +213,7 @@ class Mod:
         if getattr(self.b, "buried", False):      # (under the city: open canal is roofed, and no roof stands over the rim's slab)
             cap = self.b.rim - 16
             if spec[0] == "open" and not (len(spec) > 3 and spec[3]) and spec[1] < cap - 64:
-                spec = ("low", spec[1], spec[2], cap)
+                spec = ("low", spec[1], spec[2], cap, "canal")      # (roofed, but canal still: it keeps the canal's sloped banks, map_ring's kind)
             elif spec[0] == "low" and spec[3] > cap:
                 spec = spec[:3] + (cap,) + spec[4:]
         if self.fr.dz:      # (lifted to the street: its floors and roofs go up with it, and its canal's floor is the road)

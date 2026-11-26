@@ -117,7 +117,7 @@ class CorridorPlan(Plan):
                 self.sky_box(x1, y1, lid, x2, y2, max(self.top, lid + 16), sky, sky, sky)
             elif kind == "cellar":      # (a room under a yard open to the sky: Plan's own)
                 ceil, upper, upper_mat, lid = spec[3], spec[4], spec[5], spec[6]
-                vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
+                vmf.world_box(self.box(x1, y1, ceil, x2, y2, upper), CORE if upper_mat == CORE else self.floor_side, top=upper_mat, bottom=self.ceiling, vis=self.vis)
                 self.sky_box(x1, y1, lid, x2, y2, max(self.top, lid + 16), sky, sky, sky)
             elif kind == "under":
                 vmf.world_box(self.box(x1, y1, spec[3], x2, y2, STREET), cw, top=spec[4], bottom=self.ceiling, vis=self.vis)
@@ -1205,9 +1205,40 @@ def combine_core(b, shed_front):
             c = (i + di, j + dj)
             if c not in cells and c not in shed_front and c not in core and not kept(c, CELL):
                 core.add(c)      # (never in, nor beside, a place kept for another piece: the plain wall stays there)
-    for c in core:
+    over = set()
+    for (i, j) in street:      # (a culvert passing under the frontage, a tee's side gate: the wall's core stands over it, where
+        for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):      # the street's brick front stood in a gap in the wall: the owner, 26 November)
+            c = (i + di, j + dj)
+            spec = cells.get(c)
+            if spec is not None and c not in street and c not in shed_front and spec[0] == "low" and spec[1] < STREET - 64 and spec[2] != CORE:
+                over.add(c)
+    jambs = set()      # (and the culvert's own jambs on the frontage, solid squares of the module's beside it: core too, so no
+    grow = set(over)   #  length of the street's brick front is left either side of it)
+    for _ in range(3):
+        more = set()
+        for (i, j) in grow:
+            for c in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1)):
+                spec = cells.get(c)
+                if (spec is None or spec[0] == "solid") and c not in core and c not in shed_front and c not in jambs and any(n in street for n in ((c[0] + 1, c[1]), (c[0] - 1, c[1]), (c[0], c[1] + 1), (c[0], c[1] - 1))):
+                    more.add(c)
+        jambs |= more
+        grow = more
+    for c in core | jambs:
         cells[c] = ("low", STREET + WALL_H - 8, CORE, b.sky)
         b.owner[c] = "the Combine wall"
+    for c in over:
+        spec = cells[c]
+        cells[c] = ("cellar", spec[1], spec[2], min(spec[3], STREET - 16), STREET + WALL_H - 8, CORE, b.sky)
+    for c in over | jambs:
+        # (the air over this core is shut by sky on every side that is not this piece's: at a side gate's plane the plan
+        #  leaves the wall to the piece joined there, and a piece under the city has nothing so high)
+        x, y = c[0] * CELL, c[1] * CELL
+        for di, dj, box in ((-1, 0, (x, y, x + 16, y + CELL)), (1, 0, (x + CELL - 16, y, x + CELL, y + CELL)),
+                            (0, -1, (x, y, x + CELL, y + 16)), (0, 1, (x, y + CELL - 16, x + CELL, y + CELL))):
+            n = (c[0] + di, c[1] + dj)
+            if n not in cells and n not in core and n not in over and n not in jambs:
+                b.vmf.world_box((box[0], box[1], STREET + WALL_H - 8, box[2], box[3], b.sky + 16), MAT["sky"], MAT["sky"], MAT["sky"], vis=b.vis + ": walls and floors")
+    core |= over | jambs
     b.combine_core = core
 
 

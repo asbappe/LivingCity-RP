@@ -309,13 +309,8 @@ def m_tunnel(m, opt):
     m.shapes(vault + ribs)
     m.det([(u, -256, F + 14, u + 16, -250, roof - 102) for u in range(128, L - 60, 256)] + [(u, 250, F + 14, u + 16, 256, roof - 102) for u in range(128, L - 60, 256)],
           MAT["beam"])
-    # the pipe along the right wall, a cable over it; the handrail on the kerbs' edges in places
-    p2 = 64 + (L - 128) // 128 * 128                     # (the pipe in 128s, 64 in from each end, a cap on each end)
-    if p2 > 64:
-        pipe_run(m, (64, -236), (p2, -236), F + 126, "32d")
-        m.static("models/props_c17/pipe_cap005.mdl", 64, -236, 180, z=F + 107)
-        m.static("models/props_c17/pipe_cap005.mdl", p2, -236, 0, z=F + 107)
-        m.rope([(u, -251, F + 160) for u in range(136, L - 60, 256)], slack=24, width=1)
+    # (the pipe that ran along the right wall, capped at both ends, and the cable over it are gone: the owner, 26 November,
+    #  "the pipe running down the floodgate tunnel just sort of begins and ends nowhere"); the handrail on the kerbs' edges in places
     for u in range(256, L - 255, 512):
         handrail(m, (u, 206), (u + 128, 206), F + 14)
         handrail(m, (u + 256, -206), (u + 384, -206), F + 14) if u + 384 <= L - 64 else None
