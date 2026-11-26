@@ -617,7 +617,6 @@ function LC.SpeechMicOpen(by, pos)
     mic = { by = by, pos = pos, untilT = CurTime() + cvMic:GetFloat() }
     return true
 end
-function LC.SpeechMicClose() mic = nil end
 function LC.SpeechMicHeard(listener, talker)
     if not mic or talker ~= mic.by then return false end
     if CurTime() >= mic.untilT or not IsValid(mic.by) then mic = nil return false end

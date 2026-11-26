@@ -63,7 +63,6 @@ function LC.LoweredGround(ply)
     if Untrusted(ply) and (LC.NearCombineZone or LC.CombineZoneAt)(pos) then return "combine", LC.CombineZoneAt(pos) ~= nil end
     return nil
 end
-function LC.MustCarryLowered(ply) return LC.LoweredGround(ply) ~= nil end
 
 local function Off(ply)
     return not ply:Alive() or LC.TimeStopped or ply:GetNW2Bool("lc_build", false)

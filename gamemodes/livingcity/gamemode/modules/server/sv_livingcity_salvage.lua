@@ -70,7 +70,6 @@ local function Roll(tbl)
     end
     return nil
 end
-LC.RollSalvage = function(big) return Roll(big and SALVAGE_BIG or SALVAGE) end
 
 local stripped = {} -- [key] = time there's something to take again
 LC.SalvageStripped = stripped

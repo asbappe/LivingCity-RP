@@ -229,6 +229,7 @@ local function Masked(ply)
     -- a gas mask in their pockets: on it goes by itself (the owner, 13 November; sv_livingcity_gasmask.lua)
     if ply.Alive and ply:Alive() and LC.GasMaskPlayer and LC.InGasCloud and LC.InGasCloud(ply:GetPos()) and LC.GasMaskPlayer(ply) then return true end
     local unit = LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))
+    if unit and LC.ChapterMaskOff and LC.ChapterMaskOff(ply) then unit = false end -- (the mask is off: sv_livingcity_chapter.lua)
     if unit and LC.FiltersFouled and LC.FiltersFouled() then return false, true end
     return unit
 end

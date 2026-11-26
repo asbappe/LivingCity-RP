@@ -23,3 +23,18 @@ The first small piece of the owner's long-term idea 5 (18 November: "thumpers ke
 - No setting, nothing on screen. For the owner to say: the numbers, and whether the rest of idea 5 (raids from outside the walls, workers, guards, bugbait) should build on this.
 
 `LC.Antlions.Set(thumper, running)`, `.Tick()`, `.Spawn(pos)`. Tests: `Nov24_ThumperAntlionTests` (9).
+
+## The hive boss (25 November; `sv_livingcity_hiveboss.lua`)
+
+The owner's long-term idea 3 ("blind, hunts by sound ... bullets barely hurt it ... spawns when much of the city is infested; killing it crashes the infestation"), with the creature the owner chose on 25 November: the Workshop NextBot **"half life alyx jeff npc/nextbot"** (id 2149660804). That addon is the creature (it hears running and jumping, walks the map's navmesh, and only explosives hurt it); the gamemode only decides when it comes, where, and what its death does.
+
+- **Off by default** (`lc_hiveboss` 0). Staff can send one or take it away: **F4 > Factions > Admin: testing tools > Testing alone > Hive boss**.
+- **Switched on** (`lc_hiveboss` 1), it comes by itself when at least half the districts are badly infested (two at least), in the placed infestation nearest the worst district, out of sight where it can; one at a time, and not again for `lc_hiveboss_minutes` (90) after one dies. Players who join then download the addon (`resource.AddWorkshop`).
+- **Dead**, the infestation crashes: every placed infestation loses half of what grew from it, the furthest patches first.
+- **Spores:** within 500 units of it, anyone with no gas mask coughs every few seconds (a mask in the pockets goes on by itself).
+- Nothing is written on anyone's screen.
+- `lc_hiveboss_class`: its entity class. Empty, the gamemode finds the installed class with "jeff" in its name.
+
+**What the server needs:** the addon itself (subscribed through the server's Workshop collection, or unpacked into `garrysmod/addons/`), and a navmesh for the map (`garrysmod/maps/rp_c18_ug.nav`): without one the addon opens its own "navmesh generator" window for an admin. Not known without the real game: the class name the addon uses (hence the search by name), whether it hears a cough, whether its death is told to the game as an NPC's is (a removed boss with no health left counts too).
+
+`LC.HiveBoss.Class()`, `.Spawn([pos])`, `.Remove()`, `.Crash()`, `.Due()`; hooks `LivingCityHiveBoss(ent)`, `LivingCityHiveBossDead(by, patchesGone)`. Tests: `Nov25_HiveBossTests` (11).

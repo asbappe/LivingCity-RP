@@ -49,6 +49,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | The city's layout (the editor's work; since 21 November also `zoneMarkers`, the names of the map's `lc_zone_...` markers that have brought their zone once, so one deleted stays deleted) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | Lockers, storage crates and market stalls, with what's in them | `data/livingcity/<map>_storage.json` | sv_livingcity_storage.lua |
+| The chapter (whose the city is after the rocket's wave, its clocks, the staff lock; 26 November) | `data/livingcity/<map>_chapter.json` | `LC.Chapter`, sv_livingcity_chapter.lua |
 | Debug reports (each one saved as it's copied) | `data/livingcity/reports/` | sv_livingcity_debug.lua |
 | Every error, grouped and counted, kept over restarts (F4 > Factions > Admin: errors; the owner sends `errors.txt`) | `data/livingcity/errors.txt`, `errors.json` (what the text is made from), `errors_previous.txt` (the list before the last "start again") | sh_livingcity_errors.lua |
 | Players' bug reports and feedback (F1 > Out of character > Report a bug or feedback; their words with a debug report under them; one a minute each) | `data/livingcity/feedback/<date>_<time>_<steamid64>.txt` | `LC.Feedback`, sv_livingcity_feedback.lua |

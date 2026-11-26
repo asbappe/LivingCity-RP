@@ -814,6 +814,7 @@ function LC.SocioWhyShown(why)
 end
 
 function LC.SocioAuto()
+    if LC.ChapterReversed and LC.ChapterReversed() then return "green" end -- (no Combine to judge it: sv_livingcity_chapter.lua)
     if LC.Event == "lockdown" then return "red", "lockdown" end
     local now = CurTime()
     -- an outbreak: red only while its infected are actually loose in the city (at most 5 minutes);

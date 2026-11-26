@@ -164,7 +164,7 @@ function LC.HQScan(ply, to)
     end
     local d = to - ply:GetPos()
     if d:Length() > 4000 then to = ply:GetPos() + d:GetNormalized() * 4000 end
-    local sc = ents.Create("npc_cscanner")
+    local sc = not (LC.ChapterReversed and LC.ChapterReversed()) and ents.Create("npc_cscanner") or nil -- (dead with the rest: sv_livingcity_chapter.lua)
     if not IsValid(sc) then return false, "HQ has no scanner to send." end
     sc:SetPos(ply:GetPos() + Vector(0, 0, 120))
     sc:Spawn()
