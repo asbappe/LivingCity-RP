@@ -2833,6 +2833,7 @@ class CaveForest(Forest):
         self.door_y = self.room_pt(456, 0, 0)[1]             # the door's middle (on the lobe's open floor)
         self.deep_x = self.bulk_x - self.BULK_T + 48         # the holdout's gallery is cut here, 48 inside the bulkhead's west face
         self.office_plan()
+        self.lifts = []                  # (suffix, train, car's floor, top, bottom) of each lift in the holdout's pit (lift_rig)
         self.hull = []                   # what lies behind the emergency door, each part's reach (x1 y1 z1 x2 y2 z2): nest() shuts them all in one box
         # the spring: where the west wall meets the floor. The slot runs 140 back into the rock from the wall's lip.
         ys = ym + self.SPRING
@@ -3651,22 +3652,50 @@ class CaveForest(Forest):
                               grubs, len(makers)))
 
     def holdout_lift(self):
-        """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities.
+        """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
         Valve's cage (holdout_elevator_1: its own brushwork, open on its north side, the lamp and the rotating red light
-        on it) on a func_tracktrain of our own wiring: it starts at the top, where the players come in; a call button at
-        each landing and one in the cage; stops 3 over each floor, so nothing is flush; while it is away from the top an
-        unseen clip closes the hole it leaves in the landing; it does no crush damage. While it is on its way down the
-        holdout's makers send zombies and antlions (Valve's way: they come while you wait for it), off when it is down.
-        Valve's own climbs only while someone stands in it (one trigger's OnStartTouch and OnEndTouch: it breaks with
-        several players), so that is not copied."""
+        on it) on our own wiring (lift_rig). While it is on its way down the holdout's makers send zombies and antlions
+        (Valve's way: they come while you wait for it), off when it is down. Valve's own climbs only while someone
+        stands in it (one trigger's OnStartTouch and OnEndTouch: it breaks with several players), so that is not copied.
+        Its call button at the top stood in the scaffold's corner post (elevator01_framework, round the cage from the
+        floor to the top), where a press met the post: it is on a post of its own beside the cage's mouth now."""
         pf = PF.load("valve_ep2_holdout")
-        ax = pf["anchor"]
         cage = [w for w in pf["wiring"] if w["keys"].get("targetname") == "holdout_elevator_1"][0]
+        out = self.lift_rig(pf, "", "holdout_elevator_1", cage["keys"], cage["brushes"], cage["origin"], 8, (1472, -9584, 1568, -9508), "north", -512, -1728,
+                            top_button=((1580, -9496), 180),
+                            bottom_button=((1434, -9520, -1691), 179.5, "models/props_mining/freightelevatorbutton01.mdl", (1424, -9530, -1697, 1434, -9510, -1667)),
+                            car_button=((1520, -9580), 90), lights=True, makers=True)
+        # the top call button's post: a square of the scaffold's steel on the landing's grating, east of the cage's mouth
+        P = self.deep_pt
+        a, b = P(1580, -9500, -512), P(1588, -9492, -448)
+        self.vmf.detail([self.box(a[0], a[1], a[2], b[0], b[1], b[2])], "metal/metaltruss017a", vis=self.vis("holdout: lights and dressing"))
+        return out
+
+    def lift_rig(self, pf, s, train, keys, brushes, origin, floor_up, car, mouth, top_z, bottom_z, top_button, bottom_button, car_button, lights=False,
+                 makers=False, more=()):
+        """A lift in the holdout's pit, as entities in the piece's frame for pf_entities: Valve's car (its brushes, built at
+        the top as Valve built it) on a func_tracktrain of ours between two path points, its floor flush with each landing
+        (the top's grating, the floor's landing), at LIFT_SPEED. Names end in s ("" for the first lift, "_2" for the
+        second), so two lifts never answer each other. car: the car's floor (Valve's x1 y1 x2 y2); mouth: its open side.
+        A call button at each landing and one on the car: a press while it moves does nothing.
+        What makes it safe (the owner, 26 November, of the first: "it gets stuck going up if a player is on it right below
+        the 'destination' at the top until I jump off or noclip"): an unseen clip over the hole it leaves in the top landing
+        (fence_top) stood over the car's whole floor until the car had arrived, so a rider's head met it 72 under the top
+        and the car pushed them into it for good. Now the fence goes as the car comes within 128 of the top (a path point
+        there, heard only on the way up), and comes back once the car is 3 s on its way down. And a rider standing half
+        out of the car's mouth would meet the landing's edge from under it: so the car sets off only when nobody stands
+        across its mouth (a trigger there, as the silo's lift waited), and an unseen gate closes the mouth while it moves.
+        It does no crush damage: if something is under it, it waits. Its sound: the freight lift of Eli's lab, looping
+        while it moves, at its own pitch (Valve's car had the Citadel's core lift, pitched by speed: a low groan at this
+        speed), and its stop."""
+        ax = pf["anchor"]
         rel = lambda x, y, z: [x - ax[0], y - ax[1], z - ax[2]]
         out = []
+        o = list(origin)
+        spots = iter([(o[0] - 200 - 16 * (i % 6), o[1] + 160 + 16 * (i // 6), rel(0, 0, -472)[2]) for i in range(200)])
 
-        def ent(cls, keys, at, outs=(), brushes=None, origin=None):
-            e = {"classname": cls, "origin": list(at), "keys": keys, "out": list(outs), "ours": True}
+        def ent(cls, k, at=None, outs=(), brushes=None):
+            e = {"classname": cls, "origin": list(at if at is not None else next(spots)), "keys": k, "out": list(outs), "ours": True}
             if brushes:
                 e["brushes"] = brushes
             out.append(e)
@@ -3679,42 +3708,73 @@ class CaveForest(Forest):
                 u, w = FACE_AXES[f]
                 sides.append({"plane": [list(c) for c in p[:3]], "verts": [list(c) for c in p], "material": mat.upper(), "uaxis": u, "vaxis": w, "lightmapscale": "16"})
             return sides
-        o = cage["origin"]                         # (-1328 590 56: the cage built at the top, its floor's top 8 over its origin)
-        floor_top = 64
-        delta = floor_top - o[2]
-        top, bottom = rel(0, 0, -512)[2] + 3 - delta, rel(0, 0, -1728)[2] + 3 - delta
+
+        def vb(x1, y1, z1, x2, y2, z2, mat):        # (a box given in Valve's own coordinates)
+            a, b = rel(x1, y1, z1), rel(x2, y2, z2)
+            return bx(min(a[0], b[0]), min(a[1], b[1]), min(a[2], b[2]), max(a[0], b[0]), max(a[1], b[1]), max(a[2], b[2]), mat)
+        built_top = o[2] + floor_up                  # (the car's floor's top where Valve built it: the top landing's level)
+        top_o = rel(0, 0, top_z)[2] - floor_up       # (the train's origin when its floor is flush with each landing)
+        bottom_o = rel(0, 0, bottom_z)[2] - floor_up
         speed = str(self.LIFT_SPEED)
-        keys = dict(cage["keys"])
-        keys.update({"targetname": "holdout_elevator_1", "target": "stop_top", "speed": "0", "startspeed": speed, "height": "0", "dmg": "0", "spawnflags": "19", "orientationtype": "0"})
-        ent("func_tracktrain", keys, o, brushes=cage["brushes"])
-        ent("path_track", {"targetname": "stop_top", "target": "stop_bottom", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"}, (o[0], o[1], top),
-            [("OnPass", "arrive_top", "Trigger", "", 0)])
-        ent("path_track", {"targetname": "stop_bottom", "target": "", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"}, (o[0], o[1], bottom),
-            [("OnPass", "arrive_bottom", "Trigger", "", 0)])
-        spots = iter([(o[0] - 200 - 16 * (i % 6), o[1] + 160 + 16 * (i // 6), floor_top + 40) for i in range(200)])
+        k = dict(keys)
+        k.update({"targetname": train, "target": "stop_top" + s, "speed": "0", "startspeed": speed, "height": "0", "dmg": "0", "spawnflags": "19",
+                  "orientationtype": "0", "MoveSound": "eli_lab.elevator_move", "StopSound": "eli_lab.elevator_stop", "StartSound": "",
+                  "MoveSoundMinPitch": "100", "MoveSoundMaxPitch": "100", "volume": "10"})
+        ent("func_tracktrain", k, o, brushes=list(brushes) + list(more))
+        ent("path_track", {"targetname": "stop_top" + s, "target": "near_top" + s, "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
+            (o[0], o[1], top_o), [("OnPass", "arrive_top" + s, "Trigger", "", 0)])
+        ent("path_track", {"targetname": "near_top" + s, "target": "stop_bottom" + s, "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
+            (o[0], o[1], top_o - 128), [("OnPass", "nearing_top" + s, "Trigger", "", 0)])
+        ent("path_track", {"targetname": "stop_bottom" + s, "target": "", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
+            (o[0], o[1], bottom_o), [("OnPass", "arrive_bottom" + s, "Trigger", "", 0)])
 
         def relay(name, outs, off=False):
-            ent("logic_relay", {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, next(spots), outs)
-        go = [("OnTrigger", "call_*", "Disable", "", 0), ("OnTrigger", "rot_redlight1", "Start", "", 0), ("OnTrigger", "spot_doors*", "LightOn", "", 0),
-              ("OnTrigger", "lift_start", "PlaySound", "", 0)]
-        relay("go_down", go + [("OnTrigger", "arrive_bottom", "Enable", "", 0), ("OnTrigger", "holdout_elevator_1", "StartForward", "", 1), ("OnTrigger", "fence_top", "Enable", "", 3),
-                               ("OnTrigger", "zombie_maker", "Enable", "", 2), ("OnTrigger", "antlion_maker", "Enable", "", 4)])
-        relay("go_up", go + [("OnTrigger", "arrive_top", "Enable", "", 0), ("OnTrigger", "holdout_elevator_1", "StartBackward", "", 1)])
-        done = [("OnTrigger", "rot_redlight1", "Stop", "", 0), ("OnTrigger", "spot_doors*", "LightOff", "", 0), ("OnTrigger", "call_*", "Enable", "", 1.5)]
-        relay("arrive_top", done + [("OnTrigger", "arrive_top", "Disable", "", 0), ("OnTrigger", "at_*", "SetValue", "1", 0), ("OnTrigger", "fence_top", "Disable", "", 0)], off=True)
-        relay("arrive_bottom", done + [("OnTrigger", "arrive_bottom", "Disable", "", 0), ("OnTrigger", "at_*", "SetValue", "0", 0),
-                                       ("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)], off=True)
-        for name, cmp_value, outs in (("top", "1", [("OnLessThan", "go_up", "Trigger", "", 0)]), ("bottom", "0", [("OnGreaterThan", "go_down", "Trigger", "", 0)]),
-                                      ("cage", "1", [("OnEqualTo", "go_down", "Trigger", "", 0), ("OnLessThan", "go_up", "Trigger", "", 0)])):
-            relay("call_" + name, [("OnTrigger", "at_" + name, "Compare", "", 0)])
-            ent("logic_compare", {"targetname": "at_" + name, "InitialValue": "1", "CompareValue": cmp_value}, next(spots), outs)
-        ent("ambient_generic", {"targetname": "lift_start", "message": "d3_breen.core_elevator_move1", "health": "8", "pitch": "100", "pitchstart": "100", "radius": "1500",
-                                "spawnflags": "48", "volstart": "0", "preset": "0"}, (o[0], o[1], floor_top + 120))
-        # the clip over the landing's hole while the cage is away (on the landing's level: the riders are well below it by then)
-        x1, y1, x2, y2 = -1376, 552, -1280, 628
-        ent("func_brush", {"targetname": "fence_top", "StartDisabled": "1", "Solidity": "0", "spawnflags": "2", "rendermode": "10", "renderamt": "0", "excludednpc": "",
-                           "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}, ((x1 + x2) / 2, (y1 + y2) / 2, floor_top + 56),
-            brushes=[bx(x1, y1, floor_top, x2, y2 + 8, floor_top + 112, MAT["clip"])])
+            ent("logic_relay", {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, None, outs)
+        calls = ["call_top" + s, "call_bottom" + s, "call_cage" + s]
+        ats = ["at_top" + s, "at_bottom" + s, "at_cage" + s]
+        go = [("OnTrigger", c, "Disable", "", 0) for c in calls]
+        done = [("OnTrigger", c, "Enable", "", 1.5) for c in calls] + [("OnTrigger", "gate" + s, "Disable", "", 0)]
+        if lights:
+            go += [("OnTrigger", "rot_redlight1", "Start", "", 0), ("OnTrigger", "spot_doors*", "LightOn", "", 0)]
+            done += [("OnTrigger", "rot_redlight1", "Stop", "", 0), ("OnTrigger", "spot_doors*", "LightOff", "", 0)]
+        relay("go_down" + s, go + [("OnTrigger", "arrive_bottom" + s, "Enable", "", 0), ("OnTrigger", "clear_dn" + s, "Test", "", 1)])
+        relay("go_up" + s, go + [("OnTrigger", "arrive_top" + s, "Enable", "", 0), ("OnTrigger", "nearing_top" + s, "Enable", "", 0), ("OnTrigger", "clear_up" + s, "Test", "", 1)])
+        away = [("OnFalse", "gate" + s, "Enable", "", 0)]
+        down = away + [("OnFalse", train, "StartForward", "", 0.1), ("OnFalse", "fence_top" + s, "Enable", "", 3)]
+        if makers:
+            down += [("OnFalse", "zombie_maker", "Enable", "", 1), ("OnFalse", "antlion_maker", "Enable", "", 3)]
+        # (it sets off once nobody stands across its mouth: the trigger there holds both branches true)
+        ent("logic_branch", {"targetname": "clear_dn" + s, "InitialValue": "0"}, None, down + [("OnTrue", "clear_dn" + s, "Test", "", 1)])
+        ent("logic_branch", {"targetname": "clear_up" + s, "InitialValue": "0"}, None, away + [("OnFalse", train, "StartBackward", "", 0.1), ("OnTrue", "clear_up" + s, "Test", "", 1)])
+        relay("nearing_top" + s, [("OnTrigger", "fence_top" + s, "Disable", "", 0), ("OnTrigger", "nearing_top" + s, "Disable", "", 0)], off=True)
+        relay("arrive_top" + s, done + [("OnTrigger", "arrive_top" + s, "Disable", "", 0), ("OnTrigger", "fence_top" + s, "Disable", "", 0)]
+              + [("OnTrigger", a, "SetValue", "1", 0) for a in ats], off=True)
+        bottom = done + [("OnTrigger", "arrive_bottom" + s, "Disable", "", 0)] + [("OnTrigger", a, "SetValue", "0", 0) for a in ats]
+        if makers:
+            bottom += [("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)]
+        relay("arrive_bottom" + s, bottom, off=True)
+        for name, cmp_value, outs in (("top", "1", [("OnLessThan", "go_up" + s, "Trigger", "", 0)]), ("bottom", "0", [("OnGreaterThan", "go_down" + s, "Trigger", "", 0)]),
+                                      ("cage", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)])):
+            relay("call_" + name + s, [("OnTrigger", "at_" + name + s, "Compare", "", 0)])
+            ent("logic_compare", {"targetname": "at_" + name + s, "InitialValue": "1", "CompareValue": cmp_value}, None, outs)
+        # the car's mouth: a trigger across it (anyone half out holds the car), and an unseen gate there while it moves
+        x1, y1, x2, y2 = car
+        zt = built_top
+        mouth_box = {"north": (x1, y2 - 2, x2, y2 + 2), "south": (x1, y1 - 2, x2, y1 + 2), "east": (x2 - 2, y1, x2 + 2, y2), "west": (x1 - 2, y1, x1 + 2, y2)}[mouth]
+        mx1, my1, mx2, my2 = mouth_box
+        ent("trigger_multiple", {"targetname": "mouth" + s, "parentname": train, "spawnflags": "1", "wait": "0.1", "StartDisabled": "0"}, None,
+            [("OnStartTouchAll", c, "SetValue", v_, 0) for v_, c in (("1", "clear_dn" + s), ("1", "clear_up" + s))]
+            + [("OnEndTouchAll", c, "SetValue", "0", 0) for c in ("clear_dn" + s, "clear_up" + s)],
+            brushes=[vb(mx1, my1, top_z + 1, mx2, my2, top_z + 72, MAT["trigger"])])
+        gx = {"north": (x1, y2, x2, y2 + 1), "south": (x1, y1 - 1, x2, y1), "east": (x2, y1, x2 + 1, y2), "west": (x1 - 1, y1, x1, y2)}[mouth]
+        ent("func_brush", {"targetname": "gate" + s, "parentname": train, "StartDisabled": "1", "Solidity": "0", "spawnflags": "2", "rendermode": "10", "renderamt": "0",
+                           "excludednpc": "", "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}, None,
+            brushes=[vb(gx[0], gx[1], top_z, gx[2], gx[3], top_z + 112, MAT["clip"])])
+        # the fence over the hole it leaves in the top landing while it is away (to the landing's edge past its mouth)
+        fx1, fy1, fx2, fy2 = {"north": (x1, y1, x2, y2 + 8), "south": (x1, y1 - 8, x2, y2), "east": (x1, y1, x2 + 8, y2), "west": (x1 - 8, y1, x2, y2)}[mouth]
+        ent("func_brush", {"targetname": "fence_top" + s, "StartDisabled": "1", "Solidity": "0", "spawnflags": "2", "rendermode": "10", "renderamt": "0", "excludednpc": "",
+                           "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}, None,
+            brushes=[vb(fx1, fy1, top_z, fx2, fy2, top_z + 112, MAT["clip"])])
 
         def button(name, foot, yaw, box, model, outs, parent=None):
             pk = {"targetname": name + "_model", "model": model, "angles": "0 %s 0" % yaw, "skin": "0", "solid": "0", "DefaultAnim": "idleoff", "disableshadows": "1",
@@ -3725,26 +3785,35 @@ class CaveForest(Forest):
                   "renderamt": "0", "rendercolor": "255 255 255"}
             if parent:
                 pk["parentname"] = bk["parentname"] = parent
-            ent("prop_dynamic", pk, foot)
-            ent("func_button", bk, ((box[0] + box[3]) / 2, (box[1] + box[4]) / 2, (box[2] + box[5]) / 2),
-                [("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(outs), brushes=[bx(*box, MAT["nodraw"])])
-        # the top landing's: on the pit's south wall west of the cage, facing the landing; the floor's: where Valve's was
-        # (freightelevatorbutton01 on the post west of the cage); the cage's: on its south side's middle post, facing in
-        b02 = "models/props_mining/freightelevatorbutton02.mdl"
-        button("button_top", (-1400, 536, floor_top + 40), 90, (-1410, 536, floor_top + 36, -1390, 546, floor_top + 64), b02, [("OnPressed", "call_top", "Trigger", "", 0)])
-        bz = rel(0, 0, -1691)[2]
-        button("button_bottom", (-1414, 616, bz), 179.5, (-1424, 606, bz - 6, -1414, 626, bz + 24), "models/props_mining/freightelevatorbutton01.mdl",
-               [("OnPressed", "call_bottom", "Trigger", "", 0)])
-        button("button_cage", (-1328, 556, floor_top + 36), 90, (-1338, 556, floor_top + 32, -1318, 566, floor_top + 60), b02, [("OnPressed", "call_cage", "Trigger", "", 0)],
-               parent="holdout_elevator_1")
-        # the holdout's makers (Valve's way: on while the lift comes down), each with its pattern; made at the room's ends
-        for name, cls, at, every in (("zombie", "npc_zombie", rel(850, -8399, -1784), "4"), ("antlion", "npc_antlion", rel(2014, -9100, -1783), "6")):
-            ent(cls, {"targetname": name, "spawnflags": "2564", "angles": "0 0 0", "squadname": "lc_holdout", "physdamagescale": "1.0", "sleepstate": "0",
-                      "renderamt": "255", "rendercolor": "255 255 255"}, (at[0] + 64, at[1], at[2] + 8))
-            ent("npc_template_maker", {"targetname": name + "_maker", "TemplateName": "lc_holdout_" + name, "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1",
-                                       "SpawnFrequency": every, "MaxLiveChildren": "3", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2",
-                                       "CriterionDistance": "2", "angles": "0 0 0"}, (at[0], at[1], at[2] + 8))
-        self.lift_info = (o, top, bottom, delta)
+            ent("prop_dynamic", pk, rel(*foot))
+            a, b = rel(*box[:3]), rel(*box[3:])
+            ent("func_button", bk, [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0, (a[2] + b[2]) / 2.0], [("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(outs),
+                brushes=[bx(min(a[0], b[0]), min(a[1], b[1]), min(a[2], b[2]), max(a[0], b[0]), max(a[1], b[1]), max(a[2], b[2]), MAT["nodraw"])])
+
+        def mine_button(name, at, yaw, z, outs, parent=None):
+            # Episode Two's mine lift button (freightelevatorbutton02: 8 wide, 20 high, 5 out, facing east at yaw 0) with
+            # its foot on a face at `at`, centred there, facing `yaw`
+            (x, y), c, sn = at, round(math.cos(math.radians(yaw))), round(math.sin(math.radians(yaw)))
+            foot = (x + 4 * sn, y - 4 * c, z)              # (its 8 run to its left from the foot)
+            fx_, fy_ = x + 10 * c, y + 10 * sn
+            box = (min(x, fx_) - 10 * abs(sn), min(y, fy_) - 10 * abs(c), z - 4, max(x, fx_) + 10 * abs(sn), max(y, fy_) + 10 * abs(c), z + 24)
+            button(name, foot, yaw, box, "models/props_mining/freightelevatorbutton02.mdl", outs, parent)
+        mine_button("button_top" + s, top_button[0], top_button[1], top_z + 40, [("OnPressed", "call_top" + s, "Trigger", "", 0)])
+        if len(bottom_button) > 2:      # (Valve's own, where Valve put it)
+            foot, yaw, model, box = bottom_button
+            button("button_bottom" + s, foot, yaw, box, model, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
+        else:
+            mine_button("button_bottom" + s, bottom_button[0], bottom_button[1], bottom_z + 40, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
+        mine_button("button_cage" + s, car_button[0], car_button[1], top_z + 36, [("OnPressed", "call_cage" + s, "Trigger", "", 0)], parent=train)
+        # the holdout's makers (Valve's way: on while a lift comes down), each with its pattern; made at the room's ends
+        if makers:
+            for name, cls, at, every in (("zombie", "npc_zombie", rel(850, -8399, -1784), "4"), ("antlion", "npc_antlion", rel(2014, -9100, -1783), "6")):
+                ent(cls, {"targetname": name, "spawnflags": "2564", "angles": "0 0 0", "squadname": "lc_holdout", "physdamagescale": "1.0", "sleepstate": "0",
+                          "renderamt": "255", "rendercolor": "255 255 255"}, (at[0] + 64, at[1], at[2] + 8))
+                ent("npc_template_maker", {"targetname": name + "_maker", "TemplateName": "lc_holdout_" + name, "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1",
+                                           "SpawnFrequency": every, "MaxLiveChildren": "3", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2",
+                                           "CriterionDistance": "2", "angles": "0 0 0"}, (at[0], at[1], at[2] + 8))
+        self.lifts.append((s, train, car, top_z, bottom_z))
         return out
 
     def workings_hull(self):
