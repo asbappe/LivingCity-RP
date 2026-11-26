@@ -205,13 +205,16 @@ def pf_finish(sols, q, d, rooms, mats, models=()):
 
 
 def pf_model_boxes(pf):
-    """The boxes of a lifted piece's upright models (no pitch or roll), in the piece's own frame, by their real sizes."""
+    """The boxes of a lifted piece's upright models (no pitch or roll) that nothing moves (no parent, no name), in the
+    piece's own frame, by their real sizes. (A door's model moves away from what it covered shut: the strip over White
+    Forest's south door, inside the door model's box, showed as a hole when it kept Valve's nodraw.)"""
     import map_build
     out = []
     for e in pf["points"]:
-        m = e["keys"].get("model", "")
-        a = [float(c) for c in (e["keys"].get("angles") or "0 0 0").split()]
-        if m.endswith(".mdl") and len(a) == 3 and abs(a[0]) < 0.01 and abs(a[2]) < 0.01:
+        k = e["keys"]
+        m = k.get("model", "")
+        a = [float(c) for c in (k.get("angles") or "0 0 0").split()]
+        if m.endswith(".mdl") and len(a) == 3 and abs(a[0]) < 0.01 and abs(a[2]) < 0.01 and not k.get("parentname") and not k.get("targetname"):
             b = map_build.prop_box(m, e["origin"], a[1])
             if b:
                 out.append(b)
