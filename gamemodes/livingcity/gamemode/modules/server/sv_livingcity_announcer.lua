@@ -421,6 +421,7 @@ end
 local function Say(voice, trig, only, force, tier)
     if not cvOn:GetBool() then return false end
     if LC.EndingSession and LC.EndingSession() then return false end -- (quiet through a secret ending)
+    if LC.ChapterReversed and LC.ChapterReversed() then return false end -- (and while the city is the Resistance's: sv_livingcity_chapter.lua)
     voice = VoiceName(voice)
     local now = CurTime()
     if not force and ((voiceNext[voice] or 0) > now or (trigNext[voice .. "/" .. trig] or 0) > now) then return false end

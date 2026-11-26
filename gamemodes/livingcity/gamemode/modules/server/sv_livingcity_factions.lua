@@ -369,6 +369,7 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
         if not IsValid(ply) then return end
         ApplyBody(ply)
         if LC.Prisoners and LC.Prisoners[ply] then return end
+        if LC.ChapterSpawn and LC.ChapterSpawn(ply) then return end -- (the city is the Resistance's: units at their holdout. sv_livingcity_chapter.lua)
         -- hunted people spawn at resistance spawn points (or rebel territory), the
         -- infested at theirs (or in their nests); citizens never spawn on Combine ground
         local hunted, zombie = LC.PlayerIsHunted(ply), LC.PlayerIsZombie(ply)

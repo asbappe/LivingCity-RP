@@ -33,6 +33,7 @@ local cvCap = CreateConVar("lc_vest_capacity", "75", FLAGS, "How much charge a p
 -- How much charge someone can hold right now.
 function LC.VestCap(ply)
     if not IsValid(ply) then return 0 end
+    if LC.ChapterVestDead and LC.ChapterVestDead(ply) then return 0 end -- (a unit's vest holds no charge: sv_livingcity_chapter.lua)
     local issued = ply:GetNW2Int("lc_vest_cap", 0)
     if LC.PlayerIsCP and LC.PlayerIsCP(ply) then issued = math.max(issued, 100) end
     local worn = ply:GetNW2Bool("lc_vest", false) and cvCap:GetInt() or 0

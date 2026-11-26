@@ -26,10 +26,6 @@ function LC_CL.NextStep()
         urgent = me:GetNW2Bool("lc_next_urgent", false), new = me:GetNW2Bool("lc_next_new", false) }
 end
 
-function LC_CL.ShowNextStep(mode)
-    if mode == nil then mode = (cvShow:GetInt() == 2) and 1 or 2 end
-    RunConsoleCommand("lc_whatnow_show", tostring(mode))
-end
 
 ------------------------------------------------------------------------
 -- On screen

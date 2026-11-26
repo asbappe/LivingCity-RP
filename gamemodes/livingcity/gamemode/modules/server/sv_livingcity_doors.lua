@@ -134,6 +134,8 @@ local function Shutting(door)
     return s == 1 or s == 3 -- (at the bottom, going down)
 end
 
+LC.DoorHoldOpen = HoldOpen -- (sv_livingcity_chapter.lua: every Combine door open for as long as the city is the Resistance's)
+
 local function OpenAndHold(door)
     door:Fire("Unlock")
     door:Fire("Open", "", 0.1)

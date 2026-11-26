@@ -73,7 +73,6 @@ net.Receive("lc_last_chance", function()
     local d = { roll = net.ReadUInt(7), need = net.ReadUInt(7), lives = net.ReadBool(), secs = net.ReadFloat(), why = net.ReadString() }
     living = { d = d, t0 = CurTime() }
 end)
-function LC_CL.LivingDice() return living end
 
 local function ReadCompressed()
     local len = net.ReadUInt(32)

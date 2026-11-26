@@ -46,7 +46,6 @@ end
 -- The prison (the owner, 1 November): only Nova Prospekt guards, lc_prison_guards (2) of them; no
 -- metrocops or soldiers garrisoned in it (a Combine zone that takes it in leaves it to them).
 local cvPrison = CreateConVar("lc_prison_guards", "2", FLAGS, "Nova Prospekt prison guards garrisoned in each prison zone (only they guard it)")
-LC.GarrisonPrisonGuards = function() return math.max(0, cvPrison:GetInt()) end
 
 local function Count(z)
     local n, cops = 0, 0

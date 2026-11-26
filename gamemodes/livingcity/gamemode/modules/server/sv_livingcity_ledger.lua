@@ -294,7 +294,6 @@ local function Bulletin(s)
     hook.Run("LivingCityBulletin", text)
     return text
 end
-LC.LedgerBulletin = function() return Bulletin(Load()) end
 
 -- A new city day: the drift, the marks that run out, the bulletin.
 function LC.LedgerNewDay(quiet)

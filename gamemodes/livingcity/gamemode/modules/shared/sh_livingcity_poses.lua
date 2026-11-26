@@ -69,7 +69,6 @@ local function Knows(def, name)
     if def.known[name] then return true end
     return def.any ~= nil and #name <= 64 and string.match(name, def.any) ~= nil
 end
-function LC.PoseKnowsBone(id, name) return LC.Poses[id] ~= nil and Knows(LC.Poses[id], name) end
 
 -- A pose whose built-in numbers are a setting's (lc_cuff_pose, lc_broom_hold): the code that owns
 -- the setting says how to read it. bones: function() return { [name] = Angle } end
