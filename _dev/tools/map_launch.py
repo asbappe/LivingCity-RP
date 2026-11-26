@@ -225,7 +225,7 @@ def build(f, F):
     #  "you put the extra TV over the door prop that doesn't open; please just remove that door prop. and make sure the
     #  wall is sealed where the door prop was")
     v.world_box((TECH_AT[0] + 240, TECH_AT[1] + 496, TECH_AT[2] + 56, TECH_AT[0] + 344, TECH_AT[1] + 528, TECH_AT[2] + 192), MAT["nodraw"],
-                faces={"south": "CONCRETE/CONCRETEWALL_BUNKER05B"}, vis=vis)
+                faces={"south": "CONCRETE/CONCRETEWALL_BUNKER05B", "west": "CONCRETE/CONCRETEWALL_BUNKER05A", "east": "CONCRETE/CONCRETEWALL_BUNKER05A"}, vis=vis)
 
     def keep(e):
         k = e["keys"]
