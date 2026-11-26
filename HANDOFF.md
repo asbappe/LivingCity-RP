@@ -31,11 +31,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 24 November (the TODO run; the owner: "make judgement calls as needed"): built, none seen in the real game yet: barnacles
-  lift who they catch (sh_livingcity_barnacle.lua); the pumphouse nearest a rebel territory is its water; the live base's
-  vehicle (editor: "Point: Resistance base vehicle"; a buggy, an airboat on water); antlions at a stopped thumper's burrow;
-  a cut train line costs supplies. docs/features/wildlife.md, resistance-base.md, ieds.md. What waits for the owner's
-  word is the last line of TODO.md. Last full run (24 November): 9,262 passed, 1 failed (Nov21_CellsFullTests, passes alone).
+- 25 November: units hear (sv_livingcity_noise.lua; docs/features/contraband.md "Keeping quiet"): a shot or a thrown thing landing (and, only out
+  after curfew outside the blocks, running or a jump) sends the nearest free Civil Protection unit to look. Ideas from three NPC addons, none built: docs/dev/npc-ai-lessons.md.
+- 24 November (the TODO run), built, not yet seen in game: barnacles lift, pumphouse water, the base's vehicle, antlions at a
+  stopped thumper, a cut train line (docs/features/wildlife.md, resistance-base.md, ieds.md). Last full run: 9,262 passed, 1 failed.
 - 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is
   `straight 512`. The ring was cut down after the owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md;
   ring piece alone 31,115 faces). Left of their review: the drain, the railway to the station (TODO.md).

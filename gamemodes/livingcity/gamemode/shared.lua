@@ -166,6 +166,7 @@ LC_MODULES = {
         "sv_livingcity_rp",
         "sv_livingcity_rhythm",
         "sv_livingcity_running",
+        "sv_livingcity_noise", -- (after running: a unit hears running, jumping, thrown things and shots, and comes to look)
         "sv_livingcity_salvage",
         "sv_livingcity_scanner",
         "sv_livingcity_scavenge",

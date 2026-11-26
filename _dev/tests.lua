@@ -44869,6 +44869,118 @@ end
 Nov26_BunkerCCTVTests()
 
 ----------------------------------------------------------------------
+function NoiseTests()
+section("Noise: a unit hears it and comes to look")
+local T = Vector(30000, 30000, 0)
+local wasRunning = LC.Running
+local sneak = newPlayer("Sneak", "citizen")
+local cpP = newPlayer("NoiseUnit", "cp")
+_run(3)
+LC.Running = true
+local held = {}
+for npc, st in pairs(LC.NPCs) do held[npc] = st LC.NPCs[npc] = nil end -- (only the units of this test)
+local function unit(off, extra)
+    local c = ents.Create("npc_metropolice") c:SetPos(T + off)
+    local st = { role = "cop", state = "idle" }
+    for k, v in pairs(extra or {}) do st[k] = v end
+    LC.NPCs[c] = st
+    return c, st
+end
+ok(LC.NoiseRange(75, 0.5) > 600 and LC.NoiseRange(75, 0.5) < LC.NoiseRange(140, 1), "a louder sound carries farther", tostring(LC.NoiseRange(75, 0.5)))
+ok(LC.NoiseRange(200, 10) == GetConVar("lc_noise_max"):GetFloat(), "and none past lc_noise_max")
+local near, stN = unit(Vector(300, 0, 0))
+local far, stF = unit(Vector(700, 0, 0))
+local post, stP = unit(Vector(100, 0, 0), { doorPost = {} })
+local who = LC.Noise(T, 800, nil, false)
+ok(who == near, "the nearest free unit sets off, not the one on a post")
+ok(stN.state == "moving" and stN.heard and stN.dest:Distance(T) <= 90 and stN.dest:Distance(T) > 0, "to about where it was, not the very spot", tostring(stN.dest))
+ok(not stP.heard and not stF.heard, "one unit, not all of them")
+ok(LC.Noise(T + Vector(0, 200, 0), 820, nil, false) == far, "a noise no louder leaves it be: the next unit goes")
+local d0 = stN.dest
+ok(LC.Noise(T + Vector(0, -250, 0), 1200, nil, false) == near and stN.dest ~= d0, "a much louder one takes it off the first")
+-- there: a look round, and done with it
+near:SetPos(stN.dest)
+local poi = stN.poi
+ok(LC.ArriveHandlers.noise(near, stN, CurTime(), poi) == true and stN.heard == nil, "there, it looks round and lets it go")
+ok((stN.heardNext or 0) > CurTime(), "and is not off after the next small noise at once")
+stN.state = "idle"
+ok(LC.Noise(T, 800, nil, false) ~= near, "(it rests)")
+-- too long getting there
+stF.heard.untilT = CurTime() - 1
+LC.NoiseTick(CurTime())
+ok(stF.heard == nil and stF.state == "idle", "a unit who can't get there gives up and goes back to its rounds")
+-- players: running and jumping are heard, walking and crouching are not
+for npc in pairs(LC.NPCs) do LC.NPCs[npc] = nil npc:Remove() end
+local cop, stC = unit(Vector(300, 0, 0))
+local wall = true
+local oldLOS = LC.LineOfSight
+LC.LineOfSight = function() return not wall end
+sneak:SetPos(T) sneak.ground = true
+local evWas, graceWas, zokWas = LC.Event, LC.EventGraceEnds, LC.ZonesOfKind
+LC.Event, LC.EventGraceEnds = nil, 0
+sneak.keys = { [IN_SPEED] = true } sneak.vel = Vector(400, 0, 0)
+LC.NoiseTick(CurTime())
+hook.Run("KeyPress", sneak, IN_JUMP)
+ok(not stC.heard, "with no curfew on, running and jumping bring nobody")
+LC.Event = "curfew"
+local inBlock = true
+LC.ZonesOfKind = function(kind) if kind == "block" and inBlock then return { { kind = "block", pos = T, r = 500, group = 1 } } end return {} end
+ok(LC.NoiseStepsCount(sneak) == false, "(inside a block)")
+LC.NoiseTick(CurTime())
+hook.Run("KeyPress", sneak, IN_JUMP)
+ok(not stC.heard, "nor during a curfew inside a habitation block")
+inBlock = false
+ok(LC.NoiseStepsCount(sneak) == true, "(out in the street after curfew: now it counts)")
+sneak.vel = Vector(60, 0, 0) sneak.keys = {}
+LC.NoiseTick(CurTime())
+ok(not stC.heard, "walking makes no noise")
+sneak.keys = { [IN_SPEED] = true } sneak.vel = Vector(400, 0, 0)
+sneak.Crouching = function() return true end
+LC.NoiseTick(CurTime())
+ok(not stC.heard, "nor does creeping, crouched")
+sneak.Crouching = nil
+wall = false
+LC.NoiseTick(CurTime())
+ok(not stC.heard, "a unit who can see you running isn't sent to look (it shouts: the running rule)")
+wall = true sneak.lcNoiseAt = nil
+LC.NoiseTick(CurTime())
+ok(stC.heard ~= nil and stC.state == "moving", "running behind a wall brings the unit round to look")
+stC.heard, stC.heardNext, stC.state, stC.poi = nil, nil, "idle", nil
+sneak.vel = Vector() sneak.keys = {}
+LC.NoiseTick(CurTime())
+ok(not stC.heard, "(and within a few seconds, nothing more from the same player)")
+sneak.lcNoiseAt = nil
+hook.Run("KeyPress", sneak, IN_JUMP)
+ok(stC.heard ~= nil, "a jump is heard too")
+stC.heard, stC.heardNext, stC.state, stC.poi = nil, nil, "idle", nil
+cpP:SetPos(T) cpP.lcNoiseAt = nil
+hook.Run("KeyPress", cpP, IN_JUMP)
+ok(not stC.heard, "a Civil Protection player's noise doesn't count")
+-- a thrown thing landing
+local can = ents.Create("prop_physics") can:SetPos(T + Vector(0, 300, 0))
+local snd = { Entity = can, SoundName = "physics/metal/soda_can_impact_hard1.wav", SoundLevel = 75, Volume = 0.8, Pos = can:GetPos() }
+hook.Run("EntityEmitSound", snd)
+ok(not stC.heard, "a can falling over by itself is nothing")
+hook.Run("OnPlayerPhysicsDrop", sneak, can, true)
+ok(LC.Running and can.lcThrown == true, "(thrown, and the city still runs)", tostring(LC.Running) .. tostring(can.lcThrown))
+can.lcDroppedAt = CurTime() - 1
+hook.Run("EntityEmitSound", snd)
+ok(stC.heard ~= nil and stC.dest:Distance(can:GetPos()) <= 90, "a thrown can landing sends the unit there")
+stC.heard, stC.heardNext, stC.state, stC.poi = nil, nil, "idle", nil
+hook.Run("EntityEmitSound", snd)
+ok(not stC.heard, "once: not for every bounce")
+-- off
+RunConsoleCommand("lc_noise", "0")
+ok(LC.Noise(T, 800, nil, false) == nil, "lc_noise 0: nobody comes")
+RunConsoleCommand("lc_noise", "1")
+LC.LineOfSight = oldLOS
+LC.Event, LC.EventGraceEnds, LC.ZonesOfKind = evWas, graceWas, zokWas
+can:Remove()
+LC.NPCs[cop] = nil cop:Remove()
+for npc, st in pairs(held) do if IsValid(npc) then LC.NPCs[npc] = st end end
+LC.Running = wasRunning
+end
+NoiseTests()
 section("Stop")
 LC.Stop(admin)
 _run(1)
