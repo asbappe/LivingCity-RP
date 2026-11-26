@@ -125,10 +125,7 @@ end
 -- What actually happens, for the person reading it.
 local MEANS = {
     ambient = function()
-        if LC.CityState and LC.CityState() == "unrest" then
-            return "The city is in unrest: more inspections and raids, and rations come slower. See !city."
-        end
-        return nil -- (the owner, 26 November: no "just the city talking" line; the quote alone)
+        return nil -- (the owner, 26 November: no second line under an ambient one, unrest or not; the quote alone)
     end,
     rations = function(ply)
         if LC.PlayerIsCP(ply) then return "Rations are being handed out for " .. Minutes() .. ". The lines move faster and citizens crowd them; keep order." end

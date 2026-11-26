@@ -31,7 +31,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 26 November (the owner): the quiet HUD card lost "This server hides numbers on screen"; ambient PA lines no longer add "> Just the city talking. Nothing changes." in chat.
+- 26 November (the owner): the quiet HUD card lost "This server hides numbers on screen"; ambient PA lines get no second line in chat (not "Just the city talking", not the unrest one).
+- 26 November: the old-timer's fisherman head no longer parented (it floated where he left a player's view, his own head shrunk): it takes its bones from his every frame and draws only with him (LC_CL.HeadOn; city-people.md). Not seen in game yet.
 - 26 November: the cistern as its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf, sent), a street plate
   over it, Valve's freight lift from gallery to street (models, lc_cistern_lift; map-building.md). Not compiled. Next: Propper++.
 - 25 and 26 November (the owner's answers; none seen in game): Combine APC on the ring's road (apc-patrol.md); the city falls chapter,
