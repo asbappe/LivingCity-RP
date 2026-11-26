@@ -831,7 +831,8 @@ def m_railbridge(m, opt):
     FAR = {s: T0[s] + 1024 for s in (1, -1)}
     if raised:
         import map_backdrop
-        FAR = {street: T0[street] + 1408, -street: 256 + map_backdrop.DEPTH - 64}      # (1408 behind the wall's face: 64 clear of the city's
+        SKY_RUN = 4096      # (a corridor of sky on past the scenery's far edge, for the train to wait in unseen: below)
+        FAR = {street: T0[street] + 1408, -street: 256 + map_backdrop.DEPTH + SKY_RUN - 64}      # (1408 behind the wall's face: 64 clear of the city's
         #                                                                              block at y 6272 on the ring's north run, checked --against c18_lc.vmf)
     m.open(0, -256, L, 256)
     from map_mods_c import cage_lamp
@@ -843,6 +844,15 @@ def m_railbridge(m, opt):
                 m.paint(c - 160, lo, c + 160, hi, ("low", map_corridor.STREET + map_corridor.WALL_H - 8, map_corridor.CORE, b.sky))
                 m.side(c - 160, lo, c + 160, hi)
                 m.blocked(c - 160, lo, c + 160, hi)
+            else:
+                # beyond the scenery's far edge the line runs on in a corridor of sky 320 wide (the owner, 26 November: "make
+                # a skybox tunnel big enough to fit the train and have it stretch far enough out that the train spawns out
+                # of view of a player on the street/canal"): its floor, walls and lid are all sky, so from the street and
+                # the canal it is sky like the rest; the train waits at its far end, SKY_RUN beyond the scenery
+                e0 = 256 + map_backdrop.DEPTH
+                m.paint(c - 160, min(s * e0, s * (e0 + SKY_RUN)), c + 160, max(s * e0, s * (e0 + SKY_RUN)), ("open", D - 128, MAT["sky"]))
+                m.side(c - 160, min(s * e0, s * (e0 + SKY_RUN)), c + 160, max(s * e0, s * (e0 + SKY_RUN)))
+                m.blocked(c - 160, min(s * e0, s * (e0 + SKY_RUN)), c + 160, max(s * e0, s * (e0 + SKY_RUN)))
             piers = [(256, 276), (map_corridor.ROAD_IN + 8, map_corridor.ROAD_OUT - 8), (t0 + 128, t0 + 160)] if s == street else \
                 [(256 + 96, 256 + 128), (256 + 640, 256 + 672), (256 + 1184, 256 + 1216)]
             for k, (e1, e2) in enumerate(piers):
@@ -937,7 +947,7 @@ def m_railbridge(m, opt):
     tv, base = T0[1] + 544, D + 6                   # (it waits in the left tunnel, 544 in: wholly hidden)
     tr = T0[-1] + 544
     way = -1                                         # (it runs from +v to -v)
-    if raised:      # (it waits at the scenery's far end, 496 in from the sky, and runs to the city's side: it stops with its
+    if raised:      # (it waits at the far end of the corridor of sky, 496 in from its end, and runs to the city's side: it stops with its
         #              tail 460 behind the wall's face, where from the street nobody sees it over the wall's top)
         way = street
         tv, tr = -street * (FAR[-street] - 496), FAR[street] - 480
