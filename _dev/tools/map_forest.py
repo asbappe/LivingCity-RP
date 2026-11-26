@@ -3159,6 +3159,7 @@ class CaveForest(Forest):
         self.big_room()
         self.bulkhead()
         self.holdout()
+        self.nest_door()
         self.workings_hull()
         for q in range(64, self.LONG - 100, 192):
             y = ym + q
@@ -3289,9 +3290,8 @@ class CaveForest(Forest):
         """Ravenholm's big mining room (the owner, 22 November: "replace that room with the big ravenholm mining room"):
         d1_town_04's headcrab cave lifted whole (valve_raven_big_room: its rock, the metal stairs up the shaft to the
         brick landing at its top, the timber), north of the forest's north wall, turned so its mouth passage runs south
-        into the hole in that wall. Cut across its south lobe on Valve's grid, where the emergency door's bulkhead
-        stands. A rebel headquarters can be raised in it (lc_hq_setup_cave, the territory marker), and the antlions from
-        beyond the emergency door run to it (lc_nest_rally)."""
+        into the hole in that wall. Cut across its south lobe on Valve's grid, where the bulkhead on to the holdout's
+        gallery stands. A rebel headquarters can be raised in it (lc_hq_setup_cave, the territory marker)."""
         v, zf = self.vmf, self.zf
         rv, rp = self.vis("big room (Ravenholm's, lifted from d1_town_04)"), self.vis("big room: lights and dressing")
         d = self.w(*self.room_pt(1536, -640, -5120))
@@ -3352,9 +3352,6 @@ class CaveForest(Forest):
         v.point("info_target", self.w(hq[0], hq[1], hq[2] + 8), {"targetname": "lc_hq_setup_cave", "spawnflags": "0"}, rp)
         zc = self.room_pt(350, -950, -5120)
         v.point("info_target", self.w(zc[0], zc[1], zc[2] + 8), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, rp)
-        ry = self.room_pt(500, -900, -5112)
-        v.point("info_target", self.w(ry[0], ry[1], ry[2]), {"targetname": "lc_nest_rally", "angles": "0 0 0"},
-                self.vis("antlion makers (delete if the gamemode is to send the antlions itself)"))
         for (x, y) in ((1450, -648), (1100, -650), (800, -700), (500, -900), (200, -1100), (450, -1350), (456, -1600)):
             p = self.room_pt(x, y, -5112)
             self.node(*p)
@@ -3368,77 +3365,119 @@ class CaveForest(Forest):
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), self.ox + self.end_x, self.oy + self.D + WALL, zf))
 
     def bulkhead(self):
-        """The emergency door (the owner: "an emergency door that has sealed the rest of the cave off ... requires two buttons
-        to be pushed simultaneously (within 1 second of each other) that cannot be pushed by a single person"): a concrete
-        bulkhead across the big room's south lobe (the room's west side, as it is turned), a steel shutter in it that lifts
-        into the wall, and a button on the bulkhead each side of it, 480 apart with a wall standing out between each and the
-        door, so the way from one to the other is about 700: nobody presses both inside a second. Each press counts for
-        one second (a math_counter); two at once work the door, open or shut. The shutter is a func_button used as a mover,
-        as the bunker's leaves are. Nothing kills (it did until 22 November; the owner: "considering how dying in the
-        gamemode means a new character, yes just shove, not kill"): as it comes down a shove (shove()) pushes whoever is
-        under it out, into the room or out to the gallery, whichever side they stand. The bulkhead is the whole west wall
-        of the room's box (it keeps the room and all behind the door apart, so its areaportal works): the room's rock runs
-        48 into its east face, Episode Two's gallery 48 into its west face."""
+        """The bulkhead across the big room's south lobe (the room's west side, as it is turned), with a doorway through it
+        on to Episode Two's gallery. The emergency door stood in it until 26 November; it is now where the holdout's floor
+        meets the antlion tunnels (nest_door(): the owner, "can we please get it AND the two button controlled door/gate
+        thing moved to the spot between the antlion cave section and the big open mine shaft area right next to it"), and
+        the doorway here is open: the gallery, the lifts and the holdout are the way on. The bulkhead is the whole west
+        wall of the room's box, so an areaportal in the doorway (always open, no name) still keeps the room and all behind
+        it apart for drawing: the room's rock runs 48 into its east face, Episode Two's gallery 48 into its west face."""
         v, zf, T = self.vmf, self.zf, self.BULK_T
-        fx, dy = self.bulk_x, self.door_y           # (its east face, the room's side; the door's middle)
+        fx, dy = self.bulk_x, self.door_y           # (its east face, the room's side; the doorway's middle)
         wx = fx - T                                  # (its west face, the gallery's side)
         high = 160
-        B, W = self.box, self.w
-        cw, steel, rib = MAT["canal_wall"], FMAT["door"], MAT["bars"]
-        dv = self.vis("nest door (the shutter, the two buttons, the wiring)")
+        B = self.box
+        cw = MAT["canal_wall"]
+        dv = self.vis("the doorway from the big room to the gallery")
         sv = self.vis("hull behind the forest (black walls)")
         y1, y2, z1, z2 = self.room_box[1], self.room_box[4], self.room_box[2], self.room_box[5]
         v.world_box(B(wx, y1, z1, fx, dy - 96, z2), cw, vis=sv)
         v.world_box(B(wx, dy + 96, z1, fx, y2, z2), cw, vis=sv)
         v.world_box(B(wx, dy - 96, zf + high, fx, dy + 96, z2), cw, bottom=MAT["ceiling"], vis=sv)
         v.world_box(B(wx, dy - 96, z1, fx, dy + 96, zf), cw, top=FMAT["bunker_floor"], vis=sv)
-        # a frame round the doorway on the room's side, and the two walls that stand out between the door and each button
+        # a frame round the doorway on the room's side
         v.detail([B(fx, dy - 112, zf, fx + 8, dy - 96, zf + high + 16), B(fx, dy + 96, zf, fx + 8, dy + 112, zf + high + 16), B(fx, dy - 112, zf + high, fx + 8, dy + 112, zf + high + 16)],
                  MAT["beam"], vis=dv)
-        v.detail([B(fx + 8, dy - 128, zf - 16, fx + 224, dy - 112, zf + 144), B(fx + 8, dy + 112, zf - 16, fx + 224, dy + 128, zf + 144)], cw, vis=dv)
-        # the shutter, drawn shut, 44 inside the room's face; pressed in, it is up in the wall with 8 showing
-        parts = [(B(fx - 68, dy - 96, zf, fx - 44, dy + 96, zf + high), steel)]
+        # the areaportal: always open (it has no name), in the middle of the doorway
+        portal = B(fx - T / 2 - 1, dy - 96, zf, fx - T / 2 + 1, dy + 96, zf + high)
+        v.portals.append(portal)
+        v.brush_entity("func_areaportal", {"StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
+        self.node(fx + 120, dy, zf)
+        self.node(wx - 72, dy, zf)
+        self.door_hole = (wx, dy - 96, zf, fx, dy + 96, zf + high)
+        self.keep_way_clear((wx - 200, dy - 88, zf + 4, fx + 220, dy + 88, zf + 110), "the doorway from the big room to the gallery")
+        self.joints.append(("the bulkhead between the big room and the gallery", self.w(wx - 160, dy - 400, zf - 64) + self.w(fx + 160, dy + 400, zf + 420)[0:3],
+                            [self.w(fx + 100, dy, zf + 64), self.w(wx - 100, dy, zf + 64)]))
+        self.notes.append("the bulkhead across the big room's south lobe at (%d %d), floor z %d: an open doorway 192 wide and %d high on to the gallery" % (
+            self.ox + fx, self.oy + dy, zf, high))
+
+    def nest_door(self):
+        """The emergency door (the owner: "an emergency door that has sealed the rest of the cave off ... requires two buttons
+        to be pushed simultaneously (within 1 second of each other) that cannot be pushed by a single person"), since 26
+        November where the holdout's floor meets the antlion tunnels (the owner: "the spot between the antlion cave section
+        and the big open mine shaft area right next to it"). Valve's holdout floor has a wall on its north side (steel below,
+        mine concrete above) with an opening 512 wide in it from the floor to the rock over the tunnels' cleft, where Valve
+        had an areaportal window: that opening is filled with the same wall in the same plane and materials, and the
+        door is in it, on Valve's planks across the drop beyond. A steel shutter 192 x 160 lifts into the wall (lc_nest_door,
+        a func_button mover like the bunker's leaves, drawn shut), a mine lift button on the wall each side of it, 600
+        apart (lc_nest_button_a, _b), with a short wall standing out between each and the door (the floor's rails run just
+        in front). Each press counts for one second (a math_counter); two at once work the door, open or shut. Nothing
+        kills: as it comes down a shove pushes whoever is under it out, to the holdout's side or the tunnels' side. Its
+        areaportal (lc_nest_portal) starts shut and stands inside the shutter's thickness: the fill is world brush, so it
+        parts the holdout from the tunnels. Episode Two's alarm post stands by it on the holdout's side (holdout())."""
+        v, P, B, W = self.vmf, self.deep_pt, self.box, self.w
+        dv = self.vis("nest door (the shutter, the two buttons, the wiring)")
+        X1, X2 = P(1280, 0, 0)[0], P(1792, 0, 0)[0]           # Valve's opening: its own walls each side
+        fy, by = P(0, -8128, 0)[1], P(0, -8064, 0)[1]          # the wall's face on the holdout's side, and on the tunnels' side
+        uy = P(0, -8096, 0)[1]                                 # (the concrete over the steel is set back 32, as Valve's each side)
+        zf, zm, zt = P(0, 0, -1792)[2], P(0, 0, -1280)[2], P(0, 0, -256)[2]
+        dx = P(1456, 0, 0)[0]                                  # the door's middle, on Valve's planks across the drop
+        high = 160
+        metal, conc, steel, rib = "metal/metalwall089b", "concrete/concretewall_mine_001a", FMAT["door"], MAT["bars"]
+        hv = self.vis("holdout (Episode Two's, lifted from ep2_outland_03)")
+        back = {"north": conc}
+        v.world_box(B(X1, fy, zf, dx - 96, by, zm), metal, faces=back, vis=hv)
+        v.world_box(B(dx + 96, fy, zf, X2, by, zm), metal, faces=back, vis=hv)
+        v.world_box(B(dx - 96, fy, zf + high, dx + 96, by, zm), metal, bottom=metal, faces=back, vis=hv)
+        v.world_box(B(X1, uy, zm, X2, by, zt), conc, vis=hv)
+        # a frame round the doorway on the holdout's side, and the two walls that stand out between the door and each button
+        v.detail([B(dx - 112, fy - 8, zf, dx - 96, fy, zf + high + 16), B(dx + 96, fy - 8, zf, dx + 112, fy, zf + high + 16),
+                  B(dx - 112, fy - 8, zf + high, dx + 112, fy, zf + high + 16)], MAT["beam"], vis=dv)
+        v.detail([B(dx - 128, fy - 72, zf - 16, dx - 112, fy - 8, zf + 144), B(dx + 112, fy - 72, zf - 16, dx + 128, fy - 8, zf + 144)], metal, vis=dv)
+        # the shutter, drawn shut in the middle of the wall's thickness; pressed in, it is up in the wall with 8 showing
+        mid = (fy + by) / 2
+        parts = [(B(dx - 96, mid - 12, zf, dx + 96, mid + 12, zf + high), steel)]
         for z in (20, 76, 132):
-            parts.append((B(fx - 44, dy - 96, zf + z, fx - 40, dy + 96, zf + z + 8), rib))
-            parts.append((B(fx - 72, dy - 96, zf + z, fx - 68, dy + 96, zf + z + 8), rib))
+            parts.append((B(dx - 96, mid - 16, zf + z, dx + 96, mid - 12, zf + z + 8), rib))
+            parts.append((B(dx - 96, mid + 12, zf + z, dx + 96, mid + 16, zf + z + 8), rib))
         v.brush_entity("func_button", {
             "targetname": "lc_nest_door", "movedir": "-90 0 0", "speed": "30", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
             "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
         # nothing kills (shove()): in the last moments of the shut, whoever is under the shutter is pushed out from under
-        # it, into the room on the room's side (harder: who stands in the middle goes there) and out to the gallery on
-        # the gallery's side. A shutter coming down meets a standing head 72 up, 2.4 s before it is down, so its shove is
-        # on from then (the wiring below), and the shutter is never left resting on anyone.
-        shove(v, "lc_nest_shove", [(B(fx - 96, dy - 96, zf, fx - 56, dy + 96, zf + high), 180, 200), (B(fx - 56, dy - 96, zf, fx - 16, dy + 96, zf + high), 0, 300)], dv)
-        # an areaportal in it, shut while it is: what lies beyond is not drawn, nor the room from there
-        portal = B(fx - 57, dy - 96, zf, fx - 55, dy + 96, zf + high)      # (inside the shutter's own thickness: see the bunker's)
+        # it, to the holdout's side (harder: who stands in the middle goes there) or to the tunnels' side. A shutter coming
+        # down meets a standing head 72 up, 2.4 s before it is down, so its shove is on from then (the wiring below)
+        shove(v, "lc_nest_shove", [(B(dx - 96, mid, zf, dx + 96, by + 8, zf + high), 90, 200), (B(dx - 96, fy - 8, zf, dx + 96, mid, zf + high), 270, 300)], dv)
+        # its areaportal, shut while it is: what lies beyond is not drawn, nor the holdout from there
+        portal = B(dx - 96, mid - 1, zf, dx + 96, mid + 1, zf + high)
         v.portals.append(portal)
         v.brush_entity("func_areaportal", {"targetname": "lc_nest_portal", "StartOpen": "0", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
-        # the two buttons, each with a lamp that shows for the second its press counts
+        # the two buttons, each with a lamp that shows for the second its press counts (Episode Two's mine lift button,
+        # facing the holdout: at yaw 270 the model stands 5 out to the south and 8 wide to the east of its foot)
         for side, tag in ((-1, "a"), (1, "b")):
-            uy = dy + side * 240
-            v.point("env_sprite", W(fx + 10, uy, zf + 84), {"targetname": "lc_nest_lamp_" + tag, "model": "sprites/glow06.spr", "rendermode": "9", "renderamt": "255",
-                                                             "rendercolor": "120 255 120", "scale": ".35", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
-                                                             "renderfx": "0", "spawnflags": "0"}, dv)
-            wall_button(v, W(fx, uy - 4, zf + 44), 0, "lc_nest_button_" + tag, B(fx, uy - 10, zf + 40, fx + 10, uy + 10, zf + 68), dv,
+            ux = dx + side * 300
+            v.point("env_sprite", W(ux, fy - 10, zf + 84), {"targetname": "lc_nest_lamp_" + tag, "model": "sprites/glow06.spr", "rendermode": "9", "renderamt": "255",
+                                                            "rendercolor": "120 255 120", "scale": ".35", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
+                                                            "renderfx": "0", "spawnflags": "0"}, dv)
+            wall_button(v, W(ux - 4, fy, zf + 44), 270, "lc_nest_button_" + tag, B(ux - 10, fy - 10, zf + 40, ux + 10, fy, zf + 68), dv,
                         [("OnPressed", "lc_nest_count", "Add", "1", 0), ("OnPressed", "lc_nest_count", "Subtract", "1", 1),
                          ("OnPressed", "lc_nest_lamp_" + tag, "ShowSprite", "", 0), ("OnPressed", "lc_nest_lamp_" + tag, "HideSprite", "", 1),
                          ("OnPressed", "lc_nest_blip", "PlaySound", "", 0)], "1.2")
-        at = W(fx + 40, dy, zf + 120)
+        at = W(dx, fy - 40, zf + 120)
 
         def sound(name, message, pos, radius="2200", loops=False):
             v.point("ambient_generic", pos, {"targetname": name, "message": message, "health": "10", "pitch": "100", "pitchstart": "100", "radius": radius,
                                              "spawnflags": "16" if loops else "48",
                                              "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0",
                                              "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, dv)
-        sound("lc_nest_blip", "Buttons.snd17", W(fx + 30, dy, zf + 60), "700")
-        sound("lc_nest_alarm", "ambient/alarms/klaxon1.wav", W(fx + 60, dy, zf + 200))
+        sound("lc_nest_blip", "Buttons.snd17", W(dx, fy - 30, zf + 60), "700")
+        sound("lc_nest_alarm", "ambient/alarms/klaxon1.wav", W(dx, fy - 60, zf + 200))
         sound("lc_nest_move", "Streetwar.d3_c17_11_garage_move1", at, loops=True)
         sound("lc_nest_slam", "Streetwar.d3_c17_11_garage_stop1", at)
-        v.point("light", W(fx + 70, dy, zf + 190), {"targetname": "lc_nest_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
+        v.point("light", W(dx, fy - 70, zf + 190), {"targetname": "lc_nest_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
                                                      "style": "0"}, dv)
         v.point("env_shake", at, {"targetname": "lc_nest_shake", "amplitude": "6", "radius": "900", "duration": "1.4", "frequency": "40", "spawnflags": "0"}, dv)
-        v.point("math_counter", W(fx + 30, dy, zf + 110), {"targetname": "lc_nest_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"}, dv,
+        v.point("math_counter", W(dx, fy - 30, zf + 110), {"targetname": "lc_nest_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"}, dv,
                 connections=[("OnHitMax", "lc_nest_open", "Trigger", "", 0), ("OnHitMax", "lc_nest_shut", "Trigger", "", 0)])
         # the wiring: the shutter takes about five seconds each way (152 at 30: shutting, it is down 6.57 s in). The shove
         # is on from 4 s in (its foot 74 over the floor) until 0.3 s after it is down. lc_nest_opened and lc_nest_closed
@@ -3448,10 +3487,10 @@ class CaveForest(Forest):
                    ("OnTrigger", "lc_nest_door", "PressIn", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5), ("OnTrigger", "lc_nest_opened", "Trigger", "", 1.5),
                    ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                    ("OnTrigger", "lc_nest_light", "TurnOff", "", 9), ("OnTrigger", "lc_nest_shut", "Enable", "", 9)]
-        # the alarm at the first mouth beyond the door (Episode Two's post, holdout()): the siren and all three lamps when the
-        # door is opened, the antlions 11 s later (the owner, 21 November: "20 seconds is too long; let's do 11 seconds.
-        # This is triggered by the players so they know what they are getting into already"). The first antlion out
-        # stops the siren; the lamps stay lit while the door is open.
+        # the alarm by the door (Episode Two's post, holdout()): the siren and all three lamps when the door is opened, the
+        # antlions 11 s later (the owner, 21 November: "20 seconds is too long; let's do 11 seconds. This is triggered by
+        # the players so they know what they are getting into already"). The first antlion out stops the siren; the
+        # lamps stay lit while the door is open.
         opening += [("OnTrigger", "lc_nest_mouth_1_siren", "PlaySound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOn", "", 0.3 * (k - 1)) for k in (1, 2, 3)]
         opening += [("OnTrigger", "lc_nest_maker", "Enable", "", self.NEST_WARNING)]
         shutting = [("OnTrigger", "lc_nest_shut", "Disable", "", 0), ("OnTrigger", "lc_nest_maker", "Disable", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 0),
@@ -3462,19 +3501,19 @@ class CaveForest(Forest):
                     ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                     ("OnTrigger", "lc_nest_portal", "Close", "", 6.9), ("OnTrigger", "lc_nest_closed", "Trigger", "", 6.9), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9),
                     ("OnTrigger", "lc_nest_open", "Enable", "", 9)]
-        v.point("logic_relay", W(fx + 30, dy - 16, zf + 130), {"targetname": "lc_nest_open", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=opening)
-        v.point("logic_relay", W(fx + 30, dy + 16, zf + 130), {"targetname": "lc_nest_shut", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=shutting)
-        v.point("logic_relay", W(fx + 30, dy - 16, zf + 150), {"targetname": "lc_nest_opened", "StartDisabled": "0", "spawnflags": "0"}, dv)
-        v.point("logic_relay", W(fx + 30, dy + 16, zf + 150), {"targetname": "lc_nest_closed", "StartDisabled": "0", "spawnflags": "0"}, dv)
-        self.node(fx + 120, dy, zf)
-        self.node(wx - 72, dy, zf)
-        self.door_hole = (wx, dy - 96, zf, fx, dy + 96, zf + high)
-        self.keep_way_clear((wx - 200, dy - 88, zf + 4, fx + 220, dy + 88, zf + 110), "the emergency door")
-        self.joints.append(("the emergency door's bulkhead", self.w(wx - 160, dy - 400, zf - 64) + self.w(fx + 160, dy + 400, zf + 420)[0:3],
-                            [self.w(fx + 100, dy, zf + 64), self.w(wx - 100, dy, zf + 64)]))
-        self.notes.append("the emergency door: in a bulkhead across the big room's south lobe at (%d %d), floor z %d, facing east; a shutter 192 wide and %d high; its two "
-                          "buttons are 480 apart with a wall between each and the door (about 700 on foot); both within a second open it, and shut it again" % (
-                              self.ox + fx, self.oy + dy, zf, high))
+        v.point("logic_relay", W(dx - 16, fy - 30, zf + 130), {"targetname": "lc_nest_open", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=opening)
+        v.point("logic_relay", W(dx + 16, fy - 30, zf + 130), {"targetname": "lc_nest_shut", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=shutting)
+        v.point("logic_relay", W(dx - 16, fy - 30, zf + 150), {"targetname": "lc_nest_opened", "StartDisabled": "0", "spawnflags": "0"}, dv)
+        v.point("logic_relay", W(dx + 16, fy - 30, zf + 150), {"targetname": "lc_nest_closed", "StartDisabled": "0", "spawnflags": "0"}, dv)
+        self.node(dx, fy - 120, zf)
+        self.node(dx, by + 34, zf)
+        self.nest_hole = (dx - 96, fy, zf, dx + 96, by, zf + high)
+        self.keep_way_clear((dx - 88, fy - 120, zf + 12, dx + 88, by + 60, zf + 110), "the emergency door")      # (over the floor's rails, short of Valve's struts)
+        self.joints.append(("the emergency door's wall", self.w(dx - 400, fy - 160, zf - 64) + self.w(dx + 400, by + 160, zf + 420)[0:3],
+                            [self.w(dx, fy - 100, zf + 64), self.w(dx, by + 30, zf + 64)]))
+        self.notes.append("the emergency door: in the holdout floor's north wall at (%d %d), floor z %d, facing south, where Valve's opening led on to the antlion tunnels; "
+                          "a shutter 192 wide and %d high; its two buttons are 600 apart with a wall between each and the door; both within a second open it, and shut it again" % (
+                              self.ox + dx, self.oy + (fy + by) / 2, zf, high))
 
     def holdout(self):
         """Behind the emergency door, Episode Two's holdout from ep2_outland_03, lifted whole as Valve made it
@@ -3552,33 +3591,39 @@ class CaveForest(Forest):
         v.point("light", self.w(ex[0] + 40, ex[1] - 40, ex[2] + 160), {"_light": "255 200 90 150", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         v.point("light", self.w(ex[0] + 6, ex[1] + 5, ex[2] + 96), {"_light": "160 255 150 40", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         self.keep_way_clear((P(2250, 0, 0)[0], P(0, -7330, 0)[1], ex[2] + 24, P(2600, 0, 0)[0], P(0, -7240, 0)[1], ex[2] + 100), "the larval extract's chamber")
-        # Episode Two's alarm post at the first mouth beyond the door (valve_ep2_antlion_alarm): in the gallery, where
-        # the antlions come from the holdout's top landing, its lamps facing the way from the door
-        al = P(1850, -10080, -608)
+        # Episode Two's alarm post by the emergency door (valve_ep2_antlion_alarm; nest_door()): on the holdout's floor west
+        # of the door, its lamps facing south over the floor, where those at the door and on their way to it see them
+        # (it stood in the gallery's control room until 26 November; the owner: "which is absurd")
+        al = P(1256, -8184, -1792)
         apf = PF.load("valve_ep2_antlion_alarm")
 
-        def louder(e):                          # (Valve's 1250 stops short of the door's buttons)
+        def louder(e):                          # (Valve's 1250 stops short of the far end of the holdout)
             if e["keys"].get("targetname") == "mouth_1_siren":
                 e["keys"]["radius"] = "2400"
-        pf_entities(v, apf, 2, self.w(al[0], al[1], al[2]), "lc_nest_", hp, self.vis("alarm post (Episode Two's)"), edit=louder, valve_anchor=apf["anchor"])
+        pf_entities(v, apf, 1, self.w(al[0], al[1], al[2]), "lc_nest_", hp, self.vis("alarm post (Episode Two's)"), edit=louder, valve_anchor=apf["anchor"])
         z0 = P(0, 0, -576)[2]
         for (xa, ya, xb, yb, what) in ((2260, -10120, 2760, -10050, "the gallery from the emergency door"), (2190, -10085, 2260, -10045, "the gallery's doorway into the control room"),
                                        (1150, -9940, 1750, -9900, "the corridor on to the top landing"), (1110, -9880, 1200, -9640, "the way up to the top landing")):
             self.keep_way_clear((P(xa, 0, 0)[0], P(0, ya, 0)[1], z0 + 4, P(xb, 0, 0)[0], P(0, yb, 0)[1], z0 + 72), what)
         # the antlions while the emergency door is open: one pattern (not in the map until a maker copies it), two makers
-        # in the gallery's far end, two alive from each, no end to them while it is open; each one made runs to
-        # lc_nest_rally in the big room
-        t = P(1500, -9920, -590)
-        v.point("npc_antlion", self.w(*t), {"targetname": "lc_nest_antlion", "spawnflags": "2564", "angles": "0 0 0", "radius": "256", "eludedist": "1024", "ignorebugbait": "0",
+        # on the floor of the cleft beyond the door, two alive from each, no end to them while it is open; each one made
+        # runs to lc_nest_rally on the holdout's floor before the door
+        t = P(1500, -7440, -1912)
+        v.point("npc_antlion", self.w(*t), {"targetname": "lc_nest_antlion", "spawnflags": "2564", "angles": "0 270 0", "radius": "256", "eludedist": "1024", "ignorebugbait": "0",
                                            "startburrowed": "0", "unburroweffects": "0", "squadname": "lc_nest", "physdamagescale": "1.0", "sleepstate": "0",
                                            "renderamt": "255", "rendercolor": "255 255 255"}, mv_)
-        makers = (P(1300, -9920, -590), P(1100, -9700, -590))
+        makers = (P(1456, -7520, -1912), P(1520, -7330, -1912))
         for p in makers:
             v.point("npc_template_maker", self.w(*p), {
                 "targetname": "lc_nest_maker", "TemplateName": "lc_nest_antlion", "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1", "SpawnFrequency": "9",
-                "MaxLiveChildren": "2", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2", "CriterionDistance": "2", "angles": "0 0 0"}, mv_,
+                "MaxLiveChildren": "2", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2", "CriterionDistance": "2", "angles": "0 270 0"}, mv_,
                 connections=[("OnSpawnNPC", "!activator", "FightToPosition", "lc_nest_rally", 0.5), ("OnSpawnNPC", "lc_nest_mouth_1_siren", "StopSound", "", 0)])
-        # their way to the door: path nodes along the gallery (the door's own are bulkhead()'s, the room's big_room()'s)
+        ry = P(1456, -8864, -1784)
+        v.point("info_target", self.w(*ry), {"targetname": "lc_nest_rally", "angles": "0 0 0"}, mv_)
+        # their way to the door: path nodes up the cleft's east ledge and over Valve's planks (the door's own are
+        # nest_door()'s); and the gallery's own, from the bulkhead to the top landing
+        for (x, y, z) in ((1456, -7470, -1920), (1560, -7520, -1912), (1760, -7520, -1792), (1766, -7650, -1792), (1610, -8020, -1800), (1456, -8020, -1792)):
+            self.node(*P(x, y, z))
         for (x, y, z) in ((2650, -10100, -576), (2420, -10070, -576), (2230, -10064, -600), (2050, -10050, -604), (1880, -9990, -604), (1700, -9920, -604),
                           (1450, -9920, -604), (1200, -9920, -604), (1100, -9750, -604), (1100, -9550, -604)):
             self.node(*P(x, y, z))
@@ -3601,7 +3646,7 @@ class CaveForest(Forest):
         grubs = sum(1 for e in pf.get("wiring", []) if e["classname"] == "npc_antlion_grub")
         self.notes.append("the holdout: Episode Two's (ep2_outland_03, %d brushes, %d displaced faces, lifted whole): a gallery %d long from the emergency door to the top landing, "
                           "the lift down %d to the holdout's floor, the antlion tunnels north of it that loop round, the larval extract (lc_nest_extract) at their end; "
-                          "Valve's %d grubs where Valve put them; the alarm post in the gallery; %d antlion makers there" % (
+                          "Valve's %d grubs where Valve put them; the alarm post by the emergency door; %d antlion makers in the cleft beyond it" % (
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), 2848 - 1150, 1728 - 512,
                               grubs, len(makers)))
 
@@ -3735,6 +3780,25 @@ class CaveForest(Forest):
         for box in south:
             v.world_box(self.box(*box), black, vis=nv)
         self.hull_box = (X1, ys, Z1, X2, Y2, Z2)
+        # the emergency door's areaportal parts the holdout from the antlion tunnels (nest_door()): the void in this box reaches
+        # both (Valve's drop in the cleft beyond the door goes on down; Valve's floor is a slab 256 thick, or a displaced
+        # skin, with nothing under it), so a curtain across the box in the plane of the door's wall: under Valve's walls
+        # along it up to their foot, under Valve's floor in the opening up to its underside (black there: it is the far
+        # side of the drop), and the box's full height beyond them
+        P = self.deep_pt
+        fy, by = P(0, -8128, 0)[1], P(0, -8064, 0)[1]
+        zw, zs = P(0, 0, -1792)[2], P(0, 0, -2048)[2]
+        nd, xs = MAT["nodraw"], [P(x, 0, 0)[0] for x in (512, 1280, 1792, 2048, 2304)]
+        zl, zr = P(0, 0, 256)[2], P(0, 0, -1280)[2]           # (the tops of Valve's walls over the holdout, and of the steel east of it)
+        cuts = [(X1, xs[0], Z1, Z2, nd), (xs[0], xs[1], Z1, zw, nd), (xs[1], xs[2], Z1, zs, black), (xs[2], xs[4], Z1, zw, nd), (xs[4], X2, Z1, Z2, nd),
+                (xs[0], xs[3], zl, Z2, nd), (xs[3], xs[4], zr, Z2, nd)]
+        for (xa, xb, bottom, top, mat) in cuts:
+            v.world_box(self.box(xa, fy, bottom, xb, by, top), mat, vis=nv)
+        # (over them Valve's walls, the opening's fill and Valve's rock over the cleft carry the plane on up, all but the
+        # door: the build's checks do not read lifted brushes, so they are told; map_areas.py reads them all)
+        hx1, hz1, hx2, hz2 = self.nest_hole[0], self.nest_hole[2], self.nest_hole[3], self.nest_hole[5]
+        for c in ((X1, fy, Z1, hx1, by, Z2), (hx2, fy, Z1, X2, by, Z2), (hx1, fy, Z1, hx2, by, hz1), (hx1, fy, hz2, hx2, by, Z2)):
+            v.claims.append(self.box(*c))
         wx1, wx2 = self.ox + X1 - 64, self.ox + X2 + 64
         if wx2 > -6720:
             self.problems.append("the workings reach x %d: east of x -6720, where the ring's canal is" % wx2)

@@ -516,6 +516,7 @@ class Vmf:
         self.visgroups = {} # name -> id
         self.skyname = skyname
         self.boxes = [] # (box, seals) for the checks
+        self.claims = []    # boxes that seal for the checks alone: where lifted brushes of Valve's (which the checks do not read) wall a place off
         self.disp_count = 0
         self.disp_made = [] # (visgroup, edge points, quads folded, quads) of every displaced face
         self.points = []    # (classname, place) of every point entity, for the checks
@@ -1172,7 +1173,7 @@ def flood(vmf, seed, stoppers):
     """Where the air at seed reaches, among the piece's sealing brushes and some stopper boxes. Returns (the cells
     reached, the solid cells, the cuts along each axis, a cell on the outside if the air got there). Exact for boxes:
     space is cut at every brush face."""
-    solid = [b for b, seals in vmf.boxes if seals] + list(stoppers)
+    solid = [b for b, seals in vmf.boxes if seals] + list(vmf.claims) + list(stoppers)
     axes = []
     for a in range(3):
         cuts = sorted(set([b[a] for b in solid] + [b[a + 3] for b in solid]))
@@ -1267,7 +1268,7 @@ def portal_areas(vmf, stoppers):
     ports = list(vmf.portals)
     if not ports:
         return []
-    solid = [b for b, seals in vmf.boxes if seals] + list(stoppers) + ports
+    solid = [b for b, seals in vmf.boxes if seals] + list(vmf.claims) + list(stoppers) + ports
     axes = []
     for a in range(3):
         cuts = sorted(set([b[a] for b in solid] + [b[a + 3] for b in solid]))
