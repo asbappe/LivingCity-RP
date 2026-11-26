@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9193a61. Admin-only console messages and log lines are left out.
+Made from version 574e540. Admin-only console messages and log lines are left out.
 
-13625 lines, from 398 files.
+13623 lines, from 398 files.
 
 ## Contents
 
@@ -239,7 +239,7 @@ Made from version 9193a61. Admin-only console messages and log lines are left ou
 - [a business of your own (the owner, 10 November: "real](#a-business-of-your-own-the-owner-10-november-real-svlivingcityemploymentlua) (23)
 - [secret endings](#secret-endings-svlivingcityendingslua) (84)
 - [escorts through Combine doors](#escorts-through-combine-doors-svlivingcityescortlua) (74)
-- [city events](#city-events-svlivingcityeventslua) (84)
+- [city events](#city-events-svlivingcityeventslua) (82)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (67)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (65)
 - [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (58)
@@ -11187,149 +11187,144 @@ Made from version 9193a61. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What actually happens, for the person reading it.
 
-- "The city is in unrest: more inspections and raids, and rations come slower. See !city."  (text, line 129)
-- "Just the city talking. Nothing changes."  (text, line 131)
-
-> Note for you (not shown in game): part of: rations
-
-- "Rations are being handed out for {Minutes}. The lines move faster and citizens crowd them; keep order."  (text, line 134)
-- "Rations are being handed out for {Minutes}. Lines move faster and you can collect again sooner. Stand at the front of a ration line to get yours (not if you're wanted)."  (text, line 135)
+- "Rations are being handed out for {Minutes}. The lines move faster and citizens crowd them; keep order."  (text, line 131)
+- "Rations are being handed out for {Minutes}. Lines move faster and you can collect again sooner. Stand at the front of a ration line to get yours (not if you're wanted)."  (text, line 132)
 
 > Note for you (not shown in game): part of: sweep
 
-- "Civil status inspections for {Minutes}. Stop and search citizens: Civil Protection units stop people far more often now."  (text, line 138)
-- "Civil status inspections for {Minutes}. Civil Protection units stop and search people far more often and from further away. Anything illegal on you will be found: stash it, or stay out of sight."  (text, line 139)
+- "Civil status inspections for {Minutes}. Stop and search citizens: Civil Protection units stop people far more often now."  (text, line 135)
+- "Civil status inspections for {Minutes}. Civil Protection units stop and search people far more often and from further away. Anything illegal on you will be found: stash it, or stay out of sight."  (text, line 136)
 
 > Note for you (not shown in game): part of: raid
 
-- "a housing block"  (name, line 143)
-- "Civil Protection units are searching {name}. Contraband found there is traced to its owner, who becomes wanted."  (name, line 144)
-- "Civil Protection units are searching {name}{or} room by room. Anyone there gets frisked, contraband lying around is traced to whoever left it, and they become wanted. Stashes can be found too."  (text, line 146)
+- "a housing block"  (name, line 140)
+- "Civil Protection units are searching {name}. Contraband found there is traced to its owner, who becomes wanted."  (name, line 141)
+- "Civil Protection units are searching {name}{or} room by room. Anyone there gets frisked, contraband lying around is traced to whoever left it, and they become wanted. Stashes can be found too."  (text, line 143)
 
 > Note for you (not shown in game): part of: curfew
 
-- "A curfew in the daytime: a punishment for the unrest in the city."  (text, line 151)
-- "It's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning."  (text, line 152)
+- "A curfew in the daytime: a punishment for the unrest in the city."  (text, line 148)
+- "It's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning."  (text, line 149)
 
 > Note for you (not shown in game): (and what happens if you don't, as every curfew says: city-events.md; the culprits were told above)
 
-- "After that, a Civil Protection unit who sees you outside warns you three times, then you're wanted."  (text, line 157)
-- "Curfew for {Minutes}. Get inside {or} within {grace} seconds.{after}"  (text, line 158)
-- "Curfew for {Minutes}. After {grace} seconds, citizens still outside get three warnings from a Civil Protection unit, then they're wanted."  (text, line 160)
-- "Curfew for {Minutes}. You have no room yet: wait it out at Civil Intake, or where you arrived. Civil Protection units leave new arrivals there alone."  (text, line 163)
+- "After that, a Civil Protection unit who sees you outside warns you three times, then you're wanted."  (text, line 154)
+- "Curfew for {Minutes}. Get inside {or} within {grace} seconds.{after}"  (text, line 155)
+- "Curfew for {Minutes}. After {grace} seconds, citizens still outside get three warnings from a Civil Protection unit, then they're wanted."  (text, line 157)
+- "Curfew for {Minutes}. You have no room yet: wait it out at Civil Intake, or where you arrived. Civil Protection units leave new arrivals there alone."  (text, line 160)
 
 > Note for you (not shown in game): part of: curfew
 
-- "Curfew for {Minutes}. Get inside {or} (your HUD points the way). You have {grace} seconds. After that, a Civil Protection unit who sees you outside warns you three times, then you're wanted. Running is allowed until then."  (text, line 165)
+- "Curfew for {Minutes}. Get inside {or} (your HUD points the way). You have {grace} seconds. After that, a Civil Protection unit who sees you outside warns you three times, then you're wanted. Running is allowed until then."  (text, line 162)
 
 > Note for you (not shown in game): part of: lockdown
 
-- "Lockdown for {Minutes}, and it's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning. Get out of sight."  (text, line 171)
-- "Lockdown for {Minutes}: a curfew with extra Civil Protection units out. After {grace} seconds, anyone outside gets three warnings, then they're wanted."  (text, line 173)
-- "Lockdown for {Minutes}. You have no room yet: wait it out at Civil Intake, or where you arrived. Civil Protection units leave new arrivals there alone."  (text, line 176)
-- "Lockdown for {Minutes}: a curfew, with extra Civil Protection units on the street. Get inside {or} within {grace} seconds. After that, Civil Protection units who see you outside warn you three times, then you're wanted."  (text, line 178)
+- "Lockdown for {Minutes}, and it's about you: any Civil Protection unit who sees you knows you, and won't stop at a warning. Get out of sight."  (text, line 168)
+- "Lockdown for {Minutes}: a curfew with extra Civil Protection units out. After {grace} seconds, anyone outside gets three warnings, then they're wanted."  (text, line 170)
+- "Lockdown for {Minutes}. You have no room yet: wait it out at Civil Intake, or where you arrived. Civil Protection units leave new arrivals there alone."  (text, line 173)
+- "Lockdown for {Minutes}: a curfew, with extra Civil Protection units on the street. Get inside {or} within {grace} seconds. After that, Civil Protection units who see you outside warn you three times, then you're wanted."  (text, line 175)
 
 > Note for you (not shown in game): part of: ended
 
-- "The curfew is over. You can go out again."  (text, line 181)
+- "The curfew is over. You can go out again."  (text, line 178)
 
 > Note for you (not shown in game): part of: response
 
-- "Overwatch has been sent in. Keep clear of any fighting."  (text, line 182)
+- "Overwatch has been sent in. Keep clear of any fighting."  (text, line 179)
 
 > Note for you (not shown in game): part of: supply
 
-- "on the streets"  (text, line 187)
-- "A supply convoy is unloading {where} for {Minutes}. Guard the crate: if anything's left in it when the convoy moves on, every Civil Protection unit nearby is paid."  (text, line 188)
-- "A supply convoy is unloading {where} for {Minutes}. Guns, ammunition, medicine, lightly guarded. Take what you can (E on the crate)."  (text, line 189)
-- "A supply convoy is unloading {where} for {Minutes}. Keep clear of it. Anyone caught taking from the crate is wanted."  (text, line 190)
-- "Ration distribution is over. Lines go back to their usual pace."  (text, line 195)
-- "Inspections are over. Civil Protection units are back to stopping people at the usual rate."  (text, line 196)
-- "The housing block inspection is over."  (text, line 197)
-- "Morning exercise is over. Off to work."  (text, line 198)
-- "Morning exercise is over. Off to work."  (text, line 198)
-- "The parade is over. Off to work."  (text, line 198)
+- "on the streets"  (text, line 184)
+- "A supply convoy is unloading {where} for {Minutes}. Guard the crate: if anything's left in it when the convoy moves on, every Civil Protection unit nearby is paid."  (text, line 185)
+- "A supply convoy is unloading {where} for {Minutes}. Guns, ammunition, medicine, lightly guarded. Take what you can (E on the crate)."  (text, line 186)
+- "A supply convoy is unloading {where} for {Minutes}. Keep clear of it. Anyone caught taking from the crate is wanted."  (text, line 187)
+- "Ration distribution is over. Lines go back to their usual pace."  (text, line 192)
+- "Inspections are over. Civil Protection units are back to stopping people at the usual rate."  (text, line 193)
+- "The housing block inspection is over."  (text, line 194)
+- "Morning exercise is over. Off to work."  (text, line 195)
+- "Morning exercise is over. Off to work."  (text, line 195)
+- "The parade is over. Off to work."  (text, line 195)
 
 > Note for you (not shown in game): (no Half-Life 2 voice unless lc_announce_stock: the words still go in chat and on screen)
 
-- "PA: overwatch says %s (%s)"  (message, line 239)
+- "PA: overwatch says %s (%s)"  (message, line 236)
 
 > Note for you (not shown in game): and in chat, what it said and what it means
 
-- "[{title}] "{says}""  (chat message, line 253)
+- "[{title}] "{says}""  (chat message, line 250)
 
 > Note for you (not shown in game): part of: end event
 
-- "[City] {was}"  (chat message, line 292)
+- "[City] {was}"  (chat message, line 289)
 
 > Note for you (not shown in game): A ration handout keeps to the day (the owner, 14 November: "Ration distribution needs to take place before bed time, never in the middle of the night"), and there is none while the stores are empty ("rations are empty, how are they being distributed?"). auto: the city's own timer, the NPC Administrator or the director asking, who keep to the hours (07:00 to 18:00, so it is over well before the good night at 21:00); a handout a player orders by hand may be at any hour, but not from empty stores either. True, or false and why not.
 
-- "the stores are empty"  (text, line 305)
-- "rations are handed out by day"  (text, line 308)
+- "the stores are empty"  (text, line 302)
+- "rations are handed out by day"  (text, line 305)
 
 > Note for you (not shown in game): pull idle citizens toward the lines right away
 
-- "curfew or lockdown: gone home"  (text, line 347)
+- "curfew or lockdown: gone home"  (text, line 344)
 
 > Note for you (not shown in game): part of: start event
 
-- "Event started: %s (%s min)"  (message, line 352)
+- "Event started: %s (%s min)"  (message, line 349)
 
 > Note for you (not shown in game): part of: block name
 
-- "Habitation Block %02d"  (text, line 397)
+- "Habitation Block %02d"  (text, line 394)
 
 > Note for you (not shown in game): the one this is all about: no warnings, he knows you
 
-- "[Civil Protection] "That's the one!" The Civil Protection unit knows you: this curfew is about you. You are wanted."  (chat message, line 464)
-- "Wanted in connection with the unrest"  (text, line 465)
+- "[Civil Protection] "That's the one!" The Civil Protection unit knows you: this curfew is about you. You are wanted."  (chat message, line 461)
+- "Wanted in connection with the unrest"  (text, line 462)
 
 > Note for you (not shown in game): and he comes over: walking at the first warning, running after that
 
-- "Civil Intake (you have no room yet)"  (text, line 478)
-- "your residence"  (text, line 478)
-- "[Civil Protection] Curfew is in effect. Return to %s. (Warning %d of %d)"  (message, line 482)
+- "Civil Intake (you have no room yet)"  (text, line 475)
+- "your residence"  (text, line 475)
+- "[Civil Protection] Curfew is in effect. Return to %s. (Warning %d of %d)"  (message, line 479)
 
 > Note for you (not shown in game): part of: enforce curfew
 
-- "[Civil Protection] Curfew violation. You are now wanted."  (chat message, line 486)
-- "Curfew violation"  (text, line 487)
+- "[Civil Protection] Curfew violation. You are now wanted."  (chat message, line 483)
+- "Curfew violation"  (text, line 484)
 
 > Note for you (not shown in game): part of: end can
 
-- "Did as Civil Protection said"  (text, line 557)
+- "Did as Civil Protection said"  (text, line 554)
 
 > Note for you (not shown in game): "now put it in the trash": a marker to the nearest bin, in case it isn't in plain sight
 
-- "The bin"  (text, line 615)
+- "The bin"  (text, line 612)
 
 > Note for you (not shown in game): part of: can think
 
-- "Refusing a lawful order"  (text, line 678)
+- "Refusing a lawful order"  (text, line 675)
 
 > Note for you (not shown in game): Commands
 
-- "[Miscount] Start the city first."  (chat message, line 758)
-- "[Miscount] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5"  (chat message, line 760)
-- "[Miscount] Event started: {name}"  (chat message, line 762)
+- "[Miscount] Start the city first."  (chat message, line 755)
+- "[Miscount] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5"  (chat message, line 757)
+- "[Miscount] Event started: {name}"  (chat message, line 759)
 
 > Note for you (not shown in game): a unit sets off after someone causing a disturbance
 
-- "Civil Protection is chasing someone {or}. Stay out of the way."  (chat message, line 794)
+- "Civil Protection is chasing someone {or}. Stay out of the way."  (chat message, line 791)
 
 > Note for you (not shown in game): wanted: for running, evasion; for killing or attacking, capital malcompliance
 
-- "citizen {GetNW2String}"  (text, line 801)
-- "is wanted: {or}."  (chat message, line 803)
-- "is wanted: {or}."  (chat message, line 805)
+- "citizen {GetNW2String}"  (text, line 798)
+- "is wanted: {or}."  (chat message, line 800)
+- "is wanted: {or}."  (chat message, line 802)
 
 > Note for you (not shown in game): a long sentence: citizenship revoked
 
-- "has been sentenced."  (chat message, line 811)
+- "has been sentenced."  (chat message, line 808)
 
 > Note for you (not shown in game): someone reports a crime: failing to report is conspiracy (said when people do report)
 
-- "A citizen has reported something to Civil Protection."  (chat message, line 816)
+- "A citizen has reported something to Civil Protection."  (chat message, line 813)
 
 ## burning the confiscated contraband (the owner, 7 November) (sv_livingcity_evidence.lua)
 
@@ -12326,7 +12321,7 @@ Made from version 9193a61. Admin-only console messages and log lines are left ou
 - "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). Get rations from the ration dispensers, and water from vending machines and sinks. If either one reaches zero, you start dying."  (text, line 99)
 - "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). The Resistance's supply crate in rebel territory gives you food; bins, fishing and the vegetable pots help too. If either one reaches zero, you start dying."  (text, line 100)
 - "Where to find your numbers"  (title, line 101)
-- "This server hides numbers on screen. Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}."  (text, line 102)
+- "Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}."  (text, line 102)
 - "Camera sway"  (title, line 103)
 - "The camera sways slightly as you walk and dips when you land. If that bothers you, turn it off in F4 > Me and settings > Camera sway (this only changes it for you)."  (text, line 104)
 

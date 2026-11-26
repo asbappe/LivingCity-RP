@@ -1516,6 +1516,7 @@ do
     local headScale
     local oldNpc = setmetatable({ nw = { lc_oldtimer = true } }, { __index = function(t, k)
         if k == "GetNW2Bool" then return function(self, n, d) local v = self.nw[n] if v == nil then return d end return v end end
+        if k == "IsDormant" then return function(self) return rawget(self, "dormant") end end
         if k == "IsValid" then return function() return true end end
         if k == "GetPos" then return function() return Vector(0, 0, 0) end end
         if k == "LookupBone" then return function() return 6 end end
@@ -1524,12 +1525,14 @@ do
     end })
     local fbWas, ivWas, cmWas2 = ents.FindByClass, util.IsValidModel, ClientsideModel
     local made = 0
-    local headCallback
+    local headCallback, lastHead, drawn
     ents.FindByClass = function(c) if c == "npc_citizen" then return { oldNpc } end return {} end
     ClientsideModel = function()
         made = made + 1
         local m = { IsValid = function() return true end, GetBoneCount = function() return 3 end, GetBoneName = function(_, i) return ({ [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Head1" })[i] end,
-            AddCallback = function(_, name, fn) if name == "BuildBonePositions" then headCallback = fn end end }
+            AddCallback = function(_, name, fn) if name == "BuildBonePositions" then headCallback = fn end end,
+            DrawModel = function() drawn = (drawn or 0) + 1 end, SetParent = function() problems[#problems + 1] = "the old-timer's head is parented to him (it floats where he was once he walks out of view)" end }
+        lastHead = m
         return setmetatable(m, { __index = function() return function() end end })
     end
     _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
@@ -1540,9 +1543,16 @@ do
     file.Exists = function(p) return p == "models/lostcoast/fisherman/fisherman.mdl" end
     _advance(2) run("Think")
     if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him (the file is there, the model not loaded yet)" end
+    if not headCallback then problems[#problems + 1] = "the old-timer's head isn't put on his bones" end
+    -- (the owner, 26 November: "leaves a shrunken mutated ragdoll NPC thing floating in the air": out of view, nothing is drawn)
+    oldNpc.dormant = true
+    if lastHead and lastHead.RenderOverride then lastHead:RenderOverride() end
+    if drawn or headScale then problems[#problems + 1] = "the old-timer's head was drawn (or his own shrunk) while he was out of view" end
+    oldNpc.dormant = nil
+    if lastHead and lastHead.RenderOverride then lastHead:RenderOverride() end
+    if not drawn then problems[#problems + 1] = "the old-timer's head isn't drawn when he is" end
     -- (the owner, 15 November: "citizen old timer has no head": his own head shrunk to nothing took the merged one with it)
-    if not (headScale and headScale.x > 0) then problems[#problems + 1] = "the old-timer's own head is shrunk to nothing (the merged head goes with it)" end
-    if not headCallback then problems[#problems + 1] = "the old-timer's merged head isn't put back to full size after the merge" end
+    if not (headScale and headScale.x > 0) then problems[#problems + 1] = "the old-timer's own head is shrunk to nothing, or not at all once his new one is drawn" end
     file.Exists = function() return false end
     made = 0
     _advance(2) run("Think")

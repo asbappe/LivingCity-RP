@@ -3953,7 +3953,15 @@ section("Announcements say what's going on")
 local listener = newPlayer("Listener", "citizen")
 listener.chat = {}
 LC.Announce("ambient", "npc/overwatch/cityvoice/f_innactionisconspiracy_spkr.wav")
-ok(has(listener.chat, "counts as conspiracy") and has(listener.chat, "Nothing changes"), "an ambient line is put into words, and you're told it's just atmosphere", table.concat(listener.chat, " | "))
+ok(has(listener.chat, "counts as conspiracy") and not has(listener.chat, "Nothing changes") and not has(listener.chat, "city talking"), "an ambient line is put into words, with no \"just the city talking\" line after it", table.concat(listener.chat, " | "))
+do -- (the owner, 26 November: and none in unrest either)
+    local csWas = LC.CityState
+    LC.CityState = function() return "unrest" end
+    listener.chat = {}
+    LC.Announce("ambient", "npc/overwatch/cityvoice/f_innactionisconspiracy_spkr.wav")
+    LC.CityState = csWas
+    ok(has(listener.chat, "counts as conspiracy") and not has(listener.chat, "in unrest"), "in unrest, an ambient line is still only the quote", table.concat(listener.chat, " | "))
+end
 LC.EndEvent(true)
 listener.chat = {}
 LC.StartEvent("curfew", 4)
