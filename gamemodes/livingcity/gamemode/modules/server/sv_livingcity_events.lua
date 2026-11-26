@@ -128,7 +128,7 @@ local MEANS = {
         if LC.CityState and LC.CityState() == "unrest" then
             return "The city is in unrest: more inspections and raids, and rations come slower. See !city."
         end
-        return "Just the city talking. Nothing changes."
+        return nil -- (the owner, 26 November: no "just the city talking" line; the quote alone)
     end,
     rations = function(ply)
         if LC.PlayerIsCP(ply) then return "Rations are being handed out for " .. Minutes() .. ". The lines move faster and citizens crowd them; keep order." end

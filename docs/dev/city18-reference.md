@@ -4022,3 +4022,30 @@ Trees, rocks, logs, plants and anything else out in the open get fademindist -1 
 - **Checked by:** no outdoor prop_static in a forest build has a fademaxdist other than 0
 - **Tags:** props, owner
 
+### The Combine wall on a bank stands back on the canal wall's top, never on a slab out over the canal (`owner-wall-stands-on-the-bank`)
+
+Where the Combine wall runs along a canal bank with no street, its core is set back 2 or 3 squares and the canal's own wall is cut to a ledge at the street's height before it, so the pieces stand on the canal wall's top, flush with its face or recessed. Nothing is cantilevered out over the canal to carry them. A culvert's roof at a join is a deck at the street's height, not a block of concrete to the rim.
+
+- **Why:** The owner, 26 November, of the sill the pieces first stood on: "they are on a slab of concrete floating in the air ... push them BACK so they are flush with the canal walls; if that doesn't work ... push them even further back so they are recessed a bit"; and of the join: "a big dumb concrete block/brush ... that shouldn't be there, and there is no combine wall between it and the city".
+- **How:** map_corridor.bank_core (back 2 or 3, ledge squares, fill); m_gate and map_build.canal paint the join culverts "under" a deck.
+- **Checked by:** map_propkit.py --placed; the pieces alone and joined are sealed (map_build.flood from the spawn).
+- **Tags:** owner, combine, canal
+
+### A track never ends in the open: portal to portal, or no track (`owner-tracks-end-in-portals`)
+
+Every railway track runs from one black portal to another (a tunnel in a canal wall, or in the city's void behind the Combine wall). No buffer stop in a street or in the open, no wooden crossing laid over rails. A run whose track cannot reach a portal at both ends has no track: its bed is road. Where two tracks cross, their trains are never sent at once.
+
+- **Why:** The owner, 26 November: "the trains are still just going to dead ends, make their tracks go from one canal wall portal to another; they need to never go to a dead end in the street/open, except if it's their black train portal in a canal wall or in the city void"; "if that makes train tracks intersect, then please make sure they don't collide or run into/through each other".
+- **How:** ring.txt: "left over" at the north and south runs' far corners (through trains); map_corridor.BANK_TRACKS False; the west and east runs trackless (a portal through the Combine wall at the south-west corner would give the west run its train back).
+- **Checked by:** The chain build's notes: every train "runs into the tunnel at the far end"; no "buffer stop" in them.
+- **Tags:** owner, streets
+
+### A module whose story comes from the city stands on the city's side (`owner-modules-face-the-city`)
+
+A module's side must fit its story: what the Combine dump (the ash outfall) comes out of the city-side wall, under the street, near the first canal; a station's gate or a crypt leads toward the city or the infested quarter, never out into the ruins. Things players walk through are never blocked by dressing (a fence across tents' open ends), and columns stay slim.
+
+- **Why:** The owner, 26 November: the ash's "'source' as implied by its position needs to be the city; currently it's the wasteland/ruins and that makes no sense"; "the tents' entrances are blocked by the wooden panel you placed"; the underpass's columns "look very cool but are way too wide/broad/big"; the shanty "is a bit too small".
+- **How:** m_ash (street_side 1: the chute 96 lower, under the street), ring.txt (ash on the east side), m_shanty (2048 long, a tunnel mouth for its bridge, no plank fence), m_underpass (piers 64 square as detail, small sloped feet).
+- **Checked by:** The chain build has no PROBLEM lines; map_walk.py.
+- **Tags:** owner, canal
+

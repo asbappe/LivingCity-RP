@@ -99,7 +99,7 @@ LC.HINTS = {
         text = { default = "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). Get rations from the ration dispensers, and water from vending machines and sinks. If either one reaches zero, you start dying.",
                  resistance = "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). The Resistance's supply crate in rebel territory gives you food; bins, fishing and the vegetable pots help too. If either one reaches zero, you start dying." } },
     quiet_hud = { title = "Where to find your numbers", when = function() local c = GetConVar("lc_quiet_hud") return c and c:GetBool() end,
-        text = { default = "This server hides numbers on screen. Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}." } },
+        text = { default = "Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}." } },
     view_bob = { title = "Camera sway", when = function() local c = GetConVar("lc_view_bob") return c and c:GetBool() end,
         text = { default = "The camera sways slightly as you walk and dips when you land. If that bothers you, turn it off in F4 > Me and settings > Camera sway (this only changes it for you)." } },
 

@@ -32,6 +32,7 @@ rim 968
 upper left
 wall combine
 wall bank 5824 1024 5952 1856      # (the last jog has no street: the wall stands on its west bank, on from the street's)
+wall bank 5824 5696 5888 5888      # (and beside the start gate's deck, on from the first canal's west bank to the north run's street end)
 end 6144 1856 N
 road -4480 1920 -2624 2560 840 replaces 14734 15630
 
@@ -65,7 +66,7 @@ straight 1024      # (was "morgue flip": taken off the ring, 24 November)
 straight 1024      # (was "floodroom flip": taken off the ring, 24 November)
 railbridge
 straight 1088
-left back       # the west run's train: out of a tunnel north of the north run's canal
+left over       # the north run's track on west over the west run's canal into a tunnel: its train runs through, tunnel to tunnel (26 November: no track ends in the open; the west run has no track now)
 # N4 and N5: south down the west (the cave forest's branch in the middle; its wall stands along the outside bank, so
 # nothing here has side rooms)
 straight 3200 stairs
@@ -83,7 +84,7 @@ left            # (no train: the boathouse's rooms and the stash's wall stand wh
 straight 1024      # (was "boathouse flip": taken off the ring, 24 November)
 straight 1024
 shanty flip
-straight 1280      # (was "camp flip": its tents are in the shanty now, 24 November)
+straight 768      # (was "camp flip", 1280: its tents are in the shanty now, 24 November; the shanty 512 longer, 26 November)
 vort flip
 sludge flip
 straight 1280      # (was "barge": taken off the ring, 24 November)
@@ -102,9 +103,9 @@ cistern
 wreck
 basin
 collapse flip
-ash flip
+straight 768      # (was "ash flip": moved to the east side by the first canal, its chute from the city, 26 November)
 straight 192
-left back       # the east side's train: out of a tunnel south of the south run's canal (east: the firing wall's recess)
+left over       # the south run's track on east over the east side's canal into a tunnel: its train runs through (the east side has no track now: its far end had no portal to go to)
 # S4: north
 straight 768      # (was "execwall flip": taken off the ring, 24 November)
 straight 1024      # (was "lift flip": taken off the ring, 24 November)
@@ -112,7 +113,8 @@ pumphouse flip
 quay
 straight 1536      # (was "arcade": taken off the ring, 24 November)
 straight 1024      # (was "aqueduct": taken off the ring, 24 November)
-straight 1024      # (was "chimney": taken off the ring, 24 November)
+ash                # (the ash outfall, its chute in the city's side under the street; the nearest of the ring to the spawn: the owner, 26 November)
+straight 256       # (with the ash, the 1024 that was "chimney")
 swingbridge
 relay
 straight 64
