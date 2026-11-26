@@ -852,10 +852,22 @@ def m_tee(m, opt):
 def m_gate(m, opt):
     """The culvert a chain ends in: the same gate as every piece's (512 wide, 256 high), capped until something is joined."""
     b = m.b
-    m.low(0, -256, 256, 256, F + GATE_HIGH)
-    gate_cap(b.vmf, m.fr.box(0, -256, F, 64, 256, F + GATE_HIGH), m.fr.box(80, -256, F, 88, 256, F + GATE_HIGH), m.fr.ax("v"),
+    high = F + GATE_HIGH
+    if getattr(b, "street_wall", None) == "combine":
+        # (beside a walled street the culvert's roof is a deck at the street's height, not a block of concrete to the rim:
+        #  the owner, 26 November, of the first canal's north join, "a big dumb concrete block/brush ... that shouldn't be
+        #  there, and there is no combine wall between it and the city")
+        import map_corridor
+        high = map_corridor.STREET - 16
+        m.paint(0, -256, 256, 256, ("under", F, MAT["canal_floor"], high, MAT["quay_floor"]))
+    else:
+        m.low(0, -256, 256, 256, high)
+    gate_cap(b.vmf, m.fr.box(0, -256, F, 64, 256, high), m.fr.box(80, -256, F, 88, 256, high), m.fr.ax("v"),
              "%s: %s gate's cap (delete to join)" % (b.vis, opt[0] if opt else "a"))
-    m.portal(128, -256, F, 130, 256, F + GATE_HIGH)
+    if high < F + GATE_HIGH:      # (over the deck, and the Combine wall's core beside it: a wall of sky at the gate's plane until a piece is joined)
+        b.vmf.world_box(m.fr.box(0, -320, map_corridor.STREET, 16, 320, b.sky + 16), MAT["sky"], MAT["sky"], MAT["sky"],
+                        vis="%s: %s gate's cap (delete to join)" % (b.vis, opt[0] if opt else "a"))
+    m.portal(128, -256, F, 130, 256, high)
     m.side(0, -256, 256, 256)      # (no mud in a culvert: a mud patch is 256 square on the map's grid, and one here reached past the gate's plane into the piece joined to it)
     b.allow.append(m.fr.box(-64, -448, BASE, 64, 448, b.sky + 64))     # (where the next piece's own walls may overlap this one's: both solid)
     # (nothing of this piece beyond the gate's plane, where the next piece begins; beside a street only the culvert's own width,
@@ -2340,7 +2352,7 @@ def build_chain(lay, args):
             map_corridor.spur(b, *road)
         if b.street_wall == "combine":
             if lay.get("wall_banks"):
-                more, front = map_corridor.bank_core(b.plan.cells, lay["wall_banks"], map_corridor.STREET + map_corridor.WALL_H - 8, b.sky)
+                more, front, _ledges = map_corridor.bank_core(b.plan.cells, lay["wall_banks"], map_corridor.STREET + map_corridor.WALL_H - 8, b.sky)
                 b.combine_core = set(getattr(b, "combine_core", set())) | more
                 b.wall_front, b.wall_cells = front, b.plan.cells
                 for c in more:

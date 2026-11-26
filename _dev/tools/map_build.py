@@ -1374,6 +1374,7 @@ useless = []
 # ---------------------------------------------------------------------------
 
 COMBINE_CORE = "metal/citadel_metalwall077a"      # (map_corridor.CORE: the Combine wall's core)
+STREET_Z = 656                                    # (map_corridor.STREET: a deck over a square "under" a street stands there)
 FENCE_POST = 512      # a post every 512 along the walls' tops, and one at each end (were every 256: 504 brushes round the ring)
 
 
@@ -1393,7 +1394,9 @@ def fence(vmf, plan, high, vis, top=None):
                 continue
             if nb[0] == "low" and len(nb) > 2 and nb[2] == COMBINE_CORE:
                 continue      # (the Combine wall stands there: no chain link before it)
-            at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 else top
+            if nb[0] == "under" and len(nb) > 4 and nb[4] == MAT["quay_floor"]:
+                continue      # (a gate's culvert under its deck: no chain link along the deck's edge)
+            at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 else STREET_Z if nb[0] == "under" else top
             runs.setdefault((axis, line, side, at), []).append(a)
     sheets, bars = {"x": [], "y": []}, []
 
@@ -1481,8 +1484,12 @@ def canal(args):
     plan.paint(P((3072, 2304, 4352, 2816)), canal_floor)                  # C: the fork's east arm
     plan.paint(P((4352, 2304, 4608, 2816)), culvert)                      #    its end: a culvert to the east gate (x 4608)
     plan.paint(P((2560, 2816, 3072, 3584)), canal_floor)                  # D: the fork's north arm
-    plan.paint(P((2560, 3584, 3072, 3840)), culvert)                      #    its end: a culvert to the north gate (y 3840)
-    plan.paint(P((2560, 0, 3072, 256)), culvert)                          # under the turn north, a culvert to the south gate (y 0): where the canal ring's south half comes in (22 November)
+    # (the north and south gates' culverts under a deck at the road's height, not a block of concrete: the owner, 26
+    #  November, "a big dumb concrete block/brush ... that shouldn't be there, and there is no combine wall between it
+    #  and the city")
+    decked = ("under", floor_z, MAT["canal_floor"], road_z - 16, MAT["quay_floor"])
+    plan.paint(P((2560, 3584, 3072, 3840)), decked)                       #    its end: a culvert to the north gate (y 3840)
+    plan.paint(P((2560, 0, 3072, 256)), decked)                           # under the turn north, a culvert to the south gate (y 0): where the canal ring's south half comes in (22 November)
     plan.paint(P((3072, 1280, 3328, 1664)), ("low", floor_z, MAT["canal_floor"], floor_z + 192)) # a low bay off B: somewhere to hide
     plan.paint(P((64, 768, 256, 896)), doorway)                           # where the quay's footbridge lands, in the north wall
     plan.paint(P((2432, 1792, 2560, 2048)), doorway)                      # the second footbridge's west end, in B's west wall (wall on every side but the front)
@@ -1515,9 +1522,13 @@ def canal(args):
         plan.cells[c] = ("low", core_top, mc.CORE, sky)
     # the Combine wall on the banks that look to the city, where no street runs (the owner, 25 November: "every section of
     # the canal that has a side/face towards the city MUST have a combine wall there"): A's south bank from the quay
-    # to the south gate's culvert, A's west end and north bank, B's and D's west bank up to the north gate
-    bank, bank_front = mc.bank_core(plan.cells, [P((640, 192, 2560, 256)), P((-64, 256, 0, 832)),
-                                                 P((0, 768, 2560, 832)), P((2496, 768, 2560, 3712))], core_top, sky)      # (not beside the north gate: what joins there seals its own)
+    # to the south gate's culvert, A's north bank, B's and D's west bank up to the north gate
+    # (set back on the top of the canal's own wall, never out over the canal: 128 back on A's south bank, where the city's
+    #  edge is 256 behind the canal's face, 192 on the others; not A's west end, where the city's buildings stand close)
+    #  beside the two gates' culverts it stands at their decks' edge, a return joining it to the wall set back)
+    bank, bank_front, bank_ledges = mc.bank_core(
+        plan.cells, [P((640, 192, 2560, 256)) + (2,), P((0, 768, 2560, 832)) + (3,), P((2496, 768, 2560, 3584)) + (3,), P((2496, 3584, 2560, 3840)), P((2496, 0, 2560, 256))],
+        core_top, sky, fill=[P((2304, 3584, 2496, 3648))])
 
     vmf = Vmf()
     cells = plan.cells
@@ -1527,8 +1538,12 @@ def canal(args):
 
     # the two gates, closed until something is joined: each cap is inside the canal's own last 64 units
     gate_cap(vmf, B(4544, 2304, floor_z, 4608, 2816, floor_z + GATE_HIGH), B(4520, 2304, floor_z, 4528, 2816, floor_z + GATE_HIGH), "y", "LC canal: east gate's cap (delete to join)")
-    gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, floor_z + GATE_HIGH), B(2560, 3752, floor_z, 3072, 3760, floor_z + GATE_HIGH), "x", "LC canal: north gate's cap (delete to join)")
-    gate_cap(vmf, B(2560, 0, floor_z, 3072, 64, floor_z + GATE_HIGH), B(2560, 80, floor_z, 3072, 88, floor_z + GATE_HIGH), "x", "LC canal: south gate's cap (delete to join the canal ring)")
+    gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, road_z - 16), B(2560, 3752, floor_z, 3072, 3760, road_z - 16), "x", "LC canal: north gate's cap (delete to join)")
+    gate_cap(vmf, B(2560, 0, floor_z, 3072, 64, road_z - 16), B(2560, 80, floor_z, 3072, 88, road_z - 16), "x", "LC canal: south gate's cap (delete to join the canal ring)")
+    # (and over each gate's deck and the Combine wall's core beside it, a wall of sky at the piece's edge until the ring is
+    #  joined, whose own squares carry them on)
+    vmf.world_box(B(2496, 3824, road_z, 3072, 3840, sky + 16), MAT["sky"], MAT["sky"], MAT["sky"], vis="LC canal: north gate's cap (delete to join)")
+    vmf.world_box(B(2496, 0, road_z, 3072, 16, sky + 16), MAT["sky"], MAT["sky"], MAT["sky"], vis="LC canal: south gate's cap (delete to join the canal ring)")
     # ...and the road on the east bank at both its ends, where the ring carries it on
     mc.road_cap(vmf, "LC canal", "the east road's south", R["mid"], road_y1, road_y1 + 64, sky)
     mc.road_cap(vmf, "LC canal", "the east road's north", R["mid"], road_y2 - 64, road_y2, sky)
@@ -1541,8 +1556,8 @@ def canal(args):
     # it can be seen through it (each stands a little in from the opening, so it has air on both sides even when capped)
     pv = "LC canal: areaportals"
     vmf.areaportal(B(4478, 2304, floor_z, 4480, 2816, floor_z + GATE_HIGH), pv)
-    vmf.areaportal(B(2560, 3710, floor_z, 3072, 3712, floor_z + GATE_HIGH), pv)
-    vmf.areaportal(B(2560, 128, floor_z, 3072, 130, floor_z + GATE_HIGH), pv)
+    vmf.areaportal(B(2560, 3710, floor_z, 3072, 3712, road_z - 16), pv)
+    vmf.areaportal(B(2560, 128, floor_z, 3072, 130, road_z - 16), pv)
     vmf.areaportal(B(0, 32, road_z, 640, 34, sky), pv)
 
     if args.test:
@@ -1634,7 +1649,8 @@ def canal(args):
     road_nodes = []
     gap1, gap2 = oy + 1792, oy + 1984       # (the ladder's slot and the footbridge, y 3648 to 3840)
     mc.east_bank_dress(vmf, "LC canal: the road on the east bank", R["mid"], edge=[(road_y1, gap1), (gap2, road_y2)], rail=[(road_y1, gap1 + 64), (gap2, road_y2)],
-                       tracks=[(road_y1, road_y2)], pave=[(road_y1, road_y2)], outer=[(road_y1, road_y2)], planks=[(gap1 + 64, gap2)],
+                       tracks=[(road_y1, road_y2)], pave=[(road_y1, road_y2)], outer=[(road_y1, road_y2)],      # (no planks over the tracks: the owner, 26 November, "a dumb looking wood slab on the tracks")
+                       
                        lane=lambda x, y, z: road_nodes.append((x, y, z)), lanes_at=range(road_y1 + 192, road_y2, 512))
     import types      # (not over its last three squares at the north edge, where the ring's stretch beyond ends in a pier over the join,
     #                    nor over the two each side of the arm, so no pier overhangs the water)
@@ -1655,6 +1671,7 @@ def canal(args):
                                     view=view)
 
     # --- where the city's people can walk: the flat of the floor, the quay, the stairs, the bridges ----------------
+    set_blocked = set_blocked + [(c[0] * CELL - ox, c[1] * CELL - oy, c[0] * CELL + CELL - ox, c[1] * CELL + CELL - oy) for c in sorted(bank_ledges | bank)]      # (the Combine wall's ledge and its core's top: nobody walks there)
     blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] + set_blocked # (the stairs, behind each gate's bars, the set pieces)
     node_id = [args.first_node]
 

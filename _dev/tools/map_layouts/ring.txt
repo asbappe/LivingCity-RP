@@ -32,6 +32,7 @@ rim 968
 upper left
 wall combine
 wall bank 5824 1024 5952 1856      # (the last jog has no street: the wall stands on its west bank, on from the street's)
+wall bank 5824 5696 5888 5888      # (and beside the start gate's deck, on from the first canal's west bank to the north run's street end)
 end 6144 1856 N
 road -4480 1920 -2624 2560 840 replaces 14734 15630
 
