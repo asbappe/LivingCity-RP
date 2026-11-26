@@ -1343,7 +1343,7 @@ def combine_wall(b, seed=1):
             a, z = 0, s["L"]          # (just long enough for one run: it takes the whole stretch, the end piers stand over its ends)
         if z - a < 512:
             counts["plain"] += 1      # (too short for a run: the core stays plain metal, a pier on its middle if it has room)
-            if s["L"] >= 256:
+            if s["L"] >= 320:      # (not on a 256 return: players can stand behind one, where a pier's back shows over the core)
                 put(r.choice(W["piers"]), (s["o"][0] + s["d"][0] * (s["L"] // 2), s["o"][1] + s["d"][1] * (s["L"] // 2), STREET), int(round(math.degrees(math.atan2(s["d"][1], s["d"][0])))) % 360)
                 counts["piers"] += 1
             continue
@@ -1373,7 +1373,9 @@ def combine_wall(b, seed=1):
             put(r.choice(W["runs"][str(k)]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
             counts["runs"] += 1
         us = [(runs[n][0] + runs[n][1] + runs[n + 1][0]) // 2 for n in range(len(runs) - 1)]
-        us = ([half] if s["ends"][0] == "free" else []) + us + ([s["L"] - half] if s["ends"][1] == "free" else [])
+        # (a free end's pier stands over its run's end, wherever a remainder has pushed that: a pier narrower than the
+        #  widest left the run's end showing when it stood a fixed way in from the stretch's end)
+        us = ([runs[0][0]] if s["ends"][0] == "free" else []) + us + ([runs[-1][0] + runs[-1][1]] if s["ends"][1] == "free" else [])
         for u in us:
             put(r.choice(W["piers"]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
             counts["piers"] += 1
