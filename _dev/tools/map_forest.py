@@ -3431,9 +3431,9 @@ class CaveForest(Forest):
         metal, conc, steel, rib = "metal/metalwall089b", "concrete/concretewall_mine_001a", FMAT["door"], MAT["bars"]
         hv = self.vis("holdout (Episode Two's, lifted from ep2_outland_03)")
         back = {"north": conc}
-        v.world_box(B(X1, fy, zf, dx - 96, by, zm), metal, faces=back, vis=hv)
-        v.world_box(B(dx + 96, fy, zf, X2, by, zm), metal, faces=back, vis=hv)
-        v.world_box(B(dx - 96, fy, zf + high, dx + 96, by, zm), metal, bottom=metal, faces=back, vis=hv)
+        v.world_box(B(X1, fy, zf, dx - 96, by, zm), metal, top=metal, faces=back, vis=hv)       # (its top a ledge 32 deep under the concrete)
+        v.world_box(B(dx + 96, fy, zf, X2, by, zm), metal, top=metal, faces=back, vis=hv)
+        v.world_box(B(dx - 96, fy, zf + high, dx + 96, by, zm), metal, top=metal, bottom=metal, faces=back, vis=hv)
         v.world_box(B(X1, uy, zm, X2, by, zt), conc, vis=hv)
         # a frame round the doorway on the holdout's side, and the two walls that stand out between the door and each button
         v.detail([B(dx - 112, fy - 8, zf, dx - 96, fy, zf + high + 16), B(dx + 96, fy - 8, zf, dx + 112, fy, zf + high + 16),
@@ -3995,12 +3995,12 @@ class CaveForest(Forest):
         # the emergency door's areaportal parts the holdout from the antlion tunnels (nest_door()): the void in this box reaches
         # both (Valve's drop in the cleft beyond the door goes on down; Valve's floor is a slab 256 thick, or a displaced
         # skin, with nothing under it), so a curtain across the box in the plane of the door's wall: under Valve's walls
-        # along it up to their foot, under Valve's floor in the opening up to its underside (black there: it is the far
-        # side of the drop), and the box's full height beyond them
+        # along it up to their foot, under Valve's floor in the opening up to its underside (the far side of the drop),
+        # and the box's full height beyond them; black, as the box is
         P = self.deep_pt
         fy, by = P(0, -8128, 0)[1], P(0, -8064, 0)[1]
         zw, zs = P(0, 0, -1792)[2], P(0, 0, -2048)[2]
-        nd, xs = MAT["nodraw"], [P(x, 0, 0)[0] for x in (512, 1280, 1792, 2048, 2304)]
+        nd, xs = black, [P(x, 0, 0)[0] for x in (512, 1280, 1792, 2048, 2304)]       # (black as the box: whatever crack shows it, it shows the box)
         zl, zr = P(0, 0, 256)[2], P(0, 0, -1280)[2]           # (the tops of Valve's walls over the holdout, and of the steel east of it)
         cuts = [(X1, xs[0], Z1, Z2, nd), (xs[0], xs[1], Z1, zw, nd), (xs[1], xs[2], Z1, zs, black), (xs[2], xs[4], Z1, zw, nd), (xs[4], X2, Z1, Z2, nd),
                 (xs[0], xs[3], zl, Z2, nd), (xs[3], xs[4], zr, Z2, nd)]
