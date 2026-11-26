@@ -3606,6 +3606,7 @@ class CaveForest(Forest):
         X1, Y1, Z1 = (min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         X2, Y2, Z2 = (max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         self.deep_reach = (X1, Y1, Z1, X2, Y2, Z2)
+        self.holdout_pit(d)
         B, P = self.box, self.deep_pt
         cm, rock = "concrete/concretewall_mine_002a", "nature/blendrockslime02a"
 
@@ -3697,6 +3698,34 @@ class CaveForest(Forest):
                           "Valve's %d grubs where Valve put them; the alarm post by the emergency door; %d antlion makers in the cleft beyond it" % (
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), 2848 - 1150, 1728 - 512,
                               grubs, len(makers)))
+
+    def holdout_pit(self, d):
+        """The chasm under the antlion tunnels, Valve's own (valve_ep2_holdout_pit, lifted from ep2_outland_03 below the
+        holdout's box, same anchor). The drop beyond the emergency door and the tunnels' edges look down into it: in
+        Valve's map the cleft goes on down between walls of black rock to a black floor 1024 under the walkway. Without it
+        the drop opened into the shut box's empty space, where Valve's sealing blocks showed their nodraw faces (the owner,
+        26 November: "can you just re-copy the cave from EP2? ... when AI tries to patch a VMF map, it tries to use flat
+        brushes behind/with displacement geometry and it doesn't work"). Valve's triggers there (a fall kills) are left
+        out: a fall of 1024 does it."""
+        pv = self.vis("holdout: the chasm under the antlion tunnels (Episode Two's)")
+        cap = -5696 + 10136        # (Valve's y -5696, in the piece's frame: the north face of Valve's sealing wall at the chasm's north end)
+
+        def short(sols):      # (two of Valve's rock brushes there run 256 on behind that wall; their rock is their south face, so they end with the wall;
+            sols = [sol for sol in sols if min(c[1] for sd in sol["sides"] for c in sd["corners"] or []) < cap]      # a board wholly beyond it is left out)
+            for sol in sols:
+                if len(sol["sides"]) == 6 and any(c[1] > cap for sd in sol["sides"] for c in sd["corners"] or []) and all(
+                        c[1] <= cap for sd in sol["sides"] if sd.get("disp") for c in sd["corners"] or []):
+                    for sd in sol["sides"]:
+                        for key in ("plane", "verts", "corners"):
+                            sd[key] = [[c[0], min(c[1], cap), c[2]] for c in sd.get(key) or []]
+            return sols
+        pf, boxes = self.lifted("valve_ep2_holdout_pit", 0, d, pv, pv, "lc_holdout_pit_", keep=lambda e: False, clip=3040 - 2848, solids=short)
+        r = self.deep_reach
+        lo = [min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3)]
+        hi = [max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3)]
+        self.deep_reach = tuple(min(r[k], lo[k]) for k in range(3)) + tuple(max(r[k + 3], hi[k]) for k in range(3))
+        self.notes.append("the chasm under the antlion tunnels: Valve's (%d brushes, %d displaced faces), its floor at z %d" % (
+            len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), lo[2]))
 
     def holdout_sheds(self):
         """The sheds on the holdout's floor (Valve's: three huts of forest steel, A and C with two doorways, B one, on the
