@@ -3977,3 +3977,12 @@ A prop lifted with its brushes must keep its origin to the hundredth: cut to who
 - **Checked by:** by computing: each lifted prop's offset from its brushes equals Valve's
 - **Tags:** props, geometry, owner
 
+### Outdoor props never fade (`owner-props-never-fade`)
+
+Trees, rocks, logs, plants and anything else out in the open get fademindist -1 and fademaxdist 0: a forest seen from its edge is wider than any fade distance, so props pop in as you walk.
+
+- **Why:** "now all the trees are invisible from the spawn and fade in, those need to not do that. it's like a ps2 game..." (26 November).
+- **How:** map_forest.py static() and stand(): fade (-1, 0) unless asked.
+- **Checked by:** no outdoor prop_static in a forest build has a fademaxdist other than 0
+- **Tags:** props, owner
+
