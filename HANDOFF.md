@@ -45,4 +45,4 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 22 to 25 November: the canal ring (map_ring_walk.py, ~22 min with the nodraw pass). Propper++ kit: 43 pieces; the wall's 20 changed
   25 Nov: owner recompiles those. Latest test map: 20,200 faces. Stitched map over; the drain and the railway left of the review (TODO).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them). Flaky, pass alone: TODO.md, end.
-- Map chat: the bunker (map_launch.py). Generator changes go into the OWNER'S latest VMF: map_owner_delta.py, map_hidden_faces --brushes, --holes.
+- Map chat (bunker): owner's VMF via map_owner_delta.py, map_hidden_faces --brushes/--holes, map_areas.py. 26 Nov fixes3 sent.
