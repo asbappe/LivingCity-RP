@@ -479,6 +479,7 @@ class Forest:
     SHORE_MUD = True # ground just above a water's level turns to dirt (the pond's shore)
     TREES = 0.75     # how thickly trees stand (the owner, after walking both: "too thick with trees ... reduce it about 25%")
     ROCKS_N, LOGS_N = 34, 12     # how many rocks and fallen logs
+    BACK_BLACK = False   # the shell's faces on its north side look into a shut box of black walls behind it (the cave forest's): black, not sky
 
     def __init__(self, name, origin, z0, seed, first_node, gate):
         self.name, self.seed = name, seed
@@ -599,7 +600,8 @@ class Forest:
         sky, nd = MAT["sky"], MAT["nodraw"]
         vis = self.vis("shell (sky, walls, slab)")
         v.world_box(self.box(-T, -T, self.zb - 64, W + T, D + T, self.zb), nd, vis=vis)
-        v.world_box(self.box(-T, -T, self.lid, W + T, D + T, self.lid + 16), sky, sky, sky, vis=vis)
+        back = {"north": MAT["black"]} if self.BACK_BLACK else {}
+        v.world_box(self.box(-T, -T, self.lid, W + T, D + T, self.lid + 16), sky, sky, sky, vis=vis, faces=back or None)
         side, g = self.gate
         ends = {"west": (-T, D + T), "east": (-T, D + T), "south": (0, W), "north": (0, W)}
         frames = {"west": lambda a, b: (-T, a, 0, b), "east": lambda a, b: (W, a, W + T, b), "south": lambda a, b: (a, -T, b, 0), "north": lambda a, b: (a, D, b, D + T)}
@@ -618,7 +620,9 @@ class Forest:
                 pieces.append((a0, b, None))
             for s1, s2, face in pieces:
                 x1, y1, x2, y2 = frames[name](s1, s2)
-                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
+                faces = dict(back) if y2 == D + T else {}
+                faces.update({face: MAT["canal_wall"]} if face else {})
+                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces=faces or None)
                 self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
@@ -2800,6 +2804,7 @@ def old_nest_draws(rnd, L):
 
 class CaveForest(Forest):
     SHORE_MUD = False                   # (the stream's banks are dirt by their own rule)
+    BACK_BLACK = True                   # (behind its north wall, the box round the big room and the holdout, black inside: workings_hull)
     CX, YM, LONG = 2304, 2560, 3072     # the mouth's middle, the hillside's line, how far in it goes (to the forest's north wall: the emergency door)
     # The bend (the owner: "it's a straight shot still; can it curve ... so a combine unit can't just slaughter everyone
     # inside if they are standing outside"): straight in for 768, then over the next 768 the passage moves 960 west, then
@@ -3279,7 +3284,7 @@ class CaveForest(Forest):
         v.world_box(B(hx2, D, self.zb, x2, D + T, top), jm, vis=sv)
         v.world_box(B(hx1, D, zf + hz, hx2, D + T, top), jm, bottom=jm, vis=sv)
         v.world_box(B(hx1, D, self.zb, hx2, D + T, zf), jm, top=fl, vis=sv)
-        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv)
+        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv, faces={"north": MAT["black"]})      # (its back in the big room's box: black as the box)
         under = min(self.natural(x, D, (0, 0)) for x in range(x1, x2 + 1, 64)) - top
         if under < 8:
             self.problems.append("the wall the cave ends in stands %d out of the hill" % -under)
@@ -4119,9 +4124,9 @@ class CaveForest(Forest):
         r = self.room_box
         rx1, ry1, rz1, rx2, ry2, rz2 = r
         # the room's own box: north, east, under and over (its west wall is the bulkhead, its south the forest's wall)
-        for box in ((rx1, ry2, rz1 - 64, rx2 + 64, ry2 + 64, rz2 + 64), (rx2, ry1, rz1 - 64, rx2 + 64, ry2, rz2 + 64), (rx1, ry1, rz1 - 64, rx2, ry2, rz1),
-                    (rx1, ry1, rz2, rx2, ry2, rz2 + 64)):
-            v.world_box(self.box(*box), black, vis=nv)
+        for box, top, bottom in (((rx1, ry2, rz1 - 64, rx2 + 64, ry2 + 64, rz2 + 64), None, None), ((rx2, ry1, rz1 - 64, rx2 + 64, ry2, rz2 + 64), None, None),
+                                 ((rx1, ry1, rz1 - 64, rx2, ry2, rz1), black, None), ((rx1, ry1, rz2, rx2, ry2, rz2 + 64), None, black)):
+            v.world_box(self.box(*box), black, top=top, bottom=bottom, vis=nv)      # (black inside: its floor's top and its lid's underside too)
         # the box round everything
         d = self.deep_reach
         X1 = int(math.floor((min(d[0], rx1) - 64) / 64.0)) * 64
@@ -4129,9 +4134,9 @@ class CaveForest(Forest):
         Y2 = int(math.ceil((max(d[4], ry2 + 64) + 64) / 64.0)) * 64
         Z1 = int(math.floor((min(d[2], rz1 - 64) - 64) / 64.0)) * 64
         Z2 = int(math.ceil((max(d[5], rz2 + 64)) / 64.0)) * 64
-        for box in ((X1 - 64, ys, Z1 - 64, X2 + 64, Y2 + 64, Z1), (X1 - 64, ys, Z2, X2 + 64, Y2 + 64, Z2 + 64), (X1 - 64, ys, Z1, X1, Y2 + 64, Z2),
-                    (X2, ys, Z1, X2 + 64, Y2 + 64, Z2), (X1, Y2, Z1, X2, Y2 + 64, Z2)):
-            v.world_box(self.box(*box), black, vis=nv)
+        for box, top, bottom in (((X1 - 64, ys, Z1 - 64, X2 + 64, Y2 + 64, Z1), black, None), ((X1 - 64, ys, Z2, X2 + 64, Y2 + 64, Z2 + 64), None, black),
+                                 ((X1 - 64, ys, Z1, X1, Y2 + 64, Z2), None, None), ((X2, ys, Z1, X2 + 64, Y2 + 64, Z2), None, None), ((X1, Y2, Z1, X2, Y2 + 64, Z2), None, None)):
+            v.world_box(self.box(*box), black, top=top, bottom=bottom, vis=nv)
         # its south side where the forest's north wall does not stand: west of the forest, under its slab, over its sky (and
         # over the stretch the cave's wall and its sky are, the room's box over the sky too)
         tw = WALL
