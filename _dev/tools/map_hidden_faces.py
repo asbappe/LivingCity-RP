@@ -36,6 +36,7 @@ import map_view as mv
 
 SEE_THROUGH = ("glass", "fence", "grate", "chainlink", "gate", "mesh", "water", "window", "wire", "cable", "decal", "overlay", "foliage",
                "leaf", "leaves", "tree", "grill", "rail", "ladder", "slime", "vent", "blinds", "cage", "lattice", "net", "hole", "alpha", "trans")
+OPAQUE_ANYWAY = ("rockslime",)      # (words in SEE_THROUGH inside the name of a solid material: Valve's rock blend nature/blendrockslime02a is rock)
 NOT_SOLID_TOOLS = ("toolstrigger", "toolsclip", "toolsplayerclip", "toolsnpcclip", "toolsareaportal", "toolshint", "toolsskip", "toolsinvisible",
                    "toolsoccluder", "toolsfog", "toolsblocklight", "toolsinvisibleladder", "toolsorigin", "toolsblock_los", "toolsdotted")
 NODRAW = "TOOLS/TOOLSNODRAW"
@@ -50,7 +51,7 @@ def opaque(mats):
             if any(t in m for t in NOT_SOLID_TOOLS):
                 return False
             continue
-        if any(w in m for w in SEE_THROUGH):
+        if any(w in m for w in SEE_THROUGH) and not any(w in m for w in OPAQUE_ANYWAY):
             return False
     return True
 
