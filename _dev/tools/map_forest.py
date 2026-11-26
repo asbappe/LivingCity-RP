@@ -2816,7 +2816,8 @@ class CaveForest(Forest):
     MOUTH_CLEAR = (200, 450, 120)       # kept clear before the cave's mouth: this far either side of its middle, out from it, and in past its fence
     BULK_T = 256                        # the emergency door's bulkhead is this thick (the holdout's gallery walls run 208 into it)
     GALLERY_Y = -10064                  # (Valve's y) the holdout's gallery's clear middle, where the emergency door is (the timber along its south wall clear of it)
-    LIFT_SPEED = 64                     # the holdout's lift: 19 s from the top landing to the floor (Valve's goes at 35, and 20 near the ends)
+    LIFT_SPEED = 64                     # the holdout's lifts: 19 s from the top landing to the floor (Valve's goes at 35, and 20 near the ends)
+    LIFT_2 = (1104, -9296, 1208, -9120)  # (Valve's x1 y1 x2 y2) the second lift's platform but its tongue into the scaffold
 
     def setup(self):
         z0 = self.z0
@@ -3233,13 +3234,16 @@ class CaveForest(Forest):
         in line with the control room's doorway further in)."""
         return (x - 2848 + self.deep_x, y - self.GALLERY_Y + self.door_y, z + 576 + self.zf)
 
-    def lifted(self, name, q, d, vis_w, vis_p, prefix, skip=None, keep=None, edit=None, extra=(), clip=None):
+    def lifted(self, name, q, d, vis_w, vis_p, prefix, skip=None, keep=None, edit=None, extra=(), clip=None, solids=None):
         """A piece lifted from Valve's maps (map_prefab.py), placed: its brushes (Valve's world brushes in the world), its
         props, lights and kept wiring. Everything behind the emergency door is underground in one shut box, so the sky is
-        made black; and nothing of Valve's dev materials may be left in it. Returns the piece and its brushes' boxes."""
+        made black; and nothing of Valve's dev materials may be left in it. Returns the piece and its brushes' boxes.
+        solids: a change to the piece's brushes before they are placed (it is given them and returns them)."""
         pf = copy.deepcopy(PF.load(name))
         if clip is not None:
             pf["solids"] = [clip_x(sol, clip) or sol for sol in pf["solids"]]
+        if solids is not None:
+            pf["solids"] = solids(pf["solids"])
         for sol in pf["solids"]:
             for sd in sol["sides"]:
                 m = sd["material"].lower()
@@ -3531,8 +3535,8 @@ class CaveForest(Forest):
 
         def skip(sol):
             f = sol["from"]
-            if f.startswith(drop_from) or (f.startswith("func_tracktrain") and sol.get("live") == "holdout_elevator_1"):
-                return True       # (Valve's loose boards, breakables, the gate, its buttons, the blockers, the see-through; the cage rides on our lift)
+            if f.startswith(drop_from) or (f.startswith("func_tracktrain") and sol.get("live") in ("holdout_elevator_1", "holdout_elevator_2")):
+                return True       # (Valve's loose boards, breakables, the gate, its buttons, the blockers, the see-through; both lifts ride on our wiring)
             if any(c[0] > 3060 - 2848 for sd in sol["sides"] for c in (sd["corners"] or sd["plane"])):
                 return True       # (nothing past the bulkhead into the big room: the gallery's own walls end inside it; clip_x shortened the boxes)
             return any(sd["material"].lower().startswith("nature/clifftrees") for sd in sol["sides"])   # (tree cards against Valve's sky: it is black here)
@@ -3556,7 +3560,8 @@ class CaveForest(Forest):
             if k == "point_spotlight" and name.startswith("elevator_1_light"):
                 e["keys"]["spawnflags"] = "3"
         extra = self.holdout_lift()
-        pf, boxes = self.lifted("valve_ep2_holdout", 0, d, hv, hp, "lc_holdout_", skip=skip, keep=keep, edit=edit, extra=extra, clip=3040 - 2848)
+        pf, boxes = self.lifted("valve_ep2_holdout", 0, d, hv, hp, "lc_holdout_", skip=skip, keep=keep, edit=edit, extra=extra, clip=3040 - 2848,
+                                solids=self.lift_2_recess)
         X1, Y1, Z1 = (min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         X2, Y2, Z2 = (max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         self.deep_reach = (X1, Y1, Z1, X2, Y2, Z2)
@@ -3669,6 +3674,95 @@ class CaveForest(Forest):
         P = self.deep_pt
         a, b = P(1580, -9500, -512), P(1588, -9492, -448)
         self.vmf.detail([self.box(a[0], a[1], a[2], b[0], b[1], b[2])], "metal/metaltruss017a", vis=self.vis("holdout: lights and dressing"))
+        out += self.holdout_lift_2(pf)
+        return out
+
+    def holdout_lift_2(self, pf):
+        """The second lift (the owner, 26 November: "can we also mirror/clone the elevator to work on the other elevator
+        scaffolding in the same shaft? it's the one the vortigaunt uses on the map in EP2; this way we have 2 elevators in
+        case several people are trying to get in and out"): Valve's own platform (holdout_elevator_2: a grating 104 x 176
+        with a tongue 72 x 96 off its west side that runs in the scaffold, elevator01_framework, against the pit's west
+        wall) on the same wiring as the first (lift_rig), its names ending _2, down from the top landing's level to the
+        holdout's floor, where it sits flush in a recess cut for it in Valve's floor (lift_2_recess). It has no cage, so
+        unseen walls ride round it, on the three sides with no landing and over the tongue (into the scaffold: nobody
+        rides there), and its open south side (the walkway at the top) has the first lift's mouth and gate. Its call
+        buttons are on the pit's west wall beside it at both levels, clear of the scaffold, and one on a post at its
+        north-east corner. A trip down brings the holdout's makers as the first lift's do."""
+        plat = [w for w in pf["wiring"] if w["keys"].get("targetname") == "holdout_elevator_2"][0]
+        ax = pf["anchor"]
+        rel = lambda x, y, z: [x - ax[0], y - ax[1], z - ax[2]]
+
+        def bx(x1, y1, z1, x2, y2, z2, mat):
+            a, b = rel(x1, y1, z1), rel(x2, y2, z2)
+            box = tuple(min(a[k], b[k]) for k in range(3)) + tuple(max(a[k], b[k]) for k in range(3))
+            sides = []
+            for f in FACE_ORDER:
+                c = face_corners(box, f)
+                u, w = FACE_AXES[f]
+                sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "material": mat.upper(), "uaxis": u, "vaxis": w, "lightmapscale": "16"})
+            return sides
+        post = [bx(1192, -9128, -512, 1200, -9120, -456, "metal/metaltruss017a")]      # (its button inside the platform's edge)
+        out = self.lift_rig(pf, "_2", "holdout_elevator_2", plat["keys"], plat["brushes"], plat["origin"], 8, self.LIFT_2, "south", -512, -1792,
+                            top_button=((1024, -9329), 0), bottom_button=((1024, -9329), 0), car_button=((1196, -9128), 270), makers=True, more=post)
+        # its unseen walls: west (and over the tongue), north and east, as high as a player, riding with it; always solid
+        x1, y1, x2, y2 = self.LIFT_2
+        walls = [bx(x1 - 1, y1, -512, x1, y2 + 1, -400, MAT["clip"]), bx(x1, y2, -512, x2 + 1, y2 + 1, -400, MAT["clip"]), bx(x2, y1, -512, x2 + 1, y2, -400, MAT["clip"]),
+                 bx(1032, -9256, -512, x1 - 1, -9160, -400, MAT["clip"])]
+        out.append({"classname": "func_brush", "origin": rel((x1 + x2) / 2.0, (y1 + y2) / 2.0, -456), "ours": True, "out": [], "brushes": walls,
+                    "keys": {"targetname": "rails_2", "parentname": "holdout_elevator_2", "StartDisabled": "0", "Solidity": "2", "spawnflags": "2", "rendermode": "10",
+                             "renderamt": "0", "excludednpc": "", "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}})
+        # the starts the zombie and antlion makers already have are the first lift's (lift_rig made them once)
+        return [e for e in out if e["keys"].get("targetname") not in ("zombie", "antlion", "zombie_maker", "antlion_maker")]
+
+    def lift_2_recess(self, sols):
+        """Valve's floor under the second lift (its brush x 768..1280, y -9600..-9088, z -2048..-1792 in Valve's frame),
+        cut so the platform (16 thick, its tongue too) sits in a recess 24 deep with its top flush with the floor and
+        nothing under it to flicker: the floor's own top and edges are kept with Valve's textures, the recess's sides are
+        Episode Two's mine concrete, its bottom Valve's dirt floor."""
+        ax = PF.load("valve_ep2_holdout")["anchor"]
+        orig = (768 - ax[0], -9600 - ax[1], -2048 - ax[2], 1280 - ax[0], -9088 - ax[1], -1792 - ax[2])
+        out, hit = [], None
+        for sol in sols:
+            pts = [c for sd in sol["sides"] for c in (sd.get("verts") or sd["plane"])]
+            box = tuple(min(p[k] for p in pts) for k in range(3)) + tuple(max(p[k] for p in pts) for k in range(3))
+            if hit is None and sol["from"] == "worldspawn" and all(abs(box[k] - orig[k]) < 0.5 for k in range(6)):
+                hit = sol
+                continue
+            out.append(sol)
+        if hit is None:
+            self.problems.append("the second lift's recess: Valve's floor brush under it is not where it was")
+            return sols
+        face = {}
+        for sd in hit["sides"]:
+            ps = sd["plane"]
+            for f, k, v in (("top", 2, orig[5]), ("bottom", 2, orig[2]), ("west", 0, orig[0]), ("east", 0, orig[3]), ("south", 1, orig[1]), ("north", 1, orig[4])):
+                if all(abs(q[k] - v) < 0.5 for q in ps):
+                    face[f] = sd
+        cut = "CONCRETE/CONCRETEWALL_MINE_002A"
+        x1, y1, x2, y2 = self.LIFT_2
+        m = 2
+        r = lambda x, y, z: (x - ax[0], y - ax[1], z - ax[2])
+        X1, Y1, Z1, X2, Y2, Z2 = orig
+        mx1, my1, _ = r(x1 - m, y1 - m, 0)
+        mx2, my2, _ = r(x2 + m, y2 + m, 0)
+        tx1, ty1, _ = r(1032 - m, -9256 - m, 0)
+        ty2 = r(0, -9160 + m, 0)[1]
+        zr = r(0, 0, -1816)[2]
+        pieces = [(X1, Y1, Z1, tx1, Y2, Z2), (mx2, Y1, Z1, X2, Y2, Z2), (tx1, Y1, Z1, mx2, my1, Z2), (tx1, my2, Z1, mx2, Y2, Z2),
+                  (tx1, my1, Z1, mx2, my2, zr), (tx1, my1, zr, mx1, ty1, Z2), (tx1, ty2, zr, mx1, my2, Z2)]
+        for b in pieces:
+            sides = []
+            for f in FACE_ORDER:
+                c = face_corners(b, f)
+                outer = {"top": b[5] == Z2, "bottom": b[2] == Z1, "west": b[0] == X1, "east": b[3] == X2, "south": b[1] == Y1, "north": b[4] == Y2}[f]
+                src = face.get(f) if (outer or f == "top") else None
+                if src:
+                    sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "corners": [list(q) for q in c], "material": src["material"], "uaxis": src["uaxis"],
+                                  "vaxis": src["vaxis"], "lightmapscale": src.get("lightmapscale", "16")})
+                else:
+                    u, w = FACE_AXES[f]
+                    sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "corners": [list(q) for q in c], "material": cut, "uaxis": u, "vaxis": w, "lightmapscale": "16"})
+            out.append({"from": "worldspawn", "sides": sides})
         return out
 
     def lift_rig(self, pf, s, train, keys, brushes, origin, floor_up, car, mouth, top_z, bottom_z, top_button, bottom_button, car_button, lights=False,
