@@ -394,6 +394,11 @@ ROCKET_FOOT = -1232                 # the rocket's foot (its engines' bottom) in
 # Valve's path above its start (ptrack_1 3 9 6 7 4), its rocket's top 86 into the hatch at the start; ours starts 169
 # under it, so each comes 255 later; killed (ptrack_8) when its foot is at 2500, its top at 4130, under the sky (SKY)
 PATH = (("ptrack_1", 0), ("ptrack_3", 315), ("ptrack_9", 571), ("ptrack_6", 1451), ("ptrack_7", 1931), ("ptrack_4", 3583), ("ptrack_8", 2500 - ROCKET_FOOT))
+# How fast it climbs (the owner, 26 November: "far too fast"): about a third of Valve's speeds (its relay's SetSpeedReal 50
+# at 30 s, its tracks' 500 1000 1500 1700 1900), so it starts slow and takes about 11 s from the silo's floor to the kill
+# track (out of the collar's mouth at about 6.5 s); the train blends each track's speed into the next (velocitytype 2).
+RISE_START = 20
+RISE = {"ptrack_3": 150, "ptrack_9": 300, "ptrack_6": 420, "ptrack_7": 480, "ptrack_4": 540}
 
 
 def launch(f, F, lr):
@@ -452,9 +457,13 @@ def launch(f, F, lr):
             e["origin"] = [0, 0, foot]
             e["brushes"] = [[{"plane": pl, "verts": [], "corners": [], "material": "TOOLS/TOOLSNODRAW", "uaxis": "[1 0 0 0] 0.25", "vaxis": "[0 -1 0 0] 0.25",
                               "lightmapscale": "16"} for pl in box_planes((-8, -8, foot - 8, 8, 8, foot + 8))]]
-            k.update({"orientationtype": "0", "dmg": "0", "spawnflags": str(int(k.get("spawnflags", "0") or 0) | 8)})     # (8: not solid)
+            # (8: not solid; 1 no pitch and 16 always fixed orientation: Garry's Mod turned the train to face along its
+            #  upright path despite orientationtype 0, and the rocket rose lying on its side, the owner, 26 November)
+            k.update({"orientationtype": "0", "dmg": "0", "spawnflags": str(int(k.get("spawnflags", "0") or 0) | 8 | 1 | 16)})
         if tn.startswith("ptrack_"):
             e["origin"] = [0, 0, foot + path[tn]]
+            if tn in RISE:
+                k["speed"] = str(RISE[tn])
             order = [n for n, _ in PATH]
             i = order.index(tn)
             k["target"] = order[i + 1] if i + 1 < len(order) else ""
@@ -468,7 +477,7 @@ def launch(f, F, lr):
         if cls == "env_shake":          # (Valve's shook the whole world; here the room)
             k.update({"spawnflags": str(int(k.get("spawnflags", "0") or 0) & ~1), "radius": "640"})
         if tn == "relay_launch":        # (one launch a map; the ending hooks in here: LAUNCH_RELAY)
-            e["out"] = [o for o in e["out"] if o[1] not in ("birds", "logic_start_redlight")] + [
+            e["out"] = [(o, t, i, str(RISE_START) if i == "SetSpeedReal" else val, d) for o, t, i, val, d in e["out"] if t not in ("birds", "logic_start_redlight")] + [
                 ("OnTrigger", "!self", "Disable", "", 0.1), ("OnTrigger", "button_launch", "Lock", "", 0)]
     names = F.pf_entities(v, lr, LR_TURN, LR_AT, "lc_launch_", vis, wv, keep=keep, edit=edit, extra=extra, valve_anchor=lr["anchor"])
     # the red button's cover (the owner, 24 November: "I can't press the launch button cause Dr Kleiner opens the cover for
