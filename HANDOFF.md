@@ -31,18 +31,18 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 25 November: units hear (sv_livingcity_noise.lua; docs/features/contraband.md "Keeping quiet"): a shot or a thrown thing landing (and, only out
-  after curfew outside the blocks, running or a jump) sends the nearest free Civil Protection unit to look. Ideas from three NPC addons, none built: docs/dev/npc-ai-lessons.md.
+- 26 November: the cistern lifted out of the ring into its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf,
+  sent). A street plate over it and a lift from the gallery to the street (lc_cistern_lift; docs/dev/map-building.md, "The cistern by
+  itself"). Not compiled. The ring's own cistern is untouched (another chat has the ring). Next: its Propper++ pieces.
+- 25 November: units hear (sv_livingcity_noise.lua; docs/features/contraband.md "Keeping quiet"). Ideas from three NPC addons, none
+  built: docs/dev/npc-ai-lessons.md.
 - 24 November (the TODO run), built, not yet seen in game: barnacles lift, pumphouse water, the base's vehicle, antlions at a
   stopped thumper, a cut train line (docs/features/wildlife.md, resistance-base.md, ieds.md). Last full run: 9,262 passed, 1 failed.
-- 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it); ring.txt's branch is
-  `straight 512`. The ring was cut down after the owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md;
-  ring piece alone 31,115 faces). Left of their review: the drain, the railway to the station (TODO.md).
+- 24 November: the Resistance's town is off the map, kept on the shelf (map_town.py still builds it). The ring was cut down after the
+  owner's walk (7 modules saved as prefabs `lc_mod_*`, docs/dev/prefabs.md). Left of their review: the drain, the railway (TODO.md).
 - 22 to 25 November: the canal ring (map_ring_walk.py, ~22 min with the nodraw pass, which vbsp's vertex limit needs).
-  Propper++ kit: 43 pieces; the wall's 20 changed 25 Nov (no white panels, 4 piers, 3 looks): owner recompiles those.
-  Latest test map: 20,200 faces, ~39,913 vertices. Stitched map still over (TODO).
+  Propper++ kit: 43 pieces; the wall's 20 changed 25 Nov: owner recompiles those. Latest test map: 20,200 faces. Stitched map over (TODO).
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them; curl with the file id).
   Flaky in full runs, pass alone: the dream bubbles, EndingTests, Lamarr (TODO.md).
-- Map chat: bunker rebuilt round White Forest's control room + 12a's launch room over Valve's pad on our silo; red
-  button launches (lc_rocket_launch), CCTV lc_bunker_cctv (map_launch.py). Generator changes go into the OWNER'S latest
-  VMF: map_owner_delta.py (ground merged too), map_hidden_faces --brushes, then --holes. 24 Nov: 9 fixes sent (fixes2: areaportal leak fixed), 10,392 sides.
+- Map chat: bunker rebuilt round White Forest's control room + 12a's launch room; red button launches (lc_rocket_launch), CCTV
+  lc_bunker_cctv (map_launch.py). Generator changes go into the OWNER'S latest VMF: map_owner_delta.py, map_hidden_faces --brushes, --holes.
