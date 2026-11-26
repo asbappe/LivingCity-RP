@@ -1976,15 +1976,20 @@ class BunkerForest(Forest):
         model = [p for p in pf["points"] if p["keys"].get("model", "").endswith("missile_doors.mdl")][0]["keys"]
         e0, e1 = W(0, 0, 0), W(1, 0, 0)
         east = int(round(math.degrees(math.atan2(e1[1] - e0[1], e1[0] - e0[0])))) % 360       # (the bunker's +u in the map)
-        for tag, (a, b), way, roll in (("west", (d1 - 8, mid), -1, -90), ("east", (mid, d2 + 8), 1, 90)):
+        # Both leaves the same way up (the owner, 26 November, thought one leaf sat higher than the other: both stood at
+        # the same height, but the west leaf was the east one turned upside down in the wall's plane, as Valve's pair lie
+        # turned half round each other, so whatever of the model is not the same top and bottom showed the other way up
+        # on it). Now the west leaf is the east one moved along: the same yaw and roll, its own +x toward the middle.
+        for tag, (a, b), way in (("west", (d1 - 8, mid), -1), ("east", (mid, d2 + 8), 1)):
             name = "lc_bunker_door_" + tag
-            yaw = (east + (0 if way > 0 else 180)) % 360        # (the model's own +x away from the middle: its meeting edge is its -x, as in Valve's)
+            yaw = (east + (0 if way > 0 else 180)) % 360        # (the way it slides: away from the middle, into its jamb)
+            mdl_yaw, roll = east, 90
             v.brush_entity("func_button", {"targetname": name, "movedir": "0 %d 0" % yaw, "speed": str(self.FLAT_SPEED), "lip": str(lip), "wait": "-1", "spawnflags": "0",
                                            "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
                            [B(a, 32 - self.FLAT_HALF_T - 2, zp, b, 32 + self.FLAT_HALF_T + 2, top)], MAT["nodraw"], dv)     # (as thick as the pair of leaves)
             keys = {k: model[k] for k in ("model", "skin", "MinAnimTime", "MaxAnimTime", "RandomAnimation", "SetBodyGroup", "PerformanceMode", "pressuredelay",
                                           "ExplodeDamage", "ExplodeRadius") if k in model}
-            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1", "lightingorigin": lit,
+            keys.update({"targetname": name + "_model", "angles": "0 %d %d" % (mdl_yaw, roll), "parentname": name, "solid": "0", "disableshadows": "1", "lightingorigin": lit,
                          "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "modelscale": str(sc), "StartDisabled": "0", "renderamt": "255",
                          "rendercolor": "255 255 255"})
             # Valve's leaf is drawn on one side only (the side seen from inside Silo 2): its other side shows as nodraw (the
@@ -1993,7 +1998,7 @@ class BunkerForest(Forest):
             # pair, back to back on the doorway's middle (32): this one inside, its drawn side to the bunker, and its mirror
             # (turned half round its length) outside, its drawn side to the forest, lit from outside.
             v.point("prop_dynamic", W((a + b) // 2, 32 + self.FLAT_HALF_T, zp + int(round(164.8 * sc))), keys, dv)
-            back = dict(keys, targetname="lc_bunker_outer_leaf_" + tag, angles="0 %d %d" % (yaw, roll + 180), lightingorigin=lit_out)
+            back = dict(keys, targetname="lc_bunker_outer_leaf_" + tag, angles="0 %d %d" % (mdl_yaw, roll + 180), lightingorigin=lit_out)
             v.point("prop_dynamic", W((a + b) // 2, 32 - self.FLAT_HALF_T, zp + int(round(164.8 * sc))), back, dv)
         v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
         # an areaportal across the doorway, in the leaves' plane, shut with them, so the bunker is not drawn from outside
