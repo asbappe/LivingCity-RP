@@ -3162,6 +3162,7 @@ class CaveForest(Forest):
         self.bulkhead()
         self.holdout()
         self.nest_door()
+        self.nest_bridge()
         self.workings_hull()
         for q in range(64, self.LONG - 100, 192):
             y = ym + q
@@ -3519,6 +3520,46 @@ class CaveForest(Forest):
         self.notes.append("the emergency door: in the holdout floor's north wall at (%d %d), floor z %d, facing south, where Valve's opening led on to the antlion tunnels; "
                           "a shutter 192 wide and %d high; its two buttons are 600 apart with a wall between each and the door; both within a second open it, and shut it again" % (
                               self.ox + dx, self.oy + (fy + by) / 2, zf, high))
+
+    def nest_bridge(self):
+        """Over the drop beyond the emergency door. Valve's planks end a few feet past the door, where the cleft's floor
+        falls away into the cave Valve's map went on to below (not lifted); the rock floor of the antlion tunnels starts
+        again 444 on, 128 lower. Whoever went through the door could not come back (the coordinator, 26 November: "add a
+        ladder out of the antlion tunnels' one-way drop, back up to the planks, so whoever goes through the gate can come
+        back"). So the planks go on as a walkway of Valve's planks across the drop, with the city's own handrails, to an
+        end board over the rock, and a ladder (the owner's ladder pieces, a func_useableladder 28 out, a place to step off
+        at each end) climbs from the rock floor to the walkway's end. It drops 128 to the rock: no harm."""
+        v, P = self.vmf, self.deep_pt
+        bv = self.vis("holdout: the walkway over the drop and its ladder")
+        W = lambda x, y, z: self.w(*P(x, y, z))
+
+        def vb(x1, y1, z1, x2, y2, z2):
+            a, b = P(x1, y1, z1), P(x2, y2, z2)
+            return self.box(*(a + b))
+        x1, x2, y1, y2, zd = 1408, 1504, -7996, -7552, -1792       # (the walkway: Valve's planks' middle, from their end to the rock)
+        plank = "wood/woodfloor005a"
+        v.detail([vb(x1, y1, zd - 8, x2, y2, zd)], plank, vis=bv)
+        v.detail([vb(x1 - 4, y1, zd - 32, x1 + 8, y2, zd - 8), vb(x2 - 8, y1, zd - 32, x2 + 4, y2, zd - 8),     # (its two stringers)
+                  vb(x1 - 4, y2 - 6, zd - 128, x2 + 4, y2, zd - 8)], plank, vis=bv)                             # (and its end board, down to the rock)
+        for x in (x1 - 2, x2 + 2):
+            for (yc, model) in ((y1 + 64, "long"), (y1 + 192, "long"), (y1 + 320, "long"), (y1 + 412, "medium")):
+                v.point("prop_static", W(x, yc, zd + 20), {"model": "models/props_c17/handrail04_%s.mdl" % model, "angles": "0 0 0", "skin": "0", "solid": "6",
+                                                           "fademindist": "1900", "fademaxdist": "2500", "fadescale": "1"}, bv)
+        lx = (x1 + x2) / 2
+        v.point("prop_static", W(lx, y2, zd - 128), {"model": "models/props_c17/metalladder002.mdl", "angles": "0 90 0", "skin": "0", "solid": "6",
+                                                    "fademindist": "-1", "fadescale": "1"}, bv)
+        v.point("prop_static", W(lx, y2, zd), {"model": "models/props_c17/metalladder002b.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, bv)
+        p0, p1 = W(lx, y2 + 28, zd - 124), W(lx, y2 + 28, zd + 12)
+        v.point("func_useableladder", W(lx, y2 + 28, zd + 2), {"point0": "%d %d %d" % p0, "point1": "%d %d %d" % p1, "spawnflags": "0", "StartDisabled": "0"}, bv)
+        v.point("info_ladder_dismount", W(lx, y2 + 70, zd - 127), {}, bv)
+        v.point("info_ladder_dismount", W(lx, y2 - 42, zd + 1), {}, bv)
+        for (a, b, what) in (((x1 + 8, y1, zd + 4), (x2 - 8, y2 - 20, zd + 72), "the walkway over the drop beyond the emergency door"),
+                             ((lx - 16, y2 + 12, zd - 124), (lx + 16, y2 + 44, zd + 72), "the ladder up from the antlion tunnels to the walkway")):
+            self.keep_way_clear(P(*a) + P(*b), what)
+        self.node(*P(lx, -7760, zd))
+        self.notes.append("the walkway over the drop beyond the emergency door: %d long, to a ladder up from the antlion tunnels' floor (%d %d %d)" % (
+            y2 - y1, self.ox + P(lx, 0, 0)[0], self.oy + P(0, y2 + 28, 0)[1], P(0, 0, zd - 128)[2]))
 
     def holdout(self):
         """Behind the emergency door, Episode Two's holdout from ep2_outland_03, lifted whole as Valve made it
