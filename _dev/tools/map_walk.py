@@ -274,6 +274,42 @@ def slope_floors(text):
     return out
 
 
+NOT_SOLID = ("tools/toolstrigger", "tools/toolshint", "tools/toolsskip", "tools/toolsareaportal", "tools/toolsskybox",
+             "tools/toolsfog", "tools/toolsblocklight", "tools/toolsoccluder", "tools/toolsinvisibleladder", "tools/toolsblack")
+
+
+def ladder_feet(text, ents):
+    """A ladder whose ends a player cannot stand at: the game says "funcladder with blocked bottom point ... stuck in"
+    (the owner's log, 25 November: a canal bank buried two ladders' feet). A player's box (32 across, 72 tall) at each
+    end must be clear of every brush. Gives [((x, y, z), message)]."""
+    import map_propkit
+    ends = []
+    for kv, _ in ents:
+        if kv.get("classname") == "func_useableladder":
+            for key in ("point0", "point1"):
+                p = num3(kv.get(key, ""))
+                if p:
+                    ends.append((key, p))
+    if not ends:
+        return []
+    solids = []
+    for faces, cls in map_propkit.read_solids(text, ("worldspawn", "func_detail", "func_brush")):
+        if all(m in NOT_SOLID for _, m in faces):
+            continue
+        solids.append(map_propkit.Solid(faces))
+    out = []
+    for key, p in ends:
+        pts = [(p[0] + dx, p[1] + dy, p[2] + dz) for dx in (-16, 0, 16) for dy in (-16, 0, 16) for dz in (0, 36, 72)]      # (touching counts: Source calls a box that touches a brush stuck)
+        for sd in solids:
+            if sd.lo[0] > p[0] + 16 or sd.hi[0] < p[0] - 16 or sd.lo[1] > p[1] + 16 or sd.hi[1] < p[1] - 16 or sd.lo[2] > p[2] + 72 or sd.hi[2] < p[2]:
+                continue
+            if any(sd.inside(q, -0.05) for q in pts):
+                out.append((p, "a ladder's %s at (%d %d %d) is inside a brush: no room for a player there" % (
+                    "foot" if key == "point0" else "top", p[0], p[1], p[2])))
+                break
+    return out
+
+
 def check_text(text, limit=12, where=None, start=None):
     boxes = map_stairs.boxes_of(text)
     props = prop_boxes(text)
@@ -292,6 +328,7 @@ def check_text(text, limit=12, where=None, start=None):
                 for x in a[:4]:
                     for y in b[:6]:
                         ladders.append((x, y))
+    problems_ladders = ladder_feet(text, ents)
     # lifts: a func_door that rides up or down (a flat platform moving at least 64, more than twice its own height) joins
     # the floor round its foot to the floor round where it stops, as a ladder does (the freight lift's dock)
     for kv, e in ents:
@@ -350,7 +387,7 @@ def check_text(text, limit=12, where=None, start=None):
             pts = [tuple(float(c) for c in g.split()) for pm in map_stairs.PLANE.finditer(e) for g in pm.groups()]
             if pts:
                 movers.append((min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts), max(p[1] for p in pts)))
-    problems = []
+    problems = ["walk: " + ((where(p[0], p[1]) + ": ") if where else "") + msg for p, msg in problems_ladders][:limit]
     for label, p, kind in targets:
         if any(r[0] - 160 <= p[0] <= r[2] + 160 and r[1] - 160 <= p[1] <= r[3] + 160 for r in movers):
             continue
