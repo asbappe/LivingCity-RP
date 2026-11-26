@@ -1106,7 +1106,12 @@ def m_crypt(m, opt):
     put(m, P + "props_debris/concrete_chunk01a.mdl", 500, 110, 30)
     put(m, P + "props_debris/broken_pile001a.mdl", 600, 90, 70)
     put(m, P + "props_debris/concrete_chunk02a.mdl", 560, 330, 10, z=cz)
-    m.static(P + "props_debris/concrete_debris128pile001b.mdl", 512, 174, 0, F + 40)      # what came down the bank when it broke
+    if getattr(m.b, "buried", False):
+        # (under the city the canal is a tunnel with upright walls and no bank to climb: the wall's own fallen stone, laid
+        #  as rough steps, is the way up to the hole)
+        m.steps(64, 464, 560, F, cz, "v", 1)
+    else:
+        m.static(P + "props_debris/concrete_debris128pile001b.mdl", 512, 174, 0, F + 40)      # what came down the bank when it broke
     m.light(512, 290, ceil - 20, "170 190 220 16")
     m.lane(512, 220, F + 92)
     m.lane(512, 296, cz)

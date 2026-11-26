@@ -790,7 +790,10 @@ def wall_portal_build(b, Qw, sq, tag, far):
     m.det([(wall, lo, STREET, wall + 8, hi, STREET + 304)], MAT["black"], vis=dv)
     p1, p2 = sv(RAIL_V - 184, RAIL_V - 160)
     q1, q2 = sv(RAIL_V + 160, RAIL_V + 184)
-    m.det([(-512, p1, STREET, -488, p2, STREET + 336), (-512, q1, STREET, -488, q2, STREET + 336), (-512, p1, STREET + 304, -488, q2, STREET + 336)], MAT["beam"], vis=dv)
+    # (a concrete buttress each side of the mouth, as deep as the wall's pieces stand out and as high as the wall: the
+    #  wall's runs end against them, their ends never seen from the mouth; a lintel between them)
+    m.det([(-512, p1, STREET, -352, p2, STREET + WALL_H - 8), (-512, q1, STREET, -352, q2, STREET + WALL_H - 8)], MAT["canal_wall"], vis=dv)
+    m.det([(-512, min(p2, q1), STREET + 304, -488, max(p2, q1), STREET + 336)], MAT["beam"], vis=dv)
     side = sq * (RAIL_V + 250)
     m.static("models/props_trainstation/light_signal002a.mdl", -512 + 42, side, 0, z=STREET + 120)
     m.grime("danger", -512, sq * (RAIL_V - 230), STREET + 60, 8)
@@ -1454,7 +1457,8 @@ def combine_wall(b, seed=1):
         us = [(runs[n][0] + runs[n][1] + runs[n + 1][0]) // 2 for n in range(len(runs) - 1)]
         # (a free end's pier stands over its run's end, wherever a remainder has pushed that: a pier narrower than the
         #  widest left the run's end showing when it stood a fixed way in from the stretch's end)
-        us = ([runs[0][0]] if s["ends"][0] == "free" else []) + us + ([runs[-1][0] + runs[-1][1]] if s["ends"][1] == "free" else [])
+        #  (and never beyond the stretch's own end: half a pier stood in a train's portal, seen from inside it)
+        us = ([max(runs[0][0], half)] if s["ends"][0] == "free" else []) + us + ([min(runs[-1][0] + runs[-1][1], s["L"] - half)] if s["ends"][1] == "free" else [])
         for u in us:
             put(r.choice(W["piers"]), (s["o"][0] + s["d"][0] * u, s["o"][1] + s["d"][1] * u, STREET), yaw)
             counts["piers"] += 1

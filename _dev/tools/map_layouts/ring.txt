@@ -112,7 +112,8 @@ straight 1024      # (was "lift flip": taken off the ring, 24 November)
 pumphouse flip
 quay
 straight 1536      # (was "arcade": taken off the ring, 24 November)
-straight 1024      # (was "aqueduct": taken off the ring, 24 November)
+straight 512       # (with the tee, the 1024 that was "aqueduct")
+tee                # (the crypt's inlet forks west here under the street: map_layouts/inlet.txt; the owner, 26 November)
 ash                # (the ash outfall, its chute in the city's side under the street; the nearest of the ring to the spawn: the owner, 26 November)
 straight 256       # (with the ash, the 1024 that was "chimney")
 swingbridge

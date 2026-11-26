@@ -119,8 +119,12 @@ class Frame:
 class Build:
     """One file being made: its plan, and what the modules leave for the dressing and the checks."""
 
-    def __init__(self, name, rim, first_node, upper=None, wall=None):
+    def __init__(self, name, rim, first_node, upper=None, wall=None, buried=False):
         self.name, self.rim, self.sky = name, rim, rim + 384
+        # buried (a layout's "buried"): a chain under the owner's city, nothing of it over its rim (the street's height):
+        # no band of sky over its walls, every stretch of canal roofed 16 under the rim (Mod.paint), only a square with a
+        # sky of its own (a churchyard) open above it (the crypt's inlet, 26 November)
+        self.buried = buried
         self.street_wall = wall   # "combine": a Combine wall between the city and the street (map_corridor.combine_wall)
         self.vmf = Vmf()
         self.vis = "LC %s" % name
@@ -131,6 +135,9 @@ class Build:
             import map_corridor
             self.sky = map_corridor.STREET + (1024 if wall == "combine" else 768)      # (room over the Combine wall's piers)
             self.plan = map_corridor.CorridorPlan(BASE, rim, self.sky, self.vis + ": walls and floors")
+        elif buried:
+            self.sky = rim - 16
+            self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"])], sky=self.sky, vis=self.vis + ": walls and floors")
         else:
             self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
         self.taken, self.blocked, self.no_bank, self.no_mud, self.lanes = [], [], [], [], []
@@ -202,6 +209,12 @@ class Mod:
     # --- the squares ---
     def paint(self, u1, v1, u2, v2, spec):
         r = self.fr.rect(u1, v1, u2, v2)
+        if getattr(self.b, "buried", False):      # (under the city: open canal is roofed, and no roof stands over the rim's slab)
+            cap = self.b.rim - 16
+            if spec[0] == "open" and not (len(spec) > 3 and spec[3]) and spec[1] < cap - 64:
+                spec = ("low", spec[1], spec[2], cap)
+            elif spec[0] == "low" and spec[3] > cap:
+                spec = spec[:3] + (cap,) + spec[4:]
         if self.fr.dz:      # (lifted to the street: its floors and roofs go up with it, and its canal's floor is the road)
             if spec[0] == "open" and spec[1] == F and spec[2] == MAT["canal_floor"]:
                 spec = ("open", F, MM["road"])
@@ -280,6 +293,8 @@ class Mod:
         self.b.vmf.world_box(self.fr.box(*box), mat, top=top or mat, bottom=mat, vis=vis or self.b.vis + ": walls and floors", seals=seals)
 
     def portal(self, *box):
+        if getattr(self.b, "buried", False):      # (under the city a roof is never over the rim's slab: Mod.paint)
+            box = box[:5] + (min(box[5], self.b.rim - 16),)
         self.b.vmf.areaportal(self.fr.box(*box), self.b.vis + ": areaportals")
 
     def ent(self, cls, keys, boxes, mat, vis=None):
@@ -2210,6 +2225,8 @@ def read_layout(path):
             lay.setdefault("backdrop", []).append(words[1:])      # (the scenery beyond the outer wall: map_backdrop.py)
         elif words[0] == "round":
             lay["round"] = words[1].lower()       # ("round east": the road round the first canal's east side, map_corridor.ROUND)
+        elif words[0] == "buried":
+            lay["buried"] = True                  # (a chain under the owner's city: Build's buried)
         elif words[0] == "close":
             lay["close"] = True                   # (no gate at the chain's end: its last module ends it, as roadend does)
         else:
@@ -2273,7 +2290,7 @@ def name_sign(b, fr, length, half, words):
 
 def build_chain(lay, args):
     upper = lay.get("upper")
-    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper, lay.get("wall"))
+    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper, lay.get("wall"), buried=lay.get("buried", False))
     b.wall_brushes = lay.get("wall_brushes", False)      # (map_corridor.combine_wall: the kit's models unless the layout says brushes)
     b.test = bool(args.test)
     elems, shed_n = [], 0
