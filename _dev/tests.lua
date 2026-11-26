@@ -44642,6 +44642,344 @@ function Nov23_LipSyncTests() -- (the owner, 23 November: "I REALLY need you to 
 end
 Nov23_LipSyncTests()
 
+function Nov25_ApcTests() -- (the owner, 20 November: "An APC on patrol: at most 1 at a time"; 25 November: a path "that runs along the center of the road")
+    section("25 November: a Combine APC patrols the road's marks")
+    local A = LC.Apc
+    local T0 = Vector(-170000, -170000, 0)
+    local runsWas, nextWas, lookWas, takesWas, noticeWas = A.CityRuns, A.nextAt, A.lookAt, LC.NPCTakesIn, LC.Notice
+    local cvOn, cvMin = GetConVar("lc_apc"), GetConVar("lc_apc_minutes")
+    -- (the city itself stays as the tests left it, stopped: its own units would wander in and make their own arrests)
+    local running, realRun = true, LC.Running
+    LC.Running = true
+    local runs = A.CityRuns()
+    LC.Running = false
+    ok(runs == true and A.CityRuns() == false, "it knows whether the city runs")
+    LC.Running = realRun
+    A.CityRuns = function() return running end
+    -- (and its units are not called in from across the map after the rebels stood here: only the APC's own soldier acts)
+    local hostileWas = LC.MakeOneHostile
+    LC.MakeOneHostile = function(npc, st, target) if st and st.apcCrew then return hostileWas(npc, st, target) end end
+    if A.S then A.Remove() end
+    local hidden, noteWas = {}, LC.ErrorNote -- (what LC.Try swallows while this runs)
+    LC.ErrorNote = function(realm, msg, ...) hidden[#hidden + 1] = tostring(msg) return noteWas(realm, msg, ...) end
+    ok(cvOn and cvOn:GetInt() == 1 and cvMin and cvMin:GetInt() == 20, "two settings: lc_apc (1) and lc_apc_minutes (20)")
+
+    -- the route: the map's marks in the order of their names, round a square of 2000 with a mark every 500
+    local marks, sq = {}, {}
+    for k = 0, 15 do
+        local side, u = math.floor(k / 4), (k % 4) * 500
+        sq[k] = (side == 0 and Vector(u, 0, 0)) or (side == 1 and Vector(2000, u, 0)) or (side == 2 and Vector(2000 - u, 2000, 0)) or Vector(0, 2000 - u, 0)
+    end
+    for _, k in ipairs({ 7, 0, 15, 3, 1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14 }) do
+        local e = ents.Create("info_target")
+        e:SetPos(T0 + sq[k] + Vector(0, 0, 8))
+        e:SetName(string.format("lc_apc_route_%03d", k))
+        e:Spawn()
+        marks[k] = e
+    end
+    local route, loop = A.Route()
+    local inOrder = route ~= nil and #route == 16
+    for k = 0, 15 do if inOrder and route[k + 1]:Distance(T0 + sq[k]) > 1 then inOrder = false end end
+    ok(inOrder, "the route: the map's lc_apc_route marks in name order, on the road under them", route and #route)
+    ok(loop == true, "its last mark within 1500 of its first: a closed loop")
+    for k = 12, 15 do marks[k]:Remove() marks[k] = nil end
+    route, loop = A.Route()
+    ok(route and #route == 12 and loop == false, "its ends far apart: there and back", route and #route)
+    -- a map without them: the editor's points, in the order of their #
+    for k = 0, 11 do marks[k]:Remove() marks[k] = nil end
+    ok(A.Route() == nil and A.Send() == false and A.S == nil, "no route: no APC")
+    local pts = { LC.AddPoint(T0 + Vector(900, 0, 0), 0, "apcroute", 3), LC.AddPoint(T0, 0, "apcroute", 1), LC.AddPoint(T0 + Vector(450, 0, 0), 0, "apcroute", 2) }
+    route, loop = A.Route()
+    ok(route and #route == 3 and route[1]:Distance(T0) < 1 and route[2]:Distance(T0 + Vector(450, 0, 0)) < 1 and route[3]:Distance(T0 + Vector(900, 0, 0)) < 1 and loop == true,
+        "the editor's APC route points, in the order of their #")
+    for _, p in ipairs(pts) do LC.RemovePoint(p) end
+    for k = 0, 15 do
+        local e = ents.Create("info_target")
+        e:SetPos(T0 + sq[k] + Vector(0, 0, 8))
+        e:SetName(string.format("lc_apc_route_%03d", k))
+        e:Spawn()
+        marks[k] = e
+    end
+    local function onRoad(p) -- (on one of the square's four sides)
+        local x, y = p.x - T0.x, p.y - T0.y
+        local onX = (math.abs(y) < 1 or math.abs(y - 2000) < 1) and x > -1 and x < 2001
+        local onY = (math.abs(x) < 1 or math.abs(x - 2000) < 1) and y > -1 and y < 2001
+        return onX or onY
+    end
+    local function along(steps, secs) -- (it never leaves the road while this runs)
+        local good = true
+        for _ = 1, steps do
+            _run(secs or 0.5)
+            if A.S and not onRoad(A.S.pos) then good = false end
+        end
+        return good
+    end
+
+    -- one at a time; it drives the marks
+    local okS = A.Send(nil, 1, 1)
+    local S = A.S
+    ok(okS == true and S ~= nil and IsValid(S.ent) and S.ent:GetClass() == "prop_dynamic" and S.ent:GetModel() == "models/combine_apc.mdl", "sent: the Combine APC, as a prop the server moves")
+    local again, why = A.Send(nil, 5, 1)
+    ok(again == false and A.S == S and #ents.FindByName("lc_apc_patrol") == 1, "at most one at a time", why)
+    S.want = 1
+    local good = along(10)
+    local x = S.pos.x - T0.x
+    ok(good and x > 950 and x < 1250 and S.ent:GetPos():Distance(S.pos) < 1, "it drives along its marks at about 220 a second", x)
+    good = along(14)
+    ok(good and math.abs(S.pos.x - T0.x - 2000) < 1 and S.pos.y - T0.y > 300, "round the corner, on the road all the way", S.pos.y - T0.y)
+    -- a player in its way: it stops and sounds its horn; out of its way: on it goes
+    local walker = newPlayer("ApcWalker", "cp")
+    walker:SetPos(S.pos + Vector(0, 200, 0))
+    _sounds = {}
+    local before = Vector(S.pos.x, S.pos.y, S.pos.z)
+    _run(3)
+    local horn = false
+    for _, s in ipairs(_sounds) do if s == "ambient/alarms/apc_alarm_pass1.wav" then horn = true end end
+    ok(S.pos:Distance(before) < 30 and horn, "someone standing in its way: it stops and sounds its horn", S.pos:Distance(before))
+    walker:SetPos(T0 + Vector(-9000, -9000, 0))
+    _run(2)
+    ok(S.pos:Distance(before) > 200, "out of its way: it drives on")
+    walker:Remove()
+    good = along(60)
+    ok(good and A.S == nil and not IsValid(S.ent), "its lap done and nobody looking: gone")
+    ok(A.nextAt and math.abs(A.nextAt - CurTime() - 20 * 60) < 40, "and the next is lc_apc_minutes away", A.nextAt and A.nextAt - CurTime())
+
+    -- it comes by itself every lc_apc_minutes, not with lc_apc 0, not while the city is stopped
+    A.nextAt, A.lookAt = CurTime() + 3, 0
+    cvOn:SetInt(0)
+    _run(12)
+    ok(A.S == nil, "lc_apc 0: none comes")
+    cvOn:SetInt(1)
+    running = false
+    A.nextAt, A.lookAt = CurTime() + 3, 0
+    _run(12)
+    ok(A.S == nil, "the city stopped: none comes")
+    running = true
+    A.nextAt, A.lookAt = CurTime() + 3, 0
+    _run(12)
+    ok(A.S ~= nil and IsValid(A.S.ent), "the city running: one comes out when its time is up")
+    local own = A.S.ent
+    cvOn:SetInt(0)
+    _run(1)
+    ok(A.S == nil and not IsValid(own), "lc_apc 0 with one out: taken off")
+    cvOn:SetInt(1)
+
+    -- its gun: open rebels and the Commander, nobody else
+    local fired = {}
+    local moveWas = A.Move
+    local function send(at)
+        if A.S then A.Remove() end
+        A.Send(nil, at or 1, 1)
+        A.S.want = 9
+        A.S.ent.FireBullets = function(_, b) fired[#fired + 1] = b end
+        fired = {}
+        return A.S
+    end
+    local function shotAt(who, secs)
+        fired = {}
+        _run(secs or 2)
+        local n, at = #fired, true
+        for _, b in ipairs(fired) do
+            local to = (who:GetPos() + Vector(0, 0, 36) - b.Src):GetNormalized()
+            if b.Dir:Dot(to) < 0.99 then at = false end
+        end
+        return n > 0 and at, n
+    end
+    local spot = T0 + Vector(500, 700, 0)
+    local away = T0 + Vector(-60000, -60000, 0)
+    local cit = newPlayer("ApcCitizen", "citizen")
+    local cop = newPlayer("ApcUnit", "cp")
+    local rebel = newPlayer("ApcFighter", "resistance", nil, 400)
+    local cmdr = newPlayer("ApcCommander", "resistance", nil, 1800)
+    for _, p in ipairs({ cit, cop, rebel, cmdr }) do p:SetPos(away) p.lcApcPapersAt = CurTime() end -- (asked already: the gun alone here)
+    A.Move = function() end -- (parked at its first mark while its gun is tried)
+    S = send(1)
+    cit:SetPos(spot)
+    local hit, n = shotAt(cit)
+    ok(n == 0 and S.target == nil, "a citizen: its gun is silent", n)
+    cit:SetPos(away) cop:SetPos(spot)
+    hit, n = shotAt(cop)
+    ok(n == 0, "a unit: silent", n)
+    cop:SetPos(away) rebel:SetPos(spot)
+    rebel:SetNW2String("lcd_disguise", "citizen")
+    hit, n = shotAt(rebel)
+    ok(n == 0 and not A.Hostile(rebel), "a rebel in citizen clothes: silent", n)
+    rebel:SetNW2String("lcd_disguise", "")
+    ok(LC.PlayerIsHunted(rebel) and A.Hostile(rebel), "a Fighter in his own gear is in open rebel garb")
+    hit, n = shotAt(rebel)
+    ok(hit and S.target == rebel, "a rebel in open rebel garb: bursts at them", n)
+    ok(n >= 6 and n <= 14, "in bursts, not a stream (two seconds: a burst or two of six)", n)
+    local b = fired[1]
+    ok(b and b.Damage == 8 and b.Num == 1 and b.TracerName == "AR2Tracer" and b.Src.z - S.pos.z > 100, "pulse rounds from its turret, eight a round, no missiles")
+    rebel:SetNW2String("lcd_disguise", "cp")
+    hit, n = shotAt(rebel)
+    ok(n == 0, "a rebel in a unit's uniform: taken for a unit", n)
+    rebel:SetNW2String("lcd_disguise", "")
+    rebel:SetPos(T0 + Vector(500, 2600, 0))
+    hit, n = shotAt(rebel)
+    ok(n == 0, "beyond about 1500: not seen", n)
+    rebel:SetPos(away) cmdr:SetPos(spot)
+    cmdr:SetNW2String("lcd_disguise", "citizen")
+    ok(A.Commander(cmdr) and not A.Commander(rebel), "the Resistance's Commander is known by rank")
+    hit, n = shotAt(cmdr)
+    ok(hit, "the Commander, even in citizen clothes: fired on", n)
+    cmdr:SetPos(away)
+    local fighter = ents.Create("npc_citizen")
+    fighter:SetPos(spot) fighter:Spawn()
+    LC.NPCs[fighter] = { role = "rebel", state = "idle" }
+    hit, n = shotAt(fighter)
+    ok(hit, "a rebel fighter (an NPC) in the open: fired on", n)
+    LC.NPCs[fighter].casual = true
+    hit, n = shotAt(fighter)
+    ok(n == 0, "the same fighter acting casual, in plain clothes: silent", n)
+    LC.NPCs[fighter] = nil fighter:Remove()
+    -- it follows on the road: to the mark nearest them, by the shorter way, and no farther
+    A.Move = moveWas
+    S = send(1)
+    rebel:SetPos(T0 + Vector(1500, 400, 0))
+    good = along(24)
+    ok(good and S.pos:Distance(T0 + Vector(1500, 0, 0)) < 1 and S.target == rebel, "it follows along the road to the mark nearest them, never off it", S.pos.x - T0.x)
+    rebel:SetPos(T0 + Vector(300, 800, 0)) -- (nearest: the mark at (0, 1000); the short way there is back round by its start)
+    good = along(40)
+    ok(good and S.pos:Distance(T0 + Vector(0, 1000, 0)) < 1, "and back the shorter way round when that is it", tostring(S.pos - T0))
+    rebel:SetPos(away)
+
+    -- papers: a citizen within 600; one check a player every ten minutes
+    local notices, taken = {}, {}
+    LC.Notice = function(ply, kind, title, text) if title == "Papers" then notices[#notices + 1] = { ply = ply, title = title, text = text } end end
+    LC.NPCTakesIn = function(unit, victim) -- (the city's own arrest, stood in for: cuffed on the spot, the charge settled)
+        if LC.Detained[victim] then return false end -- (as the real one: nobody is taken in twice)
+        taken[#taken + 1] = { unit = unit, victim = victim, reason = LC.WantedReason(victim) }
+        LC.Detained[victim] = { untilT = CurTime() + 30, cop = unit }
+        LC.ClearWanted(victim)
+        return true
+    end
+    local function soldier() return A.S and A.S.papers and A.S.papers.soldier end
+    local function steppedOut() -- (run until its soldier is out; was it on the road all the way?)
+        local good = true
+        for _ = 1, 60 do
+            if IsValid(soldier()) then break end
+            _run(0.3)
+            if A.S and not onRoad(A.S.pos) then good = false end
+        end
+        return soldier(), good
+    end
+    S = send(1)
+    cit.lcApcPapersAt = nil
+    LC.GiveItem(cit, "permit", 1)
+    cit:SetPos(T0 + Vector(1000, 550, 0))
+    _sounds = {}
+    local sol
+    sol, good = steppedOut()
+    ok(good and S.pos:Distance(T0 + Vector(1000, 0, 0)) < 1 and S.hold == true, "a citizen near the road: it stops at the mark nearest them", tostring(S.pos - T0))
+    ok(IsValid(sol) and sol:GetClass() == "npc_combine_s" and LC.NPCs[sol] and LC.NPCs[sol].role == "soldier" and sol:GetPos():Distance(S.pos) < 400,
+        "an Overwatch soldier steps out beside it")
+    local said = false
+    for _, s in ipairs(_sounds) do if s == "npc/metropolice/vo/citizen.wav" or s == "npc/metropolice/vo/apply.wav" then said = true end end
+    ok(said and #notices == 1 and notices[1].ply == cit and notices[1].text == "Show your travel permit: stand still.", "he demands their papers aloud, and one short notice says what to do", #notices)
+    _sounds = {}
+    local stood = Vector(S.pos.x, S.pos.y, S.pos.z)
+    _run(12)
+    local go = false
+    for _, s in ipairs(_sounds) do if s == "npc/metropolice/vo/allrightyoucango.wav" then go = true end end
+    ok(go and #taken == 0 and LC.WantedReason(cit) == "" and LC.HasItem(cit, "permit"), "with a travel permit: waved on (and it is still theirs)")
+    ok(A.S.papers == nil and not IsValid(sol), "the soldier gets back in")
+    _run(4)
+    ok(S.pos:Distance(stood) > 200 and S.hold == nil, "and it drives on")
+    S = send(1)
+    along(16)
+    ok(S.papers == nil and #notices == 1 and S.pos.x - T0.x > 1500, "the same player within ten minutes: not asked again", #notices)
+    -- without one: taken in as any unit takes someone in
+    local cit2 = newPlayer("ApcNoPapers", "citizen")
+    cit2:SetPos(T0 + Vector(1000, 550, 0))
+    cit:SetPos(away)
+    S = send(1)
+    sol = steppedOut()
+    _run(8)
+    ok(#taken == 1 and taken[1].victim == cit2 and taken[1].unit == sol and taken[1].reason == "No travel permit", "without a permit: arrested by the soldier, for having none",
+        #taken > 0 and taken[1].reason)
+    _run(8)
+    ok(A.S.papers == nil and not IsValid(sol) and S.hold == nil, "then he gets back in and it drives on", A.S.papers and A.S.papers.phase)
+    LC.Detained[cit2] = nil LC.ClearWanted(cit2)
+    -- a rebel passing as a citizen is asked the same; one who runs is shot
+    rebel.lcApcPapersAt = nil
+    rebel:SetNW2String("lcd_disguise", "citizen")
+    rebel:SetPos(T0 + Vector(1000, 550, 0))
+    cit2:SetPos(away)
+    S = send(1)
+    sol = steppedOut()
+    ok(IsValid(sol) and S.papers.ply == rebel and #notices == 3, "a rebel dressed as a citizen: asked for papers, not fired on", #notices)
+    rebel:SetPos(T0 + Vector(1000, 1100, 0))
+    hit, n = shotAt(rebel, 3)
+    ok(hit and A.Hostile(rebel), "told to stand still, they run: its gun opens up", n)
+    rebel:SetPos(away)
+    rebel:SetNW2String("lcd_disguise", "")
+    LC.Notice, LC.NPCTakesIn = noticeWas, takesWas
+
+    -- the crew: bullets little, explosives a lot, an IED beside it the end of them
+    S = send(1)
+    local apc = S.ent
+    hook.Run("EntityTakeDamage", apc, _dmg(rebel, 100, 2))
+    ok(math.abs(S.hp - 590) < 0.01, "bullets hurt it little (a tenth)", S.hp)
+    hook.Run("EntityTakeDamage", apc, _dmg(rebel, 100, 64))
+    ok(math.abs(S.hp - 390) < 0.01 and A.Hostile(rebel), "explosives a lot (double), and whoever did it is its enemy", S.hp)
+    hook.Run("EntityTakeDamage", apc, _dmg(nil, 5000, 1))
+    ok(math.abs(S.hp - 390) < 0.01, "what is nobody's attack (a door, a crate) does not hurt it", S.hp)
+    hook.Run("LivingCityIED", S.pos + Vector(2000, 0, 0), rebel)
+    ok(math.abs(S.hp - 390) < 0.01 and not S.dead, "an IED far off: nothing")
+    local died
+    hook.Add("LivingCityApcCrewDead", "ApcTest", function(e, by) died = { e, by } end)
+    hook.Run("LivingCityIED", S.pos + Vector(120, 0, 0), rebel)
+    hook.Remove("LivingCityApcCrewDead", "ApcTest")
+    ok(S.dead and died and died[1] == apc and died[2] == rebel and IsValid(S.smoke) and apc:GetNW2Bool("lc_apc_dead"), "an IED beside it: the crew is dead, and it smokes")
+    local at = Vector(S.pos.x, S.pos.y, S.pos.z)
+    rebel:SetPos(S.pos + Vector(0, 300, 0))
+    hit, n = shotAt(rebel, 5)
+    ok(n == 0 and S.pos:Distance(at) < 1 and IsValid(apc), "it stands where it stopped: undriven, its gun silent", n)
+    ok(A.Send(nil, 5, 1) == false and A.S == S, "and no other comes while it stands there")
+    -- salvage: the Resistance, E on it, eight seconds, once
+    cit:SetPos(S.pos + Vector(0, 150, 0))
+    hook.Run("KeyPress", cit, IN_USE)
+    ok(not LC.Busy(cit), "a citizen cannot salvage it")
+    rebel:SetPos(S.pos + Vector(0, 150, 0))
+    hook.Run("KeyPress", rebel, IN_USE)
+    ok(LC.Busy(rebel) and not S.salvaged, "a Resistance player at it presses E: salvaging")
+    _run(7)
+    ok(not S.salvaged, "not before eight seconds")
+    _run(2)
+    ok(S.salvaged and LC.HasItem(rebel, "scrap", 6) and LC.HasItem(rebel, "ammo_smg", 2), "then: scrap and boxes of rounds")
+    hook.Run("KeyPress", rebel, IN_USE)
+    ok(not LC.Busy(rebel), "once")
+    _run(70)
+    ok(A.S == nil and not IsValid(apc), "salvaged: cleared away within the minute")
+    -- left alone it stands ten minutes, then is cleared
+    S = send(1)
+    apc = S.ent
+    A.Damage(600, nil)
+    ok(S.dead, "its health gone: the crew is dead")
+    _run(590)
+    ok(A.S == S and IsValid(apc), "it stands ten minutes")
+    _run(15)
+    ok(A.S == nil and not IsValid(apc), "then it is cleared away")
+
+    -- staff: F4 > Factions > Admin: testing tools > "APC: send one now", "APC: remove it"
+    if A.S then A.Remove() end
+    cop:SetPos(T0 + Vector(1000, 60, 0))
+    local sentOk, said1 = LC.ADMIN_ACTIONS.solo(cop, "apc", nil)
+    ok(sentOk == true and A.S ~= nil and math.abs(A.S.pos:Distance(cop:GetPos()) - 1500) < 300, "the staff tool sends one now, about 1500 from whoever asked", said1)
+    local twice = LC.ADMIN_ACTIONS.solo(cop, "apc", nil)
+    ok(twice == false, "not a second one")
+    local goneOk = LC.ADMIN_ACTIONS.solo(cop, "apcoff", nil)
+    ok(goneOk == true and A.S == nil and LC.ADMIN_ACTIONS.solo(cop, "apcoff", nil) == false, "and the other takes it off")
+    A.Move = moveWas
+    LC.ErrorNote = noteWas
+    ok(#hidden == 0, "and nothing went wrong unseen in all of it", hidden[1])
+    for k = 0, 15 do if IsValid(marks[k]) then marks[k]:Remove() end end
+    for _, p in ipairs({ cit, cit2, cop, rebel, cmdr }) do LC.Detained[p] = nil p:Remove() end
+    A.CityRuns, A.nextAt, A.lookAt, LC.MakeOneHostile = runsWas, nextWas, lookWas, hostileWas
+end
+Nov25_ApcTests()
+
 function Nov24_BarnacleLiftTests() -- (the owner, 22 November: barnacles "just don't pull me up")
     section("24 November: a barnacle lifts the player it has caught")
     local HELD = EFL_IS_BEING_LIFTED_BY_BARNACLE or 1048576

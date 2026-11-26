@@ -1624,6 +1624,10 @@ def canal(args):
                                                 node_share("canal") - (node_id[0] - args.first_node), ch.dished)
     for x, y, z in dim:
         vmf.point("info_target", W(x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC canal: the dimmer southern half (marks for the gamemode)")
+    # the APC's route up this piece's stretch of the ring road (the ring's own marks end at this piece's south edge and
+    # start again at its north edge: map_corridor.apc_route), numbered after the ring's so the loop closes in name order
+    for n, (x, y) in enumerate(mc.apc_marks([(R["mid"] + mc.APC_ROAD, road_y1 + mc.APC_END), (R["mid"] + mc.APC_ROAD, road_y2 - mc.APC_END)])):
+        vmf.point("info_target", (x, y, road_z + mc.APC_UP), {"targetname": mc.APC_NAME % (mc.APC_CANAL + n)}, "LC canal: the APC's route (marks for the gamemode)")
 
     # reflections: one cubemap for each stretch, at eye height
     for x, y, z in ((320, 128, road_z), (800, 512, floor_z), (2000, 512, floor_z), (2816, 1500, floor_z), (3200, 1472, floor_z), (2816, 2560, floor_z), (3900, 2560, floor_z), (2816, 3300, floor_z)):
