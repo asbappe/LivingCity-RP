@@ -22,7 +22,6 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `barge` | 1280 | a river barge grounded askew: a hideout in its hold, a wheelhouse, a gangplank from the bank | `lc_barge_hold`, `lc_barge_wheel` | `map_mods_a.py` |
 | `shell` | 1024 | a headcrab canister in the right bank: a crater, a cracked wall, the start of an infestation (no creatures) | `lc_shell_canister`, `lc_shell_patch_1`, `lc_shell_patch_2`, `lc_shell_patch_3`, `lc_shell_patch_4` | `map_mods_a.py` |
 | `aqueduct` | 1024 | a water trough crossing over the canal on two piers: a ladder to a walk along it, a leak and a pool | `lc_aqueduct_drip`, `lc_aqueduct_fall`, `lc_aqueduct_valve`, `lc_aqueduct_walk` | `map_mods_a.py` |
-| `pipes` | 1280 | a tangle of service pipes: duck and weave along the floor, or climb to a plank along the main and a bridge | `lc_pipes_leak`, `lc_pipes_top`, `lc_pipes_valve` | `map_mods_a.py` |
 | `camp` | 1280 | a refugee camp on a terrace on the left bank: six tents of brushes round a cooking fire | `lc_camp_fire`, `lc_camp_tent_1`, `lc_camp_tent_2`, `lc_camp_tent_3`, `lc_camp_tent_4`, `lc_camp_tent_5`, `lc_camp_tent_6` | `map_mods_a.py` |
 | `cells` | 1024 | the cells: a guard room, three barred cells, a crawl duct out (left) | `lc_cells_button_1`, `lc_cells_button_2`, `lc_cells_button_3`, `lc_cells_door_1`, `lc_cells_door_2`, `lc_cells_door_3`, `lc_cells_entry`, `lc_cells_grate`, `lc_cells_spot_1`, `lc_cells_spot_2`, `lc_cells_spot_3` | `map_mods_b.py` |
 | `memorial` | 768 | the wall of the dead: plaques and candles in a recess under the open sky (left) | `lc_memorial_wall` | `map_mods_b.py` |
@@ -515,38 +514,6 @@ Unchecked: which way canal_bars004 faces; the sound ambient/water/drip_loop1.wav
 silent); water standing in a trough of detail brushes; the pool, a sheet of water 5 deep lying on the floor; the
 ladder against a buttress; that a thin env_steam pointed down reads as falling water (Half-Life 2 has no falling
 water material); the culverts beyond the bars are short (192) and end dark: where they lead is still to come.
-
-### `pipes`
-
-The pipes. A tangle of the city's service mains fills a stretch of the canal: steel pipes 87 across (the game's own
-steel pipe model, scaled up 2.25 times: props, not brushes, since 24 November), every end shut by a bolted plate, stencilled
-numbers on their sides.
-On the floor: one main lies across the whole floor at u 480 with 54 under it, and the fat main along the left side
-has 66 under it: everyone on the floor ducks once. Past it two mains on the floor (86 high, too high to hop) make a
-chicane: the first reaches from under the main to v -30 (go round its end on the right), the second from the right
-wall to v -31 (go round on the left, by the main). A run of the city's pipes crosses high overhead.
-Over the top: a steel service stair (grating treads on two stringers, the city's rail on its open side; u 96 to
-324, by the left side) up to a valve platform 152 over the floor, with a valve, a gas meter and a lamp; from it a
-plank 32 wide with the city's handrail runs along the top of the main (u 428 to 878); a grating bridge, railed,
-crosses the canal there to a second fat main on the right, and from its end a ramp of planks (144 down over 244)
-comes back to the floor at u 1192. That is also the only way for anyone who cannot duck.
-Two steam leaks on the main: a pale one with a hiss, and one at a joint by the bridge (lc_pipes_leak) that the
-wheel by the platform's valve shuts and opens again (lc_pipes_valve: turned all the way the steam stops, turned
-back it starts again). Risers of the city's pipe up the walls from the bank, each with a caged lamp: over the walls'
-top, or on a street's bank to just under the street's edge (no wall stands over the canal there). The mains are
-cover from end to end, and the plank is a firing step over all of it
-(lc_pipes_top). It hums like a pump room (d1_canals.waterpuzzleroom).
-Named for the game: lc_pipes_top (an info_target on the main's plank), lc_pipes_leak (an env_steam: TurnOn,
-TurnOff, Toggle; it starts on), lc_pipes_valve (a valve wheel, momentary_rot_button: hold E to turn it; Valve's wiring, the owner said go ahead).
-Unchecked: whether Garry's Mod's compiler scales a prop_static (the keys modelscale and uniformscale are both set: if
-neither works the mains show 38 across; an unseen wall keeps players out of their full size either way).
-Left as brushes: the mains' end plates, the saddles and
-posts they rest on, the platform's deck and posts, the stair's treads and stringers, the bridge's grating and
-girders, the planks.
-Unchecked: the sound ambient/gas/steam_loop1.wav; that 54 and 66 of headroom pass a crouched player easily; that
-the 86-high mains cannot be hopped; what pipeset32d_512_001a looks like overhead; where handrail04_doublerise's
-posts meet the treads; the button's model is Episode Two's (the shared helper's choice). The leak does no harm:
-the game can add a hurt to it if it wants the valve to matter.
 
 ### `camp`
 
@@ -1063,6 +1030,8 @@ motor box and turntable, the landings, their lips and corbels, the stairs, their
 flights, the doorways' frames and the planking, the barrier arms (dev_hazzardstripe01a).
 
 ### `railbridge`
+
+**Beside a walled street (26 November):** the bed stands 144 over the Combine wall's top (z 1312 on the ring), a viaduct on piers with no tunnels: from the far edge of the scenery beyond the canal, over the canal, the street and the wall, to a strip 1408 deep behind the wall (the wall's core carried back under it). Beyond the scenery's far edge the line runs on 4096 in a corridor of sky 320 wide (floor, walls and lid all sky brush: the owner, "make a skybox tunnel big enough to fit the train and have it stretch far enough out that the train spawns out of view"); the train waits at its far end and runs to the city's side, stopping out of sight behind the wall; it never leaves the map's sealed space. The owner: "raise it up but there is no need for a tunnel mouth on a side where the train is now above the wall". Without a walled street it is as described below.
 
 EXPERIMENTAL: a railway crosses over the canal on a steel girder bridge, from a tunnel mouth in the left wall to
 one in the right. Every 150 seconds a horn sounds, a red lamp shows at each mouth, and two seconds later a freight

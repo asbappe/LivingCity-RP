@@ -22,7 +22,7 @@ It is **not** one of the secret endings: no vote, no time stop, no map reload. I
    - **A Combine-only zone is nobody's to trespass in**, and sociostability reads green.
    - **A unit's Arrest Baton does nothing:** a dry click and a fizzle for the blow and for the arrest, no glow at its tip, no words. (Searching and releasing with it, and cuffing by hand from F2, still work.)
    - **A unit's vest holds no charge:** forced to 0, the Commissary charges nothing, a suit battery is not picked up.
-   - **A unit's mask glitches:** static, torn bands and the whole view dropping out every few seconds, strong on purpose. **F2 > Take off the mask** ends it for the rest of the chapter; with it off the unit breathes gas like anyone else.
+   - **A unit's mask glitches:** static, torn bands and the whole view dropping out every few seconds, strong on purpose. **F2 > Take off the uniform** ends it for the rest of the chapter (the owner, 26 November: "unmasked cops means they take off their CP uniforms"): they wear a citizen's clothes, with the face they chose for their character if it is a citizen's, and breathe gas like anyone else. They are still Civil Protection or Overwatch to the game (their side, their rank, who shoots at them). When the Combine take the city back they are in uniform again.
    - **Where they come back:** Civil Protection and Overwatch players spawn at a **Combine holdout** point (below). With none placed they come back at the Resistance's old spawn points (`rspawn`), and Resistance players at the units' own ground (a Combine-only zone, or by a Commissary). With a holdout placed the Resistance spawns where it always did.
 5. **The Combine take it back.** Not before `lc_chapter_hold_minutes` (60) of server time have passed since the wave. Then Combine players standing in **the Nexus** start the hold: at least 2 of them, or 1 when 4 or fewer players are online. The Nexus is the Combine-only zone with the Administrator's desk in it (the `desk` point; with none, her office by its door or studio; with neither, any Combine-only zone).
    - The hold is 8 minutes on a clock that **runs only while a living unit stands in the Nexus** and stands still otherwise. This is holding ground against attackers, which house rule 9 allows.
@@ -83,7 +83,7 @@ Nothing here has run in Garry's Mod: it is tested in the offline stub only. To c
 - **The alarm:** `ambient/alarms/klaxon1.wav` at the Nexus, pitch 80 to 130, every 10 down to 2.5 seconds.
 - **Doors:** the same open-and-lock the secret endings use; a map's sliding Combine door that will not say whether it is open is opened once and not looked at again.
 - **The numbers** (25 seconds of climb, 6 of wave, 8 minutes of hold, the wave sizes, the ledger's 3, 3, +40 and 40, 30) are first guesses for the owner to change.
-- **No model changes:** there is no unmasked metrocop model in the game, so a unit with the mask off looks the same.
+- **Out of uniform** a unit wears Half-Life 2's plain citizen clothes (`models/humans/group01/`): whether the face they chose carries over, and how the first person hands look, is not seen yet.
 
 ## Left as they are (not gated)
 

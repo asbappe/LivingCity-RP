@@ -36,13 +36,15 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   insists; lc_cistern_lift; map-building.md, "The cistern by itself"). Not compiled. The ring's cistern is untouched. Next: Propper++.
 - 25 and 26 November (the owner's answers; none seen in the real game): a Combine APC on the ring's road (apc-patrol.md); the chapter,
   the city falls, `lc_chapter` 0 (chapter-city-falls.md); the hive boss as the Workshop NextBot 2149660804, `lc_hiveboss` 0
-  (wildlife.md); `lc_text_gate` 3; `lc_train_real` 0. Staff lines: F4 > Factions > Admin: testing tools. Ten new settings wait for the
-  owner's OK before they go in the core snapshot (CORE_CHANGELOG.md): the core check fails on exactly those until then. Last full run
-  (26 November): 9,449 passed, 5 failed: the core check, and four that pass alone (TODO.md, end).
+  (wildlife.md); `lc_text_gate` 3; `lc_train_real` 0. Staff lines: F4 > Factions > Admin: testing tools. The ten new settings are in the core
+  snapshot (the owner's OK, 26 November). A unit who takes the glitching mask off is out of uniform (citizen clothes). Last full run
+  (26 November): 9,460 passed, 4 failed, all four passing alone (old order-dependent tests: TODO.md, end).
 - 26 November, not seen in game: fights handed to the engine Background NPCs' way (LC.CombatDrive; civil-protection-tools.md), citizens'
   fright lasts while the shooting does (LC.FearStep; city-people.md), units hear (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md.
 - 24 November (the TODO run), not seen in game: wildlife.md, resistance-base.md, ieds.md. The Resistance's town is off the map.
-- 22 to 25 November: the canal ring (map_ring_walk.py, ~22 min with the nodraw pass). Propper++ kit: 43 pieces; the wall's 20 changed
-  25 Nov: owner recompiles those. Latest test map: 20,200 faces. Stitched map over; the drain and the railway left of the review (TODO).
+- 22 to 26 November: the canal ring (map_ring_walk.py, ~36 min with the nodraw pass, which vbsp's vertex limit needs).
+  Kit: 43 pieces (the wall's 20 changed 25 Nov). 26 Nov: the Combine wall on every city bank (bank_core: the jog, the
+  first canal); rail bridge a viaduct 144 over the wall with a corridor of sky for its train; big grates on blocked
+  tunnels, Valve's ring and grate on culverts; pipes module deleted. Test map: 19,437 faces, ~38,966 vertices.
 - The owner's c18_lc.vmf and Valve's VMF zip are on their Drive (the Drive connector finds them). Flaky, pass alone: TODO.md, end.
 - Map chat (bunker): owner's VMF via map_owner_delta.py, map_hidden_faces --brushes/--holes, map_areas.py. 26 Nov fixes3 sent.
