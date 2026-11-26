@@ -69,15 +69,22 @@ def main():
     run([py, "map_shift.py", "lc_forest_bunker_test.vmf", "lc_forest_bunker_east_test.vmf", "3520", "0"], show=("SHIFT",))
     os.remove(os.path.join(HERE, "lc_forest_bunker_test.vmf"))
     names[-1] = "lc_forest_bunker_east_test.vmf"
-    print("joining them:")
-    run([py, "map_merge.py", "--blank"] + names + ["--out", args.out])
-    for name in names:
+    # Joined in two halves, each finished by itself, then the halves joined (26 November: with the forest the whole map's
+    # grid of 8 unit cubes no longer fits in memory, and at 16 the pass cannot see into the silo's shaft and rightly
+    # refuses to write). A half's open gate keeps its cap while it is passed, so the pass sees it shut, as the other half
+    # will shut it; the two caps go when the halves are joined. The forest's half first (the shorter pass).
+    halves = [("lc_walk_east_test.vmf", names[3:], ["--spawn", "8064", "4416", "416", "0"]), ("lc_walk_ring_test.vmf", names[:3], [])]
+    print("joining them, a half at a time:")
+    for half, group, spawn in halves:
+        run([py, "map_merge.py", "--blank"] + group + spawn + ["--out", half])
+        if not args.quick:
+            run([py, "map_hidden_faces.py", half, half, "--cell", str(args.cell)], show=("can never be seen", "LOST", "LEAK", "written", "not written"))
+    run([py, "map_merge.py", "--blank"] + [h[0] for h in halves] + ["--out", args.out])
+    for name in names + [h[0] for h in halves]:
         os.remove(os.path.join(HERE, name))
     import map_budget
     print("  joined: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("finishing it:")
-    if not args.quick:
-        run([py, "map_hidden_faces.py", args.out, args.out, "--cell", str(args.cell)], show=("can never be seen", "LOST", "LEAK", "written", "not written"))
     run([py, "map_slim.py", args.out], show=("MB",))
     print("  finished: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("checking the finished file:")
