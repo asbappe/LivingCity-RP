@@ -1517,6 +1517,11 @@ def m_ash(m, opt):
     edge); the wheelbarrow is loose and turned on its side (roll 85): it settles as it falls."""
     m.open(0, -256, 768, 256)
     lo, hi = F + 208, F + 336
+    if m.street_side() == 1:
+        # (in the wall the street runs over, the chute comes from the city, under the street: the owner, 26 November, "its
+        #  'source' as implied by its position needs to be the city; currently it's the wasteland/ruins and that makes no
+        #  sense". Its mouth 96 lower, its hood's top at the street's height, still over the heap's top)
+        lo, hi = F + 112, F + 240
     m.low(320, 256, 448, 320, hi, floor=lo, mat=MAT["black"])
     m.side(320, 256, 448, 320)
     m.blocked(320, 256, 448, 320)
@@ -1542,8 +1547,8 @@ def m_ash(m, opt):
                                                ("lc_ash_clatter", "PlaySound", "", 0.4)])
     m.point("logic_timer", 384, 200, lo - 60, {"targetname": "lc_ash_timer", "UseRandomTime": "1", "LowerRandomBound": "180", "UpperRandomBound": "600",
                                               "StartDisabled": "0", "spawnflags": "0"}, connections=[("OnTimer", "lc_ash_tip", "Trigger", "", 0)])
-    for kind, u, z, sd in (("stain", 384, F + 160, 1), ("stain", 350, F + 110, 2), ("burn", 410, F + 190, 3), ("danger", 500, F + 260, 4), ("number", 270, F + 260, 5)):
-        m.grime(kind, u, 256, z, sd)
+    for kind, u, z, sd in (("stain", 384, lo - 48, 1), ("stain", 350, lo - 98, 2), ("burn", 410, lo - 18, 3), ("danger", 500, lo + 52, 4), ("number", 270, lo + 52, 5)):
+        m.grime(kind, u, 256, max(z, F + 24), sd)
     # the heap: its own ground of ash and rubble (the canal's mud kept off it), worked out from one height
     cx, cy = m.fr.pt(384, 110)
     dx, dy = m.fr.pt(580, -60)

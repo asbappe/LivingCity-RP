@@ -103,7 +103,7 @@ cistern
 wreck
 basin
 collapse flip
-ash flip
+straight 768      # (was "ash flip": moved to the east side by the first canal, its chute from the city, 26 November)
 straight 192
 left back       # the east side's train: out of a tunnel south of the south run's canal (east: the firing wall's recess)
 # S4: north
@@ -113,7 +113,8 @@ pumphouse flip
 quay
 straight 1536      # (was "arcade": taken off the ring, 24 November)
 straight 1024      # (was "aqueduct": taken off the ring, 24 November)
-straight 1024      # (was "chimney": taken off the ring, 24 November)
+ash                # (the ash outfall, its chute in the city's side under the street; the nearest of the ring to the spawn: the owner, 26 November)
+straight 256       # (with the ash, the 1024 that was "chimney")
 swingbridge
 relay
 straight 64
