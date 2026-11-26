@@ -208,6 +208,7 @@ local HARSH = {
 local RESPONSE_GAP = 180 -- (a response squad is announced once in three minutes, however many go in)
 local lastResponse = -1e9
 function LC.Announce(kind, path, detail)
+    if LC.ChapterReversed and LC.ChapterReversed() then return end -- (the PA is the Combine's: silent while the city is not. sv_livingcity_chapter.lua)
     -- A routine line waits for the PA to have been quiet a while (lc_announce_quiet, 90 seconds after the last
     -- one finished), whoever asks for it (the owner, 14 November: four Overwatch lines in a row; the ration
     -- stores going "short" again every time they ticked across the line asked for one each time, past the
@@ -313,6 +314,7 @@ function LC.StartEvent(name, minutes)
     if not DEFAULT_MINUTES[name] then return false end
     if name == "rations" and not LC.RationsCanStart(false) then return false end -- (nothing to hand out)
     if LC.EndingBusy and LC.EndingBusy() then return false end -- (the world is ending: sv_livingcity_endings.lua)
+    if LC.ChapterReversed and LC.ChapterReversed() then return false end -- (no curfew, sweep, parade or ration call without the Combine: sv_livingcity_chapter.lua)
     if LC.ExerciseKinds and LC.ExerciseKinds[name] and not (LC.ExerciseReady and LC.ExerciseReady(name)) then return false end -- (no route or yard on this map)
     if LC.Event then LC.EndEvent(true) end
     minutes = tonumber(minutes) or DEFAULT_MINUTES[name]

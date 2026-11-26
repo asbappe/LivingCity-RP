@@ -9,6 +9,17 @@
     city (their day is done) walks to the platform with a suitcase and
     boards, instead of going out through a doorway. Then the train pulls out.
 
+    A real train (the owner, 20 November: "the train has to actually show up for
+    those to trigger"; 25 November: "let's wire this up and not flip it on in the
+    gamemode yet"): with lc_train_real 1 (0 by default) on a map that has a train
+    to the station, nothing arrives until the map's train has. When one is due
+    the gamemode Triggers the map's relay lc_train_station_run; the map Triggers
+    its relay lc_train_station_arrived when the train stands at the station, and
+    only then do the horn, the notice and the arrivals happen. A train the map
+    sends by itself counts too, if half the usual wait has passed. While that
+    line's tracks lie wrecked (an IED: sv_livingcity_ied.lua) no train is called.
+    On a map without those two names, and with the setting off, all is as before.
+
     Intake Processors are told when a train is in (their "New arrivals" shift
     is the time to work the platform). lc_trains 0 turns them off;
     lc_train (admin) brings one in now.
@@ -21,6 +32,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_trains", "1", FLAGS, "Trains come into the station now and then, with new arrivals; people leaving the city board them")
 local cvMinutes = CreateConVar("lc_train_minutes", "24", FLAGS, "Minutes between trains (give or take a quarter)")
+local cvReal    = CreateConVar("lc_train_real", "0", FLAGS, "New arrivals wait for the map's own train to reach the station (needs lc_train_station_run and lc_train_station_arrived in the map)")
 local BOARDING = 90
 
 local ORIGINS = { "City 14", "the coast", "the industrial district", "City 9", "the outlands transfer", "Nova Prospekt processing" }
@@ -122,7 +134,46 @@ timer.Create("LivingCityTrains", 5, 0, function()
     if now < T.nextAt then return end
     if LC.Event == "curfew" or LC.Event == "lockdown" then T.nextAt = now + 120 return end
     if #LC.TrainPlatforms() == 0 then T.nextAt = now + 300 return end
+    if LC.TrainReal() then LC.TrainCall() return end -- (the arrivals wait for the map's train: below)
     local ok, err = LC.Try(LC.TrainArrive)
+    if not ok and LC.Error then LC.Error("trains", err) end
+end)
+
+------------------------------------------------------------------------
+-- The map's own train to the station (lc_train_real)
+------------------------------------------------------------------------
+
+local function Named(n) return ents.FindByName and ents.FindByName(n) or {} end
+
+-- Is the real train in charge? The setting on, and the map has both relays.
+function LC.TrainReal()
+    return cvReal:GetBool() and #Named("lc_train_station_run") > 0 and #Named("lc_train_station_arrived") > 0
+end
+
+-- A train is due: call the map's. It is asked again in three minutes if it never shows.
+function LC.TrainCall()
+    local now = CurTime()
+    if LC.TracksWrecked and LC.TracksWrecked("lc_train_station") then T.nextAt = now + 120 return false end
+    for _, e in ipairs(Named("lc_train_station_run")) do if IsValid(e) and e.Fire then e:Fire("Trigger", "", 0) end end
+    T.calledAt, T.nextAt = now, now + 180
+    hook.Run("LivingCityTrainCalled")
+    return true
+end
+
+-- The map says its train stands at the station.
+function LC.TrainShowedUp()
+    if not LC.TrainReal() or not LC.Running then return false end
+    local now = CurTime()
+    local wait = cvMinutes:GetFloat() * 60
+    if not T.calledAt and now - (T.arrivedAt or -1e9) < wait * 0.5 then return false end -- (one the map sent by itself, too soon after the last)
+    T.calledAt, T.arrivedAt = nil, now
+    return LC.TrainArrive()
+end
+
+hook.Add("AcceptInput", "LivingCityTrains", function(ent, input)
+    if not IsValid(ent) or string.lower(input or "") ~= "trigger" then return end
+    if (ent.GetName and ent:GetName() or "") ~= "lc_train_station_arrived" then return end
+    local ok, err = LC.Try(LC.TrainShowedUp)
     if not ok and LC.Error then LC.Error("trains", err) end
 end)
 

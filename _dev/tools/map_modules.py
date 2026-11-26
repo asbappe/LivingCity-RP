@@ -2333,6 +2333,7 @@ def build_chain(lay, args):
         map_corridor.lay(b, group_sheds(elems), upper, lay.get("cars", 2))
         if lay.get("round") == "east":
             map_corridor.round_east(b)       # (the road round the first canal's east side: the ring's share)
+        map_corridor.apc_route(b, round_east=lay.get("round") == "east")      # (the APC's route along the middle of the road: marks for the gamemode)
         for road in lay.get("roads", []):
             map_corridor.spur(b, *road)
         if b.street_wall == "combine":

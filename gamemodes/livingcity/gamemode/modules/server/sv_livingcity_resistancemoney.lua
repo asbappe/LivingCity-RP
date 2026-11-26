@@ -441,7 +441,6 @@ local function EscortGone(P)
     end
     return true
 end
-LC.PaymasterEscortGone = function() return LC.Paymaster ~= nil and EscortGone(LC.Paymaster) end
 
 local function DropSatchel(P, pos)
     if IsValid(P.satchel) then return end

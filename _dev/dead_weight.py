@@ -69,6 +69,8 @@ def main():
     # LC.SendCompressed("name", ...) starts a message by name too
     started |= set(re.findall(r'SendCompressed\(\s*"([^"]+)"', allsrc))
     received |= set(re.findall(r'ReceiveCompressed\(\s*"([^"]+)"', allsrc))
+    # a module's own helper sends by name as well: Send(ply, "name", t) (the intake tutor, the interrogation)
+    started |= set(re.findall(r'\bSend\(\s*[\w.]+\s*,\s*"([^"]+)"', allsrc))
     never_sent = sorted((n, f) for n, f in added.items() if n not in started)
     never_heard = sorted((n, f) for n, f in added.items() if n in started and n not in received)
 

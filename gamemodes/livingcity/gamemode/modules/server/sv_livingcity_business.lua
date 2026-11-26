@@ -107,7 +107,6 @@ function HasKey(ply, r)
     local k = OwnerKey(ply)
     return r.owner == k or (r.keys and r.keys[k] ~= nil)
 end
-LC.HasApartmentKey = function(ply, door) local r = LC.RentalOf(door) return r ~= nil and HasKey(ply, r) end
 
 local function EachDoor(r, main, fn)
     local d = DoorById(main)

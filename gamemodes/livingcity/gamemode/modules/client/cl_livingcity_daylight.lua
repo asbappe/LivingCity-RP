@@ -58,7 +58,6 @@ hook.Add("RenderScreenspaceEffects", "LivingCityPlaceMood", function()
         ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0,
     })
 end)
-LC_CL.MoodNow = function() return now.dark, now.dim end
 
 ------------------------------------------------------------------------
 -- The stars. The owner, 20 November, of the painted sky's stock star picture: "looks like a toddler drew some

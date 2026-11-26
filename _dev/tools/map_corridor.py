@@ -65,6 +65,14 @@ STRIPE = "dev/dev_hazzardstripe01a"      # (as the owner's map paints its edges)
 # ring; the owner's compile of it ran out of faces, 23 November). TIE: where it lies in each 64 of track.
 TIE = (24, 40)
 POST = 256              # the kerb rail's and the edge's chain link's posts, one every POST (were 128)
+# The APC's route (the owner, 25 November: "can you just make the roads on the canal ring have some sort of path for the
+# APC that runs along the center of the road?"): marks named lc_apc_route_NNN along the middle of the roadway, in order.
+APC_ROAD = 768          # the middle of the roadway (576..960 from the canal's middle; a lifted module's own middle too)
+APC_STEP = 512          # a mark at most this far from the one before, and one at every corner
+APC_UP = 8              # how far over the road's surface a mark stands
+APC_END = 96            # how far inside a piece its first and last marks stand, where the ring road runs on into another piece
+APC_NAME = "lc_apc_route_%03d"
+APC_CANAL = 900         # the first canal's own stretch of the ring road is numbered from here (map_build.canal): after the ring's
 
 
 class CorridorPlan(Plan):
@@ -165,6 +173,7 @@ def lay(b, elems, side, cars):
     s = 1 if side == "left" else -1
     plan, cells = b.plan, b.plan.cells
     road, walk, gravel = MM["road"], MM["walk"], MM["gravel"]
+    b.street_elems, b.street_s = elems, s      # (for the APC's route: apc_route)
     FR = front_line(b)          # (where the frontage stands: FRONT, or 64 farther out behind a Combine wall's foot)
     shed_front = set()     # (the sheds' own brick walls: never the Combine wall)
 
@@ -458,6 +467,88 @@ def lay(b, elems, side, cars):
                 for j in range(r[1] // CELL, r[3] // CELL):
                     if (i, j) in cells and cells[(i, j)][0] != "solid":
                         b.lifted.add((i, j))
+
+
+def apc_corners(elems, s):
+    """The middle of the roadway along the street as corner points, for the longest stretch that no gap ("nostreet")
+    and no module lifted onto the road ("up") breaks:
+    where its first run starts, where two runs' middles cross at each turn (inside the square where the two streets
+    cross at a turn toward the street; out round the corner at a turn away from it), where its last run ends."""
+    pieces, cur, last = [], [], None
+    for e in list(elems) + [{"kind": "gap"}]:
+        if e["kind"] == "gap" or e.get("lifted"):      # (a lifted module stands on the road itself: the route ends before it)
+            if last:
+                cur.append(last[1])
+            if len(cur) >= 2:
+                pieces.append(cur)
+            cur, last = [], None
+            continue
+        if e["kind"] != "leg":
+            continue
+        a, z = e["frame"].pt(0, s * APC_ROAD), e["frame"].pt(e["length"], s * APC_ROAD)
+        if last is None:
+            cur.append(a)
+        elif (last[0][0] == last[1][0]) != (a[0] == z[0]):      # (the run turned: its middle and the last run's cross here)
+            cur.append((last[1][0], a[1]) if last[0][0] == last[1][0] else (a[0], last[1][1]))
+        last = (a, z)
+    return max(pieces, key=lambda p: sum(abs(p[k + 1][0] - p[k][0]) + abs(p[k + 1][1] - p[k][1]) for k in range(len(p) - 1))) if pieces else []
+
+
+def apc_marks(corners):
+    """Corner points (apc_corners) as the marks to place: every corner, and between two as many as keep them no more
+    than APC_STEP apart, evenly."""
+    out = []
+    for k, (x, y) in enumerate(corners):
+        if k:
+            px, py = corners[k - 1]
+            d = ((x - px) ** 2 + (y - py) ** 2) ** 0.5
+            n = max(1, -(-int(d) // APC_STEP))
+            for j in range(1, n):
+                out.append((int(round(px + (x - px) * j / n)), int(round(py + (y - py) * j / n))))
+        if not out or out[-1] != (x, y):
+            out.append((x, y))
+    return out
+
+
+def apc_route(b, round_east=False):
+    """The APC's route along the chain's street (the gamemode's patrol drives from mark to mark:
+    sv_livingcity_apc.lua): an info_target named lc_apc_route_NNN at each of apc_marks, APC_UP over the road. With the
+    road round the first canal (ROUND) it starts on the bank road at the first canal's north edge, crosses the bridge
+    into the first run's street, and from the last run's end crosses the deck over the jog to the bank road and the
+    first canal's south edge; the first canal's own piece marks the bank between (numbered from APC_CANAL), which
+    closes the loop. Every mark must stand over the street: one that does not is a problem."""
+    elems, s = getattr(b, "street_elems", None), getattr(b, "street_s", 1)
+    corners = apc_corners(elems or [], s)
+    if len(corners) < 2:
+        return []
+    own = set()      # (the marks on the round road's deck, bridge and bank: over a slab or squares round_east checked)
+    if round_east:
+        R = ROUND
+        bank = R["mid"] + APC_ROAD
+        by = (R["bridge"][1] + R["bridge"][3]) // 2
+        first, last = corners[0], corners[-1]
+        if first[0] != R["mid"] - APC_ROAD or corners[1][0] != first[0] or not first[1] <= by < corners[1][1]:
+            b.problems.append("the APC's route: the bridge round the first canal (y %d) does not meet the first run's street at (%d %d)" % (by, first[0], first[1]))
+        dy = (last[1] + R["deck"][3]) // 2      # (the middle of the deck over the jog, beyond the street's end: no tracks or fence stand between)
+        if not (R["deck"][0] < last[0] < R["deck"][2] and R["deck"][1] <= last[1] < R["deck"][3]):
+            b.problems.append("the APC's route: the last run's street ends at (%d %d), not on the deck over the jog" % last)
+        head = [(bank, R["north"][0] + APC_END), (bank, by), (first[0], by)]
+        tail = [(last[0], dy), (bank, dy), (bank, R["south"][1] - APC_END)]
+        corners = head + corners[1:-1] + tail
+        own = set(apc_marks(head)[:-1]) | set(apc_marks(tail))
+    marks = apc_marks(corners)
+    cells = b.plan.cells
+    vis = b.vis + ": the APC's route (marks for the gamemode)"
+    for n, (x, y) in enumerate(marks):
+        spec = cells.get((x // CELL, y // CELL))
+        if (x, y) not in own and not ((x // CELL, y // CELL) in b.deck and spec and spec[0] in ("open", "under")):
+            b.problems.append("the APC's route: its mark %d at (%d %d) is not over the street (%s)" % (n, x, y, b.owner.get((x // CELL, y // CELL), "nothing there")))
+        b.vmf.point("info_target", (x, y, STREET + APC_UP), {"targetname": APC_NAME % n}, vis)
+    if len(marks) >= APC_CANAL:
+        b.problems.append("the APC's route has %d marks: the first canal's stretch is numbered from %d" % (len(marks), APC_CANAL))
+    b.notes.append("the APC's route: %d marks along the middle of the road (%s 000 to %03d)%s" % (
+        len(marks), APC_NAME[:-4], len(marks) - 1, ", closed by the first canal's stretch (from %d)" % APC_CANAL if round_east else ""))
+    return marks
 
 
 def train(b, n, a, z, s, cars):

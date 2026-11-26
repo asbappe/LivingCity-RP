@@ -106,6 +106,7 @@ end
 
 function LC.FlyDropship(opts)
     if not opts or not opts.pos then return nil, "nowhere to go" end
+    if LC.ChapterReversed and LC.ChapterReversed() then return nil, "the sky's busy" end -- (no Combine in the sky: sv_livingcity_chapter.lua)
     if not ModelOK(SHIP) then return nil, "no dropship model on this server" end
     if #LC.Dropships >= 3 then return nil, "the sky's busy" end
     local ship = ents.Create("lc_dropship")

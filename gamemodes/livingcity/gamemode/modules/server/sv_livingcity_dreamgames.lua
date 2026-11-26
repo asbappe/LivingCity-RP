@@ -77,7 +77,6 @@ local BARREL = "models/props_c17/oildrum001_explosive.mdl"
 local PLATE_HALF = 1.5 -- (half a plate's thickness)
 
 LC.DreamGameNames = {}
-function LC.DreamGameName(id) return G[id] and G[id].name or nil end
 
 ------------------------------------------------------------------------
 -- The arena: room for it, and its props
@@ -1297,4 +1296,3 @@ end
 LC.DreamGameKit = { Block = Block, Actor = Actor, Animate = Animate, Floor = Floor, WallAt = WallAt, Snd = Snd, Puff = Puff,
     Send = Send, InPlay = InPlay, ToStart = ToStart, Done = Done, Hit = Hit, ValidModel = ValidModel,
     PLATE8 = PLATE8, PLATE8_S = PLATE8_S, PLATE4 = PLATE4, PLATE4_S = PLATE4_S }
-function LC.DreamGameBusy() return LC.DreamActive ~= nil and LC.DreamActive.game ~= nil and not LC.DreamActive.game.stopped end

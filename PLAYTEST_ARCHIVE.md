@@ -32,9 +32,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 
 ## Added since the cut
-- [ ] **Arriving (a new character, citizen):** walk out of the station. Do the cards and tips come one at a time, each readable, never piled up? [needs a person: pacing of the first minutes]
-- [ ] **Talking to a citizen:** E on a citizen. Do the number keys work, are their words under the list, and does walking off close it? [needs a person: the feel of the talk window]
-- [ ] **A first job:** a hold E job from F4 (Bin round, Graffiti removal, The count, a leaking pipe). Does the bar fill, and is the thing easy to find and aim at? [needs a person: aim and finding by eye]
 - [ ] **Chevrons:** on the way to a job, any straight line of the trail through a wall? [needs the real server: the real map]
 - [ ] **The announcer:** over 5 minutes, at most one of the map's own Overwatch lines, and none on top of a city announcement? [needs the real server: the recordings]
 - [ ] **Searching:** stop a citizen and search them (baton, reload). Do the numbers check the spots, do found things show, does "Done searching: check their papers" work? [needs a person: the feel of the search]
@@ -106,4 +103,8 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Barnacles:** stand under one (the canal's underpass has six, or spawn one): are you lifted smoothly to its mouth, bitten there, and dropped when it is shot? [needs a person: the real barnacle is only in the game]
 - [ ] **The base's vehicle:** Miscount Editor > "Point: Resistance base vehicle", one on a road and one on water near rebel territory; raise the flag: a buggy (an airboat on water) at the nearer spot, driveable, gone once the flag is down and nobody sits in it? [needs a person: real vehicles]
 - [ ] **Thumper and pumphouse (after the ring's next compile):** stop the thumper at its button: antlions dig up at the burrow, two at a time, and dig away a minute after it is started again? Stop the pumphouse nearest a rebel territory: is a sink there dry (a knock and a drip)? [needs a person: the map's own names]
+- [ ] **The APC:** F4 > Factions > Admin: testing tools > The roads > "APC: send one now" (needs the ring's route or a few "Point: APC route" along a street): does it drive smoothly down the middle, stop for you, the soldier ask for your travel permit, the turret fire on a rebel in the open, and can it be killed and salvaged? [needs a person: the real vehicle, sounds and soldier]
+- [ ] **The chapter:** F4 > Factions > Admin: testing tools > The city > "Chapter: launch the rocket's wave": the wave in the sky, every unit dead, forcefields and turrets dead, Combine doors open; as a unit, the dead baton, the mask's static and F2 > Take off the mask; then "the Combine retake the city". [needs a person: how it looks and feels]
+- [ ] **The hive boss and the text gate:** with the Jeff addon and a navmesh on the server, Testing alone > Hive boss > "Send it now": does it come, hunt by sound, die to explosives, and the infestation shrink? And over an hour of play: do hints now come one at a time, and is anything you needed missing? [needs a person]
 - [ ] **Noise:** during a curfew, run behind a wall near a patrolling unit outside the blocks, then throw a can down an alley past one. Does he come at the right moments, look natural looking round, and is 450 units for running fair? [needs a person: how it feels to sneak]
+- [ ] **The cistern's lift (lc_cistern_test, after its first compile):** call it from the gallery, ride up and down, stand in a gate as it shuts. Does it ride smoothly with two players, do the gates read as gates, is the corner doorway wide enough, are its sounds there? [needs a person: how a lift rides]

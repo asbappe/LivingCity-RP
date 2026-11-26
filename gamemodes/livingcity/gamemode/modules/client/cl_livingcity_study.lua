@@ -28,7 +28,6 @@ local frame
 local lastInput = 0
 
 function LC_CL.Studying() return R ~= nil end
-function LC_CL.StudyState() return state end
 
 local function Act(what, arg)
     net.Start("lc_study_act")

@@ -562,4 +562,3 @@ function LC.DreamRecAbort()
     if R and not R.started then Stop() end
 end
 
-function LC.DreamRecStop(why) Stop(why) end

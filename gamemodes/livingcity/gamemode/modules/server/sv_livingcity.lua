@@ -121,12 +121,6 @@ function LC.SoundExists(path)
     return known
 end
 
--- The first of these sounds that's there (or nil).
-function LC.FirstSound(list)
-    for _, s in ipairs(type(list) == "table" and list or { list }) do
-        if LC.SoundExists(s) then return s end
-    end
-end
 
 -- Every sound the server plays goes through it, ours or not.
 do
@@ -1602,6 +1596,7 @@ end
 LC.SpawnCop, LC.SpawnSoldier = SpawnCop, SpawnSoldier
 
 local function SpawnScanner(pos)
+    if LC.ChapterReversed and LC.ChapterReversed() then return end -- (the Combine's machines are dead: sv_livingcity_chapter.lua)
     local npc = ents.Create("npc_cscanner")
     if not IsValid(npc) then return end
     npc:SetPos(pos + Vector(0, 0, 110))
@@ -2508,6 +2503,8 @@ function LC.CopProvoked(npc, st, ply, now)
     if LC.AtSpeech and LC.AtSpeech(ply) then return end
     -- a unit posted at the desks, and anyone in the arrival search, aren't "crowding" (sv_livingcity_intaketutor.lua)
     if (st and (st.tutorPost or st.tutorBusy)) or (LC.TutorFlows and LC.TutorFlows[ply]) then return end
+    -- nor to the one the APC's soldier walked up to for their papers (sv_livingcity_apc.lua)
+    if st and st.apcPapers == ply then return end
     local b = ply.lcBump
     if not b or now - b.last > 45 then
         b = { n = 0, last = 0 }

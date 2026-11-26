@@ -304,8 +304,11 @@ LC_MODULES = {
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
         "sv_livingcity_idlelife", -- (citizens' idle life as Valve directs it: a pose for each idle spot, moments started where a player looks, a crowd that looks instead of chatting)
         "sv_livingcity_antlions", -- (antlions dig up at a stopped thumper's burrow, where a map has the thumper module)
+        "sv_livingcity_hiveboss", -- (the hive boss: the owner's Workshop NextBot, when it comes and what its death does; off until switched on)
+        "sv_livingcity_apc", -- (a Combine APC patrols the roads: the map's lc_apc_route marks, or the editor's APC route points)
         "sv_livingcity_basevehicle", -- (the live base's one vehicle: a buggy, or an airboat on water, at the spot placed for it)
         "sv_livingcity_hq", -- (the HQ's later stages: what only it does, what the Combine know of it, the raid, a ransack's papers; last, after the Inform list it adds to)
+        "sv_livingcity_chapter", -- (the chapter, the city falls to the Resistance: the rocket's wave, the role reversal, the Nexus taken back)
     },
     client = {
         "cl_livingcity",
@@ -409,6 +412,7 @@ LC_MODULES = {
         "cl_livingcity_context", -- (what you can do here: the panel on the right)
         "cl_livingcity_trail", -- (the quest trail on the ground)
         "cl_livingcity_cards", -- (the card table's window: sv_livingcity_resistancemoney.lua)
+        "cl_livingcity_chapter", -- (the rocket's wave in the sky, and a unit's glitching mask: sv_livingcity_chapter.lua)
     },
 }
 
