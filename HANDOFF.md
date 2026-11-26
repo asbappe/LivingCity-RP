@@ -41,9 +41,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   9,460 passed, 4 failed, all four passing alone (order-dependent: TODO.md, end). HintTests stops at tests.lua:4168 (old: TODO.md, end).
 - 26 November, not seen in game: LC.CombatDrive (civil-protection-tools.md), LC.FearStep (city-people.md), units hear
   (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md. 24 Nov TODO run: wildlife, resistance-base, ieds (not seen).
-- 22 to 26 November: the canal ring (map_ring_walk.py joins the first canal, ring.txt and inlet.txt; ~44 min with
-  the nodraw pass). Kit: 43 pieces. 26 Nov: Combine wall on every city bank, set back on the canal wall's top; rail
-  bridge a viaduct with a sky corridor; trains only portal to portal (3 through trains, locks where tracks cross);
-  floodgate (valve wheel), tramfall (tram under the breach, base 64), the crypt's inlet (buried chain) to a church
-  by the infested quarter. Test map: 19,596 faces, ~39,656 vertices. Not run in game: the wheel gates.
+- 22 to 26 November: the canal ring (map_ring_walk.py joins the first canal, ring.txt, inlet.txt, bunker_way.txt and the
+  bunker forest; ~30 min; the ring's half nodraw-passed, the forest's half as built: TODO.md). Kit: 43 pieces. Combine
+  wall on every city bank; rail bridge a viaduct, the Combine engine at its train's head; trains portal to portal;
+  floodgate (valve wheel), tramfall, the crypt's inlet. 26 Nov, late: overflow and swingbridge modules gone (the swing
+  bridge is the quay's bridge), pour() three jets, backdrop 16 buildings and Valve's card trees, the bunker forest 3520
+  east down Valve's tunnel (servicetunnel, map_shift.py). Test map: 27,568 faces, ~48,400 vertices. Nothing of 26 Nov run in game.
 - Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes3 sent).
