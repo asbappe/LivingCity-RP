@@ -36,8 +36,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   boss as the Workshop NextBot 2149660804, `lc_hiveboss` 0 (wildlife.md); the text gate, `lc_text_gate` 3; the real
   train, `lc_train_real` 0. Staff lines for each: F4 > Factions > Admin: testing tools. Ten new settings wait for the
   owner's OK before they go in the core snapshot (CORE_CHANGELOG.md): the core check fails on exactly those until then.
-  Last full run
-  (26 November): 9,423 passed, 4 failed (the core check, and three that pass alone: TODO.md, end).
+  Last full run (26 November, with main merged in): 9,449 passed, 5 failed: the core check, and four that pass alone
+  (old order-dependent tests the new ones moved into other shards: TODO.md, end).
 - 25 November: units hear (sv_livingcity_noise.lua; docs/features/contraband.md "Keeping quiet"): a shot or a thrown thing landing (and, only out
   after curfew outside the blocks, running or a jump) sends the nearest free Civil Protection unit to look. Ideas from three NPC addons, none built: docs/dev/npc-ai-lessons.md.
 - 24 November (the TODO run), built, not yet seen in game: barnacles lift, pumphouse water, the base's vehicle, antlions at a
