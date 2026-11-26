@@ -967,15 +967,29 @@ def m_railbridge(m, opt):
     for k, v in enumerate((-150, 0, 150)):                    # dust and grit off the bridge's underside as it passes
         m.point("env_dustpuff", c + (k - 1) * 30, v, D - 62, {"targetname": "lc_rail_dust_%d" % (k + 1), "scale": "14", "speed": "8", "color": "110 104 96", "angles": "90 0 0"})
     dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (1.2, 1.7, 2.2, 2.8)]
+    if raised:
+        dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (0.6, 1.1, 1.6, 2.2, 2.8)]      # (it is 1.2 seconds from the canal's edge at lc_rail_pb)
     stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv + way * 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
              ("lc_rail_p3", way * (tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", way * tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
+    if raised:
+        # (it starts far down the corridor of sky, about 15 seconds from the canal: the horn and the lamps as it comes into
+        #  view at the scenery's far edge (lc_rail_pa), the shake and the dust as it reaches the canal (lc_rail_pb), not
+        #  as it starts: the owner, 26 November, "I just want to make sure it's not silent")
+        va, vb = -street * (256 + map_backdrop.DEPTH - 64), -street * (256 + 420)
+        stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv + way * 128, "lc_rail_pa", "0", None),
+                 ("lc_rail_pa", va, "lc_rail_pb", "0", [("OnPass", "lc_rail_horn", "PlaySound", "", 0), ("OnPass", "lc_rail_signal_*", "ShowSprite", "", 0),
+                                                        ("OnPass", "lc_rail_signal_*", "HideSprite", "", 14)]),
+                 ("lc_rail_pb", vb, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
+                 ("lc_rail_p3", way * (tr - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", way * tr, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
     for name, v, nxt, flags, wires in stops:
         m.point("path_track", c, v, base, {"targetname": name, "target": nxt, "spawnflags": flags, "orientationtype": "0", "speed": "0", "radius": "0"},
                 b.vis + ": the train", connections=wires)
     sound(m, "lc_rail_horn", "ambient/alarms/train_horn2.wav", c, 0 if raised else T0[1] + 64, D + 64, radius=4000)
-    m.point("env_shake", c, 0, D, {"targetname": "lc_rail_shake", "amplitude": "3", "radius": "1000", "duration": "3.5", "frequency": "35", "spawnflags": "0"})
-    m.relay("lc_rail_run", c, 0, D + 180, [("lc_rail_horn", "PlaySound", "", 0), ("lc_rail_signal_*", "ShowSprite", "", 0), ("lc_rail_train", "StartForward", "", 2),
-                                           ("lc_rail_signal_*", "HideSprite", "", 10)])
+    # (the shake reaches 1700 when raised: the street and the canal's floor are 650 and 900 under the bed)
+    m.point("env_shake", c, 0, D, {"targetname": "lc_rail_shake", "amplitude": "3", "radius": "1700" if raised else "1000", "duration": "3.5", "frequency": "35", "spawnflags": "0"})
+    m.relay("lc_rail_run", c, 0, D + 180, [("lc_rail_train", "StartForward", "", 0)] if raised else
+            [("lc_rail_horn", "PlaySound", "", 0), ("lc_rail_signal_*", "ShowSprite", "", 0), ("lc_rail_train", "StartForward", "", 2),
+             ("lc_rail_signal_*", "HideSprite", "", 10)])
     m.point("logic_timer", c, 0, D + 200, {"targetname": "lc_rail_timer", "RefireTime": "150", "UseRandomTime": "0", "StartDisabled": "0", "spawnflags": "0"},
             connections=[("OnTimer", "lc_rail_run", "Trigger", "", 0)])
     m.test_button((c - 8, 120, F + 40, c + 8, 128, F + 56), [("OnIn", "lc_rail_run", "Trigger")])
