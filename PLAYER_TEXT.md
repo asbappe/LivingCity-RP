@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 427dfeb. Admin-only console messages and log lines are left out.
+Made from version 75d1306. Admin-only console messages and log lines are left out.
 
 13562 lines, from 393 files.
 
@@ -1143,7 +1143,7 @@ Made from version 427dfeb. Admin-only console messages and log lines are left ou
 - "Don't crowd Civil Protection units. They warn you first, then hit you with the stunstick."  (text, line 121)
 - "When a Civil Protection unit stops you, stand still. They may search you and find anything illegal in your pockets."  (text, line 122)
 - "A unit player searching you pats you down one spot at a time (Jacket, Waist, Legs, Boots): a panel shows which. Stand still. Once a spot has been checked you may press R, once, to try to slip something into it; it works more often than not, but if they feel it, it's found."  (text, line 123)
-- "Crouch to sneak: a Civil Protection unit only spots you from half the usual distance, even less if you move slowly or stay in the dark, and never from behind. While crouching, a bar shows how visible you are, and each unit's line of sight is drawn in front of him (red means he can see you)."  (text, line 124)
+- "Crouch to sneak: a Civil Protection unit only spots you from half the usual distance, even less if you move slowly or stay in the dark, and never from behind. While crouching, a bar shows how visible you are, and each unit's line of sight is drawn in front of him (red means he can see you). Units hear too: running, a jump or a shot brings one round to look, even through a wall; walking and crouching are silent. Throw something to draw him away."  (text, line 124)
 - "Wanted but haven't hurt anyone? Units chase you down and cuff you. They shoot at violent suspects, and at anyone with a gun in their hand."  (text, line 125)
 - "Sleeping in a bed, you lie still and heal; press Jump to get up. Rations being handed out during your shift? F2 > Take a ration break: your job waits for you."  (text, line 126)
 - "Resistance: with fighters following you, F2 > Squad orders tells them to act casual (plain clothes, guns away), get their guns out, or meet you at the job's marker. In a camp, hold E on a mattress, crate or chair to move it (let go to put it down, R rotates it). At your stash, Stash it puts away the weapon you're holding."  (text, line 127)
@@ -20715,64 +20715,64 @@ Made from version 427dfeb. Admin-only console messages and log lines are left ou
 
 - "[Civil Protection] {or}{text}"  (chat message, line 51)
 
-> Note for you (not shown in game): Why the cops wouldn't shout at this player, or nil if they would.
+> Note for you (not shown in game): Why the cops wouldn't shout at this player, or nil if they would. hunted = true: for what a unit hears (sv_livingcity_noise.lua), where the wanted still count.
 
-- "dead or in a vehicle"  (text, line 85)
-- "build mode"  (text, line 86)
-- "a Civil Protection unit"  (text, line 87)
-- "a stalker (Combine property)"  (text, line 88)
-- "in a convincing uniform"  (text, line 89)
-- "already wanted"  (text, line 91)
+- "dead or in a vehicle"  (text, line 86)
+- "build mode"  (text, line 87)
+- "a Civil Protection unit"  (text, line 88)
+- "a stalker (Combine property)"  (text, line 89)
+- "in a convincing uniform"  (text, line 90)
+- "already wanted"  (text, line 92)
 
 > Note for you (not shown in game): part of: exempt why
 
-- "in custody"  (text, line 92)
-- "being stopped"  (text, line 93)
-- "Overwatch or the Administrator"  (text, line 94)
-- "in rebel territory"  (text, line 95)
-- "in the infestation zone"  (text, line 96)
+- "in custody"  (text, line 93)
+- "being stopped"  (text, line 94)
+- "Overwatch or the Administrator"  (text, line 95)
+- "in rebel territory"  (text, line 96)
+- "in the infestation zone"  (text, line 97)
 
 > Note for you (not shown in game): told to hurry home: running is what they want
 
-- "curfew grace period"  (text, line 98)
+- "curfew grace period"  (text, line 99)
 
 > Note for you (not shown in game): For the debug report: would a unit shout at this player right now, and if not, why not.
 
-- "off (lc_running_cops 0)"  (text, line 121)
-- "city not running"  (text, line 122)
-- "speed %d (walk %d, run %d)%s, %s, %s"  (message, line 127)
+- "off (lc_running_cops 0)"  (text, line 123)
+- "city not running"  (text, line 124)
+- "speed %d (walk %d, run %d)%s, %s, %s"  (message, line 129)
 
 > Note for you (not shown in game): part of: running status
 
-- "exempt: {why}"  (text, line 128)
-- "not exempt"  (message, line 128)
-- "Civil Protection unit watching at {GetPos}"  (text, line 129)
-- "no Civil Protection unit in sight within {GetInt}"  (text, line 129)
+- "exempt: {why}"  (text, line 130)
+- "not exempt"  (message, line 130)
+- "Civil Protection unit watching at {GetPos}"  (text, line 131)
+- "no Civil Protection unit in sight within {GetInt}"  (text, line 131)
 
 > Note for you (not shown in game): part of: chase
 
-- "I said stop running!"  (text, line 155)
-- "[Civil Protection] You ran from a Civil Protection unit. Units are after you. Press E on one to give yourself up."  (chat message, line 156)
-- "[Civil Protection] That's the third time this hour. This time it's the cells."  (chat message, line 157)
-- "Fleeing Civil Protection"  (text, line 158)
+- "I said stop running!"  (text, line 157)
+- "[Civil Protection] You ran from a Civil Protection unit. Units are after you. Press E on one to give yourself up."  (chat message, line 158)
+- "[Civil Protection] That's the third time this hour. This time it's the cells."  (chat message, line 159)
+- "Fleeing Civil Protection"  (text, line 160)
 
 > Note for you (not shown in game): part of: warn
 
-- "Stop running!"  (text, line 167)
+- "Stop running!"  (text, line 169)
 
 > Note for you (not shown in game): Caught for running, the first or second time in an hour: cuffed, a few of the stick, and let go with a laugh (sv_livingcity_prison.lua asks before anyone is locked up or detained). True when this took the place of an arrest.
 
-- "Fleeing Civil Protection"  (text, line 177)
+- "Fleeing Civil Protection"  (text, line 179)
 
 > Note for you (not shown in game): part of: running beating
 
-- "[Civil Protection] Cuffed. The unit has a few words, and the stick, for someone who runs when told to stop."  (chat message, line 195)
-- "Caught running"  (on-screen notice, line 196)
-- "You're cuffed for a moment. Run from a unit three times in an hour and it's the cells."  (on-screen notice, line 196)
+- "[Civil Protection] Cuffed. The unit has a few words, and the stick, for someone who runs when told to stop."  (chat message, line 197)
+- "Caught running"  (on-screen notice, line 198)
+- "You're cuffed for a moment. Run from a unit three times in an hour and it's the cells."  (on-screen notice, line 198)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] The cuffs come off. "All right, you can go." A warning, this time: a third time in the hour is the cells."  (chat message, line 205)
+- "[Civil Protection] The cuffs come off. "All right, you can go." A warning, this time: a third time in the hour is the cells."  (chat message, line 207)
 
 ## save files written safely (sv_livingcity_safefile.lua)
 

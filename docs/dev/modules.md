@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-296 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+297 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -184,6 +184,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `needs` | Survival and economy (client): hunger and thirst HUD, Credits | - | `client/cl_livingcity_needs.lua` 57K | - | `LC_CL.WrapPlain`, `LC_CL.QuietHUD`, `LC_CL.LeftColumnTop`, `LC_CL.Clothes`, `LC_CL.LeftColumnBottom`, `LC_CL.StatusRows` | - |
 | `net` | Sending big and frequent things to players safely (server and client) | - | - | `shared/sh_livingcity_net.lua` 13K | `LC.SetGlobalLong`, `N.Assemble`, `LC.GetGlobalLong`, `N.Split` | NetSafetyTests (4) |
 | `nextstep` | What now? | `server/sv_livingcity_nextstep.lua` 16K | `client/cl_livingcity_nextstep.lua` 8K | - | `LC.NextStep`, `LC.FirstRationDue`, `LC_CL.HasRank`, `LC_CL.PlacesPage`, `LC_CL.WhatNowPage`, `LC_CL.ShowNextStep` | NextStepTests (2) |
+| `noise` | Noise, and the unit who comes to look | `server/sv_livingcity_noise.lua` 10K | - | - | `LC.Noise`, `LC.NoiseRange`, `LC.NoiseTick`, `LC.PlayerNoise`, `LC.NoiseUnitFree`, `LC.ThrownLanding` | NoiseTests (3) |
 | `notices` | On the screen, not just in chat | `server/sv_livingcity_notices.lua` 9K | `client/cl_livingcity_notices.lua` 17K | - | `LC.Notice`, `LC.SetWaypoint`, `LC.WaypointTo`, `LC.BlockCenter`, `LC_CL.AddNotice`, `LC.FlushNotices` | PapersHousingTests (3); LaborTests (2) |
 | `npcstr` | The city's people's name tags, sent only where they're seen | - | - | `shared/sh_livingcity_npcstr.lua` 9K | - | - |
 | `npcvices` | Citizens who drink and smoke | `server/sv_livingcity_npcvices.lua` 6K | - | - | `LC.NPCViceOf`, `LC.NPCViceStop`, `LC.NPCViceStart`, `LC.NPCViceTick` | MindsTests (3); IdlePoseTests (2) |
