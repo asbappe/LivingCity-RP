@@ -666,8 +666,10 @@ def rail_runs(b, elems, s, cars):
         if e["kind"] in ("left", "right"):
             e["junction"] = inside_turn(e, s) and 0 < k < len(elems) - 1 and elems[k - 1]["kind"] == "leg" and elems[k + 1]["kind"] == "leg"
             rail = e.get("rail", [])
-            if rail and not e["junction"]:
+            if [w for w in rail if w != "wall"] and not e["junction"]:
                 b.problems.append("%s: \"over\" and \"back\" (a train's tunnel) go only on a turn toward the street's side with the street on both runs" % e["tag"])
+            if "wall" in rail and e["junction"]:
+                b.problems.append("%s: \"wall\" (a train's portal through the Combine wall ahead) goes only on a turn away from the street's side" % e["tag"])
             # ("over" and "back" at one corner cross the two tracks in its square, a level crossing of rails: allowed since 26
             #  November, the owner: tracks "need to never go to a dead end in the street/open"; the two trains are never sent
             #  at once, tunnel_train's locks)
@@ -689,6 +691,22 @@ def rail_runs(b, elems, s, cars):
             continue
         ends = []
         for which, t in (("start", r["before"]), ("end", r["after"])):
+            if which == "end" and t and not t.get("junction") and "wall" in t.get("rail", ()):
+                # (a turn away from the street: the track goes straight on across the corner's street and into a black
+                #  portal in the Combine wall ahead, the next run's: the owner, 26 November, a track may end in "their
+                #  black train portal in a canal wall or in the city void")
+                Q0 = back_frame(R)
+                far = 256 + FR                                       # (from the run's end to the wall's street face)
+                px, py = Q0.pt(512 - far, 0)
+                Qw = Frame(px, py, Q0.rot, Q0.length)               # (as a crossing's frame: the mouth at its u -512)
+                tag = "the train's portal in the Combine wall at the %s" % t["tag"]
+                if wall_portal_squares(b, Qw, -s, tag, cars):
+                    r["tunnels"].append((which, Qw, -s, tag))
+                    r["far"], r["wall_end"] = L + far + TUN, far
+                    ends.append("tunnel")
+                else:
+                    ends.append("open")
+                continue
             if not (t and t.get("junction")):
                 ends.append("open")
                 continue
@@ -703,7 +721,7 @@ def rail_runs(b, elems, s, cars):
             else:
                 ends.append("junction")
         ua = {"tunnel": -(512 + TUN), "junction": FR + 128, "open": 64}[ends[0]]
-        ub = {"tunnel": L + 512 + TUN, "junction": L - FR - 128, "open": L - 64}[ends[1]]
+        ub = {"tunnel": r.get("far", L + 512 + TUN), "junction": L - FR - 128, "open": L - 64}[ends[1]]
         if ub - ua < 256:
             b.notes.append("the run %s is too short for a track between its ends" % r["tag"])
             ua = ub = 0
@@ -720,7 +738,62 @@ def rail_runs(b, elems, s, cars):
         for e in legs:
             e["rail_span"] = (ua - o, ub - o)
             o += e["length"]
+    # two runs whose tracks cross in a corner's square (one carried on "over" it, the next carried "back" through it):
+    # their trains are never sent at once (the owner, 26 November: "if that makes train tracks intersect, then please make
+    # sure they don't collide or run into/through each other"): each one's relay shuts the other's off while it is out
+    for a, c in zip(runs, runs[1:]):
+        if a.get("ends") and c.get("ends") and a["ends"][1] == "tunnel" and c["ends"][0] == "tunnel" and a["after"] is c["before"] and not a.get("wall_end"):
+            a.setdefault("locks", []).append(c["n"])
+            c.setdefault("locks", []).append(a["n"])
     return runs
+
+
+def wall_portal_squares(b, Qw, sq, tag, cars):
+    """Before the street is laid (rail_runs): a train's portal through the Combine wall, in Qw (the wall's street face at
+    u -512, as a crossing's canal wall is): a room through the wall's line and TUN beyond it, 304 high under a roof up to
+    the wall's own top (the wall's metal on it, its own sky over it), where nothing else is; the train hidden in solid
+    beyond its black end (hide_trains). Gives whether it can be built."""
+    from map_modules import MM, Mod
+    lo, hi = sorted((sq * (RAIL_V - 160), sq * (RAIL_V + 160)))
+    wall = -(512 + TUN)
+    for c in squares(Qw.rect(wall - hide_len(cars), lo - 64, -512, hi + 64)):
+        if b.plan.cells.get(c) is not None:
+            b.problems.append("%s: the portal or the train hidden beyond it runs into %s at (%d %d)" % (tag, b.owner.get(c, "something"), c[0] * CELL, c[1] * CELL))
+            return False
+    m = Mod(b, Qw, tag)
+    m.cellar(wall, lo, -512, hi, STREET, STREET + 304, STREET + WALL_H - 8, mat=MM["gravel"], upper_mat=CORE)
+    b.rail_hides.append((Qw, sq, tag, hide_len(cars)))
+    return True
+
+
+def wall_portal_build(b, Qw, sq, tag, far):
+    """A train's portal through the Combine wall (wall_portal_squares painted its room), in Qw: the rails from the run's
+    end (u far - 512) across the corner's street and in to the black end, a concrete pilaster each side of the mouth, a
+    railway signal head beside it."""
+    from map_modules import MM, Mod
+    m = Mod(b, Qw, tag)
+    dv = b.vis + ": the trains' bridges and tunnels"
+    wall = -(512 + TUN)
+
+    def sv(a, c):
+        return tuple(sorted((sq * a, sq * c)))
+    lo, hi = sv(RAIL_V - 160, RAIL_V + 160)
+    ties, rails = [], []
+    t1, t2 = sv(RAIL_V - 68, RAIL_V + 68)
+    for u in range(wall + 64, far - 512, 64):
+        ties.append((u + TIE[0], t1, STREET, u + TIE[1], t2, STREET + 3))
+    m.det(ties, MM["beam_wood"], vis=dv, faces={"bottom": MAT["nodraw"]})
+    for g in (-40, 37):
+        r1, r2 = sv(RAIL_V + g, RAIL_V + g + 3)
+        rails.append((wall + 8, r1, STREET + 3, far - 512, r2, STREET + 9))
+    m.det(rails, MAT["bars"], vis=dv)
+    m.det([(wall, lo, STREET, wall + 8, hi, STREET + 304)], MAT["black"], vis=dv)
+    p1, p2 = sv(RAIL_V - 184, RAIL_V - 160)
+    q1, q2 = sv(RAIL_V + 160, RAIL_V + 184)
+    m.det([(-512, p1, STREET, -488, p2, STREET + 336), (-512, q1, STREET, -488, q2, STREET + 336), (-512, p1, STREET + 304, -488, q2, STREET + 336)], MAT["beam"], vis=dv)
+    side = sq * (RAIL_V + 250)
+    m.static("models/props_trainstation/light_signal002a.mdl", -512 + 42, side, 0, z=STREET + 120)
+    m.grime("danger", -512, sq * (RAIL_V - 230), STREET + 60, 8)
 
 
 def crossing_squares(b, Q, sq, tag, cars):
@@ -828,9 +901,12 @@ def rail_ends(b, r, s, cars, junction):
         if kind != "tunnel":
             buffer_stop(b, R, s, r["ua"] if which == "start" else r["ub"], -1 if which == "start" else 1, "the track's end on %s" % r["tag"])
     for which, Q, sq, tag in r["tunnels"]:
-        crossing_build(b, Q, sq, tag)
+        if which == "end" and r.get("wall_end"):
+            wall_portal_build(b, Q, sq, tag, r["wall_end"])
+        else:
+            crossing_build(b, Q, sq, tag)
     if len(r["tunnels"]) == 2:
-        tunnel_train(b, r["n"], R, s, r["L"] + 512 + TUN, cars, r, junction, through=True)
+        tunnel_train(b, r["n"], R, s, r.get("far", r["L"] + 512 + TUN), cars, r, junction, through=True)
     elif r["tunnels"]:
         which, Q, sq, tag = r["tunnels"][0]
         tunnel_train(b, r["n"], Q, sq, r["ub"] if which == "start" else r["L"] - r["ua"], cars, r, junction)
@@ -1005,7 +1081,9 @@ def tunnel_train(b, n, Q, sq, u_far, cars, r, junction, through=False):
                                          "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0", "preset": "0", "spindown": "0", "spinup": "0",
                                          "volstart": "0"}, tv)
     vmf.point("logic_relay", (mouth[0], mouth[1], mouth[2] + 16), {"targetname": name + "_run", "StartDisabled": "0", "spawnflags": "0"}, tv,
-              connections=[("OnTrigger", name + "_horn", "PlaySound", "", 0), ("OnTrigger", name + "_hurt", "Enable", "", 2.5), ("OnTrigger", name, "StartForward", "", 3)])
+              connections=[("OnTrigger", name + "_horn", "PlaySound", "", 0), ("OnTrigger", name + "_hurt", "Enable", "", 2.5), ("OnTrigger", name, "StartForward", "", 3)] +
+              [("OnTrigger", "lc_train_%d_%s" % (o, what), act, "", when) for o in r.get("locks", ())      # (a train whose track crosses this one's: never out at once)
+               for what in ("run", "timer") for act, when in (("Disable", 0), ("Enable", int((abs(u2 - u1) * (1 if through else 2)) // SPEED) + 20))])
     vmf.point("logic_timer", (mouth[0], mouth[1], mouth[2] + 32), {"targetname": name + "_timer", "UseRandomTime": "1", "LowerRandomBound": "70",
                                                                    "UpperRandomBound": "240", "RefireTime": "120", "StartDisabled": "0", "spawnflags": "0"}, tv,
               connections=[("OnTimer", name + "_run", "Trigger", "", 0)])

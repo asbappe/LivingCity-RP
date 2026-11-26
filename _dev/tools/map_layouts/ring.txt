@@ -66,14 +66,14 @@ straight 1024      # (was "morgue flip": taken off the ring, 24 November)
 straight 1024      # (was "floodroom flip": taken off the ring, 24 November)
 railbridge
 straight 1088
-left over       # the north run's track on west over the west run's canal into a tunnel: its train runs through, tunnel to tunnel (26 November: no track ends in the open; the west run has no track now)
+left back over  # the west run's train out of a tunnel north of the north run's canal; and the north run's track on west over the west run's canal into a tunnel (the two never sent at once)
 # N4 and N5: south down the west (the cave forest's branch in the middle; its wall stands along the outside bank, so
 # nothing here has side rooms)
 straight 3200 stairs
 tee flip
 straight 1280      # (was "pipes": the module deleted, the owner, 25 November)
 straight 1408
-right
+right wall      # the west run's track straight on across the corner's street into a black portal in the Combine wall (the owner, 26 November: yes)
 # S1: west
 drain
 overflow flip

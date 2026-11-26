@@ -2297,7 +2297,7 @@ def build_chain(lay, args):
             m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt + (["wide"] if size > CANAL_W else []))
             name_sign(b, fr, size, size // 2, words)
             if "nostreet" not in opt:      # ("over", "back": a run's track carried on over the canal at this corner, map_corridor.rail_runs)
-                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name), "rail": [w for w in opt if w in ("over", "back")]})
+                elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name), "rail": [w for w in opt if w in ("over", "back", "wall")]})
             else:
                 elems.append({"kind": "gap", "tag": "%d %s turn" % (n, name)})
             shed_n = 0
