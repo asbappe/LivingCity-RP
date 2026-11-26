@@ -662,6 +662,8 @@ def cctv(f, F, lr):
             v.ents[i] = v.ents[i].replace("lc_launch_cctv", CCTV_NAME)
     for where, wall, facing, along, z, frame in cctv_walls(f):
         screen(v, wall, facing, along, z, frame, f.vis("bunker's camera"))
+    for where, wall, facing, at, z in emergency_buttons(f):
+        emergency_button(v, F, where, wall, facing, at, z, f.vis("bunker door (the leaves, the button, the wiring)"))
     f.notes.append("the bunker's camera (%s): Episode Two's security camera on the bunker's front at (%d %d %d), looking down the path; shown on the "
                    "launch room's two big screens, and on a screen in %s" % (CCTV_NAME, ex, ey, ezz, " and one in ".join(w[0] for w in cctv_walls(f))))
 
@@ -671,12 +673,33 @@ def cctv(f, F, lr):
 # missile launch control room? the ones inside the missile launch control room work nicely"): made as the launch room's
 # that work, a func_monitor whose face is dev/dev_tvmonitor1a (the camera's picture, its 256 by 256 stretched to the face
 # exactly), here on a wall in a metal frame 4 deep and 4 round it. Each: (where, the wall's face, the way the screen
-# faces, its span along the wall, its bottom and top, the frame's metal).
+# faces, its span along the wall, its bottom and top, the frame's metal). Since 26 November each has room beside it for
+# a second screen, of a camera inside the bunker's door (door_screens), and an emergency close for the door under them
+# (emergency_buttons): in the office the pair is over the servers and the bench (the forest's screen moved up from
+# between them, where the button is now), in the control room over the wall consoles and west of them.
 def cctv_walls(f):
     import map_silo as MS
     tx, ty, _ = TECH_AT
-    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] - 16, SILO[0] + 56), (f.zg + 52, f.zg + 96), "metal/metalwall085a"),
+    return [("the leader's office", SILO[1] + MS.OFFICE_HULL, "south", (SILO[0] - 12, SILO[0] + 60), (f.zg + 110, f.zg + 154), "metal/metalwall085a"),
             ("the control room", ty + 496, "south", (tx + 378, tx + 458), (FLOOR_LOW + 102, FLOOR_LOW + 144), "metal/metalwall074a")]
+
+
+# The emergency closes of the bunker's front doors (the owner, 26 November): a button under each pair of screens, in the
+# leader's office and in White Forest's control room, that shuts the doors as the button by them does (lc_bunker_close:
+# the klaxon, the slide, the shove at the close, never a kill; while they are shut or shutting it does nothing; it never
+# opens them). Each: (where, the wall's face, the way it faces, the model's foot along the wall, its height: hand height).
+def emergency_buttons(f):
+    import map_silo as MS
+    tx, ty, _ = TECH_AT
+    return [("office", SILO[1] + MS.OFFICE_HULL, "south", SILO[0] + 16, f.zg + 40),
+            ("ctl", ty + 496, "south", tx + 326, FLOOR_LOW + 40)]
+
+
+def emergency_button(v, F, where, wall, facing, at, z, vis):
+    """Episode Two's mine lift button on a wall facing south (map_forest.wall_button), named lc_bunker_button_<where>."""
+    assert facing == "south"
+    F.wall_button(v, (at, wall, z), 270, "lc_bunker_button_" + where, (at - 6, wall - 10, z - 4, at + 14, wall, z + 24), vis,
+                  [("OnPressed", "lc_bunker_close", "Trigger", "", 0)], "9")
 
 
 def screen(v, wall, facing, along, z, frame, vis):

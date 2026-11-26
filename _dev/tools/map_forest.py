@@ -2062,8 +2062,10 @@ class BunkerForest(Forest):
         relay = W(mid, 200, zp + 120)
         v.point("logic_relay", relay, {"targetname": "lc_bunker_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
         v.point("logic_relay", (relay[0] + 16, relay[1], relay[2]), {"targetname": "lc_bunker_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
-        # the button: on the wall inside, west of the stairs; one press works whichever relay is live
-        wall_button(v, W(512, 256, zp + 40), 270, "lc_bunker_button", B(506, 246, zp + 36, 526, 256, zp + 64), dv,
+        # the button: inside, on the front wall right by the doors (east of them, the owner, 26 November: it had been on the
+        # far wall west of the stairs), at hand height; one press works whichever relay is live. Emergency closes in the
+        # control room and the leader's office: map_launch.emergency_buttons.
+        wall_button(v, W(780, 64, zp + 40), 90, "lc_bunker_button", B(766, 64, zp + 36, 786, 74, zp + 64), dv,
                     [("OnPressed", "lc_bunker_close", "Trigger", "", 0), ("OnPressed", "lc_bunker_open", "Trigger", "", 0)], "9")
         # nobody left inside and the door shut: it opens again (the unshutting relay is only live while it is shut). Inside
         # is every room, stair and corridor of the bunker, the corridor to the silo and the WHOLE silo (its hull's inside,
