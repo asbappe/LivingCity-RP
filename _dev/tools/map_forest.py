@@ -3687,6 +3687,12 @@ class CaveForest(Forest):
         door(1778, -9412, -1665, 90, 0, (1734, -9466, -1716, 1778, -9358, -1630))      # B, north (on its floor inside)
         door(1990, -8668, -1726, 270, 1, (1990, -8722, -1780, 2034, -8614, -1692))     # C, south (outward, over the rail in front)
         door(1916, -8518, -1729, 180, 0, (1862, -8562, -1780, 1970, -8518, -1692))     # C, west (on its floor inside)
+        # a lamp in each: Valve's caged lamp on a wall inside (it stands 8 out and hangs 11), the light just under it
+        for (x, y, z, yaw) in ((1856, -9143, -1692, 90), (1824, -9591, -1636, 90), (2039, -8564, -1701, 180), (905, -8564, -1696, 0)):
+            c, sn = round(math.cos(math.radians(yaw))), round(math.sin(math.radians(yaw)))
+            v.point("prop_static", W(x, y, z), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 %d 0" % yaw, "skin": "0", "solid": "0",
+                                                "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, sv)
+            v.point("light", W(x + 5 * c, y + 5 * sn, z - 16), {"_light": "255 205 150 50", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
 
     def holdout_lift(self):
         """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
