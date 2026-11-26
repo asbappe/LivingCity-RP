@@ -3649,12 +3649,44 @@ class CaveForest(Forest):
             v.point("light", self.w(*P(x, y, z)), {"_light": col, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         for (x, y, z) in ((1500, -8800, -1700), (2000, -10136, -520), (1400, -7000, -1700)):
             v.point("env_cubemap", self.w(*P(x, y, z)), {"cubemapsize": "0"}, hv)
+        self.holdout_sheds()
         grubs = sum(1 for e in pf.get("wiring", []) if e["classname"] == "npc_antlion_grub")
         self.notes.append("the holdout: Episode Two's (ep2_outland_03, %d brushes, %d displaced faces, lifted whole): a gallery %d long from the emergency door to the top landing, "
                           "the lift down %d to the holdout's floor, the antlion tunnels north of it that loop round, the larval extract (lc_nest_extract) at their end; "
                           "Valve's %d grubs where Valve put them; the alarm post by the emergency door; %d antlion makers in the cleft beyond it" % (
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), 2848 - 1150, 1728 - 512,
                               grubs, len(makers)))
+
+    def holdout_sheds(self):
+        """The sheds on the holdout's floor (Valve's: three huts of forest steel, A and C with two doorways, B one, on the
+        floor's east side, and D, a two-storey shelter by the west wall with a hatch in its upper floor at its north-west
+        corner). The owner, 26 November: "can we get standard prop doors (rotating functioning doors) on the little sheds
+        in the Ep2 mine shaft?", "also can we please get a single light in each one", "and a ladder for the one that has a
+        second floor". Each doorway's frame (Valve's, wooddoor015a) is 48 x 108, which is the city's own door
+        (door01_left, 47 x 108, as the owner's map has it 134 times): hinged 2 in from a jamb, opening both ways, never
+        locked; where a hut's floor inside is 8 over the ground outside the door stands on the inside floor (its top
+        then in the wall over the frame), and C's south door opens outward only (a joist inside would meet it), its foot
+        clear of the mine rail on the ground in front. One caged
+        work lamp in each, on a wall inside, with a modest light just under it. D's ladder: the owner's ladder pieces
+        (metalladder002, 002b at the top) up the inside of its north wall through Valve's hatch, a func_useableladder 28
+        out from it, a place to step off at each end."""
+        v, P = self.vmf, self.deep_pt
+        sv = self.vis("holdout: the sheds' doors, lamps and ladder")
+        W = lambda x, y, z: self.w(*P(x, y, z))
+
+        def door(x, y, z, yaw, opendir, way):
+            v.point("prop_door_rotating", W(x, y, z), {
+                "model": "models/props_c17/door01_left.mdl", "angles": "0 %d 0" % yaw, "ajarangles": "0 0 0", "distance": "90", "dmg": "0", "fademindist": "-1",
+                "fadescale": "1", "forceclosed": "0", "hardware": "1", "health": "0", "opendir": str(opendir), "rendercolor": "255 255 255", "returndelay": "-1",
+                "skin": "7", "spawnflags": "8192", "spawnpos": "0", "speed": "100"}, sv)
+            a, b = P(*way[:3]), P(*way[3:])
+            self.keep_way_clear(tuple(min(a[k], b[k]) for k in range(3)) + tuple(max(a[k], b[k]) for k in range(3)), "a shed's doorway on the holdout's floor")
+        # (x, y of the hinge and z of the door's middle, its yaw (it reaches 47 to the left of it), open both ways or outward only, the doorway kept clear)
+        door(1846, -8964, -1738, 270, 0, (1846, -9018, -1788, 1890, -8910, -1692))     # A, north
+        door(1740, -9038, -1738, 180, 0, (1686, -9082, -1788, 1794, -9038, -1692))     # A, west
+        door(1778, -9412, -1665, 90, 0, (1734, -9466, -1716, 1778, -9358, -1630))      # B, north (on its floor inside)
+        door(1990, -8668, -1726, 270, 1, (1990, -8722, -1780, 2034, -8614, -1692))     # C, south (outward, over the rail in front)
+        door(1916, -8518, -1729, 180, 0, (1862, -8562, -1780, 1970, -8518, -1692))     # C, west (on its floor inside)
 
     def holdout_lift(self):
         """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
