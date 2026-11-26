@@ -3693,6 +3693,17 @@ class CaveForest(Forest):
             v.point("prop_static", W(x, y, z), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 %d 0" % yaw, "skin": "0", "solid": "0",
                                                 "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, sv)
             v.point("light", W(x + 5 * c, y + 5 * sn, z - 16), {"_light": "255 205 150 50", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
+        # D's ladder, up the inside of its north wall (2 off it) through the hatch in its upper floor
+        lx, ly, z0, z1 = 932, -8458, -1792, -1664
+        v.point("prop_static", W(lx, ly, z0), {"model": "models/props_c17/metalladder002.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, sv)
+        v.point("prop_static", W(lx, ly, z1), {"model": "models/props_c17/metalladder002b.mdl", "angles": "0 90 0", "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, sv)
+        p0, p1 = W(lx, ly - 28, z0 + 4), W(lx, ly - 28, z1 + 12)
+        v.point("func_useableladder", W(lx, ly - 28, z0 + 130), {"point0": "%d %d %d" % p0, "point1": "%d %d %d" % p1, "spawnflags": "0", "StartDisabled": "0"}, sv)
+        v.point("info_ladder_dismount", W(lx, ly - 70, z0 + 1), {}, sv)
+        v.point("info_ladder_dismount", W(lx, ly - 86, z1 + 1), {}, sv)
+        self.keep_way_clear(P(lx - 16, ly - 44, z0 + 4) + P(lx + 16, ly - 12, z1 + 72), "the ladder in the two-storey shed on the holdout's floor")
 
     def holdout_lift(self):
         """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
