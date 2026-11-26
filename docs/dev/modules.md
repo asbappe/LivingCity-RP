@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-296 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+297 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -195,6 +195,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `outfits` | Clothes that show the job | `server/sv_livingcity_outfits.lua` 25K | `client/cl_livingcity_outfits.lua` 9K | - | `LC.OutfitFor`, `LC.SetOutfit`, `LC.FaceOf`, `LC.ApplyLook`, `LC.CreatorChoices`, `LC.CreatorChoice` | CreatorLookTests (5); OutfitSquadTests (4); SafeFileTests (2) |
 | `pacing` | Who's in a fight, and the Combine's action music | `server/sv_livingcity_pacing.lua` 7K | - | - | `LC.ByInfest`, `LC.ActionTick`, `LC.InFight`, `LC.NoteFight`, `LC.NoteShot`, `LC.IsEnemyOf` | CombineMusicTests (2); Nov14C_EerieMusicTests (2) |
 | `pamphlet` | The Civil Orientation pamphlet | `server/sv_livingcity_pamphlet.lua` 5K | - | - | `LC.ReadPamphlet` | - |
+| `particles` | Episode Two's particle effects the maps use (the owner's compile of the forest bunker, 25 November:  | - | - | `shared/sh_livingcity_particles.lua` 3K | `LC.LoadMapParticles` | Nov26_BunkerCCTVTests (1) |
 | `patdown` | The patdown, lockpicks on cuffs, and players in the Resistance's cage | `server/sv_livingcity_patdown.lua` 29K | `client/cl_livingcity_patdown.lua` 8K | - | `LC.CageFreePlayer`, `LC.PatdownDo`, `LC.MayPatDown`, `LC.CagePutPlayer`, `LC.PatdownChance`, `LC.NPCHides` | PatdownTests (10); RebelRuleTests (7) |
 | `pathmap` | Path mapping, drawing the walkable network by walking it | `server/sv_livingcity_pathmap.lua` 7K | - | - | `LC.PathMapStep`, `LC.SetPathMapping` | PathMapTests (1) |
 | `paths` | Path network | `server/sv_livingcity_paths.lua` 18K | - | - | `LC.ZonesOfKind`, `LC.InRebelZone`, `LC.ZonesOfKindShared`, `LC.CombineZoneAt`, `LC.BuildRoute`, `LC.InInfest` | UpdateTests (5); anon@24725 (4); anon@25866 (4) |
