@@ -50,7 +50,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | Lockers, storage crates and market stalls, with what's in them | `data/livingcity/<map>_storage.json` | sv_livingcity_storage.lua |
 | The chapter (whose the city is after the rocket's wave, its clocks, the staff lock; 26 November) | `data/livingcity/<map>_chapter.json` | `LC.Chapter`, sv_livingcity_chapter.lua |
-| The Swarm's clock: how long the Resistance's flag has flown at the mine (27 November) | `data/livingcity/<map>_swarm.json` | `LC.Swarm.clock`, sv_livingcity_swarm.lua |
+| The Swarm's clock: how long the Resistance's flag has flown at the mine (27 November); with it, the suppression core's state (running or not, which consoles are cut) | `data/livingcity/<map>_swarm.json` | `LC.Swarm.clock`, `LC.Swarm.core`, sv_livingcity_swarm.lua, sv_livingcity_swarmcore.lua |
 | Debug reports (each one saved as it's copied) | `data/livingcity/reports/` | sv_livingcity_debug.lua |
 | Every error, grouped and counted, kept over restarts (F4 > Factions > Admin: errors; the owner sends `errors.txt`) | `data/livingcity/errors.txt`, `errors.json` (what the text is made from), `errors_previous.txt` (the list before the last "start again") | sh_livingcity_errors.lua |
 | Players' bug reports and feedback (F1 > Out of character > Report a bug or feedback; their words with a debug report under them; one a minute each) | `data/livingcity/feedback/<date>_<time>_<steamid64>.txt` | `LC.Feedback`, sv_livingcity_feedback.lua |

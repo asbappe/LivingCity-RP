@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 940e20d3. Admin-only console messages and log lines are left out.
+Made from version 6ff0fe3a. Admin-only console messages and log lines are left out.
 
-13674 lines, from 400 files.
+13697 lines, from 401 files.
 
 ## Contents
 
@@ -82,7 +82,7 @@ Made from version 940e20d3. Admin-only console messages and log lines are left o
 - [init.lua](#initlua-initlua) (5)
 - [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (22)
 - [cl_livingcity_actions.lua](#cllivingcityactionslua-cllivingcityactionslua) (56)
-- [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (72)
+- [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (74)
 - [cl_livingcity_advisors.lua](#cllivingcityadvisorslua-cllivingcityadvisorslua) (11)
 - [cl_livingcity_arrest.lua](#cllivingcityarrestlua-cllivingcityarrestlua) (14)
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
@@ -378,7 +378,8 @@ Made from version 940e20d3. Admin-only console messages and log lines are left o
 - [the Resistance's supply lines (docs/features/supply-lines.md)](#the-resistances-supply-lines-docsfeaturessupply-linesmd-svlivingcitysupplylineslua) (32)
 - [survival](#survival-svlivingcitysurvivallua) (71)
 - [Realistic or Relaxed survival, chosen per character](#realistic-or-relaxed-survival-chosen-per-character-svlivingcitysurvivalmodelua) (9)
-- [the Swarm, the second way into the chapter "the city falls to the Resistance" (the owner, 27 November:](#the-swarm-the-second-way-into-the-chapter-the-city-falls-to-the-resistance-the-owner-27-november-svlivingcityswarmlua) (44)
+- [the Swarm, the second way into the chapter "the city falls to the Resistance" (the owner, 27 November:](#the-swarm-the-second-way-into-the-chapter-the-city-falls-to-the-resistance-the-owner-27-november-svlivingcityswarmlua) (46)
+- [the suppression core under the Nexus, the Swarm's second gate (the owner, 27 November, agreed: the](#the-suppression-core-under-the-nexus-the-swarms-second-gate-the-owner-27-november-agreed-the-svlivingcityswarmcorelua) (19)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (59)
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (37)
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
@@ -1255,7 +1256,7 @@ Made from version 940e20d3. Admin-only console messages and log lines are left o
 - "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. Looking at it, F1 > Donate food to the crate adds to it. A walled garden's soil takes seeds too: melons and pumpkins."  (text, line 217)
 - "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. A buggy or an airboat may stand ready near it. The Combine find it only through people: keep it quiet."  (text, line 218)
 - "While the headquarters stands, now and then a courier on the road or a boat up the canal brings food and rounds to its crate: the Resistance can escort him (F4), Civil Protection stop him (F4)."  (text, line 219)
-- "The antlion nest's glowing extract (hold E on it) goes to a freed vortigaunt (E). With the flag long at the mine and the Resistance strong, the vortigaunts make pheropods: stop the city's thumpers, and the antlions follow their holder to the Nexus."  (text, line 220)
+- "The antlion nest's glowing extract (hold E on it) goes to a freed vortigaunt (E). With the flag long at the mine and the Resistance strong, the vortigaunts make pheropods: stop the city's thumpers and the core under the Nexus (E at its three consoles), and the antlions follow their holder there."  (text, line 220)
 - "The Advisor screen in your office (E, or F2 > City orders > The Advisors): ask them for troops, supplies or more units, and report to them every third night; try their patience and they cut rations, then send an officer to watch you, then replace you."  (text, line 221)
 - "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Each of you can take one tin every 15 minutes. Look at the crate to see what's in it and when more is due."  (text, line 222)
 - "Crate running low? Take a Headcrab hunt from the Operations board (F4): kill four headcrabs in the infested ground, pick up their raw meat (E) and stand by the crate. Each headcrab is a meal for the camp, and it pays more while the crate is empty."  (text, line 223)
@@ -1737,69 +1738,74 @@ Made from version 940e20d3. Admin-only console messages and log lines are left o
 - "Swarm: the city falls to the swarm now"  (text, line 185)
 - "Swarm: end it (pheropods back, antlions away)"  (text, line 186)
 
+> Note for you (not shown in game): the suppression core under the Nexus, where the map has one (sv_livingcity_swarmcore.lua)
+
+- "Core: stop it"  (text, line 190)
+- "Core: start it"  (text, line 191)
+
 > Note for you (not shown in game): the confiscated contraband, burned in public (sv_livingcity_evidence.lua)
 
-- "Burn it now"  (text, line 195)
+- "Burn it now"  (text, line 201)
 
 > Note for you (not shown in game): save files that couldn't be read: kept as they are until a superadmin says otherwise (sv_livingcity_safefile.lua)
 
-- "Save files:"  (text, line 203)
-- "Let the city save over them"  (text, line 204)
-- "Couldn't be read, kept as they are and not saved over: {savefiles}"  (text, line 205)
+- "Save files:"  (text, line 209)
+- "Let the city save over them"  (text, line 210)
+- "Couldn't be read, kept as they are and not saved over: {savefiles}"  (text, line 211)
 
 > Note for you (not shown in game): staff tools that were only in the C menu (the owner, 19 November)
 
-- "Staff tools"  (text, line 210)
-- "Dreams (tonight's, wake everyone, put things back)"  (text, line 212)
-- "Performance debugger"  (text, line 213)
-- "Lag monitor: on (turn off)"  (text, line 216)
-- "Lag monitor: off (turn on)"  (text, line 216)
+- "Staff tools"  (text, line 216)
+- "Dreams (tonight's, wake everyone, put things back)"  (text, line 218)
+- "Performance debugger"  (text, line 219)
+- "Lag monitor: on (turn off)"  (text, line 222)
+- "Lag monitor: off (turn on)"  (text, line 222)
 
 > Note for you (not shown in game): testing alone: what one player can't set off by themselves (superadmins; the owner, 18 November)
 
-- "Testing alone  (what one player can't set off)"  (text, line 222)
-- "Add a stand-in player (a bot)"  (text, line 225)
-- "Her address:"  (text, line 227)
+- "Testing alone  (what one player can't set off)"  (text, line 228)
+- "Add a stand-in player (a bot)"  (text, line 231)
+- "Her address:"  (text, line 233)
 
 > Note for you (not shown in game): part of: build
 
-- "End the address"  (text, line 229)
-- "Address now"  (text, line 231)
-- "Assassination test (me: Fighter, and her address)"  (text, line 232)
-- "Place the speech stand and crowd points in the editor first."  (text, line 234)
-- "Her last stand now"  (text, line 240)
-- "G-Man's next step"  (text, line 242)
-- "Me as Barney"  (text, line 243)
-- "Me as Freeman"  (text, line 244)
-- "End it"  (text, line 245)
-- "End the {event}"  (text, line 250)
-- "Secret endings menu"  (text, line 256)
-- "Leak the infestation now"  (text, line 257)
-- "Shell a district now"  (text, line 258)
-- "Order the sewer flush now"  (text, line 259)
-- "The quarter:"  (text, line 261)
-- "Open the sewer door now"  (text, line 262)
-- "Order the wall opened from inside now"  (text, line 263)
-- "What this map has"  (text, line 266)
-- "Dream room {m}"  (text, line 267)
-- "Supply run to the headquarters now"  (text, line 270)
-- "Hive boss:"  (text, line 272)
-- "Send it now"  (text, line 273)
-- "Remove it"  (text, line 274)
-- "The roads:"  (text, line 276)
-- "APC: send one now"  (text, line 277)
-- "APC: remove it"  (text, line 278)
+- "End the address"  (text, line 235)
+- "Address now"  (text, line 237)
+- "Assassination test (me: Fighter, and her address)"  (text, line 238)
+- "Place the speech stand and crowd points in the editor first."  (text, line 240)
+- "Her last stand now"  (text, line 246)
+- "G-Man's next step"  (text, line 248)
+- "Me as Barney"  (text, line 249)
+- "Me as Freeman"  (text, line 250)
+- "End it"  (text, line 251)
+- "End the {event}"  (text, line 256)
+- "Secret endings menu"  (text, line 262)
+- "Leak the infestation now"  (text, line 263)
+- "Shell a district now"  (text, line 264)
+- "Order the sewer flush now"  (text, line 265)
+- "The quarter:"  (text, line 267)
+- "Open the sewer door now"  (text, line 268)
+- "Order the wall opened from inside now"  (text, line 269)
+- "What this map has"  (text, line 272)
+- "Dream room {m}"  (text, line 273)
+- "Supply run to the headquarters now"  (text, line 276)
+- "Hive boss:"  (text, line 278)
+- "Send it now"  (text, line 279)
+- "Remove it"  (text, line 280)
+- "The roads:"  (text, line 282)
+- "APC: send one now"  (text, line 283)
+- "APC: remove it"  (text, line 284)
 
 > Note for you (not shown in game): territory: grow it now, for testing (superadmins; it grows along the path nodes)
 
-- "Grow rebel ground now"  (text, line 284)
-- "Grow the infestation now"  (text, line 285)
+- "Grow rebel ground now"  (text, line 290)
+- "Grow the infestation now"  (text, line 291)
 
 > Note for you (not shown in game): part of: build
 
-- "No rebel or infestation zones are placed."  (text, line 292)
-- "Start over"  (text, line 295)
-- "Reset XP, credits and standing to 0"  (text, line 297)
+- "No rebel or infestation zones are placed."  (text, line 298)
+- "Start over"  (text, line 301)
+- "Reset XP, credits and standing to 0"  (text, line 303)
 
 ## cl_livingcity_advisors.lua (cl_livingcity_advisors.lua)
 
@@ -13724,235 +13730,235 @@ Made from version 940e20d3. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: job game end
 
-- "You earned %d extra credits for this work, on top of your normal shift pay."  (message, line 143)
-- "No extra credits for this work."  (text, line 143)
+- "You earned %d extra credits for this work, on top of your normal shift pay."  (message, line 146)
+- "No extra credits for this work."  (text, line 146)
 
 > Note for you (not shown in game): What's under the wrapper: { item, weight } (credits for "coins")
 
-- "A small folded scrap of paper. It says 'Kleiner lives.', with a lambda (the Resistance symbol) drawn underneath."  (text, line 210)
-- "A ration wrapper with a map drawn on the inside: it shows the canal, with an X marked on it."  (text, line 211)
-- "A note written by a child: 'Papa, they took the man from 4C. Come home the back way.'"  (text, line 212)
-- "Half of a torn Combine notice. All that's left: '...relocation of all residents of Block...'"  (text, line 213)
+- "A small folded scrap of paper. It says 'Kleiner lives.', with a lambda (the Resistance symbol) drawn underneath."  (text, line 213)
+- "A ration wrapper with a map drawn on the inside: it shows the canal, with an X marked on it."  (text, line 214)
+- "A note written by a child: 'Papa, they took the man from 4C. Come home the back way.'"  (text, line 215)
+- "Half of a torn Combine notice. All that's left: '...relocation of all residents of Block...'"  (text, line 216)
 
 > Note for you (not shown in game): a credit for each piece in the cart and one more for a long throw, 5 for under three minutes; the rubbish can hide coins besides (two finds at most, 3 to 8 each)
 
-- "Street sweep"  (title, line 250)
+- "Street sweep"  (title, line 253)
 
 > Note for you (not shown in game): part of: lc on pickup
 
-- "found in the rubbish"  (text, line 286)
-- "[Sanitation] You found %d credits in Union tokens stuck in that rubbish. They're yours to keep."  (message, line 287)
-- "Found in the rubbish"  (on-screen notice, line 289)
-- "[Sanitation] You found {what} hidden in that rubbish. It's in your pockets now."  (chat message, line 292)
+- "found in the rubbish"  (text, line 289)
+- "[Sanitation] You found %d credits in Union tokens stuck in that rubbish. They're yours to keep."  (message, line 290)
+- "Found in the rubbish"  (on-screen notice, line 292)
+- "[Sanitation] You found {what} hidden in that rubbish. It's in your pockets now."  (chat message, line 295)
 
 > Note for you (not shown in game): part of: start
 
-- "[Sanitation] Your cart is waiting at the depot. Look at it and press E to grab it and push it; press E again to let go. Pick up each piece of rubbish with E and throw it into the cart with left click (long throws pay extra). When the cart is full, push it back to the depot to finish. You have 7 minutes, and finishing in under 3 earns a bonus."  (chat message, line 302)
+- "[Sanitation] Your cart is waiting at the depot. Look at it and press E to grab it and push it; press E again to let go. Pick up each piece of rubbish with E and throw it into the cart with left click (long throws pay extra). When the cart is full, push it back to the depot to finish. You have 7 minutes, and finishing in under 3 earns a bonus."  (chat message, line 305)
 
 > Note for you (not shown in game): part of: hud
 
-- "Rubbish in the cart: %d of %d"  (message, line 305)
-- "Long throws (extra pay): %d"  (message, line 306)
-- "Cart full: push it back to the depot to finish"  (text, line 307)
-- "Pushing the cart (press E to let go)"  (text, line 307)
-- "Press E on the cart to push it"  (text, line 307)
+- "Rubbish in the cart: %d of %d"  (message, line 308)
+- "Long throws (extra pay): %d"  (message, line 309)
+- "Cart full: push it back to the depot to finish"  (text, line 310)
+- "Pushing the cart (press E to let go)"  (text, line 310)
+- "Press E on the cart to push it"  (text, line 310)
 
 > Note for you (not shown in game): part of: tick
 
-- "Done in under 3 minutes: 5 credits bonus."  (text, line 340)
-- "%d long throws into the cart (1 extra credit each)."  (message, line 342)
-- "Time's up: you're paid for the rubbish already in the cart."  (text, line 347)
+- "Done in under 3 minutes: 5 credits bonus."  (text, line 343)
+- "%d long throws into the cart (1 extra credit each)."  (message, line 345)
+- "Time's up: you're paid for the rubbish already in the cart."  (text, line 350)
 
 > Note for you (not shown in game): pressing a key
 
-- "[Sanitation] You let go of the cart. Press E on it to push it again."  (chat message, line 362)
+- "[Sanitation] You let go of the cart. Press E on it to push it again."  (chat message, line 365)
 
 > Note for you (not shown in game): The same line, other work: the ration plant's sealing line (opts.variant = "rations").
 
-- "Factory line"  (title, line 388)
-- "The conveyor belt is starting. Rust-red, sparking parts are faulty: pick them up with E and throw them (left click) into the scrap bin beside the belt. Leave the good parts on the belt so they reach the end. You're paid for each one you get right and lose pay for each mistake. (Stealing: press R while holding a good part to hide it in your coat; the dealer and the quartermaster buy them. If a Civil Protection unit sees you, you become wanted, and if you take more than one, the foreman may find the count short and dock your pay.)"  (text, line 389)
-- "Something rattles inside this part. Press R while holding it to open it and pocket what's hidden inside."  (text, line 390)
-- "Ration sealing line"  (title, line 391)
-- "The ration sealing belt is starting. Split, leaking packs (the sickly green ones) are faulty: pick them up with E and throw them (left click) into the reject bin beside the belt. Leave the sealed packs on the belt so they reach the end and go on to the dispensers. You're paid for each one you get right and lose pay for each mistake. (Stealing: press R while holding a sealed pack to hide it in your coat. If a Civil Protection unit sees you, you become wanted, and if you take more than one, the foreman may find the count short and dock your pay.)"  (text, line 392)
-- "This pack is heavier than a ration should be. Press R while holding it to open it and pocket what's hidden inside."  (text, line 393)
+- "Factory line"  (title, line 391)
+- "The conveyor belt is starting. Rust-red, sparking parts are faulty: pick them up with E and throw them (left click) into the scrap bin beside the belt. Leave the good parts on the belt so they reach the end. You're paid for each one you get right and lose pay for each mistake. (Stealing: press R while holding a good part to hide it in your coat; the dealer and the quartermaster buy them. If a Civil Protection unit sees you, you become wanted, and if you take more than one, the foreman may find the count short and dock your pay.)"  (text, line 392)
+- "Something rattles inside this part. Press R while holding it to open it and pocket what's hidden inside."  (text, line 393)
+- "Ration sealing line"  (title, line 394)
+- "The ration sealing belt is starting. Split, leaking packs (the sickly green ones) are faulty: pick them up with E and throw them (left click) into the reject bin beside the belt. Leave the sealed packs on the belt so they reach the end and go on to the dispensers. You're paid for each one you get right and lose pay for each mistake. (Stealing: press R while holding a sealed pack to hide it in your coat. If a Civil Protection unit sees you, you become wanted, and if you take more than one, the foreman may find the count short and dock your pay.)"  (text, line 395)
+- "This pack is heavier than a ration should be. Press R while holding it to open it and pocket what's hidden inside."  (text, line 396)
 
 > Note for you (not shown in game): part of: hud
 
-- "Faulty %s binned: %d    Good %s passed: %d"  (message, line 464)
-- "Faulty %s missed: %d    Good %s binned by mistake: %d"  (message, line 465)
+- "Faulty %s binned: %d    Good %s passed: %d"  (message, line 467)
+- "Faulty %s missed: %d    Good %s binned by mistake: %d"  (message, line 468)
 
 > Note for you (not shown in game): part of: tick
 
-- "[Foreman] That one was good! Binning good ones comes out of your pay."  (chat message, line 515)
-- "[Foreman] A faulty one reached the end of the belt! That comes out of your pay."  (chat message, line 518)
+- "[Foreman] That one was good! Binning good ones comes out of your pay."  (chat message, line 518)
+- "[Foreman] A faulty one reached the end of the belt! That comes out of your pay."  (chat message, line 521)
 
 > Note for you (not shown in game): the foreman counts what went through: skim more than one and he may find it short
 
-- "The foreman found %d missing from his count. It comes out of your pay, and you lose Civil Standing."  (message, line 555)
-- "Goods went missing on your shift"  (text, line 556)
+- "The foreman found %d missing from his count. It comes out of your pay, and you lose Civil Standing."  (message, line 558)
+- "Goods went missing on your shift"  (text, line 559)
 
 > Note for you (not shown in game): part of: tick
 
-- "No mistakes all shift: 6 credits bonus."  (text, line 560)
-- "Faulty parts binned: %d of %d. Good parts passed: %d."  (message, line 562)
+- "No mistakes all shift: 6 credits bonus."  (text, line 563)
+- "Faulty parts binned: %d of %d. Good parts passed: %d."  (message, line 565)
 
 > Note for you (not shown in game): Skimming (sv_livingcity_funding.lua): R while holding a good part pockets it. A unit who sees it makes you wanted; and the more you take, the likelier the foreman finds the count short.
 
-- "That one is faulty: nobody would buy it, so it's not worth stealing."  (chat message, line 581)
+- "That one is faulty: nobody would buy it, so it's not worth stealing."  (chat message, line 584)
 
 > Note for you (not shown in game): part of: line skim
 
-- "You hid {name} in your coat. The foreman's count will be one short."  (chat message, line 587)
-- "Theft from the factory floor"  (text, line 589)
-- "[Civil Protection] A Civil Protection unit saw you steal that. You're now wanted."  (chat message, line 590)
+- "You hid {name} in your coat. The foreman's count will be one short."  (chat message, line 590)
+- "Theft from the factory floor"  (text, line 592)
+- "[Civil Protection] A Civil Protection unit saw you steal that. You're now wanted."  (chat message, line 593)
 
 > Note for you (not shown in game): pressing a key
 
-- "You open it and pocket what was hidden inside: {what}."  (chat message, line 606)
-- "Theft from the factory floor"  (text, line 608)
-- "[Civil Protection] A Civil Protection unit saw you steal that. You're now wanted."  (chat message, line 609)
+- "You open it and pocket what was hidden inside: {what}."  (chat message, line 609)
+- "Theft from the factory floor"  (text, line 611)
+- "[Civil Protection] A Civil Protection unit saw you steal that. You're now wanted."  (chat message, line 612)
 
 > Note for you (not shown in game): part of: rule lines
 
-- "Papers must not be expired."  (text, line 650)
-- "The photo must match the person in front of you."  (text, line 650)
+- "Papers must not be expired."  (text, line 653)
+- "The photo must match the person in front of you."  (text, line 653)
 
 > Note for you (not shown in game): One traveler's papers, and what's wrong with them (if anything).
 
-- "Anya Vasek"  (text, line 661)
-- "Pavel Orlov"  (text, line 661)
-- "Mira Kessler"  (text, line 661)
-- "Tomas Hrabal"  (text, line 661)
-- "Ilse Brandt"  (text, line 661)
-- "Jonas Petrov"  (text, line 661)
+- "Anya Vasek"  (text, line 664)
+- "Pavel Orlov"  (text, line 664)
+- "Mira Kessler"  (text, line 664)
+- "Tomas Hrabal"  (text, line 664)
+- "Ilse Brandt"  (text, line 664)
+- "Jonas Petrov"  (text, line 664)
 
 > Note for you (not shown in game): (at the ration counter the same game checks citizens' cards: opts.who, opts.one, opts.where, opts.title)
 
-- "Papers check"  (title, line 732)
+- "Papers check"  (title, line 735)
 
 > Note for you (not shown in game): part of: start
 
-- "[{where}] {who} will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay."  (chat message, line 739)
+- "[{where}] {who} will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay."  (chat message, line 742)
 
 > Note for you (not shown in game): part of: hud
 
-- "%s checked: %d of %d"  (message, line 741)
-- "Right calls: %d    Citations (mistakes): %d"  (message, line 741)
-- "Today's rules:"  (text, line 741)
-- "Press E on the {one} to see their papers"  (text, line 743)
+- "%s checked: %d of %d"  (message, line 744)
+- "Right calls: %d    Citations (mistakes): %d"  (message, line 744)
+- "Today's rules:"  (text, line 744)
+- "Press E on the {one} to see their papers"  (text, line 746)
 
 > Note for you (not shown in game): part of: finish
 
-- "No citations all shift: 5 credits bonus."  (text, line 767)
-- "%d of %d decisions right."  (message, line 769)
+- "No citations all shift: 5 credits bonus."  (text, line 770)
+- "%d of %d decisions right."  (message, line 772)
 
 > Note for you (not shown in game): The call: "approve", "deny" or "unit". True when it was right.
 
-- "Forged papers: the seal reads {seal}. A Civil Protection unit takes the traveler away."  (text, line 825)
+- "Forged papers: the seal reads {seal}. A Civil Protection unit takes the traveler away."  (text, line 828)
 
 > Note for you (not shown in game): part of: papers decide
 
-- "Denied. The seal was forged, so calling a Civil Protection unit would have paid more."  (text, line 827)
-- "You approved forged papers (the seal read {seal})."  (text, line 831)
-- "They walk through on forged papers. Under their breath: 'Thank you.' Nobody noticed this time."  (text, line 833)
-- "You approved papers that had expired."  (text, line 838)
-- "You approved a traveler whose photo didn't match them."  (text, line 838)
-- "You approved entry from a banned district, {banned}."  (text, line 839)
-- "You approved a traveler with no transit permit stamp."  (text, line 839)
-- "You approved travel for work without a Union stamp."  (text, line 840)
-- "You turned away a traveler whose papers were all in order."  (text, line 844)
-- "Your pay is docked for this."  (on-screen notice, line 851)
-- "[Station] {note}"  (chat message, line 853)
+- "Denied. The seal was forged, so calling a Civil Protection unit would have paid more."  (text, line 830)
+- "You approved forged papers (the seal read {seal})."  (text, line 834)
+- "They walk through on forged papers. Under their breath: 'Thank you.' Nobody noticed this time."  (text, line 836)
+- "You approved papers that had expired."  (text, line 841)
+- "You approved a traveler whose photo didn't match them."  (text, line 841)
+- "You approved entry from a banned district, {banned}."  (text, line 842)
+- "You approved a traveler with no transit permit stamp."  (text, line 842)
+- "You approved travel for work without a Union stamp."  (text, line 843)
+- "You turned away a traveler whose papers were all in order."  (text, line 847)
+- "Your pay is docked for this."  (on-screen notice, line 854)
+- "[Station] {note}"  (chat message, line 856)
 
 > Note for you (not shown in game): part of: street papers
 
-- "Only Civil Protection units check papers."  (text, line 893)
-- "Look at a citizen, up close."  (text, line 895)
-- "Get up close to them."  (text, line 896)
-- "Not this one, not now."  (text, line 897)
-- "You've seen their papers. Pick someone else."  (text, line 899)
+- "Only Civil Protection units check papers."  (text, line 896)
+- "Look at a citizen, up close."  (text, line 898)
+- "Get up close to them."  (text, line 899)
+- "Not this one, not now."  (text, line 900)
+- "You've seen their papers. Pick someone else."  (text, line 902)
 
 > Note for you (not shown in game): part of: street papers decide
 
-- "papers out of order"  (text, line 930)
-- "papers out of order"  (text, line 931)
-- "a forged seal, {seal}"  (text, line 932)
-- "somebody else's photo"  (text, line 932)
-- "a banned district"  (text, line 933)
-- "no transit permit stamp"  (text, line 933)
-- "no Union stamp"  (text, line 933)
-- "out of order"  (text, line 933)
-- "[CP net] Papers out of order (%s): cited. %d credit%s, +%d Civil Standing."  (message, line 934)
-- "[CP net] You wave them on."  (chat message, line 938)
-- "[CP net] Papers in order. You wave them on."  (chat message, line 941)
-- "a citation that didn't stand"  (text, line 944)
-- "[CP net] Their papers were in order: the citation is thrown out (-2 Civil Standing)."  (chat message, line 945)
+- "papers out of order"  (text, line 933)
+- "papers out of order"  (text, line 934)
+- "a forged seal, {seal}"  (text, line 935)
+- "somebody else's photo"  (text, line 935)
+- "a banned district"  (text, line 936)
+- "no transit permit stamp"  (text, line 936)
+- "no Union stamp"  (text, line 936)
+- "out of order"  (text, line 936)
+- "[CP net] Papers out of order (%s): cited. %d credit%s, +%d Civil Standing."  (message, line 937)
+- "[CP net] You wave them on."  (chat message, line 941)
+- "[CP net] Papers in order. You wave them on."  (chat message, line 944)
+- "a citation that didn't stand"  (text, line 947)
+- "[CP net] Their papers were in order: the citation is thrown out (-2 Civil Standing)."  (chat message, line 948)
 
 > Note for you (not shown in game): (F2 with a citizen in front of you: "Check their papers")
 
-- "[CP net] {why}"  (text, line 955)
+- "[CP net] {why}"  (text, line 958)
 
 > Note for you (not shown in game): 3 to 6 by the shocks, 2 for close to the fewest turns, doubled in a blackout (LC.WireTry)
 
-- "the panel"  (text, line 1110)
-- "the terminal"  (text, line 1111)
+- "the panel"  (text, line 1113)
+- "the terminal"  (text, line 1114)
 
 > Note for you (not shown in game): part of: hud
 
-- "Turns used: %d (fewest possible: %d)"  (message, line 1120)
-- "Blackout: this job pays double."  (text, line 1121)
+- "Turns used: %d (fewest possible: %d)"  (message, line 1123)
+- "Blackout: this job pays double."  (text, line 1124)
 
 > Note for you (not shown in game): the breaker trips: a new board (and paid less)
 
-- "[Maintenance] Too slow: the breaker tripped and the wires are scrambled. Start again (this job now pays less)."  (chat message, line 1132)
+- "[Maintenance] Too slow: the breaker tripped and the wires are scrambled. Start again (this job now pays less)."  (chat message, line 1135)
 
 > Note for you (not shown in game): part of: wire try
 
-- "Finished in close to the fewest turns: 2 credits bonus."  (text, line 1183)
-- "Blackout: pay doubled."  (text, line 1184)
-- "Not shocked once."  (text, line 1186)
+- "Finished in close to the fewest turns: 2 credits bonus."  (text, line 1186)
+- "Blackout: pay doubled."  (text, line 1187)
+- "Not shocked once."  (text, line 1189)
 
 > Note for you (not shown in game): Triage (Clinic Medic): patients bleeding out at different rates. Treat them with the medkit (primary fire) before they're gone: the worst first. How fast each gets worse (health a second, roughly): an emergency department's mix, not everyone bleeding out alike (the owner: a broken arm isn't dying like someone bleeding out). 0: stable, in pain, can wait.
 
-- "Gunshot wound, bleeding heavily"  (label, line 1208)
-- "Stab wound"  (label, line 1208)
-- "Electrocuted, heart racing"  (label, line 1209)
-- "Head injury (blunt force)"  (label, line 1209)
-- "Crushed under rubble"  (label, line 1210)
-- "Stunstick beating"  (label, line 1210)
-- "Severe burns"  (label, line 1211)
-- "Smoke inhalation"  (label, line 1211)
-- "Broken arm"  (label, line 1212)
-- "Dislocated shoulder"  (label, line 1212)
+- "Gunshot wound, bleeding heavily"  (label, line 1211)
+- "Stab wound"  (label, line 1211)
+- "Electrocuted, heart racing"  (label, line 1212)
+- "Head injury (blunt force)"  (label, line 1212)
+- "Crushed under rubble"  (label, line 1213)
+- "Stunstick beating"  (label, line 1213)
+- "Severe burns"  (label, line 1214)
+- "Smoke inhalation"  (label, line 1214)
+- "Broken arm"  (label, line 1215)
+- "Dislocated shoulder"  (label, line 1215)
 
 > Note for you (not shown in game): part of: urgency
 
-- "(stable: can wait)"  (text, line 1215)
+- "(stable: can wait)"  (text, line 1218)
 
 > Note for you (not shown in game): part of: start
 
-- "[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies."  (chat message, line 1260)
+- "[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies."  (chat message, line 1263)
 
 > Note for you (not shown in game): part of: hud
 
-- "Saved: %d    Lost: %d    Waiting: %d"  (message, line 1262)
+- "Saved: %d    Lost: %d    Waiting: %d"  (message, line 1265)
 
 > Note for you (not shown in game): part of: tick
 
-- "[Clinic] A patient has died: {label}."  (chat message, line 1275)
-- "[Clinic] A patient has died: {label}."  (chat message, line 1290)
-- "[Clinic] {or} grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'"  (chat message, line 1300)
-- "Every patient survived: 6 credits bonus."  (text, line 1312)
-- "%d patients saved, %d lost."  (message, line 1313)
+- "[Clinic] A patient has died: {label}."  (chat message, line 1278)
+- "[Clinic] A patient has died: {label}."  (chat message, line 1293)
+- "[Clinic] {or} grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'"  (chat message, line 1303)
+- "Every patient survived: 6 credits bonus."  (text, line 1315)
+- "%d patients saved, %d lost."  (message, line 1316)
 
 > Note for you (not shown in game): part of: start
 
-- "[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block."  (chat message, line 1368)
+- "[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block."  (chat message, line 1371)
 
 > Note for you (not shown in game): part of: hud
 
-- "Blocks broken: %d of %d"  (message, line 1369)
-- "Hit the blocks with the crowbar (left click)"  (text, line 1369)
+- "Blocks broken: %d of %d"  (message, line 1372)
+- "Hit the blocks with the crowbar (left click)"  (text, line 1372)
 
 ## the unit's kick (sv_livingcity_kick.lua)
 
@@ -24913,80 +24919,127 @@ Made from version 940e20d3. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): The one place this puts words on a screen (house rule 10: few of them).
 
-- "The swarm"  (on-screen notice, line 118)
+- "The swarm"  (on-screen notice, line 119)
 
 > Note for you (not shown in game): What the ritual still waits for, in as few words as will do (nil: nothing).
 
-- "the flag flying at the mine"  (text, line 777)
-- "freed vortigaunts"  (text, line 778)
-- "Resistance strength {NEED_STRENGTH}"  (text, line 780)
-- "districts held"  (text, line 781)
+- "the flag flying at the mine"  (text, line 784)
+- "freed vortigaunts"  (text, line 785)
+- "Resistance strength {NEED_STRENGTH}"  (text, line 787)
+- "districts held"  (text, line 788)
 
 > Note for you (not shown in game): part of: missing
 
-- "the mine's flag up %d more minutes"  (message, line 783)
-- "a city that can fall"  (text, line 784)
+- "the mine's flag up %d more minutes"  (message, line 790)
+- "a city that can fall"  (text, line 791)
 
 > Note for you (not shown in game): part of: use vort
 
-- "Still needed: {miss}."  (chat message, line 891)
+- "Still needed: {miss}."  (chat message, line 898)
 
 > Note for you (not shown in game): part of: set holder
 
-- "The pheropods are yours. Take the swarm to the Nexus."  (chat message, line 936)
-- "The pheropods are yours. Stop the city's thumpers."  (chat message, line 936)
-- "has the pheropods."  (text, line 937)
-- "has the pheropods. Stop the city's thumpers."  (text, line 937)
+- "The pheropods are yours. Take the swarm to the Nexus."  (chat message, line 943)
+- "The pheropods are yours. Stop the city's thumpers."  (chat message, line 943)
+- "has the pheropods."  (text, line 944)
+- "has the pheropods. Stop the city's thumpers."  (text, line 944)
 
 > Note for you (not shown in game): part of: over
 
-- "the city is not ours now"  (text, line 1153)
+- "the city is not ours now"  (text, line 1168)
 
 > Note for you (not shown in game): part of: build
 
-- "Get to the stopped thumper (marked)"  (text, line 1173)
-- "the thumper"  (text, line 1173)
-- "Mend its wiring"  (text, line 1174)
-- "Start it with its button"  (quest step, line 1177)
-- "Restart the thumpers"  (title, line 1184)
-- "The antlions are coming into the city. Mend each stopped thumper and start it again."  (description, line 1185)
+- "Get to the stopped thumper (marked)"  (text, line 1199)
+- "the thumper"  (text, line 1199)
+- "Mend its wiring"  (text, line 1200)
+- "Start it with its button"  (quest step, line 1203)
+- "Restart the thumpers"  (title, line 1212)
+- "The antlions are coming into the city. Mend what was left stopped and start it again."  (description, line 1214)
+- "The antlions are coming into the city. Mend each stopped thumper and start it again."  (description, line 1215)
 
 > Note for you (not shown in game): part of: tick
 
-- "The thumpers are down. Take the swarm to the Nexus."  (text, line 1233)
+- "The city's defences are down. Take the swarm to the Nexus."  (text, line 1263)
+- "The thumpers are down. Take the swarm to the Nexus."  (text, line 1263)
 
 > Note for you (not shown in game): Staff: F4 > Factions > Admin: testing tools > The city (sv_livingcity_admintools.lua) What staff see under the lines.
 
-- "The extract is in the nest."  (spoken line, line 1380)
-- "This map has no antlion nest."  (spoken line, line 1380)
-- "carries the extract."  (spoken line, line 1382)
+- "The extract is in the nest."  (spoken line, line 1410)
+- "This map has no antlion nest."  (spoken line, line 1410)
+- "carries the extract."  (spoken line, line 1412)
 
 > Note for you (not shown in game): part of: status
 
-- "The extract lies where it fell (back in the nest in %d min)."  (message, line 1384)
-- "A freed vortigaunt holds the extract.{or}"  (spoken line, line 1387)
-- "The vortigaunts' ritual: %d s left."  (message, line 1389)
-- "%s holds the pheropods. Thumpers stopped: %d of %d. The swarm: %d."  (message, line 1391)
-- "The city fell to the swarm: the pheropods are gone, %d thumpers broken."  (message, line 1395)
-- "The hive hunts it while the chamber's guardian lives."  (spoken line, line 1397)
-- "The door's guardian is out."  (spoken line, line 1398)
-- "The door's next guardian in %d min."  (message, line 1400)
-- "The mine's flag: %d of %d min."  (message, line 1402)
-- "(lc_swarm is 0: nothing starts by itself.)"  (spoken line, line 1403)
+- "The extract lies where it fell (back in the nest in %d min)."  (message, line 1414)
+- "A freed vortigaunt holds the extract.{or}"  (spoken line, line 1417)
+- "The vortigaunts' ritual: %d s left."  (message, line 1419)
+- "%s holds the pheropods. Thumpers stopped: %d of %d. The swarm: %d."  (message, line 1421)
+- "The city fell to the swarm: the pheropods are gone, %d thumpers broken."  (message, line 1425)
+- "The hive hunts it while the chamber's guardian lives."  (spoken line, line 1427)
+- "The door's guardian is out."  (spoken line, line 1428)
+- "The door's next guardian in %d min."  (message, line 1430)
+- "The mine's flag: %d of %d min."  (message, line 1432)
+- "(lc_swarm is 0: nothing starts by itself.)"  (spoken line, line 1435)
 
 > Note for you (not shown in game): part of: swarm
 
-- "Superadmins only."  (text, line 1435)
-- "Nobody to give it to."  (text, line 1437)
-- "You carry the larval extract."  (text, line 1439)
-- "The vortigaunts' ritual: the pheropods go to the highest rank in 15 s."  (text, line 1442)
-- "The pheropods go to {Nick}."  (text, line 1443)
-- "No Resistance player is online: the pheropods wait for one."  (text, line 1443)
-- "The city is the Resistance's already."  (text, line 1446)
-- "It is falling already."  (text, line 1446)
-- "The swarm: the city falls to the Resistance."  (text, line 1447)
-- "The swarm is over: the pheropods taken back, the antlions gone, the extract in the nest."  (text, line 1450)
-- "Swarm: extract, ritual, fall or end?"  (text, line 1452)
+- "Superadmins only."  (text, line 1467)
+- "Nobody to give it to."  (text, line 1469)
+- "You carry the larval extract."  (text, line 1471)
+- "The vortigaunts' ritual: the pheropods go to the highest rank in 15 s."  (text, line 1474)
+- "The pheropods go to {Nick}."  (text, line 1475)
+- "No Resistance player is online: the pheropods wait for one."  (text, line 1475)
+- "The city is the Resistance's already."  (text, line 1478)
+- "It is falling already."  (text, line 1478)
+- "The swarm: the city falls to the Resistance."  (text, line 1479)
+- "The swarm is over: the pheropods taken back, the antlions gone, the extract in the nest."  (text, line 1482)
+- "Swarm: extract, ritual, fall or end?"  (text, line 1484)
+
+## the suppression core under the Nexus, the Swarm's second gate (the owner, 27 November, agreed: the (sv_livingcity_swarmcore.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_swarmcore.lua`
+
+
+> Note for you (not shown in game): part of: core use
+
+- "the console"  (text, line 219)
+
+> Note for you (not shown in game): part of: core stages
+
+- "Get to the core's console (marked)"  (text, line 332)
+- "the console"  (text, line 332)
+- "Mend its wiring"  (text, line 333)
+- "Start the core with its button"  (quest step, line 337)
+
+> Note for you (not shown in game): part of: over
+
+- "the city has fallen"  (text, line 350)
+
+> Note for you (not shown in game): part of: build
+
+- "Go down to the suppression core (marked)"  (quest step, line 358)
+- "Restart the suppression core"  (title, line 363)
+- "The core under the Nexus has stopped. Mend its consoles and start it again."  (description, line 364)
+
+> Note for you (not shown in game): Staff: F4 > Factions > Admin: testing tools > The city, beside the Swarm's (sv_livingcity_admintools.lua) How it stands, for the Swarm's line (nil: no core on this map).
+
+- "The core is stopped: %d of %d consoles whole."  (message, line 381)
+
+> Note for you (not shown in game): part of: core status
+
+- "The core runs: %d of %d consoles cut (whole again in %d min)."  (message, line 384)
+- "The core runs."  (spoken line, line 386)
+
+> Note for you (not shown in game): part of: core
+
+- "Superadmins only."  (text, line 393)
+- "This map has no suppression core."  (text, line 394)
+- "The core is stopped already."  (text, line 397)
+- "The core winds down."  (text, line 398)
+- "The core runs already."  (text, line 400)
+- "The core runs again."  (text, line 401)
+- "Core: stop or start?"  (text, line 403)
 
 ## talking to people (sv_livingcity_talk.lua)
 
