@@ -673,7 +673,10 @@ class Forest:
                 x1, y1, x2, y2 = frames[name](s1, s2)
                 faces = dict(back) if y2 == D + T else {}
                 faces.update({face: MAT["canal_wall"]} if face else {})
-                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces=faces or None)
+                if name == "north" and not face:
+                    self.north_wall(x1, x2, self.zb, vis, faces or None)
+                else:
+                    v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces=faces or None)
                 self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
@@ -689,6 +692,10 @@ class Forest:
             head.append(self.st_box(s1, 0, s1 + 64, 256, z0 - 64, z0 + 448))
             head.append(self.st_box(s1, 256, s1 + 64, 384, z0 - 64, z0 + 256))
         v.detail(self.headwall_cut(head), MAT["canal_wall"], vis=self.vis("structures"))
+
+    def north_wall(self, x1, x2, z1, vis, faces):
+        """The north wall from z1 to the sky over x1..x2 (a forest may bury part of it under ground of its own)."""
+        self.vmf.world_box(self.box(x1, self.D, z1, x2, self.D + WALL, self.lid), MAT["sky"], vis=vis, faces=faces)
 
     def headwall_cut(self, head):
         """The headwall's boxes, with any hole a piece makes in them (none here)."""
@@ -3346,7 +3353,7 @@ class CaveForest(Forest):
         v.world_box(B(hx2, D, self.zb, x2, D + T, top), jm, vis=sv)
         v.world_box(B(hx1, D, zf + hz, hx2, D + T, top), jm, bottom=jm, vis=sv)
         v.world_box(B(hx1, D, self.zb, hx2, D + T, zf), jm, top=fl, vis=sv)
-        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv, faces={"north": MAT["black"]})      # (its back in the big room's box: black as the box)
+        self.north_wall(x1, x2, top, sv, {"north": MAT["black"]})      # (its back in the big room's box: black as the box)
         under = min(self.natural(x, D, (0, 0)) for x in range(x1, x2 + 1, 64)) - top
         if under < 8:
             self.problems.append("the wall the cave ends in stands %d out of the hill" % -under)
@@ -4943,6 +4950,46 @@ class CaveForest(Forest):
 
     def height(self, x, y, bias=None):
         return Forest.height(self, x, y, bias) + self.hill_behind(x, y)
+
+    def north_wall(self, x1, x2, z1, vis, faces):
+        """The north wall from z1 to the sky over x1..x2: sky as the shell's walls are, but where the hill behind the shed
+        buries it, black below the ground (a sky face under the ground is a hole to map_hidden_faces --holes, as the shell's
+        other walls' buried feet already are): in pieces between the ground's points along the wall (64 apart, the ground
+        straight between them), each piece's black part topped 2 under the ground's line there, the sky part over it."""
+        v, D, T, lid = self.vmf, self.D, WALL, self.lid
+        mid, reach = self.bw["mid"], self.HILL[0]
+        lo, hi = max(x1, mid - reach), min(x2, mid + reach)
+        if hi <= lo:
+            return Forest.north_wall(self, x1, x2, z1, vis, faces)
+        for a, b in ((x1, lo), (hi, x2)):
+            if b > a:
+                Forest.north_wall(self, a, b, z1, vis, faces)
+        sky, nd = MAT["sky"], MAT["nodraw"]
+        back = (faces or {}).get("north", sky)
+        g = lambda x: max(z1 + 8, int(math.floor(self.natural(x, D) + self.hill_behind(x, D))) - 2)
+        W = lambda x, y, z: tuple(int(c) for c in self.w(x, y, z))
+        cols = sorted(set([lo, hi] + list(range(int(math.ceil(lo / 64.0)) * 64, int(hi) + 1, 64))))
+        for a, b in zip(cols, cols[1:]):
+            ga, gb = g(a), g(b)
+            for (za, zb_, front, top_mat) in ((z1, None, MAT["black"], nd), (None, lid, sky, sky)):
+                if zb_ is None:      # (under the ground's line)
+                    f = [([W(a, D, z1), W(b, D, z1), W(b, D, gb), W(a, D, ga)], front),
+                         ([W(a, D + T, z1), W(a, D + T, ga), W(b, D + T, gb), W(b, D + T, z1)], back),
+                         ([W(a, D, z1), W(a, D, ga), W(a, D + T, ga), W(a, D + T, z1)], nd),
+                         ([W(b, D, z1), W(b, D + T, z1), W(b, D + T, gb), W(b, D, gb)], nd),
+                         ([W(a, D, z1), W(a, D + T, z1), W(b, D + T, z1), W(b, D, z1)], nd),
+                         ([W(a, D, ga), W(b, D, gb), W(b, D + T, gb), W(a, D + T, ga)], nd)]
+                    box = self.box(a, D, z1, b, D + T, max(ga, gb))
+                else:                # (over it, to the sky)
+                    f = [([W(a, D, ga), W(b, D, gb), W(b, D, lid), W(a, D, lid)], front),
+                         ([W(a, D + T, ga), W(a, D + T, lid), W(b, D + T, lid), W(b, D + T, gb)], back),
+                         ([W(a, D, ga), W(a, D, lid), W(a, D + T, lid), W(a, D + T, ga)], sky),
+                         ([W(b, D, gb), W(b, D + T, gb), W(b, D + T, lid), W(b, D, lid)], sky),
+                         ([W(a, D, lid), W(b, D, lid), W(b, D + T, lid), W(a, D + T, lid)], top_mat),
+                         ([W(a, D, ga), W(a, D + T, ga), W(b, D + T, gb), W(b, D, gb)], nd)]
+                    box = self.box(a, D, min(ga, gb), b, D + T, lid)
+                v.world.append(v.convex_text(f, vis))
+                v.boxes.append((box, True))
 
     def hill_crest(self):
         """The top of the crib behind the shed: 16 over the hill's highest at the wall within 240 of the shed."""
