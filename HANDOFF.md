@@ -45,7 +45,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   forest via --forest; ~30 min). 27 Nov: the walk map is the OWNER'S FILE now (they edited it in Hammer: rail viaduct with
   canal_bridge02, ladders, ropes...): carry generator changes in with map_owner_delta.py (BEFORE: the build last sent, AFTER:
   the new one), never send a fresh build. Same day: the bunker tunnel at road height (stairs down at its end), shanty under
-  the jog's road deck (shantydeck), relay quay 256 up; a plug under their trimmed core 3102 (it leaked). 24,755 faces,
-  ~46,861 vertices. Stitched with City 18 and the cave: ~95,700 vertices, over the limit (TODO). Not run in game.
-  27 Nov (cave chat): four thumpers in ring.txt (lc_thumper_ by the checkpoint, lc_thumper2_ the old one, 3_ west, 4_ south): in the generator, NOT yet carried into the owner's walk map.
+  the jog's road deck (shantydeck), relay quay 256 up; a plug under their trimmed core 3102 (it leaked). 25,265 faces,
+  ~47,632 vertices. Stitched with City 18 and the cave: ~95,700 vertices, over the limit (TODO). Not run in game.
+  27 Nov: four thumpers (lc_thumper_ by the checkpoint, 2_ the old one with the owner's own button and cable, 3_ west, 4_ south) carried into the owner's walk map;
+  a stopped one sends antlions into its stretch of canal (lc_thumperN_area marks), one every 15 s, two at most (wildlife.md).
 - Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); generator power, hold-E start, crank lift, cables (lc_forest_cave_yours_1127_power sent, not compiled).
