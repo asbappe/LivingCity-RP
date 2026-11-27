@@ -23,6 +23,10 @@
 # run before's track on over the next one's canal. A train waits unseen beyond the tunnel's black end, comes out,
 # runs along its run and backs in again (with a tunnel at both ends of a run it would run through). Every other track
 # end is a buffer stop short of the crossing square (map_corridor.rail_runs).
+# Four Combine thumpers (the owner, 27 November: "4 of those thumper modules scattered around the canal, one of them
+# next to the combine checkpoint"), for the Swarm: the Resistance must switch every one off before antlions can be led
+# into the city. Each copy has its own names, numbered as they come here (lc_thumper_..., then lc_thumper2_... to
+# lc_thumper4_...: map_mods_c.m_thumper), so its button stops and starts that one alone.
 # Checked with
 #   python3 map_build.py chain --layout map_layouts/ring.txt --against c18_lc.vmf lc_canal.vmf lc_ravenholm.vmf lc_forest_bunker.vmf lc_forest_cave.vmf
 
@@ -53,13 +57,14 @@ backdrop clear 3200 1792 8000 5760
 
 # N1: north, from the first canal
 checkpoint
-straight 1344 stairs
+thumper stairs     # (the first of four thumpers, beside the checkpoint: the owner, 27 November, for the Swarm; its names lc_thumper_...; the run's stairs on its leg)
+straight 320       # (with the thumper, the 1344 that was "straight 1344 stairs": everything after it stays where it was)
 left back       # the north run's train: out of a tunnel east of this run's canal, over a bridge onto its tracks
 # N2 and N3: west along the north; the train comes out at the corner and stops short of the rail bridge
 straight 1280      # (was "depot flip": taken off the ring, 24 November)
 straight 1024      # (was "armory flip": taken off the ring, 24 November)
 substation
-thumper
+thumper            # (the second, lc_thumper2_...: the ring's first thumper, where it stood before the other three came)
 straight 576 stairs
 straight 512      # (was the town's branch, "tee flip", 512 long: everything after it stays where it was)
 lock
@@ -73,7 +78,8 @@ left back over  # the west run's train out of a tunnel north of the north run's 
 straight 3200 stairs
 tee flip
 straight 1280      # (was "pipes": the module deleted, the owner, 25 November)
-straight 1408
+thumper            # (the third, lc_thumper3_...: its terrace south of the cave forest's wall, which ends at y 4480)
+straight 384       # (with the thumper, the 1408 that was here: everything after it stays where it was)
 right wall      # the west run's track straight on across the corner's street into a black portal in the Combine wall (the owner, 26 November: yes)
 # S1: west
 drain
@@ -96,7 +102,8 @@ left back       # the south run's train: out of a tunnel west of the west side's
 tunnel 2048
 crypt flip
 straight 1024      # (was "shell": taken off the ring, 24 November)
-straight 1536      # (was "tram": the tram is under the breach now, on the east side: the owner, 26 November)
+thumper            # (the fourth, lc_thumper4_...)
+straight 512       # (with the thumper, the 1536 that was "tram", under the breach on the east side since 26 November: everything after it stays where it was)
 widen
 lockgate flip
 narrow

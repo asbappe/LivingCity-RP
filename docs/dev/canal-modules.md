@@ -849,6 +849,11 @@ the Combine's lamp over it and a small screen beside it, and the button that sto
 a camera on the terrace's back wall, danger signs. Why it is here is shown downstream: sand drifted over the canal's
 floor toward the exit, a burrow broken through the left wall's foot with sand spilling from it, two dead antlions.
 
+Every copy has names of its own (the owner, 27 November: four round the ring for the Swarm, each stopped and
+started by its own button alone). The first in a piece keeps the names below; the second is lc_thumper2_head,
+lc_thumper2_button and so on, the third lc_thumper3_..., counted as they come in the layout (as the flood gates
+count theirs). Every output points at its own copy's names. The ring's four: map_layouts/ring.txt.
+
 Named for the game:
   lc_thumper_head    the thumper itself (prop_thumper): Disable stops it, Enable starts it; its output OnThumped
                      fires each time the hammer lands (the dust and the shake hang on it).
