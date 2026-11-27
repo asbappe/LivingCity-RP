@@ -10,19 +10,30 @@
     the others have a number after "thumper" (lc_thumper2_head, lc_thumper2_burrow, ...). Every name is read as
     ^lc_thumper(%d*)_(%w+)$, and a copy's parts go together by that number ("" for the first).
 
-    While a thumper stands still, antlions dig up at its burrow as Valve's own makers send them
-    (ep2_outland_05): two out at most, from a pool of four that gets one back every 25 seconds, so killing
-    them buys a breather and lingering brings more. They go for everyone: units, rebels, citizens.
-    Started again, the thumper drives off what is left (the game does that itself) and after a minute those
-    still alive dig themselves away. Nothing is written on anyone's screen.
+    While a thumper stands still (the owner, 27 November: "a few (NOT a continuous relentless swarm, but like 1/5
+    the HL2 amount) ... at a small trickle (basically one at a time) at a random player/NPC in that part of the canal,
+    until the thumper is turned back on ... one every 15 seconds with a max or 2 alive at a time"): every 15 seconds
+    one antlion digs up near a random player or person in that thumper's stretch of the canal, and goes for them;
+    two alive at most from each thumper. Its stretch: within 3500 units of the thumper, in the canal's basin (from 64
+    under its burrow's floor to 192 over it: the canal's floor and the thumper's terrace, never the street 256 up).
+    Nobody there, none come. Each thumper on its own: two stopped, two trickles.
+    Started again, the thumper drives off what is left (the game does that itself), and a minute later its antlions
+    still alive dig themselves away. They go for everyone (while the Swarm's pheropods are out, they are its allies:
+    sv_livingcity_swarm.lua). Nothing is written on anyone's screen.
     On a map without these names nothing here happens.
 ]]
 
 LC = LC or {}
 LC.Antlions = LC.Antlions or { stopped = {}, out = {} }
 local A = LC.Antlions
+A.calm = A.calm or {} -- [thumper] = when it was started again (its antlions dig away a minute later)
 
-local GRACE, EVERY, OUT_MAX, POOL_MAX, REGEN, REACH, HEARD = 15, 8, 2, 4, 25, 2000, 3500
+local EVERY, OUT_MAX, REACH, STRETCH, BASIN_DOWN, BASIN_UP, CALM = 15, 2, 2000, 3500, 64, 192, 60
+A.EVERY, A.OUT_MAX, A.STRETCH = EVERY, OUT_MAX, STRETCH
+-- (what they never come up for: their own kind, the invisible and what flies)
+local NOT_PREY = { npc_antlion = true, npc_antlionguard = true, npc_antlion_worker = true, npc_antlion_grub = true, npc_bullseye = true,
+    npc_grenade_bugbait = true, npc_cscanner = true, npc_clawscanner = true, npc_manhack = true, npc_turret_floor = true, npc_turret_ceiling = true,
+    npc_turret_ground = true, npc_combine_camera = true, npc_helicopter = true, npc_combinegunship = true, npc_combinedropship = true, npc_strider = true }
 
 local function NameOf(e) return string.lower(tostring(e.GetName and e:GetName() or "")) end
 
@@ -65,9 +76,10 @@ function A.Set(thumper, running)
     if not IsValid(thumper) then return end
     local s = A.stopped[thumper]
     if running then
-        if s then A.stopped[thumper] = nil A.startedAt = CurTime() end
+        if s then A.stopped[thumper] = nil A.calm[thumper] = CurTime() end
     elseif not s then
-        A.stopped[thumper] = { since = CurTime(), pool = POOL_MAX, regenAt = CurTime() + REGEN, nextAt = CurTime() + GRACE }
+        A.stopped[thumper] = { since = CurTime(), nextAt = CurTime() + EVERY }
+        A.calm[thumper] = nil
     end
 end
 
@@ -80,22 +92,52 @@ hook.Add("AcceptInput", "LivingCityAntlions", function(ent, input)
     LC.Try(A.Set, ent, what == "enable")
 end)
 
-local function Living()
+-- How many of this thumper's are alive.
+function A.OutOf(thumper)
     local n = 0
     for e in pairs(A.out) do
-        if IsValid(e) and e:Health() > 0 then n = n + 1 else A.out[e] = nil end
+        if not (IsValid(e) and e:Health() > 0) then A.out[e] = nil elseif e.lcThumper == thumper then n = n + 1 end
     end
     return n
 end
 
-local function SomeoneNear(pos)
-    for _, p in ipairs(player.GetAll()) do
-        if p:Alive() and p:GetPos():DistToSqr(pos) <= HEARD * HEARD then return true end
-    end
-    return false
+-- In this thumper's stretch of the canal: near it, and down in the basin (not on the street over it).
+function A.InStretch(thumper, pos)
+    local tp = thumper:GetPos()
+    if (pos.x - tp.x) ^ 2 + (pos.y - tp.y) ^ 2 > STRETCH * STRETCH then return false end
+    local burrow = A.BurrowOf(thumper)
+    local floor = burrow and burrow:GetPos().z or (tp.z - 128)
+    return pos.z >= floor - BASIN_DOWN and pos.z <= floor + BASIN_UP
 end
 
-function A.Spawn(pos)
+-- Who is in its stretch: living players and people (any creature it would go for).
+function A.Prey(thumper)
+    local out = {}
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and not p:GetNW2Bool("lc_build", false) and A.InStretch(thumper, p:GetPos()) then out[#out + 1] = p end
+    end
+    for _, e in ipairs(ents.FindInSphere and ents.FindInSphere(thumper:GetPos(), STRETCH) or {}) do
+        if IsValid(e) and e:IsNPC() and e:Health() > 0 and not NOT_PREY[e:GetClass()] and A.InStretch(thumper, e:GetPos()) then out[#out + 1] = e end
+    end
+    return out
+end
+
+-- A spot on the floor a few steps from someone, that they could see (else nil).
+local function SpotNear(pos)
+    if not util.TraceLine then return nil end
+    for _ = 1, 8 do
+        local a, r = math.Rand(0, math.pi * 2), math.Rand(150, 300)
+        local at = pos + Vector(math.cos(a) * r, math.sin(a) * r, 0)
+        local tr = util.TraceLine({ start = at + Vector(0, 0, 64), endpos = at - Vector(0, 0, 128), mask = MASK_SOLID_BRUSHONLY })
+        if tr and tr.Hit and math.abs(tr.HitPos.z - pos.z) < 64 then
+            local los = util.TraceLine({ start = pos + Vector(0, 0, 40), endpos = tr.HitPos + Vector(0, 0, 40), mask = MASK_SOLID_BRUSHONLY })
+            if not (los and los.Hit) then return tr.HitPos end
+        end
+    end
+    return nil
+end
+
+function A.Spawn(pos, thumper)
     local e = ents.Create("npc_antlion")
     if not IsValid(e) then return nil end
     local a, d = math.Rand(0, math.pi * 2), math.Rand(0, 48)
@@ -106,40 +148,47 @@ function A.Spawn(pos)
     e:Spawn()
     if e.Activate then e:Activate() end
     if e.Fire then e:Fire("Unburrow", "", 0.1) end
-    e.lcThumperAntlion = true
+    e.lcThumperAntlion, e.lcThumper = true, thumper
     A.out[e] = true
+    if A.OnSpawn then LC.Try(A.OnSpawn, e) end -- (the Swarm's, while its pheropods are out)
     return e
 end
 
 function A.Tick()
     local now = CurTime()
-    local anyStopped = false
     for th, s in pairs(A.stopped) do
         if not IsValid(th) then
             A.stopped[th] = nil
-        else
-            anyStopped = true
-            if now >= s.regenAt then
-                s.regenAt = now + REGEN
-                if s.pool < POOL_MAX then s.pool = s.pool + 1 end
-            end
-            if now >= s.nextAt and s.pool > 0 and Living() < OUT_MAX then
-                local burrow = A.BurrowOf(th)
-                if burrow and SomeoneNear(burrow:GetPos()) and A.Spawn(burrow:GetPos()) then
-                    s.pool = s.pool - 1
-                    s.nextAt = now + EVERY
+        elseif now >= s.nextAt then
+            s.nextAt = now + EVERY
+            if A.OutOf(th) < OUT_MAX then
+                local prey = A.Prey(th)
+                if #prey > 0 then
+                    local who = prey[math.random(#prey)]
+                    local burrow = A.BurrowOf(th)
+                    local at = SpotNear(who:GetPos()) or (burrow and burrow:GetPos())
+                    local e = at and A.Spawn(at, th)
+                    if e and not (A.FriendOf and A.FriendOf(who)) then
+                        if e.AddEntityRelationship then e:AddEntityRelationship(who, D_HT, 99) end
+                        if e.SetEnemy then e:SetEnemy(who) end
+                        if e.UpdateEnemyMemory then e:UpdateEnemyMemory(who, who:GetPos()) end
+                    end
                 end
             end
         end
     end
-    -- every thumper running again for a minute: what is left digs itself away
-    if not anyStopped and A.startedAt and now - A.startedAt >= 60 then
-        A.startedAt = nil
-        for e in pairs(A.out) do
-            if IsValid(e) and e:Health() > 0 then
-                if e.Fire then e:Fire("BurrowAway", "", 0) else e:Remove() end
+    -- a thumper running again for a minute: its antlions still alive dig themselves away
+    for th, t in pairs(A.calm) do
+        if now - t >= CALM then
+            A.calm[th] = nil
+            for e in pairs(A.out) do
+                if e.lcThumper == th or not IsValid(e.lcThumper) then
+                    if IsValid(e) and e:Health() > 0 then
+                        if e.Fire then e:Fire("BurrowAway", "", 0) else e:Remove() end
+                    end
+                    A.out[e] = nil
+                end
             end
-            A.out[e] = nil
         end
     end
 end
@@ -151,7 +200,7 @@ timer.Create("LivingCityAntlions", 2, 0, function()
 end)
 local function Forget()
     for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
-    A.stopped, A.out, A.startedAt = {}, {}, nil
+    A.stopped, A.out, A.calm = {}, {}, {}
 end
 hook.Add("LivingCityStopped", "LivingCityAntlions", Forget)
-hook.Add("PostCleanupMap", "LivingCityAntlions", function() A.stopped, A.out, A.startedAt = {}, {}, nil end)
+hook.Add("PostCleanupMap", "LivingCityAntlions", function() A.stopped, A.out, A.calm = {}, {}, {} end)

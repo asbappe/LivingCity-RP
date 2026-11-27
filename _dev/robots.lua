@@ -437,7 +437,8 @@ return function(T)
             local ours, fallen = W.CityOurs, W.S.fallen
             W.CityOurs, W.S.fallen = function() return true end, true
             return function()
-                for _, e in ipairs(made) do A.stopped[e] = nil if IsValid(e) then e:Remove() end end
+                for e in pairs(A.out) do if IsValid(e) and table.HasValue(made, e.lcThumper) then e:Remove() A.out[e] = nil end end
+                for _, e in ipairs(made) do A.stopped[e] = nil if A.calm then A.calm[e] = nil end if IsValid(e) then e:Remove() end end
                 W.CityOurs, W.S.fallen, W.S.broken = ours, fallen, {}
             end
         end,

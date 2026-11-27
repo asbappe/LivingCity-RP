@@ -45241,35 +45241,53 @@ function Nov24_BaseVehicleTests() -- (the owner, 20 November: "each base has one
 end
 Nov24_BaseVehicleTests()
 
-function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumpers keep them off ... which a saboteur can switch off")
-    section("24 November: antlions dig up at a stopped thumper's burrow")
+function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumpers keep them off ... which a saboteur can switch off"; 27 November: "a small trickle (basically one at a time) at a random player/NPC in that part of the canal ... one every 15 seconds with a max or 2 alive at a time")
+    section("24 November: antlions dig up at a stopped thumper (27 November: a trickle in its stretch of the canal)")
     local A = LC.Antlions
     local T0 = Vector(-162000, -162000, 0)
-    local th = ents.Create("prop_thumper") th:SetPos(T0) th:SetName("lc_thumper_head") th:Spawn()
+    local stoppedWas, outWas, calmWas = A.stopped, A.out, A.calm
+    A.stopped, A.out, A.calm = {}, {}, {}
+    local th = ents.Create("prop_thumper") th:SetPos(T0 + Vector(0, 0, 128)) th:SetName("lc_thumper_head") th:Spawn()
     local burrow = ents.Create("info_target") burrow:SetPos(T0 + Vector(400, 0, 0)) burrow:SetName("lc_thumper_burrow") burrow:Spawn()
     local p = newPlayer("Saboteur", "resistance", nil, 200)
-    p:SetPos(T0 + Vector(300, 300, 0))
-    local function Out() local n = 0 for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then n = n + 1 end end return n end
+    local function Here() p:SetPos(T0 + Vector(600, 900, 0)) end
+    Here()
+    local function Out() return A.OutOf(th) end
     hook.Run("AcceptInput", th, "Enable", th, th)
     _run(40)
     ok(Out() == 0, "the thumper running: no antlions")
     hook.Run("AcceptInput", th, "Disable", p, p)
-    _run(10)
+    _run(10) Here()
     ok(Out() == 0, "stopped: not at once")
-    _run(30)
-    ok(Out() == 2, "then they dig up at its burrow, two at a time", Out())
-    local near = true
-    for e in pairs(A.out) do if e:GetPos():Distance(burrow:GetPos()) > 60 then near = false end end
-    ok(near, "at the burrow's mouth")
-    for e in pairs(A.out) do e:SetHealth(0) end
-    _run(20)
-    ok(Out() == 2, "killed: the next two come", Out())
-    for e in pairs(A.out) do e:SetHealth(0) end
-    A.stopped[th].pool, A.stopped[th].regenAt = 0, CurTime() + 25
-    _run(10)
-    ok(Out() == 0, "the pool empty: a breather", Out())
-    _run(60)
-    ok(Out() >= 1, "lingering brings more", Out())
+    _run(8) Here()
+    ok(Out() == 1, "then one every fifteen seconds", Out())
+    local first
+    for e in pairs(A.out) do first = e end
+    ok(first and first.enemy == p and first:GetPos():Distance(p:GetPos()) < 400 and first.kv.startburrowed == "1",
+        "digging up near someone in its stretch of the canal, and going for them")
+    _run(15) Here()
+    ok(Out() == 2, "a second fifteen seconds later", Out())
+    _run(32) Here()
+    ok(Out() == 2, "two alive at most from a thumper", Out())
+    first:SetHealth(0)
+    _run(16) Here()
+    ok(Out() == 2, "one killed: another within fifteen seconds", Out())
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    p:SetPos(T0 + Vector(600, 900, 256))
+    _run(34)
+    ok(Out() == 0, "someone on the street over the canal is not in its stretch: none come", Out())
+    p:SetPos(T0 + Vector(5000, 0, 0))
+    local cit = ents.Create("npc_citizen") cit:SetPos(T0 + Vector(-900, 300, 0)) cit:Spawn()
+    _run(17)
+    local onCit = 0
+    for e in pairs(A.out) do if IsValid(e) and e.enemy == cit then onCit = onCit + 1 end end
+    ok(Out() == 1 and onCit == 1, "nobody but a citizen there: one comes for them", Out())
+    cit:Remove()
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    _run(34)
+    ok(Out() == 0, "nobody in its stretch: none come")
+    Here()
+    _run(17) Here()
     hook.Run("AcceptInput", th, "Enable", p, p)
     local left = {}
     for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then left[#left + 1] = e e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
@@ -45278,7 +45296,7 @@ function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumper
     _run(40)
     ok(Out() == 0 and not IsValid(left[1]), "then they dig themselves away, and no more come", Out())
     th:Remove() burrow:Remove() p:Remove()
-    A.stopped, A.out, A.startedAt = {}, {}, nil
+    A.stopped, A.out, A.calm = stoppedWas or {}, outWas or {}, calmWas or {}
 end
 Nov24_ThumperAntlionTests()
 
@@ -45957,23 +45975,29 @@ function Nov27_SwarmTests() -- (the owner, 27 November: the Swarm, "they functio
     ok(Has(heads, th1) and Has(heads, th2), "every thumper on the map is found, the first copy's and the second's", #heads)
     ok(A.BurrowOf(th2) == bur2 and A.BurrowOf(th1) == bur1 and A.PartOf(th2, "button") == but2 and A.PartOf(rel2, "head") == th2,
         "each copy's burrow, button and start go with its own thumper")
-    local watcher = newPlayer("SwarmWatcher", "citizen")
-    watcher:SetPos(T0 + Vector(6300, 300, 0))
-    local outWas, stoppedWas = A.out, A.stopped
-    A.out, A.stopped = {}, {}
+    local watcher, watcher2 = newPlayer("SwarmWatcher", "citizen"), newPlayer("SwarmWatcher2", "citizen")
+    local function Watch() watcher:SetPos(T0 + Vector(6300, 900, 0)) watcher2:SetPos(T0 + Vector(300, 900, 0)) end
+    Watch()
+    local outWas, stoppedWas, calmWas = A.out, A.stopped, A.calm
+    A.out, A.stopped, A.calm = {}, {}, {}
     hook.Run("AcceptInput", th2, "Disable", watcher, watcher)
     ok(W.Stopped(th2) and not W.Stopped(th1), "the second copy's button stops the second thumper only")
-    _run(40)
-    local atTwo, atOne = 0, 0
-    for e in pairs(A.out) do
-        if IsValid(e) and e:GetPos():Distance(bur2:GetPos()) < 80 then atTwo = atTwo + 1 end
-        if IsValid(e) and e:GetPos():Distance(bur1:GetPos()) < 80 then atOne = atOne + 1 end
-    end
-    ok(atTwo == 2 and atOne == 0, "and its antlions dig up at its own burrow, as they do at the first", atTwo .. " " .. atOne)
-    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
-    A.out = {}
+    _run(20) Watch() _run(20) Watch()
+    ok(A.OutOf(th2) == 2 and A.OutOf(th1) == 0, "its trickle comes, two at most", A.OutOf(th2) .. " " .. A.OutOf(th1))
+    local ownStretch = true
+    for e in pairs(A.out) do if IsValid(e) and not (e.lcThumper == th2 and e.enemy == watcher) then ownStretch = false end end
+    ok(ownStretch, "only for whoever is in its own stretch of the canal (not the first copy's)")
+    hook.Run("AcceptInput", th1, "Disable", watcher2, watcher2)
+    _run(20) Watch() _run(20) Watch()
+    ok(A.OutOf(th1) == 2 and A.OutOf(th2) == 2, "two stopped at once: two trickles, each its own two", A.OutOf(th1) .. " " .. A.OutOf(th2))
+    for e in pairs(A.out) do if IsValid(e) then e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
     hook.Run("AcceptInput", th2, "Enable", watcher, watcher)
-    watcher:SetPos(S0 + Vector(0, -9000, 0))
+    _run(62) Watch()
+    ok(A.OutOf(th2) == 0 and A.OutOf(th1) == 2, "the second started again: a minute later its antlions dig away, the first's carry on", A.OutOf(th2) .. " " .. A.OutOf(th1))
+    hook.Run("AcceptInput", th1, "Enable", watcher2, watcher2)
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    A.out, A.calm = {}, {}
+    watcher:SetPos(S0 + Vector(0, -9000, 0)) watcher2:SetPos(S0 + Vector(0, -9100, 0))
 
     -- the emergency door's guardian (it comes whatever lc_swarm says)
     local D0 = S0 + Vector(0, -3000, 0)
@@ -46329,6 +46353,14 @@ function Nov27_SwarmTests() -- (the owner, 27 November: the Swarm, "they functio
     ok(#told == toldN, "(and only once)", #told .. " " .. toldN)
     local swarm = OfKind("swarm")
     ok(#swarm >= 2 and #swarm <= W.SWARM_MAX and swarm[1]:GetPos():Distance(H0) < 600, "the holder in the city: antlions dig up near them, a few at a time", #swarm)
+    rebel:SetPos(T0 + Vector(6300, 900, 0))
+    A.stopped[th2].nextAt = CurTime()
+    _run(2.1)
+    local trick
+    for e in pairs(A.out) do if IsValid(e) and e.lcThumper == th2 then trick = e end end
+    ok(trick ~= nil and trick.lcSwarmFriend == true and trick.enemy ~= rebel and trick.rel[rebel] == D_LI,
+        "the trickle at a stopped thumper is the swarm's too while the pheropods are out: it never comes for the Resistance's own")
+    rebel:SetPos(S0 + Vector(-3200, 3000, 0))
     local ant = swarm[1]
     ok(ant.rel[holder] == D_LI and ant.rel[rebel] == D_LI and ant.rel[unit] == D_HT and ant.rel[watcher] == D_NU,
         "allies of the Resistance, enemies of the units, and citizens left alone (each creature, not Half-Life 2's global)")
@@ -46409,6 +46441,15 @@ function Nov27_SwarmTests() -- (the owner, 27 November: the Swarm, "they functio
     for _, p in ipairs(player.GetAll()) do if p:HasWeapon("weapon_bugbait") then anyBait = true end end
     ok(not IsValid(W.S.holder) and not anyBait, "nobody gets them after that (no next highest)")
     ok(W.Broken(th1) and W.Broken(th2), "the thumpers left stopped are broken")
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    rebel:SetPos(T0 + Vector(6300, 900, 0))
+    A.stopped[th2].nextAt = CurTime()
+    _run(2.1)
+    local wildTrick
+    for e in pairs(A.out) do if IsValid(e) and e.lcThumper == th2 then wildTrick = e end end
+    ok(wildTrick ~= nil and wildTrick.enemy == rebel and not wildTrick.lcSwarmFriend, "and after the fall the trickle comes for the Resistance too")
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    rebel:SetPos(S0 + Vector(-3200, 3000, 0))
     ok(hook.Run("AcceptInput", rel2, "Trigger", rebel, rebel) == true and W.Stopped(th2), "a broken thumper's button does nothing but fizzle")
     harv.alive = true
     harv:SetPos(E0 + Vector(-160, 0, 0))
@@ -46482,13 +46523,13 @@ function Nov27_SwarmTests() -- (the owner, 27 November: the Swarm, "they functio
     for _, z in ipairs(zones) do LC.RemoveZone(z) end
     for _, pt in ipairs(points) do LC.RemovePoint(pt) end
     for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
-    A.stopped, A.out, A.startedAt = stoppedWas or {}, outWas or {}, nil
+    A.stopped, A.out, A.calm = stoppedWas or {}, outWas or {}, calmWas or {}
     for _, e in ipairs(made) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
     for _, e in ipairs(ents.FindByClass("lc_swarm_extract")) do e:Remove() end
     for _, e in ipairs(ents.FindByClass("npc_antlion")) do e:Remove() end
     for _, e in ipairs(ents.FindByClass("npc_antlionguard")) do e:Remove() end
     for _, e in ipairs(ents.FindByClass("scripted_sequence")) do e:Remove() end
-    for _, p in ipairs({ watcher, opener, harv, unit, cit, rebel, bringer, lt, third, fv, staff }) do if IsValid(p) then p:Remove() end end
+    for _, p in ipairs({ watcher, watcher2, opener, harv, unit, cit, rebel, bringer, lt, third, fv, staff }) do if IsValid(p) then p:Remove() end end
     if holder and IsValid(holder) then holder:Remove() end
     LC.RefreshPower()
 end

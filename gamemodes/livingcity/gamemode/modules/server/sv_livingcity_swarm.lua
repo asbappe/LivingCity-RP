@@ -545,6 +545,7 @@ function W.Drop(pos)
     if IsValid(b) then
         b:SetPos(floor + Vector(0, 0, 8))
         b:SetKeyValue("spawnflags", tostring(65536 + 131072))
+        b:SetKeyValue("health", "100") -- (alive to be aimed at; it takes no damage)
         b:Spawn()
         if b.Activate then b:Activate() end
         if b.SetParent then b:SetParent(e) end
@@ -1099,6 +1100,13 @@ function W.Destroyed(why)
     return true
 end
 hook.Add("LivingCityChapterBegan", "LivingCitySwarm", function(why) LC.Try(W.Destroyed, why) end)
+
+-- The trickle at a stopped thumper (sv_livingcity_antlions.lua): while the pheropods are out, the swarm's allies, who
+-- never come for the Resistance's own; before them and after the fall, everyone's enemy.
+if LC.Antlions then
+    LC.Antlions.FriendOf = function(t) return W.S.stage == "pheropods" and Friendly(t) end
+    LC.Antlions.OnSpawn = function(e) if W.S.stage == "pheropods" then W.Befriend(e) end end
+end
 -- (the Combine have the city back: they see to their own thumpers)
 hook.Add("LivingCityChapterEnded", "LivingCitySwarm", function() W.S.fallen, W.S.broken = false, {} end)
 
