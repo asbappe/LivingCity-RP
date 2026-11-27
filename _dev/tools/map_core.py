@@ -301,6 +301,9 @@ def diggers(m, vmf, problems):
         # Valve's train and tracks have their origin at the top of the block (over our roof once moved): the origin and
         # both tracks go down together, inside the room (a train's brushes move as its origin does, wherever that is)
         lower = (top["origin"][2] + d[2]) - (FLOOR + stroke + 32)
+        # (as it spawns a train goes to its first track, its origin `height` over it: Valve's stand 5 under their trains'
+        #  origins, so their pistons stop 5 short of the ground; ours are set so the piston meets the pit floor)
+        settle = float(big["keys"].get("height", "0")) + (top["origin"][2] - big["origin"][2])
 
         def at(p):
             return (p[0] + d[0], p[1] + d[1], p[2] + d[2])
@@ -366,7 +369,7 @@ def diggers(m, vmf, problems):
             keys = dict((k, v) for k, v in w["keys"].items() if k not in ("targetname", "target"))
             keys.update({"targetname": "%s_track_%s" % (name, which), "target": "%s_track_%s" % (name, other)})
             o = at(w["origin"])
-            o = (o[0], o[1], o[2] - lower)
+            o = (o[0], o[1], o[2] - lower - settle)
             vmf.point("path_track", o, keys, vis, connections=[("OnPass", relay, "Trigger", "", 0)], exact=True)
             wires = []
             for out, val in w.get("connections", []):
