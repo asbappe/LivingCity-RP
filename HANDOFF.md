@@ -34,7 +34,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 26 November: the quiet HUD card and the ambient PA lines trimmed (the owner); the old-timer's fisherman head takes his bones every frame (LC_CL.HeadOn; city-people.md). Not seen in game.
 - 27 November (the owner's design; not seen in game): **the Swarm**, `lc_swarm` 1 (the-swarm.md, sv_livingcity_swarm.lua): nest guardians, the larval extract,
   the vortigaunts' ritual (five conditions), pheropods to the highest rank, the thumpers' trickle (1 per 15 s, 2 alive), the city falls
-  at the Nexus, then the job "Restart the thumpers". Full run: 9,629 passed, 7 failed, none from it. Waiting on the owner: a suppression core under the Nexus (C18).
+  at the Nexus, then the job "Restart the thumpers". Full run: 9,629 passed, 7 failed, none from it. The suppression core (sv_livingcity_swarmcore.lua; map_core.py builds its chamber into the owner's C18: c18_lc_yours_1127_core sent, not compiled).
 - 26 November: the cistern as its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf, sent), a street plate
   over it, Valve's freight lift from gallery to street (models, lc_cistern_lift; map-building.md). Not compiled. Next: Propper++.
 - 25 and 26 November (the owner's answers; none seen in game): Combine APC on the ring's road (apc-patrol.md); the city falls chapter,
