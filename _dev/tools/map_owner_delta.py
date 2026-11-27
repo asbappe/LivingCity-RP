@@ -314,6 +314,10 @@ def main():
         add_e = [x for x in add_e if x not in same_shape]
     new_ents = [vis_ok(renum(A[s:e])) for k, (s, e) in add_e]
     new_sols = [vis_ok(renum(A[s:e])) for k, (s, e) in add_w]
+    # (only the visgroups the added pieces are in: a visgroup the owner deleted with what was in it stays deleted; the
+    #  owner, 27 November, deleted the cave's gate, its fence and with them the "path links" visgroup)
+    used = set(re.findall(r'"visgroupid" "(\d+)"', ''.join(new_ents + new_sols)))
+    vnew = [(n, v) for n, v in vnew if v in used]
 
     out, eol = O, oeol
     w_end = oworld[1] - 1                       # (the world's closing brace)

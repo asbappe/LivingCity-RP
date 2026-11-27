@@ -1402,6 +1402,11 @@ end
 hook.Add("PlayerUse", "LivingCityVortCharge", function(ply, ent)
     if LC.StalkerCantSpeak and LC.StalkerCantSpeak(ply, ent) then return false end
     if not (IsValid(ent) and LC.RebelVorts[ent]) then return end
+    -- (the larval extract handed over, or the ritual asked for: the swarm's, sv_livingcity_swarm.lua, whichever hook hears E first)
+    if LC.Swarm and LC.Swarm.UseVort then
+        local ok, mine = LC.Try(LC.Swarm.UseVort, ply, ent)
+        if ok and mine then return false end
+    end
     if (ply.lcVortUse or 0) > CurTime() then return false end
     ply.lcVortUse = CurTime() + 1
     local ok, msg = LC.VortCharge(ply, ent)

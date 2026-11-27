@@ -50,6 +50,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | Lockers, storage crates and market stalls, with what's in them | `data/livingcity/<map>_storage.json` | sv_livingcity_storage.lua |
 | The chapter (whose the city is after the rocket's wave, its clocks, the staff lock; 26 November) | `data/livingcity/<map>_chapter.json` | `LC.Chapter`, sv_livingcity_chapter.lua |
+| The Swarm's clock: how long the Resistance's flag has flown at the mine (27 November) | `data/livingcity/<map>_swarm.json` | `LC.Swarm.clock`, sv_livingcity_swarm.lua |
 | Debug reports (each one saved as it's copied) | `data/livingcity/reports/` | sv_livingcity_debug.lua |
 | Every error, grouped and counted, kept over restarts (F4 > Factions > Admin: errors; the owner sends `errors.txt`) | `data/livingcity/errors.txt`, `errors.json` (what the text is made from), `errors_previous.txt` (the list before the last "start again") | sh_livingcity_errors.lua |
 | Players' bug reports and feedback (F1 > Out of character > Report a bug or feedback; their words with a debug report under them; one a minute each) | `data/livingcity/feedback/<date>_<time>_<steamid64>.txt` | `LC.Feedback`, sv_livingcity_feedback.lua |
@@ -81,6 +82,7 @@ Every recording and song is sent to players with `resource.AddFile` when the map
 
 - Every setting (`lc_*`) and its default is in the core snapshot. **Settings are saved on the server (archived): changing a default never reaches a server that already has the old value.** When a default has to change (with the owner's OK), add the old and new value to the `RETUNED` table in sv_livingcity_endings.lua (`LC.EndingRetune`), which moves a server still on exactly the old default to the new one.
 - **Settings changed in game are also saved per map**, in the layout file (`data/livingcity/<map>.json`, under `"settings"`) and put back on every start (`LC.RememberSetting`). A setting the owner once changed stays that way on that map, whatever its default (that's how `lc_npc_budget` stayed at 10).
+- `lc_swarm` is **1** (the owner, 27 November: "have it on by default"): the antlion nest's extract, the freed vortigaunts' pheropods and the antlions can make the city fall to the Resistance (`docs/features/the-swarm.md`). 0: no harvest, ritual or fall by itself; staff's lines and the nest's guardians still work.
 - `lc_npc_budget` caps the city's NPCs (default 100, for a 32-slot server; 1.75 times at 64 slots and 2.5 times at 120 and up, at most 250; asked for 9 November). Lower than what the settings add up to, nothing more spawns (Civil Protection included); superadmins are told, and the debug report says so.
 
 ## How it all behaves

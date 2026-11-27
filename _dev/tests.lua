@@ -45241,73 +45241,95 @@ function Nov24_BaseVehicleTests() -- (the owner, 20 November: "each base has one
 end
 Nov24_BaseVehicleTests()
 
-function Nov27_ThumperAntlionTests() -- (the owner, 27 November: "that west end of the canal will have antlions spawning in at a small trickle ... at a random player/NPC in that part of the canal, until the thumper is turned back on"; "one every 15 seconds with a max of 2 alive at a time")
-    section("27 November: a stopped thumper's stretch of canal gets an antlion every 15 seconds, two at most, near someone in it")
+function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumpers keep them off ... which a saboteur can switch off"; 27 November: "a small trickle (basically one at a time) at a random player/NPC in that part of the canal ... one every 15 seconds with a max or 2 alive at a time")
+    section("24 November: antlions dig up at a stopped thumper (27 November: a trickle in its stretch of the canal)")
     local A = LC.Antlions
-    A.stopped, A.out, A.calm = {}, {}, {}
     local T0 = Vector(-162000, -162000, 0)
-    local T2 = T0 + Vector(30000, 0, 0)
-    local made = {}
-    local function Make(cls, name, pos) local e = ents.Create(cls) e:SetPos(pos) e:SetName(name) e:Spawn() made[#made + 1] = e return e end
-    local th = Make("prop_thumper", "lc_thumper_head", T0 + Vector(0, 600, 0))
-    Make("info_target", "lc_thumper_area", T0 + Vector(-2000, -224, 8))
-    Make("info_target", "lc_thumper_area", T0 + Vector(2000, 224, 208))
-    Make("info_target", "lc_thumper_burrow", T0 + Vector(0, 150, 0))
-    local th2 = Make("prop_thumper", "lc_thumper2_head", T2 + Vector(0, 600, 0))
-    Make("info_target", "lc_thumper2_area", T2 + Vector(-2000, -224, 8))
-    Make("info_target", "lc_thumper2_area", T2 + Vector(2000, 224, 208))
+    local stoppedWas, outWas, calmWas = A.stopped, A.out, A.calm
+    A.stopped, A.out, A.calm = {}, {}, {}
+    local th = ents.Create("prop_thumper") th:SetPos(T0 + Vector(0, 0, 128)) th:SetName("lc_thumper_head") th:Spawn()
+    local burrow = ents.Create("info_target") burrow:SetPos(T0 + Vector(400, 0, 0)) burrow:SetName("lc_thumper_burrow") burrow:Spawn()
     local p = newPlayer("Saboteur", "resistance", nil, 200)
-    p:SetPos(T0 + Vector(500, 0, 0))
-    local cit = Make("npc_citizen", "", T2 + Vector(-800, 0, 0))
-    local function Of(t) local n, list = 0, {} for e, owner in pairs(A.out) do if owner == t and IsValid(e) and e:Health() > 0 then n = n + 1 list[#list + 1] = e end end return n, list end
+    local function Here() p:SetPos(T0 + Vector(600, 900, 0)) end
+    Here()
+    local function Out() return A.OutOf(th) end
     hook.Run("AcceptInput", th, "Enable", th, th)
     _run(40)
-    ok(Of(th) == 0, "the thumper running: no antlions")
+    ok(Out() == 0, "the thumper running: no antlions")
     hook.Run("AcceptInput", th, "Disable", p, p)
-    _run(12)
-    ok(Of(th) == 0, "stopped: not at once")
-    _run(6)
-    local n, list = Of(th)
-    ok(n == 1, "15 seconds on: one", n)
-    local d = list[1] and list[1]:GetPos():Distance(p:GetPos())
-    ok(d and d >= 150 and d <= 600, "near the player in the stretch, a few steps off", d)
-    ok(list[1] and list[1].enemy == p, "and it goes for them")
-    _run(10)
-    ok(Of(th) == 1, "not another before 15 seconds have passed", Of(th))
-    _run(8)
-    ok(Of(th) == 2, "the next 15 seconds on: two", Of(th))
-    _run(40)
-    ok(Of(th) == 2, "never more than two of that thumper's out at once", Of(th))
-    ok(Of(th2) == 0, "the other thumper, still running: its stretch quiet")
-    for _, e in ipairs(select(2, Of(th))) do e:SetHealth(0) end
-    _run(3)
-    ok(Of(th) == 1, "killed: one comes back, still one at a time", Of(th))
-    p:SetPos(T0 + Vector(500, 3000, 0))
-    for _, e in ipairs(select(2, Of(th))) do e:SetHealth(0) end
-    _run(40)
-    ok(Of(th) == 0, "nobody left in the stretch: nobody comes", Of(th))
-    hook.Run("AcceptInput", th2, "Disable", p, p)
-    _run(18)
-    local n2, l2 = Of(th2)
-    ok(n2 == 1 and l2[1].enemy == cit, "the second thumper stopped: one comes up by the person in its stretch, and goes for them", n2)
-    ok(Of(th) == 0, "and none in the first's, where nobody is")
-    for _, e in ipairs(l2) do e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end
-    hook.Run("AcceptInput", th2, "Enable", p, p)
+    _run(10) Here()
+    ok(Out() == 0, "stopped: not at once")
+    _run(8) Here()
+    ok(Out() == 1, "then one every fifteen seconds", Out())
+    local first
+    for e in pairs(A.out) do first = e end
+    ok(first and first.enemy == p and first:GetPos():Distance(p:GetPos()) < 400 and first.kv.startburrowed == "1",
+        "digging up near someone in its stretch of the canal, and going for them")
+    _run(15) Here()
+    ok(Out() == 2, "a second fifteen seconds later", Out())
+    _run(32) Here()
+    ok(Out() == 2, "two alive at most from a thumper", Out())
+    first:SetHealth(0)
+    _run(16) Here()
+    ok(Out() == 2, "one killed: another within fifteen seconds", Out())
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    p:SetPos(T0 + Vector(600, 900, 256))
+    _run(34)
+    ok(Out() == 0, "someone on the street over the canal is not in its stretch: none come", Out())
+    p:SetPos(T0 + Vector(5000, 0, 0))
+    local cit = ents.Create("npc_citizen") cit:SetPos(T0 + Vector(-900, 300, 0)) cit:Spawn()
+    _run(17)
+    local onCit = 0
+    for e in pairs(A.out) do if IsValid(e) and e.enemy == cit then onCit = onCit + 1 end end
+    ok(Out() == 1 and onCit == 1, "nobody but a citizen there: one comes for them", Out())
+    cit:Remove()
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    _run(34)
+    ok(Out() == 0, "nobody in its stretch: none come")
+    Here()
+    _run(17) Here()
+    hook.Run("AcceptInput", th, "Enable", p, p)
+    local left = {}
+    for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then left[#left + 1] = e e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
     _run(30)
-    ok(IsValid(l2[1]) and Of(th2) == 1, "started again: no more come, those out are left to the thumper for a minute", Of(th2))
-    _run(36)
-    ok(not IsValid(l2[1]) and Of(th2) == 0, "then they dig themselves away", Of(th2))
-    local th3 = Make("prop_thumper", "lc_thumper3_head", T0 + Vector(0, -20000, 0))
-    p:SetPos(T0 + Vector(1500, -20000, 0))
-    hook.Run("AcceptInput", th3, "Disable", p, p)
-    _run(18)
-    ok(Of(th3) == 1, "a thumper without marks: someone within 2000 of it is enough", Of(th3))
+    ok(#left >= 1 and IsValid(left[1]), "started again: those out are left to the thumper for a minute")
+    _run(40)
+    ok(Out() == 0 and not IsValid(left[1]), "then they dig themselves away, and no more come", Out())
+    th:Remove() burrow:Remove() p:Remove()
+    A.stopped, A.out, A.calm = stoppedWas or {}, outWas or {}, calmWas or {}
+end
+Nov24_ThumperAntlionTests()
+
+function Nov27_ThumperStretchMarksTests() -- (the owner, 27 November: "if the thumper on the west side of the canal is shut off, then that west end of the canal will have antlions")
+    section("27 November: a thumper's stretch where the map marks it, the whole run of canal it stands on")
+    local A = LC.Antlions
+    A.stopped, A.out, A.calm, A.areas = {}, {}, {}, {}
+    local T0 = Vector(-182000, -182000, 0)
+    local made = {}
+    local function Make(cls, name, pos) local e = ents.Create(cls) e:SetPos(pos) e:SetName(name) e:Spawn() made[#made + 1] = e return e end
+    local th = Make("prop_thumper", "lc_thumper5_head", T0 + Vector(0, 600, 128))
+    Make("info_target", "lc_thumper5_burrow", T0 + Vector(0, 150, 0))
+    Make("info_target", "lc_thumper5_area", T0 + Vector(-1000, -224, 8))
+    Make("info_target", "lc_thumper5_area", T0 + Vector(9000, 224, 208))
+    local p = newPlayer("Runner", "resistance", nil, 200)
+    p:SetPos(T0 + Vector(7000, 0, 0))
+    local function Of() local n, list = 0, {} for e in pairs(A.out) do if e.lcThumper == th and IsValid(e) and e:Health() > 0 then n = n + 1 list[#list + 1] = e end end return n, list end
+    hook.Run("AcceptInput", th, "Disable", p, p)
+    _run(17)
+    local n, list = Of()
+    ok(n == 1, "7000 from the thumper but in its marked run: one comes up", n)
+    local d = list[1] and list[1]:GetPos():Distance(p:GetPos())
+    ok(d and d <= 400, "a few steps from them", d)
+    for _, e in ipairs(list) do e:SetHealth(0) end
+    p:SetPos(T0 + Vector(2000, 1500, 0))
+    _run(32)
+    ok(Of() == 0, "out of the run (on its bank, within 3500 of the thumper): none", Of())
     for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
     for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
     p:Remove()
-    A.stopped, A.out, A.calm = {}, {}, {}
+    A.stopped, A.out, A.calm, A.areas = {}, {}, {}, {}
 end
-Nov27_ThumperAntlionTests()
+Nov27_ThumperStretchMarksTests()
 
 function Nov24_CutLineTests() -- (the owner, 20 November: a wrecked line causes "a problem with supplies ... the combine need to go out and repair it")
     section("24 November: a train line cut by a bomb costs the city its supplies until it is repaired")
@@ -45935,6 +45957,614 @@ if IsValid(cit) then LC.NPCs[cit] = nil cit:Remove() end
 if IsValid(far) then LC.NPCs[far] = nil far:Remove() end
 end
 Nov26_FearTests()
+
+function Nov27_SwarmTests() -- (the owner, 27 November: the Swarm, "they function just like in HL2: you can control antlions ... throwing a pheropod on an NPC or player spawns extra antlions that then swarm the target")
+    section("27 November: the Swarm, the second way into the city falling to the Resistance")
+    local W, A, C = LC.Swarm, LC.Antlions, LC.Chapter
+    local S0 = Vector(-182000, -182000, 0)
+    local CFILE = "livingcity/" .. game.GetMap() .. "_chapter.json"
+    local SFILE = "livingcity/" .. game.GetMap() .. "_swarm.json"
+    local cfileWas, sfileWas, cWas, clockWas = _files[CFILE], _files[SFILE], C.S, W.clock
+    local cvWas = { GetConVar("lc_swarm"):GetString(), GetConVar("lc_chapter"):GetString(), GetConVar("lc_ledger"):GetString() }
+    _setcvar("lc_ledger", 1)
+    local led = LC.Ledger()
+    local ledWas = { combine = led.combine, authority = led.authority, resistance = led.resistance, districts = table.Copy(led.districts),
+        crackdown = table.Copy(led.crackdown), liberated = table.Copy(led.liberated), news = #led.news }
+    local noticeWas, baseStateWas, baseWas = LC.Notice, LC.BaseState, LC.Base.S
+    local told = {}
+    LC.Notice = function(p, _, title, text) if title == "The swarm" then told[#told + 1] = { p = p, text = text } end end
+    local function toldTo(p, from) for i = (from or 0) + 1, #told do if told[i].p == p then return told[i].text end end return nil end
+    local began = {}
+    hook.Add("LivingCityChapterBegan", "SwarmTests", function(why) began[#began + 1] = why end)
+    if LC.Event then LC.EndEvent(true) end
+    C.S = { state = "normal", elapsed = 0, cooldown = 0, lock = false }
+    C.retake, C.pendingAt, C.pendingBy = nil, nil, nil
+    W.End()
+    W.clock = { flown = 0 }
+    local made, zones, points = {}, {}, {}
+    local function Ent(cls, name, pos) local e = ents.Create(cls) if name then e:SetName(name) end e:SetPos(pos) e:Spawn() made[#made + 1] = e return e end
+    local function Out(kind) local n = 0 for e, k in pairs(W.S.out) do if k == kind and IsValid(e) and e:Health() > 0 then n = n + 1 end end return n end
+    local function OfKind(kind) local o = {} for e, k in pairs(W.S.out) do if k == kind and IsValid(e) and e:Health() > 0 then o[#o + 1] = e end end return o end
+    local function Has(t, v) for _, x in ipairs(t or {}) do if x == v then return true end end return false end
+    local function Aim(p, at) p.aim = (at - p:EyePos()):GetNormalized() end
+
+    ok(cvWas[1] == "1", "lc_swarm is 1 by default (the owner's choice)", cvWas[1])
+
+    -- every copy of the thumper module, by its name's pattern (27 November: four on the canal ring)
+    local T0 = S0 + Vector(0, 15000, 0)
+    local th1 = Ent("prop_thumper", "lc_thumper_head", T0)
+    local th2 = Ent("prop_thumper", "lc_thumper2_head", T0 + Vector(6000, 0, 0))
+    local bur1 = Ent("info_target", "lc_thumper_burrow", T0 + Vector(400, 0, 0))
+    local bur2 = Ent("info_target", "lc_thumper2_burrow", T0 + Vector(6400, 0, 0))
+    local rel1 = Ent("logic_relay", "lc_thumper_start", T0 + Vector(200, 0, 0))
+    local rel2 = Ent("logic_relay", "lc_thumper2_start", T0 + Vector(6200, 0, 0))
+    local but2 = Ent("func_button", "lc_thumper2_button", T0 + Vector(6220, 0, 0))
+    local n2, part2 = A.Parse("lc_thumper2_burrow")
+    local n1, part1 = A.Parse("lc_thumper_head")
+    ok(n2 == "2" and part2 == "burrow" and n1 == "" and part1 == "head" and A.Parse("lc_thumperhead") == nil, "a thumper's parts are read by their name's pattern, each copy by its number")
+    local heads = A.Heads()
+    ok(Has(heads, th1) and Has(heads, th2), "every thumper on the map is found, the first copy's and the second's", #heads)
+    ok(A.BurrowOf(th2) == bur2 and A.BurrowOf(th1) == bur1 and A.PartOf(th2, "button") == but2 and A.PartOf(rel2, "head") == th2,
+        "each copy's burrow, button and start go with its own thumper")
+    local watcher, watcher2 = newPlayer("SwarmWatcher", "citizen"), newPlayer("SwarmWatcher2", "citizen")
+    local function Watch() watcher:SetPos(T0 + Vector(6300, 900, 0)) watcher2:SetPos(T0 + Vector(300, 900, 0)) end
+    Watch()
+    local outWas, stoppedWas, calmWas = A.out, A.stopped, A.calm
+    A.out, A.stopped, A.calm = {}, {}, {}
+    hook.Run("AcceptInput", th2, "Disable", watcher, watcher)
+    ok(W.Stopped(th2) and not W.Stopped(th1), "the second copy's button stops the second thumper only")
+    _run(20) Watch() _run(20) Watch()
+    ok(A.OutOf(th2) == 2 and A.OutOf(th1) == 0, "its trickle comes, two at most", A.OutOf(th2) .. " " .. A.OutOf(th1))
+    local ownStretch = true
+    for e in pairs(A.out) do if IsValid(e) and not (e.lcThumper == th2 and e.enemy == watcher) then ownStretch = false end end
+    ok(ownStretch, "only for whoever is in its own stretch of the canal (not the first copy's)")
+    hook.Run("AcceptInput", th1, "Disable", watcher2, watcher2)
+    _run(20) Watch() _run(20) Watch()
+    ok(A.OutOf(th1) == 2 and A.OutOf(th2) == 2, "two stopped at once: two trickles, each its own two", A.OutOf(th1) .. " " .. A.OutOf(th2))
+    for e in pairs(A.out) do if IsValid(e) then e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
+    hook.Run("AcceptInput", th2, "Enable", watcher, watcher)
+    _run(62) Watch()
+    ok(A.OutOf(th2) == 0 and A.OutOf(th1) == 2, "the second started again: a minute later its antlions dig away, the first's carry on", A.OutOf(th2) .. " " .. A.OutOf(th1))
+    hook.Run("AcceptInput", th1, "Enable", watcher2, watcher2)
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    A.out, A.calm = {}, {}
+    watcher:SetPos(S0 + Vector(0, -9000, 0)) watcher2:SetPos(S0 + Vector(0, -9100, 0))
+
+    -- the emergency door's guardian (it comes whatever lc_swarm says)
+    local D0 = S0 + Vector(0, -3000, 0)
+    local door = Ent("func_button", "lc_nest_door", D0)
+    door.obbmin, door.obbmax = Vector(-96, -16, 0), Vector(96, 16, 160)
+    local rally = Ent("info_target", "lc_nest_rally", D0 + Vector(0, -800, 0))
+    local count = Ent("math_counter", "lc_nest_count", D0 + Vector(0, -30, 110))
+    local opened = Ent("logic_relay", "lc_nest_opened", D0 + Vector(0, -30, 150))
+    local opener = newPlayer("SwarmOpener", "resistance", nil, 400)
+    opener:SetPos(D0 + Vector(300, -300, 0))
+    _setcvar("lc_swarm", 0)
+    hook.Run("AcceptInput", count, "Add", opener, opener)
+    hook.Run("AcceptInput", opened, "Trigger", opener, opener)
+    local g1 = W.S.doorGuard
+    ok(IsValid(g1) and g1:GetClass() == "npc_antlionguard" and g1.kv.cavernbreed == "1" and g1.kv.incavern == "0",
+        "the door opens: an Episode Two guardian (the cavern breed, free to charge), even with lc_swarm 0")
+    ok(IsValid(g1) and g1:GetPos().y > D0.y + 40 and g1:GetPos().y < D0.y + 260 and math.abs(g1:GetPos().z - D0.z) < 40,
+        "on the planks just behind the shutter, at the door's own floor (never down in the cleft)", IsValid(g1) and tostring(g1:GetPos() - D0) or "")
+    hook.Run("AcceptInput", opened, "Trigger", opener, opener)
+    ok(W.S.doorGuard == g1 and #ents.FindByClass("npc_antlionguard") >= 1, "never two from the door at once")
+    _run(W.GUARD_CHARGE - 1)
+    opener:SetPos(D0 + Vector(300, -300, 0)) -- (still by the door: the city may have put a new player somewhere else)
+    _run(2.2)
+    ok(IsValid(g1) and g1.enemy == opener and Has(g1.fired, "SetChargeTarget") and g1.sched == SCHED_CHASE_ENEMY,
+        "the shutter up: it charges out through the doorway at whoever opened it")
+    g1:SetHealth(0)
+    _run(1.1)
+    hook.Run("AcceptInput", opened, "Trigger", opener, opener)
+    ok(W.S.doorGuard == nil and W.S.doorGuardDied ~= nil, "dead: none comes the next time the door opens")
+    W.S.doorGuardDied = CurTime() - W.GUARD_AGAIN - 1
+    hook.Run("AcceptInput", opened, "Trigger", opener, opener)
+    local g2 = W.S.doorGuard
+    ok(IsValid(g2) and g2 ~= g1, "ten minutes after one died, the door brings another")
+    if IsValid(g2) then g2:Remove() end
+    _run(1.1)
+    W.S.doorGuard, W.S.doorGuardDied = nil, nil
+
+    -- the harvest
+    local E0 = S0 + Vector(3000, 0, 0)
+    local ess = Ent("prop_dynamic", "lc_nest_extract", E0 + Vector(0, 0, 60))
+    W.essence = nil
+    local harv = newPlayer("SwarmHarvester", "citizen")
+    harv:SetPos(E0 + Vector(-160, 0, 0))
+    Aim(harv, ess:GetPos())
+    harv.keys = { [IN_USE] = true }
+    hook.Run("KeyPress", harv, IN_USE)
+    ok(W.S.harvest == nil, "lc_swarm 0: nobody can harvest the extract")
+    _setcvar("lc_swarm", 1)
+    local unit = newPlayer("SwarmUnit", "cp")
+    unit:SetPos(E0 + Vector(-150, 40, 0))
+    Aim(unit, ess:GetPos())
+    unit.keys = { [IN_USE] = true }
+    hook.Run("KeyPress", unit, IN_USE)
+    ok(W.S.harvest == nil, "a Combine player cannot harvest it")
+    unit.keys = {}
+    unit:SetPos(S0 + Vector(0, -12000, 0))
+    harv.aim = Vector(0, 1, 0)
+    hook.Run("KeyPress", harv, IN_USE)
+    ok(W.S.harvest == nil, "looking away from it: nothing")
+    Aim(harv, ess:GetPos())
+    hook.Run("KeyPress", harv, IN_USE)
+    ok(W.S.harvest ~= nil and W.S.harvest.ply == harv, "anyone else holds E on it: the harvest begins")
+    _run(2.6)
+    local glow = ess:GetNW2Float("lc_swarm_glow", 0)
+    ok(glow > 0.4 and glow < 0.65 and GetGlobal2Entity("lc_swarm_essence") == ess, "halfway, the essence glows halfway (the world shows it, no bar)", tostring(glow))
+    ok(Out("hunt") >= 1 and harv.nw.lcu_progress == nil, "the nest wakes round them: an antlion digs up in the chamber", Out("hunt"))
+    harv.keys = {}
+    _run(0.3)
+    ok(W.S.harvest == nil and ess:GetNW2Float("lc_swarm_glow", 0) == 0 and W.S.stage == "nest", "let go: it stops, and the glow goes out")
+    harv.keys = { [IN_USE] = true }
+    hook.Run("KeyPress", harv, IN_USE)
+    _run(W.HARVEST_SECS + 0.3)
+    ok(W.S.stage == "carried" and W.S.carrier == harv and harv:GetNW2Bool("lc_swarm_carry", false), "five seconds: they carry the extract, glowing")
+    ok(ess.nodraw == true, "and the essence over the honeycomb is gone")
+    local claim = W.S.claim
+    ok(IsValid(claim) and claim:GetClass() == "npc_antlionguard" and claim.kv.cavernbreed == "1" and claim.kv.incavern == "1"
+        and claim.kv.startburrowed == "1" and Has(claim.fired, "Unburrow") and claim.enemy == harv,
+        "a second guardian bursts up out of the chamber's floor and goes for them")
+    harv.keys = {}
+
+    -- the hunt: for as long as that guardian lives
+    for _, e in ipairs(OfKind("hunt")) do e:Remove() end
+    harv:SetPos(E0 + Vector(-2000, 0, 0))
+    harv.aim = Vector(1, 0, 0)
+    W.S.huntNext = CurTime()
+    _run(1.1)
+    local hunters = OfKind("hunt")
+    local behind = 0
+    for _, e in ipairs(hunters) do if (e:GetPos() - harv:GetPos()):Dot(Vector(1, 0, 0)) < 0 then behind = behind + 1 end end
+    ok(#hunters == 2 and behind == 2, "antlions dig up near and behind the carrier", #hunters .. " " .. behind)
+    ok(hunters[1] and hunters[1].enemy == harv and hunters[1].kv.startburrowed == "1" and Has(hunters[1].fired, "Unburrow"), "out of the ground, going for the carrier first")
+    local nextAt = W.S.huntNext - CurTime()
+    ok(nextAt >= W.HUNT_GAP[1] - 1.2 and nextAt <= W.HUNT_GAP[2], "the next ones in 15 to 20 seconds", tostring(nextAt))
+    W.S.huntNext = CurTime()
+    _run(1.1)
+    W.S.huntNext = CurTime()
+    _run(1.1)
+    ok(Out("hunt") == W.HUNT_MAX, "four out at most", Out("hunt"))
+    ok(W.Where() ~= nil, "(the hunt follows the essence wherever it is)")
+    claim:SetHealth(0)
+    for _, e in ipairs(OfKind("hunt")) do e:Remove() end
+    W.S.huntNext = CurTime()
+    _run(1.1)
+    ok(Out("hunt") == 0 and W.S.claim == nil, "the guardian dead: the hive's claim is broken, and no more come")
+
+    -- fragile: dropped, picked up, pocketed, hurt
+    local cit = newPlayer("SwarmCitizen", "citizen")
+    cit:SetPos(E0 + Vector(-2400, 0, 0))
+    harv:Kill()
+    local drop = W.S.drop
+    ok(W.S.stage == "dropped" and IsValid(drop) and drop:GetClass() == "lc_swarm_extract" and drop:GetNW2Bool("lc_swarm_drop", false)
+        and drop:GetPos():Distance(harv:GetPos()) < 40, "the carrier dies: it lies glowing where they fell")
+    ok(IsValid(W.S.bull) and W.S.bull:GetClass() == "npc_bullseye" and W.S.bull.kv.spawnflags == tostring(65536 + 131072),
+        "with an invisible mark on it that takes no shot itself")
+    hook.Run("PlayerUse", cit, drop)
+    ok(W.S.stage == "carried" and W.S.carrier == cit and not IsValid(drop), "anyone not Combine picks it up with E")
+    cit:Kill()
+    drop = W.S.drop
+    local rebel = newPlayer("SwarmRebelShot", "resistance", nil, 400)
+    hook.Run("EntityTakeDamage", drop, _dmg(rebel, 20, DMG_BULLET or 2))
+    ok(W.S.stage == "dropped" and IsValid(drop), "a rebel's stray shot does nothing to it")
+    local cop = ents.Create("npc_metropolice") cop:SetPos(drop:GetPos() + Vector(900, 0, 0)) cop:Spawn() made[#made + 1] = cop
+    _run(1.1)
+    ok(cop.enemy == W.S.bull and cop.rel[W.S.bull] == D_HT and cop.sched == SCHED_CHASE_ENEMY, "a Combine NPC that sees it drops everything and goes for it, shooting")
+    hook.Run("EntityTakeDamage", drop, _dmg(cop, 20, DMG_BULLET or 2))
+    ok(W.S.stage == "nest" and not IsValid(drop) and ess.nodraw == false, "the Combine's shot bursts it: the essence is back in the nest")
+    -- (again, carried by a citizen)
+    W.Carry(cit) cit.alive = true
+    W.ShowEssence(false)
+    cit:Kill()
+    drop = W.S.drop
+    unit:SetPos(drop:GetPos() + Vector(10, 0, 0))
+    _run(0.3)
+    ok(W.S.stage == "nest" and not IsValid(drop), "a unit's boot on it bursts it")
+    unit:SetPos(S0 + Vector(0, -12000, 0))
+    W.Carry(cit) cit.alive = true
+    W.ShowEssence(false)
+    cit:Kill()
+    drop = W.S.drop
+    cop:SetPos(drop:GetPos() + Vector(20, 0, 0))
+    _run(0.3)
+    ok(W.S.stage == "nest", "a Combine NPC reaching it bursts it")
+    cop:SetPos(S0 + Vector(0, -16000, 0))
+    W.Carry(cit) cit.alive = true
+    W.ShowEssence(false)
+    cit:Kill()
+    drop = W.S.drop
+    hook.Run("PlayerUse", unit, drop)
+    ok(W.S.stage == "nest" and not IsValid(drop), "a Combine player's E pockets it, and it is gone")
+    W.Carry(cit) cit.alive = true
+    W.ShowEssence(false)
+    cit:Kill()
+    W.S.dropAt = CurTime() - W.DROP_SECS - 1
+    _run(1.1)
+    ok(W.S.stage == "nest" and ess.nodraw == false, "left untouched ten minutes: back in the nest")
+    cit.alive = true
+    for _, how in ipairs({ "LivingCitySearched", "LivingCityPattedDown", "LivingCityTied" }) do
+        W.Carry(cit)
+        W.ShowEssence(false)
+        if how == "LivingCitySearched" then hook.Run(how, unit, cit, {}, {}) else hook.Run(how, cit, unit, {}) end
+        ok(W.S.stage == "nest", "a unit's search, pat-down or cuffs takes it from the carrier, and it is gone: " .. how)
+    end
+    W.Carry(cit)
+    hook.Run("LivingCitySearched", rebel, cit, {}, {})
+    ok(W.S.stage == "carried", "(a search by anyone else takes nothing)")
+    LC.SetFaction(cit, "cp", nil, true)
+    _run(1.1)
+    ok(W.S.stage == "nest", "a carrier who joins the Combine has it in Combine pockets: gone")
+    LC.SetFaction(cit, "citizen", nil, true)
+    W.Carry(cit)
+    hook.Run("PlayerDisconnected", cit)
+    ok(W.S.stage == "dropped" and IsValid(W.S.drop), "the carrier leaves the server: it drops where they were")
+    cit:Remove()
+
+    -- the keeper: a freed vortigaunt holds it, as Episode Two's does
+    local K0 = S0 + Vector(0, 3000, 0)
+    local vorts, rvWas = {}, LC.RebelVorts
+    LC.RebelVorts = {}
+    for i = 1, 3 do
+        local v = Ent("npc_vortigaunt", nil, K0 + Vector(i * 200, 0, 0))
+        v.seqs = { idle_nectar = 3, nectar_recieve = 4, turn_blue = 5, surgery_sustain_idle = 6, turn_blue_vort1 = 7, turn_blue_vort2 = 8 }
+        LC.RebelVorts[v] = true
+        vorts[i] = v
+    end
+    local keeper = vorts[1]
+    local bringer = newPlayer("SwarmBringer", "resistance", nil, 400)
+    bringer:SetPos(K0 + Vector(160, 60, 0))
+    W.Carry(bringer)
+    W.ShowEssence(false)
+    hook.Run("PlayerUse", bringer, keeper)
+    ok(W.S.stage == "held" and W.S.keeper == keeper and not bringer:GetNW2Bool("lc_swarm_carry", false), "the carrier's E on a freed vortigaunt: it takes the extract")
+    local hand = W.S.inHand
+    ok(IsValid(hand) and hand:GetModel() == "models/props_hive/larval_essence.mdl" and hand:GetParent() == keeper and Has(hand.fired, "SetParentAttachment")
+        and GetGlobal2Entity("lc_swarm_inhand") == hand, "the little glowing essence in its hands, on its nectar attachment")
+    local hold = W.S.holdScript
+    ok(IsValid(hold) and hold.kv.m_iszPlay == "nectar_recieve" and hold.kv.m_iszPostIdle == "idle_nectar" and hold.kv.m_iszEntity == keeper:GetName()
+        and Has(hold.fired, "BeginSequence"), "Episode Two's own animations: it receives it, then holds it")
+    ok(keeper.lcVortNext > CurTime() + 1000, "it stays put (its camp life waits)")
+    local cmd = newPlayer("SwarmCommander", "resistance", nil, 99999)
+    local lt = newPlayer("SwarmLieutenant", "resistance", nil, 99999)
+    local third = newPlayer("SwarmThird", "resistance", nil, 99999)
+    -- (three of the same rank: whoever is longest online first; anyone else of it in the city has been on for no time)
+    cmd.TimeConnected, lt.TimeConnected, third.TimeConnected = function() return 3000 end, function() return 2000 end, function() return 1000 end
+    third:SetPos(S0 + Vector(-3300, 3000, 0))
+    cmd:SetPos(S0 + Vector(-3000, 3000, 0)) lt:SetPos(S0 + Vector(-3100, 3000, 0)) rebel:SetPos(S0 + Vector(-3200, 3000, 0))
+    told = {}
+    bringer.lcSwarmUseAt = 0
+    hook.Run("PlayerUse", bringer, keeper)
+    local line = toldTo(bringer) or ""
+    ok(W.S.stage == "held" and string.find(line, "Still needed:", 1, true) == 1 and string.find(line, "flag", 1, true) ~= nil,
+        "a Resistance player's E on it with the conditions unmet: one short line of what is missing, and nothing else", line)
+
+    -- the five conditions (the owner, 27 November), and a city that can fall
+    local M0 = K0 + Vector(0, 600, 0)
+    local mine = Ent("info_target", "lc_hq_setup_cave", M0)
+    local rz = LC.AddZone(M0, 900, "rebel", 0) zones[#zones + 1] = rz
+    LC.BaseState = function() return "live" end
+    LC.Base.S = { zone = LC.Base.SiteAt(M0), pos = M0 }
+    local b1 = LC.AddZone(K0 + Vector(-1500, 0, 0), 300, "block", 9901) zones[#zones + 1] = b1
+    local b2 = LC.AddZone(K0 + Vector(-1500, 800, 0), 300, "block", 9902) zones[#zones + 1] = b2
+    led.districts, led.liberated, led.crackdown = {}, {}, {}
+    led.districts["9901"], led.districts["9902"] = 100, 100
+    led.resistance = 70
+    W.clock.flown = W.NEED_FLOWN
+    ok(W.AtMine() and W.FreedVorts() >= 3 and W.DistrictsHeld() >= 2 and W.Missing() == nil, "the flag live at the mine, three freed vortigaunts, strength 70, two districts, two hours: nothing missing")
+    local function Breaks(what, undo, word)
+        local miss = W.Missing()
+        local text = miss and table.concat(miss, ", ") or ""
+        ok(miss ~= nil and #miss == 1 and string.find(text, word, 1, true) ~= nil, "without " .. what .. ": the line says so", text)
+        undo()
+    end
+    LC.BaseState = function() return "overrun" end
+    Breaks("the flag flying at the mine", function() LC.BaseState = function() return "live" end end, "the mine")
+    LC.Base.S = { zone = nil, pos = M0 + Vector(5000, 0, 0) }
+    Breaks("the headquarters at the mine itself", function() LC.Base.S = { zone = LC.Base.SiteAt(M0), pos = M0 } end, "the mine")
+    LC.RebelVorts[vorts[3]] = nil
+    Breaks("three freed vortigaunts", function() LC.RebelVorts[vorts[3]] = true end, "3 freed vortigaunts")
+    led.resistance = 69
+    Breaks("strength 70", function() led.resistance = 70 end, "strength 70")
+    led.districts["9902"] = 0
+    Breaks("two districts", function() led.districts["9902"] = 100 end, "2 districts")
+    W.clock.flown = W.NEED_FLOWN - 600
+    Breaks("two hours of the mine's flag", function() W.clock.flown = W.NEED_FLOWN end, "10 more minutes")
+    C.S.lock = true
+    Breaks("a city that can fall (the chapter locked)", function() C.S.lock = false end, "city that can fall")
+    -- the mine's clock: it runs while the flag flies there, stands while it is overrun, starts again on a ransack, a strike or a move
+    W.clock.flown = 0
+    W.ClockTick(CurTime(), 30)
+    ok(W.clock.flown == 30, "the mine's flag clock runs while it flies there", tostring(W.clock.flown))
+    LC.BaseState = function() return "overrun" end
+    W.ClockTick(CurTime(), 30)
+    ok(W.clock.flown == 30, "overrun (half mast): it stands")
+    LC.BaseState = function() return "live" end
+    W.ClockSave()
+    W.clock = { flown = 0 }
+    W.ClockLoad()
+    ok(W.clock.flown == 30, "kept over a restart (data/livingcity/<map>_swarm.json)", tostring(W.clock.flown))
+    hook.Run("LivingCityBaseGone", rz, "ransacked")
+    ok(W.clock.flown == 0, "a ransack starts it again")
+    W.clock.flown = 50
+    hook.Run("LivingCityBaseGone", rz, "packed")
+    ok(W.clock.flown == 0, "a strike too")
+    W.clock.flown = 50
+    LC.Base.S = { zone = nil, pos = M0 + Vector(9000, 0, 0) }
+    hook.Run("LivingCityBaseLive", nil)
+    ok(W.clock.flown == 0, "and a move (live anywhere else)")
+    LC.Base.S = { zone = LC.Base.SiteAt(M0), pos = M0 }
+    W.clock.flown = W.NEED_FLOWN
+
+    -- the hunt comes to the keeper too, while a chamber's guardian lives
+    local claim2 = Ent("npc_antlionguard", nil, K0 + Vector(0, -2000, 0))
+    W.S.claim, W.S.huntNext = claim2, CurTime()
+    _run(1.1)
+    local toKeeper = OfKind("hunt")[1]
+    ok(toKeeper ~= nil and toKeeper.enemy == keeper and toKeeper:GetPos():Distance(keeper:GetPos()) < 600, "the hive comes for the essence in the vortigaunt's hands too")
+    claim2:Remove()
+    for _, e in ipairs(OfKind("hunt")) do e:Remove() end
+    _run(1.1)
+
+    -- the ritual
+    local fv = newPlayer("SwarmFreeVort", "resistance", "vortigaunt", 400)
+    fv:SetPos(K0 + Vector(300, 300, 0))
+    vorts[3].seqs = nil
+    told = {}
+    bringer.lcSwarmUseAt = 0
+    cit = newPlayer("SwarmCitizen2", "citizen")
+    hook.Run("PlayerUse", cit, keeper)
+    ok(W.S.stage == "held", "(a citizen's E on it starts nothing)")
+    hook.Run("PlayerUse", bringer, keeper)
+    local r = W.S.ritual
+    ok(W.S.stage == "ritual" and r ~= nil and #r.chanters == 3, "everything met: the ritual begins, and the freed vortigaunts near gather", r and #r.chanters)
+    ok(Has(keeper.fired, "TurnBlue") and keeper:GetNW2Bool("lc_swarm_chant", false) and vorts[2]:GetNW2Bool("lc_swarm_chant", false)
+        and fv:GetNW2Bool("lc_swarm_chant", false), "they turn blue-purple, and a Free Vortigaunt near glows with them")
+    local ring = 0
+    for _, ss in ipairs(ents.FindByClass("scripted_sequence")) do if ss.kv.m_iszPostIdle == "surgery_sustain_idle" and string.find(ss.kv.m_iszPlay or "", "turn_blue", 1, true) then ring = ring + 1 end end
+    ok(ring == 2 and vorts[3].sched == SCHED_FORCED_GO and vorts[3].goal ~= nil and vorts[3].goal:Distance(keeper:GetPos()) < W.RING + 20,
+        "Valve's turn-blue animations where the model has them; without them it walks to its place in the ring", ring)
+    local soundsAt = #_sounds
+    _run(W.RITUAL_SECS - 3)
+    local chants = 0
+    for i = soundsAt + 1, #_sounds do if string.find(_sounds[i], "vortigese", 1, true) then chants = chants + 1 end end
+    ok(chants >= 8 and W.S.stage == "ritual", "they chant", chants)
+    _run(4)
+    ok(W.S.stage == "pheropods" and W.S.holder == cmd and cmd:HasWeapon("weapon_bugbait") and cmd:GetNW2Bool("lc_swarm_holder", false),
+        "fifteen seconds: the extract is used up, and the pheropods go to the highest-ranking Resistance player online", tostring(W.S.holder and W.S.holder:Nick()))
+    ok(not keeper:GetNW2Bool("lc_swarm_chant", false) and not IsValid(hand) and W.S.made == true, "the chant is over, nothing in its hands; one a map")
+    ok(toldTo(cmd) == "The pheropods are yours. Stop the city's thumpers." and toldTo(lt) == "SwarmCommander has the pheropods. Stop the city's thumpers.",
+        "one short notice to the holder and one to the rest of the Resistance: the thumpers", tostring(toldTo(cmd)) .. " / " .. tostring(toldTo(lt)))
+    -- who gets them
+    local a1, a2 = newPlayer("SwarmTieA", "resistance", nil, 400), newPlayer("SwarmTieB", "resistance", nil, 400)
+    local ranks = {}
+    for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_faction", "") == "resistance" then ranks[p] = p:GetNW2Int("lcf_rank", 1) p:SetNW2Int("lcf_rank", 1) end end
+    a1:SetNW2Int("lcf_rank", 5) a2:SetNW2Int("lcf_rank", 5)
+    a1.TimeConnected, a2.TimeConnected = function() return 100 end, function() return 900 end
+    ok(W.PickHolder(a1) == a1 and W.PickHolder(nil) == a2, "a tie goes to whoever brought the extract, then to the one longest online")
+    for p, rk in pairs(ranks) do if IsValid(p) then p:SetNW2Int("lcf_rank", rk) end end
+    a1:Remove() a2:Remove()
+    ok(hook.Run("PlayerCanPickupWeapon", lt, { GetClass = function() return "weapon_bugbait" end, IsValid = function() return true end }) == false,
+        "nobody else can pick them up")
+    cmd.lcNoPermadeath = true -- (a character that ends with the death is no longer in the Resistance: that is leaving it)
+    cmd:Kill()
+    _run(1.1)
+    ok(W.S.holder == cmd, "death keeps them")
+    cmd.alive, cmd.lcNoPermadeath = true, nil
+    cmd:StripWeapon("weapon_bugbait")
+    _run(1.1)
+    ok(cmd:HasWeapon("weapon_bugbait"), "and they are in hand again on coming back")
+    told = {}
+    hook.Run("PlayerDisconnected", cmd)
+    cmd:Remove()
+    _run(1.1)
+    ok(W.S.holder == lt and lt:HasWeapon("weapon_bugbait") and toldTo(lt) ~= nil, "the holder leaves the server: the next highest has them", tostring(W.S.holder and W.S.holder:Nick()))
+    LC.SetFaction(lt, "citizen", nil, true)
+    _run(1.1)
+    ok(W.S.holder == third and not lt:HasWeapon("weapon_bugbait") and third:HasWeapon("weapon_bugbait"), "leaves the Resistance: the next highest again", tostring(W.S.holder and W.S.holder:Nick()))
+    local holder = W.S.holder
+
+    -- the swarm: the Resistance's friends, the Combine's enemies; only with every thumper down and the holder in the city
+    local H0 = K0 + Vector(-1500, 400, 0)
+    holder:SetPos(H0)
+    W.S.swarmNext = CurTime()
+    _run(1.1)
+    ok(Out("swarm") == 0, "a thumper still runs: no swarm yet")
+    told = {}
+    hook.Run("AcceptInput", th1, "Disable", watcher, watcher)
+    hook.Run("AcceptInput", th2, "Disable", watcher, watcher)
+    W.S.swarmNext = CurTime()
+    _run(1.1)
+    ok(toldTo(holder) == "The thumpers are down. Take the swarm to the Nexus." and toldTo(bringer) ~= nil and toldTo(watcher) == nil,
+        "every thumper stopped: one notice to the Resistance")
+    local toldN = #told
+    _run(1.1)
+    ok(#told == toldN, "(and only once)", #told .. " " .. toldN)
+    local swarm = OfKind("swarm")
+    ok(#swarm >= 2 and #swarm <= W.SWARM_MAX and swarm[1]:GetPos():Distance(H0) < 600, "the holder in the city: antlions dig up near them, a few at a time", #swarm)
+    rebel:SetPos(T0 + Vector(6300, 900, 0))
+    A.stopped[th2].nextAt = CurTime()
+    _run(2.1)
+    local trick
+    for e in pairs(A.out) do if IsValid(e) and e.lcThumper == th2 then trick = e end end
+    ok(trick ~= nil and trick.lcSwarmFriend == true and trick.enemy ~= rebel and trick.rel[rebel] == D_LI,
+        "the trickle at a stopped thumper is the swarm's too while the pheropods are out: it never comes for the Resistance's own")
+    rebel:SetPos(S0 + Vector(-3200, 3000, 0))
+    local ant = swarm[1]
+    ok(ant.rel[holder] == D_LI and ant.rel[rebel] == D_LI and ant.rel[unit] == D_HT and ant.rel[watcher] == D_NU,
+        "allies of the Resistance, enemies of the units, and citizens left alone (each creature, not Half-Life 2's global)")
+    local rebNPC = LC.ManpowerFree(LC.SpawnRebel, H0 + Vector(0, 3000, 0)) made[#made + 1] = rebNPC
+    W.S.befriendAt = 0
+    _run(1.1)
+    ok(IsValid(rebNPC) and ant.rel[rebNPC] == D_LI and rebNPC.rel[ant] == D_LI, "and of the fighters, both ways")
+    for _ = 1, 4 do W.S.swarmNext = CurTime() _run(1.1) end
+    ok(Out("swarm") == W.SWARM_MAX, "six round the holder at most", Out("swarm"))
+    -- squeezed, they come; thrown, more come for what it hits
+    for _, e in ipairs(OfKind("swarm")) do e:SetPos(H0 + Vector(1200, 0, 0)) e.goal = nil e.enemy = nil end
+    holder.weps = holder.weps or {}
+    holder:SelectWeapon("weapon_bugbait")
+    holder.lcSqueezeNext = 0
+    hook.Run("KeyPress", holder, IN_ATTACK2 or 2048)
+    local came = 0
+    for _, e in ipairs(OfKind("swarm")) do if e.goal and e.goal:Distance(H0) < 150 and e.sched == SCHED_FORCED_GO_RUN then came = came + 1 end end
+    ok(came == W.SWARM_MAX, "the pheropod squeezed: the swarm comes to the holder", came)
+    local target = ents.Create("npc_metropolice") target:SetPos(H0 + Vector(800, 0, 0)) target:Spawn() made[#made + 1] = target
+    local nade = ents.Create("npc_grenade_bugbait") nade.owner = holder nade:SetPos(target:GetPos())
+    nade:Remove()
+    local extra, onIt = Out("swarm") - W.SWARM_MAX, 0
+    for _, e in ipairs(OfKind("swarm")) do if e.enemy == target then onIt = onIt + 1 end end
+    ok(extra == W.EXTRA and onIt >= W.SWARM_MAX + W.EXTRA - 1, "thrown on a unit: more dig up where it burst, and the swarm goes for it", extra .. " " .. onIt)
+    local friend = LC.ManpowerFree(LC.SpawnRebel, H0 + Vector(-900, 0, 0)) made[#made + 1] = friend
+    nade = ents.Create("npc_grenade_bugbait") nade.owner = holder nade:SetPos(friend:GetPos())
+    nade:Remove()
+    local onFriend = 0
+    for _, e in ipairs(OfKind("swarm")) do if e.enemy == friend then onFriend = onFriend + 1 end end
+    ok(onFriend == 0 and Out("swarm") <= W.SWARM_CAP, "thrown on one of the Resistance's own: nobody turns on them, and never more than ten", Out("swarm"))
+    local spot = H0 + Vector(0, -1400, 0)
+    nade = ents.Create("npc_grenade_bugbait") nade.owner = holder nade:SetPos(spot)
+    nade:Remove()
+    local went = 0
+    for _, e in ipairs(OfKind("swarm")) do if e.goal and e.goal:Distance(spot) < 10 and e.sched == SCHED_FORCED_GO_RUN then went = went + 1 end end
+    ok(went >= W.SWARM_MAX, "thrown at nothing: the swarm goes there and fights what it finds", went)
+    nade = ents.Create("npc_grenade_bugbait") nade.owner = rebel nade:SetPos(target:GetPos())
+    local before = Out("swarm")
+    nade:Remove()
+    ok(Out("swarm") == before, "(only the holder's pheropods)")
+    -- a thumper started again: it drives them off and the swarm does not come within its reach
+    hook.Run("AcceptInput", th2, "Enable", watcher, watcher)
+    for _, e in ipairs(OfKind("swarm")) do e:Remove() end
+    W.S.swarmNext = CurTime()
+    _run(1.1)
+    ok(Out("swarm") == 0, "a thumper running again: no more come")
+    hook.Run("AcceptInput", th2, "Disable", watcher, watcher)
+
+    -- the fall: the holder in the Nexus with the swarm
+    local N0 = H0 + Vector(0, 2600, 0)
+    local nexus = LC.AddZone(nil, nil, "combine", 0, { mins = N0 + Vector(-400, -400, -16), maxs = N0 + Vector(400, 400, 192) }) zones[#zones + 1] = nexus
+    local desk = LC.AddPoint(N0, 0, "desk", 0) points[#points + 1] = desk
+    local ncop = LC.ManpowerFree(LC.Spawners.cop, N0 + Vector(300, 0, 0)) made[#made + 1] = ncop
+    unit:SetPos(N0 + Vector(-300, 0, 0))
+    unit.alive = true
+    holder:SetPos(N0)
+    W.S.swarmNext = CurTime()
+    C.S.lock = true
+    _run(1.1)
+    ok(not W.S.falling and not LC.ChapterReversed(), "the chapter locked: the city does not fall")
+    C.S.lock = false
+    net.sent = {}
+    _run(1.1)
+    ok(W.S.falling ~= nil and _lastnet("lc_swarm_fall") ~= nil and not LC.ChapterReversed(), "in the Nexus with the swarm: it begins (lc_chapter is 0: that is the rocket's switch)")
+    ok(Out("fall") >= 2, "antlions burst up on the Combine across the city", Out("fall"))
+    _run(W.FALL_DELAY + 1)
+    ok(LC.ChapterReversed() and began[#began] == "swarm", "and the city falls to the Resistance, the chapter told why: the swarm", tostring(began[#began]))
+    ok(not (IsValid(ncop) and ncop:Health() > 0) and not unit:Alive(), "the units die, as with the rocket's wave")
+    ok(string.find(led.news[#led.news] or "", "Antlions", 1, true) ~= nil, "one line in the City Bulletin", tostring(led.news[#led.news]))
+    -- the pheropods destroyed for good, the antlions wild, the thumpers broken
+    ok(W.S.stage == "gone" and W.S.holder == nil and not holder:HasWeapon("weapon_bugbait") and not holder:GetNW2Bool("lc_swarm_holder", false),
+        "the pheropods are destroyed for good")
+    local wildOne
+    for e in pairs(W.S.wild) do if IsValid(e) then wildOne = e break end end
+    ok(wildOne ~= nil and wildOne.rel[holder] == D_HT and wildOne.rel[rebel] == D_HT and wildOne.lcSwarmFriend == nil, "the antlions are nobody's now: the Resistance are their enemies too")
+    _run(1.1)
+    local anyBait = false
+    for _, p in ipairs(player.GetAll()) do if p:HasWeapon("weapon_bugbait") then anyBait = true end end
+    ok(not IsValid(W.S.holder) and not anyBait, "nobody gets them after that (no next highest)")
+    ok(W.Broken(th1) and W.Broken(th2), "the thumpers left stopped are broken")
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    rebel:SetPos(T0 + Vector(6300, 900, 0))
+    A.stopped[th2].nextAt = CurTime()
+    _run(2.1)
+    local wildTrick
+    for e in pairs(A.out) do if IsValid(e) and e.lcThumper == th2 then wildTrick = e end end
+    ok(wildTrick ~= nil and wildTrick.enemy == rebel and not wildTrick.lcSwarmFriend, "and after the fall the trickle comes for the Resistance too")
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    rebel:SetPos(S0 + Vector(-3200, 3000, 0))
+    ok(hook.Run("AcceptInput", rel2, "Trigger", rebel, rebel) == true and W.Stopped(th2), "a broken thumper's button does nothing but fizzle")
+    harv.alive = true
+    harv:SetPos(E0 + Vector(-160, 0, 0))
+    Aim(harv, ess:GetPos())
+    ok(W.TryHarvest(harv) == false and ess.nodraw == true, "none can be made again this map: the essence is gone from the nest")
+
+    -- Restart the thumpers: the Resistance's job while the city is theirs after the swarm
+    local function Tmpl(id) for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end end
+    local function Posted(id) for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == id and not p.dead then return p end end end
+    local ps = Posted("res_thumpers")
+    ok(Tmpl("res_thumpers").available(rebel) == true and ps ~= nil, "on the Resistance's board at once")
+    if ps then
+        rebel.lcqNext = 0
+        ok(LC.AcceptPosting(rebel, ps.id) == true, "a member takes it")
+        local q = LC.QuestOf[rebel]
+        ok(q ~= nil and #q.stages == 6, "each stopped thumper: get there, mend it, start it", q and #q.stages)
+        for _, st in ipairs(q and q.stages or {}) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
+        local xpWas = tonumber(rebel:GetPData("lcf_xp_resistance", 0)) or 0
+        for i = 1, 2 do
+            local th = q.stages[i * 3].thumper
+            rebel:SetPos(q.stages[i * 3 - 2].pos + Vector(20, 0, 0))
+            _run(1.1)
+            local g = LC.JobGames[rebel]
+            ok(q.stage == i * 3 - 1 and g ~= nil and g.kind == "wiring", "at the thumper: its wiring is the game (" .. i .. ")")
+            if th == th2 then ok(hook.Run("AcceptInput", rel2, "Trigger", rebel, rebel) == true, "(not mended yet: its button still only fizzles)") end
+            LC.JobGameEnd(rebel, "done")
+            ok(q.stage == i * 3 and not W.Broken(th), "mended (" .. i .. ")")
+            local relay = q.stages[i * 3].relay
+            if IsValid(relay) then ok(hook.Run("AcceptInput", relay, "Trigger", rebel, rebel) == nil, "its button answers now (" .. i .. ")") end
+            hook.Run("AcceptInput", th, "Enable", rebel, rebel)
+            _run(1.1)
+        end
+        ok(q.done and LC.QuestOf[rebel] == nil and (tonumber(rebel:GetPData("lcf_xp_resistance", 0)) or 0) > xpWas, "every thumper running: the job pays")
+        ok(Tmpl("res_thumpers").available(rebel) == false, "and it is off the board")
+    end
+
+    -- staff
+    local staff = newPlayer("SwarmStaff", "citizen")
+    staff.admin = true
+    ok(LC.AdminTool(staff, nil, "swarm", "extract") == false, "the staff's lines are a superadmin's")
+    staff.superadmin = true
+    ok(LC.AdminTool(staff, nil, "swarm", "fall") == false, "the city the Resistance's already: no fall")
+    LC.ChapterEnd("staff")
+    C.S.cooldown = 0
+    ok(LC.AdminTool(staff, nil, "swarm", "extract") == true and W.S.stage == "carried" and W.S.carrier == staff, "Swarm: give me the extract")
+    ok(LC.AdminTool(staff, nil, "swarm", "ritual") == true and W.S.stage == "ritual", "Swarm: the vortigaunts' ritual now (whatever the conditions)")
+    ok(LC.AdminTool(staff, nil, "swarm", "end") == true and W.S.stage == "nest" and ess.nodraw == false and W.S.ritual == nil, "Swarm: end it (all back)")
+    ok(W.Status().line ~= nil and string.find(W.Status().line, "nest", 1, true) ~= nil, "(a line says how it stands)")
+    C.S.lock = true
+    ok(LC.AdminTool(staff, nil, "swarm", "fall") == true, "Swarm: the city falls to the swarm now (whatever the lock)")
+    _run(W.FALL_DELAY + 1)
+    ok(LC.ChapterReversed() and began[#began] == "swarm", "(and it falls)")
+    LC.ChapterEnd("staff")
+
+    -- everything as it was
+    W.End()
+    for e in pairs(W.S.out) do if IsValid(e) then e:Remove() end end
+    W.S = { stage = "nest", out = {}, wild = {}, broken = {}, pressers = {}, grenades = {} }
+    W.essence, W.clock = nil, clockWas
+    hook.Remove("LivingCityChapterBegan", "SwarmTests")
+    LC.Notice, LC.BaseState, LC.Base.S = noticeWas, baseStateWas, baseWas
+    if LC.Base.Reset then LC.Base.Reset() LC.Base.S = baseWas end
+    _setcvar("lc_swarm", tonumber(cvWas[1])) _setcvar("lc_chapter", tonumber(cvWas[2])) _setcvar("lc_ledger", tonumber(cvWas[3]))
+    C.S, C.retake, C.pendingAt, C.pendingBy, C.maskOff = cWas, nil, nil, nil, {}
+    _files[CFILE], _files[SFILE] = cfileWas, sfileWas
+    LC.ChapterApply()
+    led.combine, led.authority, led.resistance = ledWas.combine, ledWas.authority, ledWas.resistance
+    led.districts, led.crackdown, led.liberated = ledWas.districts, ledWas.crackdown, ledWas.liberated
+    while #led.news > ledWas.news do table.remove(led.news) end
+    LC.RebelVorts = rvWas
+    for _, z in ipairs(zones) do LC.RemoveZone(z) end
+    for _, pt in ipairs(points) do LC.RemovePoint(pt) end
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    A.stopped, A.out, A.calm = stoppedWas or {}, outWas or {}, calmWas or {}
+    for _, e in ipairs(made) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+    for _, e in ipairs(ents.FindByClass("lc_swarm_extract")) do e:Remove() end
+    for _, e in ipairs(ents.FindByClass("npc_antlion")) do e:Remove() end
+    for _, e in ipairs(ents.FindByClass("npc_antlionguard")) do e:Remove() end
+    for _, e in ipairs(ents.FindByClass("scripted_sequence")) do e:Remove() end
+    for _, p in ipairs({ watcher, watcher2, opener, harv, unit, cit, rebel, bringer, lt, third, fv, staff }) do if IsValid(p) then p:Remove() end end
+    if holder and IsValid(holder) then holder:Remove() end
+    LC.RefreshPower()
+end
+Nov27_SwarmTests()
 
 section("Stop")
 LC.Stop(admin)

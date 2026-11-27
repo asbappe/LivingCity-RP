@@ -150,7 +150,7 @@ function B.Ground(pos, r)
     for _, e in ipairs(ents.FindInSphere and ents.FindInSphere(pos, r) or {}) do
         if IsValid(e) and e.IsNPC and e:IsNPC() and (not e.Health or e:Health() > 0) then
             local c = e:GetClass()
-            if WILD[c] then out.wild = true elseif COMBINE_NPC[c] then out.combine = true end
+            if WILD[c] and not e.lcSwarmFriend then out.wild = true elseif COMBINE_NPC[c] then out.combine = true end -- (the pheropods' antlions are the Resistance's: sv_livingcity_swarm.lua)
         end
     end
     return out

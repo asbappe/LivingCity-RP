@@ -1298,6 +1298,7 @@ setting lc_surgery_price = 300
 setting lc_surgery_standing = -50
 setting lc_survival_modes = 1
 setting lc_survival_switch_hours = 3
+setting lc_swarm = 1
 setting lc_sweep_gas = 0.5
 setting lc_sweep_warning = 90
 setting lc_tag_minutes = 60

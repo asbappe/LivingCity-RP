@@ -316,6 +316,7 @@ local function Snapshot(admin, target)
     if admin:IsSuperAdmin() then
         local sp = LC.SpeechSession and LC.SpeechSession()
         data.chapter = LC.ChapterStatus and LC.ChapterStatus() or nil -- (the chapter: sv_livingcity_chapter.lua)
+        data.swarm = LC.Swarm and LC.Swarm.Status and LC.Swarm.Status() or nil -- (the swarm: sv_livingcity_swarm.lua)
         data.solo = { address = sp and true or false, places = (LC.SpeechPlaces and LC.SpeechPlaces()) and true or false,
             event = GetGlobal2String("lc_event", ""), collapse = GetGlobal2String("lc_collapse_stage", "") }
     end
