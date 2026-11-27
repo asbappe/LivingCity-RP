@@ -4121,3 +4121,12 @@ A tunnel, doorway or gate that people walk through out of a canal, and anything 
 - **Checked by:** The chain's notes: the relay's quay at z 656; map_stairs.py on the canal and the tunnel.
 - **Tags:** owner, geometry
 
+### A brush entity's middle must be inside the map: Hammer writes it as the origin, and vbsp tests it for leaks (`owner-hammer-origins-leak`)
+
+When the owner saves a file in Hammer, every brush entity gets an "origin" key, the middle of its brushes, and vbsp's leak test floods to that point. A trigger or other brush entity whose middle lies in the void (a box reaching over a buried chain's roof, past a wall into nothing) makes the map leak, though the generator's own file (no origin keys) compiled. Size each brush entity so its middle is in the map's air or inside solid, and run map_leak_points.py on every file before sending it.
+
+- **Why:** The owner's compile of 27 November, of their Hammer-saved walk map: "Entity trigger_multiple (3392.00 -6016.00 656.00) leaked!": the test map's module-name trigger over the crypt's buried inlet reached 1536 over the canal's floor, its middle on the inlet roof's top face.
+- **How:** map_modules.name_sign: the box from 1024 under the floor to 1280 over it (its middle 128 over the floor); map_leak_points.py, run by map_ring_walk.py.
+- **Checked by:** python3 map_leak_points.py FILE.vmf prints 0.
+- **Tags:** owner, geometry
+

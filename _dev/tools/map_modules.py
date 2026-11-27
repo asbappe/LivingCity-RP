@@ -2266,7 +2266,11 @@ def name_sign(b, fr, length, half, words):
     (the owner, 24 November: "a trigger that pops text up on my screen ... that tells me the name of the module I'm
     standing in; several of them I have no idea which module they are"). A trigger over the module's whole length, its
     side rooms and the street beside it, and a game_text it shows again every second to whoever stands in it (one
-    line: Hammer turns a backslash-n into a slash on saving). Never in the real map."""
+    line: Hammer turns a backslash-n into a slash on saving). Never in the real map. Its box from 1024 under the canal's
+    floor to 1280 over it, so its middle is 128 over the floor, in the canal's air: Hammer writes a brush entity's middle
+    as its origin when it saves, and vbsp tests that point for leaks (the owner's compile of 27 November: the box reached
+    1536 up, its middle was the top of the buried inlet's roof, in the void over it, "Entity trigger_multiple
+    (3392.00 -6016.00 656.00) leaked!")."""
     if not b.test:
         return
     b.sign_n = getattr(b, "sign_n", 0) + 1
@@ -2277,7 +2281,7 @@ def name_sign(b, fr, length, half, words):
         "color": "255 220 80", "color2": "255 220 80", "fadein": "0", "fadeout": "0.3", "holdtime": "1.5", "fxtime": "0",
         "channel": "2", "spawnflags": "0"}, vis)
     b.vmf.brush_entity("trigger_multiple", {"spawnflags": "1", "StartDisabled": "0", "wait": "1"},
-                       [fr.box(0, -half, F - 1024, length, half, F + 1536)], MAT["trigger"], vis,
+                       [fr.box(0, -half, F - 1024, length, half, F + 1280)], MAT["trigger"], vis,
                        connections=[("OnStartTouch", text, "Display", "", 0), ("OnTrigger", text, "Display", "", 0)])
     b.vmf.boxes.pop()      # (the trigger is nothing a train, a prop or a check should take for a thing in the way)
 

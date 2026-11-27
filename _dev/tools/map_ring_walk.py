@@ -122,6 +122,9 @@ def main():
     #  own build walks its inside; what this walk proves there is the way from the canal down the tunnel to its gate)
     run([py, "map_walk.py", args.out, "--also", "14768", "4260", "410", "--also", "12688", "7024", "-142", "--also", "11748", "4770", "410"], show=("problems", "  "))
     run([py, "map_stairs.py", args.out], show=("flights", "  "))
+    # (and every entity's point, as vbsp's leak test sees it once Hammer has saved the file: the owner's compile of 27
+    #  November leaked at a test trigger whose middle was in the void over the buried inlet's roof)
+    run([py, "map_leak_points.py", args.out], show=("OUTSIDE", "entities in air"))
     fin = map_budget.count(os.path.join(HERE, args.out))
     for key in ("faces", "verts"):
         if map_budget.over(fin, key):
