@@ -320,6 +320,14 @@ return function(T)
             if not (IsValid(st.relay) and hook.Run("AcceptInput", st.relay, "Trigger", p, p) == true) then
                 hook.Run("AcceptInput", st.thumper, "Enable", p, p)
             end
+        elseif k == "count" and st.event == "core_started" then
+            -- the suppression core's button (sv_livingcity_swarmcore.lua), pressed where it is: with every console
+            -- mended it starts the core; with one still cut it only fizzles, and the job waits
+            if now < (mem.useAt or 0) then return end
+            mem.useAt = now + 1
+            if not IsValid(st.button) then return "the robot can't find the core's button" end
+            p.lcCorePressAt = 0
+            use(p, st.button)
         elseif k == "count" and st.poll and st.event ~= "served" then
             -- a step the job watches for itself (meat in the crate, a wound patched): each needs its own doing
             return "the robot can't do this step yet: count / " .. tostring(st.event)
@@ -417,6 +425,31 @@ return function(T)
         end
     end
 
+    -- The suppression core under the Nexus (sv_livingcity_swarmcore.lua), stopped, its three consoles cut, at a place of
+    -- the robot's own: the machine, its two relays, the consoles' marks, the button and the Combine's way in.
+    local function stoppedCore(at)
+        local W = LC.Swarm
+        if not (W and W.CoreStages) then error("no suppression core in this build") end
+        local made = {}
+        local function put(cls, name, off)
+            local e = ents.Create(cls) e:SetName(name) e:SetPos(at + off) e:Spawn()
+            made[#made + 1] = e
+        end
+        put("func_tracktrain", "lc_core_machine", Vector(0, 400, 96))
+        put("info_target", "lc_core_room", Vector(0, 0, 0))
+        put("logic_relay", "lc_core_stop", Vector(0, 0, -40))
+        put("logic_relay", "lc_core_start", Vector(16, 0, -40))
+        for i, off in ipairs({ Vector(-300, 0, 0), Vector(0, 300, 0), Vector(300, 0, 0) }) do put("info_target", "lc_core_panel_" .. i, off) end
+        put("func_button", "lc_core_button", Vector(0, -300, 40))
+        put("info_target", "lc_core_combine_way", Vector(0, -1400, 0))
+        local was = W.core
+        W.core = { running = false, cut = { true, true, true }, applied = true }
+        return function()
+            for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+            W.core = was
+        end
+    end
+
     -- A job offered only while something is on in the city that is not one of its events: the robot's city
     -- is given it while the job is played. id -> function() -> what puts the city back.
     local STAGED = {
@@ -436,12 +469,17 @@ return function(T)
             end
             local ours, fallen = W.CityOurs, W.S.fallen
             W.CityOurs, W.S.fallen = function() return true end, true
+            -- (and the suppression core, left stopped: one more of what the job starts again)
+            local core = W.CoreStages and stoppedCore(at + Vector(0, 6000, 0))
             return function()
                 for e in pairs(A.out) do if IsValid(e) and table.HasValue(made, e.lcThumper) then e:Remove() A.out[e] = nil end end
                 for _, e in ipairs(made) do A.stopped[e] = nil if A.calm then A.calm[e] = nil end if IsValid(e) then e:Remove() end end
                 W.CityOurs, W.S.fallen, W.S.broken = ours, fallen, {}
+                if core then core() end
             end
         end,
+        -- the suppression core stopped by the Resistance, its consoles cut (sv_livingcity_swarmcore.lua)
+        cmb_core = function() return stoppedCore(Vector(-70000, 70000, 0)) end,
         res_supplyescort = function() return supplyRun() end,
         cp_supplystop = function() return supplyRun() end,
         -- the Union paymaster on his walk with the wages (sv_livingcity_resistancemoney.lua)

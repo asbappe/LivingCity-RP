@@ -126,6 +126,8 @@ function LC.JobGameStart(ply, kind, q, opts)
 end
 
 -- End it. how: "done", "quit", "test", "replaced"
+-- (opts.quiet: a game that is no shift's work, such as the suppression core's consoles: no pay and no notice. Other code
+-- hears every end: hook LivingCityJobGameEnded(ply, kind, how, opts).)
 function LC.JobGameEnd(ply, how)
     local g = LC.JobGames[ply]
     if not g then return end
@@ -134,7 +136,8 @@ function LC.JobGameEnd(ply, how)
     if def.finish then LC.Try(def.finish, g, how) end
     for _, e in ipairs(g.props) do if IsValid(e) then e:Remove() end end
     Hud(ply, nil)
-    if how == "done" or how == "test" then
+    hook.Run("LivingCityJobGameEnded", ply, g.kind, how, g.opts)
+    if (how == "done" or how == "test") and not g.opts.quiet then
         local pay = math.max(0, math.floor(g.pay))
         if Unpaid(g.q, ply) then pay = 0 end
         pay = Mul(ply, pay)

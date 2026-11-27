@@ -23,7 +23,8 @@
                     hours) and the city can fall: the freed vortigaunts gather, turn blue-purple and chant for 15
                     seconds, and the pheropods (weapon_bugbait) go to the highest-ranking Resistance player online.
                     Missing anything: one short line of what. One per map.
-      The swarm     the mission is the city's thumpers. All stopped (or none on the map) and the holder in the city:
+      The swarm     the mission is the city's thumpers. All stopped (or none on the map), the suppression core under
+                    the Nexus too where the map has one (sv_livingcity_swarmcore.lua), and the holder in the city:
                     antlions come up near the holder as at Nova Prospekt, the Resistance's allies and the Combine's
                     enemies. A thrown pheropod brings more onto what it hits; squeezed, they come to the holder.
       The fall      the holder in the Nexus with the swarm: antlions burst up on the Combine, and the chapter begins
@@ -147,6 +148,11 @@ function W.AllStopped()
     for _, th in ipairs(W.Thumpers()) do if not W.Stopped(th) then return false end end
     return true
 end
+-- The city's defences: every thumper stopped, and the suppression core under the Nexus too where the map has one
+-- (sv_livingcity_swarmcore.lua). The swarm comes into the city, and the city falls to it, only with all of them down.
+function W.DefencesDown() return W.AllStopped() and not (W.CoreRunning ~= nil and W.CoreRunning()) end
+local function HasCore() return W.HasCore ~= nil and W.HasCore() end
+local function CoreDown() return W.CoreDown ~= nil and W.CoreDown() end
 local function NearRunningThumper(pos)
     for _, th in ipairs(W.Thumpers()) do
         if not W.Stopped(th) and th:GetPos():DistToSqr(pos) < W.THUMP_R * W.THUMP_R then return true end
@@ -932,7 +938,7 @@ function W.SetHolder(p, first)
     if not IsValid(p) then return end
     p:SetNW2Bool("lc_swarm_holder", true)
     GiveBait(p)
-    local down = W.AllStopped()
+    local down = W.DefencesDown()
     if down then S.toldDown = true end
     Tell(p, down and "The pheropods are yours. Take the swarm to the Nexus." or "The pheropods are yours. Stop the city's thumpers.")
     if first then TellRebels(p:Nick() .. (down and " has the pheropods." or " has the pheropods. Stop the city's thumpers."), p) end
@@ -995,8 +1001,8 @@ function W.SwarmNear(pos, r)
     return false
 end
 
--- As at Nova Prospekt: with every thumper down and the holder in the city, they dig up near the holder a few at a
--- time, follow, and go for the Combine on their own. Never within a running thumper's reach.
+-- As at Nova Prospekt: with every thumper down (and the core: W.DefencesDown) and the holder in the city, they dig up
+-- near the holder a few at a time, follow, and go for the Combine on their own. Never within a running thumper's reach.
 function W.SwarmTick(now, h)
     local S = W.S
     for e in pairs(LC.Antlions and LC.Antlions.out or {}) do if Living(e) and not e.lcSwarmFriend and not e.lcSwarmWild then W.Befriend(e) end end
@@ -1007,7 +1013,7 @@ function W.SwarmTick(now, h)
     end
     if not Living(h) then return end
     local hp = h:GetPos()
-    if W.AllStopped() and W.InCity(hp) and not NearRunningThumper(hp) and now >= (S.swarmNext or 0) then
+    if W.DefencesDown() and W.InCity(hp) and not NearRunningThumper(hp) and now >= (S.swarmNext or 0) then
         S.swarmNext = now + W.SWARM_EVERY
         for _ = 1, 3 do
             if #list >= W.SWARM_MAX then break end
@@ -1095,7 +1101,7 @@ function W.Destroyed(why)
     for e in pairs(LC.Antlions and LC.Antlions.out or {}) do if IsValid(e) and e.lcSwarmFriend then W.Wild(e) end end
     S.broken = {}
     for _, th in ipairs(W.StoppedThumpers()) do S.broken[th] = true end
-    if next(S.broken) ~= nil and LC.PostDirective then LC.PostDirective("res_thumpers", nil, true) end
+    if (next(S.broken) ~= nil or CoreDown()) and LC.PostDirective then LC.PostDirective("res_thumpers", nil, true) end
     if LC.Log then LC.Log("info", "swarm: the pheropods are destroyed; the antlions are wild") end
     return true
 end
@@ -1120,10 +1126,11 @@ function W.ClockLoad()
     W.clock = { flown = math.max(0, tonumber(istable(t) and t.flown) or 0) }
     return W.clock
 end
+-- (the one file for both: the mine's clock, and the suppression core's state, W.CoreData: sv_livingcity_swarmcore.lua)
 function W.ClockSave()
     if not (file and file.Write and LC.SafeWrite) then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    LC.SafeWrite(ClockFile(), util.TableToJSON({ flown = math.floor(W.clock.flown or 0) }, true))
+    LC.SafeWrite(ClockFile(), util.TableToJSON({ flown = math.floor(W.clock.flown or 0), core = W.CoreData and W.CoreData() or nil }, true))
 end
 W.clock = W.clock or W.ClockLoad()
 local function ClockReset()
@@ -1156,41 +1163,56 @@ local Q = LC.QB
 if Q and LC.QuestTemplates then
     LC.QuestTemplates[#LC.QuestTemplates + 1] = {
         id = "res_thumpers", brings = false, factions = { resistance = true }, squad = 4,
-        available = function() return W.S.fallen == true and W.CityOurs() and #W.StoppedThumpers() > 0 end,
+        available = function() return W.S.fallen == true and W.CityOurs() and (#W.StoppedThumpers() > 0 or CoreDown()) end,
         over = function()
             if not (W.S.fallen and W.CityOurs()) then return false, "the city is not ours now" end
-            if #W.StoppedThumpers() == 0 then return true end -- (every thumper runs: it pays, whoever started the last)
+            -- (every thumper runs, and the core: it pays, whoever started the last)
+            if #W.StoppedThumpers() == 0 and not CoreDown() then return true end
         end,
         build = function(ply)
-            local left, list = W.StoppedThumpers(), {}
+            -- each stopped thumper, and the suppression core under the Nexus where it is stopped (one more of them:
+            -- its consoles mended, then its button; sv_livingcity_swarmcore.lua), each next the nearest to the last
+            local left, list = {}, {}
+            for _, th in ipairs(W.StoppedThumpers()) do left[#left + 1] = { th = th, pos = th:GetPos() } end
+            local corePos = CoreDown() and W.CorePos and W.CorePos() or nil
+            if corePos then left[#left + 1] = { core = true, pos = corePos } end
             local from = IsValid(ply) and ply:GetPos() or Vector(0, 0, 0)
-            while #left > 0 do -- (each next the nearest to the last)
+            while #left > 0 do
                 local bi, bd
-                for i, th in ipairs(left) do
-                    local d = th:GetPos():DistToSqr(from)
+                for i, site in ipairs(left) do
+                    local d = site.pos:DistToSqr(from)
                     if not bd or d < bd then bi, bd = i, d end
                 end
-                local th = table.remove(left, bi)
-                list[#list + 1] = th
-                from = th:GetPos()
+                local site = table.remove(left, bi)
+                list[#list + 1] = site
+                from = site.pos
             end
             if #list == 0 then return nil end
-            local stages = {}
-            for _, th in ipairs(list) do
-                local at = W.ThumperConsole(th)
-                stages[#stages + 1] = Q.GameGo(at, "Get to the stopped thumper (marked)", "wiring", { what = "the thumper", pos = at }, 140)
-                local mend = Q.GameStage("Mend its wiring")
-                mend.onDone = function() W.S.broken[th] = nil end
-                stages[#stages + 1] = mend
-                local start = Q.Count("thumper_started", 1, "Start it with its button")
-                start.pos, start.untallied, start.thumper = at, true, th
-                start.relay = LC.Antlions and LC.Antlions.PartOf and LC.Antlions.PartOf(th, "start")
-                start.poll = function(q, st) if not W.Stopped(st.thumper) then Q.Advance(q) end end
-                stages[#stages + 1] = start
+            local stages, nThumpers, last = {}, 0, IsValid(ply) and ply:GetPos() or nil
+            for _, site in ipairs(list) do
+                if site.core then
+                    for _, st in ipairs(W.CoreStages and W.CoreStages(last) or {}) do stages[#stages + 1] = st end
+                else
+                    local th = site.th
+                    nThumpers = nThumpers + 1
+                    local at = W.ThumperConsole(th)
+                    stages[#stages + 1] = Q.GameGo(at, "Get to the stopped thumper (marked)", "wiring", { what = "the thumper", pos = at }, 140)
+                    local mend = Q.GameStage("Mend its wiring")
+                    mend.onDone = function() W.S.broken[th] = nil end
+                    stages[#stages + 1] = mend
+                    local start = Q.Count("thumper_started", 1, "Start it with its button")
+                    start.pos, start.untallied, start.thumper = at, true, th
+                    start.relay = LC.Antlions and LC.Antlions.PartOf and LC.Antlions.PartOf(th, "start")
+                    start.poll = function(q, st) if not W.Stopped(st.thumper) then Q.Advance(q) end end
+                    stages[#stages + 1] = start
+                end
+                last = site.pos
             end
             return {
-                title = "Restart the thumpers", reward = 40 + 20 * #list, limit = 600 + 300 * #list,
-                desc = "The antlions are coming into the city. Mend each stopped thumper and start it again.",
+                title = "Restart the thumpers", reward = 40 + 20 * nThumpers + (corePos and 60 or 0),
+                limit = 600 + 300 * nThumpers + (corePos and 600 or 0),
+                desc = corePos and "The antlions are coming into the city. Mend what was left stopped and start it again."
+                    or "The antlions are coming into the city. Mend each stopped thumper and start it again.",
                 stages = stages,
             }
         end,
@@ -1236,12 +1258,12 @@ function W.Tick(now)
         local h = S.holder
         if not (IsValid(h) and Rebel(h)) then W.SetHolder(W.PickHolder(nil), false) h = S.holder end
         if IsValid(h) then GiveBait(h) end
-        if not S.toldDown and #W.Thumpers() > 0 and W.AllStopped() then
+        if not S.toldDown and (#W.Thumpers() > 0 or HasCore()) and W.DefencesDown() then
             S.toldDown = true
-            TellRebels("The thumpers are down. Take the swarm to the Nexus.")
+            TellRebels(HasCore() and "The city's defences are down. Take the swarm to the Nexus." or "The thumpers are down. Take the swarm to the Nexus.")
         end
         W.SwarmTick(now, h)
-        if Living(h) and cvOn:GetBool() and not S.falling and W.AllStopped() and W.InNexus(h:GetPos()) and W.SwarmNear(h:GetPos(), 3000) and W.MayFall() then
+        if Living(h) and cvOn:GetBool() and not S.falling and W.DefencesDown() and W.InNexus(h:GetPos()) and W.SwarmNear(h:GetPos(), 3000) and W.MayFall() then
             W.Fall(h)
         end
         for _, w in ipairs(ents.FindByClass and ents.FindByClass("weapon_bugbait") or {}) do -- (never left lying about)
@@ -1408,8 +1430,10 @@ function W.Status()
         line = line .. string.format(" The door's next guardian in %d min.", math.ceil((W.GUARD_AGAIN - (CurTime() - S.doorGuardDied)) / 60))
     end
     line = line .. string.format(" The mine's flag: %d of %d min.", math.floor((W.clock.flown or 0) / 60), W.NEED_FLOWN / 60)
+    local core = W.CoreStatus and W.CoreStatus() or nil -- (the suppression core, where the map has one)
+    if core then line = line .. " " .. core.line end
     if not cvOn:GetBool() then line = line .. " (lc_swarm is 0: nothing starts by itself.)" end
-    return { stage = S.stage, line = line }
+    return { stage = S.stage, line = line, core = core }
 end
 
 -- Staff's own: the extract, the ritual, the fall, the end (whatever lc_swarm and the conditions say).

@@ -6302,6 +6302,37 @@ if not ok then return "swarm: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the suppression core's heartbeat (cl_livingcity_swarm.lua): a deep thud, quiet, the faintest shake, nothing written;
+# and the staff's two lines for it in the admin panel, beside the Swarm's
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local SW = LC_CL.Swarm
+    if not (SW and SW.Thud and net["recv_lc_core_thud"]) then error("the heartbeat's receiver is missing") end
+    local was = { sound, util.ScreenShake, chat.AddText }
+    local played, shook, wrote = {}, {}, 0
+    sound = { Play = function(path, pos, level, pitch, vol) played[#played + 1] = { path = path, pitch = pitch, vol = vol } end }
+    util.ScreenShake = function(pos, amp, freq, dur, r) shook[#shook + 1] = { amp = amp, dur = dur } end
+    chat.AddText = function() wrote = wrote + 1 end
+    local n0 = _calls["surface.DrawText"] or 0
+    net["recv_lc_core_thud"]()
+    if #played ~= 1 or played[1].pitch > 70 or played[1].vol > 0.35 then error("one deep, quiet thud: " .. #played .. " sounds") end
+    if #shook ~= 1 or shook[1].amp > 1 or shook[1].dur > 1.5 then error("the faintest shake") end
+    if wrote > 0 or (_calls["surface.DrawText"] or 0) ~= n0 or not SW.thudAt then error("something written") end
+    sound, util.ScreenShake, chat.AddText = was[1], was[2], was[3]
+end)
+if not ok then return "core heartbeat: " .. tostring(e) end
+local okP, errP
+local swarm = { line = "The extract is in the nest. The core runs.", core = { running = true, cut = 0, n = 3, line = "The core runs." } }
+for _, core in ipairs({ swarm.core, { running = false, cut = 3, n = 3, line = "The core is stopped." } }) do
+    swarm.core = core
+    util.JSONToTable = function() return { target = "STEAM_0:1|Me", faction = "cp", xp = { cp = 300 }, players = { { id = "STEAM_0:1|Me", name = "Me" } },
+        chapter = { state = "normal", lock = false, line = "Normal." }, swarm = swarm, solo = { address = false, places = true, event = "", collapse = "" } } end
+    okP, errP = pcall(net["recv_lc_admintools"])
+    if not okP then return "admin panel, the core's lines: " .. tostring(errP) end
+end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")

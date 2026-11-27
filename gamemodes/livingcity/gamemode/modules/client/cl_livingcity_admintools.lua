@@ -184,7 +184,13 @@ local function Build()
         local s2 = Row(cs)
         Btn(s2, "Swarm: the city falls to the swarm now", function() Do("swarm", "fall") end, 260):SetEnabled(not (state.chapter and state.chapter.state == "reversed"))
         Btn(s2, "Swarm: end it (pheropods back, antlions away)", function() Do("swarm", "end") end, 300)
-        local sl = Label(Row(cs, 48), state.swarm.line or "", 600)
+        -- the suppression core under the Nexus, where the map has one (sv_livingcity_swarmcore.lua)
+        if state.swarm.core then
+            local s3 = Row(cs)
+            Btn(s3, "Core: stop it", function() Do("core", "stop") end, 140):SetEnabled(state.swarm.core.running == true)
+            Btn(s3, "Core: start it", function() Do("core", "start") end, 140):SetEnabled(state.swarm.core.running ~= true)
+        end
+        local sl = Label(Row(cs, state.swarm.core and 64 or 48), state.swarm.line or "", 600)
         sl:Dock(FILL)
         sl:SetWrap(true)
     end

@@ -4,7 +4,9 @@
       the essence in the nest brightens while it is harvested (the server says how far: its lc_swarm_glow);
       whoever carries the extract glows with it (lc_swarm_carry), and so does the essence in a vortigaunt's hands;
       freed vortigaunts at the ritual stand in a purple light (lc_swarm_chant), as Episode Two's turn blue;
-      the city falling to the swarm: the ground shakes and rumbles for everyone (lc_swarm_fall).
+      the city falling to the swarm: the ground shakes and rumbles for everyone (lc_swarm_fall);
+      the suppression core's heartbeat, while it runs: a low, deep thud now and then, barely felt (lc_core_thud,
+      sv_livingcity_swarmcore.lua). When it stops, so does the thud: the silence is the message.
     (The dropped extract lights itself: entities/lc_swarm_extract.lua.)
 ]]
 
@@ -79,3 +81,16 @@ function SW.Fall()
     SW.fellAt = CurTime()
 end
 net.Receive("lc_swarm_fall", function() LC.Try(SW.Fall) end)
+
+-- The suppression core's heartbeat (the server sends it every 4 to 6 seconds to whoever is in the city): the thumper's
+-- own thud an octave down, quiet, and the faintest shake. Subtle on purpose: it should never annoy.
+SW.THUD = { snd = "ambient/machines/thumper_hit.wav", pitch = { 46, 52 }, vol = 0.25, shake = 0.5 }
+function SW.Thud()
+    local me = LocalPlayer()
+    if not IsValid(me) then return end
+    local at = me:GetPos()
+    if sound and sound.Play then sound.Play(SW.THUD.snd, at, 75, math.random(SW.THUD.pitch[1], SW.THUD.pitch[2]), SW.THUD.vol) end
+    if util and util.ScreenShake then util.ScreenShake(at, SW.THUD.shake, 3, 0.8, 64) end
+    SW.thudAt = CurTime()
+end
+net.Receive("lc_core_thud", function() LC.Try(SW.Thud) end)

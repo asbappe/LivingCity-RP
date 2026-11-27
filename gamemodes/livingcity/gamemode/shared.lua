@@ -310,6 +310,7 @@ LC_MODULES = {
         "sv_livingcity_hq", -- (the HQ's later stages: what only it does, what the Combine know of it, the raid, a ransack's papers; last, after the Inform list it adds to)
         "sv_livingcity_chapter", -- (the chapter, the city falls to the Resistance: the rocket's wave, the role reversal, the Nexus taken back)
         "sv_livingcity_swarm", -- (the Swarm: the nest's guardians, the larval extract, the vortigaunts' pheropods, the antlions and the city's fall; after the chapter)
+        "sv_livingcity_swarmcore", -- (the suppression core under the Nexus: the city's heartbeat, its three consoles, the swarm's second gate; after the Swarm)
     },
     client = {
         "cl_livingcity",

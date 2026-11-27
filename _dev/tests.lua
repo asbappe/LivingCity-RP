@@ -46535,6 +46535,320 @@ function Nov27_SwarmTests() -- (the owner, 27 November: the Swarm, "they functio
 end
 Nov27_SwarmTests()
 
+function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppression core under the Nexus, the city's own Citadel-style thumper)
+    section("27 November: the suppression core under the Nexus, the Swarm's second gate")
+    local W, A, C = LC.Swarm, LC.Antlions, LC.Chapter
+    local C0 = Vector(160000, -160000, 0)
+    local SFILE = "livingcity/" .. game.GetMap() .. "_swarm.json"
+    local sfileWas, coreWas, clockWas, cWas = _files[SFILE], W.core, W.clock, C.S
+    local noticeWas, soundWas, oursWas = LC.Notice, sound, W.CityOurs
+    local outWas, stoppedWas, calmWas = A.out, A.stopped, A.calm
+    A.out, A.stopped, A.calm = {}, {}, {}
+    local told, heard = {}, {}
+    LC.Notice = function(p, _, title, text) told[#told + 1] = { p = p, title = title, text = text } end
+    local function toldTo(p, title) for _, t in ipairs(told) do if t.p == p and (not title or t.title == title) then return t.text end end return nil end
+    sound = { Play = function(path, pos, level, pitch) heard[#heard + 1] = { path = path, pos = pos, level = level, pitch = pitch } end }
+    local function Heard(word) for _, h in ipairs(heard) do if string.find(h.path, word, 1, true) then return h end end return nil end
+    if LC.Event then LC.EndEvent(true) end
+    C.S = { state = "normal", elapsed = 0, cooldown = 0, lock = false }
+    C.retake, C.pendingAt, C.pendingBy = nil, nil, nil
+    W.End()
+    W.clock = { flown = 0 }
+    W.core = { running = true, cut = {} }
+    local made, zones, points = {}, {}, {}
+    local function Ent(cls, name, pos) local e = ents.Create(cls) if name then e:SetName(name) end e:SetPos(pos) e:Spawn() made[#made + 1] = e return e end
+    local function Has(t, v) for _, x in ipairs(t or {}) do if x == v then return true end end return false end
+    local function Out(kind) local n = 0 for e, k in pairs(W.S.out) do if k == kind and IsValid(e) and e:Health() > 0 then n = n + 1 end end return n end
+    local function Thuds(p)
+        local n = 0
+        for _, m in ipairs(net.sent) do if m.name == "lc_core_thud" and type(m.to) == "table" and Has(m.to, p) then n = n + 1 end end
+        return n
+    end
+    local function Tmpl(id) for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end end
+    local function Posted(id, f) for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and p.tmpl.id == id and not p.dead and not p.q then return p end end end
+
+    -- the city (a housing block) over the chamber, and the map's pieces of the core, found by name
+    local block = LC.AddZone(C0, 400, "block", 9960) zones[#zones + 1] = block
+    local R0 = C0 + Vector(0, 0, -512)
+    local machine = Ent("func_tracktrain", "lc_core_machine", R0 + Vector(0, 400, 96))
+    local room = Ent("info_target", "lc_core_room", R0)
+    local stopR = Ent("logic_relay", "lc_core_stop", R0 + Vector(0, 0, -40))
+    local startR = Ent("logic_relay", "lc_core_start", R0 + Vector(16, 0, -40))
+    local panels = {}
+    for i, off in ipairs({ Vector(-300, 0, 0), Vector(0, 300, 0), Vector(300, 0, 0) }) do panels[i] = Ent("info_target", "lc_core_panel_" .. i, R0 + off) end
+    local button = Ent("func_button", "lc_core_button", R0 + Vector(0, -300, 40))
+    local way = Ent("info_target", "lc_core_combine_way", R0 + Vector(0, -1400, 0))
+    Ent("info_target", "lc_core_breach", R0 + Vector(1400, 0, 0))
+    ok(W.HasCore() and W.CoreRunning() and W.CorePos() == room:GetPos(), "the map has a core (Valve's digger, a func_tracktrain): it runs, and it is where its chamber is")
+    machine:SetName("lc_core_digger_1")
+    local mark = Ent("info_target", "lc_core_machine", R0 + Vector(0, 400, 0))
+    ok(W.HasCore(), "(an info_target at the machine will do as well)")
+    mark:Remove()
+    machine:SetName("lc_core_machine")
+
+    local cit = newPlayer("CoreCitizen", "citizen")
+    local far = newPlayer("CoreForest", "citizen")
+    local reb = newPlayer("CoreRebel", "resistance", nil, 400)
+    local cop = newPlayer("CoreCop", "cp")
+    local function Places() cit:SetPos(C0 + Vector(200, 200, 0)) far:SetPos(C0 + Vector(0, 30000, 0)) end
+    Places()
+    reb:SetPos(C0 + Vector(600, 600, 0)) cop:SetPos(C0 + Vector(-600, 600, 0))
+
+    -- the heartbeat: in the city, never in the forests; every 4 to 6 seconds
+    net.sent = {}
+    W.core.applied, W.core.thudAt = true, 0
+    _run(0.6)
+    ok(Thuds(cit) == 1 and Thuds(far) == 0, "while it runs: a thud for whoever is in the city, none for the forest", Thuds(cit) .. " " .. Thuds(far))
+    local times, last = {}, #net.sent
+    for _ = 1, 60 do
+        _run(0.5) Places()
+        for i = last + 1, #net.sent do if net.sent[i].name == "lc_core_thud" then times[#times + 1] = CurTime() end end
+        last = #net.sent
+    end
+    local lo, hi = 99, 0
+    for i = 2, #times do lo, hi = math.min(lo, times[i] - times[i - 1]), math.max(hi, times[i] - times[i - 1]) end
+    ok(#times >= 4 and lo >= 3.95 and hi <= 6.55, "every 4 to 6 seconds", #times .. " thuds, " .. lo .. " to " .. hi .. " s apart")
+    ok(Thuds(far) == 0, "(and still none in the forest)")
+
+    -- with every canal thumper stopped and the core running: no swarm, nothing new on screen
+    local T0 = C0 + Vector(8000, 0, 0)
+    local th = Ent("prop_thumper", "lc_thumper7_head", T0)
+    Ent("info_target", "lc_thumper7_burrow", T0 + Vector(400, 0, 0))
+    hook.Run("AcceptInput", th, "Disable", reb, reb)
+    W.S.stage, W.S.made = "pheropods", true
+    told = {}
+    W.SetHolder(reb, false)
+    ok(toldTo(reb, "The swarm") == "The pheropods are yours. Stop the city's thumpers.", "the pheropods with the core running: the holder's mission is still the thumpers (the core is one)", toldTo(reb, "The swarm"))
+    told = {}
+    W.S.swarmNext = CurTime()
+    _run(1.1)
+    ok(W.AllStopped() and not W.DefencesDown() and Out("swarm") == 0, "every thumper stopped, the core running: no swarm comes into the city", #A.Heads() .. " thumpers, " .. Out("swarm"))
+    ok(toldTo(reb, "The swarm") == nil, "and nothing new on screen (the heartbeat tells them)", toldTo(reb, "The swarm"))
+
+    -- the consoles: a Resistance player's E is the wiring game; each done cuts one
+    local function At(p, i) p:SetPos(panels[i]:GetPos() + Vector(40, 0, 0)) p.lcCoreUseAt = 0 p.lookingAt = nil end
+    local function Wire(p, i)
+        At(p, i)
+        hook.Run("KeyPress", p, IN_USE)
+        local g = LC.JobGames[p]
+        if g then LC.JobGameEnd(p, "done") end
+        return g
+    end
+    local cr0 = LC.Credits(reb)
+    At(reb, 1)
+    hook.Run("KeyPress", reb, IN_USE)
+    local g = LC.JobGames[reb]
+    ok(g ~= nil and g.kind == "wiring" and g.opts.lcCore == 1 and g.opts.lcCoreDo == "cut", "a Resistance player's E at a console: the wiring game (nothing to stand through)")
+    if g then LC.JobGameEnd(reb, "done") end
+    ok(W.core.cut[1] == true and W.CoreRunning() and W.core.firstAt ~= nil, "done: that console is cut, and the core still runs")
+    ok(LC.Credits(reb) == cr0 and toldTo(reb, "Rewiring: done") == nil, "(sabotage is no shift's work: no pay and no notice)")
+    ok(Heard("powerdown") ~= nil, "(the console dies with a sound, not a word)")
+    At(reb, 1)
+    hook.Run("KeyPress", reb, IN_USE)
+    ok(LC.JobGames[reb] == nil, "a cut console again: nothing to do there")
+    At(cit, 2)
+    hook.Run("KeyPress", cit, IN_USE)
+    ok(LC.JobGames[cit] == nil and not W.core.cut[2], "a citizen's E: nothing")
+    Places()
+    reb:SetPos(panels[2]:GetPos() + Vector(400, 0, 0)) reb.lcCoreUseAt = 0
+    hook.Run("KeyPress", reb, IN_USE)
+    ok(LC.JobGames[reb] == nil, "out of reach: nothing")
+    local mg = Wire(cop, 1)
+    ok(mg ~= nil and mg.opts.lcCoreDo == "mend" and not W.core.cut[1] and W.core.firstAt == nil, "a Combine player's E at a cut console mends it")
+    -- the ten minutes
+    Wire(reb, 1)
+    W.core.firstAt = CurTime() - W.CORE_WINDOW
+    _run(0.6)
+    ok(not W.core.cut[1] and W.core.firstAt == nil and W.CoreRunning(), "not all three within ten minutes of the first: the cut one is whole again")
+    heard, net.sent, told = {}, {}, {}
+    Wire(reb, 1) Wire(reb, 2)
+    ok(W.CoreRunning() and W.CoreCutCount() == 2, "two of three: it runs on")
+    Wire(reb, 3)
+    ok(W.CoreDown() and Has(stopR.fired, "Trigger"), "all three within ten minutes: the core winds down (the map's lc_core_stop)")
+    local wind = Heard("thumper_shutdown")
+    ok(wind ~= nil and wind.level >= 100 and wind.pitch < 100 and wind.pos == room:GetPos(), "a huge wind-down at the machine", wind and wind.level)
+    ok(Posted("cmb_core", "cp") ~= nil, "the Combine's job is on their board")
+    net.sent = {}
+    for _ = 1, 26 do _run(0.5) Places() end
+    ok(Thuds(cit) == 0, "stopped: the heartbeat stops for everyone (the silence is the message)")
+
+    -- every canal thumper and the core stopped: the defences are down, the swarm comes
+    ok(W.DefencesDown(), "every thumper and the core stopped: the city's defences are down")
+    reb:SetPos(C0 + Vector(600, 600, 0)) -- (back up in the street)
+    W.S.swarmNext = CurTime()
+    _run(1.1)
+    ok(toldTo(reb, "The swarm") == "The city's defences are down. Take the swarm to the Nexus.", "one short line to the Resistance: the city's defences are down", toldTo(reb, "The swarm"))
+    ok(Out("swarm") >= 1, "and the swarm comes up round the holder in the city", Out("swarm"))
+    local toldN = #told
+    _run(1.1)
+    ok(#told == toldN, "(only once)")
+
+    -- the button: with a console cut it only fizzles; the map's own start does nothing either
+    local sounds0 = #_sounds
+    cop.lcCorePressAt = 0
+    hook.Run("PlayerUse", cop, button)
+    ok(W.CoreDown() and #_sounds > sounds0 and string.find(_sounds[#_sounds], "spark", 1, true) ~= nil, "its button with the consoles cut: a fizzle, and it stays stopped")
+    ok(hook.Run("AcceptInput", startR, "Trigger", cop, cop) == true and W.CoreDown(), "(the map's own start does nothing while a console is cut)")
+
+    -- the fall needs the core stopped too: the holder in the Nexus with the swarm, every thumper down
+    local N0 = C0 + Vector(0, 2400, 0)
+    local nexus = LC.AddZone(nil, nil, "combine", 0, { mins = N0 + Vector(-400, -400, -16), maxs = N0 + Vector(400, 400, 192) }) zones[#zones + 1] = nexus
+    points[#points + 1] = LC.AddPoint(N0, 0, "desk", 0)
+    W.core.running, W.core.cut = true, {}
+    reb:SetPos(N0)
+    W.Antlion(N0 + Vector(200, 0, 0), "swarm") W.Antlion(N0 + Vector(-200, 0, 0), "swarm")
+    _run(1.1)
+    ok(W.MayFall() and W.InNexus(reb:GetPos()) and W.SwarmNear(reb:GetPos(), 3000) and W.S.falling == nil, "in the Nexus with the swarm, the core running: the city does not fall")
+    W.core.running = false
+    _run(1.1)
+    local fell = W.S.falling ~= nil
+    W.S.falling = nil
+    for e, k in pairs(W.S.out) do if k == "fall" and IsValid(e) then e:Remove() end end
+    ok(fell, "the core stopped as well: it falls")
+    for e, k in pairs(W.S.out) do if k == "swarm" and IsValid(e) then e:Remove() end end
+    reb:SetPos(C0 + Vector(600, 600, 0))
+    W.core.cut = { true, true, true }
+
+    -- Restart the suppression core: the Combine's job
+    local ps = Posted("cmb_core", "cp")
+    ok(Tmpl("cmb_core").available(cop) == true and ps ~= nil, "Restart the suppression core: on the Combine's board while it is stopped")
+    if ps then
+        cop.lcqNext = 0
+        ok(LC.AcceptPosting(cop, ps.id) == true, "a unit takes it")
+        local q = LC.QuestOf[cop]
+        ok(q ~= nil and #q.stages == 8, "down by their way, each of the three consoles (get there, its wiring), then the button", q and #q.stages)
+        for _, st in ipairs(q and q.stages or {}) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
+        local xpWas = tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0
+        cop:SetPos(way:GetPos())
+        _run(1.1)
+        ok(q.stage == 2, "down by their way (marked)")
+        for n = 1, 3 do
+            cop:SetPos(q.stages[q.stage].pos + Vector(20, 0, 0))
+            _run(1.1)
+            local cg = LC.JobGames[cop]
+            ok(cg ~= nil and cg.kind == "wiring" and cg.opts.lcCoreDo == "mend", "at a console: its wiring is the game (" .. n .. ")")
+            if cg then LC.JobGameEnd(cop, "done") end
+            ok(cg ~= nil and not W.core.cut[cg.opts.lcCore], "mended (" .. n .. ")")
+        end
+        ok(q.stages[q.stage] and q.stages[q.stage].event == "core_started" and W.CoreDown(), "every console mended: the button is left, and it is still stopped")
+        stopR.fired, startR.fired = {}, {}
+        cop.lcCorePressAt = 0
+        hook.Run("PlayerUse", cop, button)
+        ok(W.CoreRunning() and Has(startR.fired, "Trigger"), "the button: it runs again (the map's lc_core_start)")
+        ok(Heard("thumper_startup") ~= nil, "(with a sound at the machine)")
+        _run(1.1)
+        ok(q.done and LC.QuestOf[cop] == nil and (tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0) > xpWas, "the job pays")
+        ok(Tmpl("cmb_core").available(cop) == false, "and it is off the board")
+        net.sent = {}
+        for _ = 1, 9 do _run(0.5) Places() end
+        ok(Thuds(cit) >= 1, "the heartbeat again")
+    end
+
+    -- or a Combine player simply mends the consoles and presses the button; a Resistance player cuts a mended one again
+    local staff = newPlayer("CoreStaff", "citizen")
+    staff.admin = true
+    ok(LC.AdminTool(staff, nil, "core", "stop") == false, "the staff's lines are a superadmin's")
+    staff.superadmin = true
+    ok(LC.AdminTool(staff, nil, "core", "stop") == true and W.CoreDown() and W.CoreCutCount() == 3, "Core: stop it (every console cut, as the Resistance leave it)")
+    Wire(cop, 1)
+    ok(not W.core.cut[1], "(a unit mends one by E)")
+    Wire(reb, 1)
+    ok(W.core.cut[1] == true and W.CoreDown(), "a Resistance player's E at a mended console while it is stopped: cut again")
+    Wire(cop, 1) Wire(cop, 2) Wire(cop, 3)
+    cop.lcCorePressAt = 0
+    hook.Run("PlayerUse", cop, button)
+    ok(W.CoreRunning(), "a unit mends all three and presses the button: it runs (no job needed)")
+
+    -- the staff's lines and the Swarm's status line
+    local line = W.Status().line
+    ok(W.Status().core ~= nil and W.Status().core.running == true and string.find(line, "The core runs.", 1, true) ~= nil, "the Swarm's line says how the core stands", line)
+    ok(LC.AdminTool(staff, nil, "core", "start") == true and W.CoreRunning(), "Core: start it (already running: says so)")
+    LC.AdminTool(staff, nil, "core", "stop")
+    ok(string.find(W.Status().line, "stopped", 1, true) ~= nil, "(stopped: the line says so)", W.Status().line)
+    ok(LC.AdminTool(staff, nil, "core", "start") == true and W.CoreRunning() and W.CoreCutCount() == 0, "Core: start it (every console whole)")
+
+    -- saved over restarts with the Swarm's own file
+    LC.AdminTool(staff, nil, "core", "stop")
+    W.core.cut[2] = nil
+    W.clock.flown = 30
+    W.ClockSave()
+    local saved = util.JSONToTable(_files[SFILE] or "{}") or {}
+    ok(saved.flown == 30 and istable(saved.core) and saved.core.running == false and #saved.core.cut == 2, "saved in the Swarm's file: stopped, which consoles are cut (the mine's clock beside it)")
+    W.core = { running = true, cut = {} }
+    W.CoreLoad()
+    ok(W.CoreDown() and W.core.cut[1] and not W.core.cut[2] and W.core.cut[3], "and read back after a restart")
+    stopR.fired = {}
+    _run(0.6)
+    ok(Has(stopR.fired, "Trigger"), "the map starts with its machine running: saved stopped, it is stopped again")
+    W.core = { running = true, cut = { [1] = true }, firstAt = CurTime() - 100, applied = true }
+    W.ClockSave()
+    W.CoreLoad()
+    ok(W.CoreRunning() and W.core.cut[1] and math.abs((CurTime() - (W.core.firstAt or 0)) - 100) <= 1, "(the ten minutes go on from where they were)")
+    W.core.applied, W.core.cut, W.core.firstAt = true, {}, nil
+
+    -- after the city falls to the swarm: the core is one of what Restart the thumpers starts again
+    hook.Run("AcceptInput", th, "Enable", reb, reb)
+    LC.AdminTool(staff, nil, "core", "stop")
+    W.CityOurs = function() return true end
+    W.S.stage, W.S.made = "pheropods", true
+    W.SetHolder(reb, false)
+    W.Destroyed("swarm")
+    local rp = Posted("res_thumpers", "resistance")
+    ok(Tmpl("res_thumpers").available(reb) == true and rp ~= nil, "the city fallen with the core stopped: Restart the thumpers is on the Resistance's board")
+    ok(Tmpl("cmb_core").available(cop) == false, "(the Combine's own job is not, while the city is the Resistance's)")
+    At(cop, 1)
+    hook.Run("KeyPress", cop, IN_USE)
+    ok(LC.JobGames[cop] == nil, "(nor does a unit's E mend it then)")
+    if rp then
+        reb.lcqNext = 0
+        ok(LC.AcceptPosting(reb, rp.id) == true, "a member takes it")
+        local q = LC.QuestOf[reb]
+        ok(q ~= nil and #q.stages == 7 and q.stages[7].event == "core_started", "the core's three consoles, then its button", q and #q.stages)
+        for n = 1, 3 do
+            reb:SetPos(q.stages[q.stage].pos + Vector(20, 0, 0))
+            _run(1.1)
+            local rg = LC.JobGames[reb]
+            ok(rg ~= nil and rg.opts.lcCoreDo == "mend", "a console's wiring (" .. n .. ")")
+            if rg then LC.JobGameEnd(reb, "done") end
+        end
+        reb.lcCorePressAt = 0
+        hook.Run("PlayerUse", reb, button)
+        _run(1.1)
+        ok(W.CoreRunning() and q.done and LC.QuestOf[reb] == nil, "mended and started: the job pays")
+    end
+    W.CityOurs = oursWas
+
+    -- a map without the core: nothing of it
+    machine:SetName("")
+    ok(not W.HasCore() and not W.CoreRunning() and W.DefencesDown() == W.AllStopped() and W.Status().core == nil, "without lc_core_machine: no core, the swarm's gate is the thumpers alone")
+    net.sent = {}
+    for _ = 1, 14 do _run(0.5) Places() end
+    ok(Thuds(cit) == 0, "and no heartbeat")
+    ok(LC.AdminTool(staff, nil, "core", "stop") == false, "(nor the staff's lines)")
+
+    -- everything as it was
+    for _, p in ipairs({ cop, reb }) do
+        if LC.JobGames[p] then LC.JobGameEnd(p, "quit") end
+        if LC.QuestOf[p] then LC.FinishQuest(LC.QuestOf[p], false) end
+    end
+    for _, list in pairs(LC.Postings) do for _, p in ipairs(list) do if p.tmpl and (p.tmpl.id == "cmb_core" or p.tmpl.id == "res_thumpers") then p.dead = true end end end
+    W.End()
+    for e in pairs(W.S.out) do if IsValid(e) then e:Remove() end end
+    W.S = { stage = "nest", out = {}, wild = {}, broken = {}, pressers = {}, grenades = {} }
+    W.essence, W.clock, W.core = nil, clockWas, coreWas
+    W.CityOurs, LC.Notice, sound = oursWas, noticeWas, soundWas
+    C.S, C.retake, C.pendingAt, C.pendingBy = cWas, nil, nil, nil
+    _files[SFILE] = sfileWas
+    for _, z in ipairs(zones) do LC.RemoveZone(z) end
+    for _, pt in ipairs(points) do LC.RemovePoint(pt) end
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    A.out, A.stopped, A.calm = outWas or {}, stoppedWas or {}, calmWas or {}
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    for _, e in ipairs(ents.FindByClass("npc_antlion")) do e:Remove() end
+    for _, p in ipairs({ cit, far, reb, cop, staff }) do if IsValid(p) then p:Remove() end end
+end
+Nov27_CoreTests()
+
 section("Stop")
 LC.Stop(admin)
 _run(1)
