@@ -401,6 +401,55 @@ def clip_x(sol, xmax):
     return out
 
 
+def _pf_normal(pl):
+    a, b, c = pl
+    u = [c[k] - a[k] for k in range(3)]
+    w = [b[k] - a[k] for k in range(3)]
+    n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+    ln = math.sqrt(sum(x * x for x in n))
+    return [x / ln for x in n] if ln > 1e-9 else None
+
+
+def pf_clamp(sol, lo, hi):
+    """A lifted brush cut back to lie within lo..hi (x y z, in the piece's frame) where that only shortens it: along each
+    axis it overruns, every face is either square to that axis or runs along it (a box, or a wall or a floor sloped along
+    another axis), so its corners and plane points are moved in to the limit and every plane stays the plane it was.
+    Gives the brush (a copy when cut), or None: nothing of it inside, a displaced face, or an end that is not square."""
+    pts = [c for sd in sol["sides"] for c in (sd.get("corners") or []) + sd["plane"]]
+    out = None
+    for k in range(3):
+        mn, mx = min(c[k] for c in pts), max(c[k] for c in pts)
+        if min(mx, hi[k]) - max(mn, lo[k]) < 1:
+            return None
+        if mn >= lo[k] - 0.01 and mx <= hi[k] + 0.01:
+            continue
+        if any(sd.get("disp") for sd in sol["sides"]):
+            return None
+        for sd in sol["sides"]:
+            n = _pf_normal(sd["plane"])
+            if n is None or (abs(n[k]) > 1e-3 and abs(abs(n[k]) - 1) > 1e-3):       # (Valve's plane points are off by a thousandth here and there)
+                return None
+        out = copy.deepcopy(out or sol)
+        for sd in out["sides"]:
+            n0 = _pf_normal(sd["plane"])
+            for key in ("plane", "verts", "corners"):
+                sd[key] = [[min(max(c[i], lo[i]), hi[i]) if i == k else c[i] for i in range(3)] for c in sd.get(key) or []]
+            if _pf_normal(sd["plane"]) is None:          # (two of its plane points moved on to one: three of its corners instead)
+                cs = []
+                for c in sd["corners"]:
+                    if not any(all(abs(c[i] - d[i]) < 0.01 for i in range(3)) for d in cs):
+                        cs.append(c)
+                for a in range(len(cs)):
+                    trio = [cs[a], cs[(a + 1) % len(cs)], cs[(a + 2) % len(cs)]]
+                    n = _pf_normal(trio)
+                    if n is not None:
+                        sd["plane"] = trio if sum(n[i] * n0[i] for i in range(3)) > 0 else [trio[0], trio[2], trio[1]]
+                        break
+                else:
+                    return None
+    return out or sol
+
+
 def smooth(t):
     t = 0.0 if t < 0 else 1.0 if t > 1 else t
     return t * t * (3 - 2 * t)
@@ -479,6 +528,7 @@ class Forest:
     SHORE_MUD = True # ground just above a water's level turns to dirt (the pond's shore)
     TREES = 0.75     # how thickly trees stand (the owner, after walking both: "too thick with trees ... reduce it about 25%")
     ROCKS_N, LOGS_N = 34, 12     # how many rocks and fallen logs
+    BACK_BLACK = False   # the shell's faces on its north side look into a shut box of black walls behind it (the cave forest's): black, not sky
 
     def __init__(self, name, origin, z0, seed, first_node, gate):
         self.name, self.seed = name, seed
@@ -599,7 +649,8 @@ class Forest:
         sky, nd = MAT["sky"], MAT["nodraw"]
         vis = self.vis("shell (sky, walls, slab)")
         v.world_box(self.box(-T, -T, self.zb - 64, W + T, D + T, self.zb), nd, vis=vis)
-        v.world_box(self.box(-T, -T, self.lid, W + T, D + T, self.lid + 16), sky, sky, sky, vis=vis)
+        back = {"north": MAT["black"]} if self.BACK_BLACK else {}
+        v.world_box(self.box(-T, -T, self.lid, W + T, D + T, self.lid + 16), sky, sky, sky, vis=vis, faces=back or None)
         side, g = self.gate
         ends = {"west": (-T, D + T), "east": (-T, D + T), "south": (0, W), "north": (0, W)}
         frames = {"west": lambda a, b: (-T, a, 0, b), "east": lambda a, b: (W, a, W + T, b), "south": lambda a, b: (a, -T, b, 0), "north": lambda a, b: (a, D, b, D + T)}
@@ -617,8 +668,12 @@ class Forest:
                     a0 = c2
                 pieces.append((a0, b, None))
             for s1, s2, face in pieces:
+                if s2 <= s1:
+                    continue      # (two cuts that meet: nothing between them)
                 x1, y1, x2, y2 = frames[name](s1, s2)
-                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
+                faces = dict(back) if y2 == D + T else {}
+                faces.update({face: MAT["canal_wall"]} if face else {})
+                v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces=faces or None)
                 self.shell_walls.append(self.box(x1, y1, self.zb, x2, y2, self.lid))
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
@@ -2800,6 +2855,7 @@ def old_nest_draws(rnd, L):
 
 class CaveForest(Forest):
     SHORE_MUD = False                   # (the stream's banks are dirt by their own rule)
+    BACK_BLACK = True                   # (behind its north wall, the box round the big room and the holdout, black inside: workings_hull)
     CX, YM, LONG = 2304, 2560, 3072     # the mouth's middle, the hillside's line, how far in it goes (to the forest's north wall: the emergency door)
     # The bend (the owner: "it's a straight shot still; can it curve ... so a combine unit can't just slaughter everyone
     # inside if they are standing outside"): straight in for 768, then over the next 768 the passage moves 960 west, then
@@ -2816,7 +2872,8 @@ class CaveForest(Forest):
     MOUTH_CLEAR = (200, 450, 120)       # kept clear before the cave's mouth: this far either side of its middle, out from it, and in past its fence
     BULK_T = 256                        # the emergency door's bulkhead is this thick (the holdout's gallery walls run 208 into it)
     GALLERY_Y = -10064                  # (Valve's y) the holdout's gallery's clear middle, where the emergency door is (the timber along its south wall clear of it)
-    LIFT_SPEED = 64                     # the holdout's lift: 19 s from the top landing to the floor (Valve's goes at 35, and 20 near the ends)
+    LIFT_SPEED = 64                     # the holdout's lifts: 19 s from the top landing to the floor (Valve's goes at 35, and 20 near the ends)
+    LIFT_2 = (1104, -9296, 1208, -9120)  # (Valve's x1 y1 x2 y2) the second lift's platform but its tongue into the scaffold
 
     def setup(self):
         z0 = self.z0
@@ -2833,6 +2890,7 @@ class CaveForest(Forest):
         self.door_y = self.room_pt(456, 0, 0)[1]             # the door's middle (on the lobe's open floor)
         self.deep_x = self.bulk_x - self.BULK_T + 48         # the holdout's gallery is cut here, 48 inside the bulkhead's west face
         self.office_plan()
+        self.lifts = []                  # (suffix, train, car's floor, top, bottom) of each lift in the holdout's pit (lift_rig)
         self.hull = []                   # what lies behind the emergency door, each part's reach (x1 y1 z1 x2 y2 z2): nest() shuts them all in one box
         # the spring: where the west wall meets the floor. The slot runs 140 back into the rock from the wall's lip.
         ys = ym + self.SPRING
@@ -3159,6 +3217,9 @@ class CaveForest(Forest):
         self.big_room()
         self.bulkhead()
         self.holdout()
+        self.nest_door()
+        self.nest_bridge()
+        self.back_way()
         self.workings_hull()
         for q in range(64, self.LONG - 100, 192):
             y = ym + q
@@ -3231,13 +3292,16 @@ class CaveForest(Forest):
         in line with the control room's doorway further in)."""
         return (x - 2848 + self.deep_x, y - self.GALLERY_Y + self.door_y, z + 576 + self.zf)
 
-    def lifted(self, name, q, d, vis_w, vis_p, prefix, skip=None, keep=None, edit=None, extra=(), clip=None):
+    def lifted(self, name, q, d, vis_w, vis_p, prefix, skip=None, keep=None, edit=None, extra=(), clip=None, solids=None):
         """A piece lifted from Valve's maps (map_prefab.py), placed: its brushes (Valve's world brushes in the world), its
         props, lights and kept wiring. Everything behind the emergency door is underground in one shut box, so the sky is
-        made black; and nothing of Valve's dev materials may be left in it. Returns the piece and its brushes' boxes."""
+        made black; and nothing of Valve's dev materials may be left in it. Returns the piece and its brushes' boxes.
+        solids: a change to the piece's brushes before they are placed (it is given them and returns them)."""
         pf = copy.deepcopy(PF.load(name))
         if clip is not None:
             pf["solids"] = [clip_x(sol, clip) or sol for sol in pf["solids"]]
+        if solids is not None:
+            pf["solids"] = solids(pf["solids"])
         for sol in pf["solids"]:
             for sd in sol["sides"]:
                 m = sd["material"].lower()
@@ -3259,7 +3323,7 @@ class CaveForest(Forest):
         inside its south face; Valve's passage runs 48 into its north face (its cut, and the cut faces of its brushes,
         are inside the wall)."""
         v, zf, D, T = self.vmf, self.zf, self.D, WALL
-        x1, x2 = self.cuts["north"]
+        x1, x2 = self.cuts["north"][0] if isinstance(self.cuts["north"], list) else self.cuts["north"]     # (the back way cuts the wall too: back_way_plan)
         top = zf + 704
         B = self.box
         sv = self.vis("shell (sky, walls, slab)")
@@ -3272,7 +3336,7 @@ class CaveForest(Forest):
         v.world_box(B(hx2, D, self.zb, x2, D + T, top), jm, vis=sv)
         v.world_box(B(hx1, D, zf + hz, hx2, D + T, top), jm, bottom=jm, vis=sv)
         v.world_box(B(hx1, D, self.zb, hx2, D + T, zf), jm, top=fl, vis=sv)
-        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv)
+        v.world_box(B(x1, D, top, x2, D + T, self.lid), MAT["sky"], vis=sv, faces={"north": MAT["black"]})      # (its back in the big room's box: black as the box)
         under = min(self.natural(x, D, (0, 0)) for x in range(x1, x2 + 1, 64)) - top
         if under < 8:
             self.problems.append("the wall the cave ends in stands %d out of the hill" % -under)
@@ -3289,9 +3353,8 @@ class CaveForest(Forest):
         """Ravenholm's big mining room (the owner, 22 November: "replace that room with the big ravenholm mining room"):
         d1_town_04's headcrab cave lifted whole (valve_raven_big_room: its rock, the metal stairs up the shaft to the
         brick landing at its top, the timber), north of the forest's north wall, turned so its mouth passage runs south
-        into the hole in that wall. Cut across its south lobe on Valve's grid, where the emergency door's bulkhead
-        stands. A rebel headquarters can be raised in it (lc_hq_setup_cave, the territory marker), and the antlions from
-        beyond the emergency door run to it (lc_nest_rally)."""
+        into the hole in that wall. Cut across its south lobe on Valve's grid, where the bulkhead on to the holdout's
+        gallery stands. A rebel headquarters can be raised in it (lc_hq_setup_cave, the territory marker)."""
         v, zf = self.vmf, self.zf
         rv, rp = self.vis("big room (Ravenholm's, lifted from d1_town_04)"), self.vis("big room: lights and dressing")
         d = self.w(*self.room_pt(1536, -640, -5120))
@@ -3316,7 +3379,8 @@ class CaveForest(Forest):
         def edit(e):
             if e["classname"] in ("light", "light_spot"):
                 e["keys"]["spawnflags"] = "0"
-        pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit)
+        pf, boxes = self.lifted("valve_raven_big_room", 3, d, rv, rp, "lc_room_", skip=skip, keep=keep, edit=edit,
+                                solids=lambda sols: self.bare_finish(sols, skip, "the big room"))
         # two flights of the shaft's metal stairs are broken in Valve's own map (its stair check finds the same): the top
         # one stops in mid air where the stairs above collapsed, the bottom one hangs over the floor (its fallen catwalk,
         # a func_physbox, is left out); kept as Valve built them
@@ -3352,9 +3416,6 @@ class CaveForest(Forest):
         v.point("info_target", self.w(hq[0], hq[1], hq[2] + 8), {"targetname": "lc_hq_setup_cave", "spawnflags": "0"}, rp)
         zc = self.room_pt(350, -950, -5120)
         v.point("info_target", self.w(zc[0], zc[1], zc[2] + 8), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, rp)
-        ry = self.room_pt(500, -900, -5112)
-        v.point("info_target", self.w(ry[0], ry[1], ry[2]), {"targetname": "lc_nest_rally", "angles": "0 0 0"},
-                self.vis("antlion makers (delete if the gamemode is to send the antlions itself)"))
         for (x, y) in ((1450, -648), (1100, -650), (800, -700), (500, -900), (200, -1100), (450, -1350), (456, -1600)):
             p = self.room_pt(x, y, -5112)
             self.node(*p)
@@ -3368,77 +3429,119 @@ class CaveForest(Forest):
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), self.ox + self.end_x, self.oy + self.D + WALL, zf))
 
     def bulkhead(self):
-        """The emergency door (the owner: "an emergency door that has sealed the rest of the cave off ... requires two buttons
-        to be pushed simultaneously (within 1 second of each other) that cannot be pushed by a single person"): a concrete
-        bulkhead across the big room's south lobe (the room's west side, as it is turned), a steel shutter in it that lifts
-        into the wall, and a button on the bulkhead each side of it, 480 apart with a wall standing out between each and the
-        door, so the way from one to the other is about 700: nobody presses both inside a second. Each press counts for
-        one second (a math_counter); two at once work the door, open or shut. The shutter is a func_button used as a mover,
-        as the bunker's leaves are. Nothing kills (it did until 22 November; the owner: "considering how dying in the
-        gamemode means a new character, yes just shove, not kill"): as it comes down a shove (shove()) pushes whoever is
-        under it out, into the room or out to the gallery, whichever side they stand. The bulkhead is the whole west wall
-        of the room's box (it keeps the room and all behind the door apart, so its areaportal works): the room's rock runs
-        48 into its east face, Episode Two's gallery 48 into its west face."""
+        """The bulkhead across the big room's south lobe (the room's west side, as it is turned), with a doorway through it
+        on to Episode Two's gallery. The emergency door stood in it until 26 November; it is now where the holdout's floor
+        meets the antlion tunnels (nest_door(): the owner, "can we please get it AND the two button controlled door/gate
+        thing moved to the spot between the antlion cave section and the big open mine shaft area right next to it"), and
+        the doorway here is open: the gallery, the lifts and the holdout are the way on. The bulkhead is the whole west
+        wall of the room's box, so an areaportal in the doorway (always open, no name) still keeps the room and all behind
+        it apart for drawing: the room's rock runs 48 into its east face, Episode Two's gallery 48 into its west face."""
         v, zf, T = self.vmf, self.zf, self.BULK_T
-        fx, dy = self.bulk_x, self.door_y           # (its east face, the room's side; the door's middle)
+        fx, dy = self.bulk_x, self.door_y           # (its east face, the room's side; the doorway's middle)
         wx = fx - T                                  # (its west face, the gallery's side)
         high = 160
-        B, W = self.box, self.w
-        cw, steel, rib = MAT["canal_wall"], FMAT["door"], MAT["bars"]
-        dv = self.vis("nest door (the shutter, the two buttons, the wiring)")
+        B = self.box
+        cw = MAT["canal_wall"]
+        dv = self.vis("the doorway from the big room to the gallery")
         sv = self.vis("hull behind the forest (black walls)")
         y1, y2, z1, z2 = self.room_box[1], self.room_box[4], self.room_box[2], self.room_box[5]
         v.world_box(B(wx, y1, z1, fx, dy - 96, z2), cw, vis=sv)
         v.world_box(B(wx, dy + 96, z1, fx, y2, z2), cw, vis=sv)
         v.world_box(B(wx, dy - 96, zf + high, fx, dy + 96, z2), cw, bottom=MAT["ceiling"], vis=sv)
         v.world_box(B(wx, dy - 96, z1, fx, dy + 96, zf), cw, top=FMAT["bunker_floor"], vis=sv)
-        # a frame round the doorway on the room's side, and the two walls that stand out between the door and each button
+        # a frame round the doorway on the room's side
         v.detail([B(fx, dy - 112, zf, fx + 8, dy - 96, zf + high + 16), B(fx, dy + 96, zf, fx + 8, dy + 112, zf + high + 16), B(fx, dy - 112, zf + high, fx + 8, dy + 112, zf + high + 16)],
                  MAT["beam"], vis=dv)
-        v.detail([B(fx + 8, dy - 128, zf - 16, fx + 224, dy - 112, zf + 144), B(fx + 8, dy + 112, zf - 16, fx + 224, dy + 128, zf + 144)], cw, vis=dv)
-        # the shutter, drawn shut, 44 inside the room's face; pressed in, it is up in the wall with 8 showing
-        parts = [(B(fx - 68, dy - 96, zf, fx - 44, dy + 96, zf + high), steel)]
+        # the areaportal: always open (it has no name), in the middle of the doorway
+        portal = B(fx - T / 2 - 1, dy - 96, zf, fx - T / 2 + 1, dy + 96, zf + high)
+        v.portals.append(portal)
+        v.brush_entity("func_areaportal", {"StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
+        self.node(fx + 120, dy, zf)
+        self.node(wx - 72, dy, zf)
+        self.door_hole = (wx, dy - 96, zf, fx, dy + 96, zf + high)
+        self.keep_way_clear((wx - 200, dy - 88, zf + 4, fx + 220, dy + 88, zf + 110), "the doorway from the big room to the gallery")
+        self.joints.append(("the bulkhead between the big room and the gallery", self.w(wx - 160, dy - 400, zf - 64) + self.w(fx + 160, dy + 400, zf + 420)[0:3],
+                            [self.w(fx + 100, dy, zf + 64), self.w(wx - 100, dy, zf + 64)]))
+        self.notes.append("the bulkhead across the big room's south lobe at (%d %d), floor z %d: an open doorway 192 wide and %d high on to the gallery" % (
+            self.ox + fx, self.oy + dy, zf, high))
+
+    def nest_door(self):
+        """The emergency door (the owner: "an emergency door that has sealed the rest of the cave off ... requires two buttons
+        to be pushed simultaneously (within 1 second of each other) that cannot be pushed by a single person"), since 26
+        November where the holdout's floor meets the antlion tunnels (the owner: "the spot between the antlion cave section
+        and the big open mine shaft area right next to it"). Valve's holdout floor has a wall on its north side (steel below,
+        mine concrete above) with an opening 512 wide in it from the floor to the rock over the tunnels' cleft, where Valve
+        had an areaportal window: that opening is filled with the same wall in the same plane and materials, and the
+        door is in it, on Valve's planks across the drop beyond. A steel shutter 192 x 160 lifts into the wall (lc_nest_door,
+        a func_button mover like the bunker's leaves, drawn shut), a mine lift button on the wall each side of it, 600
+        apart (lc_nest_button_a, _b), with a short wall standing out between each and the door (the floor's rails run just
+        in front). Each press counts for one second (a math_counter); two at once work the door, open or shut. Nothing
+        kills: as it comes down a shove pushes whoever is under it out, to the holdout's side or the tunnels' side. Its
+        areaportal (lc_nest_portal) starts shut and stands inside the shutter's thickness: the fill is world brush, so it
+        parts the holdout from the tunnels. Episode Two's alarm post stands by it on the holdout's side (holdout())."""
+        v, P, B, W = self.vmf, self.deep_pt, self.box, self.w
+        dv = self.vis("nest door (the shutter, the two buttons, the wiring)")
+        X1, X2 = P(1280, 0, 0)[0], P(1792, 0, 0)[0]           # Valve's opening: its own walls each side
+        fy, by = P(0, -8128, 0)[1], P(0, -8064, 0)[1]          # the wall's face on the holdout's side, and on the tunnels' side
+        uy = P(0, -8096, 0)[1]                                 # (the concrete over the steel is set back 32, as Valve's each side)
+        zf, zm, zt = P(0, 0, -1792)[2], P(0, 0, -1280)[2], P(0, 0, -256)[2]
+        dx = P(1456, 0, 0)[0]                                  # the door's middle, on Valve's planks across the drop
+        high = 160
+        metal, conc, steel, rib = "metal/metalwall089b", "concrete/concretewall_mine_001a", FMAT["door"], MAT["bars"]
+        hv = self.vis("holdout (Episode Two's, lifted from ep2_outland_03)")
+        back = {"north": conc}
+        v.world_box(B(X1, fy, zf, dx - 96, by, zm), metal, top=metal, faces=back, vis=hv)       # (its top a ledge 32 deep under the concrete)
+        v.world_box(B(dx + 96, fy, zf, X2, by, zm), metal, top=metal, faces=back, vis=hv)
+        v.world_box(B(dx - 96, fy, zf + high, dx + 96, by, zm), metal, top=metal, bottom=metal, faces=back, vis=hv)
+        v.world_box(B(X1, uy, zm, X2, by, zt), conc, vis=hv)
+        # a frame round the doorway on the holdout's side, and the two walls that stand out between the door and each button
+        v.detail([B(dx - 112, fy - 8, zf, dx - 96, fy, zf + high + 16), B(dx + 96, fy - 8, zf, dx + 112, fy, zf + high + 16),
+                  B(dx - 112, fy - 8, zf + high, dx + 112, fy, zf + high + 16)], MAT["beam"], vis=dv)
+        v.detail([B(dx - 128, fy - 72, zf - 16, dx - 112, fy - 8, zf + 144), B(dx + 112, fy - 72, zf - 16, dx + 128, fy - 8, zf + 144)], metal, vis=dv)
+        # the shutter, drawn shut in the middle of the wall's thickness; pressed in, it is up in the wall with 8 showing
+        mid = (fy + by) / 2
+        parts = [(B(dx - 96, mid - 12, zf, dx + 96, mid + 12, zf + high), steel)]
         for z in (20, 76, 132):
-            parts.append((B(fx - 44, dy - 96, zf + z, fx - 40, dy + 96, zf + z + 8), rib))
-            parts.append((B(fx - 72, dy - 96, zf + z, fx - 68, dy + 96, zf + z + 8), rib))
+            parts.append((B(dx - 96, mid - 16, zf + z, dx + 96, mid - 12, zf + z + 8), rib))
+            parts.append((B(dx - 96, mid + 12, zf + z, dx + 96, mid + 16, zf + z + 8), rib))
         v.brush_entity("func_button", {
             "targetname": "lc_nest_door", "movedir": "-90 0 0", "speed": "30", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
             "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
         # nothing kills (shove()): in the last moments of the shut, whoever is under the shutter is pushed out from under
-        # it, into the room on the room's side (harder: who stands in the middle goes there) and out to the gallery on
-        # the gallery's side. A shutter coming down meets a standing head 72 up, 2.4 s before it is down, so its shove is
-        # on from then (the wiring below), and the shutter is never left resting on anyone.
-        shove(v, "lc_nest_shove", [(B(fx - 96, dy - 96, zf, fx - 56, dy + 96, zf + high), 180, 200), (B(fx - 56, dy - 96, zf, fx - 16, dy + 96, zf + high), 0, 300)], dv)
-        # an areaportal in it, shut while it is: what lies beyond is not drawn, nor the room from there
-        portal = B(fx - 57, dy - 96, zf, fx - 55, dy + 96, zf + high)      # (inside the shutter's own thickness: see the bunker's)
+        # it, to the holdout's side (harder: who stands in the middle goes there) or to the tunnels' side. A shutter coming
+        # down meets a standing head 72 up, 2.4 s before it is down, so its shove is on from then (the wiring below)
+        shove(v, "lc_nest_shove", [(B(dx - 96, mid, zf, dx + 96, by + 8, zf + high), 90, 200), (B(dx - 96, fy - 8, zf, dx + 96, mid, zf + high), 270, 300)], dv)
+        # its areaportal, shut while it is: what lies beyond is not drawn, nor the holdout from there
+        portal = B(dx - 96, mid - 1, zf, dx + 96, mid + 1, zf + high)
         v.portals.append(portal)
         v.brush_entity("func_areaportal", {"targetname": "lc_nest_portal", "StartOpen": "0", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
-        # the two buttons, each with a lamp that shows for the second its press counts
+        # the two buttons, each with a lamp that shows for the second its press counts (Episode Two's mine lift button,
+        # facing the holdout: at yaw 270 the model stands 5 out to the south and 8 wide to the east of its foot)
         for side, tag in ((-1, "a"), (1, "b")):
-            uy = dy + side * 240
-            v.point("env_sprite", W(fx + 10, uy, zf + 84), {"targetname": "lc_nest_lamp_" + tag, "model": "sprites/glow06.spr", "rendermode": "9", "renderamt": "255",
-                                                             "rendercolor": "120 255 120", "scale": ".35", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
-                                                             "renderfx": "0", "spawnflags": "0"}, dv)
-            wall_button(v, W(fx, uy - 4, zf + 44), 0, "lc_nest_button_" + tag, B(fx, uy - 10, zf + 40, fx + 10, uy + 10, zf + 68), dv,
+            ux = dx + side * 300
+            v.point("env_sprite", W(ux, fy - 10, zf + 84), {"targetname": "lc_nest_lamp_" + tag, "model": "sprites/glow06.spr", "rendermode": "9", "renderamt": "255",
+                                                            "rendercolor": "120 255 120", "scale": ".35", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
+                                                            "renderfx": "0", "spawnflags": "0"}, dv)
+            wall_button(v, W(ux - 4, fy, zf + 44), 270, "lc_nest_button_" + tag, B(ux - 10, fy - 10, zf + 40, ux + 10, fy, zf + 68), dv,
                         [("OnPressed", "lc_nest_count", "Add", "1", 0), ("OnPressed", "lc_nest_count", "Subtract", "1", 1),
                          ("OnPressed", "lc_nest_lamp_" + tag, "ShowSprite", "", 0), ("OnPressed", "lc_nest_lamp_" + tag, "HideSprite", "", 1),
                          ("OnPressed", "lc_nest_blip", "PlaySound", "", 0)], "1.2")
-        at = W(fx + 40, dy, zf + 120)
+        at = W(dx, fy - 40, zf + 120)
 
         def sound(name, message, pos, radius="2200", loops=False):
             v.point("ambient_generic", pos, {"targetname": name, "message": message, "health": "10", "pitch": "100", "pitchstart": "100", "radius": radius,
                                              "spawnflags": "16" if loops else "48",
                                              "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0",
                                              "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, dv)
-        sound("lc_nest_blip", "Buttons.snd17", W(fx + 30, dy, zf + 60), "700")
-        sound("lc_nest_alarm", "ambient/alarms/klaxon1.wav", W(fx + 60, dy, zf + 200))
+        sound("lc_nest_blip", "Buttons.snd17", W(dx, fy - 30, zf + 60), "700")
+        sound("lc_nest_alarm", "ambient/alarms/klaxon1.wav", W(dx, fy - 60, zf + 200))
         sound("lc_nest_move", "Streetwar.d3_c17_11_garage_move1", at, loops=True)
         sound("lc_nest_slam", "Streetwar.d3_c17_11_garage_stop1", at)
-        v.point("light", W(fx + 70, dy, zf + 190), {"targetname": "lc_nest_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
+        v.point("light", W(dx, fy - 70, zf + 190), {"targetname": "lc_nest_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
                                                      "style": "0"}, dv)
         v.point("env_shake", at, {"targetname": "lc_nest_shake", "amplitude": "6", "radius": "900", "duration": "1.4", "frequency": "40", "spawnflags": "0"}, dv)
-        v.point("math_counter", W(fx + 30, dy, zf + 110), {"targetname": "lc_nest_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"}, dv,
+        v.point("math_counter", W(dx, fy - 30, zf + 110), {"targetname": "lc_nest_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"}, dv,
                 connections=[("OnHitMax", "lc_nest_open", "Trigger", "", 0), ("OnHitMax", "lc_nest_shut", "Trigger", "", 0)])
         # the wiring: the shutter takes about five seconds each way (152 at 30: shutting, it is down 6.57 s in). The shove
         # is on from 4 s in (its foot 74 over the floor) until 0.3 s after it is down. lc_nest_opened and lc_nest_closed
@@ -3448,10 +3551,10 @@ class CaveForest(Forest):
                    ("OnTrigger", "lc_nest_door", "PressIn", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5), ("OnTrigger", "lc_nest_opened", "Trigger", "", 1.5),
                    ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                    ("OnTrigger", "lc_nest_light", "TurnOff", "", 9), ("OnTrigger", "lc_nest_shut", "Enable", "", 9)]
-        # the alarm at the first mouth beyond the door (Episode Two's post, holdout()): the siren and all three lamps when the
-        # door is opened, the antlions 11 s later (the owner, 21 November: "20 seconds is too long; let's do 11 seconds.
-        # This is triggered by the players so they know what they are getting into already"). The first antlion out
-        # stops the siren; the lamps stay lit while the door is open.
+        # the alarm by the door (Episode Two's post, holdout()): the siren and all three lamps when the door is opened, the
+        # antlions 11 s later (the owner, 21 November: "20 seconds is too long; let's do 11 seconds. This is triggered by
+        # the players so they know what they are getting into already"). The first antlion out stops the siren; the
+        # lamps stay lit while the door is open.
         opening += [("OnTrigger", "lc_nest_mouth_1_siren", "PlaySound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOn", "", 0.3 * (k - 1)) for k in (1, 2, 3)]
         opening += [("OnTrigger", "lc_nest_maker", "Enable", "", self.NEST_WARNING)]
         shutting = [("OnTrigger", "lc_nest_shut", "Disable", "", 0), ("OnTrigger", "lc_nest_maker", "Disable", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 0),
@@ -3462,19 +3565,59 @@ class CaveForest(Forest):
                     ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                     ("OnTrigger", "lc_nest_portal", "Close", "", 6.9), ("OnTrigger", "lc_nest_closed", "Trigger", "", 6.9), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9),
                     ("OnTrigger", "lc_nest_open", "Enable", "", 9)]
-        v.point("logic_relay", W(fx + 30, dy - 16, zf + 130), {"targetname": "lc_nest_open", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=opening)
-        v.point("logic_relay", W(fx + 30, dy + 16, zf + 130), {"targetname": "lc_nest_shut", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=shutting)
-        v.point("logic_relay", W(fx + 30, dy - 16, zf + 150), {"targetname": "lc_nest_opened", "StartDisabled": "0", "spawnflags": "0"}, dv)
-        v.point("logic_relay", W(fx + 30, dy + 16, zf + 150), {"targetname": "lc_nest_closed", "StartDisabled": "0", "spawnflags": "0"}, dv)
-        self.node(fx + 120, dy, zf)
-        self.node(wx - 72, dy, zf)
-        self.door_hole = (wx, dy - 96, zf, fx, dy + 96, zf + high)
-        self.keep_way_clear((wx - 200, dy - 88, zf + 4, fx + 220, dy + 88, zf + 110), "the emergency door")
-        self.joints.append(("the emergency door's bulkhead", self.w(wx - 160, dy - 400, zf - 64) + self.w(fx + 160, dy + 400, zf + 420)[0:3],
-                            [self.w(fx + 100, dy, zf + 64), self.w(wx - 100, dy, zf + 64)]))
-        self.notes.append("the emergency door: in a bulkhead across the big room's south lobe at (%d %d), floor z %d, facing east; a shutter 192 wide and %d high; its two "
-                          "buttons are 480 apart with a wall between each and the door (about 700 on foot); both within a second open it, and shut it again" % (
-                              self.ox + fx, self.oy + dy, zf, high))
+        v.point("logic_relay", W(dx - 16, fy - 30, zf + 130), {"targetname": "lc_nest_open", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=opening)
+        v.point("logic_relay", W(dx + 16, fy - 30, zf + 130), {"targetname": "lc_nest_shut", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=shutting)
+        v.point("logic_relay", W(dx - 16, fy - 30, zf + 150), {"targetname": "lc_nest_opened", "StartDisabled": "0", "spawnflags": "0"}, dv)
+        v.point("logic_relay", W(dx + 16, fy - 30, zf + 150), {"targetname": "lc_nest_closed", "StartDisabled": "0", "spawnflags": "0"}, dv)
+        self.node(dx, fy - 120, zf)
+        self.node(dx, by + 34, zf)
+        self.nest_hole = (dx - 96, fy, zf, dx + 96, by, zf + high)
+        self.keep_way_clear((dx - 88, fy - 120, zf + 12, dx + 88, by + 60, zf + 110), "the emergency door")      # (over the floor's rails, short of Valve's struts)
+        self.joints.append(("the emergency door's wall", self.w(dx - 400, fy - 160, zf - 64) + self.w(dx + 400, by + 160, zf + 420)[0:3],
+                            [self.w(dx, fy - 100, zf + 64), self.w(dx, by + 30, zf + 64)]))
+        self.notes.append("the emergency door: in the holdout floor's north wall at (%d %d), floor z %d, facing south, where Valve's opening led on to the antlion tunnels; "
+                          "a shutter 192 wide and %d high; its two buttons are 600 apart with a wall between each and the door; both within a second open it, and shut it again" % (
+                              self.ox + dx, self.oy + (fy + by) / 2, zf, high))
+
+    def nest_bridge(self):
+        """Over the drop beyond the emergency door. Valve's planks end a few feet past the door, where the cleft's floor
+        falls away into the cave Valve's map went on to below (not lifted); the rock floor of the antlion tunnels starts
+        again 444 on, 128 lower. Whoever went through the door could not come back (the coordinator, 26 November: "add a
+        ladder out of the antlion tunnels' one-way drop, back up to the planks, so whoever goes through the gate can come
+        back"). So the planks go on as a walkway of Valve's planks across the drop, with the city's own handrails, to an
+        end board over the rock, and a ladder (the owner's ladder pieces, a func_useableladder 28 out, a place to step off
+        at each end) climbs from the rock floor to the walkway's end. It drops 128 to the rock: no harm."""
+        v, P = self.vmf, self.deep_pt
+        bv = self.vis("holdout: the walkway over the drop and its ladder")
+        W = lambda x, y, z: self.w(*P(x, y, z))
+
+        def vb(x1, y1, z1, x2, y2, z2):
+            a, b = P(x1, y1, z1), P(x2, y2, z2)
+            return self.box(*(a + b))
+        x1, x2, y1, y2, zd = 1408, 1504, -7996, -7552, -1792       # (the walkway: Valve's planks' middle, from their end to the rock)
+        plank = "wood/woodfloor005a"
+        v.detail([vb(x1, y1, zd - 8, x2, y2, zd)], plank, vis=bv)
+        v.detail([vb(x1 - 4, y1, zd - 32, x1 + 8, y2, zd - 8), vb(x2 - 8, y1, zd - 32, x2 + 4, y2, zd - 8),     # (its two stringers)
+                  vb(x1 - 4, y2 - 6, zd - 128, x2 + 4, y2, zd - 8)], plank, vis=bv)                             # (and its end board, down to the rock)
+        for x in (x1 - 2, x2 + 2):
+            for (yc, model) in ((y1 + 64, "long"), (y1 + 192, "long"), (y1 + 320, "long"), (y1 + 412, "medium")):
+                v.point("prop_static", W(x, yc, zd + 20), {"model": "models/props_c17/handrail04_%s.mdl" % model, "angles": "0 0 0", "skin": "0", "solid": "6",
+                                                           "fademindist": "1900", "fademaxdist": "2500", "fadescale": "1"}, bv)
+        lx = (x1 + x2) / 2
+        v.point("prop_static", W(lx, y2, zd - 128), {"model": "models/props_c17/metalladder002.mdl", "angles": "0 90 0", "skin": "0", "solid": "6",
+                                                    "fademindist": "-1", "fadescale": "1"}, bv)
+        v.point("prop_static", W(lx, y2, zd), {"model": "models/props_c17/metalladder002b.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, bv)
+        p0, p1 = W(lx, y2 + 28, zd - 124), W(lx, y2 + 28, zd + 12)
+        v.point("func_useableladder", W(lx, y2 + 28, zd + 2), {"point0": "%d %d %d" % p0, "point1": "%d %d %d" % p1, "spawnflags": "0", "StartDisabled": "0"}, bv)
+        v.point("info_ladder_dismount", W(lx, y2 + 70, zd - 127), {}, bv)
+        v.point("info_ladder_dismount", W(lx, y2 - 42, zd + 1), {}, bv)
+        for (a, b, what) in (((x1 + 8, y1, zd + 4), (x2 - 8, y2 - 20, zd + 72), "the walkway over the drop beyond the emergency door"),
+                             ((lx - 16, y2 + 12, zd - 124), (lx + 16, y2 + 44, zd + 72), "the ladder up from the antlion tunnels to the walkway")):
+            self.keep_way_clear(P(*a) + P(*b), what)
+        self.node(*P(lx, -7760, zd))
+        self.notes.append("the walkway over the drop beyond the emergency door: %d long, to a ladder up from the antlion tunnels' floor (%d %d %d)" % (
+            y2 - y1, self.ox + P(lx, 0, 0)[0], self.oy + P(0, y2 + 28, 0)[1], P(0, 0, zd - 128)[2]))
 
     def holdout(self):
         """Behind the emergency door, Episode Two's holdout from ep2_outland_03, lifted whole as Valve made it
@@ -3491,8 +3634,8 @@ class CaveForest(Forest):
 
         def skip(sol):
             f = sol["from"]
-            if f.startswith(drop_from) or (f.startswith("func_tracktrain") and sol.get("live") == "holdout_elevator_1"):
-                return True       # (Valve's loose boards, breakables, the gate, its buttons, the blockers, the see-through; the cage rides on our lift)
+            if f.startswith(drop_from) or (f.startswith("func_tracktrain") and sol.get("live") in ("holdout_elevator_1", "holdout_elevator_2")):
+                return True       # (Valve's loose boards, breakables, the gate, its buttons, the blockers, the see-through; both lifts ride on our wiring)
             if any(c[0] > 3060 - 2848 for sd in sol["sides"] for c in (sd["corners"] or sd["plane"])):
                 return True       # (nothing past the bulkhead into the big room: the gallery's own walls end inside it; clip_x shortened the boxes)
             return any(sd["material"].lower().startswith("nature/clifftrees") for sd in sol["sides"])   # (tree cards against Valve's sky: it is black here)
@@ -3516,10 +3659,12 @@ class CaveForest(Forest):
             if k == "point_spotlight" and name.startswith("elevator_1_light"):
                 e["keys"]["spawnflags"] = "3"
         extra = self.holdout_lift()
-        pf, boxes = self.lifted("valve_ep2_holdout", 0, d, hv, hp, "lc_holdout_", skip=skip, keep=keep, edit=edit, extra=extra, clip=3040 - 2848)
+        pf, boxes = self.lifted("valve_ep2_holdout", 0, d, hv, hp, "lc_holdout_", skip=skip, keep=keep, edit=edit, extra=extra, clip=3040 - 2848,
+                                solids=lambda sols: self.bare_finish(self.lift_2_recess(sols), skip, "the holdout"))
         X1, Y1, Z1 = (min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         X2, Y2, Z2 = (max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3))
         self.deep_reach = (X1, Y1, Z1, X2, Y2, Z2)
+        self.holdout_pit(d)
         B, P = self.box, self.deep_pt
         cm, rock = "concrete/concretewall_mine_002a", "nature/blendrockslime02a"
 
@@ -3552,33 +3697,39 @@ class CaveForest(Forest):
         v.point("light", self.w(ex[0] + 40, ex[1] - 40, ex[2] + 160), {"_light": "255 200 90 150", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         v.point("light", self.w(ex[0] + 6, ex[1] + 5, ex[2] + 96), {"_light": "160 255 150 40", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         self.keep_way_clear((P(2250, 0, 0)[0], P(0, -7330, 0)[1], ex[2] + 24, P(2600, 0, 0)[0], P(0, -7240, 0)[1], ex[2] + 100), "the larval extract's chamber")
-        # Episode Two's alarm post at the first mouth beyond the door (valve_ep2_antlion_alarm): in the gallery, where
-        # the antlions come from the holdout's top landing, its lamps facing the way from the door
-        al = P(1850, -10080, -608)
+        # Episode Two's alarm post by the emergency door (valve_ep2_antlion_alarm; nest_door()): on the holdout's floor west
+        # of the door, its lamps facing south over the floor, where those at the door and on their way to it see them
+        # (it stood in the gallery's control room until 26 November; the owner: "which is absurd")
+        al = P(1256, -8184, -1792)
         apf = PF.load("valve_ep2_antlion_alarm")
 
-        def louder(e):                          # (Valve's 1250 stops short of the door's buttons)
+        def louder(e):                          # (Valve's 1250 stops short of the far end of the holdout)
             if e["keys"].get("targetname") == "mouth_1_siren":
                 e["keys"]["radius"] = "2400"
-        pf_entities(v, apf, 2, self.w(al[0], al[1], al[2]), "lc_nest_", hp, self.vis("alarm post (Episode Two's)"), edit=louder, valve_anchor=apf["anchor"])
+        pf_entities(v, apf, 1, self.w(al[0], al[1], al[2]), "lc_nest_", hp, self.vis("alarm post (Episode Two's)"), edit=louder, valve_anchor=apf["anchor"])
         z0 = P(0, 0, -576)[2]
         for (xa, ya, xb, yb, what) in ((2260, -10120, 2760, -10050, "the gallery from the emergency door"), (2190, -10085, 2260, -10045, "the gallery's doorway into the control room"),
                                        (1150, -9940, 1750, -9900, "the corridor on to the top landing"), (1110, -9880, 1200, -9640, "the way up to the top landing")):
             self.keep_way_clear((P(xa, 0, 0)[0], P(0, ya, 0)[1], z0 + 4, P(xb, 0, 0)[0], P(0, yb, 0)[1], z0 + 72), what)
         # the antlions while the emergency door is open: one pattern (not in the map until a maker copies it), two makers
-        # in the gallery's far end, two alive from each, no end to them while it is open; each one made runs to
-        # lc_nest_rally in the big room
-        t = P(1500, -9920, -590)
-        v.point("npc_antlion", self.w(*t), {"targetname": "lc_nest_antlion", "spawnflags": "2564", "angles": "0 0 0", "radius": "256", "eludedist": "1024", "ignorebugbait": "0",
+        # on the floor of the cleft beyond the door, two alive from each, no end to them while it is open; each one made
+        # runs to lc_nest_rally on the holdout's floor before the door
+        t = P(1500, -7440, -1912)
+        v.point("npc_antlion", self.w(*t), {"targetname": "lc_nest_antlion", "spawnflags": "2564", "angles": "0 270 0", "radius": "256", "eludedist": "1024", "ignorebugbait": "0",
                                            "startburrowed": "0", "unburroweffects": "0", "squadname": "lc_nest", "physdamagescale": "1.0", "sleepstate": "0",
                                            "renderamt": "255", "rendercolor": "255 255 255"}, mv_)
-        makers = (P(1300, -9920, -590), P(1100, -9700, -590))
+        makers = (P(1456, -7520, -1912), P(1520, -7330, -1912))
         for p in makers:
             v.point("npc_template_maker", self.w(*p), {
                 "targetname": "lc_nest_maker", "TemplateName": "lc_nest_antlion", "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1", "SpawnFrequency": "9",
-                "MaxLiveChildren": "2", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2", "CriterionDistance": "2", "angles": "0 0 0"}, mv_,
+                "MaxLiveChildren": "2", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2", "CriterionDistance": "2", "angles": "0 270 0"}, mv_,
                 connections=[("OnSpawnNPC", "!activator", "FightToPosition", "lc_nest_rally", 0.5), ("OnSpawnNPC", "lc_nest_mouth_1_siren", "StopSound", "", 0)])
-        # their way to the door: path nodes along the gallery (the door's own are bulkhead()'s, the room's big_room()'s)
+        ry = P(1456, -8864, -1784)
+        v.point("info_target", self.w(*ry), {"targetname": "lc_nest_rally", "angles": "0 0 0"}, mv_)
+        # their way to the door: path nodes up the cleft's east ledge and over Valve's planks (the door's own are
+        # nest_door()'s); and the gallery's own, from the bulkhead to the top landing
+        for (x, y, z) in ((1456, -7470, -1920), (1560, -7520, -1912), (1760, -7520, -1792), (1766, -7650, -1792), (1610, -8020, -1800), (1456, -8020, -1792)):
+            self.node(*P(x, y, z))
         for (x, y, z) in ((2650, -10100, -576), (2420, -10070, -576), (2230, -10064, -600), (2050, -10050, -604), (1880, -9990, -604), (1700, -9920, -604),
                           (1450, -9920, -604), (1200, -9920, -604), (1100, -9750, -604), (1100, -9550, -604)):
             self.node(*P(x, y, z))
@@ -3598,30 +3749,305 @@ class CaveForest(Forest):
             v.point("light", self.w(*P(x, y, z)), {"_light": col, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
         for (x, y, z) in ((1500, -8800, -1700), (2000, -10136, -520), (1400, -7000, -1700)):
             v.point("env_cubemap", self.w(*P(x, y, z)), {"cubemapsize": "0"}, hv)
+        self.holdout_sheds()
         grubs = sum(1 for e in pf.get("wiring", []) if e["classname"] == "npc_antlion_grub")
         self.notes.append("the holdout: Episode Two's (ep2_outland_03, %d brushes, %d displaced faces, lifted whole): a gallery %d long from the emergency door to the top landing, "
                           "the lift down %d to the holdout's floor, the antlion tunnels north of it that loop round, the larval extract (lc_nest_extract) at their end; "
-                          "Valve's %d grubs where Valve put them; the alarm post in the gallery; %d antlion makers there" % (
+                          "Valve's %d grubs where Valve put them; the alarm post by the emergency door; %d antlion makers in the cleft beyond it" % (
                               len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), 2848 - 1150, 1728 - 512,
                               grubs, len(makers)))
 
+    def holdout_pit(self, d):
+        """The chasm under the antlion tunnels, Valve's own (valve_ep2_holdout_pit, lifted from ep2_outland_03 below the
+        holdout's box, same anchor). The drop beyond the emergency door and the tunnels' edges look down into it: in
+        Valve's map the cleft goes on down between walls of black rock to a black floor 1024 under the walkway. Without it
+        the drop opened into the shut box's empty space, where Valve's sealing blocks showed their nodraw faces (the owner,
+        26 November: "can you just re-copy the cave from EP2? ... when AI tries to patch a VMF map, it tries to use flat
+        brushes behind/with displacement geometry and it doesn't work"). Valve's triggers there (a fall kills) are left
+        out: a fall of 1024 does it."""
+        pv = self.vis("holdout: the chasm under the antlion tunnels (Episode Two's)")
+        cap = -5696 + 10136        # (Valve's y -5696, in the piece's frame: the north face of Valve's sealing wall at the chasm's north end)
+
+        def short(sols):      # (two of Valve's rock brushes there run 256 on behind that wall; their rock is their south face, so they end with the wall;
+            sols = [sol for sol in sols if min(c[1] for sd in sol["sides"] for c in sd["corners"] or []) < cap]      # a board wholly beyond it is left out)
+            for sol in sols:
+                if len(sol["sides"]) == 6 and any(c[1] > cap for sd in sol["sides"] for c in sd["corners"] or []) and all(
+                        c[1] <= cap for sd in sol["sides"] if sd.get("disp") for c in sd["corners"] or []):
+                    for sd in sol["sides"]:
+                        for key in ("plane", "verts", "corners"):
+                            sd[key] = [[c[0], min(c[1], cap), c[2]] for c in sd.get(key) or []]
+            return sols
+        pf, boxes = self.lifted("valve_ep2_holdout_pit", 0, d, pv, pv, "lc_holdout_pit_", keep=lambda e: False, clip=3040 - 2848, solids=short)
+        r = self.deep_reach
+        lo = [min(bx[k] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3)]
+        hi = [max(bx[k + 3] for bx in boxes) - self.ox * (k == 0) - self.oy * (k == 1) for k in range(3)]
+        self.deep_reach = tuple(min(r[k], lo[k]) for k in range(3)) + tuple(max(r[k + 3], hi[k]) for k in range(3))
+        self.notes.append("the chasm under the antlion tunnels: Valve's (%d brushes, %d displaced faces), its floor at z %d" % (
+            len(pf["solids"]), sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp")), lo[2]))
+
+    def bare_finish(self, sols, skip, what):
+        """A lifted piece's bare faces that now show. Valve left faces nobody saw in its own map bare (nodraw draws
+        nothing): in ep2_outland_03 those seen only against the sky (over the pit, the gallery's open side, the cliff:
+        the backs of the pit's top walls, blocks behind its tree cards, left out here, the tops of the sheds' walls
+        under their eaves, the ends of the lift's framework), and in both pieces those behind what is left out or past
+        where the piece is cut (Ravenholm's fence over its mouth passage's timber, the sealing round its passage's
+        areaportal, the landing's walls over the shaft). Here the sky is black (lifted()), so they showed the void. Each
+        of Valve's own nodraw faces that looks into open air (inside no other brush of the piece, and inside the piece's
+        reach, so not its outer shell) is drawn: black as the sky and the box round it, or, a small face (256 or less
+        across) of something built (a brush with a material of its own), in that material. No brush is added or moved
+        (the owner, 26 November, of patching the cave: "when AI tries to patch a VMF map, it tries to use flat brushes
+        behind/with displacement geometry and it doesn't work"). sols: the piece's brushes in its own frame, changed in
+        place; skip: those not placed."""
+        nd, black = "TOOLS/TOOLSNODRAW", MAT["black"].upper()
+        placed = [sol for sol in sols if not skip(sol)]
+
+        def pts(sd):
+            return sd.get("verts") or sd.get("corners") or []
+        geo, boxes = [], []
+        for sol in placed:
+            allc = [c for sd in sol["sides"] for c in pts(sd)]
+            if not allc:
+                geo.append(None)
+                continue
+            mid = [sum(c[k] for c in allc) / len(allc) for k in range(3)]
+            planes = []
+            for sd in sol["sides"]:
+                a, b, c = sd["plane"]
+                u, w = [a[k] - b[k] for k in range(3)], [c[k] - b[k] for k in range(3)]
+                n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]]
+                ln = math.sqrt(sum(x * x for x in n)) or 1.0
+                n = [x / ln for x in n]
+                dd = sum(n[k] * a[k] for k in range(3))
+                if sum(n[k] * mid[k] for k in range(3)) - dd > 0:
+                    n, dd = [-x for x in n], -dd
+                planes.append((n, dd))
+            box = [min(c[k] for c in allc) for k in range(3)] + [max(c[k] for c in allc) for k in range(3)]
+            boxes.append(box)
+            if any(sd.get("disp") for sd in sol["sides"]):
+                geo.append(None)      # (a displaced brush covers nothing: the compiler keeps only its skin, and the skin is not its box)
+                continue
+            geo.append((planes, box, mid))
+        reach = [min(b[k] for b in boxes) + 2 for k in range(3)] + [max(b[k + 3] for b in boxes) - 2 for k in range(3)]
+
+        def covered(p, own):
+            for j, g in enumerate(geo):
+                if g is None or j == own or any(p[k] < g[1][k] - 0.01 or p[k] > g[1][k + 3] + 0.01 for k in range(3)):
+                    continue
+                if all(n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - dd <= 0.01 for n, dd in g[0]):
+                    return True
+            return False
+        count = {"black": 0, "own": 0}
+        for i, sol in enumerate(placed):
+            if geo[i] is None:
+                continue      # (a displaced brush: the compiler draws only its skin)
+            mats = [sd["material"].upper() for sd in sol["sides"] if not sd["material"].upper().startswith("TOOLS/")]
+            own = max(set(mats), key=mats.count) if mats else None
+            for k, sd in enumerate(sol["sides"]):
+                c4 = pts(sd)
+                if sd["material"].upper() != nd or len(c4) < 3:
+                    continue
+                n = geo[i][0][k][0]
+                fc = [sum(c[q] for c in c4) / len(c4) for q in range(3)]
+                near = [fc]      # (its middle, and in from each corner and each edge's middle: a sliver poking out of the brush it crosses shows at one end)
+                for j, c in enumerate(c4):
+                    e = [(c[q] + c4[(j + 1) % len(c4)][q]) / 2 for q in range(3)]
+                    for a in (c, e):
+                        ln = math.sqrt(sum((fc[q] - a[q]) ** 2 for q in range(3))) or 1.0
+                        near += [[a[q] + (fc[q] - a[q]) * f for q in range(3)] for f in (0.05, 0.25, min(1.0, 2.0 / ln))]
+                if not any(all(reach[q] <= p[q] + n[q] <= reach[q + 3] for q in range(3)) and not covered([p[q] + n[q] for q in range(3)], i) for p in near):
+                    continue
+                span = max(max(c[q] for c in c4) - min(c[q] for c in c4) for q in range(3))
+                got = own if own and span <= 256 else black
+                sol["sides"][k] = dict(sd, material=got)
+                count["own" if got != black else "black"] += 1
+        self.notes.append("%s: %d of Valve's bare faces that now show drawn black, %d in their own brush's material" % (what, count["black"], count["own"]))
+        return sols
+
+    def holdout_sheds(self):
+        """The sheds on the holdout's floor (Valve's: three huts of forest steel, A and C with two doorways, B one, on the
+        floor's east side, and D, a two-storey shelter by the west wall with a hatch in its upper floor at its north-west
+        corner). The owner, 26 November: "can we get standard prop doors (rotating functioning doors) on the little sheds
+        in the Ep2 mine shaft?", "also can we please get a single light in each one", "and a ladder for the one that has a
+        second floor". Each doorway's frame (Valve's, wooddoor015a) is 48 x 108, which is the city's own door
+        (door01_left, 47 x 108, as the owner's map has it 134 times): hinged 2 in from a jamb, opening both ways, never
+        locked; where a hut's floor inside is 8 over the ground outside the door stands on the inside floor (its top
+        then in the wall over the frame), and C's south door opens outward only (a joist inside would meet it), its foot
+        clear of the mine rail on the ground in front. One caged
+        work lamp in each, on a wall inside, with a modest light just under it. D's ladder: the owner's ladder pieces
+        (metalladder002, 002b at the top) up the inside of its north wall through Valve's hatch, a func_useableladder 28
+        out from it, a place to step off at each end."""
+        v, P = self.vmf, self.deep_pt
+        sv = self.vis("holdout: the sheds' doors, lamps and ladder")
+        W = lambda x, y, z: self.w(*P(x, y, z))
+
+        def door(x, y, z, yaw, opendir, way):
+            v.point("prop_door_rotating", W(x, y, z), {
+                "model": "models/props_c17/door01_left.mdl", "angles": "0 %d 0" % yaw, "ajarangles": "0 0 0", "distance": "90", "dmg": "0", "fademindist": "-1",
+                "fadescale": "1", "forceclosed": "0", "hardware": "1", "health": "0", "opendir": str(opendir), "rendercolor": "255 255 255", "returndelay": "-1",
+                "skin": "7", "spawnflags": "8192", "spawnpos": "0", "speed": "100"}, sv)
+            a, b = P(*way[:3]), P(*way[3:])
+            self.keep_way_clear(tuple(min(a[k], b[k]) for k in range(3)) + tuple(max(a[k], b[k]) for k in range(3)), "a shed's doorway on the holdout's floor")
+        # (x, y of the hinge and z of the door's middle, its yaw (it reaches 47 to the left of it), open both ways or outward only, the doorway kept clear)
+        door(1846, -8964, -1738, 270, 0, (1846, -9018, -1788, 1890, -8910, -1692))     # A, north
+        door(1740, -9038, -1738, 180, 0, (1686, -9082, -1788, 1794, -9038, -1692))     # A, west
+        door(1778, -9412, -1665, 90, 0, (1734, -9466, -1716, 1778, -9358, -1630))      # B, north (on its floor inside)
+        door(1990, -8668, -1726, 270, 1, (1990, -8722, -1780, 2034, -8614, -1692))     # C, south (outward, over the rail in front)
+        door(1916, -8518, -1729, 180, 0, (1862, -8562, -1780, 1970, -8518, -1692))     # C, west (on its floor inside)
+        # a lamp in each: Valve's caged lamp on a wall inside (it stands 8 out and hangs 11), the light just under it
+        for (x, y, z, yaw) in ((1856, -9143, -1692, 90), (1824, -9591, -1636, 90), (2039, -8564, -1701, 180), (905, -8564, -1696, 0)):
+            c, sn = round(math.cos(math.radians(yaw))), round(math.sin(math.radians(yaw)))
+            v.point("prop_static", W(x, y, z), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 %d 0" % yaw, "skin": "0", "solid": "0",
+                                                "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, sv)
+            v.point("light", W(x + 5 * c, y + 5 * sn, z - 16), {"_light": "255 205 150 50", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
+        # D's ladder, up the inside of its north wall (2 off it) through the hatch in its upper floor
+        lx, ly, z0, z1 = 932, -8458, -1792, -1664
+        v.point("prop_static", W(lx, ly, z0), {"model": "models/props_c17/metalladder002.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, sv)
+        v.point("prop_static", W(lx, ly, z1), {"model": "models/props_c17/metalladder002b.mdl", "angles": "0 90 0", "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, sv)
+        p0, p1 = W(lx, ly - 28, z0 + 4), W(lx, ly - 28, z1 + 12)
+        v.point("func_useableladder", W(lx, ly - 28, z0 + 130), {"point0": "%d %d %d" % p0, "point1": "%d %d %d" % p1, "spawnflags": "0", "StartDisabled": "0"}, sv)
+        v.point("info_ladder_dismount", W(lx, ly - 70, z0 + 1), {}, sv)
+        v.point("info_ladder_dismount", W(lx, ly - 86, z1 + 1), {}, sv)
+        self.keep_way_clear(P(lx - 16, ly - 44, z0 + 4) + P(lx + 16, ly - 12, z1 + 72), "the ladder in the two-storey shed on the holdout's floor")
+
     def holdout_lift(self):
-        """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities.
+        """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
         Valve's cage (holdout_elevator_1: its own brushwork, open on its north side, the lamp and the rotating red light
-        on it) on a func_tracktrain of our own wiring: it starts at the top, where the players come in; a call button at
-        each landing and one in the cage; stops 3 over each floor, so nothing is flush; while it is away from the top an
-        unseen clip closes the hole it leaves in the landing; it does no crush damage. While it is on its way down the
-        holdout's makers send zombies and antlions (Valve's way: they come while you wait for it), off when it is down.
-        Valve's own climbs only while someone stands in it (one trigger's OnStartTouch and OnEndTouch: it breaks with
-        several players), so that is not copied."""
+        on it) on our own wiring (lift_rig). While it is on its way down the holdout's makers send zombies and antlions
+        (Valve's way: they come while you wait for it), off when it is down. Valve's own climbs only while someone
+        stands in it (one trigger's OnStartTouch and OnEndTouch: it breaks with several players), so that is not copied.
+        Its call button at the top stood in the scaffold's corner post (elevator01_framework, round the cage from the
+        floor to the top), where a press met the post: it is on a post of its own beside the cage's mouth now."""
         pf = PF.load("valve_ep2_holdout")
-        ax = pf["anchor"]
         cage = [w for w in pf["wiring"] if w["keys"].get("targetname") == "holdout_elevator_1"][0]
+        out = self.lift_rig(pf, "", "holdout_elevator_1", cage["keys"], cage["brushes"], cage["origin"], 8, (1472, -9584, 1568, -9508), "north", -512, -1728,
+                            top_button=((1580, -9496), 180),
+                            bottom_button=((1434, -9520, -1691), 179.5, "models/props_mining/freightelevatorbutton01.mdl", (1424, -9530, -1697, 1434, -9510, -1667)),
+                            car_button=((1520, -9580), 90), lights=True, makers=True)
+        # the top call button's post: a square of the scaffold's steel on the landing's grating, east of the cage's mouth
+        P = self.deep_pt
+        a, b = P(1580, -9500, -512), P(1588, -9492, -448)
+        self.vmf.detail([self.box(a[0], a[1], a[2], b[0], b[1], b[2])], "metal/metaltruss017a", vis=self.vis("holdout: lights and dressing"))
+        out += self.holdout_lift_2(pf)
+        return out
+
+    def holdout_lift_2(self, pf):
+        """The second lift (the owner, 26 November: "can we also mirror/clone the elevator to work on the other elevator
+        scaffolding in the same shaft? it's the one the vortigaunt uses on the map in EP2; this way we have 2 elevators in
+        case several people are trying to get in and out"): Valve's own platform (holdout_elevator_2: a grating 104 x 176
+        with a tongue 72 x 96 off its west side that runs in the scaffold, elevator01_framework, against the pit's west
+        wall) on the same wiring as the first (lift_rig), its names ending _2, down from the top landing's level to the
+        holdout's floor, where it sits flush in a recess cut for it in Valve's floor (lift_2_recess). It has no cage, so
+        unseen walls ride round it, on the three sides with no landing and over the tongue (into the scaffold: nobody
+        rides there), and its open south side (the walkway at the top) has the first lift's mouth and gate. Its call
+        buttons are on the pit's west wall beside it at both levels, clear of the scaffold, and one on a post at its
+        north-east corner. A trip down brings the holdout's makers as the first lift's do."""
+        plat = [w for w in pf["wiring"] if w["keys"].get("targetname") == "holdout_elevator_2"][0]
+        ax = pf["anchor"]
+        rel = lambda x, y, z: [x - ax[0], y - ax[1], z - ax[2]]
+
+        def bx(x1, y1, z1, x2, y2, z2, mat):
+            a, b = rel(x1, y1, z1), rel(x2, y2, z2)
+            box = tuple(min(a[k], b[k]) for k in range(3)) + tuple(max(a[k], b[k]) for k in range(3))
+            sides = []
+            for f in FACE_ORDER:
+                c = face_corners(box, f)
+                u, w = FACE_AXES[f]
+                sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "material": mat.upper(), "uaxis": u, "vaxis": w, "lightmapscale": "16"})
+            return sides
+        post = [bx(1192, -9128, -512, 1200, -9120, -456, "metal/metaltruss017a")]      # (its button inside the platform's edge)
+        out = self.lift_rig(pf, "_2", "holdout_elevator_2", plat["keys"], plat["brushes"], plat["origin"], 8, self.LIFT_2, "south", -512, -1792,
+                            top_button=((1024, -9329), 0), bottom_button=((1024, -9329), 0), car_button=((1196, -9128), 270), makers=True, more=post)
+        # its unseen walls: west (and over the tongue), north and east, as high as a player, riding with it; always solid
+        x1, y1, x2, y2 = self.LIFT_2
+        walls = [bx(x1 - 1, y1, -512, x1, y2 + 1, -400, MAT["clip"]), bx(x1, y2, -512, x2 + 1, y2 + 1, -400, MAT["clip"]), bx(x2, y1, -512, x2 + 1, y2, -400, MAT["clip"]),
+                 bx(1032, -9256, -512, x1 - 1, -9160, -400, MAT["clip"])]
+        out.append({"classname": "func_brush", "origin": rel((x1 + x2) / 2.0, (y1 + y2) / 2.0, -456), "ours": True, "out": [], "brushes": walls,
+                    "keys": {"targetname": "rails_2", "parentname": "holdout_elevator_2", "StartDisabled": "0", "Solidity": "2", "spawnflags": "2", "rendermode": "10",
+                             "renderamt": "0", "excludednpc": "", "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}})
+        # the starts the zombie and antlion makers already have are the first lift's (lift_rig made them once)
+        return [e for e in out if e["keys"].get("targetname") not in ("zombie", "antlion", "zombie_maker", "antlion_maker")]
+
+    def lift_2_recess(self, sols):
+        """Valve's floor under the second lift (its brush x 768..1280, y -9600..-9088, z -2048..-1792 in Valve's frame),
+        cut so the platform (16 thick, its tongue too) sits in a recess 24 deep with its top flush with the floor and
+        nothing under it to flicker: the floor's own top and edges are kept with Valve's textures, the recess's sides are
+        Episode Two's mine concrete, its bottom Valve's dirt floor."""
+        ax = PF.load("valve_ep2_holdout")["anchor"]
+        orig = (768 - ax[0], -9600 - ax[1], -2048 - ax[2], 1280 - ax[0], -9088 - ax[1], -1792 - ax[2])
+        out, hit = [], None
+        for sol in sols:
+            pts = [c for sd in sol["sides"] for c in (sd.get("verts") or sd["plane"])]
+            box = tuple(min(p[k] for p in pts) for k in range(3)) + tuple(max(p[k] for p in pts) for k in range(3))
+            if hit is None and sol["from"] == "worldspawn" and all(abs(box[k] - orig[k]) < 0.5 for k in range(6)):
+                hit = sol
+                continue
+            out.append(sol)
+        if hit is None:
+            self.problems.append("the second lift's recess: Valve's floor brush under it is not where it was")
+            return sols
+        face = {}
+        for sd in hit["sides"]:
+            ps = sd["plane"]
+            for f, k, v in (("top", 2, orig[5]), ("bottom", 2, orig[2]), ("west", 0, orig[0]), ("east", 0, orig[3]), ("south", 1, orig[1]), ("north", 1, orig[4])):
+                if all(abs(q[k] - v) < 0.5 for q in ps):
+                    face[f] = sd
+        cut = "CONCRETE/CONCRETEWALL_MINE_002A"
+        x1, y1, x2, y2 = self.LIFT_2
+        m = 2
+        r = lambda x, y, z: (x - ax[0], y - ax[1], z - ax[2])
+        X1, Y1, Z1, X2, Y2, Z2 = orig
+        mx1, my1, _ = r(x1 - m, y1 - m, 0)
+        mx2, my2, _ = r(x2 + m, y2 + m, 0)
+        tx1, ty1, _ = r(1032 - m, -9256 - m, 0)
+        ty2 = r(0, -9160 + m, 0)[1]
+        zr = r(0, 0, -1816)[2]
+        pieces = [(X1, Y1, Z1, tx1, Y2, Z2), (mx2, Y1, Z1, X2, Y2, Z2), (tx1, Y1, Z1, mx2, my1, Z2), (tx1, my2, Z1, mx2, Y2, Z2),
+                  (tx1, my1, Z1, mx2, my2, zr), (tx1, my1, zr, mx1, ty1, Z2), (tx1, ty2, zr, mx1, my2, Z2)]
+        for b in pieces:
+            sides = []
+            for f in FACE_ORDER:
+                c = face_corners(b, f)
+                outer = {"top": b[5] == Z2, "bottom": b[2] == Z1, "west": b[0] == X1, "east": b[3] == X2, "south": b[1] == Y1, "north": b[4] == Y2}[f]
+                src = face.get(f) if (outer or f == "top") else None
+                if src:
+                    sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "corners": [list(q) for q in c], "material": src["material"], "uaxis": src["uaxis"],
+                                  "vaxis": src["vaxis"], "lightmapscale": src.get("lightmapscale", "16")})
+                else:
+                    u, w = FACE_AXES[f]
+                    sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "corners": [list(q) for q in c], "material": cut, "uaxis": u, "vaxis": w, "lightmapscale": "16"})
+            out.append({"from": "worldspawn", "sides": sides})
+        return out
+
+    def lift_rig(self, pf, s, train, keys, brushes, origin, floor_up, car, mouth, top_z, bottom_z, top_button, bottom_button, car_button, lights=False,
+                 makers=False, more=()):
+        """A lift in the holdout's pit, as entities in the piece's frame for pf_entities: Valve's car (its brushes, built at
+        the top as Valve built it) on a func_tracktrain of ours between two path points, its floor flush with each landing
+        (the top's grating, the floor's landing), at LIFT_SPEED. Names end in s ("" for the first lift, "_2" for the
+        second), so two lifts never answer each other. car: the car's floor (Valve's x1 y1 x2 y2); mouth: its open side.
+        A button at each landing and one on the car, and every one moves it (the owner, 27 November: "the call buttons don't
+        work on either elevators ... on the top floor": a landing's call did nothing while the car stood at that landing,
+        and the car starts at the top): to the button's own end if it is away, else to the other end. Each press clicks.
+        A press while it moves does nothing.
+        What makes it safe (the owner, 26 November, of the first: "it gets stuck going up if a player is on it right below
+        the 'destination' at the top until I jump off or noclip"): an unseen clip over the hole it leaves in the top landing
+        (fence_top) stood over the car's whole floor until the car had arrived, so a rider's head met it 72 under the top
+        and the car pushed them into it for good. Now the fence goes as the car comes within 128 of the top (a path point
+        there, heard only on the way up), and comes back once the car is 3 s on its way down. And a rider standing half
+        out of the car's mouth would meet the landing's edge from under it: so the car sets off only when nobody stands
+        across its mouth (a trigger there, as the silo's lift waited), and an unseen gate closes the mouth while it moves.
+        It does no crush damage: if something is under it, it waits. Its sound: the freight lift of Eli's lab, looping
+        while it moves, at its own pitch (Valve's car had the Citadel's core lift, pitched by speed: a low groan at this
+        speed), and its stop."""
+        ax = pf["anchor"]
         rel = lambda x, y, z: [x - ax[0], y - ax[1], z - ax[2]]
         out = []
+        o = list(origin)
+        spots = iter([(o[0] - 200 - 16 * (i % 6), o[1] + 160 + 16 * (i // 6), rel(0, 0, -472)[2]) for i in range(200)])
 
-        def ent(cls, keys, at, outs=(), brushes=None, origin=None):
-            e = {"classname": cls, "origin": list(at), "keys": keys, "out": list(outs), "ours": True}
+        def ent(cls, k, at=None, outs=(), brushes=None):
+            e = {"classname": cls, "origin": list(at if at is not None else next(spots)), "keys": k, "out": list(outs), "ours": True}
             if brushes:
                 e["brushes"] = brushes
             out.append(e)
@@ -3634,73 +4060,487 @@ class CaveForest(Forest):
                 u, w = FACE_AXES[f]
                 sides.append({"plane": [list(c) for c in p[:3]], "verts": [list(c) for c in p], "material": mat.upper(), "uaxis": u, "vaxis": w, "lightmapscale": "16"})
             return sides
-        o = cage["origin"]                         # (-1328 590 56: the cage built at the top, its floor's top 8 over its origin)
-        floor_top = 64
-        delta = floor_top - o[2]
-        top, bottom = rel(0, 0, -512)[2] + 3 - delta, rel(0, 0, -1728)[2] + 3 - delta
+
+        def vb(x1, y1, z1, x2, y2, z2, mat):        # (a box given in Valve's own coordinates)
+            a, b = rel(x1, y1, z1), rel(x2, y2, z2)
+            return bx(min(a[0], b[0]), min(a[1], b[1]), min(a[2], b[2]), max(a[0], b[0]), max(a[1], b[1]), max(a[2], b[2]), mat)
+        built_top = o[2] + floor_up                  # (the car's floor's top where Valve built it: the top landing's level)
+        top_o = rel(0, 0, top_z)[2] - floor_up       # (the train's origin when its floor is flush with each landing)
+        bottom_o = rel(0, 0, bottom_z)[2] - floor_up
         speed = str(self.LIFT_SPEED)
-        keys = dict(cage["keys"])
-        keys.update({"targetname": "holdout_elevator_1", "target": "stop_top", "speed": "0", "startspeed": speed, "height": "0", "dmg": "0", "spawnflags": "19", "orientationtype": "0"})
-        ent("func_tracktrain", keys, o, brushes=cage["brushes"])
-        ent("path_track", {"targetname": "stop_top", "target": "stop_bottom", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"}, (o[0], o[1], top),
-            [("OnPass", "arrive_top", "Trigger", "", 0)])
-        ent("path_track", {"targetname": "stop_bottom", "target": "", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"}, (o[0], o[1], bottom),
-            [("OnPass", "arrive_bottom", "Trigger", "", 0)])
-        spots = iter([(o[0] - 200 - 16 * (i % 6), o[1] + 160 + 16 * (i // 6), floor_top + 40) for i in range(200)])
+        k = dict(keys)
+        k.update({"targetname": train, "target": "stop_top" + s, "speed": "0", "startspeed": speed, "height": "0", "dmg": "0", "spawnflags": "19",
+                  "orientationtype": "0", "MoveSound": "eli_lab.elevator_move", "StopSound": "eli_lab.elevator_stop", "StartSound": "",
+                  "MoveSoundMinPitch": "100", "MoveSoundMaxPitch": "100", "volume": "10"})
+        ent("func_tracktrain", k, o, brushes=list(brushes) + list(more))
+        ent("path_track", {"targetname": "stop_top" + s, "target": "near_top" + s, "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
+            (o[0], o[1], top_o), [("OnPass", "arrive_top" + s, "Trigger", "", 0)])
+        ent("path_track", {"targetname": "near_top" + s, "target": "stop_bottom" + s, "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
+            (o[0], o[1], top_o - 128), [("OnPass", "nearing_top" + s, "Trigger", "", 0)])
+        ent("path_track", {"targetname": "stop_bottom" + s, "target": "", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
+            (o[0], o[1], bottom_o), [("OnPass", "arrive_bottom" + s, "Trigger", "", 0)])
 
         def relay(name, outs, off=False):
-            ent("logic_relay", {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, next(spots), outs)
-        go = [("OnTrigger", "call_*", "Disable", "", 0), ("OnTrigger", "rot_redlight1", "Start", "", 0), ("OnTrigger", "spot_doors*", "LightOn", "", 0),
-              ("OnTrigger", "lift_start", "PlaySound", "", 0)]
-        relay("go_down", go + [("OnTrigger", "arrive_bottom", "Enable", "", 0), ("OnTrigger", "holdout_elevator_1", "StartForward", "", 1), ("OnTrigger", "fence_top", "Enable", "", 3),
-                               ("OnTrigger", "zombie_maker", "Enable", "", 2), ("OnTrigger", "antlion_maker", "Enable", "", 4)])
-        relay("go_up", go + [("OnTrigger", "arrive_top", "Enable", "", 0), ("OnTrigger", "holdout_elevator_1", "StartBackward", "", 1)])
-        done = [("OnTrigger", "rot_redlight1", "Stop", "", 0), ("OnTrigger", "spot_doors*", "LightOff", "", 0), ("OnTrigger", "call_*", "Enable", "", 1.5)]
-        relay("arrive_top", done + [("OnTrigger", "arrive_top", "Disable", "", 0), ("OnTrigger", "at_*", "SetValue", "1", 0), ("OnTrigger", "fence_top", "Disable", "", 0)], off=True)
-        relay("arrive_bottom", done + [("OnTrigger", "arrive_bottom", "Disable", "", 0), ("OnTrigger", "at_*", "SetValue", "0", 0),
-                                       ("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)], off=True)
-        for name, cmp_value, outs in (("top", "1", [("OnLessThan", "go_up", "Trigger", "", 0)]), ("bottom", "0", [("OnGreaterThan", "go_down", "Trigger", "", 0)]),
-                                      ("cage", "1", [("OnEqualTo", "go_down", "Trigger", "", 0), ("OnLessThan", "go_up", "Trigger", "", 0)])):
-            relay("call_" + name, [("OnTrigger", "at_" + name, "Compare", "", 0)])
-            ent("logic_compare", {"targetname": "at_" + name, "InitialValue": "1", "CompareValue": cmp_value}, next(spots), outs)
-        ent("ambient_generic", {"targetname": "lift_start", "message": "d3_breen.core_elevator_move1", "health": "8", "pitch": "100", "pitchstart": "100", "radius": "1500",
-                                "spawnflags": "48", "volstart": "0", "preset": "0"}, (o[0], o[1], floor_top + 120))
-        # the clip over the landing's hole while the cage is away (on the landing's level: the riders are well below it by then)
-        x1, y1, x2, y2 = -1376, 552, -1280, 628
-        ent("func_brush", {"targetname": "fence_top", "StartDisabled": "1", "Solidity": "0", "spawnflags": "2", "rendermode": "10", "renderamt": "0", "excludednpc": "",
-                           "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}, ((x1 + x2) / 2, (y1 + y2) / 2, floor_top + 56),
-            brushes=[bx(x1, y1, floor_top, x2, y2 + 8, floor_top + 112, MAT["clip"])])
+            ent("logic_relay", {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, None, outs)
+        calls = ["call_top" + s, "call_bottom" + s, "call_cage" + s]
+        ats = ["at_top" + s, "at_bottom" + s, "at_cage" + s]
+        go = [("OnTrigger", c, "Disable", "", 0) for c in calls]
+        done = [("OnTrigger", c, "Enable", "", 1.5) for c in calls] + [("OnTrigger", "gate" + s, "Disable", "", 0)]
+        if lights:
+            go += [("OnTrigger", "rot_redlight1", "Start", "", 0), ("OnTrigger", "spot_doors*", "LightOn", "", 0)]
+            done += [("OnTrigger", "rot_redlight1", "Stop", "", 0), ("OnTrigger", "spot_doors*", "LightOff", "", 0)]
+        relay("go_down" + s, go + [("OnTrigger", "arrive_bottom" + s, "Enable", "", 0), ("OnTrigger", "clear_dn" + s, "Test", "", 1)])
+        relay("go_up" + s, go + [("OnTrigger", "arrive_top" + s, "Enable", "", 0), ("OnTrigger", "nearing_top" + s, "Enable", "", 0), ("OnTrigger", "clear_up" + s, "Test", "", 1)])
+        away = [("OnFalse", "gate" + s, "Enable", "", 0)]
+        down = away + [("OnFalse", train, "StartForward", "", 0.1), ("OnFalse", "fence_top" + s, "Enable", "", 3)]
+        if makers:
+            down += [("OnFalse", "zombie_maker", "Enable", "", 1), ("OnFalse", "antlion_maker", "Enable", "", 3)]
+        # (it sets off once nobody stands across its mouth: the trigger there holds both branches true)
+        ent("logic_branch", {"targetname": "clear_dn" + s, "InitialValue": "0"}, None, down + [("OnTrue", "clear_dn" + s, "Test", "", 1)])
+        ent("logic_branch", {"targetname": "clear_up" + s, "InitialValue": "0"}, None, away + [("OnFalse", train, "StartBackward", "", 0.1), ("OnTrue", "clear_up" + s, "Test", "", 1)])
+        relay("nearing_top" + s, [("OnTrigger", "fence_top" + s, "Disable", "", 0), ("OnTrigger", "nearing_top" + s, "Disable", "", 0)], off=True)
+        relay("arrive_top" + s, done + [("OnTrigger", "arrive_top" + s, "Disable", "", 0), ("OnTrigger", "fence_top" + s, "Disable", "", 0)]
+              + [("OnTrigger", a, "SetValue", "1", 0) for a in ats], off=True)
+        bottom = done + [("OnTrigger", "arrive_bottom" + s, "Disable", "", 0)] + [("OnTrigger", a, "SetValue", "0", 0) for a in ats]
+        if makers:
+            bottom += [("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)]
+        relay("arrive_bottom" + s, bottom, off=True)
+        for name, cmp_value, outs in (("top", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)]),
+                                      ("bottom", "0", [("OnEqualTo", "go_up" + s, "Trigger", "", 0), ("OnGreaterThan", "go_down" + s, "Trigger", "", 0)]),
+                                      ("cage", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)])):
+            relay("call_" + name + s, [("OnTrigger", "at_" + name + s, "Compare", "", 0)])
+            ent("logic_compare", {"targetname": "at_" + name + s, "InitialValue": "1", "CompareValue": cmp_value}, None, outs)
+        # the car's mouth: a trigger across it (anyone half out holds the car), and an unseen gate there while it moves
+        x1, y1, x2, y2 = car
+        zt = built_top
+        mouth_box = {"north": (x1, y2 - 2, x2, y2 + 2), "south": (x1, y1 - 2, x2, y1 + 2), "east": (x2 - 2, y1, x2 + 2, y2), "west": (x1 - 2, y1, x1 + 2, y2)}[mouth]
+        mx1, my1, mx2, my2 = mouth_box
+        ent("trigger_multiple", {"targetname": "mouth" + s, "parentname": train, "spawnflags": "1", "wait": "0.1", "StartDisabled": "0"}, None,
+            [("OnStartTouchAll", c, "SetValue", v_, 0) for v_, c in (("1", "clear_dn" + s), ("1", "clear_up" + s))]
+            + [("OnEndTouchAll", c, "SetValue", "0", 0) for c in ("clear_dn" + s, "clear_up" + s)],
+            brushes=[vb(mx1, my1, top_z + 1, mx2, my2, top_z + 72, MAT["trigger"])])
+        gx = {"north": (x1, y2, x2, y2 + 1), "south": (x1, y1 - 1, x2, y1), "east": (x2, y1, x2 + 1, y2), "west": (x1 - 1, y1, x1, y2)}[mouth]
+        ent("func_brush", {"targetname": "gate" + s, "parentname": train, "StartDisabled": "1", "Solidity": "0", "spawnflags": "2", "rendermode": "10", "renderamt": "0",
+                           "excludednpc": "", "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}, None,
+            brushes=[vb(gx[0], gx[1], top_z, gx[2], gx[3], top_z + 112, MAT["clip"])])
+        # the fence over the hole it leaves in the top landing while it is away (to the landing's edge past its mouth)
+        fx1, fy1, fx2, fy2 = {"north": (x1, y1, x2, y2 + 8), "south": (x1, y1 - 8, x2, y2), "east": (x1, y1, x2 + 8, y2), "west": (x1 - 8, y1, x2, y2)}[mouth]
+        ent("func_brush", {"targetname": "fence_top" + s, "StartDisabled": "1", "Solidity": "0", "spawnflags": "2", "rendermode": "10", "renderamt": "0", "excludednpc": "",
+                           "invert_exclusion": "0", "solidbsp": "0", "vrad_brush_cast_shadows": "0"}, None,
+            brushes=[vb(fx1, fy1, top_z, fx2, fy2, top_z + 112, MAT["clip"])])
 
         def button(name, foot, yaw, box, model, outs, parent=None):
             pk = {"targetname": name + "_model", "model": model, "angles": "0 %s 0" % yaw, "skin": "0", "solid": "0", "DefaultAnim": "idleoff", "disableshadows": "1",
                   "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0",
                   "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
                   "ExplodeDamage": "0", "ExplodeRadius": "0"}
-            bk = {"targetname": name, "spawnflags": "1025", "wait": "1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "0", "health": "0", "rendermode": "10",
+            bk = {"targetname": name, "spawnflags": "1025", "wait": "1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "15", "health": "0", "rendermode": "10",
                   "renderamt": "0", "rendercolor": "255 255 255"}
             if parent:
                 pk["parentname"] = bk["parentname"] = parent
-            ent("prop_dynamic", pk, foot)
-            ent("func_button", bk, ((box[0] + box[3]) / 2, (box[1] + box[4]) / 2, (box[2] + box[5]) / 2),
-                [("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(outs), brushes=[bx(*box, MAT["nodraw"])])
-        # the top landing's: on the pit's south wall west of the cage, facing the landing; the floor's: where Valve's was
-        # (freightelevatorbutton01 on the post west of the cage); the cage's: on its south side's middle post, facing in
-        b02 = "models/props_mining/freightelevatorbutton02.mdl"
-        button("button_top", (-1400, 536, floor_top + 40), 90, (-1410, 536, floor_top + 36, -1390, 546, floor_top + 64), b02, [("OnPressed", "call_top", "Trigger", "", 0)])
-        bz = rel(0, 0, -1691)[2]
-        button("button_bottom", (-1414, 616, bz), 179.5, (-1424, 606, bz - 6, -1414, 626, bz + 24), "models/props_mining/freightelevatorbutton01.mdl",
-               [("OnPressed", "call_bottom", "Trigger", "", 0)])
-        button("button_cage", (-1328, 556, floor_top + 36), 90, (-1338, 556, floor_top + 32, -1318, 566, floor_top + 60), b02, [("OnPressed", "call_cage", "Trigger", "", 0)],
-               parent="holdout_elevator_1")
-        # the holdout's makers (Valve's way: on while the lift comes down), each with its pattern; made at the room's ends
-        for name, cls, at, every in (("zombie", "npc_zombie", rel(850, -8399, -1784), "4"), ("antlion", "npc_antlion", rel(2014, -9100, -1783), "6")):
-            ent(cls, {"targetname": name, "spawnflags": "2564", "angles": "0 0 0", "squadname": "lc_holdout", "physdamagescale": "1.0", "sleepstate": "0",
-                      "renderamt": "255", "rendercolor": "255 255 255"}, (at[0] + 64, at[1], at[2] + 8))
-            ent("npc_template_maker", {"targetname": name + "_maker", "TemplateName": "lc_holdout_" + name, "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1",
-                                       "SpawnFrequency": every, "MaxLiveChildren": "3", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2",
-                                       "CriterionDistance": "2", "angles": "0 0 0"}, (at[0], at[1], at[2] + 8))
-        self.lift_info = (o, top, bottom, delta)
+            ent("prop_dynamic", pk, rel(*foot))
+            a, b = rel(*box[:3]), rel(*box[3:])
+            ent("func_button", bk, [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0, (a[2] + b[2]) / 2.0], [("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(outs),
+                brushes=[bx(min(a[0], b[0]), min(a[1], b[1]), min(a[2], b[2]), max(a[0], b[0]), max(a[1], b[1]), max(a[2], b[2]), MAT["nodraw"])])
+
+        def mine_button(name, at, yaw, z, outs, parent=None):
+            # Episode Two's mine lift button (freightelevatorbutton02: 8 wide, 20 high, 5 out, facing east at yaw 0) with
+            # its foot on a face at `at`, centred there, facing `yaw`
+            (x, y), c, sn = at, round(math.cos(math.radians(yaw))), round(math.sin(math.radians(yaw)))
+            foot = (x + 4 * sn, y - 4 * c, z)              # (its 8 run to its left from the foot)
+            fx_, fy_ = x + 10 * c, y + 10 * sn
+            box = (min(x, fx_) - 10 * abs(sn), min(y, fy_) - 10 * abs(c), z - 4, max(x, fx_) + 10 * abs(sn), max(y, fy_) + 10 * abs(c), z + 24)
+            button(name, foot, yaw, box, "models/props_mining/freightelevatorbutton02.mdl", outs, parent)
+        mine_button("button_top" + s, top_button[0], top_button[1], top_z + 40, [("OnPressed", "call_top" + s, "Trigger", "", 0)])
+        if len(bottom_button) > 2:      # (Valve's own, where Valve put it)
+            foot, yaw, model, box = bottom_button
+            button("button_bottom" + s, foot, yaw, box, model, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
+        else:
+            mine_button("button_bottom" + s, bottom_button[0], bottom_button[1], bottom_z + 40, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
+        mine_button("button_cage" + s, car_button[0], car_button[1], top_z + 36, [("OnPressed", "call_cage" + s, "Trigger", "", 0)], parent=train)
+        # the holdout's makers (Valve's way: on while a lift comes down), each with its pattern; made at the room's ends
+        if makers:
+            for name, cls, at, every in (("zombie", "npc_zombie", rel(850, -8399, -1784), "4"), ("antlion", "npc_antlion", rel(2014, -9100, -1783), "6")):
+                ent(cls, {"targetname": name, "spawnflags": "2564", "angles": "0 0 0", "squadname": "lc_holdout", "physdamagescale": "1.0", "sleepstate": "0",
+                          "renderamt": "255", "rendercolor": "255 255 255"}, (at[0] + 64, at[1], at[2] + 8))
+                ent("npc_template_maker", {"targetname": name + "_maker", "TemplateName": "lc_holdout_" + name, "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1",
+                                           "SpawnFrequency": every, "MaxLiveChildren": "3", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2",
+                                           "CriterionDistance": "2", "angles": "0 0 0"}, (at[0], at[1], at[2] + 8))
+        self.lifts.append((s, train, car, top_z, bottom_z))
         return out
+
+    # --- the back way (the owner, 26 November) ------------------------------------------------------------------------
+
+    BW_PORCH = (1080, -1144, -3648)     # (d1_town_04's own coordinates) the porch of the brick head house at the top of the big room's
+                                        # shaft: its floor at its open south edge, where the gallery's side doorway opens on to it
+    BW_CLIMB_Y = 4992                   # the climb up the hill's west flank: its middle, along y (by the owner's spot on the mound)
+    BW_CLIMB_X = (216, 296, 392, 672)   # its foot's pad (west edge), the first ladder's frame, the second's, the top deck's east end
+
+    def back_way_plan(self):
+        """Where the back way goes, worked out before the shell is built: the forest's north wall is cut where its passage
+        goes through, just east of the stretch the big room's joint builds (back_way)."""
+        px, py, pz = self.room_pt(*self.BW_PORCH)
+        bw = {"door": (px, py, pz)}
+        bw["hx1"] = px + 1096                       # the gallery's low end (cut on Valve's grid where its slope starts): the head room's west end
+        bw["hx2"] = bw["hx1"] + 208                 # the head room's east end (inside)
+        bw["yi1"], bw["yi2"] = py - 336, py - 16    # the gallery's inside, across (its far wall cut back to the forest's north wall)
+        bw["zl"] = pz - 256                         # its floor at the low end: it climbs 256 to the porch's floor
+        bw["sx1"], bw["sx2"] = bw["hx2"] - 88, bw["hx2"] - 8      # the shaft and the passage to it, inside (80 across)
+        bw["sy2"] = bw["yi1"] + 216
+        bw["sy1"] = bw["sy2"] - 96
+        mid = (bw["sx1"] + bw["sx2"]) // 2
+        bw["mid"] = mid
+        bw["shed"] = (mid - 88, self.D - 176, mid + 88, self.D - 8)        # the shed's inside, its back wall on the forest's north wall
+        ground = max(self.natural(x, y) for x in range(mid - 112, mid + 113, 16) for y in range(self.D - 280, self.D + 1, 16))
+        bw["zd"] = int(math.ceil((ground + 40) / 8.0)) * 8                 # the shed's deck and the passage's floor: clear of the ground under them
+        joint = self.cuts["north"][0] if isinstance(self.cuts["north"], list) else self.cuts["north"]
+        bw["cut"] = (joint[1], joint[1] + 256)      # the stretch of the north wall built here, with the passage's hole in it
+        self.cuts["north"] = [joint, bw["cut"]]
+        bw["ways"], bw["keepout"] = [], []          # (the back way's own ways, and where its timbers stand: no tree or plant of the forest's in them, bw_trees)
+        self.bw = bw
+
+    def back_way(self):
+        """The back way into the workings (the owner, 26 November: "facing the cave entrance ... on the left side is little area
+        that goes around the left side of the cave that is kind of pointless: please add a way to get up to the top of the
+        displacement mound above the cave, to the outside top of it ... a way for intruders to get inside, and then make a
+        mine tunnel cut/pasted from EP2 ... and use it to connect to the existing ravenholm entrance"). A climb of two timber
+        ladders up the hill's west flank from the ditch round the left of the cave (bw_climb); across the mound, a mine shed
+        against the forest's north wall (bw_shed); a passage through the wall to a timber shaft with a ladder up it and a
+        head room at its top (bw_wall, bw_head); and Episode Two's sloped mine gallery (ep2_outland_03) climbing from the head
+        room to the porch of the brick head house at the top of the big room's shaft, its own side doorway opening on to the
+        porch (bw_gallery, bw_porch). All of it but the climb and the shed is inside the big room's box, which reaches east
+        over the head room and the shaft; the passage is that box's third opening (workings_hull)."""
+        bw = self.bw
+        px, py, pz = bw["door"]
+        if py - 408 != self.D + WALL:
+            self.problems.append("the back way's gallery does not meet the forest's north wall (its far wall at %d, the wall's back at %d)" % (py - 408, self.D + WALL))
+        self.bw_gallery()
+        self.bw_porch()
+        self.bw_head()
+        self.bw_wall()
+        self.bw_shed()
+        self.bw_climb()
+        r = list(self.room_box)
+        r[3] = max(r[3], bw["cut"][1])
+        self.room_box = tuple(r)
+        self.room_openings = [bw["hole"]]
+        w = lambda x, y, z: tuple(int(round(c)) for c in self.w(x, y, z))
+        cx, top = self.BW_CLIMB_X, bw["climb_top"]
+        self.notes.append("the back way: a climb of two timber ladders up the hill's west flank from the ditch at (%d %d %d) to the mound's top at (%d %d %d); "
+                          "the mine shed on the mound at (%d %d %d), its door south; through the forest's north wall to a ladder up a timber shaft (%d high) "
+                          "and Episode Two's sloped mine gallery (ep2_outland_03, %d long, climbing %d) to the porch of the head house at the top of the big room's shaft (%d %d %d)" % (
+                              w(cx[0] + 40, self.BW_CLIMB_Y, bw["pad"]) + w(cx[3] - 16, self.BW_CLIMB_Y, top) + w(bw["mid"], (bw["shed"][1] + bw["shed"][3]) / 2, bw["zd"])
+                              + (bw["zl"] - bw["zd"], bw["hx1"] - (px - 88), 256) + w(px, py + 48, pz)))
+
+    def bw_box(self, box, mat, vis, top=None, bottom=None, faces=None, world=True):
+        """One brush of the back way (forest frame): a world brush, or a func_detail with world=False."""
+        if world:
+            self.vmf.world_box(self.box(*box), mat, top=top or mat, bottom=bottom or mat, vis=vis, faces=faces)
+        else:
+            f = dict(faces or {})
+            if bottom:
+                f["bottom"] = bottom
+            self.vmf.detail([self.box(*box)], mat, vis=vis, top=top or mat, faces=f or None)
+
+    def bw_way(self, box, label):
+        self.keep_way_clear(box, label)
+        self.bw["ways"].append(self.box(*box))
+
+    def bw_gallery(self):
+        """Episode Two's sloped mine gallery (ep2_outland_03, lifted as valve_ep2_incline_gallery): a timber-lined box tunnel 320
+        wide that climbs 256 at 14 degrees, turned half round so it climbs west, its side doorway (Valve's own timber frame) on
+        the porch's south edge. Cut on Valve's grid: at its low end where its slope starts (the head room goes on from there),
+        at its high end 160 past the slope's top, capped 32 inside the cut (map_lessons: join Valve's pieces with the cut
+        hidden); its far wall cut back to the forest's north wall (72 of its 104 left), a back put in the refuge niche in it.
+        Left out: its railcar and the boards and crates across its foot (the owner: "nonono please don't insert the railcar as
+        a moving component"), the ladder up out of its top and the lamp beyond the cap."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        px, py, pz = bw["door"]
+        d = self.w(px, py, pz)
+        gv, gp = self.vis("back way: the gallery (Episode Two's, lifted from ep2_outland_03)"), self.vis("back way: the gallery's lights and timbers")
+        pf = copy.deepcopy(PF.load("valve_ep2_incline_gallery"))
+        lo, hi = (-1096, 0, -1000), (120, 408, 1000)      # (the piece's frame: Valve's x from the doorway, Valve's y from its wall, Valve's z from its floor)
+        pf["solids"] = [c for c in (pf_clamp(sol, lo, hi) for sol in pf["solids"]) if c is not None]
+        porch = [self.box(px - 216, py, pz, px + 360, py + 104, pz + 168)]
+        pf_finish(pf["solids"], 2, d, [(porch, {"floor": "concrete/concretefloor013a", "ceiling": "wood/woodfloor005a", "wall": "brick/brickwall048a"})], None,
+                  models=pf_model_boxes(pf))
+        for sol in pf["solids"]:      # (the rest of what Valve left bare faces the big room's box, or the space under its displaced floor: black as the box)
+            for sd in sol["sides"]:
+                if sd["material"].upper() == "TOOLS/TOOLSNODRAW":
+                    sd["material"] = MAT["black"].upper()
+        pf_solids(v, pf, 2, d, gv, world=True)
+
+        def keep(e):
+            cls, k = e["classname"], e["keys"]
+            if cls not in ("prop_static", "light", "light_spot", "env_sprite", "infodecal") or k.get("targetname") or "ladder" in k.get("model", ""):
+                return False
+            return -1080 <= e["origin"][0] <= 80
+
+        def edit(e):
+            if e["classname"] in ("light", "light_spot"):
+                e["keys"]["spawnflags"] = "0"
+        n0 = len(v.props)
+        pf_entities(v, pf, 2, d, "lc_back_", gp, gp, keep=keep, edit=edit, valve_anchor=pf["anchor"])
+        self.valve_props.update(range(n0, len(v.props)))
+        wall, nd = "wood/woodwall_mine001a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        # the cap at the high end (its face 32 inside the cut), the wall over the doorway's lintel (Valve's alcove roofed it), the sill under the doorway
+        B((px - 120, py - 336, pz - 32, px - 88, py - 16, pz + 224), wall, gv, top=nd, bottom=nd, faces={"west": nd})
+        B((px - 56, py - 16, pz + 144, px + 56, py, pz + 224), wall, gv, top=nd, bottom=nd, faces={"north": "brick/brickwall048a"})
+        B((px - 40, py - 16, pz - 32, px + 40, py, pz), "wood/woodfloor005a", gv, bottom=nd, world=False)
+        # the refuge niche in the far wall: Valve's ran 104 deep, through where the forest's north wall stands; a back for it
+        B((px + 584, py - 408, pz - 200, px + 716, py - 392, pz - 22), wall, gv, top=nd, bottom=nd, faces={"south": nd})
+        # its ways: the doorway, the flat top, the slope (in steps, each kept clear from 10 over its highest floor), the porch to the house's door
+        self.bw_way((px - 36, py - 300, pz + 8, px + 36, py + 8, pz + 100), "the back way: the gallery's side doorway on to the porch")
+        self.bw_way((px - 80, py - 320, pz + 10, px - 72, py - 32, pz + 90), "the back way: the gallery's top")
+        self.bw_way((px - 72, py - 320, pz + 10, px + 72, py - 32, pz + 90), "the back way: the gallery's top")
+        for k in range(8):
+            xa = px + 72 + 128 * k
+            self.bw_way((xa, py - 320, pz - 32 * k + 10, xa + 128, py - 32, pz - 32 * k + 90), "the back way: the gallery's slope")
+        self.bw_way((px + 40, py + 8, pz + 8, px + 300, py + 96, pz + 90), "the back way: the porch, from the gallery to the head house's door")
+        for (x, y, z) in ((px + 900, py - 176, pz - 256 + 32), (px + 400, py - 176, pz - 80), (px, py - 176, pz), (px + 200, py + 56, pz)):
+            self.node(x, y, z)
+        v.point("env_cubemap", self.w(px + 500, py - 176, pz - 40), {"cubemapsize": "0"}, gv)
+        J = lambda a, b: self.w(*a) + self.w(*b)
+        self.joints += [("the back way: the gallery's side doorway on to the porch", J((px - 120, py - 320, pz - 16), (px + 120, py + 96, pz + 200)),
+                         [self.w(px, py - 80, pz + 48), self.w(px, py + 50, pz + 48)]),
+                        ("the back way: the cap at the gallery's high end", J((px - 96, py - 328, pz - 16), (px + 100, py - 8, pz + 232)), [self.w(px - 40, py - 176, pz + 64)]),
+                        ("the back way: the refuge niche in the gallery's far wall", J((px + 560, py - 400, pz - 100), (px + 740, py - 200, pz - 10)), [self.w(px + 650, py - 300, pz - 60)])]
+        # (that box starts over the gallery's floor: its gravel bed is a slab 8 thick on the slope, which the check's 8 unit cells can miss)
+
+    def bw_porch(self):
+        """The porch of the brick head house at the top of the big room's shaft: Valve's ran on to the town (left out, its
+        south wall with it), so it stood open to the dark of the box. Now the gallery's wall closes its south side and its
+        doorway opens on to it; a brick wall closes the rest of that side, and its west end."""
+        bw, B = self.bw, self.bw_box
+        px, py, pz = bw["door"]
+        pv, brick, nd = self.vis("back way: the porch's walls"), "brick/brickwall048a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        B((px - 224, py - 8, pz - 8, px - 120, py, pz + 176), brick, pv, top=nd, bottom=nd, faces={"south": nd})
+        B((px - 224, py, pz - 8, px - 216, py + 112, pz + 176), brick, pv, top=nd, bottom=nd, faces={"west": nd})
+        self.joints.append(("the back way: the porch's new walls", self.w(px - 230, py - 12, pz - 16) + self.w(px - 60, py + 106, pz + 172), [self.w(px - 150, py + 50, pz + 48)]))
+
+    def bw_head(self):
+        """The head room at the gallery's low end (its walls, floor and roof in line with the gallery's, so the cut is hidden),
+        with the shaft under it: a timber well 80 by 96 up from the passage's floor, and a ladder of Valve's wooden pieces
+        (props_forest/ladderwood, as Episode Two's mines have them) up its far wall to the head room's floor."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        hx1, hx2, yi1, yi2, zl, zd = bw["hx1"], bw["hx2"], bw["yi1"], bw["yi2"], bw["zl"], bw["zd"]
+        sx1, sx2, sy1, sy2, mid = bw["sx1"], bw["sx2"], bw["sy1"], bw["sy2"], bw["mid"]
+        hv = self.vis("back way: the head room, the shaft and the passage")
+        wall, floor, roof, nd = "wood/woodwall_mine001a", "nature/dirtfloor_mine001a", "wood/woodfloor005a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        ys, zr = self.D + WALL, zl + 320
+        # the head room: walls (the south one as thick as the gallery's far wall), roof, and its floor round the well
+        B((hx1, ys, zl - 16, hx2 + 16, yi1, zr + 32), wall, hv, top=nd, bottom=nd, faces={"south": nd})
+        B((hx1, yi2, zl - 16, hx2 + 16, yi2 + 16, zr + 32), wall, hv, top=nd, bottom=nd, faces={"north": nd})
+        B((hx2, yi1, zl - 16, hx2 + 16, yi2, zr + 32), wall, hv, top=nd, bottom=nd, faces={"east": nd})
+        B((hx1, yi1, zr, hx2, yi2, zr + 32), roof, hv, top=nd, bottom=roof)
+        for box in ((hx1, yi1, zl - 8, sx1, yi2, zl), (sx2, yi1, zl - 8, hx2, yi2, zl), (sx1, yi1, zl - 8, sx2, sy1, zl), (sx1, sy2, zl - 8, sx2, yi2, zl)):
+            B(box, roof, hv, top=floor, bottom=nd)
+        B((hx1, yi1, zl - 64, hx1 + 16, yi2, zl - 8), roof, hv)       # (a beam under the floor's edge at the join: the gallery's floor ends on it)
+        # the shaft: its walls from the passage's floor up to the head room's floor (over the passage, its south wall)
+        B((sx1 - 16, sy1, zd, sx1, sy2 + 16, zl - 8), wall, hv, top=nd, bottom=nd, faces={"west": nd})
+        B((sx2, sy1, zd, sx2 + 16, sy2 + 16, zl - 8), wall, hv, top=nd, bottom=nd, faces={"east": nd})
+        B((sx1, sy2, zd, sx2, sy2 + 16, zl - 8), wall, hv, top=nd, bottom=nd, faces={"north": nd})
+        B((sx1, sy1 - 16, zd + 128, sx2, sy1, zl - 8), wall, hv, top=nd, bottom=nd, faces={"south": nd})
+        # timber cribbing round the well every 128 up (16 by 16, Ravenholm's shafts have a ring every 190 to 320)
+        tb = FMAT["timber"]
+        for z in range(zd + 128, zl - 40, 128):
+            v.detail([self.box(sx1, sy2 - 8, z, sx2, sy2, z + 16), self.box(sx1, sy1, z, sx1 + 8, sy2 - 8, z + 16), self.box(sx2 - 8, sy1, z, sx2, sy2 - 8, z + 16)], tb, vis=hv)
+        # the ladder up the well's north wall, facing south
+        ly = sy2 - 3.5
+        z = zd
+        while z < zl - 20:
+            v.point("prop_static", self.w(mid, ly, z + 75), {"model": "models/props_forest/ladderwood.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                                             "fademindist": "-1", "fadescale": "1"}, hv)
+            z += 148
+        fy = int(sy2 - 24)
+        v.point("func_useableladder", self.w(mid, fy, zd + 130), {"point0": "%d %d %d" % self.w(mid, fy, zd + 2), "point1": "%d %d %d" % self.w(mid, fy, zl + 12),
+                                                                  "spawnflags": "0", "StartDisabled": "0"}, hv)
+        v.point("info_ladder_dismount", self.w(mid, sy2 - 74, zd + 1), {}, hv)
+        v.point("info_ladder_dismount", self.w(mid, sy2 + 40, zl + 1), {}, hv)
+        for (x, y, z, col) in ((mid, (sy1 + sy2) / 2, zd + 96, "255 210 150 50"), (mid, (sy1 + sy2) / 2, zl - 120, "255 210 150 30"), (hx1 + 80, (yi1 + yi2) / 2, zl + 200, "255 210 150 60")):
+            v.point("light", self.w(x, y, z), {"_light": col, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, hv)
+        self.bw_way((mid - 16, sy2 - 40, zd + 2, mid + 16, sy2 - 8, zl + 72), "the back way: the ladder up the shaft")
+        self.bw_way((hx1 + 8, yi1 + 8, zl + 8, sx1 - 4, yi2 - 8, zl + 90), "the back way: the head room")
+        self.bw_way((sx1 - 4, sy2 + 4, zl + 8, hx2 - 8, yi2 - 8, zl + 90), "the back way: the head room, off the ladder")
+        self.node(hx1 + 60, (yi1 + yi2) / 2, zl)
+        J = lambda a, b: self.w(*a) + self.w(*b)
+        self.joints += [("the back way: the gallery's low end and the head room", J((hx1 - 160, yi1 - 8, zl - 40), (hx2 + 8, yi2 + 8, zr + 8)),
+                         [self.w(hx1 - 80, (yi1 + yi2) / 2, zl + 60), self.w(hx1 + 80, (yi1 + yi2) / 2, zl + 60)]),
+                        ("the back way: the shaft", J((sx1 - 8, sy1 - 8, zd - 4), (sx2 + 8, sy2 + 8, zl + 4)), [self.w(mid, (sy1 + sy2) / 2, zd + 200)])]
+
+    def bw_wall(self):
+        """The stretch of the forest's north wall east of the big room's joint (back_way_plan cut it out of the shell), built
+        as the shell builds it, with the hole the passage goes through; the passage, lined in timber, from the shed's back
+        through the wall to the foot of the shaft."""
+        bw, B = self.bw, self.bw_box
+        D, T = self.D, WALL
+        c1, c2 = bw["cut"]
+        sx1, sx2, sy1, zd = bw["sx1"], bw["sx2"], bw["sy1"], bw["zd"]
+        h1, h2, z1, z2 = sx1 - 16, sx2 + 16, zd - 8, zd + 128
+        sv, sky, black = self.vis("shell (sky, walls, slab)"), MAT["sky"], MAT["black"]
+        # Sky on the forest's side where it shows, as the shell's; black (as the big room's box) on its back, and on its
+        # front behind the shed (up to its roof) and under the ground beside it: where the shed's posts, boards and ramp go
+        # into the ground the hole check's cubes slip under the ground's skin, and a sky face there counts as one under a roof
+        x1s, x2s = bw["shed"][0] - 8, bw["shed"][2] + 8
+        zr = zd + 152
+        under = int(min(self.natural(x, D - 8) for x in range(c1, c2 + 1, 8))) - 16
+        for (a, b, lo, hi) in ((c1, x1s, self.zb, self.lid), (x1s, h1, self.zb, self.lid), (h1, h2, self.zb, z1), (h1, h2, z2, self.lid),
+                               (h2, x2s, self.zb, self.lid), (x2s, c2, self.zb, self.lid)):
+            if b <= a:
+                continue
+            split = zr if x1s <= a and b <= x2s else under
+            for (za, zb_, front) in ((lo, min(hi, split), black), (max(lo, split), hi, sky)):
+                if zb_ > za:
+                    self.vmf.world_box(self.box(a, D, za, b, D + T, zb_), sky, vis=sv, faces={"north": black, "south": front})
+        bw["hole"] = (h1, D, z1, h2, D + T, z2)
+        hv = self.vis("back way: the head room, the shaft and the passage")
+        wall, floor, roof, nd = "wood/woodwall_mine001a", "nature/dirtfloor_mine001a", "wood/woodfloor005a", MAT["black"]      # (their backs look into the big room's box: black as it is)
+        B((h1, D, z1, h2, bw["sy2"] + 16, zd), floor, hv, top=floor, bottom=nd)
+        B((h1, D, zd + 112, h2, sy1, z2), roof, hv, top=nd, bottom=roof)
+        B((h1, D, zd, sx1, sy1, zd + 112), wall, hv, top=nd, bottom=nd, faces={"west": nd})
+        B((sx2, D, zd, h2, sy1, zd + 112), wall, hv, top=nd, bottom=nd, faces={"east": nd})
+        # timber sets along it (posts and a cap, Ravenholm's 16 by 16)
+        tb = FMAT["timber"]
+        for y in (D + T + 24, sy1 - 40):
+            self.vmf.detail([self.box(sx1, y, zd, sx1 + 8, y + 16, zd + 104), self.box(sx2 - 8, y, zd, sx2, y + 16, zd + 104), self.box(sx1, y, zd + 104, sx2, y + 16, zd + 112)], tb, vis=hv)
+        self.bw_way((sx1 + 10, D - 8, zd + 8, sx2 - 10, sy1 + 40, zd + 100), "the back way: the passage through the north wall to the shaft")
+        self.joints.append(("the back way: the passage through the forest's north wall", self.w(sx1 - 20, D - 120, zd - 12) + self.w(sx2 + 20, sy1 + 8, zd + 132),
+                            [self.w(bw["mid"], D - 60, zd + 48), self.w(bw["mid"], D + T + 60, zd + 48)]))
+
+    def bw_shed(self):
+        """The mine shed on the mound (the owner: "build a small structure on top of the existing cave entrance mound that
+        connects it all"): Episode Two's board walls and corrugated iron on a plank deck raised on 16 by 16 posts sunk in the
+        ground (nothing flat laid on the displaced ground: the owner, of gaps where flat brushes meet it), its back against
+        the forest's north wall where the passage goes in, its door south on to the mound up a plank ramp sunk at its foot."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        x1, y1, x2, y2 = bw["shed"]
+        zd, mid, sx1, sx2 = bw["zd"], bw["mid"], bw["sx1"], bw["sx2"]
+        D = self.D
+        zt = zd + 144
+        shv = self.vis("back way: the mine shed")
+        board, deck, post, tin, nd = FMAT["office_wall"], "wood/woodfloor005a", FMAT["timber"], FMAT["office_ceiling"], MAT["nodraw"]
+        low = lambda xa, ya, xb, yb: int(min(self.natural(x, y) for x in range(int(xa), int(xb) + 1, 8) for y in range(int(ya), int(yb) + 1, 8))) - 48
+        # the deck, and the posts it stands on (sunk 48 below the lowest ground round each)
+        B((x1 - 8, y1 - 8, zd - 8, x2 + 8, D, zd), deck, shv, world=False)
+        for (xa, ya) in ((x1 - 12, y1 - 12), (x2 - 4, y1 - 12), (x1 - 12, D - 12), (x2 - 4, D - 12)):
+            B((xa, ya, low(xa, ya, xa + 16, ya + 12 if ya > y1 else ya + 16), xa + 16, ya + (12 if ya > y1 else 16), zt), post, shv, world=False)
+        for xa in (x1 - 12, x2 - 4):
+            B((xa, (y1 + D) / 2 - 8, low(xa, (y1 + D) / 2 - 8, xa + 16, (y1 + D) / 2 + 8), xa + 16, (y1 + D) / 2 + 8, zd - 8), post, shv, world=False)
+        # the walls (8 thick, board), the doorway framed in timber standing 4 proud each side
+        B((x1 - 8, y1, zd, x1, y2, zt), board, shv, world=False)
+        B((x2, y1, zd, x2 + 8, y2, zt), board, shv, world=False)
+        B((x1 - 8, y1 - 8, zd, mid - 40, y1, zt), board, shv, world=False)
+        B((mid + 40, y1 - 8, zd, x2 + 8, y1, zt), board, shv, world=False)
+        B((mid - 40, y1 - 8, zd + 120, mid + 40, y1, zt), board, shv, world=False)
+        for xa in (mid - 40, mid + 32):
+            B((xa, y1 - 12, zd, xa + 8, y1 + 4, zd + 120), post, shv, world=False)
+        B((mid - 32, y1 - 12, zd + 112, mid + 32, y1 + 4, zd + 120), post, shv, world=False)
+        # the back wall, with the passage's opening in it
+        B((x1 - 8, y2, zd, sx1, D, zt), board, shv, world=False, faces={"north": nd})
+        B((sx2, y2, zd, x2 + 8, D, zt), board, shv, world=False, faces={"north": nd})
+        B((sx1, y2, zd + 112, sx2, D, zt), board, shv, world=False, faces={"north": nd})
+        # the roof: corrugated iron, eaves 24 over the walls, to the wall behind
+        B((x1 - 8, y1 - 32, zt, x2 + 8, D, zt + 8), post, shv, top=tin, bottom=tin, world=False)
+        # (no eaves at its sides, and boards down from the deck into the ground behind it: the forest's north wall is sky, and
+        #  none of it may show under the shed)
+        B((x1 - 8, y2, low(x1 - 8, y2, x2 + 8, D) + 8, x2 + 8, D, zd - 8), board, shv, world=False, faces={"north": nd})
+        # the ramp up to the door, its foot sunk into the ground
+        g = int(self.natural(mid, y1 - 104))
+        foot = min(g - 4, zd - 24)
+        length = max(96, int(math.ceil((zd - foot) / 0.75 / 8.0)) * 8)
+        ya, yb = y1 - 8 - length, y1 - 8
+        under = min(foot, low(mid - 32, ya, mid + 32, yb) + 40) - 40
+        faces = []
+        for xa in (mid - 32, mid + 32):
+            faces.append(([(xa, yb, zd), (xa, ya, foot), (xa, ya, under), (xa, yb, under)], deck))
+        corners = lambda pts: [tuple(int(c) for c in self.w(*p)) for p in pts]
+        shape = [(corners([(mid - 32, yb, zd), (mid + 32, yb, zd), (mid + 32, ya, foot), (mid - 32, ya, foot)]), deck),
+                 (corners([(mid - 32, yb, under), (mid - 32, ya, under), (mid + 32, ya, under), (mid + 32, yb, under)]), deck),
+                 (corners([(mid - 32, yb, zd), (mid - 32, yb, under), (mid + 32, yb, under), (mid + 32, yb, zd)]), deck),
+                 (corners([(mid - 32, ya, foot), (mid + 32, ya, foot), (mid + 32, ya, under), (mid - 32, ya, under)]), deck)]
+        shape += [(corners(pts), m) for pts, m in faces]
+        v.detail_shapes([shape], vis=shv)
+        # a lamp over the passage, its light, a crate in a corner
+        v.point("prop_static", self.w(mid, y2 - 1, zd + 128), {"model": "models/props_c17/light_cagelight02_on.mdl", "angles": "0 270 0", "skin": "0", "solid": "0",
+                                                                "fademindist": "-1", "fadescale": "1"}, shv)
+        v.point("light", self.w(mid, (y1 + y2) / 2, zd + 110), {"_light": "255 214 160 40", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, shv)
+        self.bw_way((mid - 28, ya, zd + 8, mid + 28, D, zd + 100), "the back way: the shed's door, from its ramp to the passage")
+        bw["keepout"].append(self.box(x1 - 40, ya, zd - 64, x2 + 40, D, zt + 160))      # (no tree or plant through the shed: bw_trees)
+        self.joints.append(("the back way: the shed's back, where the passage goes in", self.w(x1, y2 - 60, zd - 4) + self.w(x2, D + 40, zt - 4), [self.w(mid, y2 - 40, zd + 48)]))
+
+    def bw_climb(self):
+        """The climb (the owner: "a way to get up to the top of the displacement mound above the cave ... whether that's a
+        ladder, a switchback of logs to climb up, etc", and "it's ok if the player has to jump up logs; please don't just make
+        literal stairs"): two ladders of Valve's wooden pieces against timber frames, from a timber pad across the bottom of
+        the ditch to a landing on posts halfway up the hill's west flank, and from there to a deck that runs out on to the
+        mound's top. Every timber that meets the ground goes down into it, sunk 32 under the lowest ground round it."""
+        v, bw, B = self.vmf, self.bw, self.bw_box
+        cy = self.BW_CLIMB_Y
+        xp, xa, xb, xt = self.BW_CLIMB_X
+        cv = self.vis("back way: the climb up the hill's west flank")
+        deck, post, nd = "wood/woodfloor005a", FMAT["timber"], MAT["nodraw"]
+        low = lambda xa_, ya, xb_, yb: int(min(self.natural(x, y) for x in range(int(xa_), int(xb_) + 1, 8) for y in range(int(ya), int(yb) + 1, 8))) - 32
+        ditch = min(self.natural(x, cy) for x in range(xp, xa + 17, 4))
+        zp = int(ditch) + 40                                     # the pad: a jump (40) up from the ditch's bottom
+        zt = int(math.ceil(max(self.natural(x, y) for x in range(xt - 64, xt + 1, 8) for y in range(cy - 48, cy + 49, 16)) + 2))     # the top deck: level with the mound's edge
+        zm = int((zp + zt) / 2)                                  # the landing halfway
+        bw["pad"], bw["climb_top"] = zp, zt
+        y1, y2 = cy - 48, cy + 48
+        B((xp, cy - 40, low(xp, cy - 40, xa + 16, cy + 40), xa, cy + 40, zp), deck, cv, world=False)
+        B((xa, y1, zm - 56, xb + 48, y2, zm), deck, cv, world=False)
+        B((xb, y1, zt - 32, xt, y2, zt), deck, cv, world=False)
+        # the frames the ladders stand against, and the posts under the landing and the top deck
+        for (x, za, zb) in ((xa, None, zm - 56), (xb, zm, zt - 32), (xa + 64, None, zm - 56), (xb + 112, None, zt - 32)):
+            for ya in (y1, y2 - 16):
+                bottom = za if za is not None else low(x, ya, x + 16, ya + 16)
+                if zb - bottom > 8:
+                    B((x, ya, bottom, x + 16, ya + 16, zb), post, cv, world=False)
+        # the ladders, facing west (a climber faces east, up the hill)
+        for (x, z0, z1) in ((xa, zp, zm), (xb, zm, zt)):
+            lx = x - 3.5
+            z = z0
+            while z < z1 - 20:
+                self.static("models/props_forest/ladderwood.mdl", lx, cy, z + 75, 180, "back way: the climb up the hill's west flank")
+                z += 148
+            fx = int(lx - 20)
+            v.point("func_useableladder", self.w(fx, cy, z0 + 130), {"point0": "%d %d %d" % self.w(fx, cy, z0 + 2), "point1": "%d %d %d" % self.w(fx, cy, z1 + 12),
+                                                                     "spawnflags": "0", "StartDisabled": "0"}, cv)
+            v.point("info_ladder_dismount", self.w(lx - 60, cy, z0 + 1), {}, cv)
+            v.point("info_ladder_dismount", self.w(lx + 42, cy, z1 + 1), {}, cv)
+            self.bw_way((fx - 14, cy - 16, z0 + 2, x - 8, cy + 16, z1 + 72), "the back way: a ladder up the hill's west flank")
+        self.bw_way((xa + 20, cy - 32, zm + 4, xb - 8, cy + 32, zm + 80), "the back way: the landing halfway up the hill's west flank")
+        self.bw_way((xb + 20, cy - 32, zt + 4, xt, cy + 32, zt + 80), "the back way: the top of the climb, on to the mound")
+        self.bw_way((xp + 8, cy - 32, zp + 4, xa - 8, cy + 32, zp + 80), "the back way: the climb's foot")
+        bw["keepout"].append(self.box(xp, y1, zp - 40, xt, y2, zt + 160))      # (no tree or plant through the climb: bw_trees)
+
+    def bw_trees(self, final=False):
+        """(After planting, and again after settle() has moved rocks and logs off what they stood in.) A tree, plant, rock or
+        log of the forest's that stands in one of the back way's ways or timbers is left out: nothing else moves and
+        planting's own numbers are drawn as they always were, so every other tree is where the owner has seen it."""
+        import map_build
+        ways = self.bw.get("ways", []) + self.bw.get("keepout", [])
+        by_ent = dict((r["ent"], r) for r in self.placed)
+        gone = []
+        for k, text in enumerate(self.vmf.ents):
+            if '"classname" "prop_static"' not in text:
+                continue
+            m = re.search(r'\t"model" "(models/(?:props_foliage/|props_forest/log)[^"]*)"\n', text)
+            o = re.search(r'\t"origin" "([^"]*)"\n', text)
+            a = re.search(r'\t"angles" "([^"]*)"\n', text)
+            if not (m and o):
+                continue
+            pos = tuple(float(c) for c in o.group(1).split())
+            yaw = float(a.group(1).split()[1]) if a else 0.0
+            b = map_build.prop_box(m.group(1), pos, yaw)
+            if b and any(b[0] < w[3] and b[3] > w[0] and b[1] < w[4] and b[4] > w[1] and b[2] < w[5] and b[5] > w[2] for w in ways):
+                self.vmf.ents[k] = ""
+                if k in by_ent:
+                    by_ent[k]["gone"] = True
+                gone.append((m.group(1), pos))
+        self.vmf.props = [p for p in self.vmf.props if not any(p[2] == g[0] and all(abs(p[1][i] - g[1][i]) < 1 for i in range(3)) for g in gone)]
+        self.bw["trees_gone"] = self.bw.get("trees_gone", 0) + len(gone)
+        if final and self.bw["trees_gone"]:
+            self.notes.append("the back way: %d of the forest's trees, plants, rocks and logs left out where they stood in its climb or its shed" % self.bw["trees_gone"])
 
     def workings_hull(self):
         """One shut box round all that lies behind the forest's north wall, and inside it a shut box of its own round the
@@ -3713,9 +4553,9 @@ class CaveForest(Forest):
         r = self.room_box
         rx1, ry1, rz1, rx2, ry2, rz2 = r
         # the room's own box: north, east, under and over (its west wall is the bulkhead, its south the forest's wall)
-        for box in ((rx1, ry2, rz1 - 64, rx2 + 64, ry2 + 64, rz2 + 64), (rx2, ry1, rz1 - 64, rx2 + 64, ry2, rz2 + 64), (rx1, ry1, rz1 - 64, rx2, ry2, rz1),
-                    (rx1, ry1, rz2, rx2, ry2, rz2 + 64)):
-            v.world_box(self.box(*box), black, vis=nv)
+        for box, top, bottom in (((rx1, ry2, rz1 - 64, rx2 + 64, ry2 + 64, rz2 + 64), None, None), ((rx2, ry1, rz1 - 64, rx2 + 64, ry2, rz2 + 64), None, None),
+                                 ((rx1, ry1, rz1 - 64, rx2, ry2, rz1), black, None), ((rx1, ry1, rz2, rx2, ry2, rz2 + 64), None, black)):
+            v.world_box(self.box(*box), black, top=top, bottom=bottom, vis=nv)      # (black inside: its floor's top and its lid's underside too)
         # the box round everything
         d = self.deep_reach
         X1 = int(math.floor((min(d[0], rx1) - 64) / 64.0)) * 64
@@ -3723,9 +4563,9 @@ class CaveForest(Forest):
         Y2 = int(math.ceil((max(d[4], ry2 + 64) + 64) / 64.0)) * 64
         Z1 = int(math.floor((min(d[2], rz1 - 64) - 64) / 64.0)) * 64
         Z2 = int(math.ceil((max(d[5], rz2 + 64)) / 64.0)) * 64
-        for box in ((X1 - 64, ys, Z1 - 64, X2 + 64, Y2 + 64, Z1), (X1 - 64, ys, Z2, X2 + 64, Y2 + 64, Z2 + 64), (X1 - 64, ys, Z1, X1, Y2 + 64, Z2),
-                    (X2, ys, Z1, X2 + 64, Y2 + 64, Z2), (X1, Y2, Z1, X2, Y2 + 64, Z2)):
-            v.world_box(self.box(*box), black, vis=nv)
+        for box, top, bottom in (((X1 - 64, ys, Z1 - 64, X2 + 64, Y2 + 64, Z1), black, None), ((X1 - 64, ys, Z2, X2 + 64, Y2 + 64, Z2 + 64), None, black),
+                                 ((X1 - 64, ys, Z1, X1, Y2 + 64, Z2), None, None), ((X2, ys, Z1, X2 + 64, Y2 + 64, Z2), None, None), ((X1, Y2, Z1, X2, Y2 + 64, Z2), None, None)):
+            v.world_box(self.box(*box), black, top=top, bottom=bottom, vis=nv)
         # its south side where the forest's north wall does not stand: west of the forest, under its slab, over its sky (and
         # over the stretch the cave's wall and its sky are, the room's box over the sky too)
         tw = WALL
@@ -3735,6 +4575,25 @@ class CaveForest(Forest):
         for box in south:
             v.world_box(self.box(*box), black, vis=nv)
         self.hull_box = (X1, ys, Z1, X2, Y2, Z2)
+        # the emergency door's areaportal parts the holdout from the antlion tunnels (nest_door()): the void in this box reaches
+        # both (Valve's drop in the cleft beyond the door goes on down; Valve's floor is a slab 256 thick, or a displaced
+        # skin, with nothing under it), so a curtain across the box in the plane of the door's wall: under Valve's walls
+        # along it up to their foot, under Valve's floor in the opening up to its underside (the far side of the drop),
+        # and the box's full height beyond them; black, as the box is
+        P = self.deep_pt
+        fy, by = P(0, -8128, 0)[1], P(0, -8064, 0)[1]
+        zw, zs = P(0, 0, -1792)[2], P(0, 0, -2048)[2]
+        nd, xs = black, [P(x, 0, 0)[0] for x in (512, 1280, 1792, 2048, 2304)]       # (black as the box: whatever crack shows it, it shows the box)
+        zl, zr = P(0, 0, 256)[2], P(0, 0, -1280)[2]           # (the tops of Valve's walls over the holdout, and of the steel east of it)
+        cuts = [(X1, xs[0], Z1, Z2, nd), (xs[0], xs[1], Z1, zw, nd), (xs[1], xs[2], Z1, zs, black), (xs[2], xs[4], Z1, zw, nd), (xs[4], X2, Z1, Z2, nd),
+                (xs[0], xs[3], zl, Z2, nd), (xs[3], xs[4], zr, Z2, nd)]
+        for (xa, xb, bottom, top, mat) in cuts:
+            v.world_box(self.box(xa, fy, bottom, xb, by, top), mat, vis=nv)
+        # (over them Valve's walls, the opening's fill and Valve's rock over the cleft carry the plane on up, all but the
+        # door: the build's checks do not read lifted brushes, so they are told; map_areas.py reads them all)
+        hx1, hz1, hx2, hz2 = self.nest_hole[0], self.nest_hole[2], self.nest_hole[3], self.nest_hole[5]
+        for c in ((X1, fy, Z1, hx1, by, Z2), (hx2, fy, Z1, X2, by, Z2), (hx1, fy, Z1, hx2, by, hz1), (hx1, fy, hz2, hx2, by, Z2)):
+            v.claims.append(self.box(*c))
         wx1, wx2 = self.ox + X1 - 64, self.ox + X2 + 64
         if wx2 > -6720:
             self.problems.append("the workings reach x %d: east of x -6720, where the ring's canal is" % wx2)
@@ -3749,7 +4608,8 @@ class CaveForest(Forest):
         closed = flood(v, inside_deep, [stop_door])
         if closed[0] is None or reaches(closed, forest_air) or reaches(closed, inside_room):
             self.problems.append("what lies behind the emergency door is open to the room or the forest somewhere other than the door")
-        closed = flood(v, inside_room, [stop_hole, stop_door])
+        stops = [stop_hole, stop_door] + [self.box(*o) for o in getattr(self, "room_openings", [])]      # (and the back way's passage: back_way)
+        closed = flood(v, inside_room, stops)
         if closed[0] is None or reaches(closed, forest_air) or reaches(closed, inside_deep):
             self.problems.append("the big room's box is open somewhere other than the hole from the cave and the emergency door")
         self.notes.append("behind the forest's north wall: one shut box x %d to %d, y %d to %d, z %d to %d (the big room's own box inside it)" % (
@@ -4023,12 +4883,15 @@ def forest_cave(args):
     f = CaveForest("forest (cave, stream)", tuple(args.origin or (-10240, 4608)), floor, 47, args.first_node or 4600, ("east", 256))
     f.test = bool(getattr(args, "test", False))
     f.setup()
+    f.back_way_plan()
     f.shell()
     f.ground()
     f.water()
     f.cave()
     f.plant()
+    f.bw_trees()
     f.settle()
+    f.bw_trees(final=True)
     f.ground_nodes()
     f.finish()
     if args.preview:

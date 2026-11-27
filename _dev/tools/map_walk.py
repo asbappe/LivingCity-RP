@@ -26,6 +26,7 @@ import map_stairs
 CELL = 16
 BODY, HIGH, CROUCH, STEP, JUMP = 16, 72, 36, 18, 44     # (half a body across; standing; crouched; a step; a jump)
 SOLID_PROPS = ("prop_static", "prop_dynamic", "prop_dynamic_override", "prop_physics", "prop_physics_override", "prop_physics_multiplayer")
+ARCHES = ("props_mining/struts_tunnel",)     # (Episode Two's timber sets: two posts and a cap round a mine tunnel; map_build's ways skip them too)
 
 
 def ents_of(text):
@@ -55,6 +56,8 @@ def prop_boxes(text):
         if cls.startswith("prop_physics") and int(kv.get("spawnflags", "0") or 0) & 4:
             continue      # (debris: players walk through it)
         o, a, model = num3(kv.get("origin", "")), num3(kv.get("angles", "0 0 0")) or [0, 0, 0], kv.get("model", "")
+        if any(k in model.lower() for k in ARCHES):
+            continue      # (an arch over the way, its middle open: its box would shut the tunnel it stands in)
         bb = map_assets.size(model.lower()) if model else None
         if not o or not bb:
             continue
