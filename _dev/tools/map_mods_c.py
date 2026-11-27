@@ -1267,6 +1267,9 @@ def m_thumper(m, opt):
                          (lit while it runs), the run-down sound.
       lc_thumper_lamp    the console lamp's light (TurnOff, TurnOn: the relays switch it with the glow).
       lc_thumper_burrow  the burrow's mouth in the left wall (where the game may bring antlions out).
+      lc_thumper_area    (from the chain, not the module: map_modules.thumper_areas) two marks spanning the stretch of
+                         canal this thumper guards; while it is stopped, antlions come up there near someone, one every 15
+                         seconds, two at most (sv_livingcity_antlions.lua; the owner, 27 November).
 
     Left as brushes: the terrace and the thumper's plinth (the ground it stands on), the burrow's back.
 

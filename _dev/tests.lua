@@ -45300,6 +45300,37 @@ function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumper
 end
 Nov24_ThumperAntlionTests()
 
+function Nov27_ThumperStretchMarksTests() -- (the owner, 27 November: "if the thumper on the west side of the canal is shut off, then that west end of the canal will have antlions")
+    section("27 November: a thumper's stretch where the map marks it, the whole run of canal it stands on")
+    local A = LC.Antlions
+    A.stopped, A.out, A.calm, A.areas = {}, {}, {}, {}
+    local T0 = Vector(-182000, -182000, 0)
+    local made = {}
+    local function Make(cls, name, pos) local e = ents.Create(cls) e:SetPos(pos) e:SetName(name) e:Spawn() made[#made + 1] = e return e end
+    local th = Make("prop_thumper", "lc_thumper5_head", T0 + Vector(0, 600, 128))
+    Make("info_target", "lc_thumper5_burrow", T0 + Vector(0, 150, 0))
+    Make("info_target", "lc_thumper5_area", T0 + Vector(-1000, -224, 8))
+    Make("info_target", "lc_thumper5_area", T0 + Vector(9000, 224, 208))
+    local p = newPlayer("Runner", "resistance", nil, 200)
+    p:SetPos(T0 + Vector(7000, 0, 0))
+    local function Of() local n, list = 0, {} for e in pairs(A.out) do if e.lcThumper == th and IsValid(e) and e:Health() > 0 then n = n + 1 list[#list + 1] = e end end return n, list end
+    hook.Run("AcceptInput", th, "Disable", p, p)
+    _run(17)
+    local n, list = Of()
+    ok(n == 1, "7000 from the thumper but in its marked run: one comes up", n)
+    local d = list[1] and list[1]:GetPos():Distance(p:GetPos())
+    ok(d and d <= 400, "a few steps from them", d)
+    for _, e in ipairs(list) do e:SetHealth(0) end
+    p:SetPos(T0 + Vector(2000, 1500, 0))
+    _run(32)
+    ok(Of() == 0, "out of the run (on its bank, within 3500 of the thumper): none", Of())
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    p:Remove()
+    A.stopped, A.out, A.calm, A.areas = {}, {}, {}, {}
+end
+Nov27_ThumperStretchMarksTests()
+
 function Nov24_CutLineTests() -- (the owner, 20 November: a wrecked line causes "a problem with supplies ... the combine need to go out and repair it")
     section("24 November: a train line cut by a bomb costs the city its supplies until it is repaired")
     _setcvar("lc_ledger", 1)

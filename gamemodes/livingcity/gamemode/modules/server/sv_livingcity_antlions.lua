@@ -16,6 +16,9 @@
     one antlion digs up near a random player or person in that thumper's stretch of the canal, and goes for them;
     two alive at most from each thumper. Its stretch: within 3500 units of the thumper, in the canal's basin (from 64
     under its burrow's floor to 192 over it: the canal's floor and the thumper's terrace, never the street 256 up).
+    Where the map marks it (lc_thumper_area, lc_thumper2_area, ...: the canal ring's generator puts two at the opposite
+    corners of the straight run the thumper stands on, between the turns round it, the owner's "that west end of the
+    canal"), the box the marks span instead.
     Nobody there, none come. Each thumper on its own: two stopped, two trickles.
     Started again, the thumper drives off what is left (the game does that itself), and a minute later its antlions
     still alive dig themselves away. They go for everyone (while the Swarm's pheropods are out, they are its allies:
@@ -101,8 +104,41 @@ function A.OutOf(thumper)
     return n
 end
 
--- In this thumper's stretch of the canal: near it, and down in the basin (not on the street over it).
+-- The stretch the map marks for this thumper: the box its lc_thumperN_area marks span (a little wider and lower, so
+-- the canal's floor and walls are in it), or nil on a map without them. (Kept once found: the marks never move.)
+A.areas = A.areas or {}
+function A.AreaOf(thumper)
+    if not IsValid(thumper) then return nil end
+    local got = A.areas[thumper]
+    if got ~= nil then return got ~= false and got[1] or nil, got ~= false and got[2] or nil end
+    local n = A.Parse(NameOf(thumper))
+    local lo, hi, k = nil, nil, 0
+    for _, m in ipairs(n and ents.FindByName and ents.FindByName("lc_thumper" .. n .. "_area") or {}) do
+        local _, part = A.Parse(NameOf(m))
+        if IsValid(m) and part == "area" then
+            local p = m:GetPos()
+            k = k + 1
+            if not lo then
+                lo, hi = Vector(p.x, p.y, p.z), Vector(p.x, p.y, p.z)
+            else
+                lo = Vector(math.min(lo.x, p.x), math.min(lo.y, p.y), math.min(lo.z, p.z))
+                hi = Vector(math.max(hi.x, p.x), math.max(hi.y, p.y), math.max(hi.z, p.z))
+            end
+        end
+    end
+    if k < 2 then A.areas[thumper] = false return nil end
+    lo, hi = lo - Vector(48, 48, 64), hi + Vector(48, 48, 16)
+    A.areas[thumper] = { lo, hi }
+    return lo, hi
+end
+
+-- In this thumper's stretch of the canal: near it, and down in the basin (not on the street over it); or in the box
+-- the map marks for it.
 function A.InStretch(thumper, pos)
+    local lo, hi = A.AreaOf(thumper)
+    if lo then
+        return pos.x >= lo.x and pos.x <= hi.x and pos.y >= lo.y and pos.y <= hi.y and pos.z >= lo.z and pos.z <= hi.z
+    end
     local tp = thumper:GetPos()
     if (pos.x - tp.x) ^ 2 + (pos.y - tp.y) ^ 2 > STRETCH * STRETCH then return false end
     local burrow = A.BurrowOf(thumper)
@@ -116,7 +152,9 @@ function A.Prey(thumper)
     for _, p in ipairs(player.GetAll()) do
         if p:Alive() and not p:GetNW2Bool("lc_build", false) and A.InStretch(thumper, p:GetPos()) then out[#out + 1] = p end
     end
-    for _, e in ipairs(ents.FindInSphere and ents.FindInSphere(thumper:GetPos(), STRETCH) or {}) do
+    local lo, hi = A.AreaOf(thumper)
+    local reach = lo and math.max(STRETCH, (hi - lo):Length() + 1024) or STRETCH      -- (a marked stretch can be longer than 3500)
+    for _, e in ipairs((lo and ents.FindInBox and ents.FindInBox(lo, hi)) or (ents.FindInSphere and ents.FindInSphere(thumper:GetPos(), reach)) or {}) do
         if IsValid(e) and e:IsNPC() and e:Health() > 0 and not NOT_PREY[e:GetClass()] and A.InStretch(thumper, e:GetPos()) then out[#out + 1] = e end
     end
     return out
@@ -200,7 +238,7 @@ timer.Create("LivingCityAntlions", 2, 0, function()
 end)
 local function Forget()
     for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
-    A.stopped, A.out, A.calm = {}, {}, {}
+    A.stopped, A.out, A.calm, A.areas = {}, {}, {}, {}
 end
 hook.Add("LivingCityStopped", "LivingCityAntlions", Forget)
-hook.Add("PostCleanupMap", "LivingCityAntlions", function() A.stopped, A.out, A.calm = {}, {}, {} end)
+hook.Add("PostCleanupMap", "LivingCityAntlions", function() A.stopped, A.out, A.calm, A.areas = {}, {}, {}, {} end)
