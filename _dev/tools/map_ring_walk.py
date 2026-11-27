@@ -7,6 +7,8 @@ into the c18 points").
 
     python3 map_ring_walk.py                         # writes lc_ring_walk.vmf
     python3 map_ring_walk.py --against c18_lc.vmf    # ...and first checks both halves and the first canal against the owner's map
+    python3 map_ring_walk.py --forest THEIRS.vmf --ring-half KEPT.vmf    # the owner's own bunker forest in place of the generator's;
+                                                     # the ring's half kept once passed, so the next run takes minutes
 
 The joined file is then finished as a compile wants it (the owner's compile of 23 November stopped in vbsp: "Too many
 detail brush faces, max = 65536"): map_hidden_faces.py makes every face nobody can see nodraw (vbsp leaves those out),
@@ -47,8 +49,13 @@ def main():
     ap.add_argument("--out", default="lc_ring_walk.vmf")
     ap.add_argument("--cell", type=int, default=8, help="map_hidden_faces.py's cube (8: finer finds more; 16 takes an eighth of the memory)")
     ap.add_argument("--quick", action="store_true", help="skip the nodraw pass (about 40 minutes): only to look the map over; vbsp needs the pass (its vertex limit)")
+    ap.add_argument("--forest", help="the owner's own bunker forest (their lc_forest_bunker.vmf, edited in Hammer, at its first place): "
+                                     "joined in place of the generator's build, moved 3520 east as that is; never changed, never put in the repo")
+    ap.add_argument("--ring-half", help="a file to keep the ring's half in once it has had the nodraw pass (about 25 minutes of the run). If it is "
+                                        "there it is used as it is: delete it after any change to the canal, the ring or the inlet")
     args = ap.parse_args()
     py = sys.executable
+    kept = args.ring_half and not args.quick and os.path.exists(args.ring_half)
     plain = [("canal", []), ("chain", ["--layout", "map_layouts/ring.txt", "--first-node", "5000"]),
              ("chain", ["--layout", "map_layouts/inlet.txt", "--first-node", "9000"]),      # (the crypt's inlet off the east side, 26 November)
              # (the bunker forest, down Valve's long tunnel from the first canal's east gate: the owner, 26 November, "please
@@ -56,16 +63,26 @@ def main():
              #  3520 east of where it was first set: the owner's file of it, edited in Hammer, is not in this test map)
              ("chain", ["--layout", "map_layouts/bunker_way.txt", "--first-node", "9500"]),
              ("forest_bunker", [])]      # (built at its first place, then moved: map_shift.py, below)
+    names = ["lc_canal_test.vmf", "lc_ring_test.vmf", "lc_inlet_test.vmf", "lc_bunker_way_test.vmf", "lc_forest_bunker_test.vmf"]
+    todo = list(zip(plain, names))
+    if args.forest:      # (the owner, 27 November, of the generator's build in the first walk map with the forest: "crap, I made lots of
+        #                   edits ... can you please replace the generator's build with my own?")
+        todo = todo[:4]
+    if kept:
+        todo = todo[3:]
     if args.against:
         print("checking against: " + " ".join(args.against))
-        for piece, extra in plain:
+        for (piece, extra), _ in todo:
             run([py, "map_build.py", piece] + extra + ["--against"] + args.against + ["--out", os.devnull])
     print("building the test pieces:")
-    names = ["lc_canal_test.vmf", "lc_ring_test.vmf", "lc_inlet_test.vmf", "lc_bunker_way_test.vmf", "lc_forest_bunker_test.vmf"]
-    for (piece, extra), name in zip(plain, names):
+    for (piece, extra), name in todo:
         run([py, "map_build.py", piece] + extra + ["--test", "--out", name])
-    # (the forest's builder is written for its first place, its west gate at the canal's east gate: the finished file is
-    #  moved to the tunnel's far end, 3520 east)
+    if args.forest:
+        import shutil
+        print("  the owner's own forest: " + args.forest)
+        shutil.copyfile(args.forest, os.path.join(HERE, "lc_forest_bunker_test.vmf"))
+    # (the forest's builder is written for its first place, its west gate at the canal's east gate, and the owner's own
+    #  file stands there too: the finished file is moved to the tunnel's far end, 3520 east)
     run([py, "map_shift.py", "lc_forest_bunker_test.vmf", "lc_forest_bunker_east_test.vmf", "3520", "0"], show=("SHIFT",))
     os.remove(os.path.join(HERE, "lc_forest_bunker_test.vmf"))
     names[-1] = "lc_forest_bunker_east_test.vmf"
@@ -78,12 +95,21 @@ def main():
     halves = [("lc_walk_east_test.vmf", names[3:], ["--spawn", "8064", "4416", "416", "0"], False), ("lc_walk_ring_test.vmf", names[:3], [], True)]
     print("joining them, a half at a time:")
     for half, group, spawn, passed in halves:
+        if passed and kept:
+            import shutil
+            print("  the ring's half as it was kept: " + args.ring_half)
+            shutil.copyfile(args.ring_half, os.path.join(HERE, half))
+            continue
         run([py, "map_merge.py", "--blank"] + group + spawn + ["--out", half])
         if passed and not args.quick:
             run([py, "map_hidden_faces.py", half, half, "--cell", str(args.cell)], show=("can never be seen", "LOST", "LEAK", "written", "not written"))
+            if args.ring_half:
+                import shutil
+                shutil.copyfile(os.path.join(HERE, half), args.ring_half)
     run([py, "map_merge.py", "--blank"] + [h[0] for h in halves] + ["--out", args.out])
     for name in names + [h[0] for h in halves]:
-        os.remove(os.path.join(HERE, name))
+        if os.path.exists(os.path.join(HERE, name)):
+            os.remove(os.path.join(HERE, name))
     import map_budget
     print("  joined: " + map_budget.line(map_budget.count(os.path.join(HERE, args.out))))
     print("finishing it:")

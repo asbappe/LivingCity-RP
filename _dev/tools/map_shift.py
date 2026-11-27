@@ -21,8 +21,8 @@ camera must then stand so that they are seen where they were, seen from the move
 What does not: ids, names, angles, sizes, outputs, the order of anything. The file has the same number of lines after
 as before. Never writes over its input.
 
-It ends by reading both files back: the same number of lines, of brushes, of entities, and the box of all the brushes
-moved by exactly the amount asked.
+It ends by reading both files back: the same number of lines, each with the ending it had (a file from Hammer on
+Windows ends its lines \\r\\n), of brushes, of entities, and the box of all the brushes moved by exactly the amount asked.
 """
 import re
 import sys
@@ -57,6 +57,9 @@ def shift(lines, d):
     stack = []
     ent = None       # [classname, scale, [(line index, key, value)]] of the entity being read
     pending = None
+    def end(j):      # (each line keeps its own ending: a file from Hammer on Windows ends its lines \r\n)
+        return lines[j][len(lines[j].rstrip("\r\n")):]
+
     for i, raw in enumerate(lines):
         line = raw.strip()
         if line == "{":
@@ -79,7 +82,7 @@ def shift(lines, d):
                         new = moved(val, dd)
                     if new is not None:
                         m = KEY.match(lines[j].rstrip("\n"))
-                        out[j] = '%s"%s" "%s"\n' % (m.group(1), m.group(2), new)
+                        out[j] = '%s"%s" "%s"%s' % (m.group(1), m.group(2), new, end(j))
                 ent = None
             continue
         m = KEY.match(raw.rstrip("\n"))
@@ -91,7 +94,7 @@ def shift(lines, d):
         top = stack[-1] if stack else ""
         if low == "plane" and top == "side":
             new = TRIPLE.sub(lambda q: "(%s %s %s)" % tuple(fmt(float(q.group(k + 1)) + d[k]) for k in range(3)), val)
-            out[i] = '%s"%s" "%s"\n' % (ind, key, new)
+            out[i] = '%s"%s" "%s"%s' % (ind, key, new, end(i))
         elif low in ("uaxis", "vaxis") and top == "side":
             a = AXIS.match(val)
             if a:
@@ -99,16 +102,16 @@ def shift(lines, d):
                 off, scale = float(a.group(4)), float(a.group(5))
                 if scale:
                     off -= (ax[0] * d[0] + ax[1] * d[1] + ax[2] * d[2]) / scale
-                out[i] = '%s"%s" "[%s %s %s %s] %s"\n' % (ind, key, a.group(1), a.group(2), a.group(3), fmt(off), a.group(5))
+                out[i] = '%s"%s" "[%s %s %s %s] %s"%s' % (ind, key, a.group(1), a.group(2), a.group(3), fmt(off), a.group(5), end(i))
         elif low == "v" and top == "vertices_plus":
             new = moved(val, d)
             if new is not None:
-                out[i] = '%s"%s" "%s"\n' % (ind, key, new)
+                out[i] = '%s"%s" "%s"%s' % (ind, key, new, end(i))
         elif low == "startposition" and top == "dispinfo":
             q = val.strip().strip("[]")
             new = moved(q, d)
             if new is not None:
-                out[i] = '%s"%s" "[%s]"\n' % (ind, key, new)
+                out[i] = '%s"%s" "[%s]"%s' % (ind, key, new, end(i))
         elif ent is not None and len(stack) == 1:
             if low == "classname":
                 ent[0] = val.lower()
@@ -155,7 +158,8 @@ def main(argv):
     with open(dst, "w", errors="surrogateescape", newline="") as f:
         f.writelines(out)
     a, b = facts(lines), facts(out)
-    ok = a[:3] == b[:3] and all(abs(b[3][k] - a[3][k] - d[k]) < 1e-3 and abs(b[4][k] - a[4][k] - d[k]) < 1e-3 for k in range(3))
+    same_ends = all(x[len(x.rstrip("\r\n")):] == y[len(y.rstrip("\r\n")):] for x, y in zip(lines, out))
+    ok = same_ends and a[:3] == b[:3] and all(abs(b[3][k] - a[3][k] - d[k]) < 1e-3 and abs(b[4][k] - a[4][k] - d[k]) < 1e-3 for k in range(3))
     print("%s: %d lines, %d brushes, %d entities; its brushes fill x %s to %s, y %s to %s, z %s to %s" % (
         (dst, b[0], b[1], b[2]) + tuple(fmt(v) for k in range(3) for v in (b[3][k], b[4][k]))))
     print("SHIFT PASS: moved by %d %d %d" % d if ok else "SHIFT FAIL: the moved file does not match the first one moved by %d %d %d" % d)

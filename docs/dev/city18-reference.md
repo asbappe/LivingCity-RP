@@ -4087,10 +4087,10 @@ Beyond a wall players only look over, spend almost nothing: about one building t
 
 ### A side piece is reached down a long tunnel of Valve's, never right at the gate (`owner-side-piece-down-a-tunnel`)
 
-Where another place (a forest, a bunker, a quarter) joins the canal, put a long way between them, and make it one of Valve's own tunnels lifted whole (map_prefab.py extract), laid end to end as often as the length needs, with a short room of ours at each end to meet the gates. Move the far piece with map_shift.py; never rebuild it at a new origin unless its builder is proven to take one.
+Where another place (a forest, a bunker, a quarter) joins the canal, put a long way between them, and make it one of Valve's own tunnels lifted whole (map_prefab.py extract), laid end to end as often as the length needs, with a short room of ours at each end to meet the gates. Move the far piece with map_shift.py; never rebuild it at a new origin unless its builder is proven to take one. A piece the owner edits in Hammer is theirs: join their own file, never a fresh build of it, and say so plainly whenever a build is standing in for it.
 
-- **Why:** The owner, 26 November: "please stitch in the forest bunker to the ring now ... though can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel copy/pasted". The forest's builder set its silo and rooms by fixed coordinates: built with --origin it was not sealed.
-- **How:** map_mods_e.m_servicetunnel (valve_eli_raven_tunnel twice, 2752 long), map_layouts/bunker_way.txt, map_shift.py (3520 east), map_ring_walk.py.
+- **Why:** The owner, 26 November: "please stitch in the forest bunker to the ring now ... though can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel copy/pasted". The forest's builder set its silo and rooms by fixed coordinates: built with --origin it was not sealed. And 27 November, told the walk map held the generator's forest: "crap, I made lots of edits ... can you please replace the generator's build with my own? Thank you for mentioning this".
+- **How:** map_mods_e.m_servicetunnel (valve_eli_raven_tunnel twice, 2752 long), map_layouts/bunker_way.txt, map_shift.py (3520 east), map_ring_walk.py. map_ring_walk.py --forest THEIRS.vmf --ring-half KEPT.vmf.
 - **Checked by:** map_shift.py prints SHIFT PASS; the joined map's flood from the spawn stays inside; map_walk.py reaches the forest's gate from the canal's spawn.
 - **Tags:** owner, geometry, valve
 
