@@ -2413,10 +2413,44 @@ def build_chain(lay, args):
             import map_backdrop
             map_backdrop.build(b, lay)
         map_corridor.hide_trains(b)      # (the solid the trains wait in beyond their tunnels, once the backdrop has laid its ground)
+    thumper_areas(b, lay)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))
     return b, seed, spawn, end
+
+
+def thumper_areas(b, lay):
+    """For each thumper in the layout, the stretch of canal it guards: the straight run it stands on, from the turn (or the
+    chain's end) before it to the turn after it, the canal's own width between its walls (1024 where it is wide), from its floor up to under the
+    street. Two info_targets named after the copy (lc_thumper_area, lc_thumper2_area, ...: the copies counted in the
+    layout's order, as m_thumper names them) at the box's opposite corners, 32 inside the walls, 8 over the floor and 48
+    under the street; the gamemode takes the box they span (sv_livingcity_antlions.lua: while that thumper is stopped,
+    antlions come up in this stretch, near someone in it; the owner, 27 November)."""
+    import map_backdrop
+    import map_corridor
+    steps, _ = map_backdrop.walk(lay)
+    n = 0
+    for i, (kind, name, fr, L) in enumerate(steps):
+        if kind != "leg" or name != "thumper":
+            continue
+        n += 1
+        T = "lc_thumper" if n == 1 else "lc_thumper%d" % n
+        lo = hi = i
+        while lo > 0 and steps[lo - 1][0] == "leg":
+            lo -= 1
+        while hi + 1 < len(steps) and steps[hi + 1][0] == "leg":
+            hi += 1
+        rects = []
+        for k, nm, f, l in steps[lo:hi + 1]:
+            half = max(widths(nm.split()[0]) if nm.split()[0] in MODULES else (CANAL_W, CANAL_W)) // 2 - 32      # (the wide canal's legs: 1024 between the walls)
+            rects.append(f.rect(0, -half, l, half))
+        x1, y1 = min(r[0] for r in rects), min(r[1] for r in rects)
+        x2, y2 = max(r[2] for r in rects), max(r[3] for r in rects)
+        vis = b.vis + ": the thumpers' stretches of canal"
+        b.vmf.point("info_target", (x1, y1, F + 8), {"targetname": T + "_area"}, vis)
+        b.vmf.point("info_target", (x2, y2, map_corridor.STREET - 48), {"targetname": T + "_area"}, vis)
+        b.notes.append("%s_area: the stretch of canal its thumper guards, x %d..%d y %d..%d" % (T, x1, x2, y1, y2))
 
 
 def finish(b, seed, spawn, args):

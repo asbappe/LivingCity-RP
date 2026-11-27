@@ -45241,46 +45241,73 @@ function Nov24_BaseVehicleTests() -- (the owner, 20 November: "each base has one
 end
 Nov24_BaseVehicleTests()
 
-function Nov24_ThumperAntlionTests() -- (the owner's long-term list, 5: "thumpers keep them off ... which a saboteur can switch off")
-    section("24 November: antlions dig up at a stopped thumper's burrow")
+function Nov27_ThumperAntlionTests() -- (the owner, 27 November: "that west end of the canal will have antlions spawning in at a small trickle ... at a random player/NPC in that part of the canal, until the thumper is turned back on"; "one every 15 seconds with a max of 2 alive at a time")
+    section("27 November: a stopped thumper's stretch of canal gets an antlion every 15 seconds, two at most, near someone in it")
     local A = LC.Antlions
+    A.stopped, A.out, A.calm = {}, {}, {}
     local T0 = Vector(-162000, -162000, 0)
-    local th = ents.Create("prop_thumper") th:SetPos(T0) th:SetName("lc_thumper_head") th:Spawn()
-    local burrow = ents.Create("info_target") burrow:SetPos(T0 + Vector(400, 0, 0)) burrow:SetName("lc_thumper_burrow") burrow:Spawn()
+    local T2 = T0 + Vector(30000, 0, 0)
+    local made = {}
+    local function Make(cls, name, pos) local e = ents.Create(cls) e:SetPos(pos) e:SetName(name) e:Spawn() made[#made + 1] = e return e end
+    local th = Make("prop_thumper", "lc_thumper_head", T0 + Vector(0, 600, 0))
+    Make("info_target", "lc_thumper_area", T0 + Vector(-2000, -224, 8))
+    Make("info_target", "lc_thumper_area", T0 + Vector(2000, 224, 208))
+    Make("info_target", "lc_thumper_burrow", T0 + Vector(0, 150, 0))
+    local th2 = Make("prop_thumper", "lc_thumper2_head", T2 + Vector(0, 600, 0))
+    Make("info_target", "lc_thumper2_area", T2 + Vector(-2000, -224, 8))
+    Make("info_target", "lc_thumper2_area", T2 + Vector(2000, 224, 208))
     local p = newPlayer("Saboteur", "resistance", nil, 200)
-    p:SetPos(T0 + Vector(300, 300, 0))
-    local function Out() local n = 0 for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then n = n + 1 end end return n end
+    p:SetPos(T0 + Vector(500, 0, 0))
+    local cit = Make("npc_citizen", "", T2 + Vector(-800, 0, 0))
+    local function Of(t) local n, list = 0, {} for e, owner in pairs(A.out) do if owner == t and IsValid(e) and e:Health() > 0 then n = n + 1 list[#list + 1] = e end end return n, list end
     hook.Run("AcceptInput", th, "Enable", th, th)
     _run(40)
-    ok(Out() == 0, "the thumper running: no antlions")
+    ok(Of(th) == 0, "the thumper running: no antlions")
     hook.Run("AcceptInput", th, "Disable", p, p)
+    _run(12)
+    ok(Of(th) == 0, "stopped: not at once")
+    _run(6)
+    local n, list = Of(th)
+    ok(n == 1, "15 seconds on: one", n)
+    local d = list[1] and list[1]:GetPos():Distance(p:GetPos())
+    ok(d and d >= 150 and d <= 600, "near the player in the stretch, a few steps off", d)
+    ok(list[1] and list[1].enemy == p, "and it goes for them")
     _run(10)
-    ok(Out() == 0, "stopped: not at once")
-    _run(30)
-    ok(Out() == 2, "then they dig up at its burrow, two at a time", Out())
-    local near = true
-    for e in pairs(A.out) do if e:GetPos():Distance(burrow:GetPos()) > 60 then near = false end end
-    ok(near, "at the burrow's mouth")
-    for e in pairs(A.out) do e:SetHealth(0) end
-    _run(20)
-    ok(Out() == 2, "killed: the next two come", Out())
-    for e in pairs(A.out) do e:SetHealth(0) end
-    A.stopped[th].pool, A.stopped[th].regenAt = 0, CurTime() + 25
-    _run(10)
-    ok(Out() == 0, "the pool empty: a breather", Out())
-    _run(60)
-    ok(Out() >= 1, "lingering brings more", Out())
-    hook.Run("AcceptInput", th, "Enable", p, p)
-    local left = {}
-    for e in pairs(A.out) do if IsValid(e) and e:Health() > 0 then left[#left + 1] = e e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end end
-    _run(30)
-    ok(#left >= 1 and IsValid(left[1]), "started again: those out are left to the thumper for a minute")
+    ok(Of(th) == 1, "not another before 15 seconds have passed", Of(th))
+    _run(8)
+    ok(Of(th) == 2, "the next 15 seconds on: two", Of(th))
     _run(40)
-    ok(Out() == 0 and not IsValid(left[1]), "then they dig themselves away, and no more come", Out())
-    th:Remove() burrow:Remove() p:Remove()
-    A.stopped, A.out, A.startedAt = {}, {}, nil
+    ok(Of(th) == 2, "never more than two of that thumper's out at once", Of(th))
+    ok(Of(th2) == 0, "the other thumper, still running: its stretch quiet")
+    for _, e in ipairs(select(2, Of(th))) do e:SetHealth(0) end
+    _run(3)
+    ok(Of(th) == 1, "killed: one comes back, still one at a time", Of(th))
+    p:SetPos(T0 + Vector(500, 3000, 0))
+    for _, e in ipairs(select(2, Of(th))) do e:SetHealth(0) end
+    _run(40)
+    ok(Of(th) == 0, "nobody left in the stretch: nobody comes", Of(th))
+    hook.Run("AcceptInput", th2, "Disable", p, p)
+    _run(18)
+    local n2, l2 = Of(th2)
+    ok(n2 == 1 and l2[1].enemy == cit, "the second thumper stopped: one comes up by the person in its stretch, and goes for them", n2)
+    ok(Of(th) == 0, "and none in the first's, where nobody is")
+    for _, e in ipairs(l2) do e.Fire = function(self, what) if what == "BurrowAway" then self:Remove() end end end
+    hook.Run("AcceptInput", th2, "Enable", p, p)
+    _run(30)
+    ok(IsValid(l2[1]) and Of(th2) == 1, "started again: no more come, those out are left to the thumper for a minute", Of(th2))
+    _run(36)
+    ok(not IsValid(l2[1]) and Of(th2) == 0, "then they dig themselves away", Of(th2))
+    local th3 = Make("prop_thumper", "lc_thumper3_head", T0 + Vector(0, -20000, 0))
+    p:SetPos(T0 + Vector(1500, -20000, 0))
+    hook.Run("AcceptInput", th3, "Disable", p, p)
+    _run(18)
+    ok(Of(th3) == 1, "a thumper without marks: someone within 2000 of it is enough", Of(th3))
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    for e in pairs(A.out) do if IsValid(e) then e:Remove() end end
+    p:Remove()
+    A.stopped, A.out, A.calm = {}, {}, {}
 end
-Nov24_ThumperAntlionTests()
+Nov27_ThumperAntlionTests()
 
 function Nov24_CutLineTests() -- (the owner, 20 November: a wrecked line causes "a problem with supplies ... the combine need to go out and repair it")
     section("24 November: a train line cut by a bomb costs the city its supplies until it is repaired")
