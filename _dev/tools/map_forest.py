@@ -3938,7 +3938,8 @@ class CaveForest(Forest):
         the dead latch's click; its lamps and its rotating red light out; a trip under way finishes), the emergency door
         (its two buttons locked, its lamps out) and the alarm post by it (dark; its lamps come back with the power while the
         door stands open). The second lift is cranked by hand and needs none (crank_wiring). An emergency lamp on a battery
-        lights the generator dimly whatever the power."""
+        lights the generator dimly whatever the power, and black cables run from the generator up a pole beside it to a
+        junction box there, on to three junction boxes about the shaft and from each to its lamps."""
         v, P = self.vmf, self.deep_pt
         W = lambda x, y, z: self.w(*P(x, y, z))
         a, b = W(400, -9764, -1806), W(2400, -8124, -286)       # (the shaft: from the top landing's back wall to the emergency door's face)
@@ -4007,6 +4008,7 @@ class CaveForest(Forest):
             return (round(gx + fx * fw[0] + fy * lf[0]), round(gy + fx * fw[1] + fy * lf[1]), round(gz + z))
         sv = self.vis("generator: its switch, its glow and the four lamps (select them together to move them)")
         wv = self.vis("generator: the wiring, its sounds and the emergency lamp")
+        cv = self.vis("generator: the cables and their junction boxes")
         # the switch: an unseen box on the generator's side, 40 up, 12 out from it
         c = G(-10, 34, 40)
         along_x = round(gyaw / 90.0) % 2 == 0
@@ -4082,7 +4084,7 @@ class CaveForest(Forest):
         logic("logic_relay", {"targetname": "lc_power_off", "StartDisabled": "0", "spawnflags": "0"}, [("OnTrigger", n, i, val, 0) for n, i, val in off])
         logic("logic_relay", {"targetname": "lc_power_on", "StartDisabled": "0", "spawnflags": "0"}, [("OnTrigger", n, i, val, 0) for n, i, val in on])
         # the emergency lamp: a deck lamp on its own battery (no name: always lit) high on a wooden pole in the shelter's corner
-        # beside the generator, facing down along it (over Valve's timber frame round the
+        # beside the generator (its cables climb it too: cables()), facing down along it (over Valve's timber frame round the
         # shelter, which a lamp must not stand in), a dim warm spot on the generator and a faint glow at the lamp
         v.point("prop_static", W(1274, -8494, -1664), {"model": "models/props_docks/dock01_pole01a_256.mdl", "angles": "0 0 0", "skin": "0", "solid": "6",
                                                       "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, wv)
@@ -4093,9 +4095,75 @@ class CaveForest(Forest):
         v.point("light", W(1274, -8514, -1562), {"_light": "255 176 112 10", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, wv)
         v.point("env_sprite", W(1274, -8514, -1562), {"model": "materials/sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "150", "rendercolor": "255 170 100",
                                                      "scale": ".15", "GlowProxySize": "2", "HDRColorScale": "1", "framerate": "10.0", "spawnflags": "1"}, wv)
+        self.cables(cv)
         self.notes.append("the holdout's power: the generator at (%d %d %d), its switch at (%d %d %d); %d lights, %d spotlight beams, %d lamp glows, %d cage lamps "
                           "(with their unlit twins) and %d spotlight lamps on its power; the first lift's 3 buttons and the emergency door's 2 locked without it"
                           % (gx, gy, gz, c[0], c[1], c[2], count["lights"], count["beams"], count["glows"], count["lamps"], count["skins"]))
+
+    def cables(self, vis):
+        """The generator's black cables (the owner, 27 November: "can you also please make a bunch of black ropes that connect to
+        the generator and all the lights connect to central points and a line back to the generator?"): Half-Life 2's black
+        cable (cable/cable.vmt, Valve's own for these) from the generator up the wooden pole beside it (holdout_power) to a
+        junction box on it, and from there to three junction boxes: under the scaffold deck east of the generator (the floor's
+        spotlights, sheds A and C), on the pit's south wall by the first lift (the lamp at its foot, the lamps up its shaft
+        and on to the top landing, shed B), and on the emergency door's wall (the alarm post's lamp, shed D). Each hangs
+        with a little slack, high over the floor (Valve's lamps in sheds are reached at their roofs), fixed to a wall, a
+        deck, a roof or the pole, and the build fails if one crosses a way kept clear or a lift's shaft. Points in Valve's
+        coordinates (ep2_outland_03)."""
+        v, P = self.vmf, self.deep_pt
+        W = lambda x, y, z: self.w(*P(x, y, z))
+        for (x, y, z, yaw) in ((1288, -8494, -1566, 0), (1456, -8584, -1628, 180), (1456, -9594, -1616, 90), (1311, -8134, -1566, 270)):
+            v.point("prop_static", W(x, y, z), {"model": "models/props_lab/powerbox02a.mdl", "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6", "disableshadows": "1",
+                                                "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+        pts = {"gen": (1296, -8519, -1714), "pole": (1281, -8500, -1710), "pole_top": (1284, -8498, -1578), "j0": (1294, -8494, -1566),
+               "j1w": (1450, -8584, -1628), "j1e": (1462, -8584, -1628), "j1n": (1456, -8578, -1628), "j1s": (1462, -8588, -1628), "j1ne": (1462, -8582, -1628),
+               "j2n": (1451, -9588, -1620), "j2e": (1462, -9597, -1616), "j2w": (1453, -9588, -1622), "j3s": (1311, -8140, -1566),
+               "spot_a": (1493, -8598, -1617), "spot_b": (1434, -8421, -1620), "spot_c": (1693, -8390, -1620), "shed_c": (1904, -8564, -1651),
+               "shed_a": (1726, -9064, -1654), "lamp_foot": (1390, -9587, -1615), "col1": (1527, -9597, -1678), "col2": (1527, -9597, -1534),
+               "col3": (1527, -9597, -1214), "col4": (1527, -9597, -799), "col5": (1527, -9597, -527), "shed_b_mid": (1556, -9598, -1551),
+               "shed_b_wall": (1824, -9598, -1546),
+               "shed_b": (1824, -9584, -1572), "alarm": (1284, -8146, -1674), "shed_d": (1159, -8474, -1536), "top": (1276, -9592, -346)}
+        segs = [("gen", "pole", 6), ("pole", "pole_top", 0), ("j0", "j1w", 6), ("j0", "j2n", 20), ("j0", "j3s", 10),
+                ("j1e", "spot_a", 1), ("j1n", "spot_b", 4), ("j1ne", "spot_c", 6), ("j1e", "shed_c", 2), ("j1s", "shed_a", 6),
+                ("j2w", "lamp_foot", 3), ("j2e", "col2", 3), ("col1", "col2", 0), ("col2", "col3", 0), ("col3", "col4", 0), ("col4", "col5", 0),
+                ("col5", "top", 6), ("j2e", "shed_b_mid", 2), ("shed_b_mid", "shed_b_wall", 1), ("shed_b_wall", "shed_b", 0), ("j3s", "alarm", 3), ("j3s", "shed_d", 6)]
+        ends = []
+        for _a, e, _s in segs:
+            if e not in ends:
+                ends.append(e)
+        nxt, starts = {}, []
+        for s0, e, sl in segs:
+            if s0 in ends and s0 not in nxt:
+                nxt[s0] = (e, sl)       # (a point some cable ends at carries the next one on: a chain)
+            else:
+                starts.append((s0, e, sl))
+        rope = {"MoveSpeed": "64", "Type": "0", "Subdiv": "2", "Width": "2", "TextureScale": "1", "Collide": "0", "Dangling": "0", "Breakable": "0", "Barbed": "0",
+                "RopeMaterial": "cable/cable.vmt", "spawnflags": "1"}
+        for p in ends:
+            k = dict(rope, targetname="lc_power_cable_" + p, Slack="0")
+            if p in nxt:
+                k.update(NextKey="lc_power_cable_" + nxt[p][0], Slack=str(nxt[p][1]))
+            v.point("keyframe_rope", W(*pts[p]), k, vis)
+        for s0, e, sl in starts:
+            v.point("move_rope", W(*pts[s0]), dict(rope, NextKey="lc_power_cable_" + e, Slack=str(sl), PositionInterpolator="2"), vis)
+        # none crosses a way kept clear, nor a lift's shaft (each hangs as a parabola, its sag as Source's ropes sag: about
+        # the root of 3/8 of its length times its slack)
+        shafts = []
+        for s, _train, (x1, y1, x2, y2), top_z, bottom_z in self.lifts:
+            a, b = W(x1 - (72 if s else 0), y1, bottom_z), W(x2, y2, top_z + 140)
+            shafts.append((tuple(min(a[k], b[k]) for k in range(3)) + tuple(max(a[k], b[k]) for k in range(3)), "the lift%s's shaft" % s))
+        for s0, e, sl in segs:
+            A, B = W(*pts[s0]), W(*pts[e])
+            L = math.dist(A, B)
+            sag = math.sqrt(3 * L * sl / 8.0)
+            for i in range(1, 40):
+                t = i / 40.0
+                q = [A[k] + (B[k] - A[k]) * t for k in range(3)]
+                q[2] -= 4 * sag * t * (1 - t)
+                hit = next((lab for box, lab in list(v.ways) + shafts if all(box[k] < q[k] < box[k + 3] for k in range(3))), None)
+                if hit:
+                    self.problems.append("a cable from %s to %s crosses %s at (%d %d %d)" % (s0, e, hit, q[0], q[1], q[2]))
+                    break
 
     def holdout_lift(self):
         """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
