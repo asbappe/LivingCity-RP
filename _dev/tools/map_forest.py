@@ -3253,6 +3253,7 @@ class CaveForest(Forest):
             self.ox + lip[0], self.oy + ys, lip[0] - back_top[0], slot_high, self.level - back_low[2]))
         self.notes.append("the stream: surface z %d, from the spring, down the cave, out of the mouth, to a sink pool at (%d %d); a trail fords it" % (
             self.level, self.ox + self.sink[0], self.oy + self.sink[1]))
+        self.tunnel_dress()
         self.joints_check()
         self.lamps_check()
 
@@ -5175,6 +5176,550 @@ class CaveForest(Forest):
                 "targetname": "lc_cave_gate", "origin": "%d %d %d" % self.w(hinge, ym + 48, zf + 58), "distance": "90", "speed": "100", "wait": "-1", "lip": "0", "dmg": "0",
                 "forceclosed": "0", "solidbsp": "0", "spawnflags": "288", "noise1": "doors/gate_move1.wav", "rendermode": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "disableshadows": "1"}, leaf, chain, gv)
+
+    # --- the entrance tunnel, dressed ----------------------------------------------------------------------------------
+    # The owner, 27 November: "please dress up the entrance cave tunnel, it's too bare". It is the Resistance's way into
+    # the old mine (Ravenholm's big room beyond the north wall, the antlion holdout beyond that), dressed as Valve dresses
+    # Episode Two's mine caves (ep2_outland_01a, 03): rock fallen at the wall feet; caged lamps on the walls on a black
+    # cable, each a dim warm pool (Valve's recipe there for light_cagelight02_on: a spot down and out, a faint glow light,
+    # a glow sprite), one lamp dead; the Resistance's things at the widening (crates on a pallet, a footlocker, a bedroll,
+    # a radio, a propane bottle) under a lambda, and a lambda at the bend as a way mark; two of Valve's timber sets before
+    # the hole into the mine, spare timber, a derailed cart, a pick and a shovel; two dead antlions past the spring, lying
+    # in Valve's own poses (ep2_outland_01a); stains and leaves as decals. Every prop by its real size, off the walking way
+    # (128 wide down the middle) and the stream's bed; nothing fades; its own random numbers, so nothing else moves.
+    TUNNEL_SEED = 1127
+    TUNNEL_WAY = 64            # the walking way: this far either side of the passage's middle, square to it
+    TUNNEL_BED = 58            # the stream's bed: within this of its line (cave_floor carves it there)
+    # Valve's two antlion bodies in ep2_outland_01a (prop_ragdoll, ids 243892 and 1440675): each bone's angles as posed
+    ANTLION_POSES = (
+        "0,23.62 -108.09 157.86,1,1.42 -156.02 174.11,2,13.00 -160.23 149.98,3,-33.76 119.85 160.76,4,1.85 -179.45 142.77,5,43.22 -35.61 -158.88,"
+        "6,-47.18 111.85 -177.78,7,18.55 6.70 -135.78,8,-35.80 68.90 -168.49,9,30.02 9.99 171.85,10,-3.42 -69.79 149.09,11,8.93 -48.54 150.22,"
+        "12,5.95 -10.36 72.26,13,66.90 -91.48 4.78,14,55.82 -45.03 46.19,15,-27.16 -127.98 138.73,16,6.19 -152.19 129.11",
+        "0,12.68 -174.84 90.04,1,-27.65 -173.92 116.18,2,-2.47 174.55 96.38,3,-34.36 -19.78 -78.46,4,-67.76 -37.95 -62.47,5,9.09 -10.00 -120.60,"
+        "6,-23.54 9.73 -123.45,7,42.90 -38.27 -133.83,8,52.65 1.43 -73.06,9,11.65 -130.62 98.75,10,-11.49 -134.08 96.75,11,10.85 -131.12 96.32,"
+        "12,7.73 144.19 -90.19,13,-68.96 126.22 -70.99,14,49.19 154.61 -76.81,15,-21.02 164.50 89.90,16,-27.47 -176.33 72.52")
+
+    def tunnel_dress(self):
+        """The entrance tunnel's dressing (see above). Runs at the end of cave(), before the lamps are checked."""
+        import collections
+        import map_build
+        rnd = random.Random(self.TUNNEL_SEED)
+        self.tunnel_made = collections.Counter()
+        self.tunnel_left = []       # (the rock spots with no clear place: how far in)
+        self.tunnel_boxes = []      # (the map's frame) what stands in the tunnel already, and each piece of dressing put down
+        ym, L = self.YM, self.LONG
+        for cls, pos, model, yaw in self.vmf.props:
+            x, y = pos[0] - self.ox, pos[1] - self.oy
+            if ym - 64 < y < ym + L + 64 and abs(x - self.mid(min(max(y, ym), ym + L))) < 480 and pos[2] < self.zf + 640:
+                b = map_build.prop_box(model, pos, yaw)
+                if b:
+                    self.tunnel_boxes.append(b)
+        self.tunnel_ways()
+        self.tunnel_lamps()
+        self.tunnel_stash()
+        self.tunnel_mine_end()
+        self.tunnel_dead()
+        self.tunnel_rubble(rnd)
+        self.tunnel_grime()
+        m = self.tunnel_made
+        self.notes.append("the tunnel's dressing: %d fallen rocks (%d spots with no clear place left out: %s in), %d lamps on the walls (%d lit, each a spot and a "
+                          "glow light) on a cable of %d points, %d things of the Resistance's, %d of the mine's (two timber sets), %d dead antlions with %d "
+                          "bits, %d decals" % (m["rock"], len(self.tunnel_left), ", ".join(str(q) for q in self.tunnel_left) or "none", m["lamp"], m["lit"],
+                                               m["cable"], m["stash"], m["mine"], m["antlion"], m["gib"], m["decal"]))
+
+    def tunnel_dir(self, y):
+        """The way the passage runs at y: a level unit vector."""
+        k = (self.wander(y + 4) - self.wander(y - 4)) / 8.0
+        n = math.hypot(k, 1.0)
+        return (k / n, 1.0 / n)
+
+    def tunnel_in(self, y, side):
+        """Into the passage from its wall on one side (1 east, -1 west): a level unit vector, square to the passage."""
+        dx, dy = self.tunnel_dir(y)
+        return (-dy, dx) if side > 0 else (dy, -dx)
+
+    def tunnel_mesh(self):
+        """The cave's skin as the compiler makes it: each displaced face's 9 by 9 points as cave() hangs them (on_square),
+        two triangles to a square, filed by where they lie (32 squares, the forest's frame). Built once."""
+        if getattr(self, "_tunnel_tris", None) is None:
+            H, T, ym = self.HALF, self.TALL, self.YM
+            tris, grid = [], {}
+            for k in range(self.LONG // 256):
+                y0 = ym + 256 * k
+                for pt in (lambda i, j: self.on_square(-H + 40 * j, 0, y0 + 32 * i), lambda i, j: self.on_square(-H + 40 * i, T, y0 + 32 * j),
+                           lambda i, j: self.on_square(-H, 40 * i, y0 + 32 * j), lambda i, j: self.on_square(H, 40 * j, y0 + 32 * i)):
+                    P = [[pt(i, j) for j in range(9)] for i in range(9)]
+                    for i in range(8):
+                        for j in range(8):
+                            for t in ((P[i][j], P[i + 1][j], P[i + 1][j + 1]), (P[i][j], P[i + 1][j + 1], P[i][j + 1])):
+                                for gx in range(int(min(p[0] for p in t) // 32), int(max(p[0] for p in t) // 32) + 1):
+                                    for gy in range(int(min(p[1] for p in t) // 32), int(max(p[1] for p in t) // 32) + 1):
+                                        grid.setdefault((gx, gy), []).append(len(tris))
+                                tris.append(t)
+            self._tunnel_tris, self._tunnel_grid = tris, grid
+        return self._tunnel_tris, self._tunnel_grid
+
+    def tunnel_cast(self, p, d, far):
+        """How far along the ray p + t d (d a unit vector, the forest's frame) it first meets the skin, or None."""
+        tris, grid = self.tunnel_mesh()
+        q = (p[0] + d[0] * far, p[1] + d[1] * far)
+        ks = set()
+        for gx in range(int(min(p[0], q[0]) // 32), int(max(p[0], q[0]) // 32) + 1):
+            for gy in range(int(min(p[1], q[1]) // 32), int(max(p[1], q[1]) // 32) + 1):
+                ks.update(grid.get((gx, gy), ()))
+        best = None
+        for k in ks:
+            a, b, c = tris[k]
+            e1 = (b[0] - a[0], b[1] - a[1], b[2] - a[2])
+            e2 = (c[0] - a[0], c[1] - a[1], c[2] - a[2])
+            h = (d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0])
+            det = e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2]
+            if abs(det) < 1e-9:
+                continue
+            s = (p[0] - a[0], p[1] - a[1], p[2] - a[2])
+            u = (s[0] * h[0] + s[1] * h[1] + s[2] * h[2]) / det
+            if u < -1e-6 or u > 1 + 1e-6:
+                continue
+            qv = (s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0])
+            v = (d[0] * qv[0] + d[1] * qv[1] + d[2] * qv[2]) / det
+            if v < -1e-6 or u + v > 1 + 1e-6:
+                continue
+            t = (e2[0] * qv[0] + e2[1] * qv[1] + e2[2] * qv[2]) / det
+            if 1e-4 < t < far and (best is None or t < best):
+                best = t
+        return best
+
+    def tunnel_wall(self, y, side, z):
+        """Where the wall on one side (1 east, -1 west) is at height z, y along the passage: its x (level, along x from the
+        passage's middle, as the skin's rows run)."""
+        m = self.mid(y)
+        t = self.tunnel_cast((m, y, z), (side, 0, 0), 700)
+        return m + side * (t if t is not None else 700)
+
+    def tunnel_low(self, x, y):
+        """The height of the skin under (x, y): the floor, or a wall's foot where it rises (None if there is none). Found from
+        below, so a wall leaning over the place is never taken for its floor."""
+        t = self.tunnel_cast((x, y, self.zf - 60), (0, 0, 1), 300)
+        return None if t is None else self.zf - 60 + t
+
+    def tunnel_in_air(self, p, margin=0):
+        """Is p (the forest's frame) inside the passage, at least `margin` from its skin on a level line from its middle?"""
+        m = self.mid(min(max(p[1], self.YM), self.YM + self.LONG))
+        d = abs(p[0] - m)
+        if d < 1:
+            return True
+        t = self.tunnel_cast((m, p[1], p[2]), (1 if p[0] > m else -1, 0, 0), d + margin)
+        return t is None
+
+    def tunnel_box(self, model, x, y, z, pitch=0, yaw=0, roll=0):
+        """A model's real box where it stands (x, y in the forest's frame), turned by all three of its angles."""
+        import map_assets
+        b = map_assets.size(model)
+        if not b:
+            return None
+        p, w, r = (math.radians(a) for a in (pitch, yaw, roll))
+        sp, cp, sy, cy, sr, cr = math.sin(p), math.cos(p), math.sin(w), math.cos(w), math.sin(r), math.cos(r)
+        f, lf, up = (cp * cy, cp * sy, -sp), (sr * sp * cy - cr * sy, sr * sp * sy + cr * cy, sr * cp), (cr * sp * cy + sr * sy, cr * sp * sy - sr * cy, cr * cp)
+        pts = [tuple((x, y, z)[k] + a * f[k] + c * lf[k] + h * up[k] for k in range(3)) for a in (b[0], b[3]) for c in (b[1], b[4]) for h in (b[2], b[5])]
+        return tuple(min(q[k] for q in pts) for k in range(3)) + tuple(max(q[k] for q in pts) for k in range(3))
+
+    def tunnel_fits(self, box, slack=0.2):
+        """Is a box (the forest's frame) clear of every way kept clear, and of what stands in the tunnel (by more than
+        slack of the smaller one)?"""
+        if box is None:
+            return False
+        wb = self.box(*box)
+        if any(all(wb[k] < w[k + 3] and wb[k + 3] > w[k] for k in range(3)) for w in [w for w, _ in self.vmf.ways] + self.tunnel_beds):
+            return False
+        vol = lambda b: max(1.0, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]))
+        for o in self.tunnel_boxes:
+            ov = [min(wb[k + 3], o[k + 3]) - max(wb[k], o[k]) for k in range(3)]
+            if min(ov) > 0 and ov[0] * ov[1] * ov[2] > slack * min(vol(wb), vol(o)):
+                return False
+        return True
+
+    def tunnel_put(self, model, x, y, z, yaw, vis, what, pitch=0, roll=0, cls=None, keys=None):
+        """A piece of the dressing: a prop_static if the model is built for it, else a prop_dynamic_override standing still;
+        never fading (the owner, 26 November)."""
+        import map_build
+        c, k = standing_prop(model)
+        k = dict(k, model=model, angles="%d %d %d" % (round(pitch), round(yaw) % 360, round(roll)), fademindist="-1", fademaxdist="0", fadescale="1")
+        k["skin"] = map_build.prop_skin(model, *self.w(x, y, z)[:2])
+        k.update(keys or {})
+        self.vmf.point(cls or c, self.w(x, y, z), k, vis)
+        b = self.tunnel_box(model, x, y, z, pitch, yaw, roll)
+        if b:
+            self.tunnel_boxes.append(self.box(*b))
+        self.tunnel_made[what] += 1
+
+    def tunnel_spot(self, q, gap, side, model, turn=0, pitch=0, roll=0, on=None):
+        """Where a thing stands by a wall, q in (where the passage runs north): as near the wall as leaves every part of it
+        `gap` off the wall's foot (where the rock has risen 10) all along its length, its yaw facing in (plus turn), on the
+        floor under it, sunk into its high side rather than standing off its low side (or on a height given). (x, y, z, yaw,
+        the floor's spread under it.)"""
+        y = self.YM + q
+        yaw = 180 + turn if side > 0 else turn
+        b = self.tunnel_box(model, 0, 0, 0, pitch, yaw, roll)
+        feet = [self.tunnel_wall(y + yy, side, self.zf + 10) for yy in range(int(b[1]) - 4, int(b[4]) + 5, 8)]
+        x = min(feet) - gap - b[3] if side > 0 else max(feet) + gap - b[0]
+        fl = [self.tunnel_low(x + px, y + py) for px in (b[0], (b[0] + b[3]) / 2, b[3]) for py in (b[1], (b[1] + b[4]) / 2, b[4])]
+        fl = [f for f in fl if f is not None]
+        base = on if on is not None else min(fl) + 0.7 * (max(fl) - min(fl)) - 0.8
+        return x, y, stand_z(model, base, pitch, roll), yaw, max(fl) - min(fl)
+
+    def tunnel_ways(self):
+        """The walking way down the tunnel (128 wide, square to the passage, on its middle: in pieces 8 long, so that through
+        the bend, where it runs aslant, it is not much wider than it is) and the stream's bed (in pieces 32 long), kept
+        clear from just inside the mouth (the mouth itself is kept clear already); and a way past the east side of the
+        owner's mine car on their track (in their own file, 2686 in, on the passage's middle; west of it the cave's own
+        rock leaves 95). The boxes reach only 36 over the floor: whatever stands on the floor meets them, and the stalactites
+        hanging over the way do not (their tips come down to 44 over it in the bend). The cave's own rocks at the walls
+        (cave(), from 22 November) lie in the stream's edges here and there: the bed is kept clear round them as it is
+        (each piece trimmed off the rock on its side), and the dressing keeps off the whole bed (tunnel_fits). The cable is
+        kept 100 over the walking way by tunnel_lamps itself."""
+        zf, ym, L = self.zf, self.YM, self.LONG
+        self.tunnel_cols, self.tunnel_beds = [], []      # (the map's frame: the walking way to its full height, for the cable; the whole bed)
+        old = list(self.tunnel_boxes)      # (what stood here before the dressing)
+        for q in range(96, L, 8):
+            ya, yb = ym + q, ym + min(q + 8, L)
+            xs = [self.mid(y) + s * self.TUNNEL_WAY * self.lean(y) for y in (ya, yb) for s in (-1, 1)]
+            b = self.box(min(xs), ya, zf - 40, max(xs), yb, zf + 36)
+            for o in old:      # (a corner of the cave's own rock that just reaches in: the way steps aside from it, still 128 wide)
+                if all(b[k] < o[k + 3] and b[k + 3] > o[k] for k in range(3)):
+                    shift = (o[3] - b[0] + 1) if (o[0] + o[3]) < (b[0] + b[3]) else -(b[3] - o[0] + 1)
+                    if abs(shift) <= 16:
+                        b = (b[0] + shift, b[1], b[2], b[3] + shift, b[4], b[5])
+            self.vmf.keep_way_clear(b, "the walking way down the cave")
+            self.tunnel_cols.append(b[:5] + (zf + 100,))
+        for q in range(96, L, 32):
+            ya, yb = ym + q, ym + min(q + 32, L)
+            bed = [x for y in (ya, (ya + yb) / 2.0, yb) for x in range(int(self.mid(y)) - 330, int(self.mid(y)) + 331, 6)
+                   if path_dist(x, y, self.cave_line) < self.TUNNEL_BED]
+            if not bed:
+                continue
+            b = list(self.box(min(bed) - 6, ya, zf - 48, max(bed) + 6, yb, zf + 30))
+            self.tunnel_beds.append(tuple(b))
+            for o in old:
+                if all(b[k] < o[k + 3] and b[k + 3] > o[k] for k in range(3)):
+                    if (o[0] + o[3]) < (b[0] + b[3]):
+                        b[0] = o[3] + 1
+                    else:
+                        b[3] = o[0] - 1
+            if b[3] - b[0] > 16:
+                self.vmf.keep_way_clear(tuple(b), "the stream's bed in the cave")
+        mx = self.end_x
+        self.keep_way_clear((mx + 8, ym + 2610, zf - 40, mx + 144, ym + 2770, zf + 36), "the way past the owner's mine car")
+
+    def tunnel_lamps(self):
+        """Valve's caged lamps on the east wall (the dry side), a black cable from lamp to lamp on small brackets along the
+        same wall, from a junction box near the mouth to the timber frame of the hole into the mine (a span straight across
+        the bend would be 600 long). A lit lamp throws a dim warm pool: a spot down and out, a faint glow light, a glow sprite
+        at its bulb (Valve's recipe for this lamp in ep2_outland_01a, 255 226 174); the fifth along is dead. Each lamp is set a little up or down
+        the wall until its sprite and lights are clear of the rock; where a span of cable would pass through rock that
+        bulges out between its two ends, a bracket is put in at its middle (and again, if need be)."""
+        v, zf, ym = self.vmf, self.zf, self.YM
+        vis, lv = self.vis("tunnel: lamps and cable"), self.vis("lights")
+        warm = "255 226 174"
+        chain = (("box", 640, 1, 116), ("lamp", 700, 1, 150), ("hook", 860, 1, 168), ("hook", 975, 1, 176), ("hook", 1080, 1, 176),
+                 ("hook", 1170, 1, 170), ("hook", 1250, 1, 164), ("lamp", 1320, 1, 150), ("hook", 1400, 1, 164), ("hook", 1470, 1, 170),
+                 ("hook", 1545, 1, 176), ("hook", 1610, 1, 176), ("lamp", 1690, 1, 140), ("hook", 1880, 1, 172), ("hook", 2040, 1, 168),
+                 ("lamp", 2172, 1, 150), ("hook", 2300, 1, 120), ("hook", 2390, 1, 150), ("dead", 2480, 1, 156), ("hook", 2690, 1, 176),
+                 ("hook", 2830, 1, 170), ("lamp", 2956, 1, 150))
+        anchors = []        # (kind, q, side, point in the forest's frame, the way in, yaw)
+        for kind, q, side, up in chain:
+            y = ym + q
+            ix, iy = self.tunnel_in(y, side)
+            yaw = math.degrees(math.atan2(iy, ix))
+            for dz in ((0, -8, 8, -16, 16, -24, 24, -32, 32) if kind == "lamp" else (0,)):
+                z = zf + up + dz
+                wx = self.tunnel_wall(y, side, z)
+                x, yy = wx + ix * 0.5, y + iy * 0.5
+                if kind != "lamp" or (all(self.tunnel_in_air((x + ix * a, yy + iy * a, z + h), m) for a, h, m in ((4, -7, 4), (16, -12, 8), (12, 4, 6)))
+                                      and self.tunnel_cast((x + ix * 4, yy + iy * 4, z - 7), (0, 0, -1), 10) is None
+                                      and self.tunnel_cast((x + ix * 16, yy + iy * 16, z - 12), (0, 0, -1), 16) is None):
+                    break
+            else:
+                self.problems.append("no place on the wall %d in for a lamp whose light is clear of the rock" % q)
+            anchors.append((kind, q, side, (x, yy, z), (ix, iy), yaw))
+        for kind, q, side, (x, yy, z), (ix, iy), yaw in anchors:
+            if kind in ("lamp", "dead"):
+                self.tunnel_put("models/props_c17/light_cagelight02_%s.mdl" % ("on" if kind == "lamp" else "off"), x, yy, z, yaw, vis, "lamp")
+                if kind == "lamp":
+                    v.point("light_spot", self.w(x + ix * 12, yy + iy * 12, z + 4), {
+                        "_light": warm + " 150", "_lightHDR": "-1 -1 -1 1", "_lightscaleHDR": "1", "_inner_cone": "30", "_cone": "70", "_exponent": "1",
+                        "_distance": "0", "pitch": "-55", "angles": "-55 %d 0" % round(yaw), "_quadratic_attn": "1", "_linear_attn": "0", "_constant_attn": "0",
+                        "style": "0"}, lv)
+                    v.point("light", self.w(x + ix * 16, yy + iy * 16, z - 12), {"_light": warm + " 12", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1",
+                                                                                "style": "0"}, lv)
+                    v.point("env_sprite", self.w(x + ix * 4, yy + iy * 4, z - 7), {
+                        "model": "materials/sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "110", "rendercolor": "255 214 160", "scale": ".2",
+                        "GlowProxySize": "2", "HDRColorScale": "1", "framerate": "10.0", "spawnflags": "1"}, vis)
+                    self.tunnel_made["lit"] += 1
+            elif kind == "box":
+                self.tunnel_put("models/props_lab/powerbox02a.mdl", x + ix * 5.5, yy + iy * 5.5, z, yaw, vis, "hook")      # (12 deep: its back on the rock)
+
+        def tie(kind, p, inn):
+            # where the cable meets each thing: a lamp's top, a bracket's end, the junction box's side
+            off, up = {"lamp": (2, 5), "dead": (2, 5), "hook": (6, 0), "box": (12, 8)}[kind]
+            return (p[0] + inn[0] * off, p[1] + inn[1] * off, p[2] + up)
+
+        def slack(a, b):
+            # a little sag (Source's ropes sag about the root of 3/8 of the span times the slack); over 128 never under 25
+            span = math.dist(a, b)
+            s = 8 * min(40.0, 0.16 * span) ** 2 / (3 * span)
+            return int(round(max(s, 25 if span > 128 else 0)))
+
+        def clear(a, b, margin=2):
+            # the span as it hangs: in the air of the passage, `margin` off the rock, all along but its ends (on the rock)
+            span = math.dist(a, b)
+            sag = math.sqrt(3 * span * slack(a, b) / 8.0)
+            for n in range(1, 24):
+                t = n / 24.0
+                if min(t, 1 - t) * span < 16:
+                    continue
+                p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t - 4 * sag * t * (1 - t))
+                if not self.tunnel_in_air(p, margin):
+                    return False
+            return True
+        pts = [tie(a[0], a[3], a[4]) for a in anchors]
+        sides = [a[2] for a in anchors]
+        i = 0
+        while i < len(pts) - 1:
+            if clear(pts[i], pts[i + 1]) or sides[i] != sides[i + 1] or math.dist(pts[i], pts[i + 1]) < 40:
+                i += 1
+                continue
+            # a bracket half way, on the same wall, at the height between or a little up or down it, where both halves clear
+            y = (pts[i][1] + pts[i + 1][1]) / 2.0
+            side = sides[i]
+            ix, iy = self.tunnel_in(y, side)
+            best = None
+            for dz in (0, -12, 12, -24, 24):
+                z = (pts[i][2] + pts[i + 1][2]) / 2.0 + dz
+                wx = self.tunnel_wall(y, side, z)
+                x, yy = wx + ix * 0.5, y + iy * 0.5
+                t = tie("hook", (x, yy, z), (ix, iy))
+                if best is None:
+                    best = (x, yy, z, t)
+                if clear(pts[i], t) and clear(t, pts[i + 1]):
+                    best = (x, yy, z, t)
+                    break
+            x, yy, z, t = best
+            self.tunnel_put("models/props_c17/utilityconnecter005.mdl", x, yy, z, math.degrees(math.atan2(iy, ix)), vis, "hook")
+            pts.insert(i + 1, t)
+            sides.insert(i + 1, side)
+        for (kind, q, side, (x, yy, z), (ix, iy), yaw) in anchors:
+            if kind == "hook":
+                self.tunnel_put("models/props_c17/utilityconnecter005.mdl", x, yy, z, yaw, vis, "hook")      # (a little bracket along the rock)
+        hx2 = self.joint_hole[3]
+        pts.append((hx2 + 8, self.D - 17, zf + 184))     # (the east post of the timber frame round the hole: north_joint)
+        rope = {"MoveSpeed": "64", "Type": "0", "Subdiv": "2", "Width": "2", "TextureScale": "1", "Collide": "0", "Dangling": "0", "Breakable": "0",
+                "Barbed": "0", "RopeMaterial": "cable/cable.vmt", "spawnflags": "1"}
+        for i in range(len(pts)):
+            k = dict(rope)
+            if i + 1 < len(pts):
+                k.update(NextKey="lc_cave_cable_%d" % (i + 1), Slack=str(slack(pts[i], pts[i + 1])))
+            if i == 0:
+                k["PositionInterpolator"] = "2"
+                v.point("move_rope", self.w(*pts[i]), k, vis)
+            else:
+                v.point("keyframe_rope", self.w(*pts[i]), dict(k, targetname="lc_cave_cable_%d" % i), vis)
+        self.tunnel_made["cable"] = len(pts)
+        for i in range(len(pts) - 1):      # (no span may hang into a way kept clear, nor under 100 over the walking way, nor through the rock)
+            A, B = self.w(*pts[i]), self.w(*pts[i + 1])
+            if not clear(pts[i], pts[i + 1], 0) and i + 2 < len(pts):
+                self.problems.append("the tunnel's cable passes through the rock between (%d %d %d) and (%d %d %d)" % (A + B))
+            sag = math.sqrt(3 * math.dist(A, B) * slack(pts[i], pts[i + 1]) / 8.0)
+            for n in range(1, 40):
+                t = n / 40.0
+                p = [A[k] + (B[k] - A[k]) * t for k in range(3)]
+                p[2] -= 4 * sag * t * (1 - t)
+                hit = next((lab for box, lab in list(v.ways) + [(c, "the walking way, under 100") for c in self.tunnel_cols]
+                            if all(box[k] < p[k] < box[k + 3] for k in range(3))), None)
+                if hit:
+                    self.problems.append("the tunnel's cable hangs into %s at (%d %d %d)" % (hit, p[0], p[1], p[2]))
+                    break
+
+    def tunnel_find(self, q, gap, side, model, turn=0, pitch=0, roll=0, flat=4.5):
+        """tunnel_spot, tried a little further along and out until the floor under the thing is level within `flat` (it then
+        stands off it nowhere by more than 1.4) and it is clear of the ways and of what stands there (the floor's own
+        lumps are up to 5 high): (x, y, z, yaw) or None."""
+        tried = []
+        for dg in (0, 8, 16, 24):
+            for dq in (0, -8, 8, -16, 16, -24, 24, -32, 32):
+                x, y, z, yaw, spread = self.tunnel_spot(q + dq, gap + dg, side, model, turn, pitch, roll)
+                clear = self.tunnel_fits(self.tunnel_box(model, x, y, z, pitch, yaw, roll), slack=0.05)
+                if spread <= flat and clear:
+                    return x, y, z, yaw
+                tried.append((spread, clear))
+        self.problems.append("no level, clear place by the wall for the tunnel's %s near %d in (the floor level within %.1f at best; clear %d times of %d)" % (
+            model.rsplit("/", 1)[-1], q, min(t[0] for t in tried), sum(1 for t in tried if t[1]), len(tried)))
+        return None
+
+    def tunnel_stash(self):
+        """What the Resistance keeps at the widening, along its east wall where it runs straight: a long crate, a propane
+        bottle, a footlocker with a radio on it, crates on a pallet (two stacked), a bedroll and two bottles; a lambda over
+        them (tunnel_grime) and a lamp (tunnel_lamps). Each on level floor (tunnel_find); what stands on another thing is
+        placed from that thing: (along the passage, out from the wall, model, turn, how high it stands)."""
+        vis = self.vis("tunnel: the Resistance's things")
+        singles = ((2008, 20, "models/props_junk/wood_crate002a.mdl", 90, 0, 0, {}),
+                   (2050, 20, "models/props_citizen_tech/firetrap_propanecanister01a.mdl", 0, 0, 0, {}),
+                   (2204, 44, "models/props_c17/furnituremattress001a.mdl", 90, 0, 180, {}),           # (turned over: lesson mattress-turned)
+                   (2160, 84, "models/props_junk/garbage_glassbottle001a.mdl", 63, 90, 0, {"solid": "0"}),
+                   (2330, 30, "models/props_junk/garbage_glassbottle003a.mdl", 0, 0, 0, {"solid": "0"}))
+        groups = ((2100, 20, "models/props_forest/footlocker01_closed.mdl", 0, (
+                      (-2, 1, "models/props_lab/citizenradio.mdl", 25, 24, {"solid": "0"}),)),
+                  (2280, 20, "models/props_junk/wood_pallet001a.mdl", 0, (
+                      (-19, 8, "models/props_junk/wood_crate001a.mdl", 4, 9, {}),
+                      (-19, 8, "models/props_junk/wood_crate001a.mdl", 17, 49, {}),
+                      (25, 8, "models/props_junk/wood_crate001a_damagedmax.mdl", -8, 9, {}))))
+        for q, gap, model, turn, pitch, roll, keys in singles:
+            got = self.tunnel_find(q, gap, 1, model, turn, pitch, roll)
+            if got:
+                self.tunnel_put(model, got[0], got[1], got[2], got[3], vis, "stash", pitch, roll, keys=keys)
+        for q, gap, model, turn, on in groups:
+            got = self.tunnel_find(q, gap, 1, model, turn)
+            if not got:
+                continue
+            x, y, z, yaw = got
+            self.tunnel_put(model, x, y, z, yaw, vis, "stash")
+            floor = z - stand_z(model, 0)
+            for dq, dout, m, t, up, keys in on:
+                mx, my = x + dout, y + dq       # (the east wall: out from it is west)
+                mz = stand_z(m, floor + up)
+                if not self.tunnel_fits(self.tunnel_box(m, mx, my, mz, 0, yaw + t, 0), slack=1.0):
+                    self.problems.append("the tunnel's %s (%d in) stands in a way kept clear" % (m.rsplit("/", 1)[-1], q))
+                    continue
+                self.tunnel_put(m, mx, my, mz, yaw + t, vis, "stash", keys=keys)
+
+    def tunnel_mine_end(self):
+        """Where the tunnel nears the mine: two of Valve's timber sets (props_mining/struts_tunnel192, posts 16 square, 192
+        wide and high) on the way to the timber frame round the hole, 176 apart as Valve sets them in Episode Two's
+        galleries; on the east side two spare struts lying, a flat cart off its rails against the wall, a pick and a
+        shovel; two spikes by the end of the owner's track."""
+        vis = self.vis("tunnel: timber and the mine's leavings")
+        zf, ym = self.zf, self.YM
+        hx1, hx2 = self.joint_hole[0], self.joint_hole[3]
+        hm = (hx1 + hx2) / 2.0
+        for q, model in ((self.LONG - 96, "models/props_mining/struts_tunnel192_01.mdl"), (self.LONG - 272, "models/props_mining/struts_tunnel192_03.mdl")):
+            y = ym + q
+            fl = [self.tunnel_low(hm + dx, y + dy) for dx in (-96, -80, 80, 96) for dy in (0, 16)]
+            z = min(f for f in fl if f is not None) - 1
+            for px in (hm - 96, hm + 80):      # (only its posts need room: the way runs through the set)
+                if not self.tunnel_fits((px, y, z, px + 16, y + 16, z + 192), slack=0.05):
+                    self.problems.append("a timber set's post %d in stands in a way kept clear" % q)
+            self.tunnel_put(model, hm - 96, y, z, 0, vis, "mine")
+        mx = self.end_x
+        things = (      # (x from the passage's middle, q in, model, yaw, pitch, roll: the struts lie along the passage, pitch 90 lays one down)
+            (150, 2856, "models/props_mining/struts_single01.mdl", 90, 90, 0),
+            (170, 2862, "models/props_mining/struts_single01.mdl", 88, 90, 0),
+            (118, 2822, "models/props_mining/pickaxe01.mdl", 160, 0, 90),
+            (120, 3046, "models/props_junk/shovel01a.mdl", 20, 0, 90),
+        )
+        for dx, q, model, yaw, pitch, roll in things:
+            x, y = mx + dx, ym + q
+            b = self.tunnel_box(model, x, y, 0, pitch, yaw, roll)
+            fl = [f for f in (self.tunnel_low(px, py) for px in (b[0], b[3]) for py in (b[1], b[4])) if f is not None]
+            z = stand_z(model, min(fl) + 0.7 * (max(fl) - min(fl)), pitch, roll)
+            if max(fl) - min(fl) > 4.5:
+                self.problems.append("the floor under the tunnel's %s (%d in) is uneven by %d" % (model.rsplit("/", 1)[-1], q, max(fl) - min(fl)))
+            if not self.tunnel_fits(self.tunnel_box(model, x, y, z, pitch, yaw, roll), slack=0.05):
+                self.problems.append("the tunnel's %s (%d in) stands in a way kept clear or in another thing" % (model.rsplit("/", 1)[-1], q))
+                continue
+            self.tunnel_put(model, x, y, z, yaw, vis, "mine", pitch, roll)
+        got = self.tunnel_find(2984, 14, 1, "models/props_mining/flatbed_cart01.mdl", 94)
+        if got:
+            self.tunnel_put("models/props_mining/flatbed_cart01.mdl", got[0], got[1], got[2], got[3], vis, "mine")
+        for (dx, q, yaw) in ((76, 2782, 30), (90, 2794, 105)):      # (spikes lie loose: physics, asleep, players pass through them)
+            y = ym + q
+            self.tunnel_put("models/props_mining/railroad_spike01.mdl", mx + dx, y, self.tunnel_low(mx + dx, y), yaw, vis, "mine", cls="prop_physics",
+                            keys={"spawnflags": "5"})
+
+    def tunnel_dead(self):
+        """Two antlions dead past the spring, on the west side short of the hole into the mine (the warning of what lies
+        beyond), as Valve lays them in ep2_outland_01a: a prop_ragdoll in its own pose, 13 over the floor, debris (players
+        pass through it), and bits of them about. (x from the passage's middle, q in.)"""
+        vis = self.vis("tunnel: dead antlions")
+        zf, ym, mx = self.zf, self.YM, self.end_x
+        for (dx, q, pose) in ((-236, 2872, 0), (-222, 3010, 1)):
+            x, y = mx + dx, ym + q
+            fl = self.tunnel_low(x, y)
+            if not self.tunnel_fits(self.tunnel_box("models/antlion.mdl", x, y, fl), slack=0.05):
+                self.problems.append("a dead antlion (%d in) lies in a way kept clear or in another thing" % q)
+            self.tunnel_put("models/antlion.mdl", x, y, fl + 13, 0, vis, "antlion", cls="prop_ragdoll",
+                            keys={"angleOverride": self.ANTLION_POSES[pose], "spawnflags": "4"})
+        for (dx, q, model, yaw) in ((-190, 2930, "models/gibs/antlion_gib_large_1.mdl", 40), (-150, 2964, "models/gibs/antlion_gib_medium_3a.mdl", 200),
+                                    (-160, 3050, "models/gibs/antlion_gib_large_3.mdl", 310)):
+            x, y = mx + dx, ym + q
+            z = stand_z(model, self.tunnel_low(x, y))
+            if self.tunnel_fits(self.tunnel_box(model, x, y, z, 0, yaw, 0), slack=0.05):
+                self.tunnel_put(model, x, y, z, yaw, vis, "gib", cls="prop_physics", keys={"spawnflags": "5"})
+
+    def tunnel_rubble(self, rnd):
+        """Rock fallen at the wall feet: big, middling and small, in no rhythm, half against the rock; in the bend, where the
+        stream takes the floor, a little way up the walls. (q in, side, size, how high up the wall its middle sits.) Each
+        is moved back into the wall until it is clear of the ways and of what stands there, or left out; it is sunk a
+        quarter of its height into the floor's lowest point under it."""
+        import map_assets
+        vis = self.vis("tunnel: fallen rock")
+        zf, ym = self.zf, self.YM
+        kinds = {"s": ("models/props_wasteland/rockgranite03a.mdl", "models/props_wasteland/rockgranite03b.mdl", "models/props_wasteland/rockgranite03c.mdl"),
+                 "m": ("models/props_wasteland/rockgranite02a.mdl", "models/props_wasteland/rockgranite02b.mdl", "models/props_wasteland/rockgranite02c.mdl",
+                       "models/props_mining/caverocks_cluster01.mdl"),
+                 "b": ("models/props_wasteland/rockgranite01a.mdl", "models/props_wasteland/rockgranite01b.mdl", "models/cliffs/rocks_large02.mdl")}
+        spots = ((290, 1, "m", 10), (332, 1, "s", 6), (455, 1, "s", 8), (600, 1, "m", 10), (642, 1, "s", 6), (705, 1, "s", 8), (378, -1, "s", 8),
+                 (688, -1, "s", 10), (1010, 1, "s", 30), (1120, 1, "m", 34), (1385, 1, "s", 30), (1060, -1, "s", 30), (1455, -1, "m", 34),
+                 (1560, 1, "m", 10), (1702, 1, "s", 8), (1765, 1, "b", 14), (1808, 1, "s", 6), (2190, 1, "m", 10), (2242, 1, "s", 6), (2330, 1, "b", 14),
+                 (2402, 1, "s", 8), (2560, 1, "m", 10), (2662, 1, "s", 8), (2800, -1, "m", 10), (2842, -1, "s", 6), (2915, -1, "b", 14),
+                 (2972, -1, "m", 10), (3040, -1, "s", 8), (2860, 1, "m", 10), (3058, 1, "s", 8))
+        for (q, side, kind, up) in spots:
+            model = rnd.choice(kinds[kind])
+            b = map_assets.size(model)
+            reach = max(abs(b[0]), abs(b[3]), abs(b[1]), abs(b[4]))
+            yaw, pitch, roll = rnd.randrange(0, 360, 5), rnd.randint(-9, 9), rnd.randint(-9, 9)
+            jog = rnd.randint(-10, 10)
+            placed = False
+            for dq in (0, 24, -24, 48, -48):      # (a little further along if it fits nowhere here)
+                y0 = ym + q + jog + dq
+                ix, iy = self.tunnel_in(y0, side)
+                wx = self.tunnel_wall(y0, side, zf + up)
+                for out in (0.5, 0.4, 0.3, 0.2, 0.1, 0.0):
+                    x, y = wx + ix * reach * out, y0 + iy * reach * out
+                    fl = [self.tunnel_low(x + ix * reach * k, y + iy * reach * k) for k in (0.0, 0.5, 0.8)]
+                    fl = [f for f in fl if f is not None]
+                    if not fl:
+                        continue
+                    z = min(fl) - b[2] - 0.25 * (b[5] - b[2])
+                    if self.tunnel_fits(self.tunnel_box(model, x, y, z, pitch, yaw, roll)):
+                        self.tunnel_put(model, x, y, z, yaw, vis, "rock", pitch, roll)
+                        placed = True
+                        break
+                if placed:
+                    break
+            if not placed:
+                self.tunnel_left.append(q)
+
+    def tunnel_grime(self):
+        """Decals on the skin (each ON it, as an infodecal must be): leaves blown in at the mouth, stains where water runs
+        down the walls in the bend and by the spring, litter by the bedroll, and the lambda twice: a way mark at the bend
+        and over the stash (Valve marks a stash so: ep2_outland_01a's lambdaspray_2a). (q in, side, height up the wall
+        or None for the floor, out from the wall's foot for the floor, texture.)"""
+        vis = self.vis("tunnel: grime")
+        zf, ym = self.zf, self.YM
+        marks = ((150, 1, None, 96, "decals/leaves_ground01"), (262, 1, None, 150, "decals/leaves_ground02"), (424, 1, None, 70, "decals/leaves_ground01"),
+                 (826, 1, 74, 0, "decals/lambdaspray_2a"), (1050, -1, 118, 0, "decals/decalstain011a"), (1350, 1, 104, 0, "decals/decalstain002a"),
+                 (2168, 1, None, 120, "decals/trashdecal02a"), (2262, 1, 104, 0, "decals/lambdaspray_1a"), (2585, 1, 92, 0, "decals/decalstain015a"))
+        for q, side, up, out, texture in marks:
+            y = ym + q
+            ix, iy = self.tunnel_in(y, side)
+            if up is None:
+                foot = self.tunnel_wall(y, side, zf + 10)
+                x, yy = foot + ix * out, y + iy * out
+                at = (x, yy, self.tunnel_low(x, yy) + 0.5)
+            else:
+                x = self.tunnel_wall(y, side, zf + up)
+                at = (x + ix * 0.5, y + iy * 0.5, zf + up)
+            self.vmf.point("infodecal", self.w(*at), {"texture": texture}, vis, exact=True)
+            self.tunnel_made["decal"] += 1
 
     def kept_clear(self, x, y, margin=0):
         if self.stream_dist(x, y) < 70 + margin:
