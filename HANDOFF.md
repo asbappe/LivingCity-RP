@@ -47,4 +47,4 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   the new one), never send a fresh build. Same day: the bunker tunnel at road height (stairs down at its end), shanty under
   the jog's road deck (shantydeck), relay quay 256 up; a plug under their trimmed core 3102 (it leaked). 24,755 faces,
   ~46,861 vertices. Stitched with City 18 and the cave: ~95,700 vertices, over the limit (TODO). Not run in game.
-- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: lifts, shed doors, holes 212 to 6, back way (lc_forest_cave_1127b sent, not compiled).
+- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); generator power, hold-E start, crank lift, cables (lc_forest_cave_yours_1127_power sent, not compiled).
