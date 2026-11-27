@@ -4112,3 +4112,12 @@ Where one module has a plain version of what another module does well (a fixed f
 - **Checked by:** python3 map_build.py module --name quay: sealed, map_walk.py 0 problems; the names lc_swing_* in its list.
 - **Tags:** owner, geometry
 
+### Ways out of a canal and places people live stand above the water line (`owner-above-the-water-line`)
+
+A tunnel, doorway or gate that people walk through out of a canal, and anything people live or work on in it (a quay, a shack, a radio post), stands at the road's height or close to it, never at the canal's floor: the canal is a waterway, its floor under water when it runs. Climb to it by a stair along the wall; a tunnel may go down again once it is away from the canal.
+
+- **Why:** The owner, 27 November, walking the ring: "the tunnel to the bunker map section is great but a lore problem: the tunnel starts below the water line of the canal, we need it to start somewhere higher, flush with the road"; and "please raise the relay station to be higher up above the water line".
+- **How:** map_build.canal: the east gate at road_z, a stair up the east arm; map_layouts/bunker_way.txt: startgate road, rim 968, close; map_mods_e.m_servicetunnel at the road's height, stairs down at its far end; map_modules.m_relay: its quay at F + 256.
+- **Checked by:** The chain's notes: the relay's quay at z 656; map_stairs.py on the canal and the tunnel.
+- **Tags:** owner, geometry
+

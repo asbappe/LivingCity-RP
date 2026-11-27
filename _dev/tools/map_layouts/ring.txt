@@ -84,7 +84,7 @@ left            # (no train: the boathouse's rooms and the stash's wall stand wh
 # S2: south
 straight 1024      # (was "boathouse flip": taken off the ring, 24 November)
 straight 1024
-shanty flip
+straight 2048      # (the shanty town stood here until 27 November: it is under the road's deck at the jog now)
 straight 768      # (was "camp flip", 1280: its tents are in the shanty now, 24 November; the shanty 512 longer, 26 November)
 vort flip
 sludge flip
@@ -122,7 +122,7 @@ relay
 straight 64
 tramfall           # (the breach, with the tram's tunnel under the canal's floor and its station under the street)
 left nostreet
-straight 448 nostreet
+shantydeck nostreet      # (was "straight 448": the shanty town under the road's deck, the owner, 27 November)
 right nostreet
 
 # The road round the first canal's east side (the owner, 23 November, of the street ending at this jog: "you need to
