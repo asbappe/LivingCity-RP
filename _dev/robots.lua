@@ -309,6 +309,17 @@ return function(T)
             else
                 kill(p, thing)
             end
+        elseif k == "count" and st.event == "thumper_started" then
+            -- a thumper's own button (sv_livingcity_swarm.lua), pressed where it stands, as the map wires it: the button
+            -- triggers the copy's start relay (which the gamemode stops while the thumper is still broken), and the relay
+            -- starts the thumper
+            if now < (mem.useAt or 0) then return end
+            mem.useAt = now + 1
+            if st.pos then stand(p, st.pos) end
+            if not IsValid(st.thumper) then return end
+            if not (IsValid(st.relay) and hook.Run("AcceptInput", st.relay, "Trigger", p, p) == true) then
+                hook.Run("AcceptInput", st.thumper, "Enable", p, p)
+            end
         elseif k == "count" and st.poll and st.event ~= "served" then
             -- a step the job watches for itself (meat in the crate, a wound patched): each needs its own doing
             return "the robot can't do this step yet: count / " .. tostring(st.event)
@@ -409,6 +420,27 @@ return function(T)
     -- A job offered only while something is on in the city that is not one of its events: the robot's city
     -- is given it while the job is played. id -> function() -> what puts the city back.
     local STAGED = {
+        -- the city fallen to the swarm, two copies of the thumper module left stopped and broken (sv_livingcity_swarm.lua)
+        res_thumpers = function()
+            local W, A = LC.Swarm, LC.Antlions
+            if not (W and A and A.Set) then error("no swarm in this build") end
+            local at, made = Vector(-80000, 80000, 0), {}
+            for i, tag in ipairs({ "", "2" }) do
+                local o = at + Vector(i * 3000, 0, 0)
+                local th = ents.Create("prop_thumper") th:SetName("lc_thumper" .. tag .. "_head") th:SetPos(o) th:Spawn()
+                local relay = ents.Create("logic_relay") relay:SetName("lc_thumper" .. tag .. "_start") relay:SetPos(o + Vector(200, 0, 0))
+                local button = ents.Create("func_button") button:SetName("lc_thumper" .. tag .. "_button") button:SetPos(o + Vector(220, 0, 0))
+                made[#made + 1], made[#made + 1], made[#made + 1] = th, relay, button
+                A.Set(th, false)
+                W.S.broken[th] = true
+            end
+            local ours, fallen = W.CityOurs, W.S.fallen
+            W.CityOurs, W.S.fallen = function() return true end, true
+            return function()
+                for _, e in ipairs(made) do A.stopped[e] = nil if IsValid(e) then e:Remove() end end
+                W.CityOurs, W.S.fallen, W.S.broken = ours, fallen, {}
+            end
+        end,
         res_supplyescort = function() return supplyRun() end,
         cp_supplystop = function() return supplyRun() end,
         -- the Union paymaster on his walk with the wages (sv_livingcity_resistancemoney.lua)

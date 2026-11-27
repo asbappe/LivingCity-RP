@@ -176,6 +176,18 @@ local function Build()
         cl:Dock(FILL)
         cl:SetWrap(true)
     end
+    -- the swarm, the chapter's second way in (superadmins; sv_livingcity_swarm.lua)
+    if state.swarm then
+        local s1 = Row(cs)
+        Btn(s1, "Swarm: give me the extract", function() Do("swarm", "extract") end, 200)
+        Btn(s1, "Swarm: the vortigaunts' ritual now (pheropods to the highest rank)", function() Do("swarm", "ritual") end, 400)
+        local s2 = Row(cs)
+        Btn(s2, "Swarm: the city falls to the swarm now", function() Do("swarm", "fall") end, 260):SetEnabled(not (state.chapter and state.chapter.state == "reversed"))
+        Btn(s2, "Swarm: end it (pheropods back, antlions away)", function() Do("swarm", "end") end, 300)
+        local sl = Label(Row(cs, 48), state.swarm.line or "", 600)
+        sl:Dock(FILL)
+        sl:SetWrap(true)
+    end
     -- the confiscated contraband, burned in public (sv_livingcity_evidence.lua)
     if state.evidence then
         local er = Row(cs)

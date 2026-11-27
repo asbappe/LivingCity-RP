@@ -30,7 +30,11 @@
                    only while a living unit stands in it. Then everything comes back, and the chapter cannot start
                    again for lc_chapter_cooldown_minutes.
 
-    For other code: LC.ChapterReversed(); hooks LivingCityChapterBegan(why, by) and LivingCityChapterEnded(why).
+    The swarm     the second way in (sv_livingcity_swarm.lua): the pheropods' holder at the Nexus brings
+                   LC.ChapterBegin("swarm"), whatever lc_chapter says; no wave, the antlions are the event.
+
+    For other code: LC.ChapterReversed(); hooks LivingCityChapterBegan(why, by) (why "launch", "staff" or "swarm") and
+    LivingCityChapterEnded(why).
 ]]
 
 if CLIENT then return end
@@ -129,7 +133,7 @@ function LC.ChapterCombineNPCs()
     return out
 end
 
-local function Slay(npc)
+local function Slay(npc, why)
     npc.lcChapterSlain = true
     local own = ENDS_ITSELF[npc:GetClass()]
     if own and npc.Fire then npc:Fire(own) end
@@ -138,7 +142,8 @@ local function Slay(npc)
     if DamageInfo and npc.TakeDamageInfo then
         local d = DamageInfo()
         d:SetDamage(hp)
-        d:SetDamageType(bit.bor(DMG_SHOCK or 256, DMG_DISSOLVE or 67108864)) -- (they go as a Combine ball's victims go)
+        -- (they go as a Combine ball's victims go; to the swarm (sv_livingcity_swarm.lua), torn by claws)
+        d:SetDamageType(why == "swarm" and (DMG_SLASH or 4) or bit.bor(DMG_SHOCK or 256, DMG_DISSOLVE or 67108864))
         if IsValid(world) then d:SetAttacker(world) d:SetInflictor(world) end
         d:SetDamagePosition(npc:WorldSpaceCenter())
         npc:TakeDamageInfo(d)
@@ -147,12 +152,12 @@ local function Slay(npc)
     end
 end
 
--- Every Combine NPC, and every unit. Returns how many of each.
-function LC.ChapterKill()
+-- Every Combine NPC, and every unit. Returns how many of each. (why: the chapter's, "swarm" for the swarm's claws)
+function LC.ChapterKill(why)
     local npcs, units = 0, 0
     local slain = LC.ChapterCombineNPCs()
     for _, npc in ipairs(slain) do
-        if LC.Try(Slay, npc) then npcs = npcs + 1 end
+        if LC.Try(Slay, npc, why) then npcs = npcs + 1 end
     end
     for npc, r in pairs(LC.Cremators or {}) do
         if IsValid(npc) and LC.CrematorDie then LC.Try(LC.CrematorDie, r) npcs = npcs + 1 end
@@ -300,13 +305,14 @@ function LC.ChapterBegin(why, by)
     C.maskOff = {}
     if LC.Event and LC.EndEvent then LC.Try(LC.EndEvent, true) end -- (no curfew, sweep or lockdown outlives the Combine)
     -- (each on its own: one that fails must not leave the rest undone)
-    LC.Try(LC.ChapterKill)
+    LC.Try(LC.ChapterKill, why)
     LC.Try(LC.ChapterApply)
     Districts(100)
     LedgerTo("combine", 3)
     LedgerTo("authority", 3)
     local led = LC.Ledger and LC.Ledger()
-    if led then LedgerTo("resistance", math.min(100, (led.resistance or 50) + 40), "The city has fallen to the Resistance.") end
+    local news = why == "swarm" and "Antlions overran the Combine. The city has fallen to the Resistance." or "The city has fallen to the Resistance."
+    if led then LedgerTo("resistance", math.min(100, (led.resistance or 50) + 40), news) end
     if LC.RefreshSocio then LC.Try(LC.RefreshSocio, true) end
     LC.ChapterSave()
     if LC.Log then LC.Log("info", "chapter: the city falls to the Resistance (" .. tostring(why or "the launch") .. ")") end

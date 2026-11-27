@@ -309,6 +309,7 @@ LC_MODULES = {
         "sv_livingcity_basevehicle", -- (the live base's one vehicle: a buggy, or an airboat on water, at the spot placed for it)
         "sv_livingcity_hq", -- (the HQ's later stages: what only it does, what the Combine know of it, the raid, a ransack's papers; last, after the Inform list it adds to)
         "sv_livingcity_chapter", -- (the chapter, the city falls to the Resistance: the rocket's wave, the role reversal, the Nexus taken back)
+        "sv_livingcity_swarm", -- (the Swarm: the nest's guardians, the larval extract, the vortigaunts' pheropods, the antlions and the city's fall; after the chapter)
     },
     client = {
         "cl_livingcity",
@@ -413,6 +414,7 @@ LC_MODULES = {
         "cl_livingcity_trail", -- (the quest trail on the ground)
         "cl_livingcity_cards", -- (the card table's window: sv_livingcity_resistancemoney.lua)
         "cl_livingcity_chapter", -- (the rocket's wave in the sky, and a unit's glitching mask: sv_livingcity_chapter.lua)
+        "cl_livingcity_swarm", -- (the extract's glow, the vortigaunts' purple light, the ground shaking as the city falls: sv_livingcity_swarm.lua)
     },
 }
 

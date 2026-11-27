@@ -6258,6 +6258,50 @@ if not ok then return "chapter: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the Swarm (cl_livingcity_swarm.lua): the essence's glow while it is harvested, the carrier's, a ritual vortigaunt's purple
+# light; nothing glows when nothing should; the city falling to the swarm shakes and rumbles, nothing written
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local SW = LC_CL.Swarm
+    local think, draw = hook.t.Think.LivingCitySwarm, hook.t.PostDrawTranslucentRenderables.LivingCitySwarm
+    if not (SW and SW.Glowing and SW.Fall and think and draw and net["recv_lc_swarm_fall"]) then error("a hook is missing") end
+    local was = { DynamicLight, surface.PlaySound, player.GetAll, ents.FindByClass, _globals.lc_swarm_essence, _globals.lc_swarm_inhand }
+    local lights, sounds = 0, 0
+    DynamicLight = function() lights = lights + 1 return {} end
+    surface.PlaySound = function() sounds = sounds + 1 end
+    player.GetAll = function() return { _me } end
+    ents.FindByClass = function() return {} end
+    _globals.lc_swarm_essence, _globals.lc_swarm_inhand = nil, nil
+    _me.nw.lc_swarm_carry, _me.nw.lc_swarm_chant = false, false
+    local s0 = _calls["render.DrawSprite"] or 0
+    think() draw(false, false)
+    if lights ~= 0 or (_calls["render.DrawSprite"] or 0) ~= s0 then error("something glows with nothing to glow") end
+    local ess = ents.Create("prop_dynamic") ess:SetPos(Vector(0, 0, 60))
+    ess.nw.lc_swarm_glow = 0.5
+    _globals.lc_swarm_essence = ess
+    local vort = ents.Create("npc_vortigaunt") vort:SetPos(Vector(100, 0, 0))
+    vort.nw.lc_swarm_chant = true
+    ents.FindByClass = function(c) if c == "npc_vortigaunt" then return { vort } end return {} end
+    _me.nw.lc_swarm_carry = true
+    local g = SW.Glowing()
+    if #g ~= 3 then error("the essence, the carrier and a chanting vortigaunt: " .. #g .. " glowing") end
+    think() draw(false, false)
+    if lights ~= 3 then error("lights: " .. lights) end
+    local drawn = (_calls["render.DrawSprite"] or 0) - s0
+    if drawn ~= 2 then error("the essence's and the vortigaunt's glow (the carrier has a light only): " .. drawn .. " sprites") end
+    draw(false, true)
+    if (_calls["render.DrawSprite"] or 0) - s0 ~= 2 then error("something drawn in the sky pass") end
+    net["recv_lc_swarm_fall"]()
+    if sounds < 1 or not SW.fellAt then error("the fall: " .. sounds .. " sounds") end
+    DynamicLight, surface.PlaySound, player.GetAll, ents.FindByClass = was[1], was[2], was[3], was[4]
+    _globals.lc_swarm_essence, _globals.lc_swarm_inhand = was[5], was[6]
+    _me.nw.lc_swarm_carry, _me.nw.lc_swarm_chant = nil, nil
+    ess:Remove() vort:Remove()
+end)
+if not ok then return "swarm: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")
