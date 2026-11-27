@@ -1483,7 +1483,10 @@ def canal(args):
     plan.paint(P((0, 256, 3072, 768)), canal_floor)                       # A: east, away from the city
     plan.paint(P((2560, 768, 3072, 2816)), canal_floor)                   # B: the turn north
     plan.paint(P((3072, 2304, 4352, 2816)), canal_floor)                  # C: the fork's east arm
-    plan.paint(P((4352, 2304, 4608, 2816)), culvert)                      #    its end: a culvert to the east gate (x 4608)
+    # its end: the way to the east gate (x 4608), at the road's height since 27 November (the owner, of the tunnel to the bunker
+    # forest that began there: "the tunnel starts below the water line of the canal, we need it to start somewhere higher, flush
+    # with the road"): the arm ends in a wall, the gate's mouth in it 256 up, a stair up to it along the arm's south wall
+    plan.paint(P((4352, 2304, 4608, 2816)), ("low", road_z, MAT["quay_floor"], road_z + GATE_HIGH))
     plan.paint(P((2560, 2816, 3072, 3584)), canal_floor)                  # D: the fork's north arm
     # (the north and south gates' culverts under a deck at the road's height, not a block of concrete: the owner, 26
     #  November, "a big dumb concrete block/brush ... that shouldn't be there, and there is no combine wall between it
@@ -1538,7 +1541,7 @@ def canal(args):
     vmf.world_box(B(0, 0, plan.top, 640, 16, args.road_sky), MAT["sky"], MAT["sky"], MAT["sky"])
 
     # the two gates, closed until something is joined: each cap is inside the canal's own last 64 units
-    gate_cap(vmf, B(4544, 2304, floor_z, 4608, 2816, floor_z + GATE_HIGH), B(4520, 2304, floor_z, 4528, 2816, floor_z + GATE_HIGH), "y", "LC canal: east gate's cap (delete to join)")
+    gate_cap(vmf, B(4544, 2304, road_z, 4608, 2816, road_z + GATE_HIGH), B(4520, 2304, road_z, 4528, 2816, road_z + GATE_HIGH), "y", "LC canal: east gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, road_z - 16), B(2560, 3752, floor_z, 3072, 3760, road_z - 16), "x", "LC canal: north gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 0, floor_z, 3072, 64, road_z - 16), B(2560, 80, floor_z, 3072, 88, road_z - 16), "x", "LC canal: south gate's cap (delete to join the canal ring)")
     # (and over each gate's deck and the Combine wall's core beside it, a wall of sky at the piece's edge until the ring is
@@ -1556,7 +1559,7 @@ def canal(args):
     # areaportals: across each gate's culvert and across the road's end, so what is beyond one is drawn only as far as
     # it can be seen through it (each stands a little in from the opening, so it has air on both sides even when capped)
     pv = "LC canal: areaportals"
-    vmf.areaportal(B(4478, 2304, floor_z, 4480, 2816, floor_z + GATE_HIGH), pv)
+    vmf.areaportal(B(4478, 2304, road_z, 4480, 2816, road_z + GATE_HIGH), pv)
     vmf.areaportal(B(2560, 3710, floor_z, 3072, 3712, road_z - 16), pv)
     vmf.areaportal(B(2560, 128, floor_z, 3072, 130, road_z - 16), pv)
     vmf.areaportal(B(0, 32, road_z, 640, 34, sky), pv)
@@ -1572,15 +1575,26 @@ def canal(args):
     for i in range(31):
         steps.append(B(640 + 12 * i, 256, floor_z, 652 + 12 * i, 384, road_z - 8 * (i + 1)))
     vmf.detail(steps, MAT["canal_wall"], top=MAT["stairs"])
+    # (and the stair up to the east gate, at the east arm's end: 31 steps east along its south wall, 128 wide, from the arm's
+    #  floor to the gate's sill at the road's height; a low wall along its open side stepping up with it)
+    east = []
+    for i in range(31):
+        east.append(B(3980 + 12 * i, 2304, floor_z, 3992 + 12 * i, 2432, floor_z + 8 * (i + 1)))
+    vmf.detail(east, MAT["canal_wall"], top=MAT["stairs"])
+    vmf.detail([B(3980 + 96 * k, 2432, floor_z, min(4352, 3980 + 96 * (k + 1)), 2440, floor_z + 64 * (k + 1) + 40) for k in range(4)], MAT["canal_wall"])
+    vmf.detail([B(4352, 2440, road_z, 4360, 2816, road_z + 40)], MAT["canal_wall"])      # (and along the mouth's sill beside the stair's head: a 256 drop)
     # a low wall along the quay's edge (open where the footbridge starts) and round the landing
     vmf.detail([B(0, 240, road_z, 72, 256, road_z + 40), B(248, 240, road_z, 512, 256, road_z + 40), B(512, 368, road_z, 640, 384, road_z + 40), B(512, 256, road_z, 528, 368, road_z + 40)], MAT["canal_wall"])
 
     no_bank = [P((448, 192, 1088, 320)), P((3008, 1792, 3136, 1856)), P((2560, 192, 3072, 320))]   # the stairs; the ladder's slot (below); the south gate's mouth
+    no_bank += [P((3960, 2296, 4360, 2448))]                                                        # the stair to the east gate
     # (and no trim along the walls' tops where a deck rests on them: it would stand 16 proud of the deck: where the second
     #  footbridge meets the road, and the arm's walls under the road's bridge)
     no_bank += [P((3064, 1856, 3080, 1984)), (R["mid"] + mc.EDGE, arm_y1 - 8, fr_line, arm_y1 + 8), (R["mid"] + mc.EDGE, arm_y2 - 8, fr_line, arm_y2 + 8)]
     # what is already on the walls: nothing put on them after this may come within 24 units of any of it
     taken = [B(448, 256, floor_z, 1088, 384, road_z + 64),                                    # the stairs and their landing
+             B(3960, 2304, floor_z, 4352, 2448, road_z + 64),                                  # the stair to the east gate
+             B(4344, 2304, floor_z, 4352, 2816, road_z + GATE_HIGH + 64),                      # the east gate's mouth, up in the arm's end wall
              B(2560, 192, floor_z, 3072, 320, floor_z + GATE_HIGH + 64),                       # the south gate's mouth
                              B(64, 256, road_z - 16, 256, 768, road_z + 40),                 # the quay's footbridge
                              B(2560, 1856, road_z - 16, 3072, 1984, road_z + 40),            # the second footbridge
@@ -1736,7 +1750,7 @@ def canal(args):
     print("  the road round its east side: up the east bank from y %d to y %d (the ring's road at both ends, capped for this file alone), over the east arm on a bridge, "
           "the Combine wall's core along its far side at x %d..%d" % (road_y1, road_y2, fr_line, fr_line + 64))
     print("  it fills x %d to %d, y %d to %d, z %d to %d (the road's sky plug to %d)" % (min(xs), max(xs), min(ys), max(ys), plan.base, plan.top, args.road_sky))
-    print("  gates (a culvert %d wide, %d high, floor z %d): east at x %d, y %d to %d; north at y %d, x %d to %d; south (the canal ring's) at y %d, x %d to %d" % (
+    print("  gates (a culvert %d wide, %d high, floor z %d): east (its floor at the road's height) at x %d, y %d to %d; north at y %d, x %d to %d; south (the canal ring's) at y %d, x %d to %d" % (
         GATE_WIDE, GATE_HIGH, floor_z, ox + 4608, oy + 2304, oy + 2816, oy + 3840, ox + 2560, ox + 3072, oy, ox + 2560, ox + 3072))
     if problems:
         for p in problems:
