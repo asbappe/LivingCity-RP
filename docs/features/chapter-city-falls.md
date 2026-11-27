@@ -4,6 +4,8 @@ The owner, 25 November, about the rocket in the Resistance's silo: "not necessar
 
 It is **not** one of the secret endings: no vote, no time stop, no map reload. It is a lasting state of the city, kept over restarts, until the Combine take the city back.
 
+**A second way in: [the Swarm](the-swarm.md)** (27 November): the vortigaunts' pheropods, the city's thumpers stopped, and their holder at the Nexus with the antlions bring the same chapter, with why `"swarm"`, whatever `lc_chapter` says.
+
 **It is off until the owner turns it on: `lc_chapter` is 0.** With 0 the rocket's launch is only a launch. Staff can start and end the chapter whatever the setting (below), to see it.
 
 ## What happens, step by step
@@ -62,7 +64,7 @@ There is no console command.
 ## For other code
 
 - `LC.ChapterReversed()`: true while the city is the Resistance's. The gates in other modules are one line each and ask only this.
-- Hooks: `LivingCityChapterBegan(why, by)` (`why`: `"launch"` or `"staff"`), `LivingCityChapterEnded(why)` (`"retaken"` or `"staff"`).
+- Hooks: `LivingCityChapterBegan(why, by)` (`why`: `"launch"`, `"staff"` or `"swarm"`), `LivingCityChapterEnded(why)` (`"retaken"` or `"staff"`). With `"swarm"` the Combine NPCs die of claws, not light, and the bulletin's line names the antlions; nothing else differs.
 - `LC.Chapter.S` (the state), `LC.ChapterWave(by, why)`, `LC.ChapterBegin`, `LC.ChapterEnd(why)`, `LC.ChapterStatus()`, `LC.ChapterNexus()`, `LC.ChapterIsUnit(ply)`, `LC.ChapterVestDead(ply)`, `LC.ChapterMaskOff(ply)`, `LC.ChapterSpawn(ply)`, `LC.ChapterDeadTech(ent)`.
 - The client knows through the global `lc_chapter` (the baton) and a unit's `lc_chapter_mask` (the glitch and the F2 line).
 - Where the gates are: `LC.ManpowerCan` (units and soldiers, everywhere they come from the reserves), `SpawnScanner`, `LC.FlyDropship`, `LC.SpawnCremator`, the Administrator's `SpawnGuard`, `LC.HQScan`'s scanner, `LC.Announce` and the announcer's `Say`, `LC.StartEvent`, the trespass check (`LC.MayEnterCombine`), `LC.SocioAuto`, `LC.PowerBankLive`, `LC.FieldOff`, `LC.RefreshPower`, `LC.SuppressorFire`, `LC.CanLinkScanner`, `LC.TurretMayUse`, `LC.VestCap`, the Commissary's armour, the gas check, the spawn placing in `sv_livingcity_factions.lua`, and the Arrest Baton itself.

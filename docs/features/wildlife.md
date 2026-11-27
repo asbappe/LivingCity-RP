@@ -17,12 +17,17 @@ The owner, 22 November: "their tongues stick to me and they make the sound, they
 
 The first small piece of the owner's long-term idea 5 (18 November: "thumpers keep them off (the Combine's, which a saboteur can switch off), they come up through sand or soft ground"). Only on a map with the thumper module (`lc_thumper_head`, `lc_thumper_burrow`: `docs/dev/canal-modules.md`); elsewhere nothing happens.
 
-- While the thumper stands still (its button), antlions dig up at the burrow near it, starting 15 seconds after it stops, when a player is within 3500 units: two out at most, from a pool of four that gets one back every 25 seconds (Valve's own numbers, ep2_outland_05). Killing them buys a breather; lingering brings more.
-- They go for everyone: units, rebels, citizens.
-- Started again, the thumper drives off those left (the game does that itself), and after a minute any still alive dig themselves away.
-- No setting, nothing on screen. For the owner to say: the numbers, and whether the rest of idea 5 (raids from outside the walls, workers, guards, bugbait) should build on this.
+- **A trickle, not a swarm** (the owner, 27 November: "a few (NOT a continuous relentless swarm, but like 1/5 the HL2 amount) ... at a small trickle (basically one at a time) at a random player/NPC in that part of the canal, until the thumper is turned back on ... one every 15 seconds with a max or 2 alive at a time"). While a thumper stands still (its button), every 15 seconds one antlion digs up near a random player or person in **that thumper's stretch of the canal** and goes for them; two alive at most from each thumper. (Until 27 November: Valve's own numbers, two out from a pool of four at the burrow.)
+- **Its stretch:** within 3500 units of the thumper, down in the canal's basin: from 64 under its burrow's floor to 192 over it (the canal's floor and the thumper's terrace, 128 up; the street over the canal, 256 up, is not in it). Nobody there: none come. Each thumper on its own: two stopped, two trickles.
+- They go for everyone: units, rebels, citizens (while the Swarm's pheropods are out they are its allies instead: [the-swarm.md](the-swarm.md)).
+- Started again, the thumper drives off those left (the game does that itself), and a minute later any of its antlions still alive dig themselves away.
+- No setting, nothing on screen. For the owner to say: the numbers (15 seconds, two, 3500 units and the basin's heights), and whether the rest of idea 5 (raids from outside the walls, workers) should build on this (bugbait and guardians: the Swarm).
 
-`LC.Antlions.Set(thumper, running)`, `.Tick()`, `.Spawn(pos)`. Tests: `Nov24_ThumperAntlionTests` (9).
+**Every copy of the module (27 November):** the canal ring has four thumpers. The first keeps the names above; the others carry a number after "thumper" (`lc_thumper2_head`, `lc_thumper2_burrow`, ...). Each name is read as `^lc_thumper(%d*)_(%w+)$` and each copy's parts go together by that number, so every thumper works as the one above, with its own burrow.
+
+**With the Swarm** ([the-swarm.md](the-swarm.md)): while the pheropods are out, the antlions at a stopped thumper are the swarm's (the Resistance's allies); after the city falls to the swarm they are wild again, and the thumpers left stopped are broken until mended (the job "Restart the thumpers").
+
+`LC.Antlions.Set(thumper, running)`, `.Tick()`, `.Spawn(pos, thumper)`, `.OutOf(thumper)`, `.InStretch(thumper, pos)`, `.Parse(name)`, `.Heads()`, `.PartOf(ent, part)`. Tests: `Nov24_ThumperAntlionTests` (12); two copies at once in `Nov27_SwarmTests`.
 
 ## The hive boss (25 November; `sv_livingcity_hiveboss.lua`)
 
