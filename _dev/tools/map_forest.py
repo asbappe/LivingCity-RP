@@ -4026,7 +4026,10 @@ class CaveForest(Forest):
         the top as Valve built it) on a func_tracktrain of ours between two path points, its floor flush with each landing
         (the top's grating, the floor's landing), at LIFT_SPEED. Names end in s ("" for the first lift, "_2" for the
         second), so two lifts never answer each other. car: the car's floor (Valve's x1 y1 x2 y2); mouth: its open side.
-        A call button at each landing and one on the car: a press while it moves does nothing.
+        A button at each landing and one on the car, and every one moves it (the owner, 27 November: "the call buttons don't
+        work on either elevators ... on the top floor": a landing's call did nothing while the car stood at that landing,
+        and the car starts at the top): to the button's own end if it is away, else to the other end. Each press clicks.
+        A press while it moves does nothing.
         What makes it safe (the owner, 26 November, of the first: "it gets stuck going up if a player is on it right below
         the 'destination' at the top until I jump off or noclip"): an unseen clip over the hole it leaves in the top landing
         (fence_top) stood over the car's whole floor until the car had arrived, so a rider's head met it 72 under the top
@@ -4102,7 +4105,8 @@ class CaveForest(Forest):
         if makers:
             bottom += [("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)]
         relay("arrive_bottom" + s, bottom, off=True)
-        for name, cmp_value, outs in (("top", "1", [("OnLessThan", "go_up" + s, "Trigger", "", 0)]), ("bottom", "0", [("OnGreaterThan", "go_down" + s, "Trigger", "", 0)]),
+        for name, cmp_value, outs in (("top", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)]),
+                                      ("bottom", "0", [("OnEqualTo", "go_up" + s, "Trigger", "", 0), ("OnGreaterThan", "go_down" + s, "Trigger", "", 0)]),
                                       ("cage", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)])):
             relay("call_" + name + s, [("OnTrigger", "at_" + name + s, "Compare", "", 0)])
             ent("logic_compare", {"targetname": "at_" + name + s, "InitialValue": "1", "CompareValue": cmp_value}, None, outs)
@@ -4130,7 +4134,7 @@ class CaveForest(Forest):
                   "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0",
                   "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
                   "ExplodeDamage": "0", "ExplodeRadius": "0"}
-            bk = {"targetname": name, "spawnflags": "1025", "wait": "1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "0", "health": "0", "rendermode": "10",
+            bk = {"targetname": name, "spawnflags": "1025", "wait": "1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "15", "health": "0", "rendermode": "10",
                   "renderamt": "0", "rendercolor": "255 255 255"}
             if parent:
                 pk["parentname"] = bk["parentname"] = parent
