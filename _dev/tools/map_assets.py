@@ -233,6 +233,9 @@ def main():
             if fact is None:
                 notes.append("%s: not checked (no lists here, and not met before)" % model)
                 continue
+        if fact.get("game") is None and "cstrike" in (fact.get("elsewhere") or ()):
+            notes.append("%s is Counter-Strike: Source's (in Garry's Mod itself since July 2025): its kind not read" % model)
+            continue
         if fact.get("game") is None:
             problems.append("%s does not exist in Half-Life 2 or its episodes%s" % (model, " (only in: %s)" % ", ".join(fact["elsewhere"]) if fact.get("elsewhere") else ""))
             continue
@@ -257,6 +260,10 @@ def main():
             game = next((g for g in GAMES if g in where), None)
             if mat in NOT_IN_GMOD:
                 problems.append("the material %s is Half-Life 2's but not in the owner's Garry's Mod (their compile could not find it)" % mat)
+            elif not game and "cstrike" in where:
+                # (Garry's Mod has shipped most of Counter-Strike: Source's content itself since its July 2025 update (not its
+                #  maps, voices or music): the owner, 27 November, without the game, had picked two of its textures in Hammer)
+                notes.append("the material %s is Counter-Strike: Source's (in Garry's Mod itself since July 2025)" % mat)
             elif not game:
                 problems.append("the material %s does not exist in Half-Life 2 or its episodes%s" % (mat, " (only in: %s)" % ", ".join(sorted(where)) if where else ""))
             elif game == "ep2":
