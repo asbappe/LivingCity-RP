@@ -3219,6 +3219,7 @@ class CaveForest(Forest):
         self.holdout()
         self.nest_door()
         self.nest_bridge()
+        self.holdout_power()
         self.back_way()
         self.workings_hull()
         for q in range(64, self.LONG - 100, 192):
@@ -3526,7 +3527,7 @@ class CaveForest(Forest):
             wall_button(v, W(ux - 4, fy, zf + 44), 270, "lc_nest_button_" + tag, B(ux - 10, fy - 10, zf + 40, ux + 10, fy, zf + 68), dv,
                         [("OnPressed", "lc_nest_count", "Add", "1", 0), ("OnPressed", "lc_nest_count", "Subtract", "1", 1),
                          ("OnPressed", "lc_nest_lamp_" + tag, "ShowSprite", "", 0), ("OnPressed", "lc_nest_lamp_" + tag, "HideSprite", "", 1),
-                         ("OnPressed", "lc_nest_blip", "PlaySound", "", 0)], "1.2")
+                         ("OnPressed", "lc_nest_blip", "PlaySound", "", 0)], "1.2", extra={"locked_sound": "12"})      # (locked with no power: holdout_power)
         at = W(dx, fy - 40, zf + 120)
 
         def sound(name, message, pos, radius="2200", loops=False):
@@ -3557,6 +3558,11 @@ class CaveForest(Forest):
         # lamps stay lit while the door is open.
         opening += [("OnTrigger", "lc_nest_mouth_1_siren", "PlaySound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOn", "", 0.3 * (k - 1)) for k in (1, 2, 3)]
         opening += [("OnTrigger", "lc_nest_maker", "Enable", "", self.NEST_WARNING)]
+        # whether it stands open, for the generator (holdout_power): the alarm post's lamps go dark with the power and come
+        # back with it only while the door is open
+        opening.append(("OnTrigger", "lc_nest_isopen", "SetValue", "1", 0))
+        v.point("logic_branch", W(dx, fy - 30, zf + 170), {"targetname": "lc_nest_isopen", "InitialValue": "0"}, dv,
+                connections=[("OnTrue", "lc_nest_mouth_1_lamp_%d" % k, "LightOn", "", 0.3 * (k - 1)) for k in (1, 2, 3)])
         shutting = [("OnTrigger", "lc_nest_shut", "Disable", "", 0), ("OnTrigger", "lc_nest_maker", "Disable", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 0),
                     ("OnTrigger", "lc_nest_open", "CancelPending", "", 0),          # (shut inside the 11 s: no antlions come at all)
                     ("OnTrigger", "lc_nest_mouth_1_siren", "StopSound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOff", "", 0) for k in (1, 2, 3)] + [
@@ -3564,7 +3570,7 @@ class CaveForest(Forest):
                     ("OnTrigger", "lc_nest_shove", "Enable", "", 4), ("OnTrigger", "lc_nest_shove", "Disable", "", 6.9),
                     ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                     ("OnTrigger", "lc_nest_portal", "Close", "", 6.9), ("OnTrigger", "lc_nest_closed", "Trigger", "", 6.9), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9),
-                    ("OnTrigger", "lc_nest_open", "Enable", "", 9)]
+                    ("OnTrigger", "lc_nest_open", "Enable", "", 9), ("OnTrigger", "lc_nest_isopen", "SetValue", "0", 0)]
         v.point("logic_relay", W(dx - 16, fy - 30, zf + 130), {"targetname": "lc_nest_open", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=opening)
         v.point("logic_relay", W(dx + 16, fy - 30, zf + 130), {"targetname": "lc_nest_shut", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=shutting)
         v.point("logic_relay", W(dx - 16, fy - 30, zf + 150), {"targetname": "lc_nest_opened", "StartDisabled": "0", "spawnflags": "0"}, dv)
@@ -3911,6 +3917,186 @@ class CaveForest(Forest):
         v.point("info_ladder_dismount", W(lx, ly - 86, z1 + 1), {}, sv)
         self.keep_way_clear(P(lx - 16, ly - 44, z0 + 4) + P(lx + 16, ly - 12, z1 + 72), "the ladder in the two-storey shed on the holdout's floor")
 
+    def holdout_power(self):
+        """The generator on the holdout's floor runs the shaft's power (the owner, 27 November: "can you please make it so the
+        generator prop in the mineshaft near the nest door makes a generator sound and can be 'powered on' and 'off' ... all
+        the lights and the big nest door turn off in the mine shaft here, and they turn on only if the generator is on?",
+        "please add a green for on, red for off glow to the button", "is it possible to have a startup sequence where you
+        hold E on it and it tries starting a few times? ... a sequence of small little glow entities that one by one go
+        from red to green and only when all 4 are green is the generator 'on'"). Valve's diesel generator (ep2_outland_03's,
+        where Valve put it) hums while it runs (a raw looping wav, so the ambient_generic's radius holds), on when the map
+        starts. Its switch is unseen (nodraw) on its side, a momentary_rot_button: while it runs one press of E stops it
+        (the hum dies, its four lamps go red one by one, the glow over the switch red, the power out); while it is stopped,
+        holding E tries to start it: the lamps turn green one at a time, each with the starter's knock (and on some tries
+        the second falls back once with a cough), and when all four are green it catches: the hum, the green glow, the power
+        back. Letting go before that sets them all red again with a cough. While it switches a press does nothing. The
+        switch, its glow and the four lamps are one visgroup, to be moved together.
+        What the power runs (everything here between the top landing and the emergency door): every light and light_spot
+        (one name, lc_power_light: lights that share a name share one switchable style, and a face takes four), every
+        point_spotlight and lamp glow, the lamp models (a lit cage lamp becomes a prop_dynamic with its unlit twin beside
+        it, swapped as Valve's light rigs swap them; a spotlight lamp changes skin), the first lift (its buttons locked, with
+        the dead latch's click; its lamps and its rotating red light out; a trip under way finishes), the emergency door
+        (its two buttons locked, its lamps out) and the alarm post by it (dark; its lamps come back with the power while the
+        door stands open). The second lift is cranked by hand and needs none (crank_wiring). An emergency lamp on a battery
+        lights the generator dimly whatever the power."""
+        v, P = self.vmf, self.deep_pt
+        W = lambda x, y, z: self.w(*P(x, y, z))
+        a, b = W(400, -9764, -1806), W(2400, -8124, -286)       # (the shaft: from the top landing's back wall to the emergency door's face)
+        reach = tuple(min(a[k], b[k]) for k in range(3)) + tuple(max(a[k], b[k]) for k in range(3))
+
+        def get(t, k):
+            m = re.search(r'\n\t"%s" "([^"]*)"' % re.escape(k), t)
+            return m.group(1) if m else None
+
+        def put(t, k, val):
+            if get(t, k) is not None:
+                return re.sub(r'\n\t"%s" "[^"]*"' % re.escape(k), lambda m: '\n\t"%s" "%s"' % (k, val), t, count=1)
+            cls = get(t, "classname")
+            return t.replace('\t"classname" "%s"\n' % cls, '\t"classname" "%s"\n\t"%s" "%s"\n' % (cls, k, val), 1)
+
+        def dynamic(t):         # (a lamp that must change: a prop_static cannot)
+            if get(t, "classname") != "prop_static":
+                return t
+            t = t.replace('\t"classname" "prop_static"\n', '\t"classname" "prop_dynamic"\n', 1)
+            for k in ("disableselfshadowing", "disablevertexlighting", "screenspacefade", "ignorenormals", "lightmapresolutionx", "lightmapresolutiony",
+                      "generatelightmaps", "uniformscale", "maxdxlevel", "mindxlevel"):
+                t = re.sub(r'\n\t"%s" "[^"]*"' % k, "", t)
+            for k, val in (("DefaultAnim", ""), ("StartDisabled", "0"), ("fademindist", "-1"), ("fademaxdist", "0"), ("fadescale", "1"), ("disableshadows", "1"),
+                           ("renderamt", "255"), ("rendercolor", "255 255 255"), ("solid", get(t, "solid") or "0")):
+                t = put(t, k, val)
+            return t
+        count = dict.fromkeys(("lights", "beams", "glows", "lamps", "skins"), 0)
+        twins, gen = [], []
+        for i, t in enumerate(v.ents):
+            o = get(t, "origin")
+            if not o:
+                continue
+            p = [float(c) for c in o.split()]
+            if not all(reach[k] <= p[k] <= reach[k + 3] for k in range(3)):
+                continue
+            cls, name, model = get(t, "classname"), get(t, "targetname") or "", (get(t, "model") or "").lower()
+            if model == "models/props_mining/diesel_generator.mdl":
+                gen.append((p, float((get(t, "angles") or "0 0 0").split()[1])))
+                continue
+            if cls in ("light", "light_spot") and (not name or re.match(r"lc_holdout_elevator_1_light_\d_light$", name)):
+                t, n = put(t, "targetname", "lc_power_light"), "lights"
+            elif cls == "point_spotlight" and (not name or re.match(r"lc_holdout_elevator_1_light_\d_sprite$", name)):
+                t, n = put(put(t, "targetname", "lc_power_beam"), "spawnflags", str(int(get(t, "spawnflags") or 0) | 1)), "beams"
+            elif cls == "env_sprite" and not name:
+                t, n = put(put(t, "targetname", "lc_power_glow"), "spawnflags", str(int(get(t, "spawnflags") or 0) | 1)), "glows"
+            elif cls.startswith("prop_") and re.search(r"light_cagelight0\d_on\.mdl$", model) and (not name or re.match(r"lc_holdout_elevator_1_light_\d_model_on$", name)):
+                # (lit from the start, as its light is: Valve's lamps down the lift's shaft started hidden, lit by the story as
+                #  the cage passed; and never faded, as every prop here)
+                t, n = put(put(put(put(dynamic(t), "targetname", "lc_power_lamp_on"), "StartDisabled", "0"), "fademindist", "-1"), "fademaxdist", "0"), "lamps"
+                off = put(put(put(t, "model", get(t, "model").replace("_on.mdl", "_off.mdl")), "targetname", "lc_power_lamp_off"), "StartDisabled", "1")
+                twins.append(re.sub(r'\n\t"id" "\d+"', '\n\t"id" "%d"' % v.new_id(), off, count=1))
+            elif cls.startswith("prop_") and model.endswith("light_spotlight01_lamp.mdl") and not name:
+                t, n = put(put(dynamic(t), "targetname", "lc_power_lamp_skin"), "skin", "0"), "skins"
+            else:
+                continue
+            v.ents[i] = t
+            count[n] += 1
+        v.ents.extend(twins)      # (appended: what is listed by its place in ents, doors and portals, keeps its place)
+        if len(gen) != 1:
+            self.problems.append("the holdout's power: %d diesel generators in the shaft, not 1" % len(gen))
+            return
+        (gx, gy, gz), gyaw = gen[0]
+        fw, lf = (math.cos(math.radians(gyaw)), math.sin(math.radians(gyaw))), (-math.sin(math.radians(gyaw)), math.cos(math.radians(gyaw)))
+
+        def G(fx, fy, z):       # (a spot by the generator: fx along it, fy to its left (its side with the switch), z over its foot)
+            return (round(gx + fx * fw[0] + fy * lf[0]), round(gy + fx * fw[1] + fy * lf[1]), round(gz + z))
+        sv = self.vis("generator: its switch, its glow and the four lamps (select them together to move them)")
+        wv = self.vis("generator: the wiring, its sounds and the emergency lamp")
+        # the switch: an unseen box on the generator's side, 40 up, 12 out from it
+        c = G(-10, 34, 40)
+        along_x = round(gyaw / 90.0) % 2 == 0
+        hx, hy = (8, 6) if along_x else (6, 8)
+        v.brush_entity("momentary_rot_button", {
+            "targetname": "lc_gen_switch", "spawnflags": str(1024 + (128 if along_x else 64)), "distance": "-1", "speed": "2", "returnspeed": "0",
+            "startposition": "0", "startdirection": "-1", "sounds": "0", "solidbsp": "0", "origin": "%d %d %d" % c},
+            [self.box(c[0] - hx, c[1] - hy, c[2] - 8, c[0] + hx, c[1] + hy, c[2] + 8)], MAT["nodraw"], sv,
+            connections=[("OnPressed", "lc_gen_ready", "Test", "", 0), ("OnUnpressed", "lc_gen_trying", "Test", "", 0)])
+        green, red = "60 255 80", "255 40 30"
+
+        def glow(name, at, colour, scale, on):
+            v.point("env_sprite", at, {"targetname": name, "model": "materials/sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "255", "rendercolor": colour,
+                                       "scale": scale, "GlowProxySize": "2", "HDRColorScale": "1", "framerate": "10.0", "spawnflags": "1" if on else "0"}, sv)
+        glow("lc_gen_status_on", G(-10, 31, 52), green, ".18", True)
+        glow("lc_gen_status_off", G(-10, 31, 52), red, ".18", False)
+        for n, fx in enumerate((4, -4, -12, -20), 1):       # (left to right as seen from the switch's side)
+            glow("lc_gen_lamp%d_green" % n, G(fx, 31, 64), green, ".1", True)
+            glow("lc_gen_lamp%d_red" % n, G(fx, 31, 64), red, ".1", False)
+
+        def lamp(n, is_green, delay):
+            on, off = ("green", "red") if is_green else ("red", "green")
+            return [("OnTrigger", "lc_gen_lamp%d_%s" % (n, on), "ShowSprite", "", delay), ("OnTrigger", "lc_gen_lamp%d_%s" % (n, off), "HideSprite", "", delay)]
+
+        def sound(name, message, loop=False, radius="700", health="10"):
+            v.point("ambient_generic", G(-10, 0, 60), {"targetname": name, "message": message, "health": health, "pitch": "100", "pitchstart": "100", "radius": radius,
+                                                      "spawnflags": "0" if loop else "48"}, wv)
+        sound("lc_gen_hum", "ambient/machines/diesel_engine_idle1.wav", loop=True, health="8")      # (Half-Life 2's diesel idle; it loops, and plays from the start)
+        sound("lc_gen_on_snd", "ambient/machines/spinup.wav")
+        sound("lc_gen_off_snd", "vehicles/apc/apc_shutdown.wav")
+        sound("lc_gen_tick", "ambient/machines/machine1_hit1.wav", radius="600")
+        sound("lc_gen_tock", "ambient/machines/machine1_hit2.wav", radius="600")
+        sound("lc_gen_cough", "buttons/lever5.wav", radius="600")
+        spots = iter([G(-56 + 10 * k, -4, 104) for k in range(16)])     # (the wiring, over the generator)
+
+        def logic(cls, keys, outs):
+            v.point(cls, next(spots), keys, wv, connections=outs)
+        step = lambda n, d, snd: lamp(n, True, d) + [("OnTrigger", snd, "PlaySound", "", d)]
+        all_red = [x for n in (1, 2, 3, 4) for x in lamp(n, False, 0)]
+        logic("logic_branch", {"targetname": "lc_gen_ready", "InitialValue": "1"}, [("OnTrue", "lc_gen_state", "Test", "", 0)])
+        logic("logic_branch", {"targetname": "lc_gen_state", "InitialValue": "1"}, [("OnTrue", "lc_gen_stop", "Trigger", "", 0), ("OnFalse", "lc_gen_pick", "PickRandom", "", 0)])
+        logic("logic_branch", {"targetname": "lc_gen_trying", "InitialValue": "0"}, [("OnTrue", "lc_gen_fail", "Trigger", "", 0)])
+        logic("logic_case", {"targetname": "lc_gen_pick", "Case01": "1", "Case02": "2"},
+              [("OnCase01", "lc_gen_try_a", "Trigger", "", 0), ("OnCase02", "lc_gen_try_b", "Trigger", "", 0)])
+        logic("logic_relay", {"targetname": "lc_gen_try_a", "StartDisabled": "0", "spawnflags": "0"},
+              [("OnTrigger", "lc_gen_trying", "SetValue", "1", 0)] + step(1, 0.8, "lc_gen_tick") + step(2, 1.6, "lc_gen_tock") + step(3, 2.4, "lc_gen_tick")
+              + step(4, 3.2, "lc_gen_tock") + [("OnTrigger", "lc_gen_catch", "Trigger", "", 3.2)])
+        logic("logic_relay", {"targetname": "lc_gen_try_b", "StartDisabled": "0", "spawnflags": "0"},      # (the second lamp falls back once, with a cough)
+              [("OnTrigger", "lc_gen_trying", "SetValue", "1", 0)] + step(1, 0.8, "lc_gen_tick") + step(2, 1.6, "lc_gen_tock") + lamp(2, False, 2.3)
+              + [("OnTrigger", "lc_gen_cough", "PlaySound", "", 2.3)] + step(2, 3.1, "lc_gen_tock") + step(3, 3.9, "lc_gen_tick") + step(4, 4.7, "lc_gen_tock")
+              + [("OnTrigger", "lc_gen_catch", "Trigger", "", 4.7)])
+        logic("logic_relay", {"targetname": "lc_gen_fail", "StartDisabled": "0", "spawnflags": "0"},
+              [("OnTrigger", "lc_gen_try_a", "CancelPending", "", 0), ("OnTrigger", "lc_gen_try_b", "CancelPending", "", 0), ("OnTrigger", "lc_gen_trying", "SetValue", "0", 0),
+               ("OnTrigger", "lc_gen_cough", "PlaySound", "", 0)] + all_red)
+        logic("logic_relay", {"targetname": "lc_gen_catch", "StartDisabled": "0", "spawnflags": "0"},
+              [("OnTrigger", "lc_gen_trying", "SetValue", "0", 0), ("OnTrigger", "lc_gen_ready", "SetValue", "0", 0), ("OnTrigger", "lc_gen_ready", "SetValue", "1", 2.5),
+               ("OnTrigger", "lc_gen_state", "SetValue", "1", 0), ("OnTrigger", "lc_gen_on_snd", "PlaySound", "", 0), ("OnTrigger", "lc_gen_hum", "PlaySound", "", 0.8),
+               ("OnTrigger", "lc_gen_status_on", "ShowSprite", "", 0), ("OnTrigger", "lc_gen_status_off", "HideSprite", "", 0), ("OnTrigger", "lc_power_on", "Trigger", "", 1)])
+        logic("logic_relay", {"targetname": "lc_gen_stop", "StartDisabled": "0", "spawnflags": "0"},
+              [("OnTrigger", "lc_gen_ready", "SetValue", "0", 0), ("OnTrigger", "lc_gen_ready", "SetValue", "1", 3), ("OnTrigger", "lc_gen_state", "SetValue", "0", 0),
+               ("OnTrigger", "lc_gen_hum", "StopSound", "", 0), ("OnTrigger", "lc_gen_off_snd", "PlaySound", "", 0), ("OnTrigger", "lc_gen_status_on", "HideSprite", "", 0),
+               ("OnTrigger", "lc_gen_status_off", "ShowSprite", "", 0), ("OnTrigger", "lc_power_off", "Trigger", "", 0.8)]
+              + [x for n in (4, 3, 2, 1) for x in lamp(n, False, 0.2 * (4 - n))])
+        # what the power runs
+        locks = ["lc_holdout_button_top", "lc_holdout_button_bottom", "lc_holdout_button_cage", "lc_nest_button_a", "lc_nest_button_b"]
+        alarm = ["lc_nest_mouth_1_lamp_%d" % k for k in (1, 2, 3)]
+        off = ([("lc_power_light", "TurnOff", ""), ("lc_power_beam", "LightOff", ""), ("lc_power_glow", "HideSprite", ""), ("lc_power_lamp_on", "TurnOff", ""),
+                ("lc_power_lamp_off", "TurnOn", ""), ("lc_power_lamp_skin", "Skin", "1"), ("lc_holdout_rot_redlight1", "Stop", ""), ("lc_holdout_spot_doors*", "LightOff", ""),
+                ("lc_nest_light", "TurnOff", ""), ("lc_nest_lamp_a", "HideSprite", ""), ("lc_nest_lamp_b", "HideSprite", ""), ("lc_nest_mouth_1_siren", "StopSound", "")]
+               + [(n, "Lock", "") for n in locks] + [(n, "LightOff", "") for n in alarm])
+        on = ([("lc_power_light", "TurnOn", ""), ("lc_power_beam", "LightOn", ""), ("lc_power_glow", "ShowSprite", ""), ("lc_power_lamp_on", "TurnOn", ""),
+               ("lc_power_lamp_off", "TurnOff", ""), ("lc_power_lamp_skin", "Skin", "0"), ("lc_nest_isopen", "Test", "")] + [(n, "Unlock", "") for n in locks])
+        logic("logic_relay", {"targetname": "lc_power_off", "StartDisabled": "0", "spawnflags": "0"}, [("OnTrigger", n, i, val, 0) for n, i, val in off])
+        logic("logic_relay", {"targetname": "lc_power_on", "StartDisabled": "0", "spawnflags": "0"}, [("OnTrigger", n, i, val, 0) for n, i, val in on])
+        # the emergency lamp: a deck lamp on its own battery (no name: always lit) high on a wooden pole in the shelter's corner
+        # beside the generator, facing down along it (over Valve's timber frame round the
+        # shelter, which a lamp must not stand in), a dim warm spot on the generator and a faint glow at the lamp
+        v.point("prop_static", W(1274, -8494, -1664), {"model": "models/props_docks/dock01_pole01a_256.mdl", "angles": "0 0 0", "skin": "0", "solid": "6",
+                                                      "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, wv)
+        v.point("prop_static", W(1274, -8508, -1562), {"model": "models/props_c17/light_decklight01_on.mdl", "angles": "0 270 0", "skin": "0", "solid": "0",
+                                                      "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, wv)
+        v.point("light_spot", W(1274, -8516, -1572), {"_light": "255 176 112 150", "_lightHDR": "-1 -1 -1 1", "_inner_cone": "30", "_cone": "60", "_exponent": "1",
+                                                     "pitch": "-70", "angles": "-70 297 0", "_quadratic_attn": "1", "style": "0"}, wv)
+        v.point("light", W(1274, -8514, -1562), {"_light": "255 176 112 10", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, wv)
+        v.point("env_sprite", W(1274, -8514, -1562), {"model": "materials/sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "150", "rendercolor": "255 170 100",
+                                                     "scale": ".15", "GlowProxySize": "2", "HDRColorScale": "1", "framerate": "10.0", "spawnflags": "1"}, wv)
+        self.notes.append("the holdout's power: the generator at (%d %d %d), its switch at (%d %d %d); %d lights, %d spotlight beams, %d lamp glows, %d cage lamps "
+                          "(with their unlit twins) and %d spotlight lamps on its power; the first lift's 3 buttons and the emergency door's 2 locked without it"
+                          % (gx, gy, gz, c[0], c[1], c[2], count["lights"], count["beams"], count["glows"], count["lamps"], count["skins"]))
+
     def holdout_lift(self):
         """The holdout's lift, as entities in the piece's frame (named as the piece's: lc_holdout_...), for pf_entities:
         Valve's cage (holdout_elevator_1: its own brushwork, open on its north side, the lamp and the rotating red light
@@ -4052,7 +4238,8 @@ class CaveForest(Forest):
         across its mouth (a trigger there, as the silo's lift waited), and an unseen gate closes the mouth while it moves.
         It does no crush damage: if something is under it, it waits. Its sound: the freight lift of Eli's lab, looping
         while it moves, at its own pitch (Valve's car had the Citadel's core lift, pitched by speed: a low groan at this
-        speed), and its stop."""
+        speed), and its stop. A button is locked while the generator is off (holdout_power): a press then gives the dead
+        latch's click. crank: the lift is worked by hand instead (crank_wiring), its buttons replaced by wheels."""
         ax = pf["anchor"]
         rel = lambda x, y, z: [x - ax[0], y - ax[1], z - ax[2]]
         out = []
@@ -4153,7 +4340,7 @@ class CaveForest(Forest):
                   "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
                   "ExplodeDamage": "0", "ExplodeRadius": "0"}
             bk = {"targetname": name, "spawnflags": "1025", "wait": "1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "15", "health": "0", "rendermode": "10",
-                  "renderamt": "0", "rendercolor": "255 255 255"}
+                  "renderamt": "0", "rendercolor": "255 255 255", "locked_sound": "12"}
             if parent:
                 pk["parentname"] = bk["parentname"] = parent
             ent("prop_dynamic", pk, rel(*foot))

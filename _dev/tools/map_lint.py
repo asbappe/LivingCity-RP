@@ -273,7 +273,8 @@ def check(path, views=None, only=None, air=None):
         if re.search(r"light.*_(on|off)\.mdl$|lamppost.*_(on|off)\.mdl$", m):
             o = origin(e)
             near = any(math.dist(o, l) < 56 for l in lights)
-            if m.endswith("_off.mdl") and near:
+            switched = e.get("classname", "").startswith("prop_dynamic") and e.get("startdisabled") == "1" and e.get("targetname")
+            if m.endswith("_off.mdl") and near and not switched:      # (a hidden, named unlit twin that a switch shows as its light goes out, as Valve's rigs swap them)
                 say("offlamp", "%s at (%d %d %d) has a light shining from it: use the _on model, or no light" % (short(m), o[0], o[1], o[2]))
     # fire
     tops = [b for b, mats in brushes] + [bx for e, bx in solid_props]
