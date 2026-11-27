@@ -3956,9 +3956,22 @@ class CaveForest(Forest):
                 u, w = FACE_AXES[f]
                 sides.append({"plane": [list(q) for q in c[:3]], "verts": [list(q) for q in c], "material": mat.upper(), "uaxis": u, "vaxis": w, "lightmapscale": "16"})
             return sides
-        post = [bx(1192, -9128, -512, 1200, -9120, -456, "metal/metaltruss017a")]      # (its button inside the platform's edge)
+        post = [bx(1192, -9128, -512, 1200, -9120, -432, "metal/metaltruss017a")]      # (its wheel and its lamp on it, inside the platform's edge)
         out = self.lift_rig(pf, "_2", "holdout_elevator_2", plat["keys"], plat["brushes"], plat["origin"], 8, self.LIFT_2, "south", -512, -1792,
-                            top_button=((1024, -9329), 0), bottom_button=((1024, -9329), 0), car_button=((1196, -9128), 270), makers=True, more=post)
+                            top_button=((1024, -9329), 0), bottom_button=((1024, -9329), 0), car_button=((1196, -9128), 270), makers=True, more=post,
+                            crank={"top": ((1024, -9329), 0), "bottom": ((1024, -9329), 0), "car": ((1196, -9128), 270)})
+        # its lamp (the owner, 27 November: "an emergency light on the hand-crank lift that travels with it so it's apparent
+        # to players that they can use it"): a deck lamp on the post over the car's wheel, facing the walkway, a faint glow at
+        # it and a small light that rides with it (a baked light cannot move: a light_dynamic does), on no power but its own
+        lamp = {"model": "models/props_c17/light_decklight01_on.mdl", "angles": "0 270 0", "solid": "0", "disableshadows": "1", "fademindist": "-1",
+                "fademaxdist": "0", "fadescale": "1", "skin": "0", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255", "parentname": "holdout_elevator_2"}
+        out.append({"classname": "prop_dynamic", "origin": rel(1196, -9133, -444), "ours": True, "out": [], "keys": lamp})
+        out.append({"classname": "env_sprite", "origin": rel(1196, -9139, -444), "ours": True, "out": [], "keys": {
+            "targetname": "lamp_2", "model": "materials/sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "160", "rendercolor": "255 170 100", "scale": ".2", "GlowProxySize": "2",
+            "HDRColorScale": "1", "framerate": "10.0", "spawnflags": "1", "parentname": "holdout_elevator_2"}})
+        out.append({"classname": "light_dynamic", "origin": rel(1196, -9152, -440), "ours": True, "out": [], "keys": {
+            "_light": "255 170 110 255", "brightness": "2", "distance": "200", "_inner_cone": "0", "_cone": "0", "pitch": "0", "spotlight_radius": "0", "style": "0",
+            "spawnflags": "0", "parentname": "holdout_elevator_2"}})
         # its unseen walls: west (and over the tongue), north and east, as high as a player, riding with it; always solid
         x1, y1, x2, y2 = self.LIFT_2
         walls = [bx(x1 - 1, y1, -512, x1, y2 + 1, -400, MAT["clip"]), bx(x1, y2, -512, x2 + 1, y2 + 1, -400, MAT["clip"]), bx(x2, y1, -512, x2 + 1, y2, -400, MAT["clip"]),
@@ -4021,7 +4034,7 @@ class CaveForest(Forest):
         return out
 
     def lift_rig(self, pf, s, train, keys, brushes, origin, floor_up, car, mouth, top_z, bottom_z, top_button, bottom_button, car_button, lights=False,
-                 makers=False, more=()):
+                 makers=False, more=(), crank=False):
         """A lift in the holdout's pit, as entities in the piece's frame for pf_entities: Valve's car (its brushes, built at
         the top as Valve built it) on a func_tracktrain of ours between two path points, its floor flush with each landing
         (the top's grating, the floor's landing), at LIFT_SPEED. Names end in s ("" for the first lift, "_2" for the
@@ -4072,44 +4085,49 @@ class CaveForest(Forest):
         k.update({"targetname": train, "target": "stop_top" + s, "speed": "0", "startspeed": speed, "height": "0", "dmg": "0", "spawnflags": "19",
                   "orientationtype": "0", "MoveSound": "eli_lab.elevator_move", "StopSound": "eli_lab.elevator_stop", "StartSound": "",
                   "MoveSoundMinPitch": "100", "MoveSoundMaxPitch": "100", "volume": "10"})
+        if crank:      # (a hand-worked lift has no motor: its ratchet clicks while it is cranked, and its brake's latch as it stops)
+            k.update({"MoveSound": "", "StopSound": "buttons/lever6.wav"})
         ent("func_tracktrain", k, o, brushes=list(brushes) + list(more))
         ent("path_track", {"targetname": "stop_top" + s, "target": "near_top" + s, "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
             (o[0], o[1], top_o), [("OnPass", "arrive_top" + s, "Trigger", "", 0)])
         ent("path_track", {"targetname": "near_top" + s, "target": "stop_bottom" + s, "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
-            (o[0], o[1], top_o - 128), [("OnPass", "nearing_top" + s, "Trigger", "", 0)])
+            (o[0], o[1], top_o - 128), [("OnPass", "nearing_top" + s, "Trigger", "", 0)] + ([("OnPass", "leaving_top" + s, "Trigger", "", 0)] if crank else []))
         ent("path_track", {"targetname": "stop_bottom" + s, "target": "", "speed": speed, "spawnflags": "0", "orientationtype": "0", "angles": "0 0 0"},
             (o[0], o[1], bottom_o), [("OnPass", "arrive_bottom" + s, "Trigger", "", 0)])
 
         def relay(name, outs, off=False):
             ent("logic_relay", {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, None, outs)
-        calls = ["call_top" + s, "call_bottom" + s, "call_cage" + s]
-        ats = ["at_top" + s, "at_bottom" + s, "at_cage" + s]
-        go = [("OnTrigger", c, "Disable", "", 0) for c in calls]
-        done = [("OnTrigger", c, "Enable", "", 1.5) for c in calls] + [("OnTrigger", "gate" + s, "Disable", "", 0)]
-        if lights:
-            go += [("OnTrigger", "rot_redlight1", "Start", "", 0), ("OnTrigger", "spot_doors*", "LightOn", "", 0)]
-            done += [("OnTrigger", "rot_redlight1", "Stop", "", 0), ("OnTrigger", "spot_doors*", "LightOff", "", 0)]
-        relay("go_down" + s, go + [("OnTrigger", "arrive_bottom" + s, "Enable", "", 0), ("OnTrigger", "clear_dn" + s, "Test", "", 1)])
-        relay("go_up" + s, go + [("OnTrigger", "arrive_top" + s, "Enable", "", 0), ("OnTrigger", "nearing_top" + s, "Enable", "", 0), ("OnTrigger", "clear_up" + s, "Test", "", 1)])
-        away = [("OnFalse", "gate" + s, "Enable", "", 0)]
-        down = away + [("OnFalse", train, "StartForward", "", 0.1), ("OnFalse", "fence_top" + s, "Enable", "", 3)]
-        if makers:
-            down += [("OnFalse", "zombie_maker", "Enable", "", 1), ("OnFalse", "antlion_maker", "Enable", "", 3)]
-        # (it sets off once nobody stands across its mouth: the trigger there holds both branches true)
-        ent("logic_branch", {"targetname": "clear_dn" + s, "InitialValue": "0"}, None, down + [("OnTrue", "clear_dn" + s, "Test", "", 1)])
-        ent("logic_branch", {"targetname": "clear_up" + s, "InitialValue": "0"}, None, away + [("OnFalse", train, "StartBackward", "", 0.1), ("OnTrue", "clear_up" + s, "Test", "", 1)])
-        relay("nearing_top" + s, [("OnTrigger", "fence_top" + s, "Disable", "", 0), ("OnTrigger", "nearing_top" + s, "Disable", "", 0)], off=True)
-        relay("arrive_top" + s, done + [("OnTrigger", "arrive_top" + s, "Disable", "", 0), ("OnTrigger", "fence_top" + s, "Disable", "", 0)]
-              + [("OnTrigger", a, "SetValue", "1", 0) for a in ats], off=True)
-        bottom = done + [("OnTrigger", "arrive_bottom" + s, "Disable", "", 0)] + [("OnTrigger", a, "SetValue", "0", 0) for a in ats]
-        if makers:
-            bottom += [("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)]
-        relay("arrive_bottom" + s, bottom, off=True)
-        for name, cmp_value, outs in (("top", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)]),
-                                      ("bottom", "0", [("OnEqualTo", "go_up" + s, "Trigger", "", 0), ("OnGreaterThan", "go_down" + s, "Trigger", "", 0)]),
-                                      ("cage", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)])):
-            relay("call_" + name + s, [("OnTrigger", "at_" + name + s, "Compare", "", 0)])
-            ent("logic_compare", {"targetname": "at_" + name + s, "InitialValue": "1", "CompareValue": cmp_value}, None, outs)
+        if crank:
+            self.crank_wiring(ent, relay, rel, vb, s, train, crank, top_z, bottom_z, makers)
+        else:
+            calls = ["call_top" + s, "call_bottom" + s, "call_cage" + s]
+            ats = ["at_top" + s, "at_bottom" + s, "at_cage" + s]
+            go = [("OnTrigger", c, "Disable", "", 0) for c in calls]
+            done = [("OnTrigger", c, "Enable", "", 1.5) for c in calls] + [("OnTrigger", "gate" + s, "Disable", "", 0)]
+            if lights:
+                go += [("OnTrigger", "rot_redlight1", "Start", "", 0), ("OnTrigger", "spot_doors*", "LightOn", "", 0)]
+                done += [("OnTrigger", "rot_redlight1", "Stop", "", 0), ("OnTrigger", "spot_doors*", "LightOff", "", 0)]
+            relay("go_down" + s, go + [("OnTrigger", "arrive_bottom" + s, "Enable", "", 0), ("OnTrigger", "clear_dn" + s, "Test", "", 1)])
+            relay("go_up" + s, go + [("OnTrigger", "arrive_top" + s, "Enable", "", 0), ("OnTrigger", "nearing_top" + s, "Enable", "", 0), ("OnTrigger", "clear_up" + s, "Test", "", 1)])
+            away = [("OnFalse", "gate" + s, "Enable", "", 0)]
+            down = away + [("OnFalse", train, "StartForward", "", 0.1), ("OnFalse", "fence_top" + s, "Enable", "", 3)]
+            if makers:
+                down += [("OnFalse", "zombie_maker", "Enable", "", 1), ("OnFalse", "antlion_maker", "Enable", "", 3)]
+            # (it sets off once nobody stands across its mouth: the trigger there holds both branches true)
+            ent("logic_branch", {"targetname": "clear_dn" + s, "InitialValue": "0"}, None, down + [("OnTrue", "clear_dn" + s, "Test", "", 1)])
+            ent("logic_branch", {"targetname": "clear_up" + s, "InitialValue": "0"}, None, away + [("OnFalse", train, "StartBackward", "", 0.1), ("OnTrue", "clear_up" + s, "Test", "", 1)])
+            relay("nearing_top" + s, [("OnTrigger", "fence_top" + s, "Disable", "", 0), ("OnTrigger", "nearing_top" + s, "Disable", "", 0)], off=True)
+            relay("arrive_top" + s, done + [("OnTrigger", "arrive_top" + s, "Disable", "", 0), ("OnTrigger", "fence_top" + s, "Disable", "", 0)]
+                  + [("OnTrigger", a, "SetValue", "1", 0) for a in ats], off=True)
+            bottom = done + [("OnTrigger", "arrive_bottom" + s, "Disable", "", 0)] + [("OnTrigger", a, "SetValue", "0", 0) for a in ats]
+            if makers:
+                bottom += [("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)]
+            relay("arrive_bottom" + s, bottom, off=True)
+            for name, cmp_value, outs in (("top", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)]),
+                                          ("bottom", "0", [("OnEqualTo", "go_up" + s, "Trigger", "", 0), ("OnGreaterThan", "go_down" + s, "Trigger", "", 0)]),
+                                          ("cage", "1", [("OnEqualTo", "go_down" + s, "Trigger", "", 0), ("OnLessThan", "go_up" + s, "Trigger", "", 0)])):
+                relay("call_" + name + s, [("OnTrigger", "at_" + name + s, "Compare", "", 0)])
+                ent("logic_compare", {"targetname": "at_" + name + s, "InitialValue": "1", "CompareValue": cmp_value}, None, outs)
         # the car's mouth: a trigger across it (anyone half out holds the car), and an unseen gate there while it moves
         x1, y1, x2, y2 = car
         zt = built_top
@@ -4151,13 +4169,14 @@ class CaveForest(Forest):
             fx_, fy_ = x + 10 * c, y + 10 * sn
             box = (min(x, fx_) - 10 * abs(sn), min(y, fy_) - 10 * abs(c), z - 4, max(x, fx_) + 10 * abs(sn), max(y, fy_) + 10 * abs(c), z + 24)
             button(name, foot, yaw, box, "models/props_mining/freightelevatorbutton02.mdl", outs, parent)
-        mine_button("button_top" + s, top_button[0], top_button[1], top_z + 40, [("OnPressed", "call_top" + s, "Trigger", "", 0)])
-        if len(bottom_button) > 2:      # (Valve's own, where Valve put it)
-            foot, yaw, model, box = bottom_button
-            button("button_bottom" + s, foot, yaw, box, model, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
-        else:
-            mine_button("button_bottom" + s, bottom_button[0], bottom_button[1], bottom_z + 40, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
-        mine_button("button_cage" + s, car_button[0], car_button[1], top_z + 36, [("OnPressed", "call_cage" + s, "Trigger", "", 0)], parent=train)
+        if not crank:
+            mine_button("button_top" + s, top_button[0], top_button[1], top_z + 40, [("OnPressed", "call_top" + s, "Trigger", "", 0)])
+            if len(bottom_button) > 2:      # (Valve's own, where Valve put it)
+                foot, yaw, model, box = bottom_button
+                button("button_bottom" + s, foot, yaw, box, model, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
+            else:
+                mine_button("button_bottom" + s, bottom_button[0], bottom_button[1], bottom_z + 40, [("OnPressed", "call_bottom" + s, "Trigger", "", 0)])
+            mine_button("button_cage" + s, car_button[0], car_button[1], top_z + 36, [("OnPressed", "call_cage" + s, "Trigger", "", 0)], parent=train)
         # the holdout's makers (Valve's way: on while a lift comes down), each with its pattern; made at the room's ends
         if makers:
             for name, cls, at, every in (("zombie", "npc_zombie", rel(850, -8399, -1784), "4"), ("antlion", "npc_antlion", rel(2014, -9100, -1783), "6")):
@@ -4168,6 +4187,86 @@ class CaveForest(Forest):
                                            "CriterionDistance": "2", "angles": "0 0 0"}, (at[0], at[1], at[2] + 8))
         self.lifts.append((s, train, car, top_z, bottom_z))
         return out
+
+    def crank_wiring(self, ent, relay, rel, vb, s, train, crank, top_z, bottom_z, makers):
+        """The second lift worked by hand, as Episode Two's mine lift in ep2_outland_01a is (the owner, 27 November: "I
+        vaguely recall in EP2 there was an elevator in the mines that was hand cranked via a valve; can we convert the
+        secondary (vortigaunt elevator) in this mine shaft to that elevator? so that when the generator is turned off and the
+        primary elevator doesn't work cause no power, then this is a backup"). Valve's wheel there (button_elev) is a
+        momentary_rot_button that turns on and on while E is held (distance -1, auto-return 0, spawnflags 1153: not solid,
+        its axis, use activates), Valve's crank model (models/extras/crank.mdl) on it and its widget behind; its OnPressed
+        and OnUnpressed work relay_pressed and relay_unpressed. Valve's car is a physics platform that a thruster lifts while
+        the wheel is held and that falls back when it is let go; ours stays on its track (its stops, the gate on its mouth,
+        the fence over its hole in the top landing, no crush), and moves only while someone holds E on a wheel, stopping
+        where it is let go. Three wheels: one on the car, and one on the pit's west wall at each landing, so a car left at
+        the other end can be brought back. A landing's wheel brings the car to that landing (if it is there already, it
+        sends it to the other); the car's wheel carries on the way the car last went, and turns back at either end. One
+        wheel at a time: while one is held the other two are locked and jiggle if tried. It needs no power. A ratchet
+        clicks while it moves. crank: {wheel: ((x, y) of its foot on its face, the way it faces)} in Valve's coordinates."""
+        wheels = (("top", top_z), ("bottom", bottom_z), ("car", top_z))
+        names = dict((w, "crank_" + w + s) for w, _ in wheels)
+        ats = ["at_" + w + s for w, _ in wheels]
+        for w, z0 in wheels:
+            (x, y), f = crank[w]
+            c, sn = round(math.cos(math.radians(f))), round(math.sin(math.radians(f)))
+            z = z0 + 44
+            mid = (x + 11 * c, y + 11 * sn, z)        # (the crank's hub: its wheel 11 out from the face, the widget 3 out, behind it)
+            others = [names[o] for o, _ in wheels if o != w]
+            keys = {"targetname": names[w], "spawnflags": str(1 + (64 if c else 128) + 1024 + 8192), "distance": "-1", "speed": "90", "returnspeed": "0",
+                    "startposition": "0", "startdirection": "-1", "sounds": "0", "solidbsp": "0"}
+            props = {"disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "skin": "0", "StartDisabled": "0", "renderamt": "255",
+                     "rendercolor": "255 255 255", "solid": "0"}
+            widget = dict(props, model="models/extras/widget.mdl", angles="0 %d 0" % ((f + 90) % 360))
+            if w == "car":
+                keys["parentname"] = widget["parentname"] = train
+            box = vb(x + 2 * c - 12 * abs(sn), y + 2 * sn - 12 * abs(c), z - 12, x + 14 * c + 12 * abs(sn), y + 14 * sn + 12 * abs(c), z + 12, MAT["nodraw"])
+            ent("momentary_rot_button", keys, rel(*mid), [("OnPressed", "at_" + w + s, "Compare", "", 0)] + [("OnPressed", o, "Lock", "", 0) for o in others]
+                + [("OnUnpressed", "halt" + s, "Trigger", "", 0)] + [("OnUnpressed", o, "Unlock", "", 0) for o in others], brushes=[box])
+            ent("prop_dynamic_override", dict(props, model="models/extras/crank.mdl", angles="0 %d 0" % ((f - 90) % 360), parentname=names[w]), rel(*mid))
+            ent("prop_dynamic", widget, rel(x + 3 * c, y + 3 * sn, z))
+        # where the car is, for each wheel's choice: 1 at the top, 0 at the bottom, 0.5 between; and which way it last went
+        ent("logic_compare", {"targetname": "at_top" + s, "InitialValue": "1", "CompareValue": "1"}, None,
+            [("OnEqualTo", "down" + s, "Trigger", "", 0), ("OnLessThan", "up" + s, "Trigger", "", 0)])
+        ent("logic_compare", {"targetname": "at_bottom" + s, "InitialValue": "1", "CompareValue": "0"}, None,
+            [("OnEqualTo", "up" + s, "Trigger", "", 0), ("OnGreaterThan", "down" + s, "Trigger", "", 0)])
+        ent("logic_compare", {"targetname": "at_car" + s, "InitialValue": "1", "CompareValue": "0.5"}, None,
+            [("OnGreaterThan", "down" + s, "Trigger", "", 0), ("OnLessThan", "up" + s, "Trigger", "", 0), ("OnEqualTo", "dir" + s, "Test", "", 0)])
+        ent("logic_branch", {"targetname": "dir" + s, "InitialValue": "1"}, None, [("OnTrue", "down" + s, "Trigger", "", 0), ("OnFalse", "up" + s, "Trigger", "", 0)])
+        relay("down" + s, [("OnTrigger", "dir" + s, "SetValue", "1", 0), ("OnTrigger", "arrive_bottom" + s, "Enable", "", 0), ("OnTrigger", "arrive_top" + s, "Disable", "", 0),
+                           ("OnTrigger", "nearing_top" + s, "Disable", "", 0), ("OnTrigger", "leaving_top" + s, "Enable", "", 0), ("OnTrigger", "clear_dn" + s, "Test", "", 0)])
+        relay("up" + s, [("OnTrigger", "dir" + s, "SetValue", "0", 0), ("OnTrigger", "arrive_top" + s, "Enable", "", 0), ("OnTrigger", "nearing_top" + s, "Enable", "", 0),
+                         ("OnTrigger", "arrive_bottom" + s, "Disable", "", 0), ("OnTrigger", "leaving_top" + s, "Disable", "", 0), ("OnTrigger", "clear_up" + s, "Test", "", 0)])
+        # it sets off once nobody stands across its mouth (the trigger there holds both branches true), asking again every
+        # half second while the wheel is held
+        ent("logic_branch", {"targetname": "clear_dn" + s, "InitialValue": "0"}, None, [("OnFalse", "move_dn" + s, "Trigger", "", 0), ("OnTrue", "wait_dn" + s, "Trigger", "", 0)])
+        ent("logic_branch", {"targetname": "clear_up" + s, "InitialValue": "0"}, None, [("OnFalse", "move_up" + s, "Trigger", "", 0), ("OnTrue", "wait_up" + s, "Trigger", "", 0)])
+        relay("wait_dn" + s, [("OnTrigger", "clear_dn" + s, "Test", "", 0.5)])
+        relay("wait_up" + s, [("OnTrigger", "clear_up" + s, "Test", "", 0.5)])
+        move = [("OnTrigger", "gate" + s, "Enable", "", 0), ("OnTrigger", "ratchet" + s, "Enable", "", 0)] + [("OnTrigger", a, "SetValue", "0.5", 0) for a in ats]
+        relay("move_dn" + s, move + [("OnTrigger", train, "StartForward", "", 0.1)]
+              + ([("OnTrigger", "zombie_maker", "Enable", "", 1), ("OnTrigger", "antlion_maker", "Enable", "", 3)] if makers else []))
+        relay("move_up" + s, move + [("OnTrigger", train, "StartBackward", "", 0.1)])
+        # let go: it stops where it is (its gate stays shut between the landings), and nothing it was waiting to do is done
+        relay("halt" + s, [("OnTrigger", train, "Stop", "", 0), ("OnTrigger", "ratchet" + s, "Disable", "", 0)]
+              + [("OnTrigger", r + s, "CancelPending", "", 0) for r in ("wait_dn", "wait_up", "move_dn", "move_up")])
+        relay("arrive_top" + s, [("OnTrigger", "gate" + s, "Disable", "", 0), ("OnTrigger", "fence_top" + s, "Disable", "", 0), ("OnTrigger", "ratchet" + s, "Disable", "", 0),
+                                 ("OnTrigger", "dir" + s, "SetValue", "1", 0), ("OnTrigger", "arrive_top" + s, "Disable", "", 0)]
+              + [("OnTrigger", a, "SetValue", "1", 0) for a in ats], off=True)
+        bottom = [("OnTrigger", "gate" + s, "Disable", "", 0), ("OnTrigger", "ratchet" + s, "Disable", "", 0), ("OnTrigger", "dir" + s, "SetValue", "0", 0),
+                  ("OnTrigger", "arrive_bottom" + s, "Disable", "", 0)] + [("OnTrigger", a, "SetValue", "0", 0) for a in ats]
+        if makers:
+            bottom += [("OnTrigger", "zombie_maker", "Disable", "", 0), ("OnTrigger", "antlion_maker", "Disable", "", 0)]
+        relay("arrive_bottom" + s, bottom, off=True)
+        # the fence over its hole in the top landing: up once the car is 128 under the top on its way down (a rider's head
+        # is then clear of it), gone as it comes back within 128; never while the car is stopped nearer the top than that
+        relay("nearing_top" + s, [("OnTrigger", "fence_top" + s, "Disable", "", 0), ("OnTrigger", "nearing_top" + s, "Disable", "", 0)], off=True)
+        relay("leaving_top" + s, [("OnTrigger", "fence_top" + s, "Enable", "", 0), ("OnTrigger", "leaving_top" + s, "Disable", "", 0)], off=True)
+        # the ratchet, from the car's wheel while it moves (buttons/lever7.wav, Half-Life 2's smaller ratchet)
+        (cx, cy), _f = crank["car"]
+        ent("logic_timer", {"targetname": "ratchet" + s, "StartDisabled": "1", "RefireTime": "0.45", "UseRandomTime": "0"}, None,
+            [("OnTimer", "ratchet_snd" + s, "PlaySound", "", 0)])
+        ent("ambient_generic", {"targetname": "ratchet_snd" + s, "parentname": train, "message": "buttons/lever7.wav", "health": "6", "pitch": "100", "pitchstart": "100",
+                                "radius": "700", "spawnflags": "48"}, rel(cx, cy - 8, top_z + 30))
 
     # --- the back way (the owner, 26 November) ------------------------------------------------------------------------
 
