@@ -32,16 +32,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 
 ## Added since the cut
-- [ ] **Chevrons:** on the way to a job, any straight line of the trail through a wall? [needs the real server: the real map]
-- [ ] **The announcer:** over 5 minutes, at most one of the map's own Overwatch lines, and none on top of a city announcement? [needs the real server: the recordings]
-- [ ] **Searching:** stop a citizen and search them (baton, reload). Do the numbers check the spots, do found things show, does "Done searching: check their papers" work? [needs a person: the feel of the search]
-- [ ] **Cuffed arms:** cuff a citizen. Arms behind the back, wrists together? [needs a person: the pose by eye]
-- [ ] **Resupply scanner:** radio out, right click, Request resupply under open sky. Does the scanner come down over about three seconds, the crate twice as big? [needs a person: timing and size by eye]
-- [ ] **Heartbeat:** below 35 health it starts; die and respawn. Silent? Any other sound still going? [needs a person: by ear]
-- [ ] **Lowered gun (Resistance):** on rebel ground, does the gun tip down in your view when lowered, and come back up when raised? [needs a person: the view model by eye]
-- [ ] **The Man Inside, part 2, on the real map:** as a unit, `lcq_startchain inside`, take part 1 from F4 and hear her out, then part 2. Is a prisoner marked in the cells? After E on them, do they follow you out and through the doors? Do the guards leave when you set the fire or call the false report? [needs a person: doors, guards and following only show on the real map]
-- [ ] **The counter (Ration Production):** work kitchen shifts until "The counter" comes up. After the forged card, do citizens step up one at a time, and does the card window read well at a ration counter? [needs a person: how the card check looks and reads at the counter]
-- [ ] **Rations:** Fill the city's ration stores once; a dispenser gives a ration; an hour later stores well above empty, no announcement after 18:00; send `lc_stock`. [needs a person: the server over an hour]
 - [ ] **Asleep in the cells:** jailed with over five minutes left, F1 > Lie down and sleep: body on the floor or bed, a dream after about 20 seconds, wake in the cell? [needs a person: how it looks]
 - [ ] **Ranks and the cage:** set yourself Lieutenant (F4 admin tools): career page, the cage opens, Hacker offered; prisoners inside the cage, none in the wall? [needs a person: on the map]
 - [ ] **Rebel ground and the Colonel:** way marks as arrows within 20 seconds, pots on tables, the usual music, the Colonel stays put, mouths move on recorded lines? [needs a person: how it looks]

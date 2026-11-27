@@ -31,8 +31,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 26 November (the owner): the quiet HUD card lost "This server hides numbers on screen"; ambient PA lines get no second line in chat (not "Just the city talking", not the unrest one).
-- 26 November: the old-timer's fisherman head no longer parented (it floated where he left a player's view, his own head shrunk): it takes its bones from his every frame and draws only with him (LC_CL.HeadOn; city-people.md). Not seen in game yet.
+- 26 November: the quiet HUD card and the ambient PA lines trimmed (the owner); the old-timer's fisherman head takes his bones every frame (LC_CL.HeadOn; city-people.md). Not seen in game.
+- 27 November (the owner's design; not seen in game): **the Swarm**, `lc_swarm` 1 (the-swarm.md, sv_livingcity_swarm.lua): nest guardians, the larval extract,
+  the vortigaunts' ritual (five conditions), pheropods to the highest rank, the thumpers' trickle (1 per 15 s, 2 alive), the city falls
+  at the Nexus, then the job "Restart the thumpers". Full run: 9,629 passed, 7 failed, none from it. Waiting on the owner: a suppression core under the Nexus (C18).
 - 26 November: the cistern as its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf, sent), a street plate
   over it, Valve's freight lift from gallery to street (models, lc_cistern_lift; map-building.md). Not compiled. Next: Propper++.
 - 25 and 26 November (the owner's answers; none seen in game): Combine APC on the ring's road (apc-patrol.md); the city falls chapter,
@@ -48,4 +50,4 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   the jog's road deck (shantydeck), relay quay 256 up; a plug under their trimmed core 3102 (it leaked). 24,755 faces,
   ~46,861 vertices. Stitched with City 18 and the cave: ~95,700 vertices, over the limit (TODO). Not run in game.
   27 Nov (cave chat): four thumpers in ring.txt (lc_thumper_ by the checkpoint, lc_thumper2_ the old one, 3_ west, 4_ south): in the generator, NOT yet carried into the owner's walk map.
-- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); generator power, hold-E start, crank lift, cables (lc_forest_cave_yours_1127_power sent, not compiled).
+- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); power, crank lift, tunnel dressing, the hill behind the shed (lc_forest_cave_yours_1127_tunnel sent, not compiled).
