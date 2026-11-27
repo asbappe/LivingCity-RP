@@ -6,6 +6,10 @@
       lc_thumper_head    the thumper (prop_thumper). The map's button stops and starts it (Disable, Enable).
       lc_thumper_burrow  the burrow's mouth near it: where they come up.
 
+    A map may have several copies of the module (27 November: four on the canal ring). The first keeps these names;
+    the others have a number after "thumper" (lc_thumper2_head, lc_thumper2_burrow, ...). Every name is read as
+    ^lc_thumper(%d*)_(%w+)$, and a copy's parts go together by that number ("" for the first).
+
     While a thumper stands still, antlions dig up at its burrow as Valve's own makers send them
     (ep2_outland_05): two out at most, from a pool of four that gets one back every 25 seconds, so killing
     them buys a breather and lingering brings more. They go for everyone: units, rebels, citizens.
@@ -22,16 +26,39 @@ local GRACE, EVERY, OUT_MAX, POOL_MAX, REGEN, REACH, HEARD = 15, 8, 2, 4, 25, 20
 
 local function NameOf(e) return string.lower(tostring(e.GetName and e:GetName() or "")) end
 
-function A.BurrowOf(thumper)
+-- A thumper module's name read: its copy's number ("" for the first) and the part ("head", "burrow", "button",
+-- "start", "stop" ...). nil for any other name.
+function A.Parse(name)
+    local n, part = string.match(string.lower(tostring(name or "")), "^lc_thumper(%d*)_(%w+)$")
+    return n, part
+end
+
+-- Every thumper on the map (each copy's head).
+function A.Heads()
+    local out = {}
+    for _, e in ipairs(ents.FindByName and ents.FindByName("lc_thumper*") or {}) do
+        local _, part = A.Parse(NameOf(e))
+        if IsValid(e) and part == "head" then out[#out + 1] = e end
+    end
+    return out
+end
+
+-- A part of the same copy as ent (a thumper, or any part of it): the one of that number nearest to it, within reach.
+function A.PartOf(ent, part)
+    if not IsValid(ent) then return nil end
+    local n = A.Parse(NameOf(ent))
+    if not n then return nil end
     local best, bd
-    for _, t in ipairs(ents.FindByName and ents.FindByName("lc_thumper_burrow") or {}) do
+    for _, t in ipairs(ents.FindByName and ents.FindByName("lc_thumper" .. n .. "_" .. part) or {}) do
         if IsValid(t) then
-            local d = t:GetPos():DistToSqr(thumper:GetPos())
+            local d = t:GetPos():DistToSqr(ent:GetPos())
             if d <= REACH * REACH and (not bd or d < bd) then best, bd = t, d end
         end
     end
     return best
 end
+
+function A.BurrowOf(thumper) return A.PartOf(thumper, "burrow") end
 
 -- The map tells its thumper to stop or start: remembered here.
 function A.Set(thumper, running)
@@ -47,7 +74,9 @@ end
 hook.Add("AcceptInput", "LivingCityAntlions", function(ent, input)
     if not IsValid(ent) then return end
     local what = string.lower(input or "")
-    if (what ~= "enable" and what ~= "disable") or NameOf(ent) ~= "lc_thumper_head" then return end
+    if what ~= "enable" and what ~= "disable" then return end
+    local _, part = A.Parse(NameOf(ent))
+    if part ~= "head" then return end
     LC.Try(A.Set, ent, what == "enable")
 end)
 
