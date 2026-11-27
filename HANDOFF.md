@@ -48,4 +48,4 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   bridge is the quay's bridge), pour() three jets, backdrop 16 buildings and Valve's card trees, the bunker forest 3520
   east down Valve's tunnel (servicetunnel, map_shift.py). 27 Nov: the walk map holds the OWNER'S OWN forest file (--forest; their
   Drive link is in that chat; it uses two CS:S materials, concretewall011b/c). Test map: 24,953 faces, ~47,188 vertices. Not run in game.
-- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: lifts, shed doors, holes 212 to 6, back way (lc_forest_cave_1127b sent, not compiled).
+- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); generator power, hold-E start, crank lift, cables (lc_forest_cave_yours_1127_power sent, not compiled).
