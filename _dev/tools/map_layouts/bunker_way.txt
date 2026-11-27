@@ -1,7 +1,7 @@
 # The way to the bunker forest: from the first canal's east gate, east, a long tunnel on foot, to the forest's west gate
 # (the owner, 26 November: "please stitch in the forest bunker to the ring now ... though can we please make it down a
 # longer tunnel and not put it RIGHT there; like a HL2 tunnel copy/pasted"). The tunnel is Valve's own (Black Mesa
-# East's, toward Ravenholm), 2752 of it between two culvert rooms. With the two gates the chain is 3520 long, so the
+# East's, toward Ravenholm), 2752 of it at the road's height, then stairs down 256 to the forest's gate. With the two gates the chain is 3520 long, so the
 # bunker forest stands 3520 farther east than it was first built: its west gate at (11456 4416), the forest filling
 # x 11456..15808 (map_build.py forest_bunker --origin; the owner's own lc_forest_bunker.vmf, edited in Hammer, is moved
 # with map_shift.py).
@@ -10,7 +10,10 @@
 
 start 7936 4416
 heading E
-rim 656
+rim 968           # (over the lifted start gate's roof, 912, and the tunnel's, 848)
 buried
+startgate road    # (the first canal's east gate is at the road's height since 27 November: the owner, "the tunnel starts below the water
+#                    line of the canal, we need it to start somewhere higher, flush with the road")
+close             # (the tunnel's own last 128 is its end gate: down its stairs to the forest's floor)
 
 servicetunnel

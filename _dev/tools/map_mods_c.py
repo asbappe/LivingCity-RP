@@ -1245,6 +1245,11 @@ def m_thumper(m, opt):
     a camera on the terrace's back wall, danger signs. Why it is here is shown downstream: sand drifted over the canal's
     floor toward the exit, a burrow broken through the left wall's foot with sand spilling from it, two dead antlions.
 
+    Every copy has names of its own (the owner, 27 November: four round the ring for the Swarm, each stopped and
+    started by its own button alone). The first in a piece keeps the names below; the second is lc_thumper2_head,
+    lc_thumper2_button and so on, the third lc_thumper3_..., counted as they come in the layout (as the flood gates
+    count theirs). Every output points at its own copy's names. The ring's four: map_layouts/ring.txt.
+
     Named for the game:
       lc_thumper_head    the thumper itself (prop_thumper): Disable stops it, Enable starts it; its output OnThumped
                          fires each time the hammer lands (the dust and the shake hang on it).
@@ -1271,6 +1276,8 @@ def m_thumper(m, opt):
     ambient/machines/thumper_hit.wav, ambient/machines/thumper_top.wav, ambient/machines/thumper_shutdown1.wav.
     models/antlion.mdl as a ragdoll; nature/blendmuddirt001a for the drift (blendsandmud001a is not in the owner's Garry's Mod: their compile, 22 November); combine_shield_loop3.wav."""
     b = m.b
+    b.thumpers = getattr(b, "thumpers", 0) + 1      # (the copies in this piece, counted as they come in the layout)
+    T = "lc_thumper" if b.thumpers == 1 else "lc_thumper%d" % b.thumpers      # (every name below, and every output, is this copy's own)
     L, P = 1024, F + 128
     cu, cv = 512, -448
     m.open(0, -256, L, 256)
@@ -1293,32 +1300,32 @@ def m_thumper(m, opt):
     fv = -304
     combine_field(m, (264, fv), (568, fv), P)
     combine_field(m, (648, fv), (760, fv), P, hum=False)
-    fence_gate(m, "lc_thumper_gate", 608, fv, P, "u", open_frame=True)
+    fence_gate(m, T + "_gate", 608, fv, P, "u", open_frame=True)
     # the plinth, and the thumper on it (its box centred on the plinth: the model's middle is off its origin)
     m.shapes([vprism(octagon(cu, cv, 76), P, P + 16, MAT["beam"])])
     top = P + 16 + 338
     m.prop("prop_thumper", "models/props_combine/combinethumper002.mdl", cu - 12, cv + 18, 0, P + 16, {
-        "targetname": "lc_thumper_head", "dustscale": "128", "EffectRadius": "1000"})
-    m.point("logic_timer", cu, cv, top + 30, {"targetname": "lc_thumper_timer", "RefireTime": "3", "UseRandomTime": "0", "StartDisabled": "0", "spawnflags": "0"},
-            connections=[("OnTimer", "lc_thumper_head", "Enable", "", 0)])
-    sound(m, "lc_thumper_hit", "ambient/machines/thumper_hit.wav", cu, cv, P + 40, radius=3000)
-    sound(m, "lc_thumper_top", "ambient/machines/thumper_top.wav", cu, cv, P + 240, radius=1500, volume=6)
-    sound(m, "lc_thumper_down", "ambient/machines/thumper_shutdown1.wav", cu, cv, P + 240, radius=2000)
-    m.point("env_shake", cu, cv, P + 20, {"targetname": "lc_thumper_shake", "amplitude": "6", "radius": "1200", "duration": "0.6", "frequency": "30", "spawnflags": "0"})
-    m.point("env_smokestack", cu, cv, P + 22, {"targetname": "lc_thumper_dust", "InitialState": "0", "BaseSpread": "44", "SpreadSpeed": "40", "Speed": "30", "StartSize": "16",
+        "targetname": T + "_head", "dustscale": "128", "EffectRadius": "1000"})
+    m.point("logic_timer", cu, cv, top + 30, {"targetname": T + "_timer", "RefireTime": "3", "UseRandomTime": "0", "StartDisabled": "0", "spawnflags": "0"},
+            connections=[("OnTimer", T + "_head", "Enable", "", 0)])
+    sound(m, T + "_hit", "ambient/machines/thumper_hit.wav", cu, cv, P + 40, radius=3000)
+    sound(m, T + "_top", "ambient/machines/thumper_top.wav", cu, cv, P + 240, radius=1500, volume=6)
+    sound(m, T + "_down", "ambient/machines/thumper_shutdown1.wav", cu, cv, P + 240, radius=2000)
+    m.point("env_shake", cu, cv, P + 20, {"targetname": T + "_shake", "amplitude": "6", "radius": "1200", "duration": "0.6", "frequency": "30", "spawnflags": "0"})
+    m.point("env_smokestack", cu, cv, P + 22, {"targetname": T + "_dust", "InitialState": "0", "BaseSpread": "44", "SpreadSpeed": "40", "Speed": "30", "StartSize": "16",
                                                "EndSize": "56", "Rate": "40", "JetLength": "70", "WindAngle": "0", "WindSpeed": "0", "SmokeMaterial": "particle/SmokeStack.vmt",
                                                "twist": "6", "roll": "6", "rendercolor": "150 136 112", "renderamt": "110", "angles": "0 0 0"})
-    m.target("lc_thumper_pad", cu, cv, P + 24)
+    m.target(T + "_pad", cu, cv, P + 24)
     # the console against the terrace's near wall, the lamp over it, the button beside it
     m.static("models/props_combine/combine_interface001.mdl", 282, -404, 0, z=P)
-    combine_lamp(m, 256, -404, P + 90, 0, "120 200 255 40", name="lc_thumper_lamp")
-    sprite(m, "lc_thumper_glow", 276, -404, P + 110, "120 220 255", 0.35)
+    combine_lamp(m, 256, -404, P + 90, 0, "120 200 255 40", name=T + "_lamp")
+    sprite(m, T + "_glow", 276, -404, P + 110, "120 220 255", 0.35)
     m.static("models/props_combine/combine_smallmonitor001.mdl", 270, -456, 0, z=P + 60)
-    m.button("lc_thumper_button", 256, -340, P + 36, 0, [("lc_thumper_stop", "Trigger", "", 0), ("lc_thumper_start", "Trigger", "", 0)], wait="2.5")
-    toggle(m, "lc_thumper_stop", "lc_thumper_start", 270, -404, P + 160,
-           [("lc_thumper_head", "Disable", "", 0), ("lc_thumper_timer", "Disable", "", 0), ("lc_thumper_glow", "HideSprite", "", 0), ("lc_thumper_down", "PlaySound", "", 0),
-            ("lc_thumper_lamp", "TurnOff", "", 0)],
-           [("lc_thumper_timer", "Enable", "", 0), ("lc_thumper_head", "Enable", "", 0), ("lc_thumper_glow", "ShowSprite", "", 0), ("lc_thumper_lamp", "TurnOn", "", 0)], 2)
+    m.button(T + "_button", 256, -340, P + 36, 0, [(T + "_stop", "Trigger", "", 0), (T + "_start", "Trigger", "", 0)], wait="2.5")
+    toggle(m, T + "_stop", T + "_start", 270, -404, P + 160,
+           [(T + "_head", "Disable", "", 0), (T + "_timer", "Disable", "", 0), (T + "_glow", "HideSprite", "", 0), (T + "_down", "PlaySound", "", 0),
+            (T + "_lamp", "TurnOff", "", 0)],
+           [(T + "_timer", "Enable", "", 0), (T + "_head", "Enable", "", 0), (T + "_glow", "ShowSprite", "", 0), (T + "_lamp", "TurnOn", "", 0)], 2)
     # its power: a Combine generator in the terrace's far corner, a fat cable over the ground to the plinth
     m.static("models/props_combine/combine_generator01.mdl", 716, -592, 180, z=P)
     m.rope([(690, -560, P + 6), (600, -500, P + 4), (cu + 74, cv - 10, P + 8)], slack=20, width=6)
@@ -1339,7 +1346,7 @@ def m_thumper(m, opt):
     m.no_bank(824, 248, 904, 264)
     m.det([(832, 312, F, 896, 320, F + 64)], MAT["black"])
     m.taken(820, 240, F, 908, 256, F + 90)
-    m.target("lc_thumper_burrow", 864, 280, F + 8, 270)
+    m.target(T + "_burrow", 864, 280, F + 8, 270)
     for model, u, v, yaw in (("rockgranite03a", 796, 232, 30), ("rockgranite03b", 934, 238, 200), ("rockgranite02a", 1000, 176, 100)):     # (beside the mouth, never in front of it)
         m.static("models/props_wasteland/%s.mdl" % model, u, v, yaw, z=F)
     sx, sy = m.fr.pt(864, 240)
@@ -1365,8 +1372,8 @@ def m_thumper(m, opt):
     m.view(700, -60, F, 70, -6, "downstream: the sand, the burrow")
     m.view(430, -276, P, 0, -6, "at the fence, toward the gate")
     m.view(330, -560, P, 40, -20, "inside, by the console")
-    b.notes.append("%s: the terrace is z %d; the thumper stands at (%d %d), its top z %d (%d over the walls)" % (
-        (m.tag, P) + m.fr.pt(cu, cv) + (top, top - b.rim)))
+    b.notes.append("%s (%s_...): the terrace is z %d; the thumper stands at (%d %d), its top z %d (%d over the walls); its button at (%d %d %d)" % (
+        (m.tag, T, P) + m.fr.pt(cu, cv) + (top, top - b.rim) + m.fr.at(256, -340, P + 36)))
 
 
 # ---------------------------------------------------------------------------

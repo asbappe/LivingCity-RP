@@ -41,11 +41,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   9,460 passed, 4 failed, all four passing alone (order-dependent: TODO.md, end). HintTests stops at tests.lua:4168 (old: TODO.md, end).
 - 26 November, not seen in game: LC.CombatDrive (civil-protection-tools.md), LC.FearStep (city-people.md), units hear
   (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md. 24 Nov TODO run: wildlife, resistance-base, ieds (not seen).
-- 22 to 26 November: the canal ring (map_ring_walk.py joins the first canal, ring.txt, inlet.txt, bunker_way.txt and the
-  bunker forest; ~30 min; the ring's half nodraw-passed, the forest's half as built: TODO.md). Kit: 43 pieces. Combine
-  wall on every city bank; rail bridge a viaduct, the Combine engine at its train's head; trains portal to portal;
-  floodgate (valve wheel), tramfall, the crypt's inlet. 26 Nov, late: overflow and swingbridge modules gone (the swing
-  bridge is the quay's bridge), pour() three jets, backdrop 16 buildings and Valve's card trees, the bunker forest 3520
-  east down Valve's tunnel (servicetunnel, map_shift.py). 27 Nov: the walk map holds the OWNER'S OWN forest file (--forest; their
-  Drive link is in that chat; two CS:S materials in it are fine: Garry's Mod ships CS:S content since July 2025). Test map: 24,953 faces, ~47,188 vertices. Not run in game.
+- 22 to 27 November: the canal ring (map_ring_walk.py: first canal, ring.txt, inlet.txt, bunker_way.txt, the owner's own bunker
+  forest via --forest; ~30 min). 27 Nov: the walk map is the OWNER'S FILE now (they edited it in Hammer: rail viaduct with
+  canal_bridge02, ladders, ropes...): carry generator changes in with map_owner_delta.py (BEFORE: the build last sent, AFTER:
+  the new one), never send a fresh build. Same day: the bunker tunnel at road height (stairs down at its end), shanty under
+  the jog's road deck (shantydeck), relay quay 256 up; a plug under their trimmed core 3102 (it leaked). 24,755 faces,
+  ~46,861 vertices. Stitched with City 18 and the cave: ~95,700 vertices, over the limit (TODO). Not run in game.
 - Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); generator power, hold-E start, crank lift, cables (lc_forest_cave_yours_1127_power sent, not compiled).
