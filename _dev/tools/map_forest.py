@@ -4752,7 +4752,8 @@ class CaveForest(Forest):
                                (h2, x2s, self.zb, self.lid), (x2s, c2, self.zb, self.lid)):
             if b <= a:
                 continue
-            split = zr if x1s <= a and b <= x2s else under
+            # (each side of the shed the hill's crib stands against it up to its crest: black up to there, so no sliver of sky shows by the shed's corner posts)
+            split = zr if x1s <= a and b <= x2s else max(under, self.hill_crest()) if bw["mid"] - 240 <= a and b <= bw["mid"] + 240 else under
             for (za, zb_, front) in ((lo, min(hi, split), black), (max(lo, split), hi, sky)):
                 if zb_ > za:
                     self.vmf.world_box(self.box(a, D, za, b, D + T, zb_), sky, vis=sv, faces={"north": black, "south": front})
@@ -4943,6 +4944,11 @@ class CaveForest(Forest):
     def height(self, x, y, bias=None):
         return Forest.height(self, x, y, bias) + self.hill_behind(x, y)
 
+    def hill_crest(self):
+        """The top of the crib behind the shed: 16 over the hill's highest at the wall within 240 of the shed."""
+        mid, D = self.bw["mid"], self.D
+        return int(max(self.natural(x, D) + self.hill_behind(x, D) for x in range(mid - 240, mid + 241, 32))) + 16
+
     def built_slope(self, x, y):
         e = 24.0
         g = lambda a, b: self.natural(a, b) + self.hill_behind(a, b)
@@ -4961,7 +4967,7 @@ class CaveForest(Forest):
         and the back way's passage, so the box behind is drawn only through them."""
         bw, D = self.bw, self.D
         mid, zt = bw["mid"], bw["zd"] + 144
-        crest = int(max(self.natural(x, D) + self.hill_behind(x, D) for x in range(mid - 240, mid + 241, 32))) + 16
+        crest = self.hill_crest()
         low = int(min(self.natural(x, y) + self.hill_behind(x, y) for x in range(mid - 240, mid + 241, 16) for y in (D - 24, D))) - 24
         hv = self.vis("back way: the hill behind the shed")
         tb, nd = "wood/woodwall_mine001a", MAT["nodraw"]      # (Episode Two's mine boards, as the passage's: not the shed's timber, whose faces the crib's would line up with)
