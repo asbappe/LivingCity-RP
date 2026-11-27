@@ -482,6 +482,9 @@ def lift(m, problems):
         m.point("light_spot", LX - 4, LY, z0 + 100, {"_light": "200 225 255 60", "_lightHDR": "-1 -1 -1 1", "_cone": "70", "_inner_cone": "35", "_exponent": "1",
                                                    "angles": "-90 0 0", "pitch": "-90", "style": "0", "_constant_attn": "20", "_linear_attn": "0", "_quadratic_attn": "1"}, vis=m.lv)
     m.light(LX + 96, LY, TZ + 160, "200 225 255 40")
+    # the niche's floor in the power room (their brush 23576) ends at the shaft: its end, nodraw where it faced the void, now
+    # looks into the shaft (riders pass it): covered by a plate of ours rather than changing their brush
+    vmf.detail([(LX, 544, TZ - 16, LX + 1, 672, TZ)], "metal/citadel_metalwall090a", vis=vis, faces={"west": MAT["nodraw"]})
     vmf.keep_way_clear((3413, 544, TZ, LX, 672, TZ + 116), "the lift's upper landing")
     vmf.keep_way_clear((CH[2] - 96, LY - 52, LZ, LX, LY + 52, LZ + 116), "the lift's lower landing")
 
