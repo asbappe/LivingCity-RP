@@ -944,8 +944,16 @@ class Forest:
                 for plan, (bx, by), dive in self.buildings:
                     if (int(x - bx) // CELL, int(y - by) // CELL) in plan.cells:
                         inside = True
-                if not inside:
-                    self.node(x, y, self.natural(x, y))
+                if not inside and not self.node_skip(x, y):
+                    self.node(x, y, self.natural(x, y) + self.node_lift(x, y))
+
+    def node_skip(self, x, y):
+        """(A forest may leave out a ground node its own changes to the ground make too steep.)"""
+        return False
+
+    def node_lift(self, x, y):
+        """(How far over the planted ground a forest's built ground stands there.)"""
+        return 0
 
     def plan_nodes(self, plan, origin, skip=()):
         for (i, j), spec in sorted(plan.cells.items()):
@@ -4579,6 +4587,7 @@ class CaveForest(Forest):
         r[3] = max(r[3], bw["cut"][1])
         self.room_box = tuple(r)
         self.room_openings = [bw["hole"]]
+        self.bw_hill()
         w = lambda x, y, z: tuple(int(round(c)) for c in self.w(x, y, z))
         cx, top = self.BW_CLIMB_X, bw["climb_top"]
         self.notes.append("the back way: a climb of two timber ladders up the hill's west flank from the ditch at (%d %d %d) to the mound's top at (%d %d %d); "
@@ -4738,7 +4747,7 @@ class CaveForest(Forest):
         # into the ground the hole check's cubes slip under the ground's skin, and a sky face there counts as one under a roof
         x1s, x2s = bw["shed"][0] - 8, bw["shed"][2] + 8
         zr = zd + 152
-        under = int(min(self.natural(x, D - 8) for x in range(c1, c2 + 1, 8))) - 16
+        under = int(min(self.natural(x, D - 8) + self.hill_behind(x, D - 8) for x in range(c1, c2 + 1, 8))) - 16
         for (a, b, lo, hi) in ((c1, x1s, self.zb, self.lid), (x1s, h1, self.zb, self.lid), (h1, h2, self.zb, z1), (h1, h2, z2, self.lid),
                                (h2, x2s, self.zb, self.lid), (x2s, c2, self.zb, self.lid)):
             if b <= a:
@@ -4896,6 +4905,135 @@ class CaveForest(Forest):
         self.bw["trees_gone"] = self.bw.get("trees_gone", 0) + len(gone)
         if final and self.bw["trees_gone"]:
             self.notes.append("the back way: %d of the forest's trees, plants, rocks and logs left out where they stood in its climb or its shed" % self.bw["trees_gone"])
+
+    # --- the hill behind the shed ----------------------------------------------------------------------------------------
+    # The owner, 27 November: "when standing outside on top of the mound, there is just a skybox texture/wall behind the
+    # little shack entrance you made; can we do something to dress this up? because of it I can see through all the
+    # tunnels and caves and we just need a big hill/mound sealing that area". Why: the mound's top ran flat to the forest's
+    # north wall, whose face there is sky (as the shell's is), so the world ended in sky right behind the shed; and from the
+    # mound the shut box behind the wall (Ravenholm's big room, the mine gallery, the holdout) was in sight through the
+    # shed's door and the back way's passage, with no areaportal anywhere between it and the forest, and the engine draws
+    # whatever is in sight behind a sky face over the sky. Now the ground rises in a hill against the wall (hill_behind),
+    # the shed in a notch in it under a timber crib that holds the hill back over its roof, and an areaportal in each of the
+    # wall's two holes makes the box an area of its own, drawn only through them.
+    HILL = (880, 520, 400)      # how far along the north wall it reaches each side of the shed, how far out it starts to rise, how high it stands at the wall
+    HILL_SEED = 2711
+
+    def hill_behind(self, x, y):
+        """How far the built ground stands over the planted ground (natural) at (x, y): the hill rises from the mound's top
+        to the north wall over the last 520, along 880 of it each side of the shed (fading over the outer 360), 400 high at
+        the wall, with a notch the shed sits in: nothing over its deck and ramp (on the ground's grid of 64 the column of
+        points 16 west of the shed may not rise, or the slope between would come up through its floor), its sides rising
+        past the shed's walls. The forest's planting never sees it (natural), so not one tree draws other numbers."""
+        bw = getattr(self, "bw", None)
+        if not bw:
+            return 0.0
+        reach, out, top = self.HILL
+        t = (y - (self.D - out)) / float(out)
+        if t <= 0:
+            return 0.0
+        dx = x - bw["mid"]
+        along = 1 - smooth((abs(dx) - (reach - 360)) / 360.0)
+        if along <= 0:
+            return 0.0
+        notch = smooth((-dx - 112) / 96.0) if dx < 0 else smooth((dx - 96) / 96.0)
+        n = 0.84 + 0.16 * noise(x / 230.0, y / 230.0, self.seed + 31)
+        return top * smooth(min(t, 1.0)) ** 1.3 * along * notch * n
+
+    def height(self, x, y, bias=None):
+        return Forest.height(self, x, y, bias) + self.hill_behind(x, y)
+
+    def built_slope(self, x, y):
+        e = 24.0
+        g = lambda a, b: self.natural(a, b) + self.hill_behind(a, b)
+        return math.hypot(g(x + e, y) - g(x - e, y), g(x, y + e) - g(x, y - e)) / (2 * e)
+
+    def node_skip(self, x, y):
+        return self.hill_behind(x, y) > 0.5 and self.built_slope(x, y) > 0.5
+
+    def node_lift(self, x, y):
+        return self.hill_behind(x, y)
+
+    def bw_hill(self):
+        """Beyond the ground itself: a timber crib against the north wall where the shed sits in the hill's notch, over the
+        shed's roof and down into the ground each side of it, stacked beams up to the hill's crest (so the wall's sky does
+        not show over the shed); and an areaportal (always open) in each hole through the wall, the cave's into the big room
+        and the back way's passage, so the box behind is drawn only through them."""
+        bw, D = self.bw, self.D
+        mid, zt = bw["mid"], bw["zd"] + 144
+        crest = int(max(self.natural(x, D) + self.hill_behind(x, D) for x in range(mid - 240, mid + 241, 32))) + 16
+        low = int(min(self.natural(x, y) + self.hill_behind(x, y) for x in range(mid - 240, mid + 241, 16) for y in (D - 24, D))) - 24
+        hv = self.vis("back way: the hill behind the shed")
+        tb, nd = "wood/woodwall_mine001a", MAT["nodraw"]      # (Episode Two's mine boards, as the passage's: not the shed's timber, whose faces the crib's would line up with)
+        beams = []
+        top = zt + 8      # (the roof's top: under it the crib stands each side of the shed, 3 off its corner posts, over it right across)
+        for k, z in enumerate(range(low, crest, 16)):
+            back, z2 = (4 if k % 2 else 0), min(z + 16, crest)
+            if z < top:
+                for (a, b) in ((mid - 240, mid - 103), (mid + 103, mid + 240)):
+                    beams.append(self.box(a, D - 24 + back, z, b, D, min(z2, top)))
+            if z2 > top:
+                beams.append(self.box(mid - 240, D - 24 + back, max(z, top), mid + 240, D, z2))
+        self.vmf.detail(beams, tb, vis=hv, faces={"north": nd})
+        hx1, _, hz1, hx2, _, hz2 = self.joint_hole
+        for box in ((hx1, D + 56, hz1, hx2, D + 72, hz2), (bw["sx1"], D + 56, bw["zd"], bw["sx2"], D + 72, bw["zd"] + 112)):
+            self.vmf.brush_entity("func_areaportal", {"StartOpen": "1", "PortalVersion": "1"}, [self.box(*box)], MAT["portal"], hv)
+        self.notes.append("the hill behind the shed: up to %d at the north wall, the shed in a notch under a timber crib from %d to %d; an areaportal in the "
+                          "wall's hole from the cave and in the back way's passage" % (crest - 16, low + 24, crest))
+
+    def hill_lift(self):
+        """(After planting, settling and the back way's clearing.) The forest's own trees, plants, rocks and logs standing where
+        the hill behind the shed rises are lifted with the ground under them (planting drew its numbers as it always did,
+        so nothing else moves); and a few more of its rocks, plants and pines are set on the hill's slopes, clear of the
+        back way's ways and timbers, from numbers of their own."""
+        import map_build
+        kinds = set(m for m, _ in PINES + LEAFY) | set(PLANTS) | set(ROCKS) | set(LOGS)
+        lifted = 0
+        for k, text in enumerate(self.vmf.ents):
+            if not text or '"classname" "prop_static"' not in text:
+                continue
+            m = re.search(r'\t"model" "([^"]*)"\n', text)
+            o = re.search(r'\t"origin" "([^"]*)"\n', text)
+            if not (m and o) or m.group(1) not in kinds:
+                continue
+            x, y, z = (float(c) for c in o.group(1).split())
+            h = self.hill_behind(x - self.ox, y - self.oy)
+            if h < 0.5:
+                continue
+            new = (int(x), int(y), int(round(z + h)))
+            self.vmf.ents[k] = text.replace(o.group(0), '\t"origin" "%d %d %d"\n' % new)
+            self.vmf.props = [(c, new if c == "prop_static" and p2 == m.group(1) and abs(p[0] - x) < 1 and abs(p[1] - y) < 1 and abs(p[2] - z) < 1 else p, p2, w)
+                              for c, p, p2, w in self.vmf.props]
+            self.vmf.points = [(c, new if c == "prop_static" and abs(p[0] - x) < 1 and abs(p[1] - y) < 1 and abs(p[2] - z) < 1 else p) for c, p in self.vmf.points]
+            lifted += 1
+        rnd = random.Random(self.HILL_SEED)
+        reach, out, top = self.HILL
+        mid, D = self.bw["mid"], self.D
+        ways = [w for w, _ in self.vmf.ways] + self.bw.get("keepout", [])
+        added = {"plant": 0, "rock": 0, "tree": 0}
+        want = {"plant": 7, "rock": 4, "tree": 3}
+        for _ in range(400):
+            if all(added[k] >= want[k] for k in want):
+                break
+            x, y = rnd.uniform(mid - reach + 120, mid + reach - 120), rnd.uniform(D - out + 80, D - 70)
+            h, sl = self.hill_behind(x, y), self.built_slope(x, y)
+            if h < 60 or abs(x - mid) < 260 or any(math.hypot(x - tx, y - ty) < 90 for tx, ty in self.trees):
+                continue
+            kind = rnd.choice([k for k in want if added[k] < want[k]])
+            model = {"plant": lambda: rnd.choice(PLANTS), "rock": lambda: rnd.choice(ROCKS), "tree": lambda: pick(rnd, PINES)}[kind]()
+            if sl > {"plant": 0.9, "rock": 0.8, "tree": 0.7}[kind]:
+                continue
+            yaw = rnd.randrange(0, 360, 5)
+            z = self.natural(x, y) + h - {"plant": 2, "rock": 10, "tree": 8}[kind]
+            b = map_build.prop_box(model, self.w(x, y, z), yaw)
+            if b and any(b[0] < w[3] and b[3] > w[0] and b[1] < w[4] and b[4] > w[1] and b[2] < w[5] and b[5] > w[2] for w in ways):
+                continue
+            self.static(model, x, y, z, yaw, "trees" if kind == "tree" else "rocks, plants and fallen wood", solid=0 if kind == "plant" else 6)
+            if kind == "tree":
+                self.trees.append((x, y))
+            added[kind] += 1
+        self.notes.append("the hill behind the shed: %d of the forest's trees, plants, rocks and logs lifted with the ground under them; %d pines, %d rocks "
+                          "and %d plants more on its slopes" % (lifted, added["tree"], added["rock"], added["plant"]))
 
     def workings_hull(self):
         """One shut box round all that lies behind the forest's north wall, and inside it a shut box of its own round the
@@ -5791,6 +5929,7 @@ def forest_cave(args):
     f.bw_trees()
     f.settle()
     f.bw_trees(final=True)
+    f.hill_lift()
     f.ground_nodes()
     f.finish()
     if args.preview:
