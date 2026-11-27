@@ -913,6 +913,7 @@ class Backdrop:
         Whole and never faded (they are the skyline, and one model each); not solid (nobody walks there)."""
         from map_build import prop_box
         spots = sorted(c for c in self.band if 7 * CELL <= self.d_any.get(c, 0) <= 17 * CELL)
+        busy = self.busy()
         rnd.shuffle(spots)
         placed = []
         for c in spots:
@@ -926,8 +927,12 @@ class Backdrop:
             for yaw in rnd.sample((0, 180), 2):       # (the model's own x across the band, either way round)
                 yaw = (yaw + int(round(math.degrees(math.atan2(out[1], out[0]))))) % 360
                 bx = prop_box(model, (x, y, self.rim), yaw)
-                if bx is None or any(q not in self.band for q in cells_of((bx[0] + 48, bx[1] + 48, bx[3] - 48, bx[4] - 48))):
+                if bx is None:
                     continue
+                inner = cells_of((bx[0] + 48, bx[1] + 48, bx[3] - 48, bx[4] - 48))
+                if any(q not in self.band or q in busy for q in inner):
+                    continue      # (on the band, and clear of what the modules put up over it: the rail bridge's viaduct, the owner
+                    #               moving two clumps off it by hand on 27 November)
                 z = int(math.floor(self.ground_low((bx[0] + 200, bx[1] + 200, bx[3] - 200, bx[4] - 200)))) - 6
                 if z + (bx[5] - bx[2]) > self.lid - 32:
                     continue

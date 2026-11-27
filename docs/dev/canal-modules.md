@@ -6,6 +6,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 |---|---|---|---|---|
 | `drain` | 1024 | 1. the storm drain junction, down to the city's sewers (left) | `lc_drain_cache`, `lc_drain_grate`, `lc_drain_junction`, `lc_drain_wheel` | `map_modules.py` |
 | `shanty` | 2048 | 4. the shantytown under a street bridge (left) | `lc_base_vehicle_airboat_shanty`, `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3`, `lc_shanty_tent_4`, `lc_shanty_tent_5`, `lc_zone_rebel_r780_h400_shanty` | `map_modules.py` |
+| `shantydeck` | 448 | the shanty town under a road's deck: between a left turn and a right turn (the canal ring's jog) | `lc_base_vehicle_airboat_shanty`, `lc_hq_setup_shanty`, `lc_shanty_board`, `lc_shanty_cards`, `lc_shanty_fire`, `lc_shanty_fund`, `lc_shanty_soup`, `lc_shanty_tent_1`, `lc_shanty_tent_2`, `lc_shanty_tent_3`, `lc_shanty_tent_4`, `lc_shanty_tent_5`, `lc_zone_rebel_r780_h230_shanty` | `map_modules.py` |
 | `vort` | 1024 | 6. the vortigaunt culvert (left) | `lc_vort_fire`, `lc_vort_npc`, `lc_vort_seat_1`, `lc_vort_seat_2`, `lc_vort_seat_3` | `map_modules.py` |
 | `relay` | 1024 | 7. Cubbage's relay shack and mast, on a pier (right) | `lc_relay_hum`, `lc_relay_lamp`, `lc_relay_mast`, `lc_relay_radio`, `lc_relay_seat` | `map_modules.py` |
 | `checkpoint` | 1280 | 8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight | `lc_checkpoint_field`, `lc_checkpoint_hum`, `lc_checkpoint_light`, `lc_checkpoint_light_b`, `lc_checkpoint_pen`, `lc_checkpoint_pen_spot`, `lc_checkpoint_post`, `lc_checkpoint_queue` | `map_modules.py` |
@@ -45,7 +46,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `breach` | 1024 | the breach: the floor fallen into an old cellar, slabs for ramps, an undercut | `lc_breach_bottom`, `lc_breach_stash` | `map_mods_d.py` |
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_chute`, `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
-| `servicetunnel` | 3008 | a long way on foot: Valve's tunnel from Black Mesa East toward Ravenholm, twice end to end, a bulkhead doorway at each end | none | `map_mods_e.py` |
+| `servicetunnel` | 3264 | a long way on foot at the road's height: Valve's tunnel from Black Mesa East toward Ravenholm, twice end to end, then stairs down to its own end gate | none | `map_mods_e.py` |
 | `floodgate` | 512 | Valve's sluice gate in a headwall across the canal: hold its valve wheel to slide the leaves open; let go and they slam shut | `lc_floodgate_1_alarm`, `lc_floodgate_1_alarm_timer`, `lc_floodgate_1_beacon`, `lc_floodgate_1_clang`, `lc_floodgate_1_latch`, `lc_floodgate_1_leaf_a`, `lc_floodgate_1_leaf_b`, `lc_floodgate_1_move`, `lc_floodgate_1_wheel` | `map_mods_e.py` |
 | `lockgate` | 2048 | Valve's lock gates across the wide canal: toggled open and shut, a klaxon, a control booth, a passage round | `lc_lockgate_beacon`, `lc_lockgate_close`, `lc_lockgate_closed`, `lc_lockgate_klaxon`, `lc_lockgate_leaf_a`, `lc_lockgate_leaf_b`, `lc_lockgate_open`, `lc_lockgate_opened`, `lc_lockgate_portal`, `lc_lockgate_state`, `lc_lockgate_switch`, `lc_lockgate_switch_light`, `lc_lockgate_switch_model`, `lc_lockgate_toggle` | `map_mods_e.py` |
 | `roadend` | 1088 | the west road's end: a platform at the road's height, stairs down, and a side gate on (the ring's north half ends here) | none | `map_mods_f.py` |
@@ -117,6 +118,25 @@ stall, the washing on the line (no game has a model of clothes on a line), the s
 Unchecked: ambient/fire/fire_small_loop2.wav, env_smokestack, the cables (move_rope), sprites/light_glow03.vmt;
 where on prison_bedframe001b a mattress lies (the mattresses are loose: they fall onto the frames).
 
+### `shantydeck`
+
+The shanty town under a road's deck (the owner, 27 November, at the canal ring's jog, where the ring road crosses
+the canal on a deck: "the shanty town: please move it to under this bridge"). A plain stretch 448 long between a left
+turn before it and a right turn after it: with the two turns' squares the canal's floor there is one hall, 1472 by
+512, the deck over all but its first 128. The town is the shanty module's own, each part drawn by the module's own
+code with the frame moved (shanty_cards, shanty_hearth, shanty_row, shanty_tents): the long boardwalk and its four
+shacks along the left wall (the stall, a bunk room, the store room, the second bunk room), the string of bulbs before
+them; the card room on its boardwalk against the first turn's far wall, half under the deck's edge, the notice
+board and the washing line before it; the hearth (fire drum, seats, couch, stove, the soup's table) against the right
+wall beside it; the five tents along the right wall, their backs to it, their open ends to the hall. The way through
+stays open: in from the first turn, along before the tents, out by the second turn (156 wide at its narrowest).
+Named for the game as the shanty module's: lc_shanty_cards, _fund, _soup, _fire, _board, lc_shanty_tent_1 to _5,
+lc_hq_setup_shanty (the flag's place: on the canal's floor in the first turn's open strip, under the sky, 64 clear
+all round), lc_zone_rebel_r780_h230_shanty (the territory: 780 round the hall's middle, 230 high, under the deck, so
+the road over it is not in it) and lc_base_vehicle_airboat_shanty (by the second turn's far wall, clear of the way out).
+Left out of the module's: its own street bridge, tunnel mouth and ladder (the deck is the bridge now).
+Unchecked: that the flag's pole clears the deck's edge 58 away.
+
 ### `vort`
 
 6. The vortigaunt culvert: a low side drain in the left wall with the city's pipe along its wall under the roof
@@ -133,8 +153,9 @@ Unchecked: env_fire, env_steam rising, ambient/fire/fire_small_loop2.wav.
 
 ### `relay`
 
-7. Cubbage's relay. A concrete quay against the right wall, 128 high and 256 deep (room to walk along the shack's
-front: the owner, 22 November, had to noclip to its door), with a stone coping, three mooring cleats and an iron
+7. Cubbage's relay. A concrete quay against the right wall, at the road's height (256 over the canal's floor since 27
+November: the owner, "please raise the relay station to be higher up above the water line"; it stood 128 up) and 256
+deep (room to walk along the shack's front: the owner, 22 November, had to noclip to its door), with a stone coping, three mooring cleats and an iron
 ladder down its face, two tyres for fenders, steps the quay's full depth up its upstream end, their solid side flush
 with the quay's face; and on it a radio
 shack built from pieces (map_mods_c.shack: mismatched sheets, a tin roof on posts, a boarded window), netting thrown
@@ -1146,14 +1167,18 @@ A long way on foot, in Valve's own tunnel: Black Mesa East's tunnel toward Raven
 valve_eli_raven_tunnel, lifted from d1_eli_02), laid twice end to end, 2752 of it: an arched concrete tunnel 192 wide
 and 176 to its crown on a marble floor, Valve's pipes along one wall, deck lamps in the crown (one lit in each length,
 the others dead, as Valve left them), a red emergency lamp, and in each length Valve's bulkhead (a doorway 176 wide
-and 112 high, where the Ravenholm door hung) 312 from its outer end. The owner, 26 November, of the bunker forest's
-place on the ring: "can we please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel
-copy/pasted". At each end 128 of the canal's own culvert (512 wide, the gate's height), shut across by a concrete
-bulkhead with a doorway 128 wide and 128 high into the tunnel, a caged lamp over it. For a buried chain between two
-gates (map_layouts/bunker_way.txt).
+and 112 high, where the Ravenholm door hung). The owner, 26 November, of the bunker forest's place on the ring: "can we
+please make it down a longer tunnel and not put it RIGHT there; like a HL2 tunnel copy/pasted".
+Its floor is at the road's height, 256 over the canal's floor, from end to end of Valve's tunnel (the owner, 27
+November: "the tunnel starts below the water line of the canal, we need it to start somewhere higher, flush with the
+road"): the chain's start gate is lifted to meet it ("startgate road"), and the first canal's east arm climbs to it by
+a stair. At the far end a concrete bulkhead with a doorway 128 wide and 128 high, a stairwell going down 256 to the
+canal's floor height (16 steps), and a landing 512 wide whose end is this chain's gate (its own cap, as a gate's: the
+chain is "close"d), where the bunker forest's west gate meets it, at the forest's own floor. At the near end the same
+bulkhead hides the tunnel's cut end from the gate's culvert. 3264 long: with the start gate the chain is 3520, as before.
 Changed from Valve's: the story left out (Dog, the door he lifts, its marks and triggers); the emergency lamp, dark
 until the attack in Valve's map, is lit; the two fence panels at the base's end left out. The second length is the
-first turned half round. Left as brushes: the tunnel (Valve's own, one func_detail a length), the bulkheads.
+first turned half round. Left as brushes: the tunnel (Valve's own, one func_detail a length), the bulkheads, the stairs.
 Unchecked: which way Valve's pipe models lie once turned with the piece.
 
 ### `floodgate`
