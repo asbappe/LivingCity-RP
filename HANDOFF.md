@@ -46,5 +46,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   wall on every city bank; rail bridge a viaduct, the Combine engine at its train's head; trains portal to portal;
   floodgate (valve wheel), tramfall, the crypt's inlet. 26 Nov, late: overflow and swingbridge modules gone (the swing
   bridge is the quay's bridge), pour() three jets, backdrop 16 buildings and Valve's card trees, the bunker forest 3520
-  east down Valve's tunnel (servicetunnel, map_shift.py). Test map: 27,568 faces, ~48,400 vertices. Nothing of 26 Nov run in game.
+  east down Valve's tunnel (servicetunnel, map_shift.py). 27 Nov: the walk map holds the OWNER'S OWN forest file (--forest; their
+  Drive link is in that chat; it uses two CS:S materials, concretewall011b/c). Test map: 24,953 faces, ~47,188 vertices. Not run in game.
 - Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: lifts, shed doors, holes 212 to 6, back way (lc_forest_cave_1127b sent, not compiled).
