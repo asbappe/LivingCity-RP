@@ -1854,11 +1854,12 @@ def against(vmf, path, expected, allow=()):
 
 def main():
     import map_cistern
+    import map_core
     import map_forest
     import map_modules
     import map_raven
     import map_ring
-    pieces = {"chain": map_modules.chain, "module": map_modules.module, "cistern": map_cistern.cistern, "canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
+    pieces = {"chain": map_modules.chain, "module": map_modules.module, "cistern": map_cistern.cistern, "core": map_core.core, "canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
     ap = argparse.ArgumentParser(description="Write a new piece of map as its own VMF (never touches the owner's VMF).")
     ap.add_argument("piece", choices=sorted(pieces))
     ap.add_argument("--out", help="the VMF to write (default: lc_PIECE.vmf)")
