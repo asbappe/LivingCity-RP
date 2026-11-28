@@ -47160,6 +47160,42 @@ function Nov28_SealedDoorTests() -- (the owner, 28 November: a sealed Combine do
 end
 Nov28_SealedDoorTests()
 
+function Nov28_DreamDanceTests()
+    section("28 November: ActMod's dances are for dreams only")
+    local p = newPlayer("Dreamer Dee", "citizen")
+    local names = { "ActMod_sv_DontStartAct", "ActMod_sv_DontStartGesture", "ActMod_CantSCAct" }
+    local function Refused()
+        local n = 0
+        for _, name in ipairs(names) do if hook.Run(name, p, "dance") == true then n = n + 1 end end
+        return n
+    end
+    ok(LC.DreamDanceAllowed(p) == false and Refused() == 3, "awake: ActMod is told no, for an emote, a gesture and its menu")
+    p.lcDreaming = 4242
+    ok(LC.DreamDanceAllowed(p) == true and Refused() == 0, "dreaming: ActMod may start it")
+    p.lcDreaming = nil
+    p:SetNW2Bool("lc_dreaming", true)
+    ok(LC.DreamDanceAllowed(p) == true, "(the client's way of knowing: the dreaming flag)")
+    p:SetNW2Bool("lc_dreaming", false)
+    ok(Refused() == 3, "awake again: no again")
+    local npc = { IsValid = function() return true end, IsPlayer = function() return false end }
+    ok(LC.DreamDanceAllowed(npc) == true, "what is no player is not ours to stop")
+
+    -- a dance still going when the dreamer wakes ends with the dream
+    local was, ended = A_AM, 0
+    A_AM = { ActMod = { EndAct = function(self, who) if who == p then ended = ended + 1 end end } }
+    hook.Run("LivingCityDreamWoke", p, true, "end")
+    ok(ended == 0, "waking with no dance going: ActMod is left alone")
+    local acting = true -- (ActMod's own mark on a dancing player; the stub has no SetNWBool)
+    p.GetNWBool = function(_, key, def) if key == "A_AM.ActMod.IsAct" then return acting end return def end
+    hook.Run("LivingCityDreamWoke", p, true, "end")
+    ok(ended == 1, "waking in the middle of a dance ends it")
+    A_AM = nil
+    ok(LC.Try(hook.Run, "LivingCityDreamWoke", p, true, "end") == true, "a server without ActMod: nothing happens, nothing breaks")
+    A_AM = was
+    if IsValid(p) then p:Remove() end
+end
+Nov28_DreamDanceTests()
+
 section("Stop")
 LC.Stop(admin)
 _run(1)
