@@ -35,6 +35,7 @@ LC_MODULES = {
         "sh_livingcity_perfdebug", -- (staff: the performance debugger, off until turned on)
         "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)
         "sh_livingcity_acts",
+        "sh_livingcity_dreamdances", -- (ActMod's dances, a Workshop addon: for dreams only)
         "sh_livingcity_poses", -- (every hand-made pose and its numbers, and what the owner has set with the Miscount Poser)
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_stamina", -- (running and jumping tire you)
