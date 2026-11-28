@@ -1,6 +1,6 @@
 """Carry what changed between two generator builds into the owner's Hammer-saved VMF, touching nothing else.
 
-    python3 map_owner_delta.py BEFORE.vmf AFTER.vmf OWNER.vmf OUT.vmf [--loose] [--ground-base OLD.vmf]
+    python3 map_owner_delta.py BEFORE.vmf AFTER.vmf OWNER.vmf OUT.vmf [--loose] [--near N] [--ground-base OLD.vmf]
 
 BEFORE is the build the owner's file was last brought up to, AFTER the build now (both made the same way, say --test).
 Each entity or world brush only in BEFORE is found in the owner's file by its shape (classname, name, its brushes'
@@ -15,6 +15,11 @@ every point they sculpted, and all their alphas, stay theirs. The base is BEFORE
 (any number: a point of theirs that matches any of these builds is one they never moved), for when their ground is older
 than BEFORE (the owner, 24 November: a dip left from the old bunker's ground cut through the new hallway,
 since the carry-over compared brushes by their planes only and never saw the ground move).
+
+--near N (28 November: the owner had set right by hand what the generator then also set right): a piece to add is not
+added when the owner's file already holds it, the same class, name, place, model and brushes (their world brush moved
+there, their lamp's model swapped); nor a point entity when theirs of the same class, name and model stands within N
+units of it (they nudged it: theirs stays). What the build takes away at the same time does not count as theirs.
 
 The owner's line ends (CRLF) are kept. Afterwards: map_hidden_faces.py OUT.vmf FINAL.vmf --brushes, then FINAL --holes.
 """
@@ -223,6 +228,11 @@ def main():
         ground_base.append(args[i + 1])
         del args[i:i + 2]
     loose = '--loose' in args
+    near = None
+    if '--near' in args:
+        i = args.index('--near')
+        near = float(args[i + 1])
+        del args[i:i + 2]
     before_p, after_p, owner_p, out_p = [a for a in args if not a.startswith('--')][:4]
     B, A, O = read(before_p), read(after_p), read(owner_p)
     _, be, bw, _ = sigs(B, full=True)
@@ -312,6 +322,33 @@ def main():
     if same_shape:
         print('%d new brush entities not added: the owner has the same shape, retextured' % len(same_shape))
         add_e = [x for x in add_e if x not in same_shape]
+    if near is not None:      # (what the owner's file holds already, apart from what this build takes away)
+        gone = set(cut)
+        have_e = set(k for k, v in oe.items() if any(se not in gone for se in v))
+        have_w = set(k for k, v in ow.items() if any(se not in gone for se in v))
+        pts = {}
+        for v in oe.values():
+            for se in v:
+                t = O[se[0]:se[1]]
+                if se not in gone and '\tsolid' not in t and key(t, 'origin'):
+                    pts.setdefault((key(t, 'classname'), key(t, 'targetname'), key(t, 'model').lower()), []).append(nums(key(t, 'origin')))
+        keep_e, held = [], 0
+        for k, se in add_e:
+            t = A[se[0]:se[1]]
+            theirs = ent_sig(t) in have_e
+            if not theirs and near > 0 and '\tsolid' not in t and key(t, 'origin'):
+                o = nums(key(t, 'origin'))
+                theirs = any(max(abs(a - b) for a, b in zip(o, q)) <= near for q in pts.get((key(t, 'classname'), key(t, 'targetname'), key(t, 'model').lower()), []))
+            if theirs:
+                held += 1
+                print('  the owner has it already (not added): %s %s %s at %s' % (key(t, 'classname'), key(t, 'targetname'), key(t, 'model').split('/')[-1], key(t, 'origin')))
+            else:
+                keep_e.append((k, se))
+        add_e = keep_e
+        keep_w = [(k, se) for k, se in add_w if solid_sig(A[se[0]:se[1]]) not in have_w]
+        if len(keep_w) != len(add_w):
+            print('  %d world brushes the owner has already (not added)' % (len(add_w) - len(keep_w)))
+        add_w = keep_w
     new_ents = [vis_ok(renum(A[s:e])) for k, (s, e) in add_e]
     new_sols = [vis_ok(renum(A[s:e])) for k, (s, e) in add_w]
     # (only the visgroups the added pieces are in: a visgroup the owner deleted with what was in it stays deleted; the

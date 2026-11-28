@@ -6,6 +6,11 @@ Living City: the suppression core under City 18's Nexus (the Citadel's own thump
     python3 map_core.py OWNER.vmf OUT.vmf           the owner's map with the core in it: the piece built, carried in with
                                                     map_owner_delta.py (fresh ids, their visgroups, their line ends) and
                                                     their two walls opened (the only brushes of theirs that change)
+    python3 map_core.py OWNER.vmf OUT.vmf --refit BEFORE.vmf
+                                                    their map ALREADY holds the core (it is their file now: they edit it
+                                                    in Hammer): only what this build changes since BEFORE (the piece
+                                                    alone as it was last carried in) goes in, and what they set right
+                                                    by hand stays (refit())
 
 The owner, 27 November: "a Combine 'suppression core' under the Nexus, the city's own Citadel-style thumper ... it needs
 to be somewhat accessible by the resistance; it can't be too highly secured and impossible to get to like the prison ...
@@ -28,10 +33,19 @@ scripts (95 dB: heard across the city), so each is played here by its own wave f
 scripts/sounds/level_sounds_citadel.txt) with a radius, as the owner learned. dmg 0 on the trains (nothing the map moves
 kills): clips keep everyone out of the pit.
 
-THE CHAMBER: Combine metal, two catwalks round the pit (the lower one all round, the upper one on the north, east and
-south walls; a ladder up a post between them), a ceiling slab 32 thick with a hole round each piston, railings and a
-clip from the lower catwalk to the ceiling all round the pit, Combine wall lamps (cold, dim), a red set that is dark,
-pulsing glows at the pistons, consoles, pipes, cables, a deep machine loop (a wave file, radius 1000).
+THE CHAMBER: Combine metal, two catwalks 128 wide round a pit 768 square (the lower one all round, the upper one on the
+north, east and south walls; a ladder up a post between them), a ceiling slab 32 thick with a hole round each piston,
+Episode One's glass panes (glasswindow070c) on the pit's edge of both catwalks where Combine railings were (glass()),
+clips over all of the pit but the reactor's bridge and platform, Combine wall lamps (cold, dim), a red set that is dark,
+pulsing glows at the pistons, consoles, Valve's pipes up the corners (1024 tall: the owner raised the pit's floor to
+-1296 so they end in the slab), a deep machine loop (a wave file, radius 1000). No cables (the lesson
+owner-cables-join-things).
+
+THE REACTOR (28 November, reactor()): Episode One's core between the three pistons, at 0.43 of Valve's size: the ball 200
+across over a round platform with a bridge from the west catwalk, Valve's wall beams from the west, east and north
+walls and their column beam through it while the core runs; lc_core_stop turns it unstable (the wall beams off, the
+column noisy, the energy discharging, arcs, red), lc_core_start heals it. The pistons stand at the pit's edge: one mid
+south, one in each north corner.
 
 THE RESISTANCE'S WAY (secret): the theater tunnel (the hatch in the street at -528 1456 793 and its ladder; the tunnel
 runs east to the sewers) has a dead-end alcove on its south side (x 32..160, y 1264..1376, a power box, a stained wall).
@@ -39,16 +53,22 @@ Low in its west wall (their brush 21766) is a broken hole, 64 wide and 56 high: 
 down a ladder (342) to an old service tunnel, east 2368 under the sewers and the Nexus, down a ladder (480) at its end,
 along a short passage, down a second ladder (480), and through the chamber's west wall onto the lower catwalk.
 
+THE SEALED DOOR (28 November, sealed_door()): where the Resistance's way meets the chamber, in the owner's own brush's
+place, drawn as the Nexus's doors; named lc_sealed_core, which the game locks for everybody (a beep; a Hacker's
+multitool or a bypass charge opens it).
+
 THE COMBINE'S WAY: a doorway in the power room's east wall (their brush 23625, in the niche between the two
-generators), and behind it Valve's freight lift (the prefab valve_eli_lift_ride, as map_cistern.py uses it: the cage
-model on Valve's own unseen collision, the gate models over unseen clips, the call buttons, its sounds), down 760 to the
-upper catwalk. It is a func_door (map_walk.py rides func_door lifts): Open sends it down, Close up.
+generators), and behind it a Combine lift as City 18's own are (lift(): the owner, 28 November; it was Black Mesa
+East's freight lift): a glass plate in a citadel metal frame (a func_movelinear), Combine buttons, a gate drawn as a
+Nexus door at each landing, down 760 to the upper catwalk. Open sends it down, Close up.
 
 Names for the game: lc_core_machine (the main digger's train), lc_core_digger_2, lc_core_digger_3, lc_core_stop and
 lc_core_start (logic_relays), lc_core_panel_1..3 (where a player stands at a console), lc_core_button (a func_button
 at the main console: a press sound only, the game hears OnPressed), lc_core_room (the chamber's middle), lc_core_breach
-(at the hole in the alcove), lc_core_combine_way (in the power room before the lift). The lift: lc_core_lift_down and
-lc_core_lift_up (logic_relays).
+(at the hole in the alcove), lc_core_combine_way (in the power room before the lift). The lift: lc_core_lift (the
+plate), lc_core_lift_gate_top and _low, lc_core_lift_button, lc_core_lift_down and lc_core_lift_up (logic_relays). The
+door: lc_sealed_core. The reactor: lc_core_reactor_ball, lc_core_energy, lc_core_beam, lc_core_column and
+lc_core_column_unstable, lc_core_reactor_tesla, lc_core_reactor_arc (all worked by the two relays).
 """
 import json
 import math
@@ -67,28 +87,36 @@ from map_modules import SCAPES, Build, Frame, Mod  # noqa: E402
 PREFABS = os.path.join(HERE, "..", "reference", "prefabs")
 T = 16                                   # walls, floors and roofs
 CH = (2368, 128, 3392, 1152)             # the chamber inside: x1 y1 x2 y2
-FLOOR, LOW, HIGH, CEIL, ROOF = -1408, -896, -512, -304, 192      # pit floor, lower and upper catwalk tops, ceiling slab's underside, roof's underside
+FLOOR, LOW, HIGH, CEIL, ROOF = -1408, -896, -512, -304, 192      # the shell's floor, lower and upper catwalk tops, ceiling slab's underside, roof's underside
+PIT_FLOOR = -1296                        # the pit's floor as the owner raised it (28 November): the corner pipes (1024 tall) then end in the ceiling slab
 SLAB = 32                                # the ceiling slab's thickness
-WALK = 192                               # the catwalks' width
+WALK = 128                               # the catwalks' width (192 until 28 November: the pit was widened for the reactor)
 PIT = (CH[0] + WALK, CH[1] + WALK, CH[2] - WALK, CH[3] - WALK)   # the pit inside the lower catwalk
 K_CUT = -264                             # the diggers are cut here (with each at the bottom of its stroke): over the slab, under the roof at the top
 CX, CY = (CH[0] + CH[2]) // 2, (CH[1] + CH[3]) // 2
 # Valve's three diggers: (their train's name, ours, where the middle of its block stands here)
-DIGGERS = (("train_digger1", "lc_core_machine", (2880, 800)),
-           ("train_digger2", "lc_core_digger_2", (2704, 496)),
-           ("train_digger3", "lc_core_digger_3", (3056, 496)))
+# (out at the pit's edge since 28 November, the reactor between them: one mid south, one in each north corner, so the
+#  west, east and north walls' beams reach the core)
+DIGGERS = (("train_digger1", "lc_core_machine", (CX, CY - 272)),
+           ("train_digger2", "lc_core_digger_2", (CX - 272, CY + 272)),
+           ("train_digger3", "lc_core_digger_3", (CX + 272, CY + 272)))
+# the reactor (Episode One's core, at 0.43 of Valve's size): the ball's middle, its radius, the round platform's reach
+RZ, BALL, PLAT, BRIDGE = LOW + 128, 100, 168, 32
+SCALE = 0.43
+GLASS, FRAME = "glass/glasswindow070c", "metal/citadel_metalwall072a"
 # the wave files under Valve's sound scripts (Garry's Mod's scripts/sounds/level_sounds_citadel.txt), with a radius
 DIGGER_SOUND = {"d3_citadel.digger_hit1": "ambient/machines/floodgate_stop1.wav", "d3_citadel.digger_move1": "ambient/machines/wall_move4.wav",
                 "d3_citadel.digger_stop1": "plats/hall_elev_stop.wav"}
 LOOP = "ambient/levels/canals/generator_ambience_loop1.wav"      # (a deep machine loop the owner's own map already plays)
 # the lift (the Combine's way): its landings' front plane, the cage's middle across, the two landings' floors
 LX, LY, LZ, TZ = 3444, 608, HIGH, 248
-LIFT_SPEED = 128
+LIFT_SPEED = 180                         # (City 18's nexus_elev lifts)
 # the secret way and the Combine's doorway: where the piece opens the owner's own brushes (id: their box, the hole, the
 # material the hole's new faces get)
 HOLE = (16, 1280, 406, 32, 1344, 462)
 DOORWAY = (3413, 544, 248, 3429, 672, 376)
 OPENINGS = (HOLE, DOORWAY)
+SEALED = (2356, 896, -904, 2360, 1024, -784)      # the owner's own brush (4668765 in their file of 28 November), now the sealed door
 OPENED = {"21766": ((16, 1264, 406, 32, 1360, 526), HOLE, "brick/brickwall001a"),
           "23625": ((3413, 448, 248, 3429, 824, 480), DOORWAY, "metal/metalcombine001")}
 # the owner's brushes the piece's walls meet (their walls there are the piece's): never filled by the piece
@@ -296,11 +324,11 @@ def diggers(m, vmf, problems):
         bvs = [c for s in block for c in s["corners"]]
         vcx = (min(c[0] for c in bvs) + max(c[0] for c in bvs)) / 2.0
         vcy = (min(c[1] for c in bvs) + max(c[1] for c in bvs)) / 2.0
-        d = (bx - vcx, by - vcy, FLOOR + stroke - foot)
+        d = (bx - vcx, by - vcy, PIT_FLOOR + stroke - foot)
         cut = K_CUT + stroke          # (the cut as the train is built: at the top of its stroke)
         # Valve's train and tracks have their origin at the top of the block (over our roof once moved): the origin and
         # both tracks go down together, inside the room (a train's brushes move as its origin does, wherever that is)
-        lower = (top["origin"][2] + d[2]) - (FLOOR + stroke + 32)
+        lower = (top["origin"][2] + d[2]) - (PIT_FLOOR + stroke + 32)
         # (as it spawns a train goes to its first track, its origin `height` over it: Valve's stand 5 under their trains'
         #  origins, so their pistons stop 5 short of the ground; ours are set so the piston meets the pit floor)
         settle = float(big["keys"].get("height", "0")) + (top["origin"][2] - big["origin"][2])
@@ -354,13 +382,13 @@ def diggers(m, vmf, problems):
                 keys["radius"] = "1250"
                 keys["spawnflags"] = "48"          # (starts silent, plays once: never 'everywhere' as Valve's hit was)
                 keys["pitch"] = keys["pitchstart"] = str(90 + 10 * (n - 1))
-                o = (bx, by, FLOOR + 96)           # (at the foot of its piston, where it is heard)
+                o = (bx, by, PIT_FLOOR + 96)       # (at the foot of its piston, where it is heard)
             elif w["classname"] == "env_shake":
                 keys["radius"] = str(min(int(float(keys.get("radius", "500"))), 640))
                 keys["spawnflags"] = "0"
                 o = (bx, by, HIGH if t.endswith("_top") else LOW)      # (felt on the catwalks, not up in the attic)
             elif w["classname"] == "env_ar2explosion":
-                o = (o[0], o[1], FLOOR + 8)
+                o = (o[0], o[1], PIT_FLOOR + 8)
             vmf.point(w["classname"], tuple(int(round(v)) for v in o), keys, vis)
         # the two path_tracks; each hands its outputs (Valve's, as they were) to a relay that lc_core_stop can cancel
         for w, which in ((top, "top"), (low, "low")):
@@ -408,85 +436,273 @@ def ladder(m, x, y, z0, z1, out, foot, top):
     vmf.point("info_ladder_dismount", (top[0], top[1], z1 + 1), {}, vis)
 
 
+def zprism(outline, z1, z2, mat, top=None, bottom=None):
+    """A flat outline ([(x, y), ...] in order) stood up from z1 to z2: the faces for convex_text (detail_shapes)."""
+    faces = [([(x, y, z2) for x, y in outline], top or mat), ([(x, y, z1) for x, y in outline], bottom or mat)]
+    for k in range(len(outline)):
+        (ax, ay), (bx, by) = outline[k], outline[(k + 1) % len(outline)]
+        faces.append(([(ax, ay, z1), (bx, by, z1), (bx, by, z2), (ax, ay, z2)], mat))
+    return faces
+
+
+def eight(cx, cy, r):
+    """An octagon's corners on the grid, r from the middle to each flat side."""
+    k = int(round(r * 0.4142))
+    return [(cx + r, cy + k), (cx + k, cy + r), (cx - k, cy + r), (cx - r, cy + k), (cx - r, cy - k), (cx - k, cy - r), (cx + k, cy - r), (cx + r, cy - k)]
+
+
+def nexus_door(box, thin, foot=12, hidden=0):
+    """The boxes of a door as the Nexus's own are drawn in the owner's map (nexus_intdoor, nexus_importantdoor: a frame of
+    citadel_metalwall072c round a panel of citadel_metalwall090a over a hazard stripe, pipe metal on its edges), for
+    brush_entity: [(box, {face: material})]. thin: the axis it is thin along ("x" or "y"); foot: the stripe's height;
+    hidden: how much of each end of its width stays inside the wall (the frame is drawn inside that)."""
+    x1, y1, z1, x2, y2, z2 = box
+    nd, rim, frame, panel, stripe = MAT["nodraw"], "metal/metalpipe001a", "metal/citadel_metalwall072c", "metal/citadel_metalwall090a", "dev/dev_hazzardstripe01a"
+    big = ("west", "east") if thin == "x" else ("south", "north")
+    ends = ("south", "north") if thin == "x" else ("west", "east")
+
+    def piece(a, b, za, zb, mat, low_end=nd, high_end=nd, top=nd, bottom=nd):
+        bx = (x1, a, za, x2, b, zb) if thin == "x" else (a, y1, za, b, y2, zb)
+        return (bx, {big[0]: mat, big[1]: mat, ends[0]: low_end, ends[1]: high_end, "top": top, "bottom": bottom})
+    w1, w2 = (y1, y2) if thin == "x" else (x1, x2)
+    post = hidden + 4
+    return [piece(w1, w2, z1, z1 + foot, stripe, stripe, stripe, nd, rim),
+            piece(w1, w1 + post, z1 + foot, z2, frame, rim, nd, rim),
+            piece(w2 - post, w2, z1 + foot, z2, frame, nd, rim, rim),
+            piece(w1 + post, w2 - post, z2 - 4, z2, frame, nd, nd, rim),
+            piece(w1 + post, w2 - post, z1 + foot, z2 - 4, panel)]
+
+
+def sealed_door(m):
+    """The door where the service tunnel meets the chamber (the owner, 28 November: a brush of theirs, 4 by 128 by 120 at
+    2358 960 -844, "make it a combine door like the rest of the nexus ... it just makes a little beep and it can only be
+    hacked open by the resistance hacker OR the combine bypass charge"). Drawn as the Nexus's doors are, in their brush's
+    place, sliding up; the game seals any door named lc_sealed... by itself (sv_livingcity_doors.lua): locked for
+    everybody, a beep at E, opened only by a Hacker's multitool or a bypass charge, for its 30 seconds (wait -1: the game
+    shuts it)."""
+    b, vmf = m.b, m.b.vmf
+    name = "lc_sealed_core"
+    keys = {"targetname": name, "movedir": "-90 0 0", "speed": "100", "lip": "5", "wait": "-1", "spawnflags": "2048", "dmg": "0", "forceclosed": "0", "health": "0",
+            "ignoredebris": "0", "loopmovesound": "0", "noise1": "doors/doormove1.wav", "noise2": "doors/doormove2.wav", "locked_sentence": "0",
+            "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "0"}
+    vmf.brush_entity("func_door", keys, nexus_door(SEALED, "x", foot=20, hidden=16), MAT["nodraw"], VIS + ": the sealed door")
+    b.names.append((name, "func_door", m.tag))
+
+
+def combine_button(m, name, wall, yaw, wires, vis, outside=False):
+    """A Combine button as City 18's lifts have them (nexus_elev1_button: props_combine/combinebutton.mdl 6 out from the
+    wall under an unseen func_button that locks itself for 2.2 s and plays the model's press). wall: the point on the
+    wall's face; yaw: the way it faces. Every button of one name locks together."""
+    b, vmf = m.b, m.b.vmf
+    dx, dy = int(round(math.cos(math.radians(yaw)))), int(round(math.sin(math.radians(yaw))))
+    x, y, z = wall
+    vmf.point("prop_dynamic", (x + 6 * dx, y + 6 * dy, z), {"targetname": name + "_model", "model": "models/props_combine/combinebutton.mdl", "angles": "0 %d 0" % yaw,
+                                                             "solid": "0", "disableshadows": "1", "fademindist": "-1", "fadescale": "1", "skin": "0", "StartDisabled": "0",
+                                                             "renderamt": "255", "rendercolor": "255 255 255"}, vis, outside=outside)
+    box = (min(x, x + 12 * dx) - 8 * abs(dy), min(y, y + 12 * dy) - 8 * abs(dx), z - 6, max(x, x + 12 * dx) + 8 * abs(dy), max(y, y + 12 * dy) + 8 * abs(dx), z + 8)
+    vmf.brush_entity("func_button", {"targetname": name, "spawnflags": "1025", "wait": "3", "speed": "0", "lip": "0", "movedir": "0 0 0", "sounds": "0", "health": "0",
+                                     "min_use_angle": "0.8", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0",
+                                     "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
+                     [box], "tools/toolsinvisible", vis,
+                     connections=[("OnPressed", name, "Lock", "", 0), ("OnPressed", name, "Unlock", "", 2.2), ("OnPressed", name + "_model", "SetAnimation", "press", 0)]
+                     + [("OnPressed", n, i, val, dl) for n, i, val, dl in wires])
+    if (name, "func_button", m.tag) not in b.names:
+        b.names.append((name, "func_button", m.tag))
+
+
+def combine_lamp(m, x, y, yaw, z, colour="147 226 240 450", name=None, beam=False, pitch=-30):
+    """The Combine's wall light (props_combine/combine_light002a: its origin is at its FOOT, the model 44 tall) with its
+    light at its lens, where the owner put them (28 November: the spots had been set 22 under the model's foot and the
+    beams 22 over it, "misaligned by like 6 feet"): the light_spot 12 out and 20 up, the beam beside it."""
+    m.static("models/props_combine/combine_light002a.mdl", x, y, yaw, z)
+    dx, dy = int(round(math.cos(math.radians(yaw)))), int(round(math.sin(math.radians(yaw))))
+    keys = {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_cone": "35", "_inner_cone": "12", "_exponent": "1", "angles": "%d %d 0" % (pitch, yaw), "pitch": str(pitch),
+            "style": "0", "_constant_attn": "0", "_linear_attn": "0", "_quadratic_attn": "1"}
+    if name:
+        keys["targetname"] = name + "_blue"
+    m.point("light_spot", x + 12 * dx, y + 12 * dy, z + 20, keys, vis=m.lv)
+    if beam:
+        m.point("point_spotlight", x + 6 * dx, y + 6 * dy, z + 22, {"targetname": "lc_core_beam_blue", "angles": "%d %d 0" % (-pitch, yaw), "spawnflags": "1",
+                                                                  "spotlightlength": "400", "spotlightwidth": "48", "rendercolor": "147 226 240", "renderamt": "120",
+                                                                  "HDRColorScale": "0.6"}, vis=m.lv)
+
+
 def lift(m, problems):
-    """The Combine's way down: Valve's freight lift (d1_eli_01, the prefab valve_eli_lift_ride, as map_cistern.lift has
-    it), its landings facing west (the power room's doorway at the top, the chamber's east wall at the bottom), its shaft
-    to the east. Valve's piece has its doorway's middle at (0, 0) and its shaft toward -y: here x = LX - y, y = LY + x."""
+    """The Combine's way down, as City 18's own lifts are (the owner, 28 November: "replace the cargo / eli's lab lift with
+    a combine lift; there are several on the C18 map that are made of combine glass and use combine buttons"): a
+    func_movelinear like their nexus_elev1 (a plate of Combine glass in a frame of citadel_metalwall072a, their sounds,
+    their speed), Combine buttons on the shaft's wall at both floors and outside both doorways. Their lifts run in open
+    shafts 364 deep; this one is 760, so each landing has a gate drawn as a Nexus door (a func_movelinear too: E does
+    nothing to it), open only while the plate is there. Open sends the plate down, Close up."""
     b, vmf = m.b, m.b.vmf
     vis = VIS + ": the lift"
-    pf = json.load(open(os.path.join(PREFABS, "valve_eli_lift_ride.json")))
-
-    def valve(x1, y1, z1, x2, y2, z2, z0):
-        return (LX - y2, LY + x1, z0 + z1, LX - y1, LY + x2, z0 + z2)
-
-    def place(x, y, z, z0):
-        return (LX - y, LY + x, z0 + z)
-
-    def turned(yaw):
-        return (yaw + 90) % 360
-    prop_keys = {"skin": "0", "disableshadows": "1", "fademindist": "-1", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
-                 "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}
-    cage = [w for w in pf["wiring"] if w["keys"].get("targetname") == "elevator_lab"][0]
-    boxes = []
-    for brush in cage["brushes"]:
-        vs = [v for side in brush for v in side["corners"]]
-        boxes.append(valve(*([int(round(min(v[k] for v in vs))) for k in range(3)] + [int(round(max(v[k] for v in vs))) for k in range(3)]), z0=TZ))
-    high = max(bx[5] for bx in boxes) - min(bx[2] for bx in boxes)
+    nd = MAT["nodraw"]
     car = "lc_core_lift"
-    vmf.brush_entity("func_door", {"targetname": car, "movedir": "90 0 0", "speed": str(LIFT_SPEED), "lip": str(high - (TZ - LZ)), "wait": "-1", "spawnflags": "0",
-                                   "spawnpos": "0", "dmg": "0", "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "1",
-                                   "noise1": "eli_lab.elevator_move", "noise2": "eli_lab.elevator_stop", "locked_sentence": "0", "unlocked_sentence": "0",
-                                   "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
-                     boxes, MAT["nodraw"], vis, connections=[("OnFullyOpen", car + "_gate_low", "Open", "", 0.3), ("OnFullyClosed", car + "_gate_top", "Open", "", 0.3)])
-    b.names.append((car, "func_door", m.tag))
-    vmf.point("prop_dynamic", place(0, -88, -8, TZ), dict(prop_keys, targetname=car + "_cage", model="models/props_lab/freightelevator.mdl", angles="0 %d 0" % turned(90),
-                                                         solid="0", parentname=car), vis)
-
-    def button(name, pos, yaw, wires, parent=None, outside=False):
-        """Half-Life 2's lift button on a wall's face, facing yaw, and an unseen func_button over it."""
-        more = {"parentname": parent} if parent else {}
-        vmf.point("prop_dynamic", pos, dict(prop_keys, targetname=name + "_model", model="models/props_lab/freightelevatorbutton.mdl", angles="0 %d 0" % yaw,
-                                            solid="0", **more), vis, outside=outside)
-        dx, dy = int(round(math.cos(math.radians(yaw)))), int(round(math.sin(math.radians(yaw))))
-        x, y, z = pos
-        bb = (min(x - dx, x + 8 * dx) - 6 * abs(dy), min(y - dy, y + 8 * dy) - 6 * abs(dx), z + 2, max(x - dx, x + 8 * dx) + 6 * abs(dy), max(y - dy, y + 8 * dy) + 6 * abs(dx), z + 22)
-        vmf.brush_entity("func_button", dict({"targetname": name, "spawnflags": "1025", "wait": "2", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "15", "health": "0",
-                                              "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255"}, **more),
-                         [bb], MAT["nodraw"], vis, connections=[("OnPressed", n, i, val, dl) for n, i, val, dl in wires])
-        b.names.append((name, "func_button", m.tag))
+    x1, y1, x2, y2 = LX + 2, LY - 94, LX + 190, LY + 94      # (2 clear of the shaft's walls all round)
+    side = {"top": FRAME, "bottom": FRAME, "west": nd, "east": nd, "north": nd, "south": nd}
+    plate = [((x1, y1, TZ - 8, x1 + 8, y2, TZ), dict(side, east=FRAME)), ((x2 - 8, y1, TZ - 8, x2, y2, TZ), dict(side, west=FRAME)),
+             ((x1 + 8, y1, TZ - 8, x2 - 8, y1 + 8, TZ), dict(side, north=FRAME)), ((x1 + 8, y2 - 8, TZ - 8, x2 - 8, y2, TZ), dict(side, south=FRAME)),
+             ((x1 + 8, y1 + 8, TZ - 8, x2 - 8, y2 - 8, TZ), {"top": "glass/combineglass001a", "bottom": "glass/combineglass001a", "west": nd, "east": nd, "north": nd, "south": nd})]
+    vmf.brush_entity("func_movelinear", {"targetname": car, "movedir": "90 0 0", "movedistance": str(TZ - LZ), "speed": str(LIFT_SPEED), "startposition": "0",
+                                         "blockdamage": "0", "startsound": "d3_citadel.small_elevator_move", "stopsound": "eli_lab.elevatordoor_stop",
+                                         "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1"},
+                     plate, nd, vis, connections=[("OnFullyOpen", car + "_gate_low", "Open", "", 0.3), ("OnFullyClosed", car + "_gate_top", "Open", "", 0.3)])
+    b.names.append((car, "func_movelinear", m.tag))
+    gate = {"movedir": "-90 0 0", "speed": "100", "startposition": "0", "blockdamage": "0", "startsound": "doors/doormove1.wav", "stopsound": "doors/doormove2.wav",
+            "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1"}
+    for tag, box, send in (("low", (LX - 10, LY - 52, LZ, LX - 4, LY + 52, LZ + 116), "Close"), ("top", (LX - 10, 544, TZ, LX - 4, 672, TZ + 128), "Open")):
+        name = car + "_gate_" + tag
+        vmf.brush_entity("func_movelinear", dict(gate, targetname=name, movedistance=str(box[5] - box[2] - 5)), nexus_door(box, "x"), nd, vis,
+                         connections=[("OnFullyClosed", car, send, "", 0.5)])
+        b.names.append((name, "func_movelinear", m.tag))
     both = [(car + "_down", "Trigger", "", 0), (car + "_up", "Trigger", "", 0)]
-    button(car + "_button", place(78, -50, 32, TZ), turned(180), both, parent=car)
-    # the call buttons: in the power room on its east wall beside the doorway, and in the chamber beside its doorway
-    button(car + "_call_top", (3412, 704, 272), 180, [(car + "_up", "Trigger", "", 0)], outside=True)
-    button(car + "_call_low", (CH[2] - 1, LY + 76, LZ + 40), 180, [(car + "_down", "Trigger", "", 0)])
-    door = {"speed": "100", "lip": "16", "wait": "-1", "spawnpos": "0", "dmg": "0", "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0",
-            "noise1": "eli_lab.elevatordoor_move", "noise2": "eli_lab.elevatordoor_stop", "locked_sentence": "0", "unlocked_sentence": "0", "renderamt": "255",
-            "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"}
-    for tag, z0, send in (("low", LZ, "Close"), ("top", TZ, "Open")):
-        gate = car + "_gate_" + tag
-        vmf.point("prop_dynamic", place(0, -4, 1, z0), dict(prop_keys, targetname=gate + "_model", model="models/props_lab/elevatordoor.mdl", angles="0 %d 0" % turned(90),
-                                                           solid="6"), vis)
-        for k, (leaf, way) in enumerate(((valve(0, -12, 0, 96, -2, 160, z0), 0), (valve(-96, -12, 0, 0, -2, 160, z0), 180))):
-            wires = [("OnFullyClosed", car, send, "", 0.5), ("OnClose", gate + "_model", "SetAnimation", "close", 0), ("OnOpen", gate + "_model", "SetAnimation", "open", 0)]
-            vmf.brush_entity("func_door", dict(door, targetname=gate, movedir="0 %d 0" % turned(way), spawnflags="0" if k == 0 else "4096"), [leaf], MAT["clip"], vis,
-                             connections=wires if k == 0 else None)
-        b.names.append((gate, "func_door", m.tag))
+    button = car + "_button"
+    combine_button(m, button, (3413, 704, TZ + 56), 180, both, vis, outside=True)      # (in the power room, on its east wall beside the doorway)
+    combine_button(m, button, (LX, LY + 80, TZ + 56), 0, both, vis)                    # (in the shaft, beside the upper landing)
+    combine_button(m, button, (LX, LY + 80, LZ + 56), 0, both, vis)                    # (in the shaft, beside the lower landing)
+    combine_button(m, button, (CH[2], LY + 76, LZ + 56), 180, both, vis)               # (in the chamber, beside its doorway)
     m.point("logic_auto", LX + 64, LY, TZ + 150, {"spawnflags": "1"}, vis=vis, connections=[("OnMapSpawn", car + "_gate_top", "Open", "", 0.5)])
     m.point("logic_relay", LX + 80, LY, TZ + 150, {"targetname": car + "_down", "StartDisabled": "0", "spawnflags": "0"}, vis=vis,
             connections=[("OnTrigger", car + "_gate_top", "Close", "", 0)])
     m.point("logic_relay", LX + 96, LY, TZ + 150, {"targetname": car + "_up", "StartDisabled": "0", "spawnflags": "0"}, vis=vis,
             connections=[("OnTrigger", car + "_gate_low", "Close", "", 0)])
-    # lights: a cage lamp over each landing (its own light), one in the shaft's head
-    for z0 in (LZ, TZ):
-        m.static("models/props_c17/light_cagelight02_on.mdl", LX - 12, LY, 90, z0 + 104)
-        m.point("light_spot", LX - 4, LY, z0 + 100, {"_light": "200 225 255 60", "_lightHDR": "-1 -1 -1 1", "_cone": "70", "_inner_cone": "35", "_exponent": "1",
-                                                   "angles": "-90 0 0", "pitch": "-90", "style": "0", "_constant_attn": "20", "_linear_attn": "0", "_quadratic_attn": "1"}, vis=m.lv)
-    m.light(LX + 96, LY, TZ + 160, "200 225 255 40")
+    # lights, as their lifts' shafts have them: one fixture at the shaft's head, over the plate's reach (a lamp lower down
+    # would stand in the plate's way: it fills the shaft), shining down, and dim fills down the shaft with no fixture
+    combine_lamp(m, LX + 184, LY, 180, TZ + 120, colour="147 226 240 500", pitch=-70)
+    for z in (TZ - 250, TZ - 500, LZ + 96):
+        m.light(LX + 96, LY, z, "147 226 240 30")
     # the niche's floor in the power room (their brush 23576) ends at the shaft: its end, nodraw where it faced the void, now
     # looks into the shaft (riders pass it): covered by a plate of ours rather than changing their brush
     vmf.detail([(LX, 544, TZ - 16, LX + 1, 672, TZ)], "metal/citadel_metalwall090a", vis=vis, faces={"west": MAT["nodraw"]})
     vmf.keep_way_clear((3413, 544, TZ, LX, 672, TZ + 116), "the lift's upper landing")
     vmf.keep_way_clear((CH[2] - 96, LY - 52, LZ, LX, LY + 52, LZ + 116), "the lift's lower landing")
+
+
+def glass(m):
+    """Glass round the pit in place of the Combine railings (the owner, 28 November: "replace the combine railing around
+    the perimeter of the walkway with glass, similar to the EP1 reactor room's big glass panes between the consoles and
+    reactor core"): Episode One's pane (glasswindow070c, 4 thick) on a low kerb under a thin cap, 112 high, on both
+    catwalks, with posts at the corners and at the bridge's mouth. One long pane a side (few faces)."""
+    vmf = m.b.vmf
+    x1, y1, x2, y2 = CH
+    px1, py1, px2, py2 = PIT
+    nd = MAT["nodraw"]
+    vis = VIS + ": glass"
+    by1, by2 = CY - BRIDGE, CY + BRIDGE
+    # a run: (axis it runs along, where it stands across, from, to), each between two posts (a post is 1 proud of the kerb
+    # all round: no two faces in one plane); the pane stands 6 back from the pit's edge, on the catwalk
+    w, e, s_, n = px1 - 6, px2 + 6, py1 - 6, py2 + 6
+    hw = px1 + 4          # (the upper catwalk's open west ends)
+    for z, runs, posts in (
+            (LOW, [("x", s_, w + 5, e - 5), ("x", n, w + 5, e - 5), ("y", e, s_ + 5, n - 5), ("y", w, s_ + 5, by1 - 10), ("y", w, by2 + 10, n - 5)],
+             [(w, s_), (e, s_), (w, n), (e, n), (w, by1 - 5), (w, by2 + 5)]),
+            (HIGH, [("x", s_, hw + 5, e - 5), ("x", n, hw + 5, e - 5), ("y", e, s_ + 5, n - 5), ("y", hw, y1, 196), ("y", hw, n + 5, y2)],
+             [(e, s_), (e, n), (hw, s_), (hw, n)])):
+        kerb, pane, cap = [], [], []
+        for axis, at, a, c in runs:
+            def box(half, za, zb):
+                return (a, at - half, za, c, at + half, zb) if axis == "x" else (at - half, a, za, at + half, c, zb)
+            kerb.append(box(4, z, z + 8))
+            pane.append(box(2, z + 8, z + 108))
+            cap.append(box(4, z + 108, z + 112))
+        vmf.detail(kerb, FRAME, vis=vis, faces={"bottom": nd})
+        vmf.detail(cap, FRAME, vis=vis)
+        vmf.detail(pane, GLASS, vis=vis, faces={"top": nd, "bottom": nd})
+        vmf.detail([(x - 5, y - 5, z, x + 5, y + 5, z + 114) for x, y in posts], FRAME, vis=vis, faces={"bottom": nd})
+
+
+def reactor(m):
+    """Episode One's reactor core between the pistons (the owner, 28 November: "can we stick the reactor from EP1 inside
+    this room? the little walkway around the reactor core and the core reactor effect itself right in between all the
+    thumpers? Will they fit?"). Valve's ball is 462 across in a hall about 1700 wide (ep1_citadel_03); the pit is 768, so
+    it is here at 0.43 of that: the ball (props_combine/coreball.mdl, as Valve's second one, core_room2: a prop_dynamic
+    with two env_citadel_energy_core in it) 200 across over a round platform 336 across with a bridge from the west
+    catwalk, on a column from the pit's floor, under an emitter hung from the ceiling slab. Then: "copy the EP1 beams
+    that shoot at the reactor so they stick out of the walls ... those indicate the reactor is healthy, and when the
+    consoles get blown up or hacked, those beams all shut off and the reactor core switches to it's unstable look":
+    Valve's beam_core (sprites/core_beam1) from a nozzle on the west, east and north walls to the ball, and their
+    column beam (effects/bluelaser1) through it, clean while the core runs; lc_core_stop turns the wall beams off, the
+    column to Valve's noisy one, the energy to its discharge, the ball and the light red, arcs on; lc_core_start all back.
+    Returns the wires for the two relays. Names: lc_core_reactor_ball, lc_core_energy, lc_core_reactor_target,
+    lc_core_beam, lc_core_beam_glow, lc_core_column, lc_core_column_unstable, lc_core_reactor_tesla, lc_core_reactor_arc."""
+    b, vmf = m.b, m.b.vmf
+    x1, y1, x2, y2 = CH
+    px1 = PIT[0]
+    nd = MAT["nodraw"]
+    vis = VIS + ": the reactor (Valve's, ep1_citadel_03)"
+    metal, top = "metal/citadel_metalwall090a", "metal/citadel_tilefloor016a"
+    # the platform, its bridge, the column under it, the emitters under and over the ball
+    vmf.detail_shapes([zprism(eight(CX, CY, PLAT), LOW - 16, LOW, "metal/metalcombine001", top=top),
+                       zprism(eight(CX, CY, 48), PIT_FLOOR, LOW - 16, metal, top=nd, bottom=nd),
+                       zprism(eight(CX, CY, 96), LOW - 40, LOW - 16, metal, top=nd),
+                       zprism(eight(CX, CY, 40), LOW, LOW + 12, metal, bottom=nd),
+                       zprism(eight(CX, CY, 40), RZ + BALL + 24, CEIL, metal, top=nd),
+                       zprism(eight(CX, CY, 56), CEIL - 24, CEIL, metal, top=nd)], vis)
+    vmf.detail([(px1, CY - BRIDGE, LOW - 16, CX - PLAT, CY + BRIDGE, LOW)], "metal/metalcombine001", vis=vis, top=top, faces={"west": nd, "east": nd})
+    m.static("models/props_combine/combine_core_ring01.mdl", CX, CY, 0, RZ + BALL + 30)
+    # nobody into the pit: clips over all of it but the bridge and the platform, and round the ball
+    clips = [(PIT[0], CY + PLAT, LOW, PIT[2], PIT[3], CEIL), (PIT[0], PIT[1], LOW, PIT[2], CY - PLAT, CEIL), (CX + PLAT, CY - PLAT, LOW, PIT[2], CY + PLAT, CEIL),
+             (PIT[0], CY - PLAT, LOW, CX - PLAT, CY - BRIDGE, CEIL), (PIT[0], CY + BRIDGE, LOW, CX - PLAT, CY + PLAT, CEIL)]
+    for box in clips:
+        vmf.world_box(box, "tools/toolsclip", vis=VIS + ": clips", seals=False)
+    k = int(round(PLAT * 0.4142))
+    corners = [zprism([(CX + sx * PLAT, CY + sy * k), (CX + sx * k, CY + sy * PLAT), (CX + sx * PLAT, CY + sy * PLAT)], LOW, CEIL, "tools/toolsclip") for sx in (-1, 1) for sy in (-1, 1)]
+    for faces in corners + [zprism(eight(CX, CY, BALL + 8), LOW, RZ + BALL + 24, "tools/toolsclip")]:
+        vmf.world.append(vmf.convex_text(faces, VIS + ": clips"))
+    vmf.keep_way_clear((px1 - 64, CY - BRIDGE, LOW, CX - 240, CY + BRIDGE, LOW + 96), "the bridge to the reactor")      # (the checker knows the ball at Valve's size: 231 round)
+    # the ball, Valve's energy in it, what the beams aim at
+    vmf.point("prop_dynamic", (CX, CY, RZ), {"targetname": "lc_core_reactor_ball", "model": "models/props_combine/coreball.mdl", "angles": "0 0 0", "solid": "0",
+                                             "modelscale": str(SCALE), "lc_scale": str(SCALE), "disableshadows": "1", "fademindist": "-1", "fadescale": "1", "skin": "0",
+                                             "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"}, vis)
+    b.names.append(("lc_core_reactor_ball", "prop_dynamic", m.tag))
+    for pitch in (90, -90):
+        m.point("env_citadel_energy_core", CX, CY, RZ, {"targetname": "lc_core_energy", "angles": "%d 0 0" % pitch, "scale": "2", "spawnflags": "2"}, vis=vis)
+    m.point("info_target", CX, CY, RZ, {"targetname": "lc_core_reactor_target", "angles": "0 0 0"}, vis=vis)
+    m.point("info_target", CX, CY, LOW + 12, {"targetname": "lc_core_column_low", "angles": "0 0 0"}, vis=vis)
+    m.point("info_target", CX, CY, RZ + BALL + 24, {"targetname": "lc_core_column_top", "angles": "0 0 0"}, vis=vis)
+    beam = {"renderamt": "255", "rendercolor": "255 255 255", "Radius": "256", "life": "0", "StrikeTime": "1", "damage": "0", "framestart": "0", "framerate": "0",
+            "decalname": "Bigshot", "HDRColorScale": "1.0"}
+    for name, width, noise, flags in (("lc_core_column", 40, 0, 385), ("lc_core_column_unstable", 40, 8, 384)):
+        m.point("env_beam", CX + (4 if noise else 0), CY, LOW + 16, dict(beam, targetname=name, LightningStart="lc_core_column_low", LightningEnd="lc_core_column_top",
+                                                                       texture="effects/bluelaser1.vmt", BoltWidth=str(width), NoiseAmplitude=str(noise),
+                                                                       TextureScroll="2", spawnflags=str(flags)), vis=vis)
+    # the wall beams (Valve's beam_core): a nozzle on the west, east and north walls 256 over the lower catwalk (over heads,
+    # under the upper catwalk, over the lower glass), each its own start
+    for n, (wx, wy, dx, dy) in enumerate(((x1, CY, 1, 0), (x2, CY, -1, 0), (CX, y2, 0, -1)), start=1):
+        z = LOW + 256
+        ax, ay = abs(dy), abs(dx)      # (along the wall)
+        base = (min(wx, wx + 32 * dx) - 32 * ax, min(wy, wy + 32 * dy) - 32 * ay, z - 32, max(wx, wx + 32 * dx) + 32 * ax, max(wy, wy + 32 * dy) + 32 * ay, z + 32)
+        tip = (min(wx + 32 * dx, wx + 48 * dx) - 16 * ax, min(wy + 32 * dy, wy + 48 * dy) - 16 * ay, z - 16,
+               max(wx + 32 * dx, wx + 48 * dx) + 16 * ax, max(wy + 32 * dy, wy + 48 * dy) + 16 * ay, z + 16)
+        vmf.detail([base, tip], metal, vis=vis)
+        sx, sy = wx + 52 * dx, wy + 52 * dy
+        start = "lc_core_beam_%d" % n
+        m.point("info_target", sx, sy, z, {"targetname": start, "angles": "0 0 0"}, vis=vis)
+        m.point("env_beam", sx, sy, z + 8, dict(beam, targetname="lc_core_beam", LightningStart=start, LightningEnd="lc_core_reactor_target",
+                                                texture="sprites/core_beam1.vmt", BoltWidth="12", NoiseAmplitude="0", TextureScroll="9", spawnflags="513"), vis=vis)
+        m.point("env_sprite", sx, sy, z, {"targetname": "lc_core_beam_glow", "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "220",
+                                          "rendercolor": "190 225 255", "scale": "0.5", "framerate": "10.0", "GlowProxySize": "4.0", "HDRColorScale": "1.0",
+                                          "renderfx": "0", "spawnflags": "1"}, vis=m.lv)
+    # its light and glow (the blue with the room's blue lamps, the red with its red ones: no light style of its own), its arcs
+    for colour, name, on, scale in (("150 210 255", "lc_core_glow_blue", "1", "2.2"), ("255 80 40", "lc_core_glow_red", "0", "2.6")):
+        m.point("env_sprite", CX, CY, RZ, {"targetname": name, "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "200", "rendercolor": colour,
+                                           "scale": scale, "framerate": "10.0", "GlowProxySize": "8.0", "HDRColorScale": "1.0", "renderfx": "1", "spawnflags": on}, vis=m.lv)
+    lit = {"_lightHDR": "-1 -1 -1 1", "style": "0", "_constant_attn": "0", "_linear_attn": "0", "_quadratic_attn": "1"}
+    for dx, dy in ((0, -1), (-1, 1), (1, 1)):      # (round the ball, between the pistons: a light inside the ball's clip would light nothing)
+        x, y = CX + dx * (BALL + 30), CY + dy * (BALL + 30)
+        m.point("light", x, y, RZ, dict(lit, targetname="lc_core_lamp_blue", _light="150 210 255 220", spawnflags="0"), vis=m.lv)
+        m.point("light", x, y, RZ + 8, dict(lit, targetname="lc_core_lamp_red", _light="255 70 35 260", spawnflags="1"), vis=m.lv)
+    m.point("point_tesla", CX, CY, RZ, {"targetname": "lc_core_reactor_tesla", "m_flRadius": "230", "m_Color": "255 150 90", "beamcount_min": "2", "beamcount_max": "4",
+                                        "thick_min": "2", "thick_max": "7", "lifetime_min": "0.05", "lifetime_max": "0.3", "interval_min": "0.3", "interval_max": "1.2",
+                                        "texture": "sprites/physbeam.vmt", "m_SoundName": "DoSpark", "spawnflags": "0"}, vis=vis)
+    m.sound("ambient/energy/electric_loop.wav", CX, CY, RZ, radius=900, volume=7, name="lc_core_reactor_arc", on=False, loops=True)
+    stop = [("lc_core_beam", "TurnOff", "", 0), ("lc_core_beam_glow", "HideSprite", "", 0), ("lc_core_column", "TurnOff", "", 0), ("lc_core_column_unstable", "TurnOn", "", 0.1),
+            ("lc_core_energy", "StartDischarge", "", 0.2), ("lc_core_reactor_ball", "Color", "255 120 70", 0.2), ("lc_core_reactor_tesla", "TurnOn", "", 0.4),
+            ("lc_core_reactor_arc", "PlaySound", "", 0.4)]
+    start = [("lc_core_beam", "TurnOn", "", 1.5), ("lc_core_beam_glow", "ShowSprite", "", 1.5), ("lc_core_column_unstable", "TurnOff", "", 1.5), ("lc_core_column", "TurnOn", "", 1.5),
+             ("lc_core_energy", "StartCharge", "3", 0), ("lc_core_reactor_ball", "Color", "255 255 255", 1.5), ("lc_core_reactor_tesla", "TurnOff", "", 0),
+             ("lc_core_reactor_arc", "StopSound", "", 0)]
+    return stop, start
 
 
 def ceiling_slab():
@@ -537,6 +753,9 @@ def core(args):
     x1, y1, x2, y2 = CH
     px1, py1, px2, py2 = PIT
     nd = MAT["nodraw"]
+    # the pit's floor where the owner raised it to (their brush: the shell's own floor slab, moved 112 up; the old one
+    # under it is still the shell's, out of sight)
+    vmf.world_box((x1 - T, y1 - T, PIT_FLOOR - T, x2 + T, y2 + T, PIT_FLOOR), nd, top=COMBINE["floor"], vis=walls, tex=0.5)
 
     def hidden(box):
         """The faces of a detail slab that lie on a wall of the chamber or on another slab: nodraw."""
@@ -563,23 +782,13 @@ def core(args):
     slab, holes = ceiling_slab()
     for box in slab:
         vmf.detail([box], "metal/citadel_metalwall090a", vis=VIS + ": ceiling", faces=dict(hidden(box), top=nd))
-    clips = [(px1, py2 - 8, LOW, px2, py2, CEIL), (px1, py1, LOW, px2, py1 + 8, CEIL), (px1, py1 + 8, LOW, px1 + 8, py2 - 8, CEIL), (px2 - 8, py1 + 8, LOW, px2, py2 - 8, CEIL),
-             (px1 - 8, py2, HIGH, px1, y2, CEIL), (px1 - 8, y1, HIGH, px1, 196, CEIL), (px1 - 8, 252, HIGH, px1, py1, CEIL)]
-    for box in clips:      # (players and NPCs: nobody gets into the pit, nor off the upper catwalk's open ends)
+    clips = [(px1 - 8, py2, HIGH, px1, y2, CEIL), (px1 - 8, y1, HIGH, px1, 196, CEIL)]      # (the ladder comes up between 196 and the pit's edge)
+    for box in clips:      # (players and NPCs: nobody off the upper catwalk's open ends; the pit's own clips: reactor())
         vmf.world_box(box, "tools/toolsclip", vis=VIS + ": clips", seals=False)
     ladder(m, px1 - 16, 224, LOW, HIGH, 180, (px1 - 90, 224), (px1 + 30, 224))
-    # railings on the pit's edge (both catwalks; the upper one has no west side)
-    rail = []
-    for z, sides in ((LOW, "nsew"), (HIGH, "nse")):
-        for s in sides:
-            if s in "ns":
-                y = py2 + 8 if s == "n" else py1 - 8
-                rail += [("models/props_combine/railing_512.mdl", px1 + 224, y, 0, z), ("models/props_combine/railing_128.mdl", px2 - 64, y, 0, z)]
-            else:
-                x = px1 - 8 if s == "w" else px2 + 8
-                rail += [("models/props_combine/railing_512.mdl", x, py1 + 224, 90, z), ("models/props_combine/railing_128.mdl", x, py2 - 64, 90, z)]
-    for model, x, y, yaw, z in rail:
-        m.static(model, x, y, yaw, z)
+    # glass on the pit's edge (both catwalks), where the Combine railings were until 28 November
+    glass(m)
+    # --- the machine: Valve's diggers ---
     # --- the machine: Valve's diggers ---
     diggers(m, vmf, problems)
     # --- consoles, the main console's button, where players stand to work them ---
@@ -606,13 +815,7 @@ def core(args):
     lamps = [((x1 + 8, 400), 0, LOW + 96), ((x2 - 8, 880), 180, LOW + 96), ((2656, y1 + 8), 90, LOW + 96), ((3104, y2 - 8), 270, LOW + 96),
              ((2720, y2 - 8), 270, HIGH + 96), ((3200, y1 + 8), 90, HIGH + 96), ((x2 - 8, 900), 180, HIGH + 96), ((x1 + 8, 760), 0, HIGH + 96)]
     for (x, y), yaw, z in lamps:
-        m.static("models/props_combine/combine_light002a.mdl", x, y, yaw, z)
-        dx, dy = int(round(math.cos(math.radians(yaw)))), int(round(math.sin(math.radians(yaw))))
-        m.point("light_spot", x + 12 * dx, y + 12 * dy, z - 22, {"targetname": "lc_core_lamp_blue", "_light": "147 226 240 450", "_lightHDR": "-1 -1 -1 1", "_cone": "35",
-                                                               "_inner_cone": "12", "_exponent": "1", "angles": "-30 %d 0" % yaw, "pitch": "-30", "style": "0",
-                                                               "_constant_attn": "0", "_linear_attn": "0", "_quadratic_attn": "1"}, vis=m.lv)
-        m.point("point_spotlight", x + 6 * dx, y + 6 * dy, z + 22, {"targetname": "lc_core_beam_blue", "angles": "30 %d 0" % yaw, "spawnflags": "1", "spotlightlength": "400",
-                                                                  "spotlightwidth": "48", "rendercolor": "147 226 240", "renderamt": "120", "HDRColorScale": "0.6"}, vis=m.lv)
+        combine_lamp(m, x, y, yaw, z, name="lc_core_lamp", beam=True)
     for x, y in ((CX, CY - 160), (CX - 260, CY + 220), (CX + 260, CY + 220)):
         m.point("light", x, y, LOW - 160, {"targetname": "lc_core_lamp_red", "spawnflags": "1", "_light": "255 36 24 160", "_lightHDR": "-1 -1 -1 1", "style": "0",
                                            "_constant_attn": "0", "_linear_attn": "0", "_quadratic_attn": "1"}, vis=m.lv)
@@ -622,19 +825,19 @@ def core(args):
                 m.point("env_sprite", x + ox, y + oy, CEIL - 10, {"targetname": name, "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "180",
                                                                   "rendercolor": colour, "scale": "0.6", "framerate": "10.0", "GlowProxySize": "4.0",
                                                                   "HDRColorScale": "1.0", "renderfx": "1", "spawnflags": on}, vis=m.lv)
-    m.light(CX, CY, FLOOR + 120, "120 170 200 30")          # (a faint cold fill in the pit, always on)
-    # --- pipes and cables: Valve's Combine pipes up the corners, cables hung along the walls ---
+    m.light(CX - 200, CY - 40, PIT_FLOOR + 120, "120 170 200 30")          # (a faint cold fill in the pit, always on)
+    # --- pipes: Valve's Combine pipes up the corners, from the pit's floor to the ceiling slab (the model is 1024 tall: the
+    # owner raised the floor 112 so they end in the slab, 28 November: "you made it too tall for the pipe props"). No cables:
+    # the three hung along bare walls joined nothing (the owner: "not even close to the props it was supposed to be by") ---
     for x, y, yaw in ((x1 + 40, y1 + 40, 45), (x2 - 40, y1 + 40, 135), (x2 - 40, y2 - 40, 225), (x1 + 40, y2 - 40, 315)):      # (in the corners, up through the catwalks: out of the way of the view of the pistons)
-        m.static("models/props_combine/pipes01_cluster02a.mdl", x, y, yaw, FLOOR)
-    for (ax_, ay_), (bx_, by_) in (((x1 + 8, y1 + 300), (x1 + 8, y2 - 300)), ((x2 - 8, y1 + 200), (x2 - 8, y2 - 200)), ((x1 + 300, y2 - 8), (x2 - 300, y2 - 8))):
-        m.rope([(ax_, ay_, CEIL - 24), (bx_, by_, CEIL - 24)], slack=180, width=3)
+        m.static("models/props_combine/pipes01_cluster02a.mdl", x, y, yaw, PIT_FLOOR)
     # --- sound: the deep machine loop (a wave file with a radius: a sound script would be heard across the city) ---
     m.sound(LOOP, CX, CY, (LOW + HIGH) // 2, radius=1000, volume=8, name="lc_core_loop", on=False, loops=True)
     m.soundscape(SCAPES["combine"], CX, CY, HIGH - 64, radius=900)
     m.soundscape(SCAPES["tunnel"], 1072, 1168, 0, radius=700)
     # --- stop and start (fired by the game; the map starts it as it loads) ---
     trains = [n for _, n, _ in DIGGERS]
-    stop, start = [], []
+    stop, start = reactor(m)
     for k, t in enumerate(trains):
         for w in ("top", "low"):
             stop += [("%s_relay_%s" % (t, w), "CancelPending", "", 0), ("%s_relay_%s" % (t, w), "Disable", "", 0)]
@@ -649,8 +852,9 @@ def core(args):
     m.relay("lc_core_stop", CX - 32, CY, HIGH + 64, stop)
     m.relay("lc_core_start", CX + 32, CY, HIGH + 64, start)
     m.point("logic_auto", CX, CY, HIGH + 96, {"spawnflags": "1"}, connections=[("OnMapSpawn", "lc_core_start", "Trigger", "", 1)])
-    # --- the lift ---
+    # --- the lift, the sealed door at the service tunnel's end ---
     lift(m, problems)
+    sealed_door(m)
     # --- the secret way: rubble at the hole, lamps along the way, the ladders ---
     for model, x, y, yaw in (("models/props_debris/concrete_chunk03a.mdl", 52, 1270, 30), ("models/props_debris/concrete_chunk05g.mdl", 44, 1352, 70),
                              ("models/props_debris/concrete_chunk05g.mdl", 70, 1330, 10)):
@@ -660,20 +864,24 @@ def core(args):
     ladder(m, -48, 1312, 64, 406, 180, (-80, 1240), (-14, 1312))
     ladder(m, 2256, 1168, -416, 64, 0, (2320, 1168), (2214, 1168))
     ladder(m, 2304, 1008, -896, -416, 270, (2304, 940), (2304, 1050))
+    # the service tunnel's lamps as the owner set them right (28 November): the cage lamp with the bulb showing, its spot at
+    # the bulb shining out and down from the wall. The cable is theirs: from a power box by the first lamp, lamp to lamp, down
+    # both shafts (ours ran along the wall 18 over the lamps, from nothing to nothing). Two more lamps at the shafts are theirs.
     for x in (160, 760, 1360, 1960):
-        m.static("models/props_c17/light_cagelight02_on.mdl", x, 1231, 270, 150)
-        m.point("light_spot", x, 1216, 146, {"_light": "255 205 150 70", "_lightHDR": "-1 -1 -1 1", "_cone": "70", "_inner_cone": "35", "_exponent": "1",
-                                             "angles": "-90 0 0", "pitch": "-90", "style": "0", "_constant_attn": "20", "_linear_attn": "0", "_quadratic_attn": "1"}, vis=m.lv)
-    for x, y, z in ((-40, 1312, 500), (-80, 1300, 360), (2304, 1168, 160), (2304, 1056, -320), (2304, 960, -400)):
+        vmf.point("prop_static", (x, 1231, 162), {"model": "models/props_c17/light_cagelight01_on.mdl", "angles": "0 270 0", "skin": "0", "solid": "6",
+                                                 "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
+        m.point("light_spot", x, 1222, 154, {"_light": "255 205 150 70", "_lightHDR": "-1 -1 -1 1", "_cone": "70", "_inner_cone": "35", "_exponent": "1",
+                                             "angles": "-45 -90 -90", "pitch": "-45", "style": "0", "_constant_attn": "20", "_linear_attn": "0", "_quadratic_attn": "1"}, vis=m.lv)
+    for x, y, z in ((-40, 1312, 500), (-80, 1300, 360), (2308, 1168, 56), (2304, 960, -400)):
         m.light(x, y, z, "255 200 140 35")
-    m.rope([(-100, 1226, 180), (2240, 1226, 180)], slack=160, width=2)
     vmf.keep_way_clear((-24, 1280, 406, 32, 1344, 470), "the hole in the alcove's wall and the closet behind it")
     vmf.keep_way_clear((x1 - T, 912, LOW, x1 + 120, 1008, LOW + 112), "the way in through the chamber's west wall")
     # --- path nodes on the catwalks and at the landings (Combine units can walk the chamber) ---
-    for z, ring in ((LOW, [(x1 + 96, y) for y in range(y1 + 96, y2, 192)] + [(x2 - 96, y) for y in range(y1 + 96, y2, 192)] +
-                     [(x, y1 + 96) for x in range(x1 + 288, x2 - 96, 192)] + [(x, y2 - 96) for x in range(x1 + 288, x2 - 96, 192)]),
-                    (HIGH, [(x2 - 96, y) for y in range(y1 + 96, y2, 192)] + [(x, y1 + 96) for x in range(px1 + 96, x2 - 96, 192)] +
-                     [(x, y2 - 96) for x in range(px1 + 96, x2 - 96, 192)])):
+    w = WALK - 40
+    for z, ring in ((LOW, [(x1 + w, y) for y in range(y1 + w, y2, 192)] + [(x2 - w, y) for y in range(y1 + w, y2, 192)] +
+                     [(x, y1 + w) for x in range(x1 + w + 192, x2 - w, 192)] + [(x, y2 - w) for x in range(x1 + w + 192, x2 - w, 192)]),
+                    (HIGH, [(x2 - w, y) for y in range(y1 + w, y2, 192)] + [(x, y1 + w) for x in range(px1 + 96, x2 - w, 192)] +
+                     [(x, y2 - w) for x in range(px1 + 96, x2 - w, 192)])):
         for x, y in ring:
             b.node(x, y, z - 40 + 8)
     b.node(CH[2] + 24, LY, LZ - 32)
@@ -834,13 +1042,70 @@ def into_owner(owner, piece, out):
     return changed
 
 
+def refit(before, owner, out, piece):
+    """The piece as it is built now, carried into the owner's file that already holds an earlier build of it (BEFORE: that
+    build's piece alone, lc_core.vmf as it was). Their file is theirs: what they set right by hand stays (map_owner_delta.py
+    --loose --near), only what this build changes is taken out and put in. First, by hand here: their moved copies of what
+    this build replaces (they raised the pit's floor, and with it the diggers' lower tracks, relays, sounds and dust; they
+    nudged the chamber's ladder), which no shape would find; and their brush that becomes the sealed door."""
+    import map_owner_delta as D
+    text = D.read(owner)
+    eol, ents, world, sols = D.index(text)
+    cuts, said = [], []
+    for s0, e0 in ents:
+        t = text[s0:e0]
+        name, cls = D.key(t, "targetname"), D.key(t, "classname")
+        if re.match(r"lc_core_(machine|digger_\d+)(_|$)", name):
+            cuts.append((s0, e0))
+        elif cls == "func_useableladder" and D.key(t, "origin"):
+            o = D.nums(D.key(t, "origin"))
+            if abs(o[0] - 2516) <= 2 and abs(o[1] - 224) <= 2 and abs(o[2] + 700) <= 16:
+                cuts.append((s0, e0))
+                said.append("the chamber's ladder (func_useableladder at %s): it moves with the pit's edge" % D.key(t, "origin"))
+    said.append("%d entities of the three diggers (trains, tracks, relays, sounds, shakes, dust): built again where they stand now" % (len(cuts) - len(said)))
+    door = None
+    for s0, e0 in sols:
+        t = text[s0:e0]
+        pts = [tuple(float(v) for v in q) for q in re.findall(r"\(([-\d.e]+) ([-\d.e]+) ([-\d.e]+)\)", " ".join(re.findall(r'"plane" "([^"]+)"', t)))]
+        if pts and tuple(min(q[k] for q in pts) for k in range(3)) + tuple(max(q[k] for q in pts) for k in range(3)) == tuple(float(v) for v in SEALED):
+            door = (s0, e0, re.search(r'"id" "(\d+)"', t).group(1))
+    if not door:
+        sys.exit("STOP: the owner's brush for the sealed door (x %d..%d y %d..%d z %d..%d) is not in their file" % (SEALED[0], SEALED[3], SEALED[1], SEALED[4], SEALED[2], SEALED[5]))
+    cuts.append(door[:2])
+    said.append("world brush %s (their door brush, 4 by 128 by 120): now the func_door lc_sealed_core, drawn as the Nexus's doors" % door[2])
+    for s0, e0 in sorted(cuts, reverse=True):
+        text = text[:s0] + text[e0 + len(eol):]
+    with tempfile.TemporaryDirectory() as tmp:
+        cleared = os.path.join(tmp, "cleared.vmf")
+        with open(cleared, "w", encoding="utf-8", errors="surrogateescape", newline="") as f:
+            f.write(text)
+        r = subprocess.run([sys.executable, os.path.join(HERE, "map_owner_delta.py"), before, piece, cleared, out, "--loose", "--near", "32"], capture_output=True, text=True)
+    print("  " + (r.stdout.strip() or r.stderr.strip()).replace("\n", "\n  "))
+    if r.returncode != 0:
+        sys.exit("STOP: map_owner_delta.py failed")
+    print("  written: " + out)
+    print("  taken out of the owner's file by hand first:")
+    for c in said:
+        print("    " + c)
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser(description="The suppression core in the owner's own map (their file is only read).")
     ap.add_argument("owner")
     ap.add_argument("out")
     ap.add_argument("--piece", default="lc_core.vmf", help="where the piece alone is written first (default lc_core.vmf)")
+    ap.add_argument("--refit", metavar="BEFORE.vmf", help="the owner's file already holds the core: BEFORE is the piece alone as it was built for it (lc_core.vmf "
+                                                           "of that day); only what changed since is carried in, and what the owner set right by hand stays")
     args = ap.parse_args()
+    if args.refit:
+        r = subprocess.run([sys.executable, os.path.join(HERE, "map_build.py"), "core", "--out", args.piece], capture_output=True, text=True)
+        print(r.stdout.rstrip())
+        if r.returncode != 0:
+            print(r.stderr.rstrip())
+            sys.exit("STOP: the piece has problems (above)")
+        refit(args.refit, args.owner, args.out, args.piece)
+        return
     r = subprocess.run([sys.executable, os.path.join(HERE, "map_build.py"), "core", "--out", args.piece, "--against", args.owner], capture_output=True, text=True)
     print(r.stdout.rstrip())
     if r.returncode != 0:

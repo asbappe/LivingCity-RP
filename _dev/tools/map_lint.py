@@ -4,7 +4,7 @@ Living City: the owner's corrections, checked by machine (_dev/reference/lessons
 map_lint).
 
     python3 map_lint.py FILE.vmf [more.vmf ...]      every finding, one line each
-    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, props, lightmap, scale, seam, palette)
+    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, lens, fire, mattress, view, water, rope, flush, bare, wire, props, lightmap, scale, seam, palette)
 
 Every build runs it on the file it writes and prints what it finds as LOOK lines (map_build.py), so
 map_modules_check.py shows them with the rest. A finding is a thing to look at, not always a fault: a model's box is
@@ -17,7 +17,9 @@ often bigger than the model. What each kind means:
   mattress  the loose mattress not turned over (it lies on its back unturned)
   view      a module's viewpoint inside a prop or a wall (its picture shows nothing)
   water     a water brush whose top is level with a floor (they flicker through each other)
-  rope      a rope or cable end tied to nothing; a span over 128 with slack under 25 (Valve's have 100)
+  rope      a rope or cable end tied to nothing, or on a bare wall with no prop by it; a span over 128 with slack
+            under 25 (Valve's have 100)
+  lens      a beam (point_spotlight) and its light_spot apart, or a light_spot not at its lamp model's lens
   props     as Valve dresses props (docs/dev/valve-prop-notes.md): most loose props square on the 90s and flat,
             8 or more small props that never fade, a thing standing in a door's way (48 in front or behind)
   lightmap  Valve's lightmap scales (docs/dev/valve-craft-notes.md): big faces far from every path node at 16 or finer,
@@ -61,6 +63,10 @@ SIDES = {}       # (a brush's box -> ([(material, corners)], "world" or the enti
 # (metal/metalfence007a), since City 18's own (effects/metalfence007a) is Counter-Strike: Source's alone.
 OWNER_GROUND = ("blendmuddirt", "mudfloor", "dirtfloor")
 OWNER_KEPT = ("nature/blendmuddirt001a", "metal/metalfence007a")
+
+# where a lamp model's lens is over its origin (from, to): models whose origin is not where the light comes from
+LENS = {"models/props_combine/combine_light002a.mdl": (8, 40)}
+
 
 def in_brush(p, box, pad=1.0):
     """Is the point inside the brush itself (its planes), not only its box?"""
@@ -276,6 +282,24 @@ def check(path, views=None, only=None, air=None):
             switched = e.get("classname", "").startswith("prop_dynamic") and e.get("startdisabled") == "1" and e.get("targetname")
             if m.endswith("_off.mdl") and near and not switched:      # (a hidden, named unlit twin that a switch shows as its light goes out, as Valve's rigs swap them)
                 say("offlamp", "%s at (%d %d %d) has a light shining from it: use the _on model, or no light" % (short(m), o[0], o[1], o[2]))
+    # lens: a lamp's light at its lens (the owner, 28 November: "the point lights vs light spots, they were all misaligned
+    # by like 6 feet": the Combine wall lights' spots stood 22 under the model's foot and their beams 22 over it)
+    spots = [origin(e) for e in ents if e.get("classname") == "light_spot"]
+    for e in ents:
+        if e.get("classname") == "point_spotlight" and not e.get("parentname"):
+            o = origin(e)
+            d = sorted(math.dist(o, q) for q in spots)[:1]
+            if d and 16 < d[0] <= 96:
+                say("lens", "the beam at (%d %d %d) and its light_spot are %d apart: set both at the lamp's lens" % (o + (int(d[0]),)))
+    for e in ents:
+        m = e.get("model", "").lower()
+        if e.get("classname", "").startswith("prop_") and m in LENS:
+            o = origin(e)
+            lo, hi = LENS[m]
+            for q in spots:
+                if math.hypot(q[0] - o[0], q[1] - o[1]) <= 40 and abs(q[2] - o[2]) <= 96 and not (lo <= q[2] - o[2] <= hi):
+                    say("lens", "%s at (%d %d %d): its light_spot is %d %s its lens (the model's origin is at its foot: the lens is %d to %d up)" % (
+                        short(m), o[0], o[1], o[2], abs(q[2] - o[2] - (lo + hi) / 2), "under" if q[2] - o[2] < lo else "over", lo, hi))
     # fire
     tops = [b for b, mats in brushes] + [bx for e, bx in solid_props]
     for e in ents:
@@ -347,12 +371,19 @@ def check(path, views=None, only=None, air=None):
     # rope ends tied to nothing
     near_boxes = [b for b, mats in brushes if not mats <= {"tools/toolsskybox", "tools/toolsclip", "tools/toolsplayerclip", "tools/toolstrigger", "tools/toolsareaportal"}] + [bx for e, bx in solid_props] + \
                  [prop_box(e) for e in ents if e.get("parentname") and prop_box(e)]
+    all_prop_boxes = [bx for bx in (prop_box(e) for e in ents if e.get("classname", "").startswith("prop_")) if bx]
     for e in ents:
         if e.get("classname") not in ("move_rope", "keyframe_rope") or e.get("parentname"):
             continue
         o = origin(e)
         if not any(all(b[k] - 20 <= o[k] <= b[k + 3] + 20 for k in range(3)) for b in near_boxes):
             say("rope", "a rope's end at (%d %d %d) is tied to nothing" % o)
+            continue
+        # (the owner, 28 November: "every rope I have found that you placed was placed wrong and not even close to the props
+        #  it was supposed to be by": a cable runs from a thing to a thing, never along a bare wall from nothing to nothing)
+        if not any(all(b[k] - 24 <= o[k] <= b[k + 3] + 24 for k in range(3)) for b in all_prop_boxes) and \
+                all(sorted((b[3] - b[0], b[4] - b[1], b[5] - b[2]))[1] >= 96 for b in near_boxes if all(b[k] - 20 <= o[k] <= b[k + 3] + 20 for k in range(3))):
+            say("rope", "a cable's end at (%d %d %d) is on a bare wall, no prop within 24: run it from a thing to a thing (a power box, a lamp, a pole)" % o)
     # rope slack: Valve hangs a span over 128 with slack 100 (120 over 1024); under 25 it is drawn as a rod
     by_name = dict((e.get("targetname", "").lower(), e) for e in ents if e.get("classname") in ("move_rope", "keyframe_rope") and e.get("targetname"))
     taut = []

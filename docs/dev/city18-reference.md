@@ -3736,7 +3736,7 @@ A lift's floor flush with the floor it stops on z-fights (flickers): stop 2 to 4
 
 ### A lift is Valve's lift: models on unseen collision, never a car drawn with brushes (`owner-lifts-are-valves-models`)
 
-Never build a lift's car, gates or buttons as visible brushwork. Use the game's own: the cage model parented to a mover made only of unseen collision brushes, the gate models over unseen sliding clips, the button models under an unseen func_button, the lift's own sounds. The same goes for anything else the game already has a model for: look for the model (asset_facts.json, the prefab library) before drawing a brush.
+Never build a lift's car, gates or buttons as visible brushwork. Use the game's own: the cage model parented to a mover made only of unseen collision brushes, the gate models over unseen sliding clips, the button models under an unseen func_button, the lift's own sounds. The same goes for anything else the game already has a model for: look for the model (asset_facts.json, the prefab library) before drawing a brush. One exception (the owner, 28 November): in a Combine place the lift is City 18's own glass plate (owner-combine-lifts-are-glass).
 
 - **Why:** The owner, 26 November, of the cistern's first lift (a steel platform, rails and sliding grates of brushes): "why are you making the lift car out of brushes? USE THE ELEVATORS IN HL2 STOP USING BRUSHES GOOD GOLLY".
 - **How:** map_cistern.lift: Black Mesa East's freight lift from the prefab valve_eli_lift_ride (props_lab/freightelevator.mdl on Valve's 38 nodraw boxes, props_lab/elevatordoor.mdl with SetAnimation open and close, props_lab/freightelevatorbutton.mdl, eli_lab.elevator_move and _stop), all Half-Life 2's. Episode Two's: props_mining/elevator01_cage and elevator02_cage (the mine lifts), props_silo/silo_elevator (the silo's).
@@ -4120,4 +4120,58 @@ A tunnel, doorway or gate that people walk through out of a canal, and anything 
 - **How:** map_build.canal: the east gate at road_z, a stair up the east arm; map_layouts/bunker_way.txt: startgate road, rim 968, close; map_mods_e.m_servicetunnel at the road's height, stairs down at its far end; map_modules.m_relay: its quay at F + 256.
 - **Checked by:** The chain's notes: the relay's quay at z 656; map_stairs.py on the canal and the tunnel.
 - **Tags:** owner, geometry
+
+### A cable runs from a thing to a thing (`owner-cables-join-things`)
+
+Every rope or cable starts and ends ON a prop that would have a cable: a power box, a lamp, a pole's insulator, a machine. Lamps along a wall are chained by one cable from a power box by the first, lamp to lamp, a key point at each lamp. Never a cable along a bare wall from nothing to nothing, and never one that passes over the lamps it should feed.
+
+- **Why:** The owner, 28 November, of the suppression core and its service tunnel: "every rope I have found that you placed was placed wrong and not even close to the props it was supposed to be by, idk what on earth you're doing there". The tunnel's cable ran along the wall 18 over the lamps, its ends on bare concrete; three more hung along the chamber's bare walls. They deleted those and hung their own: a props_lab/powerbox02b by the first lamp, then lamp to lamp and down both shafts.
+- **How:** map_core.py hangs no cable of its own now (the tunnel's is the owner's). A piece that wants one: m.rope through each lamp's own origin, from a power box prop set beside the first.
+- **Checked by:** map_lint.py rope: a cable's end on a bare wall with no prop within 24
+- **Tags:** owner, props, lighting
+
+### A lamp's light sits at its lens, and its beam with it (`owner-light-at-the-lens`)
+
+Put a lamp's light_spot where the light comes out of the model, read from the model's real box (map_assets.size), never guessed from its origin: many models have their origin at their foot or their back, not their middle. The beam (point_spotlight) and the light_spot of one lamp stand at the same spot. A point light with no fixture is a fill, set low and dim; where a place needs light, hang a lamp and light it.
+
+- **Why:** The owner, 28 November: "same with the point lights vs light spots, they were all misaligned by like 6 feet". props_combine/combine_light002a has its origin at its foot (the model is 44 tall): the eight wall lights' spots had been set 22 under the foot and their beams 22 over it, 44 apart. The owner moved each spot up to 20 over the foot, beside the beam; in the service tunnel they swapped the cage lamp for light_cagelight01_on and set its spot at the bulb, shining out and down at 45 degrees; two bare point lights in the shafts they replaced with lamps.
+- **How:** map_core.combine_lamp: the light_spot 12 out and 20 up from the model's origin, the beam 6 out and 22 up. map_lint.LENS holds, per model, where the lens is over the origin.
+- **Checked by:** map_lint.py lens: a beam and its light_spot over 16 apart; a light_spot not at its lamp model's lens
+- **Tags:** owner, lighting, props, combine
+
+### A room is sized to the props that span it (`owner-room-fits-its-props`)
+
+A prop meant to run from floor to ceiling (a pipe cluster, a pillar, a ladder, a cable tray) decides the room's height there: take the model's height from asset_facts.json and make floor to ceiling that height, or stack whole pieces. Never a pipe that ends in the air under a ceiling.
+
+- **Why:** The owner, 28 November: "I had to raise the floor of the thumper room because you made it too tall for the pipe props on the corners". props_combine/pipes01_cluster02a is 1024 tall; the pit's floor was at -1408 and the ceiling slab's top at -272, so the pipes ended 112 short. They raised the floor to -1296.
+- **How:** map_core.PIT_FLOOR = -1296: the slab's top less the pipe's 1024.
+- **Checked by:** review (a tall prop's top against the ceiling over it)
+- **Tags:** owner, props, geometry
+
+### A Combine lift is City 18's glass plate with Combine buttons (`owner-combine-lifts-are-glass`)
+
+In a Combine place a lift is built as the owner's Nexus lifts are (nexus_elev1 to 3): a func_movelinear, a plate of glass/combineglass001a in a frame of metal/citadel_metalwall072a, speed 180, d3_citadel.small_elevator_move and eli_lab.elevatordoor_stop, called by props_combine/combinebutton.mdl 6 out from the wall under an unseen func_button (locks itself 2.2 s, plays the model's press), a button in the shaft and one outside at each floor. This is the one place a lift is drawn with brushes (owner-lifts-are-valves-models stands everywhere else). Where the shaft is deep enough to kill, each landing gets a gate drawn as a Nexus door that opens only while the plate is there; make the gates func_movelinear too, since the gamemode's E toggles any func_door.
+
+- **Why:** The owner, 28 November: "please replace the cargo / eli's lab lift with a combine lift; there are several on the C18 map that are made of combine glass and use combine buttons" (the lift from the Nexus's power room down to the suppression core had been Black Mesa East's freight lift).
+- **How:** map_core.lift, combine_button, nexus_door. Their own lifts run 364 in open shafts; the core's runs 760.
+- **Checked by:** review
+- **Tags:** owner, combine, props, city18
+
+### A Combine door is drawn as the Nexus's doors are; one named lc_sealed is shut to everybody (`owner-nexus-door`)
+
+A Combine door: a func_door sliding up (movedir -90 0 0, speed 100, lip 5, doors/doormove1.wav and doormove2.wav), a frame 4 wide of metal/citadel_metalwall072c round a panel of metal/citadel_metalwall090a over a hazard stripe 12 high (dev/dev_hazzardstripe01a), metal/metalpipe001a on its edges; 6 to 8 thick, 112 to 120 high. Named lc_sealed..., the gamemode locks it for everybody (a beep at E; only a Hacker's multitool or a bypass charge opens it, for 30 seconds): give it wait -1 and spawnflags 2048 (starts locked).
+
+- **Why:** The owner, 28 November, of a brush they set where the service tunnel meets the suppression core: "can you please make it a combine door like the rest of the nexus? except if a overatch/combine or citizens/rebels try to open it, it just makes a little beep and it can only be hacked open by the resistance hacker OR the combine bypass charge". Measured on nexus_intdoor and nexus_importantdoor (11 doors of this make in their map).
+- **How:** map_core.nexus_door (the boxes), sealed_door; sv_livingcity_doors.lua (the tag sealed, by the name).
+- **Checked by:** review
+- **Tags:** owner, doors, combine, city18
+
+### Episode One's reactor core: a ball, energy in it, beams that hold it (`valve-core-reactor`)
+
+Valve's core (ep1_citadel_03): props_combine/coreball.mdl, 462 across, with env_citadel_energy_core inside (scale 5; StartCharge and StartDischarge change its look), wall beams to an info_target at its middle (env_beam, sprites/core_beam1.vmt, width 24 to 28, taper out) and a column beam through it (effects/bluelaser1.vmt, width 102): clean when stable, the same beams with noise when unstable. The hall is about 1700 across. Smaller rooms take it scaled (modelscale on the prop_dynamic, the energy's scale and the beams' widths by the same share). The real thing is prop_coreball, whose shader is worked out for Valve's own spot (2688 12139 5170): anywhere else use the prop_dynamic, as Valve did for their second ball (core_room2), and expect its shading to be flatter.
+
+- **Why:** The owner, 28 November: "can we stick the reactor from EP1 inside this room? the little walkway around the reactor core and the core reactor effect itself right in between all the thumpers?" and "copy the EP1 beams that shoot at the reactor so they stick out of the walls ... those indicate the reactor is healthy". Measured in the VMF: the ball's triggers (idle 240 round, expanded 280), three wall emitters, 3 stable and 6 unstable column beams, 3 point_tesla.
+- **How:** map_core.reactor: at 0.43 (the ball 200 across, the energy at scale 2, beams 12 and 40 wide) on a platform 336 across; lc_core_stop turns the wall beams off, the column to the noisy one, the energy to its discharge, arcs on.
+- **Checked by:** review (in game: the ball's shading away from Valve's spot)
+- **Tags:** valve, combine, props, lighting
 
