@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-303 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+304 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -89,6 +89,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `dragrope` | The rope a stalker tows a body on | - | `client/cl_livingcity_dragrope.lua` 2K | - | `LC_CL.DragRopePoints` | - |
 | `dreamacting` | How the dreams' figures move (sv_livingcity_dreamstandins.lua, sv_livingcity_dreamstage.lua) | - | `client/cl_livingcity_dreamacting.lua` 13K | - | `LC_CL.DreamActRest`, `LC_CL.DreamActPose`, `LC_CL.DreamActApply`, `LC_CL.DreamStageCard` | - |
 | `dreamcourse` | The Fitness Test (a Happy dream you play) | `server/sv_livingcity_dreamcourse.lua` 12K | - | - | `LC.CourseLay` | DreamGameTests (1) |
+| `dreamdances` | ActMod's dances are for dreams only (shared) | - | - | `shared/sh_livingcity_dreamdances.lua` 2K | `LC.DreamDanceAllowed` | Nov28_DreamDanceTests (1) |
 | `dreamenforce` | Enforcers in the dreams | - | `client/cl_livingcity_dreamenforce.lua` 2K | - | - | - |
 | `dreamenforcers` | Enforcers in the dreams | `server/sv_livingcity_dreamenforcers.lua` 12K | - | - | `LC.DreamEnforcerRole`, `LC.DreamBad`, `LC.DreamEnforcerJoin`, `LC.DreamMarkBad`, `LC.DreamEnforcerStrike`, `LC.DreamEnforcerLeave` | DreamCrowdTests (4) |
 | `dreamgames` | Nightmare dreams you play (the dream games) | `server/sv_livingcity_dreamgames.lua` 64K | `client/cl_livingcity_dreamgames.lua` 30K | - | `LC.DreamGameStop`, `LC.DreamGameHeadroom`, `LC.DreamGameHalf`, `LC_CL.DreamGame`, `LC.DreamDress`, `LC.DreamGameJoin` | - |
