@@ -502,6 +502,18 @@ local function Dance(ent, beat, now, key)
     if not ent.ManipulateBoneAngles then return end
     -- which dance: the ending's (none while previewing Bloom's), or the one a stand-in is given
     key = key or (not preview and S and S.client and S.client.dance) or nil
+    -- ActMod's animation for this dance, where the server has it: then no bone turns of ours
+    -- (cl_livingcity_actdance.lua; the song's clock in seconds, so everyone moves as one)
+    if LC_CL.ActDance then
+        if LC_CL.ActDance(ent, key or "ears", beat * 60 / ((S and S.client and S.client.bpm) or 165)) then
+            if danced[ent] ~= "act" then
+                for _, id in pairs(Bones(ent)) do ent:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+                danced[ent] = "act"
+            end
+            return
+        end
+        LC_CL.ActDanceStop(ent)
+    end
     local b = Bones(ent)
     local wave = math.sin(beat * math.pi)            -- left, right, a beat each
     local flap = math.sin(beat * math.pi * 2) * FLAP -- the wrists, every beat
@@ -631,6 +643,7 @@ local function Undance(ent)
     if IsValid(ent) and ent.ManipulateBoneAngles then
         for _, id in pairs(Bones(ent)) do ent:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
     end
+    if LC_CL.ActDanceStop then LC_CL.ActDanceStop(ent) end
     danced[ent] = nil
 end
 
@@ -2172,6 +2185,8 @@ hook.Add("CalcMainActivity", "LivingCityEndingStand", function(ply)
     if not S or S.phase ~= "apocalypse" or not IsValid(ply) then return end
     if not (ply:GetNW2Bool("lc_dancing", false) or IsValid(ply:GetNW2Entity("lc_riding", NULL)) or ply:GetNW2Bool("lc_seated", false)) then return end
     if ply:GetNW2Bool("lc_end_spectating", false) then return end
+    local act = LC_CL.ActDanceSeq and LC_CL.ActDanceSeq(ply) -- (ActMod's dance, when they are doing one)
+    if act then return ACT_MP_STAND_IDLE, act end
     local seq = ply.LookupSequence and ply:LookupSequence("idle_all_01") or -1
     if not seq or seq < 0 then seq = ply.LookupSequence and ply:LookupSequence("idle_all_02") or -1 end
     return ACT_MP_STAND_IDLE, seq or -1

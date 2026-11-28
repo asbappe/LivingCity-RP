@@ -15,10 +15,11 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-304 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+305 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
+| `actdance` | The endings' dances, done with ActMod's animations (client) | - | `client/cl_livingcity_actdance.lua` 9K | - | `LC_CL.ActDanceStop`, `LC_CL.ActDanceSeq`, `LC_CL.ActDance`, `LC_CL.ActDanceChoices` | - |
 | `actions` | The actions menu (server side) | `server/sv_livingcity_actions.lua` 10K | `client/cl_livingcity_actions.lua` 37K | - | `LC_CL.ICName`, `LC.RunAction`, `LC_CL.InsiderSlipNow`, `LC_CL.OpenActions`, `LC_CL.InsiderSlipWhyNot`, `LC.CitizenNPCAction` | - |
 | `acts` | Acts (server). See sh_livingcity_acts.lua for the list. | `server/sv_livingcity_acts.lua` 6K | `client/cl_livingcity_acts.lua` 3K | `shared/sh_livingcity_acts.lua` 5K | `LCA.Resolve`, `LC.Gesture`, `LC.StopAct`, `LC.StartAct`, `LCA.Current`, `LCA.IsVortModel` | SlotActTests (3); LifeTests (2) |
 | `adminheli` | The Administrator's attack helicopter | `server/sv_livingcity_adminheli.lua` 33K | - | - | `LC.AdminHeli`, `LC.AdminHeliThink`, `LC.AdminHeliPoint`, `LC.AdminHeliTake`, `LC.AdminHeliFetch`, `LC.AdminHeliExit` | Nov17_AdminHeliTests (2) |
@@ -89,7 +90,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `dragrope` | The rope a stalker tows a body on | - | `client/cl_livingcity_dragrope.lua` 2K | - | `LC_CL.DragRopePoints` | - |
 | `dreamacting` | How the dreams' figures move (sv_livingcity_dreamstandins.lua, sv_livingcity_dreamstage.lua) | - | `client/cl_livingcity_dreamacting.lua` 13K | - | `LC_CL.DreamActRest`, `LC_CL.DreamActPose`, `LC_CL.DreamActApply`, `LC_CL.DreamStageCard` | - |
 | `dreamcourse` | The Fitness Test (a Happy dream you play) | `server/sv_livingcity_dreamcourse.lua` 12K | - | - | `LC.CourseLay` | DreamGameTests (1) |
-| `dreamdances` | ActMod's dances are for dreams only (shared) | - | - | `shared/sh_livingcity_dreamdances.lua` 2K | `LC.DreamDanceAllowed` | Nov28_DreamDanceTests (1) |
+| `dreamdances` | ActMod's dances are for dreams only (shared) | - | - | `shared/sh_livingcity_dreamdances.lua` 3K | `LC.DreamDanceAllowed`, `LC.ActDanceSetting` | Nov28_DreamDanceTests (2) |
 | `dreamenforce` | Enforcers in the dreams | - | `client/cl_livingcity_dreamenforce.lua` 2K | - | - | - |
 | `dreamenforcers` | Enforcers in the dreams | `server/sv_livingcity_dreamenforcers.lua` 12K | - | - | `LC.DreamEnforcerRole`, `LC.DreamBad`, `LC.DreamEnforcerJoin`, `LC.DreamMarkBad`, `LC.DreamEnforcerStrike`, `LC.DreamEnforcerLeave` | DreamCrowdTests (4) |
 | `dreamgames` | Nightmare dreams you play (the dream games) | `server/sv_livingcity_dreamgames.lua` 64K | `client/cl_livingcity_dreamgames.lua` 30K | - | `LC.DreamGameStop`, `LC.DreamGameHeadroom`, `LC.DreamGameHalf`, `LC_CL.DreamGame`, `LC.DreamDress`, `LC.DreamGameJoin` | - |
@@ -107,7 +108,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `economy` | Economy and social credit | `server/sv_livingcity_economy.lua` 20K | - | - | `LC.Credits`, `LC.Standing`, `LC.AddCredits`, `LC.AddStanding`, `LC.CanBuy`, `LC.OpenShop` | MarketTests (7); UndergroundTests (4); UnitLifeTests (4) |
 | `employment` | A business of your own (the owner, 10 November: "real | `server/sv_livingcity_employment.lua` 11K | - | - | `LC.EmployerOf`, `LC.AcceptJob`, `LC.StallCustomer`, `LC.OfferJob`, `LC.LetGo`, `LC.QuitJob` | EmploymentTests (5) |
 | `endings` | Secret endings | `server/sv_livingcity_endings.lua` 234K | `client/cl_livingcity_endings.lua` 114K | - | `SETUP.base`, `SETUP.water`, `LC.EndingSession`, `SETUP.hard`, `SETUP.plane`, `LC.EndingPlayers` | EndingTests (25); DreamMoodTests (16); DreamTests (5) |
-| `endingtune` | The Endings menu, the server's side (cl_livingcity_endingtune.lua draws it) | `server/sv_livingcity_endingtune.lua` 7K | `client/cl_livingcity_endingtune.lua` 32K | - | `LC.EndingTuneSet`, `LC.EndingTuning`, `LC.EndingSettingGroup`, `LC_CL.EndingsMenu`, `LC.EndingTuneShare`, `LC.EndingTuneBaked` | anon@24687 (4); anon@24239 (2) |
+| `endingtune` | The Endings menu, the server's side (cl_livingcity_endingtune.lua draws it) | `server/sv_livingcity_endingtune.lua` 7K | `client/cl_livingcity_endingtune.lua` 33K | - | `LC.EndingTuneSet`, `LC.EndingTuning`, `LC.EndingSettingGroup`, `LC_CL.EndingsMenu`, `LC.EndingTuneShare`, `LC.EndingTuneBaked` | anon@24687 (4); Nov28_DreamDanceTests (2); anon@24239 (2) |
 | `errors` | Every error in one file (server and client) | - | - | `shared/sh_livingcity_errors.lua` 15K | `LC.ErrorNote`, `LC.ErrorsCount`, `LC.ErrorsText`, `LC.ErrorsSave`, `LC.ErrorsSorted`, `LC.ErrorsClear` | ErrorsFileTests (4) |
 | `escort` | Escorts through Combine doors | `server/sv_livingcity_escort.lua` 32K | - | - | `LC.EscortTick`, `LC.RequestEscort`, `LC.EscortCovers`, `LC.EscortCommand`, `LC.EscortWatchDoor`, `LC.MayHaveEscort` | WorkEscortTests (5) |
 | `events` | City events | `server/sv_livingcity_events.lua` 44K | - | - | `LC.EndEvent`, `LC.Announce`, `LC.StartEvent`, `LC.RationsCanStart`, `LC.CurfewGrace` | AnnouncementTests (3); Nov14F_RationsTests (3); Nov25_ChapterTests (3) |

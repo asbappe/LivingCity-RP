@@ -275,6 +275,28 @@ While you dream, the city's own HUD steps aside: the status box and the next ste
 
 - **23 November (the owner: "Every dream with something flying is absolutely broken in the dream zone"):** a dream zone's top caps what flies (the plane, the fleet, the bus) only when the zone was drawn 400 or taller (`LC.DreamFlyRoom`); the editor's default 192 kept them about 70 off the floor, through it. The map's own sky or roof still holds them in, measured against the map alone, never a prop. The numa numa plane's model faces forward (`lc_ending_plane_model_yaw` 90, was -90: it flew backwards; the core snapshot waits on the owner's OK). A dream never ends with "The city resets" (screen or chat): just the light.
 
-## ActMod's dances: in dreams only (28 November; the owner: "the animations should not be available for any players except in dreams")
+## ActMod's dances (28 November; the owner: "the animations should not be available for any players except in dreams", then "all our animations suck tbh, so I'd rather just use actmod")
 
-The server's Workshop collection has **ActMod** (2538387266) and its animations' base (2615656036), for the dreams. ActMod gives every player its own menu of dances (H); the gamemode answers ActMod's own question "may this emote start?" with no for anyone awake, and says nothing. In a dream ActMod works as it does anywhere; a dance still going when the dreamer wakes ends with the dream (`sh_livingcity_dreamdances.lua`, `LC.DreamDanceAllowed`). Nothing of ActMod's is changed or copied (its author forbids both); without ActMod on the server nothing happens. The dreams' own dances do not use its animations yet: the names of all of them are known (`python3 _dev/tools/workshop_unpack.py` on the owner's PC lists them). The third item, 3830765710, only does anything with the bot addon Lambda Players: not needed.
+The server's Workshop collection has **ActMod** (2538387266) and its animations' base (2615656036). Nothing of ActMod's is changed or copied (its author forbids both): its animations are asked for by name. Without ActMod on the server everything is as it was. The third item, 3830765710, only does anything with the bot addon Lambda Players: not needed.
+
+**Its own menu (H): in dreams only.** The gamemode answers ActMod's own question "may this emote start?" with no for anyone awake, and says nothing. In a dream ActMod works as it does anywhere; a dance still going when the dreamer wakes ends with the dream (`sh_livingcity_dreamdances.lua`, `LC.DreamDanceAllowed`).
+
+**The endings' dances (and their dreams') play ActMod's animations** in place of the gamemode's bone turns (`cl_livingcity_actdance.lua`; the picks: `LC.ActDances`):
+
+| Our dance | Ending | ActMod's animation (default) |
+|---|---|---|
+| ears | Bloom | `Amod_MMD_Dance_CaramellDansen` |
+| club | Marrow | `Amod_AM4_Spooky_Month_Dance` |
+| rave | Marrow | `Amod_Fortnite_GlowStickDance` |
+| hard | Party hard | `Amod_Fortnite_JumpstyleDance` |
+| hora | Shalom | `Amod_Fortnite_EasternBloc` |
+| numa | The plane | `Amod_Fortnite_Boogie_Down` |
+| fire | Fire | `Amod_Fortnite_ElectroShuffle` |
+| cheer | The stand-up's crowd | `Amod_Fortnite_Cheerleader` |
+| bus | The Bus, Base | none (sat down: ours stays) |
+
+- **Changing a pick:** the Endings menu, on that ending's page: a list of every ActMod animation, or "none" for the gamemode's own. The same on everyone's screen, kept with the dances' tuning (`data/livingcity/ending_tuning.json`, settings `lc_actdance_<dance>`). The menu's stand-in shows the pick.
+- **Who plays it how:** a player plays it as their own animation. ActMod's animations are on player models only, so a citizen or a unit is drawn as their player-model twin doing it, in their place, on each screen (`models/humans/...` to `models/player/...`, a metrocop to `models/player/police.mdl`). Everyone keeps to the song's clock (its speeding up too), so they move as one. Bloom's risers still spin.
+- **Ours stays** for: anyone sat or riding (the bus, the plane's seats), the rope and the limp, flying on the fire, the hora's rush in and its chair, Father Grigori (he holds his guitar), anything with no player-model twin (a headcrab, a vortigaunt), and a player whose model lacks the animation.
+- **Not done yet:** the dream stage's own dances (the Conga line, the Dance Marathon) still move as before; ActMod has `Amod_Fortnite_CongaLine_walk` for the first. ActMod's props, sounds and particles for an emote are not used.
+- The names of all 422 animations: `python3 _dev/tools/workshop_unpack.py` on the owner's PC lists them.

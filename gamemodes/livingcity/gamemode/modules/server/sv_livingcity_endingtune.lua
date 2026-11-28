@@ -23,6 +23,8 @@ LC.EndingTuneFile = FILE
 
 -- the settings everyone's dance shares, though each game has its own (client settings)
 local SHARED = { lc_bloom_palm = true, lc_headbang_angle = true, lc_shalom_kippah = true, lc_shalom_chair = true }
+-- (and which of ActMod's animations each dance plays: sh_livingcity_dreamdances.lua)
+for move in pairs(LC.ActDances or {}) do SHARED[LC.ActDanceSetting(move)] = true end
 LC.EndingTuneShared = SHARED
 
 local tuning = { bones = {}, shared = {} } -- bones[move][bone] = { p, y, r }; shared[name] = "value"

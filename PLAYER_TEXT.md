@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 5a11a4d. Admin-only console messages and log lines are left out.
+Made from version 64d05f7. Admin-only console messages and log lines are left out.
 
 13703 lines, from 401 files.
 
@@ -2704,72 +2704,72 @@ Made from version 5a11a4d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's render screenspace effects moment
 
-- "$pp_colour_addr"  (text, line 829)
-- "$pp_colour_addg"  (text, line 829)
-- "$pp_colour_addb"  (text, line 829)
-- "$pp_colour_brightness"  (text, line 830)
-- "$pp_colour_contrast"  (text, line 830)
-- "$pp_colour_colour"  (text, line 830)
-- "$pp_colour_mulr"  (text, line 831)
-- "$pp_colour_mulg"  (text, line 831)
-- "$pp_colour_mulb"  (text, line 831)
+- "$pp_colour_addr"  (text, line 842)
+- "$pp_colour_addg"  (text, line 842)
+- "$pp_colour_addb"  (text, line 842)
+- "$pp_colour_brightness"  (text, line 843)
+- "$pp_colour_contrast"  (text, line 843)
+- "$pp_colour_colour"  (text, line 843)
+- "$pp_colour_mulr"  (text, line 844)
+- "$pp_colour_mulg"  (text, line 844)
+- "$pp_colour_mulb"  (text, line 844)
 
 > Note for you (not shown in game): on screen
 
-- "Under the water: hold Jump to swim up"  (text, line 910)
+- "Under the water: hold Jump to swim up"  (text, line 923)
 
 > Note for you (not shown in game): the game's render screenspace effects moment
 
-- "$pp_colour_addr"  (text, line 918)
-- "$pp_colour_addg"  (text, line 918)
-- "$pp_colour_addb"  (text, line 918)
-- "$pp_colour_brightness"  (text, line 918)
-- "$pp_colour_contrast"  (text, line 919)
-- "$pp_colour_colour"  (text, line 919)
-- "$pp_colour_mulr"  (text, line 919)
-- "$pp_colour_mulg"  (text, line 919)
-- "$pp_colour_mulb"  (text, line 919)
+- "$pp_colour_addr"  (text, line 931)
+- "$pp_colour_addg"  (text, line 931)
+- "$pp_colour_addb"  (text, line 931)
+- "$pp_colour_brightness"  (text, line 931)
+- "$pp_colour_contrast"  (text, line 932)
+- "$pp_colour_colour"  (text, line 932)
+- "$pp_colour_mulr"  (text, line 932)
+- "$pp_colour_mulg"  (text, line 932)
+- "$pp_colour_mulb"  (text, line 932)
 
 > Note for you (not shown in game): The warning, as a flashing ending starts: leave the flashing out, or not
 
-- "Photosensitivity warning"  (window title, line 1368)
+- "Photosensitivity warning"  (window title, line 1381)
 
 > Note for you (not shown in game): part of: flash warning
 
-- "What's about to happen has flashing lights, strobes and screen flashes. If that could be a problem for you, leave them out: the music, the dancing and everything else stay. (lc_ending_calm in the console changes it any time.)"  (label or button, line 1377)
-- "Reduce flashing"  (label or button, line 1382)
+- "What's about to happen has flashing lights, strobes and screen flashes. If that could be a problem for you, leave them out: the music, the dancing and everything else stay. (lc_ending_calm in the console changes it any time.)"  (label or button, line 1390)
+- "Reduce flashing"  (label or button, line 1395)
 
 > Note for you (not shown in game): (doing nothing is "I'm fine": it goes by itself after 15 seconds, time enough to read it)
 
-- "I'm fine, keep it (15)"  (label or button, line 1390)
-- "I'm fine, keep it ({left})"  (label or button, line 1395)
-- "Oy vey!"  (text, line 1759)
-- "Oy gevalt!"  (text, line 1759)
-- "Mazel tov!"  (text, line 1759)
-- "Kvetch, kvetch"  (text, line 1759)
-- "Zei gezunt!"  (text, line 1760)
-- "Kol hakavod!"  (text, line 1760)
-- "Oy li!"  (text, line 1760)
-- "Hava nagila!"  (text, line 1761)
-- "Am Yisrael chai!"  (text, line 1761)
-- "Toda raba!"  (text, line 1761)
-- "Ein ba'aya!"  (text, line 1761)
-- "Chag sameach!"  (text, line 1761)
-- "Shabbat shalom!"  (text, line 1761)
-- "Ma nishma?"  (text, line 1762)
-- "Yasher koach!"  (text, line 1762)
-- "Oy, mamaleh!"  (text, line 1762)
-- "Hakol beseder!"  (text, line 1762)
-- "Tov me'od!"  (text, line 1762)
-- "Baruch HaShem!"  (text, line 1762)
+- "I'm fine, keep it (15)"  (label or button, line 1403)
+- "I'm fine, keep it ({left})"  (label or button, line 1408)
+- "Oy vey!"  (text, line 1772)
+- "Oy gevalt!"  (text, line 1772)
+- "Mazel tov!"  (text, line 1772)
+- "Kvetch, kvetch"  (text, line 1772)
+- "Zei gezunt!"  (text, line 1773)
+- "Kol hakavod!"  (text, line 1773)
+- "Oy li!"  (text, line 1773)
+- "Hava nagila!"  (text, line 1774)
+- "Am Yisrael chai!"  (text, line 1774)
+- "Toda raba!"  (text, line 1774)
+- "Ein ba'aya!"  (text, line 1774)
+- "Chag sameach!"  (text, line 1774)
+- "Shabbat shalom!"  (text, line 1774)
+- "Ma nishma?"  (text, line 1775)
+- "Yasher koach!"  (text, line 1775)
+- "Oy, mamaleh!"  (text, line 1775)
+- "Hakol beseder!"  (text, line 1775)
+- "Tov me'od!"  (text, line 1775)
+- "Baruch HaShem!"  (text, line 1775)
 
 > Note for you (not shown in game): on screen
 
-- "Am Yisrael chai"  (text, line 2146)
+- "Am Yisrael chai"  (text, line 2159)
 
 > Note for you (not shown in game): the console command lc_shalom_pose_print
 
-- "chair %s = Angle(%g, %g, %g)"  (message, line 2165)
+- "chair %s = Angle(%g, %g, %g)"  (message, line 2178)
 
 ## the Endings menu (superadmins): tune the secret endings live (cl_livingcity_endingtune.lua)
 
@@ -2778,117 +2778,117 @@ Made from version 5a11a4d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Each ending's moves: { move, what it is }
 
-- "The dance: hands up, wrists flapping, hips swaying"  (text, line 42)
-- "The dance, on the Combine's units only (their bones sit differently)"  (text, line 42)
-- "Club dance (the kicks)"  (text, line 43)
-- "Rave dance (bigger kicks)"  (text, line 43)
-- "Sat down, arms up (Base's ZIG riders too)"  (text, line 44)
-- "Sat in a ZIG, arms up (the Bus's riders too)"  (text, line 45)
-- "Party hard (a pose and its mirror image)"  (text, line 46)
-- "The hora: arms on the shoulders, the grapevine"  (text, line 47)
-- "Rushing into the middle, arms up"  (text, line 47)
-- "Up on the chair"  (text, line 47)
-- "Numa numa"  (text, line 48)
-- "Bent over, behind out, arms pumping (on the ground)"  (text, line 49)
-- "Flying on it, Superman style (Pelvis tips the whole body)"  (text, line 49)
-- "The crowd cheering"  (text, line 50)
-- "On the rope, kicking"  (text, line 50)
-- "Limp, at the end"  (text, line 50)
-- "Father Grigori headbanging (the heavy parts)"  (text, line 51)
-- "Father Grigori dancing (the calm parts)"  (text, line 51)
+- "The dance: hands up, wrists flapping, hips swaying"  (text, line 51)
+- "The dance, on the Combine's units only (their bones sit differently)"  (text, line 51)
+- "Club dance (the kicks)"  (text, line 52)
+- "Rave dance (bigger kicks)"  (text, line 52)
+- "Sat down, arms up (Base's ZIG riders too)"  (text, line 53)
+- "Sat in a ZIG, arms up (the Bus's riders too)"  (text, line 54)
+- "Party hard (a pose and its mirror image)"  (text, line 55)
+- "The hora: arms on the shoulders, the grapevine"  (text, line 56)
+- "Rushing into the middle, arms up"  (text, line 56)
+- "Up on the chair"  (text, line 56)
+- "Numa numa"  (text, line 57)
+- "Bent over, behind out, arms pumping (on the ground)"  (text, line 58)
+- "Flying on it, Superman style (Pelvis tips the whole body)"  (text, line 58)
+- "The crowd cheering"  (text, line 59)
+- "On the rope, kicking"  (text, line 59)
+- "Limp, at the end"  (text, line 59)
+- "Father Grigori headbanging (the heavy parts)"  (text, line 60)
+- "Father Grigori dancing (the calm parts)"  (text, line 60)
 
 > Note for you (not shown in game): where each bone sits on the body map (facing you: their right arm on your left)
 
-- "Mid back"  (text, line 69)
-- "Lower back"  (text, line 70)
-- "R upper arm"  (text, line 71)
-- "L upper arm"  (text, line 72)
+- "Mid back"  (text, line 78)
+- "Lower back"  (text, line 79)
+- "R upper arm"  (text, line 80)
+- "L upper arm"  (text, line 81)
 
 > Note for you (not shown in game): what each of a bone's three turns does (as the playtests showed them)
 
-- "Out to the side (right arm: minus, left: plus)"  (text, line 78)
-- "Raise forward (minus is up)"  (text, line 78)
-- "Swing sideways"  (text, line 79)
-- "Bend the elbow"  (text, line 79)
-- "Twist (turns the palm)"  (text, line 79)
-- "Bend the wrist"  (text, line 80)
-- "Out to the side"  (text, line 81)
-- "Swing forward and back"  (text, line 81)
-- "Bend the knee (lifts the foot off the floor)"  (text, line 82)
-- "Nod (forward and back)"  (text, line 83)
-- "Tilt side to side"  (text, line 83)
+- "Out to the side (right arm: minus, left: plus)"  (text, line 87)
+- "Raise forward (minus is up)"  (text, line 87)
+- "Swing sideways"  (text, line 88)
+- "Bend the elbow"  (text, line 88)
+- "Twist (turns the palm)"  (text, line 88)
+- "Bend the wrist"  (text, line 89)
+- "Out to the side"  (text, line 90)
+- "Swing forward and back"  (text, line 90)
+- "Bend the knee (lifts the foot off the floor)"  (text, line 91)
+- "Nod (forward and back)"  (text, line 92)
+- "Tilt side to side"  (text, line 92)
 
 > Note for you (not shown in game): part of: setting row
 
-- "(the same on everyone's screen)"  (text, line 321)
-- "Back to the default ({d})"  (button, line 352)
+- "(the same on everyone's screen)"  (text, line 330)
+- "Back to the default ({d})"  (button, line 371)
 
 > Note for you (not shown in game): part of: changes
 
-- "Miscount: ending tuning, from the Endings menu"  (text, line 386)
-- "Settings changed from their default:"  (text, line 392)
-- "Shared settings (the same on everyone's screen):"  (text, line 399)
-- "Dance tuning (added to the code's own turn of the bone; pitch yaw roll):"  (text, line 403)
-- "Nothing changed yet."  (text, line 408)
+- "Miscount: ending tuning, from the Endings menu"  (text, line 405)
+- "Settings changed from their default:"  (text, line 411)
+- "Shared settings (the same on everyone's screen):"  (text, line 418)
+- "Dance tuning (added to the code's own turn of the bone; pitch yaw roll):"  (text, line 422)
+- "Nothing changed yet."  (text, line 427)
 
 > Note for you (not shown in game): part of: dance tab
 
-- "This ending has no dance to tune. Its settings are on the next tab."  (text, line 417)
+- "This ending has no dance to tune. Its settings are on the next tab."  (text, line 436)
 
 > Note for you (not shown in game): part of: paint
 
-- "Nobody's doing this move in sight."  (drawn on screen, line 443)
-- "Play the ending, or tick the stand-in below."  (drawn on screen, line 444)
-- "drag to turn round, wheel to zoom"  (drawn on screen, line 455)
+- "Nobody's doing this move in sight."  (drawn on screen, line 462)
+- "Play the ending, or tick the stand-in below."  (drawn on screen, line 463)
+- "drag to turn round, wheel to zoom"  (drawn on screen, line 474)
 
 > Note for you (not shown in game): part of: dance tab
 
-- "Watch someone else doing it"  (button, line 461)
-- "Yellow: the bone you're turning. Blue edge: a bone that's been tuned. In the world it's lit up on everyone doing the move (red forward, green right, blue up)."  (text, line 506)
-- "Left and right mirror each other"  (label or button, line 511)
-- "Back to how the code has it: this bone"  (button, line 527)
-- "Back to how the code has it: the whole move"  (button, line 533)
-- "Stand-in: someone doing the move in front of you (only on your screen)"  (label or button, line 541)
-- "The stand-in's beats a minute"  (text, line 544)
+- "Watch someone else doing it"  (button, line 480)
+- "Yellow: the bone you're turning. Blue edge: a bone that's been tuned. In the world it's lit up on everyone doing the move (red forward, green right, blue up)."  (text, line 525)
+- "Left and right mirror each other"  (label or button, line 530)
+- "Back to how the code has it: this bone"  (button, line 546)
+- "Back to how the code has it: the whole move"  (button, line 552)
+- "Stand-in: someone doing the move in front of you (only on your screen)"  (label or button, line 560)
+- "The stand-in's beats a minute"  (text, line 563)
 
 > Note for you (not shown in game): part of: think
 
-- "The song is at %.1f s (%s)"  (message, line 556)
-- "The song's time shows here while an ending plays (for lining up its sections: seconds:part,seconds:part,...)."  (label or button, line 556)
+- "The song is at %.1f s (%s)"  (message, line 575)
+- "The song's time shows here while an ending plays (for lining up its sections: seconds:part,seconds:part,...)."  (label or button, line 575)
 
 > Note for you (not shown in game): part of: settings tab
 
-- "Copy the song's time"  (button, line 558)
-- "No settings of its own."  (text, line 564)
-- "Every ending:"  (text, line 566)
+- "Copy the song's time"  (button, line 577)
+- "No settings of its own."  (text, line 584)
+- "Every ending:"  (text, line 586)
 
 > Note for you (not shown in game): part of: you tab
 
-- "These are your own game's, not the server's."  (text, line 573)
-- "How loud the songs are"  (text, line 580)
-- "Calm: no strobes or screen flashes"  (label or button, line 583)
-- "Base's arcade blocks (1: off)"  (text, line 585)
+- "These are your own game's, not the server's."  (text, line 593)
+- "How loud the songs are"  (text, line 600)
+- "Calm: no strobes or screen flashes"  (label or button, line 603)
+- "Base's arcade blocks (1: off)"  (text, line 605)
 
 > Note for you (not shown in game): part of: changes tab
 
-- "Everything you've changed. Copy it and send it on, and it can be built in as the new normal."  (text, line 592)
-- "Copy it all"  (button, line 602)
+- "Everything you've changed. Copy it and send it on, and it can be built in as the new normal."  (text, line 612)
+- "Copy it all"  (button, line 622)
 
 > Note for you (not shown in game): part of: fill
 
-- "The dance"  (text, line 614)
-- "Just for you"  (text, line 616)
+- "The dance"  (text, line 634)
+- "Just for you"  (text, line 636)
 
 > Note for you (not shown in game): part of: open
 
-- "Endings: tune them live"  (window title, line 640)
-- "Play it now"  (button, line 654)
-- "Stop it"  (button, line 655)
-- "(playing now)"  (text, line 670)
+- "Endings: tune them live"  (window title, line 660)
+- "Play it now"  (button, line 674)
+- "Stop it"  (button, line 675)
+- "(playing now)"  (text, line 690)
 
 > Note for you (not shown in game): part of: endings menu
 
-- "Only a superadmin can tune the endings."  (chat message, line 683)
+- "Only a superadmin can tune the endings."  (chat message, line 703)
 
 ## morning exercise, on your screen (sv_livingcity_exercise.lua) (cl_livingcity_exercise.lua)
 
