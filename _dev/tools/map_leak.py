@@ -31,13 +31,31 @@ SEE_THROUGH = ("glass", "fence", "grate", "chainlink", "water", "window", "wire"
 OPAQUE_ANYWAY = ("glass/glasswindow005b", "glass/glasswindow011a", "building_template/building_trainstation_window002d")
 
 
+def _facts():
+    import json
+    import os
+    try:
+        d = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "material_facts.json")))
+        return set(d.get("see_through", [])), set(d.get("solid", []))
+    except (OSError, ValueError):
+        return set(), set()
+
+
+SEE_FACT, SOLID_FACT = _facts()      # (read from Valve's .vmt files: material_facts.json; the names alone missed a metal
+                                     #  gate, rails, a truss, billboards: the owner's compile of 1128h, 28 November)
+
+
 def seals(mats):
     for m in mats:
         m = m.lower()
         if m.startswith("tools/"):
             if any(t in m for t in NOSEAL_TOOLS):
                 return False
-        elif any(w in m for w in SEE_THROUGH) and m not in OPAQUE_ANYWAY:
+        elif m in SEE_FACT:
+            return False
+        elif m in SOLID_FACT or m in OPAQUE_ANYWAY:
+            continue
+        elif any(w in m for w in SEE_THROUGH):
             return False
     return True
 

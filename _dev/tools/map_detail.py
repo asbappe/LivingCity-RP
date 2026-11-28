@@ -2,14 +2,16 @@
 """Small world brushes made func_detail, so vvis has fewer leaves to work through (the owner, 28 November, of City 18's
 first full vis: "portal flow is ludicrously slow and taking about 2 minutes per 10% ... did we break something?").
 
-    python3 map_detail.py IN.vmf OUT.vmf [--max 128] [--near 24] [--cell 4] [--margin 48] [--dry]
+    python3 map_detail.py IN.vmf OUT.vmf [--max 128] [--near 24] [--cell 1] [--margin 24] [--room 48] [--dry]
 
 A world brush becomes func_detail when it is small (its middle size, of its three, under --max: trims, frames, steps,
 ledges, beams, posts) and is none of these: a displacement; one with sky, water or slime on it; one with only tool
 faces (clips, hints, skips: they stay as the mapper set them); one within --near of an areaportal (an areaportal must
 meet world brushes all round); one that parts two areas (on a grid of --cell, the air cut into areas by the world's
 brushes and the areaportals, as map_areas.py does: a brush with different areas round it walls a room in; the
-owner's City 18 has rooms walled partly by small brushes, and a first try without this broke 75 areaportals). func_detail looks and collides exactly as before; it neither seals nor cuts the map
+owner's City 18 has rooms walled partly by small brushes, and a first try without this broke 75 areaportals); and,
+since even that let a room open (the owner's compile of 1128h), any brush with a room's air within --room of it: only
+brushes out in the open (on facades, ledges and trims facing the streets) go. func_detail looks and collides exactly as before; it neither seals nor cuts the map
 into leaves, so only a map sealed by other brushes may lose them (City 18 is sealed by its sky box: the lesson
 owner-c18-sealed-by-its-box). Every moved brush keeps its id, faces and visgroup; they go into func_detail entities of
 up to 500 brushes each, after the last entity. Check afterwards: map_areas.py (no areaportal may leak) and
@@ -62,8 +64,10 @@ def main():
     ap.add_argument("--max", type=float, default=128.0)
     ap.add_argument("--near", type=float, default=24.0)
     ap.add_argument("--dry", action="store_true")
-    ap.add_argument("--cell", type=float, default=4.0)
-    ap.add_argument("--margin", type=float, default=48.0)
+    ap.add_argument("--cell", type=float, default=1.0)
+    ap.add_argument("--margin", type=float, default=24.0)
+    ap.add_argument("--cell2", type=float, default=16.0)
+    ap.add_argument("--room", type=float, default=48.0)
     a = ap.parse_args()
     text = open(a.vmf, encoding="utf-8", errors="surrogateescape", newline="").read()
     eol = "\r\n" if "\r\n" in text[:2000] else "\n"
@@ -120,11 +124,38 @@ def main():
         e0 = text.find(eol + "}" + eol, pm.start())
         for sm in pat.finditer(text, s0, e0 + len(eol)):
             solids.append((-1, planes_of(sm.group(0))))
+    # Then the outdoors: on a grid of --cell2 over the whole map, the biggest piece of air (the streets, plazas and the
+    # sky over them, cut off from every room by the areaportals). A brush is made detail only if all the air within
+    # --room of it is outdoors: a room's walls stay world, every brush of them, however far from its areaportal (the
+    # owner's compile of 1128h: "Brush 38466: areaportal brush doesn't touch two areas", a stair tunnel opened somewhere
+    # along its length although nothing near its areaportal had been made detail).
+    C2, R = a.cell2, a.room
+    allp = np.array([[float(v) for v in q.split()] for q in re.findall(r"\((-?[\d.e]+ -?[\d.e]+ -?[\d.e]+)\)", text[w:we])])
+    glo = np.floor((allp.min(axis=0) - 2 * C2) / C2) * C2
+    gn = np.ceil((allp.max(axis=0) + 2 * C2 - glo) / C2).astype(int)
+    gsolid = np.zeros(gn, dtype=bool)
+    for start, (blo, bhi, bpl) in solids:
+        sl, ins = cells_of(blo, bhi, bpl, glo, gn, C2)
+        if sl is not None:
+            gsolid[sl] |= ins
+    glab = np.zeros(gn, dtype=np.int32)
+    ndimage.label(~gsolid, output=glab)
+    del gsolid
+    counts = np.bincount(glab.ravel())
+    counts[0] = 0
+    outdoor = int(np.argmax(counts))
+    print("outdoors: %.1f M of %.1f M cells of air (grid of %d)" % (counts[outdoor] / 1e6, counts.sum() / 1e6, C2))
     LO = np.array([q[1][0] for q in solids])
     HI = np.array([q[1][1] for q in solids])
     gone = set()
     for s0, e0, body in cand:
         lo_b, hi_b, planes = planes_of(body)
+        i0 = np.maximum(np.floor((lo_b - R - glo) / C2).astype(int), 0)
+        i1 = np.minimum(np.ceil((hi_b + R - glo) / C2).astype(int), gn)
+        around = set(int(v) for v in np.unique(glab[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]])) - {0}
+        if R >= 0 and around - {outdoor}:
+            kept["by a room"] = kept.get("by a room", 0) + 1
+            continue
         llo = np.floor((lo_b - M) / C) * C
         lhi = np.ceil((hi_b + M) / C) * C
         n = ((lhi - llo) / C).astype(int)
