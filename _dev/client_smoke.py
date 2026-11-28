@@ -6361,7 +6361,7 @@ if hooks and hooks.LivingCityActDance then
     if s2 ~= 77 then return "ActMod dances: the game is not given the animation for a dancing player (" .. tostring(s2) .. ")" end
 end
 if LC_CL.ActDance(ply, "ears_combine", 5) ~= true then return "ActMod dances: the units' ears is the same dance" end
-if LC_CL.ActDance(ply, "bus", 5) ~= false then return "ActMod dances: the bus keeps our own (none)" end
+if LC_CL.ActDance(ply, "bus", 5) ~= true then return "ActMod dances: the bus's riders do ActMod's too" end
 if LC_CL.ActDance(ply, "nosuchdance", 5) ~= false then return "ActMod dances: a dance with no pick is ours" end
 -- party hard is shared half and half: every other dancer keeps our own
 local odd, even = Player(true), Player(true)
@@ -6374,7 +6374,8 @@ if LC_CL.ActDanceSeq(ply) ~= nil then return "ActMod dances: a stopped player st
 if LC_CL.ActDance(Player(false), "ears", 5) ~= false then return "ActMod dances: a model without the animation must dance our own way" end
 local sat = Player(true)
 sat.GetNW2Bool = function(_, k) return k == "lc_seated" end
-if LC_CL.ActDance(sat, "numa", 5) ~= false then return "ActMod dances: a seated player must keep our own" end
+if LC_CL.ActDance(sat, "numa", 5) ~= true then return "ActMod dances: a seated player does ActMod's too (the owner: regardless)" end
+LC_CL.ActDanceStop(sat)
 -- a citizen: drawn as their player-model twin
 local cmWas, feWas = ClientsideModel, file.Exists
 local made, drawn, removed = {}, 0, 0
@@ -6397,6 +6398,17 @@ if LC_CL.ActDance(npc, "club", 3) ~= true or #made ~= 1 then return "ActMod danc
 if not npc.RenderOverride then return "ActMod dances: the twin is not drawn in the citizen's place" end
 npc:RenderOverride()
 if drawn ~= 1 then return "ActMod dances: the twin is not drawn" end
+-- the Conga dream's line: the twin's feet on the floor, though the server bobs the figure
+local setAt
+made, drawn = {}, 0
+local trWas = util.TraceLine
+util.TraceLine = function(t) return { Hit = true, StartSolid = false, HitPos = Vector(t.start.x, t.start.y, -5) } end
+npc.GetPos = function() return Vector(10, 20, 7) end
+if LC_CL.ActDance(npc, "conga", 2) ~= true then return "ActMod dances: the conga line's citizen has no twin" end
+npc.lcActTwin.SetPos = function(_, v) setAt = v end
+npc:RenderOverride()
+util.TraceLine = trWas
+if not setAt or setAt.z ~= -5 then return "ActMod dances: the conga's twin is not kept on the floor" end
 LC_CL.ActDanceStop(npc)
 if npc.RenderOverride ~= nil or removed ~= 1 then return "ActMod dances: a citizen who stops keeps their twin" end
 local crab = Ent({ EntIndex = function() return 41 end, GetModel = function() return "models/headcrabclassic.mdl" end, LookupSequence = function() return -1 end })

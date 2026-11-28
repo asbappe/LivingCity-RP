@@ -32,8 +32,8 @@ end
 -- The endings' dances (and their dreams'), done with ActMod's animations instead of our
 -- bone turns (the owner, 28 November: "all our animations suck tbh, so I'd rather just
 -- use actmod"; cl_livingcity_actdance.lua). Each: our dance = { ActMod's animation, the
--- endings whose page of the Endings menu changes it }. "none": our own dance stays (the
--- bus and the ZIGs: sat down, and ActMod's are done standing).
+-- endings whose page of the Endings menu changes it ("dreams": on every page, under the
+-- dreams' own dances) }. "none": our own dance stays.
 LC.ActDances = {
     ears  = { "Amod_MMD_Dance_CaramellDansen", { "bloom" } },
     club  = { "Amod_AM4_Spooky_Month_Dance", { "marrow" } },
@@ -45,7 +45,11 @@ LC.ActDances = {
     numa  = { "Amod_Fortnite_Boogie_Down", { "plane" } },
     fire  = { "Amod_Fortnite_ElectroShuffle", { "fire" } },
     cheer = { "Amod_Fortnite_Cheerleader", { "standup" } },
-    bus   = { "none", { "bus", "base" } },
+    -- (the Bus's riders and Base's: sat down, and ActMod's are done standing; the owner,
+    -- 28 November: "just use actmod's animations regardless")
+    bus   = { "Amod_Dance_Macarena", { "bus", "base" } },
+    -- (the Conga dream's line: its citizens and Doctor Kleiner; sv_livingcity_strangedreams3.lua)
+    conga = { "Amod_Fortnite_CongaLine_walk", { "dreams" } },
 }
 function LC.ActDanceSetting(move) return "lc_actdance_" .. move end
 

@@ -575,16 +575,21 @@ local function SettingsTab(sheet, id)
         self:SetText(t and string.format("The song is at %.1f s (%s)", t, S and S.client and S.client.section or "") or "The song's time shows here while an ending plays (for lining up its sections: seconds:part,seconds:part,...).")
     end
     Button(pnl, "Copy the song's time", function() local t = LC_CL.EndingSongPos and LC_CL.EndingSongPos() if t then SetClipboardText(string.format("%.1f", t)) end end)
-    for _, n in ipairs(SHARED_OF[id] or {}) do
+    local function SharedRow(n)
         local cv = GetConVar(n)
         SettingRow(pnl, { name = n, v = data.shared[n] or (cv and cv:GetString()) or SHARED[n], d = SHARED[n], help = cv and cv.GetHelpText and cv:GetHelpText() or "",
             choices = string.find(n, "^lc_actdance_") and LC_CL.ActDanceChoices and LC_CL.ActDanceChoices() or nil }, true)
     end
+    for _, n in ipairs(SHARED_OF[id] or {}) do SharedRow(n) end
     local list = info and info.settings and info.settings[id] or {}
     if #list == 0 and not SHARED_OF[id] then Label(pnl, "No settings of its own.", DIM) end
     for _, s in ipairs(list) do SettingRow(pnl, s) end
     Label(pnl, "Every ending:", GOLD)
     for _, s in ipairs(info and info.settings and info.settings.all or {}) do SettingRow(pnl, s) end
+    if SHARED_OF.dreams then
+        Label(pnl, "The dreams' own dances:", GOLD)
+        for _, n in ipairs(SHARED_OF.dreams) do SharedRow(n) end
+    end
     return pnl
 end
 

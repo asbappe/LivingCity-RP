@@ -455,7 +455,11 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStrangeDreams", function(_
     elseif th == "conga" then -- (a rainbow trail behind every dancer)
         for k, i in ipairs(st.conga or {}) do
             local e = EntOf(i)
-            if e then render.DrawSprite(e:GetPos() + Vector(0, 0, 20), 90, 90, Rainbow(now * 0.4 + k / 7, 150)) end
+            if e then
+                render.DrawSprite(e:GetPos() + Vector(0, 0, 20), 90, 90, Rainbow(now * 0.4 + k / 7, 150))
+                -- (its people walk ActMod's conga, where the server has it: cl_livingcity_actdance.lua)
+                if LC_CL.ActDance then LC_CL.ActDance(e, "conga", now) end
+            end
         end
     elseif th == "shh" then -- (Zzz over the crib, unless it's crying)
         local me = LocalPlayer()
