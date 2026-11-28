@@ -622,7 +622,7 @@ def reactor(m):
     consoles get blown up or hacked, those beams all shut off and the reactor core switches to it's unstable look":
     Valve's beam_core (sprites/core_beam1) from a nozzle on the west, east and north walls to the ball, and their
     column beam (effects/bluelaser1) through it, clean while the core runs; lc_core_stop turns the wall beams off, the
-    column to Valve's noisy one, the energy to its discharge, the ball and the light red, arcs on; lc_core_start all back.
+    column to Valve's noisy one, the energy beating (lc_core_reactor_pulse), the ball and the light red, arcs on; lc_core_start all back.
     Returns the wires for the two relays. Names: lc_core_reactor_ball, lc_core_energy, lc_core_reactor_target,
     lc_core_beam, lc_core_beam_glow, lc_core_column, lc_core_column_unstable, lc_core_reactor_tesla, lc_core_reactor_arc."""
     b, vmf = m.b, m.b.vmf
@@ -696,11 +696,18 @@ def reactor(m):
                                         "thick_min": "2", "thick_max": "7", "lifetime_min": "0.05", "lifetime_max": "0.3", "interval_min": "0.3", "interval_max": "1.2",
                                         "texture": "sprites/physbeam.vmt", "m_SoundName": "DoSpark", "spawnflags": "0"}, vis=vis)
     m.sound("ambient/energy/electric_loop.wav", CX, CY, RZ, radius=900, volume=7, name="lc_core_reactor_arc", on=False, loops=True)
+    # unstable, it beats: the energy drawn in and let go again at odd moments, the ball flaring red (Valve's own energy
+    # entity has two looks only: "start on" is its steady discharge, StartCharge the drawing in)
+    m.point("logic_timer", CX + 16, CY, RZ + BALL + 40, {"targetname": "lc_core_reactor_pulse", "UseRandomTime": "1", "LowerRandomBound": "0.6", "UpperRandomBound": "2.2",
+                                                         "StartDisabled": "1", "spawnflags": "0"}, vis=vis,
+            connections=[("OnTimer", "lc_core_energy", "StartCharge", "0.4", 0), ("OnTimer", "lc_core_energy", "StartDischarge", "", 0.45),
+                         ("OnTimer", "lc_core_reactor_ball", "Color", "255 60 30", 0), ("OnTimer", "lc_core_reactor_ball", "Color", "255 150 90", 0.45)])
     stop = [("lc_core_beam", "TurnOff", "", 0), ("lc_core_beam_glow", "HideSprite", "", 0), ("lc_core_column", "TurnOff", "", 0), ("lc_core_column_unstable", "TurnOn", "", 0.1),
-            ("lc_core_energy", "StartDischarge", "", 0.2), ("lc_core_reactor_ball", "Color", "255 120 70", 0.2), ("lc_core_reactor_tesla", "TurnOn", "", 0.4),
+            ("lc_core_reactor_pulse", "Enable", "", 0.2), ("lc_core_reactor_ball", "Color", "255 150 90", 0.2), ("lc_core_reactor_tesla", "TurnOn", "", 0.4),
             ("lc_core_reactor_arc", "PlaySound", "", 0.4)]
     start = [("lc_core_beam", "TurnOn", "", 1.5), ("lc_core_beam_glow", "ShowSprite", "", 1.5), ("lc_core_column_unstable", "TurnOff", "", 1.5), ("lc_core_column", "TurnOn", "", 1.5),
-             ("lc_core_energy", "StartCharge", "3", 0), ("lc_core_reactor_ball", "Color", "255 255 255", 1.5), ("lc_core_reactor_tesla", "TurnOff", "", 0),
+             ("lc_core_reactor_pulse", "Disable", "", 0), ("lc_core_energy", "StartDischarge", "", 1.0), ("lc_core_reactor_ball", "Color", "255 255 255", 1.5),
+             ("lc_core_reactor_tesla", "TurnOff", "", 0),
              ("lc_core_reactor_arc", "StopSound", "", 0)]
     return stop, start
 

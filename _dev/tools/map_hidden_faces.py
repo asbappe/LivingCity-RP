@@ -16,7 +16,7 @@ The flood goes in slabs, in place: the canal ring's test map (a grid of 3.6 bill
 Safe by design: anything the flood can slip into counts as seen (a wall thinner than a cube may let it through, which
 only keeps more faces). Only the material lines of the faces it names change; every other byte of the file stays.
 
-    python3 map_hidden_faces.py IN.vmf OUT.vmf [--cell 8] [--list]
+    python3 map_hidden_faces.py IN.vmf OUT.vmf [--cell 8] [--list] [--seed-lost]
     python3 map_hidden_faces.py IN.vmf --holes          (writes nothing: prints every hole a player can see, HOLE lines)
 
 --holes (the owner, 24 November: holes in the bunker's walls the builder's own checks never saw, since they judge brush
@@ -88,6 +88,8 @@ def main():
     ap.add_argument("--cell", type=int, default=8)
     ap.add_argument("--list", action="store_true", help="print every face made nodraw")
     ap.add_argument("--force", action="store_true", help="write even if some lights or things stand in air the flood missed")
+    ap.add_argument("--seed-lost", action="store_true", help="where a light or a placed thing stands in air the flood missed, flood on from it (its place is kept as seen) "
+                                                             "rather than stop: for a map with rooms players reach by teleport")
     ap.add_argument("--brushes", action="store_true", help="also delete the func_detail brushes nobody can see (world brushes always stay: they seal and part areas)")
     ap.add_argument("--route", nargs=3, type=float, metavar=("X", "Y", "Z"), help="print the way the seen air takes from the player start to this point")
     ap.add_argument("--holes", action="store_true", help="print every hole a player can see: a nodraw face, or a sky face under a roof, that seen air meets")
@@ -287,17 +289,32 @@ def main():
                 print("   (%d %d %d)" % tuple(lo + (np.array(q) + 0.5) * C))
     # the check: every light and placed thing should stand in air the flood saw (or inside something, where some
     # dressing sits); one in unseen air means a place people use that the flood missed, so nothing is changed
-    lost = []
-    for cls, name, o in things:
-        i = idx(o)
-        if not ((i >= 0).all() and (i < n).all()):
-            continue
-        near = reached[max(i[0] - 2, 0):i[0] + 3, max(i[1] - 2, 0):i[1] + 3, max(i[2] - 2, 0):i[2] + 3]
-        if air[tuple(i)] and not near.any():
-            lost.append((cls, name, [round(c) for c in o]))
+    def find_lost():
+        out = []
+        for cls, name, o in things:
+            i = idx(o)
+            if not ((i >= 0).all() and (i < n).all()):
+                continue
+            near = reached[max(i[0] - 2, 0):i[0] + 3, max(i[1] - 2, 0):i[1] + 3, max(i[2] - 2, 0):i[2] + 3]
+            if air[tuple(i)] and not near.any():
+                out.append((cls, name, [round(c) for c in o]))
+        return out
+    lost = find_lost()
     print("%d lights and placed things checked, %d stand in air the flood never saw" % (len(things), len(lost)))
     for x in lost[:40]:
         print("  LOST: %s %s at %s" % x)
+    if a.seed_lost and lost:
+        # (a place somebody lit or dressed is a place somebody sees, however players get there: a room reached by a
+        #  teleport, a view behind a window the cubes took for a wall. The flood goes on from each such thing, so the
+        #  faces round it are kept; the owner's City 18, 28 November: 27 things in 6 such places)
+        for _round in range(6):
+            for _cls, _name, o in lost:
+                reached[tuple(idx(o))] = True
+            reached = flood(reached, air)
+            lost = find_lost()
+            if not lost:
+                break
+        print("--seed-lost: the flood went on from them: %.1f M cubes of air seen now, %d things still in unseen air" % (reached.sum() / 1e6, len(lost)))
     def covered(pts):
         """Which points lie inside an opaque brush (exactly, by its planes: a brush thinner than a cube, as a door frame's
         4 of metal, can cover a face the cubes never see), or inside a solid model's own box (Valve leaves faces under a
