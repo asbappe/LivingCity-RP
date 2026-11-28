@@ -24,7 +24,7 @@ import numpy as np
 from scipy import ndimage
 
 NOSEAL_TOOLS = ("toolsclip", "toolsplayerclip", "toolsnpcclip", "toolstrigger", "toolshint", "toolsskip", "toolsareaportal", "toolsoccluder", "toolsfog",
-                "toolsorigin", "toolsblocklight", "toolsinvisibleladder", "toolsblock_los", "toolsblockbullets")
+                "toolsorigin", "toolsblocklight", "toolsinvisible", "toolsblock_los", "blockbullets")      # (toolsinvisible: Valve's wiki, "Seals leaks: No")
 SEE_THROUGH = ("glass", "fence", "grate", "chainlink", "water", "window", "wire", "grill", "slime", "vent", "cage", "lattice", "mesh")
 # (materials with such a word in their name that are solid all the same: read from Valve's own .vmt files, 28 November.
 #  The rest of City 18's 23 are $translucent or $alphatest, which vbsp takes for glass: such a brush seals nothing)
@@ -66,7 +66,8 @@ def main():
     ap.add_argument("--from", dest="start", nargs=3, type=float, required=True, metavar=("X", "Y", "Z"), help="a point in the air inside the map")
     ap.add_argument("--box", nargs=6, type=float, required=True, metavar=("X1", "Y1", "Z1", "X2", "Y2", "Z2"))
     ap.add_argument("--cell", type=int, default=4)
-    ap.add_argument("--void", default="bottom", choices=("bottom", "top", "west", "east", "south", "north"), help="the box's face that lies outside the map")
+    ap.add_argument("--void", default="bottom", choices=("bottom", "top", "west", "east", "south", "north", "all"), help="the box's face that lies outside the map (all: every face)")
+    ap.add_argument("--entities", action="store_true", help="list every point entity that stands in air joined to the void (what vbsp calls a leak), grouped by place")
     ap.add_argument("--path", action="store_true", help="print the shortest way through the air from the point to the void face (its turns)")
     ap.add_argument("--plug", nargs=6, type=float, action="append", default=[], metavar=("X1", "Y1", "Z1", "X2", "Y2", "Z2"), help="a box counted as a sealing brush")
     a = ap.parse_args()
@@ -113,7 +114,13 @@ def main():
     s = tuple(np.floor((np.array(a.start) - lo) / C).astype(int))
     if solid[s]:
         sys.exit("--from is inside a brush")
-    face = {"bottom": (slice(None), slice(None), 0), "top": (slice(None), slice(None), n[2] - 1), "west": (0, slice(None), slice(None)),
+    if a.void == "all":
+        border = np.zeros(n, dtype=bool)
+        border[0, :, :] = border[-1, :, :] = border[:, 0, :] = border[:, -1, :] = border[:, :, 0] = border[:, :, -1] = True
+        face = border
+    else:
+        face = None
+    face = face if face is not None else {"bottom": (slice(None), slice(None), 0), "top": (slice(None), slice(None), n[2] - 1), "west": (0, slice(None), slice(None)),
             "east": (n[0] - 1, slice(None), slice(None)), "south": (slice(None), 0, slice(None)), "north": (slice(None), n[1] - 1, slice(None))}[a.void]
 
     def joined(sol):
@@ -121,6 +128,42 @@ def main():
         mine = lab[s]
         return mine != 0 and bool((lab[face] == mine).any()), lab, mine
     leak, lab, mine = joined(solid)
+    if a.entities:
+        import collections
+        void = set(int(v) for v in np.unique(lab[face])) - {0}
+        text = open(a.vmf, encoding="utf-8", errors="replace").read()
+        out = []
+        for m in re.finditer(r'\nentity\r?\n\{(.*?)\n\}', text, re.S):
+            b = m.group(1)
+            if "\tsolid" in b:
+                continue
+            o = re.search(r'"origin" "([^"]+)"', b)
+            if not o:
+                continue
+            p = np.array([float(v) for v in o.group(1).split()[:3]])
+            p[2] += 1
+            i = np.floor((p - lo) / C).astype(int)
+            if (i < 0).any() or (i >= n).any():
+                continue
+            i = tuple(i)
+            if solid[i]:
+                sl = tuple(slice(max(i[d] - 1, 0), i[d] + 2) for d in range(3))
+                labs = set(int(v) for v in np.unique(lab[sl])) - {0}
+                if not labs or not labs <= void:
+                    continue
+            elif int(lab[i]) not in void:
+                continue
+            g = lambda k: (re.search(r'"%s" "([^"]*)"' % k, b) or [0, ""])[1]
+            out.append((g("classname"), p, g("id"), g("model"), g("targetname")))
+        print("%d point entities stand in air joined to the void" % len(out))
+        groups = collections.defaultdict(list)
+        for r in out:
+            groups[(int(r[1][0] // 1024) * 1024, int(r[1][1] // 1024) * 1024)].append(r)
+        for (gx, gy), rs in sorted(groups.items(), key=lambda kv: -len(kv[1])):
+            kinds = collections.Counter(r[0] for r in rs)
+            print("  x %d..%d y %d..%d: %d (%s)" % (gx, gx + 1024, gy, gy + 1024, len(rs), ", ".join("%s %d" % kv for kv in kinds.most_common(6))))
+        import json
+        json.dump([(r[0], [float(v) for v in r[1]], r[2], r[3], r[4]) for r in out], open(a.vmf + ".void.json", "w"))
     if not leak:
         print("NO LEAK in this box: the air at %s is shut off from the box's %s face" % (" ".join("%g" % v for v in a.start), a.void))
         return

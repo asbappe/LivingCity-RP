@@ -4175,3 +4175,12 @@ Valve's core (ep1_citadel_03): props_combine/coreball.mdl, 462 across, with env_
 - **Checked by:** review (in game: the ball's shading away from Valve's spot)
 - **Tags:** valve, combine, props, lighting
 
+### City 18 is sealed by a sky box round it, not room by room (`owner-c18-sealed-by-its-box`)
+
+The owner's City 18 (a decompile of rp_c18_ug) was built inside a box: most of its rooms have func_detail floors and ceilings and its streets have gaps under them, so nothing inside seals by itself, and its own outer box is gone. It is sealed by a sky box round the whole map (six world brushes, sky inside, visgroup "LC: the sky box round the whole map"), part of the real file for good. Never try to seal it room by room, and never send a 'test' copy: send the one real file. An areaportal there works only where its two rooms are closed off from each other; map_areas.py says which; one that cannot be made to work is taken out (its door stays).
+
+- **Why:** The owner, 28 November, after four compiles of test copies (a shell in a separate file, areaportals hidden): "can you just fucking fix the fucking map? why are we doing all this dumb shit to work around it and jerry rig it? just fix it". A grid check found the rooms open under and over their func_detail floors and ceilings across the whole city (691 places), and an open void under the pawn shop's block running from room to room.
+- **How:** map_leak.py --void all --entities (no entity in the void), map_areas.py (no areaportal leak, none 'in a wall'), on the real file before it is sent.
+- **Checked by:** map_leak.py --void all --entities; map_areas.py
+- **Tags:** owner, geometry, check
+
