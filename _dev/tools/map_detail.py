@@ -2,7 +2,7 @@
 """Small world brushes made func_detail, so vvis has fewer leaves to work through (the owner, 28 November, of City 18's
 first full vis: "portal flow is ludicrously slow and taking about 2 minutes per 10% ... did we break something?").
 
-    python3 map_detail.py IN.vmf OUT.vmf [--max 128] [--near 24] [--dry]
+    python3 map_detail.py IN.vmf OUT.vmf [--max 128] [--near 24] [--cell 4] [--margin 48] [--dry]
 
 A world brush becomes func_detail when it is small (its middle size, of its three, under --max: trims, frames, steps,
 ledges, beams, posts) and is none of these: a displacement; one with sky, water or slime on it; one with only tool
@@ -62,7 +62,8 @@ def main():
     ap.add_argument("--max", type=float, default=128.0)
     ap.add_argument("--near", type=float, default=24.0)
     ap.add_argument("--dry", action="store_true")
-    ap.add_argument("--cell", type=float, default=16.0)
+    ap.add_argument("--cell", type=float, default=4.0)
+    ap.add_argument("--margin", type=float, default=48.0)
     a = ap.parse_args()
     text = open(a.vmf, encoding="utf-8", errors="surrogateescape", newline="").read()
     eol = "\r\n" if "\r\n" in text[:2000] else "\n"
@@ -102,41 +103,53 @@ def main():
             kept["big"] += 1
             continue
         cand.append((m.start(), m.end(), body))
-    # the areas: air cut up by the world's sealing brushes and the areaportals, on a grid
-    C = a.cell
-    allp = np.array([[float(v) for v in q.split()] for q in re.findall(r"\((-?[\d.e]+ -?[\d.e]+ -?[\d.e]+)\)", text[w:we])])
-    lo = np.floor((allp.min(axis=0) - 2 * C) / C) * C
-    n = np.ceil((allp.max(axis=0) + 2 * C - lo) / C).astype(int)
-    solid = np.zeros(n, dtype=bool)
+    # Each candidate in turn, with the brushes already made detail left out: on a fine grid of the space round it (its box
+    # and --margin more; a cell is solid where any sealing world brush or areaportal, but this one, touches it), is the air
+    # all round it already one piece? Then it joins nothing that is not joined already, and may go (a cell counted free
+    # touches no brush, so a way through free cells is a real way). Two pieces round it: it may part two areas: it stays.
+    # (A first grid of 16 over the whole map let one go that closed a gap thinner than a cell: brush 37542's areaportal.)
+    C, M = a.cell, a.margin
+    solids = []
     for m in pat.finditer(text, w, we + len(eol)):
         body = m.group(0)
         if "dispinfo" in body or not ml.seals([x.lower() for x in re.findall(r'"material" "([^"]+)"', body)]):
             continue
-        sl, ins = cells_of(*planes_of(body), lo, n, C)
-        if sl is not None:
-            solid[sl] |= ins
+        solids.append((m.start(), planes_of(body)))
     for pm in re.finditer(r'"classname" "func_areaportal(?:window)?"', text):
         s0 = text.rfind(eol + "entity", 0, pm.start())
         e0 = text.find(eol + "}" + eol, pm.start())
         for sm in pat.finditer(text, s0, e0 + len(eol)):
-            sl, ins = cells_of(*planes_of(sm.group(0)), lo, n, C)
-            if sl is not None:
-                solid[sl] |= ins
-    lab = np.zeros(n, dtype=np.int32)
-    nl = ndimage.label(~solid, output=lab)
-    del solid
-    print("areas on a grid of %d: %d pieces of air" % (C, nl))
+            solids.append((-1, planes_of(sm.group(0))))
+    LO = np.array([q[1][0] for q in solids])
+    HI = np.array([q[1][1] for q in solids])
+    gone = set()
     for s0, e0, body in cand:
         lo_b, hi_b, planes = planes_of(body)
-        sl, ins = cells_of(lo_b - C, hi_b + C, planes, lo, n, C)      # (the box a cell wider all round: room for its shell)
+        llo = np.floor((lo_b - M) / C) * C
+        lhi = np.ceil((hi_b + M) / C) * C
+        n = ((lhi - llo) / C).astype(int)
+        grid = np.zeros(n, dtype=bool)
+        near = np.where((LO <= lhi).all(axis=1) & (HI >= llo).all(axis=1))[0]
+        for k in near:
+            start, (blo, bhi, bpl) = solids[k]
+            if start == s0 or start in gone:
+                continue
+            sl, ins = cells_of(blo, bhi, bpl, llo, n, C)
+            if sl is not None:
+                grid[sl] |= ins
+        sl, mine = cells_of(lo_b, hi_b, planes, llo, n, C)
         if sl is None:
-            moved.append((s0, e0))
+            kept["parts two areas"] += 1
             continue
-        shell = ndimage.binary_dilation(ins, iterations=1) & ~ins
-        labs = set(int(v) for v in np.unique(lab[sl][shell])) - {0}
+        me = np.zeros(n, dtype=bool)
+        me[sl] = mine
+        shell = ndimage.binary_dilation(me) & ~me & ~grid
+        lab, nl = ndimage.label(~grid & ~me)
+        labs = set(int(v) for v in np.unique(lab[shell])) - {0}
         if len(labs) > 1:
             kept["parts two areas"] += 1
             continue
+        gone.add(s0)
         moved.append((s0, e0))
     print("%d world brushes made func_detail; kept as world: %s" % (len(moved), ", ".join("%s %d" % kv for kv in kept.items())))
     if a.dry or not a.out:
