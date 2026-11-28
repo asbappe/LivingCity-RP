@@ -127,6 +127,10 @@ function LC_CL.ActDance(ent, move, clock)
     move = string.gsub(move or "", "_combine$", "")
     local name = Pick(move)
     if not name or not IsValid(ent) or not ent.LookupSequence then return false end
+    -- a dance shared half and half: every other dancer keeps our own (by their number, so the
+    -- same ones on everyone's screen; the Endings menu's stand-in shows ActMod's)
+    local idx = ent.EntIndex and ent:EntIndex() or -1
+    if LC.ActDances[move].half and idx > 0 and idx % 2 == 0 then return false end
     -- not on the rope, not in the air on the fire, not the hora's rush in or its chair: those are poses
     if ent.GetNW2Float and ent:GetNW2Float("lc_hanged", 0) > 0 then return false end
     if ent.lcTuneFly or ent.lcTuneChair or ent.lcTuneSection == "in" or (ent.GetNW2Bool and ent:GetNW2Bool("lc_flying", false)) then return false end

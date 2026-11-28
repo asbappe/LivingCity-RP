@@ -288,7 +288,7 @@ The server's Workshop collection has **ActMod** (2538387266) and its animations'
 | ears | Bloom | `Amod_MMD_Dance_CaramellDansen` |
 | club | Marrow | `Amod_AM4_Spooky_Month_Dance` |
 | rave | Marrow | `Amod_Fortnite_GlowStickDance` |
-| hard | Party hard | `Amod_Fortnite_JumpstyleDance` |
+| hard | Party hard | `Amod_Fortnite_JumpstyleDance` for every other dancer; the rest keep ours (the owner, 28 November: "can we have half the players/NPCs still do the old party hard dance") |
 | hora | Shalom | `Amod_Fortnite_EasternBloc` |
 | numa | The plane | `Amod_Fortnite_Boogie_Down` |
 | fire | Fire | `Amod_Fortnite_ElectroShuffle` |

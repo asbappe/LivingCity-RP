@@ -6363,6 +6363,12 @@ end
 if LC_CL.ActDance(ply, "ears_combine", 5) ~= true then return "ActMod dances: the units' ears is the same dance" end
 if LC_CL.ActDance(ply, "bus", 5) ~= false then return "ActMod dances: the bus keeps our own (none)" end
 if LC_CL.ActDance(ply, "nosuchdance", 5) ~= false then return "ActMod dances: a dance with no pick is ours" end
+-- party hard is shared half and half: every other dancer keeps our own
+local odd, even = Player(true), Player(true)
+even.EntIndex = function() return 2 end
+if LC_CL.ActDance(odd, "hard", 5) ~= true or LC_CL.ActDance(even, "hard", 5) ~= false then return "ActMod dances: party hard is not half ActMod's and half ours" end
+if LC_CL.ActDance(even, "ears", 5) ~= true then return "ActMod dances: only party hard is shared half and half" end
+LC_CL.ActDanceStop(odd) LC_CL.ActDanceStop(even)
 LC_CL.ActDanceStop(ply)
 if LC_CL.ActDanceSeq(ply) ~= nil then return "ActMod dances: a stopped player still has the animation" end
 if LC_CL.ActDance(Player(false), "ears", 5) ~= false then return "ActMod dances: a model without the animation must dance our own way" end

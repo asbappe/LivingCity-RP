@@ -38,7 +38,9 @@ LC.ActDances = {
     ears  = { "Amod_MMD_Dance_CaramellDansen", { "bloom" } },
     club  = { "Amod_AM4_Spooky_Month_Dance", { "marrow" } },
     rave  = { "Amod_Fortnite_GlowStickDance", { "marrow" } },
-    hard  = { "Amod_Fortnite_JumpstyleDance", { "hard" } },
+    -- (half = true: every other dancer keeps our own; the owner, 28 November: "can we have
+    -- half the players/NPCs still do the old party hard dance we had previously?")
+    hard  = { "Amod_Fortnite_JumpstyleDance", { "hard" }, half = true },
     hora  = { "Amod_Fortnite_EasternBloc", { "shalom" } },
     numa  = { "Amod_Fortnite_Boogie_Down", { "plane" } },
     fire  = { "Amod_Fortnite_ElectroShuffle", { "fire" } },
