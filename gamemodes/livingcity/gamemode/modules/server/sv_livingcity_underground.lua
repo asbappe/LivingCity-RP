@@ -1021,12 +1021,16 @@ function LC.DoorPicked(door) return IsValid(door) and (door.lcPickedUntil or 0) 
 
 local DoorLockKind
 function LC.DoorLockKind(door) return DoorLockKind(door) end
+-- cp: a Combine lock. locked: locked now. sealed: a sealed Combine door (no card reader, no pick, a prisoner's
+-- neither: a bypass charge or a Hacker's multitool only; sv_livingcity_doors.lua).
 DoorLockKind = function(door)
     local tag = LC.EffectiveDoorTag(door)
-    local cp = tag == "cp" or tag == "prison"
-    local locked = tag == "locked" or door:GetInternalVariable("m_bLocked") == true
-    return cp, locked
+    local sealed = tag == "sealed"
+    local cp = tag == "cp" or tag == "prison" or sealed
+    local locked = tag == "locked" or sealed or door:GetInternalVariable("m_bLocked") == true
+    return cp, locked, sealed
 end
+function LC.DoorSealed(door) return IsValid(door) and LC.EffectiveDoorTag(door) == "sealed" end
 
 function LC.StartPick(ply, id)
     local it = LCS.Items[id]
@@ -1039,10 +1043,10 @@ function LC.StartPick(ply, id)
     if not LC.IsDoorEntity(door) or tr.HitPos:DistToSqr(ply:EyePos()) > 110 * 110 then
         return false, "Look at a locked door, up close."
     end
-    local cp, locked = DoorLockKind(door)
+    local cp, locked, sealed = DoorLockKind(door)
     if it.tool == "keycard" then
-        if not cp then return false, "There's no card reader on that door." end
-    elseif cp and it.tool ~= "bypass" and not (prisoner and it.tool == "lockpick") then
+        if not cp or sealed then return false, "There's no card reader on that door." end
+    elseif cp and it.tool ~= "bypass" and not (prisoner and it.tool == "lockpick" and not sealed) then
         -- (the old cell locks are mechanical underneath: from the inside, with time, a pick will do)
         return false, "That's a Combine lock. A pick won't touch it."
     end
@@ -1722,11 +1726,13 @@ function LC.QuickPick(ply)
     if not LC.IsDoorEntity(door) or tr.HitPos:DistToSqr(ply:EyePos()) > 110 * 110 then
         return false, "Look at a locked door, up close."
     end
-    local cp = DoorLockKind(door)
+    local cp, _, sealed = DoorLockKind(door)
     local order = cp and { "door_code", "cp_keycard", "bypass" } or { "lockpick" } -- (a vortigaunts' door code first: sv_livingcity_vortwork.lua)
+    if sealed then order = { "bypass" } end -- (a sealed door: no card or code is tried, and none is spent)
     for _, id in ipairs(order) do
         if LC.HasItem(ply, id) then return LC.StartPick(ply, id) end
     end
+    if sealed then return false, "That's a Combine lock. A pick won't touch it." end
     return false, cp and "That's a Combine lock. You need a keycard, a door code or a bypass charge." or "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."
 end
 

@@ -66,7 +66,8 @@ LC.POINT_KINDS = {
 }
 LC.ZONE_KINDS = { nogo = true, infest = true, prison = true, block = true, rebel = true, combine = true,
     dream = true } -- (the shared dreams' edge: sv_livingcity_dreams.lua)
-LC.DOOR_TAGS = { cp = true, prison = true, locked = true, open = true, ignore = true, force = true, rent = true, office = true }
+LC.DOOR_TAGS = { cp = true, prison = true, locked = true, open = true, ignore = true, force = true, rent = true, office = true,
+    sealed = true } -- (a sealed Combine door, the owner, 28 November: sv_livingcity_doors.lua)
 
 local DOOR_CLASSES = { prop_door_rotating = true, func_door = true, func_door_rotating = true, func_movelinear = true } -- (movelinear: the Combine's sliding doors, on some maps)
 local SETTINGS = { "lc_citizens", "lc_cops", "lc_soldiers", "lc_scanners", "lc_zombies", "lc_rebels" }

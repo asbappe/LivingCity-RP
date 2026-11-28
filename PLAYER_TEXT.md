@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 6ff0fe3a. Admin-only console messages and log lines are left out.
+Made from version 5a11a4d. Admin-only console messages and log lines are left out.
 
-13697 lines, from 401 files.
+13703 lines, from 401 files.
 
 ## Contents
 
@@ -72,7 +72,7 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 - [weapon_lc_blessing.lua](#weaponlcblessinglua-weaponlcblessinglua) (7)
 - [weapon_lc_hoover.lua](#weaponlchooverlua-weaponlchooverlua) (2)
 - [weapon_lc_microphone.lua](#weaponlcmicrophonelua-weaponlcmicrophonelua) (4)
-- [weapon_lc_multitool.lua](#weaponlcmultitoollua-weaponlcmultitoollua) (16)
+- [weapon_lc_multitool.lua](#weaponlcmultitoollua-weaponlcmultitoollua) (17)
 - [weapon_lc_posters.lua](#weaponlcposterslua-weaponlcposterslua) (8)
 - [weapon_lc_radio.lua](#weaponlcradiolua-weaponlcradiolua) (6)
 - [weapon_lc_rebelclip.lua](#weaponlcrebelcliplua-weaponlcrebelcliplua) (1)
@@ -221,7 +221,7 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 - [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
 - [how infested each district is, and its leaking to the next](#how-infested-each-district-is-and-its-leaking-to-the-next-svlivingcitydistrictinfestlua) (8)
-- [doors](#doors-svlivingcitydoorslua) (9)
+- [doors](#doors-svlivingcitydoorslua) (11)
 - [The Fitness Test (a Happy dream you play)](#the-fitness-test-a-happy-dream-you-play-svlivingcitydreamcourselua) (14)
 - [Enforcers in the dreams](#enforcers-in-the-dreams-svlivingcitydreamenforcerslua) (19)
 - [nightmare dreams you play (the dream games)](#nightmare-dreams-you-play-the-dream-games-svlivingcitydreamgameslua) (48)
@@ -379,12 +379,12 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 - [survival](#survival-svlivingcitysurvivallua) (71)
 - [Realistic or Relaxed survival, chosen per character](#realistic-or-relaxed-survival-chosen-per-character-svlivingcitysurvivalmodelua) (9)
 - [the Swarm, the second way into the chapter "the city falls to the Resistance" (the owner, 27 November:](#the-swarm-the-second-way-into-the-chapter-the-city-falls-to-the-resistance-the-owner-27-november-svlivingcityswarmlua) (46)
-- [the suppression core under the Nexus, the Swarm's second gate (the owner, 27 November, agreed: the](#the-suppression-core-under-the-nexus-the-swarms-second-gate-the-owner-27-november-agreed-the-svlivingcityswarmcorelua) (19)
+- [the suppression core under the Nexus, the Swarm's second gate (the owner, 27 November, agreed: the](#the-suppression-core-under-the-nexus-the-swarms-second-gate-the-owner-27-november-agreed-the-svlivingcityswarmcorelua) (21)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (59)
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (37)
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
-- [the underground](#the-underground-svlivingcityundergroundlua) (200)
+- [the underground](#the-underground-svlivingcityundergroundlua) (201)
 - [units at their posts (a unit at each Combine door, guards at ease)](#units-at-their-posts-a-unit-at-each-combine-door-guards-at-ease-svlivingcityunitpostslua) (1)
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
 - [cigarettes, alcohol and stimulants (and how a night's dream leaves you)](#cigarettes-alcohol-and-stimulants-and-how-a-nights-dream-leaves-you-svlivingcityviceslua) (31)
@@ -958,33 +958,34 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 `gamemodes/livingcity/entities/weapons/weapon_lc_multitool.lua`
 
 
-> Note for you (not shown in game): What the tool would do with whatever you're pointing at (shared, for the HUD and the click).
+> Note for you (not shown in game): (at a console of the suppression core that can be cut: wherever it points; sv_livingcity_swarmcore.lua)
 
-- "Hijack the city screen"  (text, line 43)
-- "Download the Combine's data"  (text, line 44)
+- "Sabotage the core's console"  (text, line 40)
+- "Hijack the city screen"  (text, line 46)
+- "Download the Combine's data"  (text, line 47)
 
 > Note for you (not shown in game): part of: job
 
-- "Download the master terminal (the motherlode)"  (text, line 45)
-- "Hack the vending machine (free water)"  (text, line 46)
-- "Hack the ration dispenser (free rations)"  (text, line 47)
-- "Sabotage the transformer (causes a district-wide blackout)"  (text, line 48)
-- "Short out the power bank (connected turrets and forcefields will be powered off)"  (text, line 50)
-- "Short out the forcefield"  (text, line 53)
-- "Hack the Combine lock"  (text, line 55)
-- "Unlock the vortigaunt's shackles"  (text, line 56)
-- "Unlock the vortigaunt's shackles"  (text, line 57)
-- "Hack the Civil Protection Commissary (supplies off the books)"  (text, line 58)
-- "Download the master terminal (the motherlode)"  (text, line 63)
-- "Download the Combine's data"  (text, line 63)
+- "Download the master terminal (the motherlode)"  (text, line 48)
+- "Hack the vending machine (free water)"  (text, line 49)
+- "Hack the ration dispenser (free rations)"  (text, line 50)
+- "Sabotage the transformer (causes a district-wide blackout)"  (text, line 51)
+- "Short out the power bank (connected turrets and forcefields will be powered off)"  (text, line 53)
+- "Short out the forcefield"  (text, line 56)
+- "Hack the Combine lock"  (text, line 58)
+- "Unlock the vortigaunt's shackles"  (text, line 59)
+- "Unlock the vortigaunt's shackles"  (text, line 60)
+- "Hack the Civil Protection Commissary (supplies off the books)"  (text, line 61)
+- "Download the master terminal (the motherlode)"  (text, line 66)
+- "Download the Combine's data"  (text, line 66)
 
 > Note for you (not shown in game): part of: primary attack
 
-- "Nothing here the multitool can work on. (Try: Combine doors, city screens, data terminals, shackled vortigaunts, transformers, forcefields, power banks, vending machines, ration dispensers, and the Civil Protection Commissary.)"  (text, line 92)
+- "Nothing here the multitool can work on. (Try: Combine doors, city screens, data terminals, shackled vortigaunts, transformers, forcefields, power banks, vending machines, ration dispensers, and the Civil Protection Commissary.)"  (text, line 96)
 
 > Note for you (not shown in game): part of: draw hud
 
-- "MULTITOOL: point at electronics to hack them"  (text, line 107)
+- "MULTITOOL: point at electronics to hack them"  (text, line 111)
 
 ## weapon_lc_posters.lua (weapon_lc_posters.lua)
 
@@ -1256,7 +1257,7 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 - "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. Looking at it, F1 > Donate food to the crate adds to it. A walled garden's soil takes seeds too: melons and pumpkins."  (text, line 217)
 - "The headquarters (the flag a Lieutenant or Commander raises): last near it, you come back there; only its lab makes bypass charges and IEDs. A buggy or an airboat may stand ready near it. The Combine find it only through people: keep it quiet."  (text, line 218)
 - "While the headquarters stands, now and then a courier on the road or a boat up the canal brings food and rounds to its crate: the Resistance can escort him (F4), Civil Protection stop him (F4)."  (text, line 219)
-- "The antlion nest's glowing extract (hold E on it) goes to a freed vortigaunt (E). With the flag long at the mine and the Resistance strong, the vortigaunts make pheropods: stop the city's thumpers and the core under the Nexus (E at its three consoles), and the antlions follow their holder there."  (text, line 220)
+- "The antlion nest's glowing extract (hold E on it) goes to a freed vortigaunt (E). With the flag long at the mine and the Resistance strong, the vortigaunts make pheropods: stop the city's thumpers and the core under the Nexus (a Hacker's multitool or an IED on each of its three consoles), and the antlions follow their holder there."  (text, line 220)
 - "The Advisor screen in your office (E, or F2 > City orders > The Advisors): ask them for troops, supplies or more units, and report to them every third night; try their patience and they cut rations, then send an officer to watch you, then replace you."  (text, line 221)
 - "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Each of you can take one tin every 15 minutes. Look at the crate to see what's in it and when more is due."  (text, line 222)
 - "Crate running low? Take a Headcrab hunt from the Operations board (F4): kill four headcrabs in the infested ground, pick up their raw meat (E) and stand by the crate. Each headcrab is a meal for the camp, and it pays more while the crate is empty."  (text, line 223)
@@ -1488,55 +1489,55 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: block name
 
-- "Habitation Block %02d"  (text, line 161)
+- "Habitation Block %02d"  (text, line 162)
 
 > Note for you (not shown in game): part of: draw aim info
 
-- "%s   \|   radius %d Civil Protection units (about %.1f m across)   \|   right click removes"  (message, line 663)
-- "\|   right click removes"  (text, line 669)
-- "PATH NODE %d   \|   %d links   \|   right click removes"  (message, line 672)
+- "%s   \|   radius %d Civil Protection units (about %.1f m across)   \|   right click removes"  (message, line 664)
+- "\|   right click removes"  (text, line 670)
+- "PATH NODE %d   \|   %d links   \|   right click removes"  (message, line 673)
 
 > Note for you (not shown in game): persistent props (sv_livingcity_props.lua)
 
-- ": {GetNW2String}"  (text, line 725)
+- ": {GetNW2String}"  (text, line 726)
 
 > Note for you (not shown in game): part of: play next voice
 
-- "(the loudspeaker here is broken)"  (text, line 816)
+- "(the loudspeaker here is broken)"  (text, line 817)
 
 > Note for you (not shown in game): on screen
 
-- "Cuffed and kneeling. Wait it out."  (drawn on screen, line 940)
-- "ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)"  (message, line 976)
-- "Spawn protection %ds"  (message, line 985)
-- "Ration distribution"  (text, line 993)
-- "Civil status inspections"  (text, line 993)
-- "Housing block inspection"  (text, line 993)
-- "Supply convoy unloading"  (text, line 993)
+- "Cuffed and kneeling. Wait it out."  (drawn on screen, line 941)
+- "ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)"  (message, line 977)
+- "Spawn protection %ds"  (message, line 986)
+- "Ration distribution"  (text, line 994)
+- "Civil status inspections"  (text, line 994)
+- "Housing block inspection"  (text, line 994)
+- "Supply convoy unloading"  (text, line 994)
 
 > Note for you (not shown in game): units and Overwatch don't go home for curfew: they enforce it
 
-- "Grace period: %ds to get home."  (message, line 1003)
+- "Grace period: %ds to get home."  (message, line 1004)
 
 > Note for you (not shown in game): (a stalker has no home: the curfew's "report to your block" and HOME marker aren't for it)
 
-- "You are home. Stay inside."  (text, line 1008)
-- "Report to {block}."  (text, line 1008)
+- "You are home. Stay inside."  (text, line 1009)
+- "Report to {block}."  (text, line 1009)
 
 > Note for you (not shown in game): (the errors list, F4 > Factions > Admin: errors, says where it is in its title: no chat line)
 
-- "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 1032)
-- "Miscount errors: copied. Also in {file}"  (text, line 1037)
-- "Miscount debug report"  (window title, line 1037)
+- "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 1033)
+- "Miscount errors: copied. Also in {file}"  (text, line 1038)
+- "Miscount debug report"  (window title, line 1038)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_report)
 
-- "Copy to clipboard again"  (label or button, line 1050)
-- "Sent it: start the list again"  (label or button, line 1056)
+- "Copy to clipboard again"  (label or button, line 1051)
+- "Sent it: start the list again"  (label or button, line 1057)
 
 > Note for you (not shown in game): Path mapping (sv_livingcity_pathmap.lua): say so on screen while it's on (made once here, not every frame)
 
-- "PATH MAPPING: walk to lay nodes"  (text, line 1078)
+- "PATH MAPPING: walk to lay nodes"  (text, line 1079)
 
 ## cl_livingcity_actions.lua (cl_livingcity_actions.lua)
 
@@ -9288,55 +9289,55 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: restore backup
 
-- "No such backup. lc_backups lists them."  (text, line 194)
-- "That backup can't be read."  (text, line 196)
+- "No such backup. lc_backups lists them."  (text, line 195)
+- "That backup can't be read."  (text, line 197)
 
 > Note for you (not shown in game): Takes the jogging routes out of LC.Points (unless lc_jog is 1). The first stop of each route becomes an exercise yard where there is none within 400 units. How many stops were taken out.
 
-- "before the jogging routes were removed"  (text, line 257)
+- "before the jogging routes were removed"  (text, line 258)
 
 > Note for you (not shown in game): The morning jog is archived (lc_jog 0: sv_livingcity_exercise.lua): its routes come out of the layout, and each route's start stays as an exercise yard (unless a yard is already there), so the morning drill gathers where the jog used to. A backup of the layout is kept first.
 
-- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 336)
+- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 337)
 
 > Note for you (not shown in game): part of: add map zones
 
-- "%s on %s names no kind of zone the editor places (%s): left out"  (message, line 579)
-- "The map's marker %s brought a %s zone (%s)."  (message, line 599)
-- "a box %d wide, %d tall"  (message, line 600)
+- "%s on %s names no kind of zone the editor places (%s): left out"  (message, line 580)
+- "The map's marker %s brought a %s zone (%s)."  (message, line 600)
+- "a box %d wide, %d tall"  (message, line 601)
 
 > Note for you (not shown in game): the console command lc_reload
 
-- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 645)
+- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 646)
 
 > Note for you (not shown in game): the console command lc_backup
 
-- "[Miscount] Backed up the layout as {name}."  (text, line 655)
-- "[Miscount] Nothing to back up yet."  (text, line 655)
+- "[Miscount] Backed up the layout as {name}."  (text, line 656)
+- "[Miscount] Nothing to back up yet."  (text, line 656)
 
 > Note for you (not shown in game): the console command lc_backups
 
-- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 661)
-- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 663)
+- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 662)
+- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 664)
 
 > Note for you (not shown in game): the console command lc_restore
 
-- "[Miscount] Restored {what}."  (text, line 669)
-- "[Miscount] {what}"  (text, line 669)
+- "[Miscount] Restored {what}."  (text, line 670)
+- "[Miscount] {what}"  (text, line 670)
 
 > Note for you (not shown in game): the console command lc_autolink
 
-- "[Miscount] Made %d new links.%s"  (message, line 684)
-- "%d nodes still have no links (shown in red)."  (message, line 685)
+- "[Miscount] Made %d new links.%s"  (message, line 685)
+- "%d nodes still have no links (shown in red)."  (message, line 686)
 
 > Note for you (not shown in game): the console command lc_goto_layout
 
-- "[Miscount] None of those on this map."  (chat message, line 719)
-- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 724)
+- "[Miscount] None of those on this map."  (chat message, line 720)
+- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 725)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
-- "%s set %s to %s"  (message, line 761)
+- "%s set %s to %s"  (message, line 762)
 
 ## the map's own lights, by the hour and by the dream (sv_livingcity_daylight.lua)
 
@@ -9682,30 +9683,32 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: say
 
-- "[Miscount] {msg}"  (chat message, line 42)
+- "[Miscount] {msg}"  (chat message, line 62)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[City] The City Administrator's office. Locked."  (chat message, line 436)
+- "[City] The City Administrator's office. Locked."  (chat message, line 470)
 
 > Note for you (not shown in game): Editor helpers: inspect and test
 
-- "%s (map id %s)"  (message, line 480)
-- "none: spawned, can't be tagged"  (message, line 480)
+- "%s (map id %s)"  (message, line 515)
+- "none: spawned, can't be tagged"  (message, line 515)
 
 > Note for you (not shown in game): part of: door info
 
-- "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but Civil Protection units, even in a blackout (tag it to override)"  (text, line 485)
-- "Locked automatically: it's in a Combine-only area. Its lock goes dead in a blackout (tag it to override)"  (text, line 487)
-- "NPCs treat it as a door: {lines}{or}"  (text, line 491)
+- "Sealed{or}: a beep for everyone, units too. Only a Hacker's multitool or a bypass charge opens it, even in a blackout"  (text, line 520)
+- "A lift of ours, by its map name (lc_...lift...): never a door. NPCs don't open it, no zone locks it"  (text, line 522)
+- "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but Civil Protection units, even in a blackout (tag it to override)"  (text, line 524)
+- "Locked automatically: it's in a Combine-only area. Its lock goes dead in a blackout (tag it to override)"  (text, line 526)
+- "NPCs treat it as a door: {lines}{or}"  (text, line 530)
 
 > Note for you (not shown in game): the console command lc_unlockdoors
 
-- "Unlocked {n} doors (locked-tagged doors left alone)."  (chat message, line 521)
+- "Unlocked {n} doors (locked-tagged doors left alone)."  (chat message, line 561)
 
 > Note for you (not shown in game): the console command lc_opendoors
 
-- "Opened {n} doors. They will stay open."  (chat message, line 574)
+- "Opened {n} doors. They will stay open."  (chat message, line 615)
 
 ## The Fitness Test (a Happy dream you play) (sv_livingcity_dreamcourse.lua)
 
@@ -16961,58 +16964,58 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: transformer down
 
-- "[CP net] Power failure {where}. The district's Combine locks are dead and its forcefields are down. Secure it."  (chat message, line 218)
-- "The grid's down {where}. Their doors are open, for now."  (text, line 220)
-- "[Union] Power failure {where}. Get the transformer back up (E on it)."  (chat message, line 222)
-- "the grid"  (text, line 226)
+- "[CP net] Power failure {where}. The district's Combine locks are dead and its forcefields are down. Secure it."  (chat message, line 220)
+- "The grid's down {where}. Their doors are open, for now."  (text, line 222)
+- "[Union] Power failure {where}. Get the transformer back up (E on it)."  (chat message, line 224)
+- "the grid"  (text, line 228)
 
 > Note for you (not shown in game): part of: transformer restore
 
-- "[CP net] Power restored {where}."  (chat message, line 239)
+- "[CP net] Power restored {where}."  (chat message, line 241)
 
 > Note for you (not shown in game): E on a transformer: a maintenance technician fixes it.
 
-- "It hums. The district has power."  (text, line 246)
-- "Dead, and sparking. You don't know the first thing about it: Maintenance Technicians repair these."  (text, line 248)
-- "Rewiring the transformer..."  (progress bar, line 250)
-- "You leave it half rewired."  (text, line 251)
+- "It hums. The district has power."  (text, line 248)
+- "Dead, and sparking. You don't know the first thing about it: Maintenance Technicians repair these."  (text, line 250)
+- "Rewiring the transformer..."  (progress bar, line 252)
+- "You leave it half rewired."  (text, line 253)
 
 > Note for you (not shown in game): part of: done
 
-- "power restored"  (text, line 254)
-- "[Union] The district has power again."  (chat message, line 256)
+- "power restored"  (text, line 256)
+- "[Union] The district has power again."  (chat message, line 258)
 
 > Note for you (not shown in game): A multitool: twelve seconds, and the district goes dark.
 
-- "You need a multitool."  (text, line 263)
-- "Look at a transformer."  (text, line 264)
-- "It's already dead."  (text, line 265)
-- "Shorting the transformer... keep at it"  (progress bar, line 266)
-- "You pull back before it blows."  (text, line 267)
+- "You need a multitool."  (text, line 265)
+- "Look at a transformer."  (text, line 266)
+- "It's already dead."  (text, line 267)
+- "Shorting the transformer... keep at it"  (progress bar, line 268)
+- "You pull back before it blows."  (text, line 269)
 
 > Note for you (not shown in game): Forcefields
 
-- "You need a multitool."  (text, line 274)
-- "Look at a forcefield."  (text, line 275)
-- "Shorting the forcefield..."  (progress bar, line 276)
-- "The field snaps back."  (text, line 277)
+- "You need a multitool."  (text, line 276)
+- "Look at a forcefield."  (text, line 277)
+- "Shorting the forcefield..."  (progress bar, line 278)
+- "The field snaps back."  (text, line 279)
 
 > Note for you (not shown in game): part of: swipe forcefield
 
-- "Access denied. (Civil Protection units pass; a Combine keycard opens it for a moment.)"  (text, line 295)
-- "Unauthorized access"  (text, line 302)
+- "Access denied. (Civil Protection units pass; a Combine keycard opens it for a moment.)"  (text, line 297)
+- "Unauthorized access"  (text, line 304)
 
 > Note for you (not shown in game): Emergency crews, eventually.
 
-- "[City] Emergency crews have restored power {GetPos}."  (chat message, line 346)
+- "[City] Emergency crews have restored power {GetPos}."  (chat message, line 348)
 
 > Note for you (not shown in game): The city's own maintenance crews see to it too (after the players have had their chance).
 
-- "restoring power"  (label, line 353)
+- "restoring power"  (label, line 355)
 
 > Note for you (not shown in game): part of: find
 
-- "restoring power"  (what someone is doing, line 368)
+- "restoring power"  (what someone is doing, line 370)
 
 ## prison (sv_livingcity_prison.lua)
 
@@ -25001,45 +25004,50 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_swarmcore.lua`
 
 
-> Note for you (not shown in game): part of: core use
+> Note for you (not shown in game): The work at a console begins: cutting it is the Hacker's needle game, mending it the wiring game.
 
-- "the console"  (text, line 219)
+- "the console"  (text, line 311)
+- "The core's console"  (text, line 314)
 
 > Note for you (not shown in game): part of: core stages
 
-- "Get to the core's console (marked)"  (text, line 332)
-- "the console"  (text, line 332)
-- "Mend its wiring"  (text, line 333)
-- "Start the core with its button"  (quest step, line 337)
+- "Get to the core's console (marked)"  (text, line 498)
+- "the console"  (text, line 498)
+- "Mend its wiring"  (text, line 499)
+- "Start the core with its button"  (quest step, line 503)
 
 > Note for you (not shown in game): part of: over
 
-- "the city has fallen"  (text, line 350)
+- "the city has fallen"  (text, line 516)
 
 > Note for you (not shown in game): part of: build
 
-- "Go down to the suppression core (marked)"  (quest step, line 358)
-- "Restart the suppression core"  (title, line 363)
-- "The core under the Nexus has stopped. Mend its consoles and start it again."  (description, line 364)
-
-> Note for you (not shown in game): Staff: F4 > Factions > Admin: testing tools > The city, beside the Swarm's (sv_livingcity_admintools.lua) How it stands, for the Swarm's line (nil: no core on this map).
-
-- "The core is stopped: %d of %d consoles whole."  (message, line 381)
+- "Go down to the suppression core (marked)"  (quest step, line 524)
+- "Restart the suppression core"  (title, line 529)
+- "The core under the Nexus has stopped. Mend its consoles and start it again."  (description, line 530)
 
 > Note for you (not shown in game): part of: core status
 
-- "The core runs: %d of %d consoles cut (whole again in %d min)."  (message, line 384)
-- "The core runs."  (spoken line, line 386)
+- "(the Combine can mend in %d min)"  (message, line 550)
+- "The core is stopped: %d of %d consoles whole%s."  (message, line 552)
+- "The core runs: %d of %d consoles cut%s."  (message, line 554)
+- "The core runs."  (spoken line, line 556)
 
 > Note for you (not shown in game): part of: core
 
-- "Superadmins only."  (text, line 393)
-- "This map has no suppression core."  (text, line 394)
-- "The core is stopped already."  (text, line 397)
-- "The core winds down."  (text, line 398)
-- "The core runs already."  (text, line 400)
-- "The core runs again."  (text, line 401)
-- "Core: stop or start?"  (text, line 403)
+- "Superadmins only."  (text, line 563)
+- "This map has no suppression core."  (text, line 564)
+
+> Note for you (not shown in game): (pressed again while it is stopped: the Combine's wait is over, so their job can be tried)
+
+- "The core is stopped already: the Combine can mend it now."  (text, line 575)
+- "The core winds down."  (text, line 577)
+- "The core runs already."  (text, line 579)
+- "The core runs again."  (text, line 580)
+
+> Note for you (not shown in game): part of: core
+
+- "Core: stop or start?"  (text, line 582)
 
 ## talking to people (sv_livingcity_talk.lua)
 
@@ -25546,216 +25554,217 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: start pick
 
-- "Not now."  (text, line 1035)
-- "You're already working on a lock."  (text, line 1036)
-- "Look at a locked door, up close."  (text, line 1040)
-- "There's no card reader on that door."  (text, line 1044)
+- "Not now."  (text, line 1039)
+- "You're already working on a lock."  (text, line 1040)
+- "Look at a locked door, up close."  (text, line 1044)
+- "There's no card reader on that door."  (text, line 1048)
 
 > Note for you (not shown in game): (the old cell locks are mechanical underneath: from the inside, with time, a pick will do)
 
-- "That's a Combine lock. A pick won't touch it."  (text, line 1047)
-- "It isn't locked."  (text, line 1049)
-- "It's already open."  (text, line 1050)
-- "Swiping the card..."  (text, line 1053)
-- "Working the lock... keep looking at it"  (text, line 1053)
+- "That's a Combine lock. A pick won't touch it."  (text, line 1051)
+- "It isn't locked."  (text, line 1053)
+- "It's already open."  (text, line 1054)
+- "Swiping the card..."  (text, line 1057)
+- "Working the lock... keep looking at it"  (text, line 1057)
 
 > Note for you (not shown in game): a guard was watching the whole time
 
-- "[Civil Protection] A guard takes the pick off you. Two more minutes for the trouble."  (chat message, line 1118)
+- "[Civil Protection] A guard takes the pick off you. Two more minutes for the trouble."  (chat message, line 1122)
 
 > Note for you (not shown in game): part of: finish pick
 
-- "Your pick snaps in the lock."  (chat message, line 1125)
-- "The lock won't give. Try again."  (chat message, line 1127)
-- "The pick's bent out of true: it won't do another lock."  (text, line 1129)
-- "Tampering with Combine technology"  (text, line 1137)
-- "You punch in the code. The reader blinks green: they'll have changed it by tomorrow."  (chat message, line 1142)
-- "The reader blinks green. The card won't work twice."  (text, line 1142)
-- "The lock gives."  (text, line 1142)
-- "Unauthorized use of a Civil Protection keycard"  (text, line 1144)
-- "Breaking and entering"  (text, line 1144)
+- "Your pick snaps in the lock."  (chat message, line 1129)
+- "The lock won't give. Try again."  (chat message, line 1131)
+- "The pick's bent out of true: it won't do another lock."  (text, line 1133)
+- "Tampering with Combine technology"  (text, line 1141)
+- "You punch in the code. The reader blinks green: they'll have changed it by tomorrow."  (chat message, line 1146)
+- "The reader blinks green. The card won't work twice."  (text, line 1146)
+- "The lock gives."  (text, line 1146)
+- "Unauthorized use of a Civil Protection keycard"  (text, line 1148)
+- "Breaking and entering"  (text, line 1148)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You stop working on the lock."  (text, line 1158)
+- "You stop working on the lock."  (text, line 1162)
 
 > Note for you (not shown in game): Forging papers
 
-- "Not with someone watching. Get out of sight first."  (text, line 1175)
-- "Not with a Civil Protection unit watching."  (text, line 1176)
+- "Not with someone watching. Get out of sight first."  (text, line 1179)
+- "Not with a Civil Protection unit watching."  (text, line 1180)
 
 > Note for you (not shown in game): part of: forge
 
-- "[Papers] Name, number, stamp. It looks right. It has to."  (chat message, line 1180)
-- "[Papers] The ink bleeds across the number. The form is ruined."  (chat message, line 1183)
+- "[Papers] Name, number, stamp. It looks right. It has to."  (chat message, line 1184)
+- "[Papers] The ink bleeds across the number. The form is ruined."  (chat message, line 1187)
 
 > Note for you (not shown in game): part of: stash store
 
-- "Your stash is at home, in your own block."  (text, line 1236)
-- "That's Combine issue: it stays with you (or another unit)."  (text, line 1238)
-- "Your stash is full."  (text, line 1239)
+- "Your stash is at home, in your own block."  (text, line 1240)
+- "That's Combine issue: it stays with you (or another unit)."  (text, line 1242)
+- "Your stash is full."  (text, line 1243)
 
 > Note for you (not shown in game): part of: stash take
 
-- "Your stash is at home, in your own block."  (text, line 1248)
+- "Your stash is at home, in your own block."  (text, line 1252)
 
 > Note for you (not shown in game): part of: stash store weapon
 
-- "Your stash is at home, in your own block."  (text, line 1277)
-- "That was issued to you. It stays with you."  (text, line 1280)
-- "Your stash is full."  (text, line 1281)
-- "You hide the {cls} away."  (text, line 1293)
+- "Your stash is at home, in your own block."  (text, line 1281)
+- "That was issued to you. It stays with you."  (text, line 1284)
+- "Your stash is full."  (text, line 1285)
+- "You hide the {cls} away."  (text, line 1297)
 
 > Note for you (not shown in game): part of: stash take weapon
 
-- "Your stash is at home, in your own block."  (text, line 1297)
-- "You've one of those on you already."  (text, line 1301)
+- "Your stash is at home, in your own block."  (text, line 1301)
+- "You've one of those on you already."  (text, line 1305)
 
 > Note for you (not shown in game): the game's living city event started moment
 
-- "[Civil Protection] Your residence%s was searched. Confiscated: %s."  (message, line 1329)
-- "in {home}"  (text, line 1330)
-- "Contraband found in your residence"  (text, line 1331)
+- "[Civil Protection] Your residence%s was searched. Confiscated: %s."  (message, line 1333)
+- "in {home}"  (text, line 1334)
+- "Contraband found in your residence"  (text, line 1335)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Stash] Your stash is at home, in {or}: press E on a stove, fridge, dresser or wardrobe there."  (chat message, line 1341)
-- "Overwatch doesn't shop."  (text, line 1365)
-- "The Administrator has people for this."  (text, line 1365)
+- "[Stash] Your stash is at home, in {or}: press E on a stove, fridge, dresser or wardrobe there."  (chat message, line 1345)
+- "Overwatch doesn't shop."  (text, line 1369)
+- "The Administrator has people for this."  (text, line 1369)
 
 > Note for you (not shown in game): What the quartermaster won't buy: the lab decodes it (sv_livingcity_heist.lua, sv_livingcity_lab.lua)
 
-- "Nobody here sells anything to a Civil Protection unit."  (text, line 1370)
+- "Nobody here sells anything to a Civil Protection unit."  (text, line 1374)
 
 > Note for you (not shown in game): part of: market access
 
-- "Find the dealer."  (text, line 1378)
-- "There's no black market here. Try rebel territory, or ask an admin to place a dealer."  (text, line 1379)
+- "Find the dealer."  (text, line 1382)
+- "There's no black market here. Try rebel territory, or ask an admin to place a dealer."  (text, line 1383)
 
 > Note for you (not shown in game): part of: open market
 
-- "[Black market] {why}"  (chat message, line 1418)
+- "[Black market] {why}"  (chat message, line 1422)
 
 > Note for you (not shown in game): (lab: the Resistance's lab alone has it; gone: none left in the city; bootleg: a drink sold only from what players have sold the black market, none left and it is not on his list: sv_livingcity_resistancemoney.lua)
 
-- "Not enough credits"  (text, line 1438)
+- "Not enough credits"  (text, line 1442)
 
 > Note for you (not shown in game): part of: open market
 
-- "Too much to carry"  (text, line 1439)
-- "Sold out: more in about %d minutes"  (message, line 1444)
+- "Too much to carry"  (text, line 1443)
+- "Sold out: more in about %d minutes"  (message, line 1448)
 
 > Note for you (not shown in game): (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
 
-- "In demand: he pays more"  (text, line 1459)
+- "In demand: he pays more"  (text, line 1463)
 
 > Note for you (not shown in game): The quartermaster's window for someone not of the Resistance: nothing to buy, the arms they carry to sell or give.
 
-- "[Quartermaster] "I don't deal with rats. Walk away while you can.""  (chat message, line 1482)
+- "[Quartermaster] "I don't deal with rats. Walk away while you can.""  (chat message, line 1486)
 
 > Note for you (not shown in game): Giving one of something to the quartermaster: sympathy for someone not of the Resistance (1 a gift).
 
-- "Give it to the quartermaster himself."  (text, line 1513)
-- "He only wants arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1514)
+- "Give it to the quartermaster himself."  (text, line 1517)
+- "He only wants arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1518)
 
 > Note for you (not shown in game): part of: quartermaster donate
 
-- "That was issued to you. He won't touch it."  (text, line 1519)
-- "[Quartermaster] 'Every bit helps.' (You give: {name}.)"  (text, line 1528)
-- "[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: {name}.)"  (text, line 1529)
+- "That was issued to you. He won't touch it."  (text, line 1523)
+- "[Quartermaster] 'Every bit helps.' (You give: {name}.)"  (text, line 1532)
+- "[Quartermaster] He weighs it in his hand and nods. 'We won't forget this.' (You give: {name}.)"  (text, line 1533)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_donate)
 
-- "[Quartermaster] {why}"  (chat message, line 1537)
+- "[Quartermaster] {why}"  (chat message, line 1541)
 
 > Note for you (not shown in game): At the quartermaster: a chip decoded, from his menu.
 
-- "[Quartermaster] {why}"  (chat message, line 1546)
-- "[Quartermaster] He plugs it into a battered laptop and reads. 'This is good. Get the word out.'"  (chat message, line 1547)
+- "[Quartermaster] {why}"  (chat message, line 1550)
+- "[Quartermaster] He plugs it into a battered laptop and reads. 'This is good. Get the word out.'"  (chat message, line 1551)
 
 > Note for you (not shown in game): part of: black buy
 
-- "Only the quartermaster has those."  (text, line 1600)
-- "He's out of those. More in about %d minutes."  (message, line 1603)
-- "Not enough credits."  (text, line 1605)
+- "Only the quartermaster has those."  (text, line 1604)
+- "He's out of those. More in about %d minutes."  (message, line 1607)
+- "Not enough credits."  (text, line 1609)
 
 > Note for you (not shown in game): the dealer's rent: a share of what he takes on rebel ground goes to the Resistance's fund (not the quartermaster's)
 
-- "[Black market] %s, for %d credits. You didn't get it here."  (message, line 1620)
+- "[Black market] %s, for %d credits. You didn't get it here."  (message, line 1624)
 
 > Note for you (not shown in game): Sell one of something (or all of it): pocket items, or a weapon as "w:<class>".
 
-- "From strangers the quartermaster only buys arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1628)
+- "From strangers the quartermaster only buys arms and what the fight needs: guns, ammunition, gun parts, scrap, rags, chemicals."  (text, line 1632)
 
 > Note for you (not shown in game): part of: dealer sell
 
-- "That was issued to you. The dealer doesn't want it."  (text, line 1636)
-- "[Black market] Sold: %s, for %d credits."  (message, line 1639)
-- "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."  (text, line 1647)
+- "That was issued to you. The dealer doesn't want it."  (text, line 1640)
+- "[Black market] Sold: %s, for %d credits."  (message, line 1643)
+- "The quartermaster doesn't buy those. Take it to the lab: the scientist decodes them."  (text, line 1651)
 
 > Note for you (not shown in game): a Resistance member's half of a resistanceSplit item: the rest goes to the fund (sv_livingcity_resistancemoney.lua)
 
-- "[Black market] Sold: %s%s, for %d credits."  (message, line 1658)
+- "[Black market] Sold: %s%s, for %d credits."  (message, line 1662)
 
 > Note for you (not shown in game): (arms and materials sold to the quartermaster: 0.1 an item for arms and gun parts, 0.025 for scrap, rags and chemicals: the owner, 9 November)
 
-- "[Black market] {why}"  (chat message, line 1666)
+- "[Black market] {why}"  (chat message, line 1670)
 
 > Note for you (not shown in game): (at the quartermaster's he pays out of the Resistance's fund, or barters for what it can't pay, and a gun goes in the armory: sv_livingcity_armory.lua)
 
-- "[Black market] {why}"  (chat message, line 1681)
+- "[Black market] {why}"  (chat message, line 1685)
 
 > Note for you (not shown in game): part of: bust dealer
 
-- "[Civil Protection] The dealer bolts. You confiscate what's left of the stock."  (chat message, line 1691)
-- "a black market dealer's stock"  (text, line 1692)
-- "black market busted"  (text, line 1693)
-- "Busted a dealer"  (text, line 1694)
-- "The dealer {GetPos} got raided. Stay away for a while."  (text, line 1697)
+- "[Civil Protection] The dealer bolts. You confiscate what's left of the stock."  (chat message, line 1695)
+- "a black market dealer's stock"  (text, line 1696)
+- "black market busted"  (text, line 1697)
+- "Busted a dealer"  (text, line 1698)
+- "The dealer {GetPos} got raided. Stay away for a while."  (text, line 1701)
 
 > Note for you (not shown in game): Inventory actions and what the inventory window needs to know !pick (or bind a key to lc_pick): use the right tool you're carrying on the door you're looking at.
 
-- "Look at a locked door, up close."  (text, line 1723)
+- "Look at a locked door, up close."  (text, line 1727)
 
 > Note for you (not shown in game): part of: quick pick
 
-- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1730)
-- "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."  (text, line 1730)
+- "That's a Combine lock. A pick won't touch it."  (text, line 1735)
+- "That's a Combine lock. You need a keycard, a door code or a bypass charge."  (text, line 1736)
+- "You don't have a lockpick. Make one from four pieces of scrap (F3), or find the dealer."  (text, line 1736)
 
 > Note for you (not shown in game): bend four bits of scrap into something that opens a lock
 
-- "You need four pieces of scrap."  (text, line 1763)
-- "You bend and file the scrap into a lockpick set."  (text, line 1768)
+- "You need four pieces of scrap."  (text, line 1769)
+- "You bend and file the scrap into a lockpick set."  (text, line 1774)
 
 > Note for you (not shown in game): part of: underground action
 
-- "Requests are off on this server."  (text, line 1774)
-- "[Request] {why}"  (text, line 1775)
-- "[Stash] {why}"  (chat message, line 1780)
-- "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."  (text, line 1793)
-- "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands) and talk."  (text, line 1795)
-- "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."  (text, line 1796)
-- "Use any ration dispenser."  (text, line 1798)
+- "Requests are off on this server."  (text, line 1780)
+- "[Request] {why}"  (text, line 1781)
+- "[Stash] {why}"  (chat message, line 1786)
+- "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."  (text, line 1799)
+- "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands) and talk."  (text, line 1801)
+- "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."  (text, line 1802)
+- "Use any ration dispenser."  (text, line 1804)
 
 > Note for you (not shown in game): Upkeep
 
-- "[Papers] Your borrowed name has worn thin. You're yourself again."  (chat message, line 1832)
+- "[Papers] Your borrowed name has worn thin. You're yourself again."  (chat message, line 1838)
 
 > Note for you (not shown in game): the console command lc_search
 
-- "%s searched: %d item(s) confiscated%s"  (message, line 1858)
+- "%s searched: %d item(s) confiscated%s"  (message, line 1864)
 
 > Note for you (not shown in game): The Resistance's own plain clothes
 
-- "You don't have anything else to wear. (Find some clothes.)"  (chat message, line 1884)
+- "You don't have anything else to wear. (Find some clothes.)"  (chat message, line 1890)
 
 > Note for you (not shown in game): typing in chat
 
-- "You're already in your own clothes."  (chat message, line 1890)
+- "You're already in your own clothes."  (chat message, line 1896)
 
 > Note for you (not shown in game): (one line, not two: the owner, 18 November, "merge the pair of lines to a single line")
 
-- "[Resistance] You're in plain clothes: keep your gun out of sight. F2 > Gear up when it's time to fight."  (chat message, line 1902)
+- "[Resistance] You're in plain clothes: keep your gun out of sight. F2 > Gear up when it's time to fight."  (chat message, line 1908)
 
 ## units at their posts (a unit at each Combine door, guards at ease) (sv_livingcity_unitposts.lua)
 
@@ -25764,7 +25773,7 @@ Made from version 6ff0fe3a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: post knock out
 
-- "Trespassing in a Combine area"  (text, line 441)
+- "Trespassing in a Combine area"  (text, line 447)
 
 ## powered vests ("suit power") (sv_livingcity_vest.lua)
 

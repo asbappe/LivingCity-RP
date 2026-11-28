@@ -8,6 +8,11 @@
               locked when the power goes, and if anything else opens it (a map
               button, a trigger) it shuts and locks itself again at once.
       locked  Stays locked for everyone.
+      sealed  A sealed Combine door (the owner, 28 November): shut and locked for everyone, units and staff
+              too. E on it is a little beep and nothing else, nothing written. Only a Hacker's multitool
+              (LC.HackDoor) or a bypass charge opens it, for thirty seconds; no keycard, door code, pick or
+              boot does, the rebels' own fighters do not hack it, and a blackout leaves it locked. A door
+              with no tag of yours whose map name starts with lc_sealed is one by itself.
       open    Opened when the city starts and kept open: its own timer that swings it
               shut again is turned off, it's locked in the open position (E does
               nothing), and if anything shuts it anyway (map logic) it opens again.
@@ -21,6 +26,10 @@
 
     NPCs get doors opened for them two ways: any door right next to them, and any
     door standing between them and the next point on their route.
+
+    A door-class entity whose map name starts with lc_ and has "lift" in it is a lift of ours (or its
+    gate), never a door: NPCs do not open it, no zone locks it, E does not move it, nothing here
+    locks or unlocks it. The map's own buttons work it.
 ]]
 
 if CLIENT then return end
@@ -37,6 +46,17 @@ local cvNPCDoors    = CreateConVar("lc_npc_doors", "1", FLAGS, "Open doors for M
 local DOOR_CLASSES = { prop_door_rotating = true, func_door = true, func_door_rotating = true, func_movelinear = true } -- (movelinear: the Combine's sliding doors, on some maps)
 local SF_DOOR_USE_OPENS = 256
 local LOCKED_SOUND = "doors/default_locked.wav"
+local SEALED_SOUND = "buttons/combine_button_locked.wav"
+
+-- What the map's own name says of a door: "sealed" (lc_sealed...), "ignore" (a lift of ours or its gate,
+-- lc_..lift..: a door only by its class), or nil. Your own tag on it wins (LC.AutoDoorTag).
+function LC.DoorNameTag(ent)
+    local name = string.lower(tostring(ent.GetName and ent:GetName() or ""))
+    if string.sub(name, 1, 9) == "lc_sealed" then return "sealed" end
+    if string.sub(name, 1, 3) == "lc_" and string.find(name, "lift", 1, true) then return "ignore" end
+    return nil
+end
+local function OurLift(ent) return LC.DoorNameTag(ent) == "ignore" end
 
 local function Say(ply, msg)
     if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
@@ -69,12 +89,15 @@ LC.IsRealDoor = IsRealDoor
 -- Doors with no tag of your own lock themselves: by a prison cell, the release
 -- point or inside the prison area they're prison doors; in a Combine-only zone
 -- they're Civil Protection only. Tag a door (open, ignore, force, locked...)
--- and your tag wins.
+-- and your tag wins. Before any of that, by the map's own name for it: lc_sealed...
+-- is a sealed door, and a lift of ours (lc_..lift..) is "ignore" wherever it is.
 local AUTO_CELL_RADIUS = 450
 
 function LC.AutoDoorTag(door)
     if not IsValid(door) or LC.GetDoorTag(door) then return nil end
     if not LC.IsDoorEntity(door) then return nil end
+    local byName = LC.DoorNameTag(door)
+    if byName then return byName end
     local pos = door:WorldSpaceCenter()
     for _, p in ipairs(LC.Points or {}) do
         if (p.kind == "cell" or p.kind == "release") and pos:DistToSqr(p.pos) < AUTO_CELL_RADIUS * AUTO_CELL_RADIUS then return "prison" end
@@ -155,10 +178,12 @@ function LC.ApplyDoorState(door)
     if tag == "locked" or tag == "office" then -- (the Administrator's office: locked, but theirs to open)
         door:Fire("Close")
         door:Fire("Lock", "", 0.1)
-    elseif tag == "prison" or auto == "prison" then
-        -- a prison door is locked whatever happens, power or no power
+    elseif tag == "prison" or auto == "prison" or tag == "sealed" or auto == "sealed" then
+        -- a prison door is locked whatever happens, power or no power; so is a sealed one
         door:Fire("Close")
         door:Fire("Lock", "", 0.1)
+    elseif auto == "ignore" then
+        -- a lift of ours: the map works it, nothing here locks or unlocks it
     elseif tag == "cp" or auto == "cp" then
         -- Combine doors, and the ones by the cells, are physically locked, not just "denied":
         -- units and keycards open them, nothing else does. (Unless the power's out: sv_livingcity_power.lua)
@@ -195,7 +220,7 @@ end
 
 local function NPCMayOpen(role, tag, locked, st)
     if role == "zombie" or role == "scanner" then return false end
-    if tag == "locked" or tag == "open" or tag == "ignore" then return false end
+    if tag == "locked" or tag == "open" or tag == "ignore" or tag == "sealed" then return false end
     if UnitsOnly(tag) then
         if role == "cop" or role == "soldier" then return true end
         -- a prisoner being walked in, or let out, is taken through
@@ -422,6 +447,15 @@ hook.Add("PlayerUse", "LivingCityDoorUse", function(ply, ent)
     end
 
     if tag == "open" then return false end -- kept open
+    -- a sealed Combine door (the owner, 28 November): a little beep for everyone, units and staff too, and
+    -- nothing written. Hacked or bypassed, it is as any picked door for that while.
+    if tag == "sealed" and not (LC.DoorPicked and LC.DoorPicked(ent)) then
+        if (nextUse[ent] or 0) < CurTime() then
+            ent:EmitSound(SEALED_SOUND, 65)
+            nextUse[ent] = CurTime() + 1
+        end
+        return false
+    end
     -- the City Administrator's office (the owner, 2 November): the Administrator and staff open it
     -- (their guards follow them through, or are brought to them: sv_livingcity_cityadmin.lua)
     if tag == "office" and not (LC.DoorPicked and LC.DoorPicked(ent)) then
@@ -458,8 +492,9 @@ hook.Add("PlayerUse", "LivingCityDoorUse", function(ply, ent)
         return false
     end
 
-    -- Brush doors without "use opens" ignore E. Toggle them ourselves.
+    -- Brush doors without "use opens" ignore E. Toggle them ourselves. (Never a lift of ours: the map's buttons work it.)
     if not cvPlayerDoors:GetBool() then return end
+    if tag == "ignore" and OurLift(ent) and not LC.GetDoorTag(ent) then return end
     local class = ent:GetClass()
     if class ~= "func_door" and class ~= "func_door_rotating" then return end
     if bit.band(ent:GetSpawnFlags(), SF_DOOR_USE_OPENS) ~= 0 then return end
@@ -481,7 +516,11 @@ function LC.DoorInfo(door)
     lines[#lines + 1] = "Locked right now: " .. (IsLocked(door) and "yes" or "no")
     lines[#lines + 1] = "Your tag: " .. (LC.GetDoorTag(door) or "none")
     local auto = not LC.GetDoorTag(door) and LC.AutoDoorTag(door)
-    if auto == "prison" then
+    if LC.GetDoorTag(door) == "sealed" or auto == "sealed" then
+        lines[#lines + 1] = "Sealed" .. (auto == "sealed" and ", by its map name (lc_sealed...)" or "") .. ": a beep for everyone, units too. Only a Hacker's multitool or a bypass charge opens it, even in a blackout"
+    elseif auto == "ignore" then
+        lines[#lines + 1] = "A lift of ours, by its map name (lc_...lift...): never a door. NPCs don't open it, no zone locks it"
+    elseif auto == "prison" then
         lines[#lines + 1] = "A prison door, automatically: it's by a cell or the release point, or in the prison area. Locked to all but Civil Protection units, even in a blackout (tag it to override)"
     elseif auto then
         lines[#lines + 1] = "Locked automatically: it's in a Combine-only area. Its lock goes dead in a blackout (tag it to override)"
@@ -512,7 +551,8 @@ concommand.Add("lc_unlockdoors", function(ply)
     local n = 0
     for class in pairs(DOOR_CLASSES) do
         for _, door in ipairs(ents.FindByClass(class)) do
-            if LC.GetDoorTag(door) ~= "locked" then
+            local tag = LC.GetDoorTag(door)
+            if tag ~= "locked" and tag ~= "sealed" and (tag or not LC.DoorNameTag(door)) then -- (nor a sealed door or a lift of ours by its name)
                 door:Fire("Unlock")
                 n = n + 1
             end
@@ -563,7 +603,8 @@ concommand.Add("lc_opendoors", function(ply)
     local n = 0
     for class in pairs(DOOR_CLASSES) do
         for _, door in ipairs(ents.FindByClass(class)) do
-            if IsRealDoor(door) and LC.GetDoorTag(door) ~= "locked" then
+            local tag = LC.GetDoorTag(door)
+            if IsRealDoor(door) and tag ~= "locked" and tag ~= "sealed" and (tag or not LC.DoorNameTag(door)) then
                 door:Fire("Unlock")
                 door:Fire("Open")
                 LC.OpenedDoors[door] = nil

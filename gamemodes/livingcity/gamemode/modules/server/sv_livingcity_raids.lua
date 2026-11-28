@@ -329,7 +329,7 @@ function LC.RaidBreachDoor(raid, from)
             if IsValid(door) and door:GetClass() == "prop_door_rotating" and not door.lcBlown then
                 local tag = LC.GetDoorTag and LC.GetDoorTag(door)
                 local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
-                if tag ~= "prison" and tag ~= "locked" and tag ~= "open" and auto ~= "prison"
+                if tag ~= "prison" and tag ~= "locked" and tag ~= "open" and auto ~= "prison" and tag ~= "sealed" and auto ~= "sealed"
                     and LC.InBlock(door:WorldSpaceCenter(), raid.block) then
                     local d = door:WorldSpaceCenter():DistToSqr(from)
                     if not bd or d < bd then best, bd = door, d end

@@ -80,7 +80,13 @@ function LC.DoorFloor(door, sign, dist)
     return p
 end
 
-local SKIP_TAGS = { prison = true, locked = true, ignore = true }
+local SKIP_TAGS = { prison = true, locked = true, ignore = true, sealed = true }
+-- No post at this door: by your tag, or (with none) sealed or a lift of ours by its map name.
+local function SkipDoor(door)
+    local tag = LC.GetDoorTag and LC.GetDoorTag(door)
+    if tag then return SKIP_TAGS[tag] == true end
+    return LC.DoorNameTag ~= nil and LC.DoorNameTag(door) ~= nil
+end
 local doorCache = setmetatable({}, { __mode = "k" }) -- [zone] = { t, posts }
 
 -- The doors into zone z, each with a post outside it: { door, doorPos, pos, yaw, out, zone }.
@@ -99,7 +105,7 @@ function LC.CombineDoorPosts(z, now)
         end
         local found = {}
         for _, door in ipairs(ents.FindInSphere(center, reach)) do
-            if LC.IsDoorEntity(door) and not door.lcBlown and not SKIP_TAGS[LC.GetDoorTag and LC.GetDoorTag(door) or ""] then
+            if LC.IsDoorEntity(door) and not door.lcBlown and not SkipDoor(door) then
                 local a, b = LC.DoorFloor(door, 1, SIDE_PROBE), LC.DoorFloor(door, -1, SIDE_PROBE)
                 local inA, inB = LCZ.Contains(z, a, 0), LCZ.Contains(z, b, 0)
                 if inA ~= inB then

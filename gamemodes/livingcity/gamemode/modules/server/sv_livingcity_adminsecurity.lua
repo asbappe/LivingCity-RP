@@ -827,7 +827,7 @@ local function OpenDoor(door, now)
         return true
     end
     local tag = LC.EffectiveDoorTag and LC.EffectiveDoorTag(door) or nil
-    if tag == "locked" or tag == "open" or tag == "ignore" then return false end
+    if tag == "locked" or tag == "open" or tag == "ignore" or tag == "sealed" then return false end
     local locked = door.GetInternalVariable ~= nil and door:GetInternalVariable("m_bLocked") == true
     if locked and not (LC.UnitsOnlyDoorTag and LC.UnitsOnlyDoorTag(tag)) then return false end
     if locked then

@@ -170,6 +170,8 @@ end
 -- Enough of the grid down at once, or an admin says so.
 function LC.CheckCityGrid()
     if LC.ForcedDark ~= nil then return SetCityDark(LC.ForcedDark, "admin") end
+    -- the suppression core under the Nexus, sabotaged (the owner, 28 November): the whole city is dark while it is down
+    if LC.Swarm and LC.Swarm.CoreDown and LC.Swarm.CoreDown() then return SetCityDark(true, "core") end
     local ts, share = LC.EntsOf("lc_transformer"), cvShare:GetFloat()
     if #ts == 0 or share <= 0 then return SetCityDark(false, "grid") end
     local down = 0

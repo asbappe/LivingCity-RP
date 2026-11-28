@@ -5,6 +5,7 @@
       a city screen             wire in and hijack it (ten seconds)
       a Combine data terminal   download its data onto a chip (thirty seconds)
       a shackled vortigaunt     cut the shackles
+      a console of the core     sabotage it (standing at it: the needle game)
     The HUD says what it will do before you click. The Resistance's Hackers
     (a Resistance special, Member and up) carry one; anyone can buy one from
     the black market dealer, at a price. It's contraband: searches take it.
@@ -35,6 +36,8 @@ local TERMINAL_HINTS = { "combine_interface", "breenconsole", "combine_intmonito
 
 -- What the tool would do with whatever you're pointing at (shared, for the HUD and the click).
 local function Job(ply)
+    -- (at a console of the suppression core that can be cut: wherever it points; sv_livingcity_swarmcore.lua)
+    if ply:GetNW2Bool("lc_core_console", false) then return "core", "Sabotage the core's console" end
     local tr = ply:GetEyeTrace()
     if not tr or not tr.HitPos or tr.HitPos:DistToSqr(ply:EyePos()) > 120 * 120 then return nil end
     local e = tr.Entity
@@ -79,7 +82,8 @@ function SWEP:PrimaryAttack()
     if not IsValid(owner) or not LC then return end
     local job = Job(owner)
     local ok, why
-    if job == "door" and LC.HackDoor then ok, why = LC.HackDoor(owner)
+    if job == "core" then ok = LC.Swarm ~= nil and LC.Swarm.CoreHack ~= nil and LC.Swarm.CoreHack(owner)
+    elseif job == "door" and LC.HackDoor then ok, why = LC.HackDoor(owner)
     elseif job == "screen" and LC.HijackScreen then ok, why = LC.HijackScreen(owner, owner:GetEyeTrace().Entity)
     elseif job == "data" and LC.StealData then ok, why = LC.StealData(owner)
     elseif job == "vort" and LC.StartUnshackle then ok, why = LC.StartUnshackle(owner)

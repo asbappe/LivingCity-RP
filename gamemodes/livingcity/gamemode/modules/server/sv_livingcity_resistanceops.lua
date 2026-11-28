@@ -140,14 +140,14 @@ local function NPCDoors(sk, now)
                     hacking[npc] = nil
                 elseif now >= h.at then
                     hacking[npc] = nil
-                    if LockedCombineDoor(h.door) and LC.OpenPickedDoor then
+                    if LockedCombineDoor(h.door) and LC.OpenPickedDoor and not (LC.DoorSealed and LC.DoorSealed(h.door)) then
                         LC.OpenPickedDoor(h.door, true)
                         h.door:EmitSound("buttons/combine_button1.wav", 70)
                     end
                 end
             else
                 for _, e in ipairs(ents.FindInSphere(npc:GetPos(), 110)) do
-                    if LockedCombineDoor(e) then
+                    if LockedCombineDoor(e) and not (LC.DoorSealed and LC.DoorSealed(e)) then -- (a sealed door is a Hacker's, or a charge's)
                         hacking[npc] = { door = e, at = now + 4 }
                         npc:EmitSound("buttons/combine_button7.wav", 60)
                         break

@@ -46573,6 +46573,8 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     local SFILE = "livingcity/" .. game.GetMap() .. "_swarm.json"
     local sfileWas, coreWas, clockWas, cWas = _files[SFILE], W.core, W.clock, C.S
     local noticeWas, soundWas, oursWas = LC.Notice, sound, W.CityOurs
+    local forcedWas, fxWas = LC.ForcedDark, W.coreFx
+    LC.ForcedDark, W.coreFx = nil, {}
     local outWas, stoppedWas, calmWas = A.out, A.stopped, A.calm
     A.out, A.stopped, A.calm = {}, {}, {}
     local told, heard = {}, {}
@@ -46585,7 +46587,8 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     C.retake, C.pendingAt, C.pendingBy = nil, nil, nil
     W.End()
     W.clock = { flown = 0 }
-    W.core = { running = true, cut = {} }
+    W.core = { running = true, cut = {}, cutAt = {} }
+    LC.CheckCityGrid()
     local made, zones, points = {}, {}, {}
     local function Ent(cls, name, pos) local e = ents.Create(cls) if name then e:SetName(name) end e:SetPos(pos) e:Spawn() made[#made + 1] = e return e end
     local function Has(t, v) for _, x in ipairs(t or {}) do if x == v then return true end end return false end
@@ -46656,24 +46659,43 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     ok(W.AllStopped() and not W.DefencesDown() and Out("swarm") == 0, "every thumper stopped, the core running: no swarm comes into the city", #A.Heads() .. " thumpers, " .. Out("swarm"))
     ok(toldTo(reb, "The swarm") == nil, "and nothing new on screen (the heartbeat tells them)", toldTo(reb, "The swarm"))
 
-    -- the consoles: a Resistance player's E is the wiring game; each done cuts one
+    -- the consoles (the owner, 28 November): sabotage. A Hacker's multitool or an IED cuts one, and it stays cut
     local function At(p, i) p:SetPos(panels[i]:GetPos() + Vector(40, 0, 0)) p.lcCoreUseAt = 0 p.lookingAt = nil end
+    local function Win(p) -- the game this player is in, won: the needle game by its needle, the wiring by its end
+        local g = LC.JobGames[p]
+        if g and g.kind == "hack" then
+            for _ = 1, 4 do if LC.JobGames[p] then g.sweep = false LC.JobGameAct(p, "try", g.band + g.bandW / 2) end end
+        elseif g then
+            LC.JobGameEnd(p, "done")
+        end
+        return g
+    end
     local function Wire(p, i)
         At(p, i)
         hook.Run("KeyPress", p, IN_USE)
-        local g = LC.JobGames[p]
-        if g then LC.JobGameEnd(p, "done") end
-        return g
+        return Win(p)
     end
-    local cr0 = LC.Credits(reb)
+    local function FxAt(i, cls) for _, e in ipairs(W.coreFx[i] or {}) do if IsValid(e) and e:GetClass() == cls then return e end end return nil end
+    local function Chat(p) return #(p.chat or {}) end
+    ok(W.CoreConsolePos(1) == panels[1]:GetPos() + panels[1]:GetForward() * 72 + Vector(0, 0, 40), "a console stands 72 in front of its mark")
+    local cr0, chat0 = LC.Credits(reb), Chat(reb)
+    heard = {}
+    At(reb, 1)
+    hook.Run("KeyPress", reb, IN_USE)
+    ok(LC.JobGames[reb] == nil and not W.core.cut[1] and Heard("combine_button_locked") ~= nil and Chat(reb) == chat0, "a Resistance player without a multitool: a dead click, nothing written")
+    ok(W.CoreHack(reb) == false, "(nor is there a left click for them)")
+    reb:Give("weapon_lc_multitool")
     At(reb, 1)
     hook.Run("KeyPress", reb, IN_USE)
     local g = LC.JobGames[reb]
-    ok(g ~= nil and g.kind == "wiring" and g.opts.lcCore == 1 and g.opts.lcCoreDo == "cut", "a Resistance player's E at a console: the wiring game (nothing to stand through)")
-    if g then LC.JobGameEnd(reb, "done") end
-    ok(W.core.cut[1] == true and W.CoreRunning() and W.core.firstAt ~= nil, "done: that console is cut, and the core still runs")
-    ok(LC.Credits(reb) == cr0 and toldTo(reb, "Rewiring: done") == nil, "(sabotage is no shift's work: no pay and no notice)")
+    ok(g ~= nil and g.kind == "hack" and g.opts.lcCore == 1 and g.opts.lcCoreDo == "cut" and g.opts.quiet == true, "a Hacker's E at a console: the needle game (nothing to stand through)", g and g.kind)
+    if g then g.sweep = true LC.JobGameAct(reb, "try", 0.5) LC.JobGameAct(reb, "try", 0.5) end
+    ok(LC.JobGames[reb] == nil and g ~= nil and g.tripped == true and not W.core.cut[1], "seen twice by its scanner: the game is over, and the console is whole")
+    if LC.ClearWanted then LC.ClearWanted(reb) end
+    ok(Wire(reb, 1) ~= nil and W.core.cut[1] == true and W.CoreRunning(), "the needle game won: that console is cut, and the core still runs")
+    ok(LC.Credits(reb) == cr0 and toldTo(reb, "The core's console: done") == nil, "(sabotage is no shift's work: no pay and no notice)")
     ok(Heard("powerdown") ~= nil, "(the console dies with a sound, not a word)")
+    ok(FxAt(1, "env_spark") ~= nil and FxAt(1, "env_smokestack") ~= nil and FxAt(1, "env_spark"):GetPos() == W.CoreConsolePos(1), "a cut console sparks and smokes, where the console stands")
     At(reb, 1)
     hook.Run("KeyPress", reb, IN_USE)
     ok(LC.JobGames[reb] == nil, "a cut console again: nothing to do there")
@@ -46684,21 +46706,51 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     reb:SetPos(panels[2]:GetPos() + Vector(400, 0, 0)) reb.lcCoreUseAt = 0
     hook.Run("KeyPress", reb, IN_USE)
     ok(LC.JobGames[reb] == nil, "out of reach: nothing")
+    -- the Combine's mending is extremely delayed: 45 minutes from the cut
+    ok(W.CORE_MEND_AFTER == 45 * 60, "the Combine can mend a console 45 minutes after it was cut")
+    ok(W.CoreTask(cop, 1) == nil and Wire(cop, 1) == nil and W.core.cut[1] == true, "a Combine player's E at a freshly cut console: a dead click, and it stays cut")
+    ok(W.CoreWired(cop, 1, "mend") == false and W.core.cut[1] == true, "(nor by any game of theirs)")
+    W.core.cutAt[1] = CurTime() - W.CORE_MEND_AFTER + 30
+    ok(W.CoreTask(cop, 1) == nil, "(half a minute short of it: not yet)")
+    W.core.cutAt[1] = CurTime() - W.CORE_MEND_AFTER
     local mg = Wire(cop, 1)
-    ok(mg ~= nil and mg.opts.lcCoreDo == "mend" and not W.core.cut[1] and W.core.firstAt == nil, "a Combine player's E at a cut console mends it")
-    -- the ten minutes
+    ok(mg ~= nil and mg.kind == "wiring" and mg.opts.lcCoreDo == "mend" and not W.core.cut[1], "45 minutes on: a Combine player's E mends it (the wiring game)")
+    ok(FxAt(1, "env_spark") == nil and W.coreFx[1] == nil, "mended: its smoke and sparks are gone")
+    -- no ten minutes any more: a cut console stays cut
     Wire(reb, 1)
-    W.core.firstAt = CurTime() - W.CORE_WINDOW
+    W.core.cutAt[1] = CurTime() - 700
     _run(0.6)
-    ok(not W.core.cut[1] and W.core.firstAt == nil and W.CoreRunning(), "not all three within ten minutes of the first: the cut one is whole again")
+    ok(W.core.cut[1] == true and W.CoreRunning() and W.CORE_WINDOW == nil, "a cut console stays cut: no ten minutes any more")
+    -- the multitool's left click at a console is the same hack (weapon_lc_multitool.lua asks W.CoreHack)
+    At(reb, 2)
+    _run(0.6)
+    ok(reb:GetNW2Bool("lc_core_console", false) == true and cop:GetNW2Bool("lc_core_console", false) == false, "at a whole console the Hacker's multitool says so (nobody else's)")
+    At(reb, 2)
+    local hk = W.CoreHack(reb) == true and LC.JobGames[reb] or nil
+    ok(hk ~= nil and hk.kind == "hack" and hk.opts.lcCore == 2, "the multitool's left click within reach of a console: the same needle game")
+    Win(reb)
+    ok(W.core.cut[2] == true and W.CoreRunning() and W.CoreCutCount() == 2, "won: cut. Two of three: it runs on")
+    At(reb, 2) At(cop, 3)
+    ok(W.CoreHack(reb) == false and W.CoreHack(cop) == false, "at a cut one, or a unit's click: the multitool goes on to what it points at")
+    _run(0.6)
+    ok(reb:GetNW2Bool("lc_core_console", false) == false, "(and its line is its own again)")
+    -- an IED by a console wrecks it, whoever set it
     heard, net.sent, told = {}, {}, {}
-    Wire(reb, 1) Wire(reb, 2)
-    ok(W.CoreRunning() and W.CoreCutCount() == 2, "two of three: it runs on")
-    Wire(reb, 3)
-    ok(W.CoreDown() and Has(stopR.fired, "Trigger"), "all three within ten minutes: the core winds down (the map's lc_core_stop)")
+    ok(not LC.CityDark, "(the city is lit)")
+    hook.Run("LivingCityIED", W.CoreConsolePos(3) + Vector(0, W.CORE_BLAST + 40, 0), cit)
+    ok(not W.core.cut[3] and W.CoreRunning(), "an IED's blast too far from a console: nothing")
+    hook.Run("LivingCityIED", W.CoreConsolePos(3) + Vector(0, W.CORE_BLAST - 40, 0), cit)
+    ok(W.core.cut[3] == true and FxAt(3, "env_spark") ~= nil, "within 220 of the console: it is blown (it smokes and sparks), whoever set the charge")
+    ok(W.CoreDown() and Has(stopR.fired, "Trigger"), "all three cut: the core winds down (the map's lc_core_stop)")
     local wind = Heard("thumper_shutdown")
     ok(wind ~= nil and wind.level >= 100 and wind.pitch < 100 and wind.pos == room:GetPos(), "a huge wind-down at the machine", wind and wind.level)
-    ok(Posted("cmb_core", "cp") ~= nil, "the Combine's job is on their board")
+    ok(LC.CityDark == true and GetGlobal2Bool("lc_blackout", false) == true, "and the whole city goes dark with it")
+    ok(LC.ForceBlackout("off") == false and LC.ForceBlackout("auto") == true, "(staff's own switch still wins both ways; handed back, it is dark again)")
+    _run(0.6)
+    ok(Posted("cmb_core", "cp") == nil and Tmpl("cmb_core").available(cop) == false, "the Combine's job is not on their board yet: the consoles are too fresh to mend")
+    for i = 1, 3 do W.core.cutAt[i] = CurTime() - W.CORE_MEND_AFTER end
+    _run(0.6)
+    ok(Posted("cmb_core", "cp") ~= nil and Tmpl("cmb_core").available(cop) == true, "45 minutes on: Restart the suppression core is on the Combine's board")
     net.sent = {}
     for _ = 1, 26 do _run(0.5) Places() end
     ok(Thuds(cit) == 0, "stopped: the heartbeat stops for everyone (the silence is the message)")
@@ -46739,6 +46791,7 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     for e, k in pairs(W.S.out) do if k == "swarm" and IsValid(e) then e:Remove() end end
     reb:SetPos(C0 + Vector(600, 600, 0))
     W.core.cut = { true, true, true }
+    for i = 1, 3 do W.core.cutAt[i] = CurTime() - W.CORE_MEND_AFTER end
 
     -- Restart the suppression core: the Combine's job
     local ps = Posted("cmb_core", "cp")
@@ -46767,6 +46820,7 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
         hook.Run("PlayerUse", cop, button)
         ok(W.CoreRunning() and Has(startR.fired, "Trigger"), "the button: it runs again (the map's lc_core_start)")
         ok(Heard("thumper_startup") ~= nil, "(with a sound at the machine)")
+        ok(not LC.CityDark, "and the city's lights come back with it")
         _run(1.1)
         ok(q.done and LC.QuestOf[cop] == nil and (tonumber(cop:GetPData("lcf_xp_cp", 0)) or 0) > xpWas, "the job pays")
         ok(Tmpl("cmb_core").available(cop) == false, "and it is off the board")
@@ -46781,10 +46835,14 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     ok(LC.AdminTool(staff, nil, "core", "stop") == false, "the staff's lines are a superadmin's")
     staff.superadmin = true
     ok(LC.AdminTool(staff, nil, "core", "stop") == true and W.CoreDown() and W.CoreCutCount() == 3, "Core: stop it (every console cut, as the Resistance leave it)")
+    ok(W.CoreWaiting() and W.CoreTask(cop, 1) == nil and FxAt(2, "env_spark") ~= nil, "(freshly cut and smoking: the Combine wait, as after any sabotage)")
+    ok(LC.AdminTool(staff, nil, "core", "stop") == true and W.CoreDown() and not W.CoreWaiting(), "Core: stop it again while it is stopped: the wait is over, so the Combine's mending can be tried")
     Wire(cop, 1)
     ok(not W.core.cut[1], "(a unit mends one by E)")
     Wire(reb, 1)
-    ok(W.core.cut[1] == true and W.CoreDown(), "a Resistance player's E at a mended console while it is stopped: cut again")
+    ok(W.core.cut[1] == true and W.CoreDown(), "a Hacker at a mended console while it is stopped: cut again")
+    ok(W.CoreTask(cop, 1) == nil, "(and that one waits its 45 minutes again)")
+    W.core.cutAt[1] = CurTime() - W.CORE_MEND_AFTER
     Wire(cop, 1) Wire(cop, 2) Wire(cop, 3)
     cop.lcCorePressAt = 0
     hook.Run("PlayerUse", cop, button)
@@ -46795,27 +46853,53 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     ok(W.Status().core ~= nil and W.Status().core.running == true and string.find(line, "The core runs.", 1, true) ~= nil, "the Swarm's line says how the core stands", line)
     ok(LC.AdminTool(staff, nil, "core", "start") == true and W.CoreRunning(), "Core: start it (already running: says so)")
     LC.AdminTool(staff, nil, "core", "stop")
-    ok(string.find(W.Status().line, "stopped", 1, true) ~= nil, "(stopped: the line says so)", W.Status().line)
-    ok(LC.AdminTool(staff, nil, "core", "start") == true and W.CoreRunning() and W.CoreCutCount() == 0, "Core: start it (every console whole)")
+    ok(string.find(W.Status().line, "stopped", 1, true) ~= nil and string.find(W.Status().line, "the Combine can mend in 45 min", 1, true) ~= nil, "(stopped: the line says so, and how long the Combine wait)", W.Status().line)
+    ok(LC.AdminTool(staff, nil, "core", "start") == true and W.CoreRunning() and W.CoreCutCount() == 0, "Core: start it (every console whole, at once: staff do not wait)")
+    ok(W.coreFx[1] == nil and W.coreFx[2] == nil and W.coreFx[3] == nil and not LC.CityDark, "(no console smokes any more, and the city is lit)")
 
     -- saved over restarts with the Swarm's own file
     LC.AdminTool(staff, nil, "core", "stop")
-    W.core.cut[2] = nil
+    W.core.cut[2], W.core.cutAt[2] = nil, nil
+    W.core.cutAt[1], W.core.cutAt[3] = CurTime() - 1000, CurTime() - W.CORE_MEND_AFTER - 5
     W.clock.flown = 30
     W.ClockSave()
     local saved = util.JSONToTable(_files[SFILE] or "{}") or {}
     ok(saved.flown == 30 and istable(saved.core) and saved.core.running == false and #saved.core.cut == 2, "saved in the Swarm's file: stopped, which consoles are cut (the mine's clock beside it)")
+    ok(istable(saved.core) and istable(saved.core.cutAge) and saved.core.cutAge[1] == 1000 and saved.core.cutAge[2] == W.CORE_MEND_AFTER + 5, "and how long each has been cut")
+    for i = 1, 3 do for _, e in ipairs(W.coreFx[i] or {}) do if IsValid(e) then e:Remove() end end end -- (a restart: nothing of ours is left)
+    W.coreFx = {}
     W.core = { running = true, cut = {} }
     W.CoreLoad()
     ok(W.CoreDown() and W.core.cut[1] and not W.core.cut[2] and W.core.cut[3], "and read back after a restart")
+    ok(math.abs((CurTime() - W.core.cutAt[1]) - 1000) <= 1 and not W.CoreMendable(1) and W.CoreMendable(3), "(a restart does not shorten the Combine's wait)")
     stopR.fired = {}
     _run(0.6)
     ok(Has(stopR.fired, "Trigger"), "the map starts with its machine running: saved stopped, it is stopped again")
-    W.core = { running = true, cut = { [1] = true }, firstAt = CurTime() - 100, applied = true }
-    W.ClockSave()
+    ok(FxAt(1, "env_spark") ~= nil and FxAt(2, "env_spark") == nil and FxAt(3, "env_smokestack") ~= nil, "its cut consoles smoke and spark again")
+    ok(LC.CityDark == true, "and the city is dark again")
+    for i = 1, 3 do for _, e in ipairs(W.coreFx[i] or {}) do if IsValid(e) then e:Remove() end end end -- (a map cleanup takes them)
+    hook.GetTable().PostCleanupMap.LivingCitySwarmCore()
+    _run(0.6)
+    ok(FxAt(1, "env_spark") ~= nil and FxAt(3, "env_spark") ~= nil, "after a map cleanup: made again")
+    -- an older file (the ten minutes' clock in it, no ages): read without error, the console cut as of now
+    _files[SFILE] = util.TableToJSON({ flown = 30, core = { running = true, cut = { 1 }, cutFor = 100 } })
     W.CoreLoad()
-    ok(W.CoreRunning() and W.core.cut[1] and math.abs((CurTime() - (W.core.firstAt or 0)) - 100) <= 1, "(the ten minutes go on from where they were)")
-    W.core.applied, W.core.cut, W.core.firstAt = true, {}, nil
+    _run(0.6)
+    ok(W.CoreRunning() and W.core.cut[1] and not W.CoreMendable(1) and W.core.firstAt == nil and FxAt(1, "env_spark") ~= nil and FxAt(3, "env_spark") == nil, "an older file (the ten minutes' clock in it): read, its console cut as of now")
+    ok(not LC.CityDark, "(the core runs: the city is lit)")
+    W.core.applied, W.core.cut, W.core.cutAt = true, {}, {}
+    W.CoreFx()
+
+    -- a map prop drawn at another size: the key lc_scale
+    local prop = Ent("prop_dynamic", "lc_core_reactor", R0 + Vector(0, 0, 200))
+    ok(hook.Run("EntityKeyValue", prop, "LC_Scale", "0.45") == nil and prop.mscale == nil, "lc_scale: the key stays as the map wrote it, and nothing before the prop has spawned")
+    _run(0.2)
+    ok(prop.mscale == 0.45, "spawned: it is drawn at that size", prop.mscale)
+    local prop2 = Ent("prop_dynamic", nil, R0 + Vector(0, 0, 300))
+    hook.Run("EntityKeyValue", prop2, "lc_scale", "40") hook.Run("EntityKeyValue", prop2, "lc_scale", "0.01")
+    hook.Run("EntityKeyValue", prop2, "lc_scale", "big") hook.Run("EntityKeyValue", prop2, "modelscale", "2")
+    _run(0.2)
+    ok(prop2.mscale == nil, "a size out of 0.05 to 10, not a number, or another key: nothing")
 
     -- after the city falls to the swarm: the core is one of what Restart the thumpers starts again
     hook.Run("AcceptInput", th, "Enable", reb, reb)
@@ -46866,7 +46950,9 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     W.End()
     for e in pairs(W.S.out) do if IsValid(e) then e:Remove() end end
     W.S = { stage = "nest", out = {}, wild = {}, broken = {}, pressers = {}, grenades = {} }
-    W.essence, W.clock, W.core = nil, clockWas, coreWas
+    for i = 1, 3 do for _, e in ipairs(W.coreFx[i] or {}) do if IsValid(e) then e:Remove() end end end
+    W.essence, W.clock, W.core, W.coreFx = nil, clockWas, coreWas, fxWas
+    LC.ForcedDark = forcedWas
     W.CityOurs, LC.Notice, sound = oursWas, noticeWas, soundWas
     C.S, C.retake, C.pendingAt, C.pendingBy = cWas, nil, nil, nil
     _files[SFILE] = sfileWas
@@ -46876,9 +46962,203 @@ function Nov27_CoreTests() -- (the owner, 27 November, agreed: a Combine suppres
     A.out, A.stopped, A.calm = outWas or {}, stoppedWas or {}, calmWas or {}
     for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
     for _, e in ipairs(ents.FindByClass("npc_antlion")) do e:Remove() end
+    LC.CheckCityGrid() -- (no core any more: the city's light is the grid's again)
     for _, p in ipairs({ cit, far, reb, cop, staff }) do if IsValid(p) then p:Remove() end end
 end
 Nov27_CoreTests()
+
+function Nov28_SealedDoorTests() -- (the owner, 28 November: a sealed Combine door; and a lift of ours is never a door)
+    section("28 November: a sealed Combine door, and a lift of ours is never a door")
+    local D0 = Vector(-170000, 170000, 0)
+    local made, zones = {}, {}
+    local forcedWas = LC.ForcedDark
+    LC.ForcedDark = nil
+    local function Door(cls, mapid, name, off)
+        local e = ents.Create(cls)
+        e.mapid = mapid
+        if name then e:SetName(name) end
+        e:SetPos(D0 + off) e:Spawn()
+        made[#made + 1] = e
+        return e
+    end
+    local function Has(t, v) for _, x in ipairs(t or {}) do if x == v then return true end end return false end
+    local function Beeps(n0) local n = 0 for i = n0 + 1, #_sounds do if string.find(_sounds[i], "combine_button_locked", 1, true) then n = n + 1 end end return n end
+    local function Chat(p) return #(p.chat or {}) end
+    local function NoLuck(fn)
+        local r = math.random
+        math.random = function(a, b) if a == nil then return 0.99 end if b == nil then return r(a) end return r(a, b) end
+        local okr, err = pcall(fn)
+        math.random = r
+        if not okr then error(err) end
+    end
+    local function By(p, door) p:SetPos(door:GetPos() + Vector(60, 0, 0)) p.lookingAt = door end
+    local AWAY = D0 + Vector(0, -9000, 0)
+
+    -- the tag, and the map's own name for it
+    ok(LC.DOOR_TAGS.sealed == true, "sealed is a door tag")
+    local door = Door("func_door", 28001, nil, Vector(0, 0, 0))
+    door.fired = {}
+    ok(LC.SetDoorTag(door, "sealed") == true and LC.GetDoorTag(door) == "sealed" and LC.EffectiveDoorTag(door) == "sealed", "a door tagged sealed (the Miscount Editor)")
+    ok(Has(door.fired, "Close") and door.locked == true, "shut and locked")
+    local named = Door("prop_door_rotating", 28002, "LC_Sealed_vault", Vector(600, 0, 0))
+    ok(LC.GetDoorTag(named) == nil and LC.AutoDoorTag(named) == "sealed" and LC.DoorSealed(named) == true, "a door with no tag whose map name starts with lc_sealed: sealed by itself")
+    LC.ApplyDoorState(named)
+    ok(named.locked == true, "(shut and locked too)")
+    LC.SetDoorTag(named, "ignore")
+    ok(LC.AutoDoorTag(named) == nil and LC.EffectiveDoorTag(named) == "ignore", "(your own tag on it wins)")
+    LC.SetDoorTag(named, nil)
+    ok(LC.EffectiveDoorTag(named) == "sealed" and named.locked == true, "(cleared: sealed again)")
+    local info = table.concat(LC.DoorInfo(named), " | ")
+    ok(string.find(info, "Sealed, by its map name", 1, true) ~= nil, "the editor's inspector says so", info)
+    local cpd = Door("func_door", 28003, nil, Vector(1200, 0, 0))
+    LC.SetDoorTag(cpd, "cp")
+    local c1, l1, s1 = LC.DoorLockKind(door)
+    local c2, _, s2 = LC.DoorLockKind(cpd)
+    ok(c1 == true and l1 == true and s1 == true and c2 == true and s2 == false and LC.DoorSealed(cpd) == false, "a Combine lock, locked, and sealed (a Civil Protection door is not)")
+
+    -- E: a little beep for everyone, units and staff too, and nothing written
+    local cop = newPlayer("SealCop", "cp")
+    local staff = newPlayer("SealStaff", "citizen")
+    staff.admin, staff.superadmin = true, true
+    local cit = newPlayer("SealCitizen", "citizen", nil, 400)
+    local hk = newPlayer("SealHacker", "resistance", nil, 400)
+    _run(3)
+    for _, who in ipairs({ { cop, "a unit" }, { staff, "staff" }, { cit, "a citizen" }, { hk, "a rebel" } }) do
+        local p = who[1]
+        By(p, door)
+        _run(1.1)
+        door.fired = {}
+        local n0, chat0 = #_sounds, Chat(p)
+        local r = hook.Run("PlayerUse", p, door)
+        ok(r == false and Beeps(n0) == 1 and not Has(door.fired, "Open") and not Has(door.fired, "Unlock") and not Has(door.fired, "Toggle") and Chat(p) == chat0,
+            who[2] .. "'s E on a sealed door: a little beep, it stays shut, nothing written", tostring(r) .. " " .. Beeps(n0))
+        p:SetPos(AWAY) p.lookingAt = nil
+    end
+    By(cop, door)
+    _run(1.1)
+    local n0 = #_sounds
+    hook.Run("PlayerUse", cop, door) hook.Run("PlayerUse", cop, door) hook.Run("PlayerUse", cop, door)
+    ok(Beeps(n0) == 1, "(E held: one beep a second at most)", Beeps(n0))
+    ok(LC.PlayerMayUseCPDoor(cop, cpd) == true and hook.Run("PlayerUse", cop, cpd) == false and Has(cpd.fired, "Open"), "(a Civil Protection door still opens for the unit)")
+    cop:SetPos(AWAY) cop.lookingAt = nil
+
+    -- no keycard, no door code, no pick (a prisoner's neither)
+    By(cit, door)
+    LC.GiveItem(cit, "cp_keycard") LC.GiveItem(cit, "door_code") LC.GiveItem(cit, "lockpick")
+    local okK, whyK = LC.StartPick(cit, "cp_keycard")
+    ok(okK == false and whyK == "There's no card reader on that door." and LC.HasItem(cit, "cp_keycard"), "a keycard: there is no card reader on a sealed door", tostring(whyK))
+    local okC, whyC = LC.StartPick(cit, "door_code")
+    ok(okC == false and whyC == "There's no card reader on that door.", "(nor for a door code)", tostring(whyC))
+    local okL, whyL = LC.StartPick(cit, "lockpick")
+    ok(okL == false and whyL == "That's a Combine lock. A pick won't touch it.", "a lockpick: a Combine lock, a pick won't touch it", tostring(whyL))
+    LC.Prisoners[cit] = { untilT = CurTime() + 600 }
+    local okP, whyP = LC.StartPick(cit, "lockpick")
+    LC.Prisoners[cit] = nil
+    ok(okP == false and whyP == "That's a Combine lock. A pick won't touch it.", "(a prisoner's pick neither)", tostring(whyP))
+    local okQ, whyQ = LC.QuickPick(cit)
+    ok(okQ == false and whyQ == "That's a Combine lock. A pick won't touch it." and LC.Picking[cit] == nil, "the quick pick tries no card or code on it either", tostring(whyQ))
+
+    -- a bypass charge opens it, as a Combine door's; locked again afterwards
+    LC.GiveItem(cit, "bypass")
+    door.fired = {}
+    ok(LC.QuickPick(cit) == true and LC.Picking[cit] ~= nil and LC.Picking[cit].id == "bypass", "a bypass charge works on it")
+    NoLuck(function() _run(5) end)
+    ok(LC.DoorPicked(door) and Has(door.fired, "Unlock") and Has(door.fired, "Open") and not LC.HasItem(cit, "bypass"), "four seconds: the sealed door is open")
+    ok(LC.HasItem(cit, "cp_keycard") and LC.HasItem(cit, "door_code"), "(the card and the code were not spent)")
+    ok(hook.Run("PlayerUse", cit, door) ~= false, "while it is bypassed it is as any picked door")
+    LC.ClearWanted(cit)
+    _run(32)
+    n0 = #_sounds
+    ok(not LC.DoorPicked(door) and door.locked == true and hook.Run("PlayerUse", cit, door) == false and Beeps(n0) == 1, "thirty seconds on: shut, locked and sealed again")
+    cit:SetPos(AWAY) cit.lookingAt = nil
+
+    -- the Resistance's Hacker opens it with the multitool
+    By(hk, door)
+    local okN = LC.HackDoor(hk)
+    ok(not okN, "without a multitool: no hacking")
+    hk:Give("weapon_lc_multitool")
+    local okH, whyH = LC.HackDoor(hk)
+    ok(okH, "a Hacker's multitool works on a sealed door", tostring(whyH))
+    NoLuck(function() _run(12.5) end)
+    ok(LC.DoorPicked(door), "twelve seconds: it is open")
+    LC.ClearWanted(hk)
+    _run(32)
+    ok(not LC.DoorPicked(door) and door.locked == true, "and shut and locked again after its thirty seconds")
+    hk:SetPos(AWAY) hk.lookingAt = nil
+
+    -- a blackout leaves it locked; a boot does nothing to it
+    LC.PowerOut[door], LC.PowerOut[cpd] = nil, nil
+    cpd:Fire("Lock")
+    LC.ForceBlackout("on")
+    ok(LC.CityDark == true and LC.PowerOut[cpd] == true and cpd.locked == false, "a city-wide blackout: a Civil Protection door's lock dies")
+    ok(LC.PowerOut[door] == nil and door.locked == true and LC.PowerOut[named] == nil and named.locked == true, "a sealed door stays locked")
+    By(cop, door)
+    _run(1.1)
+    ok(hook.Run("PlayerUse", cop, door) == false and not LC.DoorPicked(door), "(and still only beeps)")
+    cop:SetPos(AWAY) cop.lookingAt = nil
+    LC.ForceBlackout("auto")
+    local plain = Door("prop_door_rotating", 28004, nil, Vector(1800, 0, 0))
+    plain:Fire("Lock")
+    ok(LC.KickWouldOpen(plain) == true and LC.KickWouldOpen(named) == false, "a boot would open a locked wooden door, never a sealed one")
+
+    -- nobody is let through by the city: an NPC unit walks up to a Civil Protection door and it opens; a sealed one does not
+    local npc = ents.Create("npc_metropolice")
+    npc:SetPos(cpd:GetPos() + Vector(30, 0, 0)) npc:Spawn()
+    made[#made + 1] = npc
+    LC.NPCs[npc] = { role = "cop", state = "moving", nextThink = CurTime() + 9999, untilT = CurTime() + 9999 }
+    LC.ApplyDoorState(cpd)
+    cpd.fired = {}
+    LC.RebuildDoorGrid()
+    _run(0.7)
+    ok(Has(cpd.fired, "Open"), "an NPC unit at a Civil Protection door: it opens for them")
+    npc:SetPos(door:GetPos() + Vector(30, 0, 0))
+    door.fired = {}
+    _run(0.7)
+    ok(not Has(door.fired, "Open") and not Has(door.fired, "Unlock") and door.locked == true, "at a sealed door: nothing")
+
+    -- a lift of ours (lc_..lift..) is never a door, wherever it is
+    local L0 = D0 + Vector(0, 4000, 0)
+    zones[#zones + 1] = LC.AddZone(nil, nil, "combine", 0, { mins = L0 + Vector(-600, -600, -64), maxs = L0 + Vector(600, 600, 400) })
+    local zdoor = Door("func_door", 28010, nil, Vector(-300, 4000, 0))
+    local lift = Door("func_door", 28011, "lc_core_lift", Vector(0, 4000, 0))
+    local gate = Door("func_door", 28012, "LC_cistern_Lift_gate_top", Vector(300, 4000, 0))
+    local other = Door("func_door", 28013, "freight_lift", Vector(300, 4300, 0))
+    ok(LC.AutoDoorTag(zdoor) == "cp", "a door in a Combine-only zone is Civil Protection's by itself")
+    ok(LC.AutoDoorTag(lift) == "ignore" and LC.AutoDoorTag(gate) == "ignore", "a lift of ours and its gate there (lc_..lift..): ignore, never locked by the zone")
+    ok(LC.AutoDoorTag(other) == "cp", "(another map's lift, not lc_: as it was)")
+    lift.fired, gate.fired = {}, {}
+    LC.ApplyDoorState(lift) LC.ApplyDoorState(gate)
+    ok(#lift.fired == 0 and #gate.fired == 0, "the city neither locks nor unlocks it: the map works it", table.concat(lift.fired, " "))
+    By(cit, lift)
+    ok(hook.Run("PlayerUse", cit, lift) == nil and #lift.fired == 0, "a player's E does not move it")
+    local free = Door("func_door", 28014, nil, Vector(0, -4000, 0))
+    By(cit, free)
+    free.fired = {}
+    hook.Run("PlayerUse", cit, free)
+    ok(Has(free.fired, "Toggle"), "(a plain sliding door still toggles by E)")
+    npc:SetPos(lift:GetPos() + Vector(30, 0, 0))
+    LC.RebuildDoorGrid()
+    _run(0.7)
+    ok(#lift.fired == 0, "nor does an NPC unit walking by")
+    ok(string.find(table.concat(LC.DoorInfo(lift), " | "), "A lift of ours", 1, true) ~= nil, "the editor's inspector names it")
+
+    -- everything as it was
+    LC.NPCs[npc] = nil
+    LC.SetDoorTag(door, nil) LC.SetDoorTag(cpd, nil)
+    for _, e in ipairs(made) do
+        LC.PowerOut[e], LC.OpenedDoors[e], LC.Relock[e], LC.PrisonDoors[e] = nil, nil, nil, nil
+        if IsValid(e) then e:Remove() end
+    end
+    for _, z in ipairs(zones) do LC.RemoveZone(z) end
+    LC.ForcedDark = forcedWas
+    LC.CheckCityGrid()
+    LC.RebuildDoorGrid()
+    for _, p in ipairs({ cop, staff, cit, hk }) do
+        if LC.ClearWanted then LC.ClearWanted(p) end
+        if IsValid(p) then p:Remove() end
+    end
+end
+Nov28_SealedDoorTests()
 
 section("Stop")
 LC.Stop(admin)

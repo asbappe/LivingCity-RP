@@ -443,10 +443,14 @@ return function(T)
         put("func_button", "lc_core_button", Vector(0, -300, 40))
         put("info_target", "lc_core_combine_way", Vector(0, -1400, 0))
         local was = W.core
-        W.core = { running = false, cut = { true, true, true }, applied = true }
+        -- (cut long enough ago for the Combine to mend: their job is on the board only then, 45 minutes after the sabotage)
+        local long = CurTime() - (W.CORE_MEND_AFTER or 0)
+        W.core = { running = false, cut = { true, true, true }, cutAt = { long, long, long }, applied = true, posted = true }
         return function()
             for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
             W.core = was
+            if W.CoreFx then W.CoreFx() end -- (nothing of the staged core's left smoking)
+            if LC.CheckCityGrid then LC.CheckCityGrid() end
         end
     end
 

@@ -214,7 +214,7 @@ function LC.KickDoor(ply, door)
     local tag = LC.GetDoorTag and LC.GetDoorTag(door)
     local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
     door:EmitSound(Pick(DOOR_HIT), 80)
-    if tag == "prison" or auto == "prison" or tag == "locked" or tag == "open" then
+    if tag == "prison" or auto == "prison" or tag == "locked" or tag == "open" or tag == "sealed" or auto == "sealed" then
         ply:ChatPrint("It doesn't give.")
         return false
     end
@@ -501,7 +501,7 @@ function LC.KickWouldOpen(door)
     if not (door.GetInternalVariable and door:GetInternalVariable("m_bLocked") == true) then return false end
     local tag = LC.GetDoorTag and LC.GetDoorTag(door)
     local auto = not tag and LC.AutoDoorTag and LC.AutoDoorTag(door) or nil
-    return not (tag == "prison" or auto == "prison" or tag == "locked" or tag == "open" or tag == "office")
+    return not (tag == "prison" or auto == "prison" or tag == "locked" or tag == "open" or tag == "office" or tag == "sealed" or auto == "sealed")
 end
 timer.Create("LivingCityKickHint", 0.3, 0, function()
     if not cvOn:GetBool() then return end

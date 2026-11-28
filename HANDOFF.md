@@ -31,24 +31,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 26 November: the quiet HUD card and the ambient PA lines trimmed (the owner); the old-timer's fisherman head takes his bones every frame (LC_CL.HeadOn; city-people.md). Not seen in game.
-- 27 November (the owner's design; not seen in game): **the Swarm**, `lc_swarm` 1 (the-swarm.md, sv_livingcity_swarm.lua): nest guardians, the larval extract,
-  the vortigaunts' ritual (five conditions), pheropods to the highest rank, the thumpers' trickle (1 per 15 s, 2 alive), the city falls
-  at the Nexus, then the job "Restart the thumpers". Full run: 9,629 passed, 7 failed, none from it. The suppression core (sv_livingcity_swarmcore.lua; map_core.py builds its chamber into the owner's C18: c18_lc_yours_1127_core sent, not compiled).
-- 26 November: the cistern as its own piece (map_cistern.py; `map_build.py cistern --test`: lc_cistern_test.vmf, sent), a street plate
-  over it, Valve's freight lift from gallery to street (models, lc_cistern_lift; map-building.md). Not compiled. Next: Propper++.
-- 25 and 26 November (the owner's answers; none seen in game): Combine APC on the ring's road (apc-patrol.md); the city falls chapter,
-  `lc_chapter` 0; the hive boss NextBot 2149660804, `lc_hiveboss` 0; `lc_text_gate` 3; `lc_train_real` 0. Staff: F4 > Factions > Admin:
-  testing tools. The ten new settings are in the core snapshot (the owner's OK). Mask off = out of uniform. Last full run (26 Nov):
-  9,460 passed, 4 failed, all four passing alone (order-dependent: TODO.md, end). HintTests stops at tests.lua:4168 (old: TODO.md, end).
-- 26 November, not seen in game: LC.CombatDrive (civil-protection-tools.md), LC.FearStep (city-people.md), units hear
-  (sv_livingcity_noise.lua). Ideas left: docs/dev/npc-ai-lessons.md. 24 Nov TODO run: wildlife, resistance-base, ieds (not seen).
-- 22 to 27 November: the canal ring (map_ring_walk.py: first canal, ring.txt, inlet.txt, bunker_way.txt, the owner's own bunker
-  forest via --forest; ~30 min). 27 Nov: the walk map is the OWNER'S FILE now (they edited it in Hammer: rail viaduct with
-  canal_bridge02, ladders, ropes...): carry generator changes in with map_owner_delta.py (BEFORE: the build last sent, AFTER:
-  the new one), never send a fresh build. Same day: the bunker tunnel at road height (stairs down at its end), shanty under
-  the jog's road deck (shantydeck), relay quay 256 up; a plug under their trimmed core 3102 (it leaked). 25,265 faces,
-  ~47,632 vertices. Stitched with City 18 and the cave: ~95,700 vertices, over the limit (TODO). Not run in game.
-  27 Nov: four thumpers (lc_thumper_ by the checkpoint, 2_ the old one with the owner's own button and cable, 3_ west, 4_ south) carried into the owner's walk map;
-  a stopped one sends antlions into its stretch of canal (the cave chat's trickle; the run between the turns where the map has lc_thumperN_area marks: wildlife.md).
-- Owner's c18_lc.vmf and Valve's VMF zip: their Drive. Bunker map chat: map_owner_delta.py, map_hidden_faces, map_areas.py (fixes5 sent). Cave: now the owner's file (carry over with map_owner_delta.py, builds with PYTHONHASHSEED=0); power, crank lift, tunnel dressing, the hill behind the shed (lc_forest_cave_yours_1127_tunnel sent, not compiled).
+- 28 November (the owner's asks; map not compiled, nothing seen in game): **the suppression core reworked.** Map (`map_core.py`, docs/dev/map-building.md): a Combine glass lift as City 18's own, the sealed door `lc_sealed_core` in the owner's brush's place, Episode One's reactor between the pistons at 0.43 (wall beams and column: healthy; `lc_core_stop`: unstable), glass for the railings, catwalks 128 wide. Game (the-swarm.md): a console is sabotaged by a Hacker's multitool or an IED, smokes and sparks, the Combine mend 45 minutes later, the whole city dark while the core is down; door tag `sealed`. Sent: `c18_lc_yours_1128.vmf`.
+- **The owner's C18 is THEIR file** (they edit it in Hammer and correct our pieces): carry changes in with `map_core.py THEIRS OUT --refit BEFORE` (map_owner_delta.py --loose --near), never a fresh build. Their corrections are lessons now (cables join things, a light at its lamp's lens, a room sized to its props): run `map_lint.py` (rope, lens) on every piece.
+- **Vertices:** City 18 alone is about 40,500 of 65,536 (corners, not lightmap cuts); the ring about 47,600: the whole map is still over. `map_hidden_faces.py --seed-lost` and the new `map_lightmap.py` were run on City 18 only; the ring and the cave wait for the owner's current files (TODO.md, end).
+- Last full run (28 November): 9,790 passed, 9 failed, none in what changed (all pass alone or fail on the old code too: TODO.md, end). Core tests 113, sealed door 43, robots pass.
+- 27 November: **the Swarm**, `lc_swarm` 1 (the-swarm.md): nest guardians, the extract, the vortigaunts' ritual, pheropods, the thumpers' trickle, the city falls at the Nexus, then "Restart the thumpers". Not seen in game.
+- 26 November: the cistern as its own piece (map_cistern.py), Valve's freight lift there. 25 and 26 November: the APC, the city falls chapter (`lc_chapter` 0), the hive boss (`lc_hiveboss` 0), `lc_text_gate` 3, `lc_train_real` 0, LC.CombatDrive, LC.FearStep, units hear. None seen in game.
+- 22 to 27 November: the canal ring (map_ring_walk.py) is the OWNER'S FILE too (carry over with map_owner_delta.py); four thumpers in it; a stopped one sends antlions into its stretch. The cave: the owner's file (builds with PYTHONHASHSEED=0).
+- Owner's maps and Valve's VMF zip: their Drive (c18_lc.vmf there is 19 November's; they upload the current one to the chat). Staff tools: F4 > Factions > Admin: testing tools.
