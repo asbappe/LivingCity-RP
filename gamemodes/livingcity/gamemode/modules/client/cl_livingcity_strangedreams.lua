@@ -541,6 +541,17 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStrangeDreams", function(_
     elseif th == "dance" then -- (the lights, on the beat)
         local _, on, beat = LC_CL.DanceBeat(st, now)
         local me = LocalPlayer()
+        -- (every dreamer here dances ActMod's dance, where the server has it, and still walks
+        -- and jumps: it is only how they look; cl_livingcity_actdance.lua)
+        if LC_CL.ActDance and IsValid(me) then
+            local here = me:GetPos()
+            for _, p in ipairs(player.GetAll()) do
+                if IsValid(p) and p:GetNW2Bool("lc_dreaming", false) and not (p.IsDormant and p:IsDormant())
+                    and p:GetPos():DistToSqr(here) < 4000 * 4000 then
+                    LC_CL.ActDance(p, "marathon", now)
+                end
+            end
+        end
         if beat and IsValid(me) then
             local at = me:GetPos()
             for i = 1, 12 do

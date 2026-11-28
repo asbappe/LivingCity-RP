@@ -50,6 +50,10 @@ LC.ActDances = {
     bus   = { "Amod_Dance_Macarena", { "bus", "base" } },
     -- (the Conga dream's line: its citizens and Doctor Kleiner; sv_livingcity_strangedreams3.lua)
     conga = { "Amod_Fortnite_CongaLine_walk", { "dreams" } },
+    -- (the Dance Marathon's dreamers, who still walk and jump as they dance: only the look of
+    -- them changes; the owner, 28 November: "can they still move and jump while dancing? that
+    -- would be ideal"; cl_livingcity_strangedreams.lua)
+    marathon = { "Amod_Fortnite_FlossDance", { "dreams" } },
 }
 function LC.ActDanceSetting(move) return "lc_actdance_" .. move end
 

@@ -6363,6 +6363,7 @@ end
 if LC_CL.ActDance(ply, "ears_combine", 5) ~= true then return "ActMod dances: the units' ears is the same dance" end
 if LC_CL.ActDance(ply, "bus", 5) ~= true then return "ActMod dances: the bus's riders do ActMod's too" end
 if LC_CL.ActDance(ply, "nosuchdance", 5) ~= false then return "ActMod dances: a dance with no pick is ours" end
+if LC_CL.ActDance(ply, "marathon", 5) ~= true or LC_CL.ActDance(ply, "conga", 5) ~= true then return "ActMod dances: the dreams' own dances (the marathon, the conga) are not ActMod's" end
 -- party hard is shared half and half: every other dancer keeps our own
 local odd, even = Player(true), Player(true)
 even.EntIndex = function() return 2 end
