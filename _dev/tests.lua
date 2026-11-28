@@ -47192,6 +47192,20 @@ function Nov28_DreamDanceTests()
     A_AM = nil
     ok(LC.Try(hook.Run, "LivingCityDreamWoke", p, true, "end") == true, "a server without ActMod: nothing happens, nothing breaks")
     A_AM = was
+
+    -- the endings' dances play ActMod's animations: which one is a shared setting of the Endings menu
+    local n = 0
+    for move, d in pairs(LC.ActDances) do
+        n = n + 1
+        if not (d[1] == "none" or string.find(d[1], "^Amod_")) or #d[2] == 0 or not LC.EndingTuneShared[LC.ActDanceSetting(move)] then n = -100 end
+    end
+    ok(n >= 9, "every dance has one of ActMod's animations (or none) and a page of the Endings menu to change it on", tostring(n))
+    local kept = LC.EndingTuning().shared.lc_actdance_ears
+    ok(LC.EndingTuneSet(nil, "setting", "lc_actdance_ears", "Amod_Fortnite_FlossDance") == true
+        and LC.EndingTuning().shared.lc_actdance_ears == "Amod_Fortnite_FlossDance", "picking another animation is kept, for everyone's screen")
+    ok(LC.EndingTuneSet(p, "setting", "lc_actdance_ears", "none") == false, "only a superadmin picks")
+    LC.EndingTuneSet(nil, "setting", "lc_actdance_ears", kept or "")
+    ok(LC.EndingTuning().shared.lc_actdance_ears == kept, "(and put back)")
     if IsValid(p) then p:Remove() end
 end
 Nov28_DreamDanceTests()

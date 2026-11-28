@@ -345,6 +345,7 @@ LC_MODULES = {
         "cl_livingcity_vortstart", -- (the choice at a new life's start: a citizen or a vortigaunt)
         "cl_livingcity_rebelmedic", -- (the Resistance's medic: his offer)
         "cl_livingcity_checkpoints",
+        "cl_livingcity_actdance", -- (the endings' dances done with ActMod's animations, where the server has it)
         "cl_livingcity_endings",
         "cl_livingcity_endingtune", -- (the Endings menu)
         "cl_livingcity_dreams", -- (shared dreams: opting out, waking up, the admins' window)

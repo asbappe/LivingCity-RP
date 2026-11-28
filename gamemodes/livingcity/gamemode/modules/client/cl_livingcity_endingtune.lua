@@ -36,6 +36,15 @@ local standIn
 -- the shared settings: one value for everyone's game (the server's), else your own
 local SHARED = { lc_bloom_palm = "90", lc_headbang_angle = "35 0 0", lc_shalom_kippah = "6.5 0 -1", lc_shalom_chair = "21 0" }
 local SHARED_OF = { bloom = { "lc_bloom_palm" }, water = { "lc_headbang_angle" }, shalom = { "lc_shalom_kippah", "lc_shalom_chair" } }
+-- (and which of ActMod's animations each dance plays: sh_livingcity_dreamdances.lua)
+for move, d in SortedPairs(LC.ActDances or {}) do
+    local n = LC.ActDanceSetting(move)
+    SHARED[n] = d[1]
+    for _, id in ipairs(d[2]) do
+        SHARED_OF[id] = SHARED_OF[id] or {}
+        table.insert(SHARED_OF[id], n)
+    end
+end
 
 -- Each ending's moves: { move, what it is }
 local MOVES = {
@@ -340,6 +349,16 @@ local function SettingRow(parent, s, shared)
                 Changed(table.concat(parts, " "))
             end)
         end
+    elseif s.choices and #s.choices > 0 then
+        -- one of a list (ActMod's animations): picked, not typed
+        local c = vgui.Create("DComboBox", row)
+        c:Dock(TOP)
+        c:DockMargin(4, 0, 4, 0)
+        c:SetValue(s.v or "")
+        c:AddChoice("none")
+        for _, name in ipairs(s.choices) do c:AddChoice(name) end
+        c.OnSelect = function(_, _, value) Changed(value) end
+        controls[1] = c
     else
         local t = vgui.Create("DTextEntry", row)
         t:Dock(TOP)
@@ -558,7 +577,8 @@ local function SettingsTab(sheet, id)
     Button(pnl, "Copy the song's time", function() local t = LC_CL.EndingSongPos and LC_CL.EndingSongPos() if t then SetClipboardText(string.format("%.1f", t)) end end)
     for _, n in ipairs(SHARED_OF[id] or {}) do
         local cv = GetConVar(n)
-        SettingRow(pnl, { name = n, v = data.shared[n] or (cv and cv:GetString()) or SHARED[n], d = SHARED[n], help = cv and cv.GetHelpText and cv:GetHelpText() or "" }, true)
+        SettingRow(pnl, { name = n, v = data.shared[n] or (cv and cv:GetString()) or SHARED[n], d = SHARED[n], help = cv and cv.GetHelpText and cv:GetHelpText() or "",
+            choices = string.find(n, "^lc_actdance_") and LC_CL.ActDanceChoices and LC_CL.ActDanceChoices() or nil }, true)
     end
     local list = info and info.settings and info.settings[id] or {}
     if #list == 0 and not SHARED_OF[id] then Label(pnl, "No settings of its own.", DIM) end

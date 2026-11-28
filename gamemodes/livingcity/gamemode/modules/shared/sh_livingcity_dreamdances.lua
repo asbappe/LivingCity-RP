@@ -29,6 +29,26 @@ for _, name in ipairs({ "ActMod_sv_DontStartAct", "ActMod_sv_DontStartGesture", 
     hook.Add(name, "LivingCityDreamsOnly", Refuse)
 end
 
+-- The endings' dances (and their dreams'), done with ActMod's animations instead of our
+-- bone turns (the owner, 28 November: "all our animations suck tbh, so I'd rather just
+-- use actmod"; cl_livingcity_actdance.lua). Each: our dance = { ActMod's animation, the
+-- endings whose page of the Endings menu changes it }. "none": our own dance stays (the
+-- bus and the ZIGs: sat down, and ActMod's are done standing).
+LC.ActDances = {
+    ears  = { "Amod_MMD_Dance_CaramellDansen", { "bloom" } },
+    club  = { "Amod_AM4_Spooky_Month_Dance", { "marrow" } },
+    rave  = { "Amod_Fortnite_GlowStickDance", { "marrow" } },
+    -- (half = true: every other dancer keeps our own; the owner, 28 November: "can we have
+    -- half the players/NPCs still do the old party hard dance we had previously?")
+    hard  = { "Amod_Fortnite_JumpstyleDance", { "hard" }, half = true },
+    hora  = { "Amod_Fortnite_EasternBloc", { "shalom" } },
+    numa  = { "Amod_Fortnite_Boogie_Down", { "plane" } },
+    fire  = { "Amod_Fortnite_ElectroShuffle", { "fire" } },
+    cheer = { "Amod_Fortnite_Cheerleader", { "standup" } },
+    bus   = { "none", { "bus", "base" } },
+}
+function LC.ActDanceSetting(move) return "lc_actdance_" .. move end
+
 if SERVER then
     hook.Add("LivingCityDreamWoke", "LivingCityDreamDanceEnds", function(p)
         local am = A_AM and A_AM.ActMod

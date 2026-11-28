@@ -6333,6 +6333,78 @@ end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+err = L.execute(r"""
+-- the endings' dances with ActMod's animations (cl_livingcity_actdance.lua)
+if not (LC.ActDances and LC_CL.ActDance and LC_CL.ActDanceStop) then return "ActMod dances: not loaded" end
+local function Ent(t)
+    t.IsValid = function() return true end
+    t.GetNW2Bool = t.GetNW2Bool or function() return false end
+    t.GetNW2Float = function() return 0 end
+    t.GetNW2Entity = function() return NULL end
+    t.SequenceDuration = function() return 4 end
+    t.GetSkin = function() return 0 end
+    t.GetModelScale = function() return 1 end
+    return t
+end
+local function Player(has)
+    return Ent({ IsPlayer = function() return true end, InVehicle = function() return false end, EntIndex = function() return 1 end,
+        GetModel = function() return has and "models/player/kleiner.mdl" or "models/player/custom_without.mdl" end,
+        LookupSequence = function(_, n) return has and string.find(n, "^Amod_") and 77 or -1 end })
+end
+local ply = Player(true)
+if LC_CL.ActDance(ply, "ears", 5) ~= true then return "ActMod dances: a player whose model has the animation does not play it" end
+local seq, d = LC_CL.ActDanceSeq(ply)
+if seq ~= 77 or math.abs(d.frac - 0.25) > 0.001 then return "ActMod dances: the player's animation or its place in the song is wrong" end
+local hooks = hook.GetTable and hook.GetTable().CalcMainActivity
+if hooks and hooks.LivingCityActDance then
+    local a, s2 = hooks.LivingCityActDance(ply, Vector(0, 0, 0))
+    if s2 ~= 77 then return "ActMod dances: the game is not given the animation for a dancing player (" .. tostring(s2) .. ")" end
+end
+if LC_CL.ActDance(ply, "ears_combine", 5) ~= true then return "ActMod dances: the units' ears is the same dance" end
+if LC_CL.ActDance(ply, "bus", 5) ~= false then return "ActMod dances: the bus keeps our own (none)" end
+if LC_CL.ActDance(ply, "nosuchdance", 5) ~= false then return "ActMod dances: a dance with no pick is ours" end
+-- party hard is shared half and half: every other dancer keeps our own
+local odd, even = Player(true), Player(true)
+even.EntIndex = function() return 2 end
+if LC_CL.ActDance(odd, "hard", 5) ~= true or LC_CL.ActDance(even, "hard", 5) ~= false then return "ActMod dances: party hard is not half ActMod's and half ours" end
+if LC_CL.ActDance(even, "ears", 5) ~= true then return "ActMod dances: only party hard is shared half and half" end
+LC_CL.ActDanceStop(odd) LC_CL.ActDanceStop(even)
+LC_CL.ActDanceStop(ply)
+if LC_CL.ActDanceSeq(ply) ~= nil then return "ActMod dances: a stopped player still has the animation" end
+if LC_CL.ActDance(Player(false), "ears", 5) ~= false then return "ActMod dances: a model without the animation must dance our own way" end
+local sat = Player(true)
+sat.GetNW2Bool = function(_, k) return k == "lc_seated" end
+if LC_CL.ActDance(sat, "numa", 5) ~= false then return "ActMod dances: a seated player must keep our own" end
+-- a citizen: drawn as their player-model twin
+local cmWas, feWas = ClientsideModel, file.Exists
+local made, drawn, removed = {}, 0, 0
+ClientsideModel = function(mdl)
+    local tw = Ent({ GetModel = function() return mdl end, LookupSequence = function(_, n) return string.find(n, "^Amod_") and 5 or -1 end,
+        DrawModel = function() drawn = drawn + 1 end, Remove = function() removed = removed + 1 end })
+    made[#made + 1] = mdl
+    return setmetatable(tw, { __index = function() return function() end end })
+end
+file.Exists = function(path) return path == "models/player/group01/male_07.mdl" or path == "models/player/police.mdl" end
+if LC_CL.ActDanceTwinModel("models/humans/group02/male_07.mdl") ~= "models/player/group01/male_07.mdl" then return "ActMod dances: a citizen's twin is not found" end
+if LC_CL.ActDanceTwinModel("models/police.mdl") ~= "models/player/police.mdl" then return "ActMod dances: a metrocop's twin is not found" end
+if LC_CL.ActDanceTwinModel("models/player/skeleton.mdl") ~= "models/player/skeleton.mdl" then return "ActMod dances: what is a player model already is its own twin" end
+if LC_CL.ActDanceTwinModel("models/headcrabclassic.mdl") ~= false then return "ActMod dances: a headcrab has no twin" end
+local npc = Ent({ EntIndex = function() return 40 end, GetModel = function() return "models/humans/group01/male_07.mdl" end,
+    LookupSequence = function() return -1 end, GetPos = function() return Vector(0, 0, 0) end, GetAngles = function() return Angle(0, 90, 0) end,
+    DrawModel = function() end })
+if LC_CL.ActDance(npc, "club", 2) ~= true or #made ~= 1 then return "ActMod dances: a citizen is not given a twin" end
+if LC_CL.ActDance(npc, "club", 3) ~= true or #made ~= 1 then return "ActMod dances: the twin is made again every frame" end
+if not npc.RenderOverride then return "ActMod dances: the twin is not drawn in the citizen's place" end
+npc:RenderOverride()
+if drawn ~= 1 then return "ActMod dances: the twin is not drawn" end
+LC_CL.ActDanceStop(npc)
+if npc.RenderOverride ~= nil or removed ~= 1 then return "ActMod dances: a citizen who stops keeps their twin" end
+local crab = Ent({ EntIndex = function() return 41 end, GetModel = function() return "models/headcrabclassic.mdl" end, LookupSequence = function() return -1 end })
+if LC_CL.ActDance(crab, "club", 2) ~= false then return "ActMod dances: what has no twin dances our own way" end
+ClientsideModel, file.Exists = cmWas, feWas
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")
