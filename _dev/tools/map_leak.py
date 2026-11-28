@@ -4,6 +4,8 @@ Entity prop_static (1589.89 -4314.11 664.11) leaked!". The entity vbsp names is 
 stands in leaked air: it says nothing of where the hole is, and the pointfile needs the game to read.)
 
     python3 map_leak.py FILE.vmf --from X Y Z --box X1 Y1 Z1 X2 Y2 Z2 [--cell 4] [--void bottom]
+    ... --path                                   also the shortest way through the air from the point to the void
+    ... --plug X1 Y1 Z1 X2 Y2 Z2 (any number)    as if these boxes were sealing brushes: to try a mend before making it
 
 Lays the box on a grid of cubes as vbsp seals a map: only the world's brushes shut space (never an entity's, never
 func_detail), and of those not a displaced one, nor one with a face you can see through or a tool face that seals
@@ -65,6 +67,8 @@ def main():
     ap.add_argument("--box", nargs=6, type=float, required=True, metavar=("X1", "Y1", "Z1", "X2", "Y2", "Z2"))
     ap.add_argument("--cell", type=int, default=4)
     ap.add_argument("--void", default="bottom", choices=("bottom", "top", "west", "east", "south", "north"), help="the box's face that lies outside the map")
+    ap.add_argument("--path", action="store_true", help="print the shortest way through the air from the point to the void face (its turns)")
+    ap.add_argument("--plug", nargs=6, type=float, action="append", default=[], metavar=("X1", "Y1", "Z1", "X2", "Y2", "Z2"), help="a box counted as a sealing brush")
     a = ap.parse_args()
     C = a.cell
     lo = np.array(a.box[:3])
@@ -99,7 +103,13 @@ def main():
             inside &= (nn[0] * X + nn[1] * Y + nn[2] * Z - d) <= (abs(nn[0]) + abs(nn[1]) + abs(nn[2])) * C / 2.0 - 0.01
         solid[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] |= inside
         used += 1
-    print("grid %d x %d x %d (%.0f M cubes of %d), %d sealing world brushes in the box" % (n[0], n[1], n[2], solid.size / 1e6, C, used))
+    for b in a.plug:
+        i0 = np.maximum(np.floor((np.array(b[:3]) - lo) / C).astype(int), 0)
+        i1 = np.minimum(np.ceil((np.array(b[3:]) - lo) / C).astype(int), n)
+        if (i1 > i0).all():
+            solid[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] = True
+    print("grid %d x %d x %d (%.0f M cubes of %d), %d sealing world brushes in the box%s" % (n[0], n[1], n[2], solid.size / 1e6, C, used,
+                                                                                            ", %d plugs" % len(a.plug) if a.plug else ""))
     s = tuple(np.floor((np.array(a.start) - lo) / C).astype(int))
     if solid[s]:
         sys.exit("--from is inside a brush")
@@ -115,6 +125,40 @@ def main():
         print("NO LEAK in this box: the air at %s is shut off from the box's %s face" % (" ".join("%g" % v for v in a.start), a.void))
         return
     print("LEAK: the air at %s is one piece with the void at the box's %s face" % (" ".join("%g" % v for v in a.start), a.void))
+    if a.path:
+        import collections
+        goal = np.zeros(n, dtype=bool)
+        goal[face] = True
+        prev = np.full(n, -2, dtype=np.int64)
+        prev[s] = -1
+        dq = collections.deque([s])
+        end = None
+        nx, ny, nz = (int(v) for v in n)
+        while dq:
+            c = dq.popleft()
+            if goal[c]:
+                end = c
+                break
+            x, y, z = c
+            for q in ((x + 1, y, z), (x - 1, y, z), (x, y + 1, z), (x, y - 1, z), (x, y, z + 1), (x, y, z - 1)):
+                if 0 <= q[0] < nx and 0 <= q[1] < ny and 0 <= q[2] < nz and prev[q] == -2 and not solid[q]:
+                    prev[q] = (c[0] * ny + c[1]) * nz + c[2]
+                    dq.append(q)
+        cells = [end]
+        while prev[cells[-1]] >= 0:
+            v = int(prev[cells[-1]])
+            cells.append((v // (ny * nz), (v // nz) % ny, v % nz))
+        cells.reverse()
+        pts = [lo + (np.array(c) + 0.5) * C for c in cells]
+        turns = [pts[0]]
+        for k in range(1, len(pts) - 1):
+            if tuple(np.sign(pts[k] - pts[k - 1])) != tuple(np.sign(pts[k + 1] - pts[k])) and np.linalg.norm(pts[k] - turns[-1]) >= 3 * C:
+                turns.append(pts[k])
+        turns.append(pts[-1])
+        print("the shortest way out (%d cubes), its turns:" % len(cells))
+        for q in turns:
+            print("   (%d %d %d)" % (q[0], q[1], q[2]))
+        return
     thick = solid
     for k in range(1, 9):
         thick = ndimage.binary_dilation(thick)
