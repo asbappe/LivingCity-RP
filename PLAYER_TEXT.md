@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 64d05f7. Admin-only console messages and log lines are left out.
+Made from version 5a07773. Admin-only console messages and log lines are left out.
 
-13703 lines, from 401 files.
+13704 lines, from 401 files.
 
 ## Contents
 
@@ -110,7 +110,7 @@ Made from version 64d05f7. Admin-only console messages and log lines are left ou
 - [the dream flight recorder (the tester's side)](#the-dream-flight-recorder-the-testers-side-cllivingcitydreamreclua) (23)
 - [shared dreams, your side (sv_livingcity_dreams.lua)](#shared-dreams-your-side-svlivingcitydreamslua-cllivingcitydreamslua) (33)
 - [secret endings, on your screen (sv_livingcity_endings.lua)](#secret-endings-on-your-screen-svlivingcityendingslua-cllivingcityendingslua) (65)
-- [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
+- [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (70)
 - [morning exercise, on your screen (sv_livingcity_exercise.lua)](#morning-exercise-on-your-screen-svlivingcityexerciselua-cllivingcityexerciselua) (11)
 - [cl_livingcity_factions.lua](#cllivingcityfactionslua-cllivingcityfactionslua) (26)
 - [cl_livingcity_feeds.lua](#cllivingcityfeedslua-cllivingcityfeedslua) (2)
@@ -2859,36 +2859,37 @@ Made from version 64d05f7. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: settings tab
 
 - "Copy the song's time"  (button, line 577)
-- "No settings of its own."  (text, line 584)
-- "Every ending:"  (text, line 586)
+- "No settings of its own."  (text, line 585)
+- "Every ending:"  (text, line 587)
+- "The dreams' own dances:"  (text, line 590)
 
 > Note for you (not shown in game): part of: you tab
 
-- "These are your own game's, not the server's."  (text, line 593)
-- "How loud the songs are"  (text, line 600)
-- "Calm: no strobes or screen flashes"  (label or button, line 603)
-- "Base's arcade blocks (1: off)"  (text, line 605)
+- "These are your own game's, not the server's."  (text, line 598)
+- "How loud the songs are"  (text, line 605)
+- "Calm: no strobes or screen flashes"  (label or button, line 608)
+- "Base's arcade blocks (1: off)"  (text, line 610)
 
 > Note for you (not shown in game): part of: changes tab
 
-- "Everything you've changed. Copy it and send it on, and it can be built in as the new normal."  (text, line 612)
-- "Copy it all"  (button, line 622)
+- "Everything you've changed. Copy it and send it on, and it can be built in as the new normal."  (text, line 617)
+- "Copy it all"  (button, line 627)
 
 > Note for you (not shown in game): part of: fill
 
-- "The dance"  (text, line 634)
-- "Just for you"  (text, line 636)
+- "The dance"  (text, line 639)
+- "Just for you"  (text, line 641)
 
 > Note for you (not shown in game): part of: open
 
-- "Endings: tune them live"  (window title, line 660)
-- "Play it now"  (button, line 674)
-- "Stop it"  (button, line 675)
-- "(playing now)"  (text, line 690)
+- "Endings: tune them live"  (window title, line 665)
+- "Play it now"  (button, line 679)
+- "Stop it"  (button, line 680)
+- "(playing now)"  (text, line 695)
 
 > Note for you (not shown in game): part of: endings menu
 
-- "Only a superadmin can tune the endings."  (chat message, line 703)
+- "Only a superadmin can tune the endings."  (chat message, line 708)
 
 ## morning exercise, on your screen (sv_livingcity_exercise.lua) (cl_livingcity_exercise.lua)
 

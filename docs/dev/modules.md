@@ -19,7 +19,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
-| `actdance` | The endings' dances, done with ActMod's animations (client) | - | `client/cl_livingcity_actdance.lua` 9K | - | `LC_CL.ActDanceStop`, `LC_CL.ActDanceSeq`, `LC_CL.ActDance`, `LC_CL.ActDanceChoices` | - |
+| `actdance` | The endings' dances, done with ActMod's animations (client) | - | `client/cl_livingcity_actdance.lua` 9K | - | `LC_CL.ActDance`, `LC_CL.ActDanceStop`, `LC_CL.ActDanceSeq`, `LC_CL.ActDanceChoices` | - |
 | `actions` | The actions menu (server side) | `server/sv_livingcity_actions.lua` 10K | `client/cl_livingcity_actions.lua` 37K | - | `LC_CL.ICName`, `LC.RunAction`, `LC_CL.InsiderSlipNow`, `LC_CL.OpenActions`, `LC_CL.InsiderSlipWhyNot`, `LC.CitizenNPCAction` | - |
 | `acts` | Acts (server). See sh_livingcity_acts.lua for the list. | `server/sv_livingcity_acts.lua` 6K | `client/cl_livingcity_acts.lua` 3K | `shared/sh_livingcity_acts.lua` 5K | `LCA.Resolve`, `LC.Gesture`, `LC.StopAct`, `LC.StartAct`, `LCA.Current`, `LCA.IsVortModel` | SlotActTests (3); LifeTests (2) |
 | `adminheli` | The Administrator's attack helicopter | `server/sv_livingcity_adminheli.lua` 33K | - | - | `LC.AdminHeli`, `LC.AdminHeliThink`, `LC.AdminHeliPoint`, `LC.AdminHeliTake`, `LC.AdminHeliFetch`, `LC.AdminHeliExit` | Nov17_AdminHeliTests (2) |
@@ -282,7 +282,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `stockpile` | The city's stores | `server/sv_livingcity_stockpile.lua` 11K | - | - | `LC.Stock`, `LC.StockAdd`, `LC.StockLevel`, `LC.StockLedgerLine`, `LC.StockTake`, `LC.StockSave` | Nov14F_RationsTests (4); StockTests (4); StockEatTests (3) |
 | `storage` | Places to keep things | `server/sv_livingcity_storage.lua` 23K | - | - | `LC.Containers`, `LC.OpenContainer`, `LC.ContainerView`, `LC.ContainerPut`, `LC.ContainerAt`, `LC.ContainerTake` | StorageTests (8); BusinessTests (4); Nov15_LockerSideTests (3) |
 | `stories` | Story chains | `server/sv_livingcity_stories.lua` 99K | - | - | `LC.LoyaltyHunt`, `LC.RecentRebelKills`, `LC.MoleConvert` | anon@24734 (1) |
-| `strangedreams` | Strange dreams (Happy and Neutral dreams you play) | `server/sv_livingcity_strangedreams.lua` 51K | `client/cl_livingcity_strangedreams.lua` 32K | - | `LC.DreamSongFor`, `LC.DreamSurface`, `LC.DreamArt`, `LC.DreamWarpPitch`, `LC.StrangeSong`, `LC_CL.DreamFaces` | NonsenseDreamTests (4); DreamFixTests (2); StrangeDreamTests (2) |
+| `strangedreams` | Strange dreams (Happy and Neutral dreams you play) | `server/sv_livingcity_strangedreams.lua` 51K | `client/cl_livingcity_strangedreams.lua` 33K | - | `LC.DreamSongFor`, `LC.DreamSurface`, `LC.DreamArt`, `LC.DreamWarpPitch`, `LC.StrangeSong`, `LC_CL.DreamFaces` | NonsenseDreamTests (4); DreamFixTests (2); StrangeDreamTests (2) |
 | `strangedreams2` | Ten more strange dreams (dreams you play) | `server/sv_livingcity_strangedreams2.lua` 78K | - | - | `LC.StrangeDreamSay` | MoreStrangeDreamTests (1) |
 | `strangedreams3` | Ten more strange dreams, nonsense on purpose | `server/sv_livingcity_strangedreams3.lua` 56K | - | - | - | - |
 | `streetcrime` | Crime between citizens (the owner, 10 November: "citizen | `server/sv_livingcity_streetcrime.lua` 17K | - | - | `LC.Pickpocket`, `LC.OfferLoan`, `LC.AcceptLoan`, `LC.RepayDebt`, `LC.ReportDebt` | StreetCrimeTests (5) |

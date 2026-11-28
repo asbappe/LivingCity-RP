@@ -12,6 +12,7 @@
     ActMod's animations are on player models only. A player plays one as their own
     animation. A citizen or a unit is drawn as their player-model twin doing it (only on
     your screen, in their place). Everyone keeps to the song's clock, so they move as one.
+    The Conga dream's line walks ActMod's conga the same way (cl_livingcity_strangedreams.lua).
     Nothing of ActMod's is copied: its animations are asked for by name.
 ]]
 
@@ -114,7 +115,13 @@ end
 local function DrawTwin(self)
     local tw, d = self.lcActTwin, self.lcActDance
     if not (tw and IsValid(tw) and d) then return self:DrawModel() end
-    tw:SetPos(self:GetPos())
+    local pos = self:GetPos()
+    if d.ground then
+        -- (the Conga line's figures are bobbed up and down by the server: the twin's feet stay on the floor)
+        local tr = util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos - Vector(0, 0, 48), filter = self })
+        if tr and tr.Hit and not tr.StartSolid then pos = tr.HitPos end
+    end
+    tw:SetPos(pos)
     tw:SetAngles(Angle(0, self:GetAngles().y + d.spin, 0))
     tw:SetCycle(d.frac)
     tw:SetupBones()
@@ -137,8 +144,7 @@ function LC_CL.ActDance(ent, move, clock)
     local now = CurTime()
     ent.lcActAt = now
     if ent.IsPlayer and ent:IsPlayer() then
-        -- sat on the bus or the plane: a dance done standing would go through the roof
-        if ent:GetNW2Bool("lc_seated", false) or IsValid(ent:GetNW2Entity("lc_riding", NULL)) or ent:InVehicle() then return false end
+        -- (sat on the bus or the plane too; the owner: "just use actmod's animations regardless")
         local seq = SeqOf(ent, name)
         if not seq then return false end
         local d = ent.lcActDance or {}
@@ -179,7 +185,7 @@ function LC_CL.ActDance(ent, move, clock)
     tw:SetSkin(ent:GetSkin() or 0)
     tw:SetModelScale(ent:GetModelScale() or 1)
     local d = ent.lcActDance or {}
-    d.seq, d.frac, d.spin = seq, Frac(tw, seq, clock), Spin(ent, now)
+    d.seq, d.frac, d.spin, d.ground = seq, Frac(tw, seq, clock), Spin(ent, now), move == "conga"
     ent.lcActDance = d
     if not ent.lcActDrawn then
         ent.lcActRenderWas, ent.lcActDrawn = ent.RenderOverride, true

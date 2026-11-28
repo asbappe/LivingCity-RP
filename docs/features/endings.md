@@ -293,10 +293,14 @@ The server's Workshop collection has **ActMod** (2538387266) and its animations'
 | numa | The plane | `Amod_Fortnite_Boogie_Down` |
 | fire | Fire | `Amod_Fortnite_ElectroShuffle` |
 | cheer | The stand-up's crowd | `Amod_Fortnite_Cheerleader` |
-| bus | The Bus, Base | none (sat down: ours stays) |
+| bus | The Bus, Base | `Amod_Dance_Macarena` (the owner, 28 November: "just use actmod's animations regardless": the riders are sat down and ActMod's are done standing) |
+| conga | the Conga dream's line | `Amod_Fortnite_CongaLine_walk` (the owner, 28 November: "ok please add it") |
 
 - **Changing a pick:** the Endings menu, on that ending's page: a list of every ActMod animation, or "none" for the gamemode's own. The same on everyone's screen, kept with the dances' tuning (`data/livingcity/ending_tuning.json`, settings `lc_actdance_<dance>`). The menu's stand-in shows the pick.
 - **Who plays it how:** a player plays it as their own animation. ActMod's animations are on player models only, so a citizen or a unit is drawn as their player-model twin doing it, in their place, on each screen (`models/humans/...` to `models/player/...`, a metrocop to `models/player/police.mdl`). Everyone keeps to the song's clock (its speeding up too), so they move as one. Bloom's risers still spin.
-- **Ours stays** for: anyone sat or riding (the bus, the plane's seats), the rope and the limp, flying on the fire, the hora's rush in and its chair, Father Grigori (he holds his guitar), anything with no player-model twin (a headcrab, a vortigaunt), and a player whose model lacks the animation.
-- **Not done yet:** the dream stage's own dances (the Conga line, the Dance Marathon) still move as before; ActMod has `Amod_Fortnite_CongaLine_walk` for the first. ActMod's props, sounds and particles for an emote are not used.
+- **The Conga dream's line:** its citizens and Doctor Kleiner walk ActMod's conga as twins, feet kept on the floor (the server still bobs the figures; the headcrab, the watermelon and the chair bob as before). Its pick is on every page of the Endings menu, under "The dreams' own dances".
+- **The Dance Marathon:** every dreamer in it dances ActMod's `Amod_Fortnite_FlossDance` (the owner, 28 November: "can they still move and jump while dancing? that would be ideal"). They walk and jump as before, and the jumps on the beat count as before: only how they look to the others changes. Its pick is beside the Conga's in the Endings menu.
+- **Ours stays** for: the rope and the limp, flying on the fire, the hora's rush in and its chair, Father Grigori (he holds his guitar), anything with no player-model twin (a headcrab, a vortigaunt), and a player whose model lacks the animation.
+- **The Conga's tail:** a dreamer in the glow at the tail walks ActMod's conga too, for as long as they keep in it (the owner, 28 November: "make the players at the conga tail do the conga walk too"); they still walk where they like.
+- **Not done yet:** ActMod's props, sounds and particles for an emote are not used.
 - The names of all 422 animations: `python3 _dev/tools/workshop_unpack.py` on the owner's PC lists them.

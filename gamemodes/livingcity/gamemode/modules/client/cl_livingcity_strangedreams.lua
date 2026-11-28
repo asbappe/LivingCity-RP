@@ -455,7 +455,16 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStrangeDreams", function(_
     elseif th == "conga" then -- (a rainbow trail behind every dancer)
         for k, i in ipairs(st.conga or {}) do
             local e = EntOf(i)
-            if e then render.DrawSprite(e:GetPos() + Vector(0, 0, 20), 90, 90, Rainbow(now * 0.4 + k / 7, 150)) end
+            if e then
+                render.DrawSprite(e:GetPos() + Vector(0, 0, 20), 90, 90, Rainbow(now * 0.4 + k / 7, 150))
+                -- (its people walk ActMod's conga, where the server has it: cl_livingcity_actdance.lua)
+                if LC_CL.ActDance then LC_CL.ActDance(e, "conga", now) end
+            end
+        end
+        -- (and the dreamers in the glow at its tail, who walk on as they like)
+        for _, i in ipairs(st.walkers or {}) do
+            local p = EntOf(i)
+            if p and LC_CL.ActDance then LC_CL.ActDance(p, "conga", now) end
         end
     elseif th == "shh" then -- (Zzz over the crib, unless it's crying)
         local me = LocalPlayer()
@@ -537,6 +546,17 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStrangeDreams", function(_
     elseif th == "dance" then -- (the lights, on the beat)
         local _, on, beat = LC_CL.DanceBeat(st, now)
         local me = LocalPlayer()
+        -- (every dreamer here dances ActMod's dance, where the server has it, and still walks
+        -- and jumps: it is only how they look; cl_livingcity_actdance.lua)
+        if LC_CL.ActDance and IsValid(me) then
+            local here = me:GetPos()
+            for _, p in ipairs(player.GetAll()) do
+                if IsValid(p) and p:GetNW2Bool("lc_dreaming", false) and not (p.IsDormant and p:IsDormant())
+                    and p:GetPos():DistToSqr(here) < 4000 * 4000 then
+                    LC_CL.ActDance(p, "marathon", now)
+                end
+            end
+        end
         if beat and IsValid(me) then
             local at = me:GetPos()
             for i = 1, 12 do

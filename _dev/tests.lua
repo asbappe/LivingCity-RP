@@ -22049,6 +22049,10 @@ _run(0.2)
 a:SetPos(g.tail)
 _run(0.5)
 ok((g.pl[a].groove or 0) > 0 and g.pl[a].inside, "Conga!: in the glow at the tail, the groove grows")
+ok(table.concat(g.def.state(g, a).walkers or {}, ",") == tostring(a:EntIndex()), "Conga!: everyone's game is told who is in the glow (they walk the conga too)")
+a:SetPos(g.tail + Vector(900, 0, 0))
+_run(0.3)
+ok(#(g.def.state(g, a).walkers or { 1 }) == 0, "Conga!: out of the glow, no longer")
 Stop(d)
 
 -- Shh!
