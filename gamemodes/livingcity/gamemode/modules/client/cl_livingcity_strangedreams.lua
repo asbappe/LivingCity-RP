@@ -461,6 +461,11 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStrangeDreams", function(_
                 if LC_CL.ActDance then LC_CL.ActDance(e, "conga", now) end
             end
         end
+        -- (and the dreamers in the glow at its tail, who walk on as they like)
+        for _, i in ipairs(st.walkers or {}) do
+            local p = EntOf(i)
+            if p and LC_CL.ActDance then LC_CL.ActDance(p, "conga", now) end
+        end
     elseif th == "shh" then -- (Zzz over the crib, unless it's crying)
         local me = LocalPlayer()
         if not st.crying and IsValid(me) and anchor then

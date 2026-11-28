@@ -715,7 +715,14 @@ do
     function def.state(g, p)
         local s = p and g.pl[p] or {}
         local glows = g.tail and { Flat(g.tail + Vector(0, 0, 10), 4) } or {}
-        return { glows = glows, conga = g.ents_, big = s.inside and "Conga! One, two, three, kick!" or "Get in the glow at the back of the line!",
+        -- (who is in the glow at the tail: they walk the conga too, where the server has ActMod;
+        -- the owner, 28 November: "make the players at the conga tail do the conga walk too")
+        local walkers = {}
+        for q, qs in pairs(g.pl) do
+            if IsValid(q) and qs.inside then walkers[#walkers + 1] = q:EntIndex() end
+        end
+        table.sort(walkers)
+        return { glows = glows, conga = g.ents_, walkers = walkers, big = s.inside and "Conga! One, two, three, kick!" or "Get in the glow at the back of the line!",
             meter = math.floor(math.min(100, s.groove or 0)), meterName = string.format("Groove: %d%%", math.floor(math.min(100, s.groove or 0))) }
     end
 end

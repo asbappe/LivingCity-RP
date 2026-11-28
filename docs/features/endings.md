@@ -301,5 +301,6 @@ The server's Workshop collection has **ActMod** (2538387266) and its animations'
 - **The Conga dream's line:** its citizens and Doctor Kleiner walk ActMod's conga as twins, feet kept on the floor (the server still bobs the figures; the headcrab, the watermelon and the chair bob as before). Its pick is on every page of the Endings menu, under "The dreams' own dances".
 - **The Dance Marathon:** every dreamer in it dances ActMod's `Amod_Fortnite_FlossDance` (the owner, 28 November: "can they still move and jump while dancing? that would be ideal"). They walk and jump as before, and the jumps on the beat count as before: only how they look to the others changes. Its pick is beside the Conga's in the Endings menu.
 - **Ours stays** for: the rope and the limp, flying on the fire, the hora's rush in and its chair, Father Grigori (he holds his guitar), anything with no player-model twin (a headcrab, a vortigaunt), and a player whose model lacks the animation.
-- **Not done yet:** the players at the Conga line's tail walk as usual. ActMod's props, sounds and particles for an emote are not used.
+- **The Conga's tail:** a dreamer in the glow at the tail walks ActMod's conga too, for as long as they keep in it (the owner, 28 November: "make the players at the conga tail do the conga walk too"); they still walk where they like.
+- **Not done yet:** ActMod's props, sounds and particles for an emote are not used.
 - The names of all 422 animations: `python3 _dev/tools/workshop_unpack.py` on the owner's PC lists them.
